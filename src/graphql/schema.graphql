@@ -155,6 +155,13 @@ type IngredientFormValue {
   slug: String!
 }
 
+input IngredientFormValueInput {
+  description: String!
+  endRedirect: Boolean
+  groupId: ID!
+  name: String!
+}
+
 input IngredientInput {
   canonicalName: String
 
@@ -211,6 +218,7 @@ scalar LocalDate
 
 type Mutation {
   createCategory(input: CategoryInput!): Category!
+  createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -221,11 +229,21 @@ type Mutation {
   """
   deleteCategory(id: ID!): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
+
+  """
+  A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.
+  """
+  deleteIngredientFormValue(id: ID!): ID!
   setEmail(email: String!, next: String): User!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+
+  """
+  Replaces the form; the slug follows the name and the group. A rename is carried onto every live compendium entry that picked the form.
+  """
+  updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
 
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
@@ -258,7 +276,16 @@ type Query {
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryDeitySuggestionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
-  ingredientFormValues(after: String, before: String, first: Int, last: Int): QueryIngredientFormValuesConnection!
+
+  """
+  The live form groups by name: the group a form is filed under is picked from these.
+  """
+  ingredientFormGroups(after: String, before: String, first: Int, last: Int): QueryIngredientFormGroupsConnection!
+
+  """
+  The curated forms by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
+  """
+  ingredientFormValues(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryIngredientFormValuesConnection!
   ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
@@ -338,9 +365,26 @@ type QueryFormSuggestionsConnectionEdge {
   node: FormSuggestion!
 }
 
+type QueryIngredientFormGroupsConnection {
+  edges: [QueryIngredientFormGroupsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryIngredientFormGroupsConnectionEdge {
+  cursor: String!
+  node: IngredientFormGroup!
+}
+
 type QueryIngredientFormValuesConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
   edges: [QueryIngredientFormValuesConnectionEdge!]!
   pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
 }
 
 type QueryIngredientFormValuesConnectionEdge {

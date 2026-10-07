@@ -2,15 +2,23 @@ import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import { slugify } from '@/lib/slugify';
+import { formSlug, slugify } from '@/lib/slugify';
 import {
   createCompendiumEntry,
   deleteCompendiumEntry,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { createCategory, deleteCategory, updateCategory } from '@/modules/vocabulary';
+import {
+  createCategory,
+  createIngredientFormValue,
+  deleteCategory,
+  deleteIngredientFormValue,
+  updateCategory,
+  updateIngredientFormValue,
+} from '@/modules/vocabulary';
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
+import type { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
 import { A, B, C, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { curatedFormId } from '../support/db/curated-ids';
@@ -18,8 +26,8 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { type IngredientFixture, makeIngredient } from '../support/fixtures';
 import type { Stamps } from './types';
 
-// Stories 17 and 18 against the compendium's writes (M5.2) and the category
-// vocabulary's (M5.6).
+// Stories 17 and 18 against the compendium's writes (M5.2), the category
+// vocabulary's (M5.6) and the form vocabulary's (M5.6a).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -53,6 +61,14 @@ async function categoryRow(id: string) {
   const [row] = await sql<({ name: string; slug: string; group_id: string } & Stamps)[]>`
     select name, slug, group_id, created_by, updated_by, updated_at, deleted_at, deleted_by
     from categories where id = ${id}
+  `;
+  return row;
+}
+
+async function formRow(id: string) {
+  const [row] = await sql<({ name: string; slug: string; group_id: string } & Stamps)[]>`
+    select name, slug, group_id, created_by, updated_by, updated_at, deleted_at, deleted_by
+    from ingredient_forms where id = ${id}
   `;
   return row;
 }
@@ -163,5 +179,46 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     const deletedCategory = await categoryRow(category.id);
     expect(deletedCategory).toMatchObject({ deleted_by: E.id });
     expect(deletedCategory.deleted_at).not.toBeNull();
+  });
+
+  it('lets the site admin add, edit and soft-delete a form, its group included, every write stamped as the admin and the deleted row kept', async () => {
+    const admin = asUser(E);
+    expect(await siteRole(E.id)).toBe('admin');
+    const groups = await sql<{ id: string; name: string }[]>`
+      select id, name from ingredient_form_groups where deleted_at is null order by name limit 2
+    `;
+    const [first, second] = groups;
+    const input: IngredientFormValueInput = {
+      name: 'Fixture Shard',
+      description: 'A form this test made',
+      groupId: first.id,
+    };
+
+    const form = await createIngredientFormValue(admin, input);
+    expect(await formRow(form.id)).toMatchObject({
+      name: input.name,
+      slug: formSlug(input.name, first.name),
+      group_id: first.id,
+      created_by: E.id,
+      updated_by: E.id,
+      deleted_at: null,
+    });
+
+    await updateIngredientFormValue(admin, form.id, {
+      ...input,
+      name: 'Fixture Shard, renamed',
+      groupId: second.id,
+    });
+    expect(await formRow(form.id)).toMatchObject({
+      name: 'Fixture Shard, renamed',
+      slug: formSlug('Fixture Shard, renamed', second.name),
+      group_id: second.id,
+      updated_by: E.id,
+    });
+
+    await deleteIngredientFormValue(admin, form.id);
+    const deletedForm = await formRow(form.id);
+    expect(deletedForm).toMatchObject({ deleted_by: E.id });
+    expect(deletedForm.deleted_at).not.toBeNull();
   });
 });

@@ -1,8 +1,9 @@
 import type { categories, categoryGroups } from './schema/categories';
 import type { deities, deityTraditions } from './schema/deities';
 import type { ingredientFormGroups, ingredientForms } from './schema/ingredient-forms';
+import type { IngredientRow } from '../../db/repository';
 
-export type { CategoryFilter } from '../../db/repository';
+export type { CategoryFilter, IngredientFormValueFilter } from '../../db/repository';
 
 export type CategoryRow = typeof categories.$inferSelect;
 
@@ -11,6 +12,15 @@ export type CategoryGroupRow = typeof categoryGroups.$inferSelect;
 export type IngredientFormGroupRow = typeof ingredientFormGroups.$inferSelect;
 
 export type IngredientFormValueRow = typeof ingredientForms.$inferSelect;
+
+/**
+ * A live compendium entry a form's rename rewrites (M5.6a), and the slug it
+ * moves to under the new spelling: the same slug on a change of case.
+ */
+export interface FormRewrite {
+  entry: IngredientRow;
+  slug: string;
+}
 
 export type DeityRow = typeof deities.$inferSelect;
 

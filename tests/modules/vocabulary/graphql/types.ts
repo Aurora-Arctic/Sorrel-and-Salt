@@ -11,9 +11,20 @@ export interface FormValueNode {
   group: { id: string; name: string; slug: string; description: string };
 }
 
+/** `ingredientFormGroups` as the group picker asks for it: each group. */
+export interface FormGroupConnection {
+  edges: { node: { id: string; name: string; slug: string; description: string } }[];
+}
+
 export interface FormValueConnection {
   edges: { cursor: string; node: FormValueNode }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
+}
+
+/** A filtered `ingredientFormValues` page as the filter tests ask for it: the count, and each name. */
+export interface FilteredFormValues {
+  totalCount: number;
+  edges: { node: { name: string } }[];
 }
 
 export interface AstrologySuggestion {
