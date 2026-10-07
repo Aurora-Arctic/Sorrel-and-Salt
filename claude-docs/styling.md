@@ -396,6 +396,13 @@ The class layer every form is built from, in `_primitives.scss`:
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
+**One size modifier, `.btn--small`**, which composes with any variant: half
+the padding (`space(1) space(3)`), a 1px edge in place of `.btn`'s 1.6px,
+which reads heavy at this size, the `caption` type size, and a `space(2)`
+gap. It is for a compact strip that the full button would make taller, such
+as a banner or a table row. The impersonation banner's Stop is the first
+(MB.53).
+
   the owner's call in M5.9, once a form of many fields read as a wall of
   hints. The tip's text stays in the field's `aria-describedby`, so it is read
   with the field whether open or not, and the tip opens while the field has
@@ -504,7 +511,8 @@ heavier than the reverse; light reverts to the browser default.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--secondary` variants, `.notice`,
+    `.btn` and its `--solid` / `--quiet` / `--secondary` variants and
+    `--small` size, `.notice`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
