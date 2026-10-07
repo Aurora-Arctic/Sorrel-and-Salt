@@ -34,9 +34,13 @@ overwrite who made the first. The way back to a deleted row is v2's restore,
 a named method per tier, with an edit after it rather than in place
 (DESIGN.md §13, "Edit history").
 
-- **`write.delete(table, where)`** — removes the rows outright, for the two
+- **`write.delete(table, match)`** — removes the rows outright, for the two
   hard-deleted join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
-  it can never become the way a soft-deletable row is quietly destroyed.
+  it can never become the way a soft-deletable row is quietly destroyed. The
+  rows are named by column value — `{ ingredientId, categoryId: [...] }`, a
+  list matching by `IN` — since a service may not build an `SQL` predicate
+  (MB.33; MB.125). A list left empty deletes nothing without a statement, and
+  a match naming no column throws rather than emptying the table.
 
 `values` is typed as the table's insert model **minus** the audit columns, so a call site can't even name `createdBy` without a cast — and if
 one casts anyway, `applyAudit` strips it: audit ids come from the session,

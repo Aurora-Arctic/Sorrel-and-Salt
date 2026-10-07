@@ -2,7 +2,6 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { and, eq } from 'drizzle-orm';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredients } from '@/modules/ingredients/schema/ingredients';
@@ -244,21 +243,13 @@ describe('ingredient_categories table', () => {
 describe('a pair removed through write.delete', () => {
   const session = { userId: AUTHOR };
 
-  const isPair = (ingredientId: string, categoryId: string) =>
-    and(
-      eq(ingredientCategories.ingredientId, ingredientId),
-      eq(ingredientCategories.categoryId, categoryId),
-    ) as ReturnType<typeof eq>;
-
   const add = (ingredientId: string, categoryId: string, author = AUTHOR) =>
     withAudit({ userId: author }, (write) =>
       write.insert(ingredientCategories, { ingredientId, categoryId }),
     );
 
   const remove = (ingredientId: string, categoryId: string) =>
-    withAudit(session, (write) =>
-      write.delete(ingredientCategories, isPair(ingredientId, categoryId)),
-    );
+    withAudit(session, (write) => write.delete(ingredientCategories, { ingredientId, categoryId }));
 
   it('is deleted outright, leaving no row to filter out', async () => {
     await add(MUGWORT, PROTECTION);
