@@ -140,7 +140,7 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
         // warning arrives after the typing, and nothing else says so.
         <output className="ingredient-form__duplicates" aria-label="Possible duplicates">
           {shown.length > 0 && (
-            <div className={blocking ? 'notice notice--error' : 'notice'}>
+            <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
               {/* Plain anchors rather than <Link>: typed routes refuse a page
                   not built yet, and /ingredients/[id] is M8.19's. */}
               <p id={warningId}>
