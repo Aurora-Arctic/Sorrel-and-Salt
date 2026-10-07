@@ -818,8 +818,8 @@ type Query {
 # type pairing an entity with a userErrors list. See Errors above.
 type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace or admin
-  createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient!
-  updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient! # replaces the row: every field non-null, "" or [] clears
+  createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient! # input.categoryIds files it (story 30, MB.125)
+  updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient! # replaces the row: every field non-null, "" or [] clears — categoryIds included
   deleteIngredient(workspaceId: ID!, id: ID!): ID! # a soft delete of the coven's own ingredient; a spell holding it keeps it
   createReference(workspaceId: ID, input: ReferenceInput!): Reference! # a null workspaceId writes the compendium tier, under the admin proof (§5)
   updateReference(workspaceId: ID, id: ID!, input: ReferenceInput!): Reference! # reaches every row linking it; nothing deletes one in v1

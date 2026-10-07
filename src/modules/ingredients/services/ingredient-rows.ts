@@ -2,26 +2,29 @@ import 'server-only';
 import {
   type AuditWriter,
   type ReferenceLinkRow,
+  findManyByIds,
   findManyOfIngredients,
   findManyReferences,
   findOneIngredient,
   findReferencesOfIngredients,
 } from '../../../db/repository';
 import { ValidationError } from '../../../lib/errors';
+import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { referenceLinks } from '../schema/reference-links';
 import type { Membership } from '@/modules/coven';
 import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
+import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
 import type { DeityRecord, IngredientFields, PickedDeity, Tier } from '../types';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
 // What an ingredient write does the same way in either tier: the parsed
 // input as columns, the picks it records checked against the vocabularies,
-// and the folk names, substitutes, deities and references written beside the
-// row. Internal to the module — the two services import it, and the index
+// and the folk names, substitutes, deities, references and categories written
+// beside the row. Internal to the module — the two services import it, and the index
 // does not.
 
 /**
@@ -73,9 +76,12 @@ export function heldDeities(
  * every deity must be a curated pick, held or not, since the compendium holds
  * curated values alone (MB.162).
  *
- * @returns the fields with the form resolved, each deity to write in order,
- * and every issue found, each pathed to the entry the caller sent, for the
- * caller to throw beside its own.
+ * Each category must name a live one, in either tier and held or not, and
+ * one named twice is filed once (MB.125).
+ *
+ * @returns the fields with the form resolved and the categories each once,
+ * each deity to write in order, and every issue found, each pathed to the
+ * entry the caller sent, for the caller to throw beside its own.
  */
 export async function resolvePicks(
   tier: Tier,
@@ -84,12 +90,14 @@ export async function resolvePicks(
   held: readonly DeityRecord[],
 ): Promise<{ fields: IngredientFields; deities: PickedDeity[]; issues: ValidationIssue[] }> {
   const heldLinks = held.flatMap((row) => (row.deityId === null ? [] : [row]));
-  const [forms, deityNames] = await Promise.all([
+  const categoryIds = [...new Set(fields.categoryIds ?? [])];
+  const [forms, deityNames, filed] = await Promise.all([
     curatedNames('form', fields.formId == null ? [] : [fields.formId]),
     curatedNames('deities', [
       ...deities.flatMap((entry) => entry.deityId ?? []),
       ...heldLinks.map((row) => row.deityId as string),
     ]),
+    findManyByIds(categories, categoryIds),
   ]);
   const issues: ValidationIssue[] = [];
 
@@ -149,8 +157,17 @@ export async function resolvePicks(
     picked[index] = { deityId: retired?.deityId ?? null, name: entry.name };
   });
 
+  const live = new Set(filed.map((category) => category.id));
+  (fields.categoryIds ?? []).forEach((id, index) => {
+    if (live.has(id)) return;
+    issues.push({
+      path: ['categoryIds', index],
+      message: 'No such category to file it under — choose one from the list',
+    });
+  });
+
   return {
-    fields: { ...fields, form },
+    fields: { ...fields, form, categoryIds },
     deities: picked.filter((entry) => entry !== undefined),
     issues,
   };
@@ -210,6 +227,50 @@ export async function replaceDeities(
       position,
     });
   }
+}
+
+export async function addCategories(
+  write: AuditWriter,
+  ingredientId: string,
+  categoryIds: readonly string[],
+) {
+  for (const categoryId of categoryIds) {
+    await write.insert(ingredientCategories, { ingredientId, categoryId });
+  }
+}
+
+/**
+ * Brings the ingredient's categories to exactly `categoryIds` (MB.125): a
+ * pair still listed is left as it is, its stamps the first filer's; one
+ * dropped is hard-deleted, as a chip toggled off leaves no row (MB.34); a new
+ * one is inserted, stamped from the session; and a set that changes nothing
+ * writes nothing. The pairs compared are the ones the ingredient shows, as
+ * `replaceReferenceLinks` compares links, so a pair whose category is
+ * soft-deleted is left in place for a restore to return. `memberships` is
+ * the tier the parent is read in, as `findManyOfIngredients` takes it: none
+ * for a compendium entry.
+ */
+export async function replaceCategories(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  categoryIds: readonly string[],
+) {
+  const held = (await findManyOfIngredients(memberships, ingredientCategories, [ingredientId])).map(
+    (pair) => pair.categoryId,
+  );
+  const shown = new Set((await findManyByIds(categories, held)).map((category) => category.id));
+  const listed = new Set(categoryIds);
+
+  await write.delete(ingredientCategories, {
+    ingredientId,
+    categoryId: held.filter((id) => shown.has(id) && !listed.has(id)),
+  });
+  await addCategories(
+    write,
+    ingredientId,
+    categoryIds.filter((id) => !held.includes(id)),
+  );
 }
 
 export async function addFolkNames(

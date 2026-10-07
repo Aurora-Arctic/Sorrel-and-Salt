@@ -163,6 +163,9 @@ const fields = {
   substitutes: z.array(substitute).nullish(),
   references: z.array(referenceLink).nullish(),
   folkNames: textList,
+  // The categories it is filed under (MB.125): whether each names a live
+  // category is the service's to read, and a repeat is written once there.
+  categoryIds: z.array(z.string().trim()).nullish(),
 };
 
 const nomenclature = z.enum(NOMENCLATURE_KINDS, {
@@ -227,6 +230,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   substituteRules(value.substitutes ?? [], ctx);
   deityRules(value.deities ?? [], ctx);
   referenceRules(value.references ?? [], ctx);
+  categoryRules(value.categoryIds ?? [], ctx);
 }
 
 /**
@@ -336,6 +340,20 @@ function referenceRules(entries: ReferenceLinkFields[], ctx: z.RefinementCtx) {
     else if (!RowId.safeParse(referenceId).success) refuse(index, 'No such source');
     else if (listed.has(referenceId)) refuse(index, 'This source is already listed');
     else listed.add(referenceId);
+  });
+}
+
+/**
+ * Each category is an id. A repeat is not refused, unlike a reference's: a
+ * category is a chip, on or off, so one sent twice is one, and the service
+ * writes it once.
+ */
+function categoryRules(ids: readonly string[], ctx: z.RefinementCtx) {
+  ids.forEach((id, index) => {
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    if (!RowId.safeParse(id).success) {
+      ctx.addIssue({ code: 'custom', path: ['categoryIds', index], message: 'No such category' });
+    }
   });
 }
 
