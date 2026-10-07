@@ -343,6 +343,21 @@ export interface AuditWriter {
     at: Date,
   ): Promise<IngredientRow[]>;
   /**
+   * Carry a planet's or a sign's new name onto the compendium's lists (MB.95):
+   * in every live compendium entry whose `list` holds an entry folding to
+   * `from`, under the suggestions' fold, that entry becomes `to`, in its
+   * place. Nothing else in the row moves, since a planet or a sign is no part
+   * of an entry's identity or slug; a coven's ingredient and a deleted entry
+   * are left alone and not returned. Named for its tables, as
+   * `carryFormRename` is.
+   */
+  carryAstrologyRename(
+    admin: SiteAdmin,
+    list: AstrologyList,
+    from: string,
+    to: string,
+  ): Promise<IngredientRow[]>;
+  /**
    * Open a pause on admin role changes, stamped from the session (MB.62). No
    * row comes back while one is already open: the one-open index refuses a
    * second, and the call writes nothing rather than failing the transaction.
@@ -436,6 +451,14 @@ export interface IngredientFilter {
    * checks one first.
    */
   formId?: string;
+  /**
+   * A planet the entry's `planets` list holds, an entry at a time under the
+   * suggestions' fold (MB.162): how a planet's delete and rename find the
+   * entries holding it (MB.95). Blank means no filter.
+   */
+  planet?: string;
+  /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
+  zodiacSign?: string;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
@@ -569,6 +592,18 @@ export interface CategoryFilter {
   query?: string;
   /** Only the categories filed under this group. */
   groupId?: string;
+}
+
+/** An ingredient list a curated astrology vocabulary's values are written to, by its property name. */
+export type AstrologyList = 'planets' | 'zodiacSigns';
+
+/** One of the two astrology vocabularies, flat and alike (MB.95). */
+export type AstrologyVocabulary = typeof planets | typeof zodiacSigns;
+
+/** What an admin astrology list is narrowed by (MB.95): a name fragment, as the forms' list is. */
+export interface AstrologyValueFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
 }
 
 /** What the admin form list is narrowed by, as `CategoryFilter` narrows the categories. Each part is optional, and absent means no filter. */

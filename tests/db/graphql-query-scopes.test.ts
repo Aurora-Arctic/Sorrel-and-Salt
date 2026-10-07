@@ -60,6 +60,14 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ ingredientFormGroups(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
+  planets: {
+    source: '{ planets(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
+  zodiacSigns: {
+    source: '{ zodiacSigns(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
   commonNameSuggestions: suggestion('commonNameSuggestions'),
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {

@@ -10,10 +10,13 @@ import {
 } from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import {
+  createAstrologyValue,
   createCategory,
   createIngredientFormValue,
+  deleteAstrologyValue,
   deleteCategory,
   deleteIngredientFormValue,
+  updateAstrologyValue,
   updateCategory,
   updateIngredientFormValue,
 } from '@/modules/vocabulary';
@@ -27,7 +30,8 @@ import { type IngredientFixture, makeIngredient } from '../support/fixtures';
 import type { Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2), the category
-// vocabulary's (M5.6) and the form vocabulary's (M5.6a).
+// vocabulary's (M5.6), the form vocabulary's (M5.6a) and the planets' and
+// the signs' (MB.95).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -221,4 +225,49 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     expect(deletedForm).toMatchObject({ deleted_by: E.id });
     expect(deletedForm.deleted_at).not.toBeNull();
   });
+
+  it.each([
+    ['a planet', 'planets', 'planets'],
+    ['a zodiac sign', 'zodiacSigns', 'zodiac_signs'],
+  ] as const)(
+    'lets the site admin add, edit and soft-delete %s, every write stamped as the admin and the deleted row kept',
+    async (_what, field, table) => {
+      const admin = asUser(E);
+      expect(await siteRole(E.id)).toBe('admin');
+      const rowOf = async (id: string) => {
+        const [row] = await sql<({ name: string; slug: string } & Stamps)[]>`
+          select name, slug, created_by, updated_by, updated_at, deleted_at, deleted_by
+          from ${sql(table)} where id = ${id}
+        `;
+        return row;
+      };
+
+      const value = await createAstrologyValue(admin, field, {
+        name: 'Fixture Body',
+        description: 'A value this test made',
+      });
+      expect(await rowOf(value.id)).toMatchObject({
+        name: 'Fixture Body',
+        slug: slugify('Fixture Body'),
+        created_by: E.id,
+        updated_by: E.id,
+        deleted_at: null,
+      });
+
+      await updateAstrologyValue(admin, field, value.id, {
+        name: 'Fixture Body, renamed',
+        description: 'Rewritten',
+      });
+      expect(await rowOf(value.id)).toMatchObject({
+        name: 'Fixture Body, renamed',
+        slug: slugify('Fixture Body, renamed'),
+        updated_by: E.id,
+      });
+
+      await deleteAstrologyValue(admin, field, value.id);
+      const deleted = await rowOf(value.id);
+      expect(deleted).toMatchObject({ deleted_by: E.id });
+      expect(deleted.deleted_at).not.toBeNull();
+    },
+  );
 });

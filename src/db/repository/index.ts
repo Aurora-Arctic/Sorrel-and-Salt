@@ -45,6 +45,8 @@ export {
   findReferencesOfIngredients,
 } from './references';
 export {
+  findAstrologyValueCount,
+  findAstrologyValues,
   findCategoryCount,
   findCategoryPage,
   findCuratedRowsByIds,
@@ -63,6 +65,9 @@ export { deleteProvisionalUsers } from './provisional-users';
 export type {
   AdminInvitationRow,
   AdminInvitationValues,
+  AstrologyList,
+  AstrologyValueFilter,
+  AstrologyVocabulary,
   AuditWriter,
   CategoryFilter,
   CitingLink,

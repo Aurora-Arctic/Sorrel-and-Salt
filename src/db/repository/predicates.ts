@@ -1,4 +1,4 @@
-import { eq, ilike, isNull, type SQL } from 'drizzle-orm';
+import { eq, ilike, isNull, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, WorkspaceScoped } from './types';
@@ -46,4 +46,15 @@ export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | und
  */
 export function containsText(column: AnyPgColumn, query: string): SQL {
   return ilike(column, `%${query.replace(/[\\%_]/g, '\\$&')}%`);
+}
+
+/**
+ * Each entry of a `text[]` column, trimmed and lower-cased as the suggestions
+ * fold a value (MB.162), as a subquery: what an `inArray` matches a folded
+ * value against, so a list holds a value whatever spacing or case an entry
+ * was written with.
+ */
+export function listFolds(list: AnyPgColumn): SQL {
+  const entry = sql.identifier('entry');
+  return sql`(select lower(btrim(${entry})) from unnest(${list}) as ${entry})`;
 }
