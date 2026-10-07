@@ -74,6 +74,30 @@ describe('Combobox', () => {
     expect(screen.queryByRole('option')).not.toBeInTheDocument();
   });
 
+  // A category's row edged in its group's colours, as its chip is filled in them.
+  it('edges a row in the colours it is given, and no other', () => {
+    render(
+      <Harness
+        suggestions={{
+          options: [
+            { value: 'Hedge Fixture', colors: { colorDark: '#abcdef', colorLight: '#123456' } },
+            { value: 'Fixture Bane' },
+          ],
+          pending: false,
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
+    const coloured = screen.getByRole('option', { name: 'Hedge Fixture' });
+    const plain = screen.getByRole('option', { name: 'Fixture Bane' });
+    expect(coloured).toHaveClass('is-coloured');
+    expect(coloured.style.getPropertyValue('--chip-dark')).toBe('#abcdef');
+    expect(coloured.style.getPropertyValue('--chip-light')).toBe('#123456');
+    expect(plain).not.toHaveClass('is-coloured');
+    expect(plain.style.getPropertyValue('--chip-dark')).toBe('');
+  });
+
   // Chrome's Issues panel flags a field no <label> names, an aria-label
   // notwithstanding; a hidden one names it the same.
   it('is named by a label element of its own, hidden, rather than an aria-label', () => {

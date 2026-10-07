@@ -38,6 +38,7 @@ function optionsFor(
       note: category.description ?? undefined,
       key: category.id,
       heading: category.group.name,
+      colors: category.group,
       category,
     }));
 }

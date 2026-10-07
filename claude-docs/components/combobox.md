@@ -54,6 +54,18 @@ only the ingredient's id tells them apart (MB.131). The row's accessible name is
 label and its note, so two same-named forms are told apart by a screen
 reader as well as by the eye, and so is who claims a value.
 
+An option may also carry `colors`, a group row's `{ colorDark, colorLight }`,
+which a category's row does (the owner's call, M5.6b). The row then takes the pair inline through
+`chipColors()` and the `is-coloured` class. The stylesheet draws a 3px bar in the theme's colour
+of the pair, its left edge level with the group heading's text and set a
+step in from the row's top and bottom, so each row's reads as its own, with the text a further two
+steps clear of the bar at its widest. The bar widens to 5px on the
+highlighted or hovered row, over 150ms, or at once under reduced motion. It
+is a background image rather than a border, so the widening moves no text
+and the highlight's wash still shows behind it. The colour says which group's chip a
+pick will become; the group's name is still the bucket's heading, so the
+colour is never the only cue.
+
 ## Behaviour
 
 - **It changes no text itself.** Typing is reported through `onChange` and a

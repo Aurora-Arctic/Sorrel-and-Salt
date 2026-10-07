@@ -46,7 +46,9 @@ A `PickerCategory` is the category's id, name, optional `description` and its
   heading — the Combobox's `heading` on each row — the groups and the names
   both alphabetical by `localeCompare`. No code names a group, so one an
   admin adds is a heading without a change here. A category's description
-  reads beneath its row.
+  reads beneath its row, and each row is marked by a bar in its group's
+  colour, the Combobox option's `colors` (the owner's call, M5.6b), so the colour
+  a pick's chip will wear is seen before the pick.
 - **An entry's colour is its group's row.** Each pick is a `ComboboxEntry`
   given its group as `colors`, so it wears the row's `colorDark` and
   `colorLight` through `chipColors` as a solid fill (claude-docs/styling.md,
@@ -84,7 +86,7 @@ screen scrolls nothing sideways.
 every category under its group, both alphabetical, with a novel group; the
 rows narrowed by the text and no typed row; a pick added after the others,
 the box emptied, said, and the pick offered no more; the picks reported in
-order; each entry in its group's colour pair, its tooltip naming the group
+order; each row and each entry in its group's colour pair, its tooltip naming the group
 then the description; an x, the
 focus kept in the box; Backspace; Clear, shown only with picks; Enter adding
 the one category named whole and nothing for part of a name; the box and the
