@@ -28,9 +28,10 @@ X sharing no member is what makes a cross-workspace denial test say something.
 
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the
-flag comes to be true — an invitation was accepted. E is seeded `false`: E has
-never been invited, and creates workspaces by being an admin instead. Seeding E
-`true` would erase exactly the distinction M6.7's gate turns on.
+flag comes to be true — an invitation was accepted. E has never been invited,
+and holds the flag by being an admin: E is seeded `true`, since MB.177's CHECK
+refuses an admin without the flag and M6.7's gate reads the flag alone
+([`mb.177-admins-hold-workspace-creation.md`](../design-decisions/mb.177-admins-hold-workspace-creation.md)).
 
 **E has one `bootstrap` row in `admin_role_changes`**, stamped as E, as MB.58's
 migration writes one for every admin a database already holds: the template is

@@ -151,6 +151,8 @@ describe('listUsers', () => {
 
     expect(awaiting).toHaveLength(count);
     expect(awaiting.every((entry) => !entry.node.canCreateWorkspace)).toBe(true);
+    // Every admin holds the flag (MB.177), so none waits on an approval.
+    expect(awaiting.some((entry) => entry.node.role === 'admin')).toBe(false);
     expect(await names({ awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
     ]);

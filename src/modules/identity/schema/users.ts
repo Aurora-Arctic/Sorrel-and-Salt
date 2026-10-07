@@ -57,6 +57,14 @@ export const users = pgTable(
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
+    // The flag is what lets anyone create a workspace, admins included, so every
+    // admin holds it and the gate never reads `role` beside it. Not partial: it
+    // states a fact about the row, deleted or not
+    // (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+    check(
+      'users_admin_can_create_workspace',
+      sql`${table.role} <> 'admin' or ${table.canCreateWorkspace}`,
+    ),
     // The provisional-account sweep's two halves, the window and the cap, run
     // on every OAuth callback and almost always empty: only unverified rows are
     // in them (claude-docs/auth/admin-bootstrap.md, "Provisional accounts").
