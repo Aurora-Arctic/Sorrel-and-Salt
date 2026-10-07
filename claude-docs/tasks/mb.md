@@ -182,6 +182,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.176 | Bug reports                                                                                    | Wave 15 | M11.8                  |
 | MB.177 | Every admin holds `canCreateWorkspace`                                                         | Wave 8  | M5.8, M6.7             |
 | MB.178 | Search and filter the admin categories list                                                    | Wave 8  | —                      |
+| MB.179 | Keep the test suite inside Postgres's connection limit                                         | Wave 8  | —                      |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3359,3 +3360,16 @@ _Acceptance criteria:_
 - `categories(query:, groupId:)` filters its edges and `totalCount`; a `groupId` that is not a uuid returns an empty page, not an error
 - Filter is offered only when the form differs from the page's filter, and a filtered list with no rows says no category matches
 - The user list's wildcard escaping reads the shared helper, its tests unchanged
+
+**MB.179 — Keep the test suite inside Postgres's connection limit** · 2h
+
+_Story:_ As a developer, I want the test suite to pass whenever the code does, so that a red run means a broken change and not a crowded database.
+
+Minted during M5.5, on the owner's call. A `db`-project run can fail tests that pass alone. During M5.5 the OAuth sign-in tests in `tests/db/email-change.test.ts`, `tests/db/email-verification.test.ts` and `tests/modules/identity/services/provisional-accounts.test.ts` failed together, the sign-in start answering 500, and passed one file at a time, on a clean `staging` checkout as on the branch. The cause is Postgres's 100 connections running out — `remaining connection slots are reserved for roles with the SUPERUSER attribute`, under the sign-in's insert into `verifications`. Each worker opens the harness's client (`tests/support/db/database.ts`) and the app's (`src/db/connection.ts`, postgres.js's default pool of 10), and whatever else holds connections at the same moment — another session's run, an e2e server left idle on `sorrel_e2e_*` — takes the rest, so which test fails depends on the room left. Measure what a run holds per worker, then bound it under the limit with room for the e2e servers and one more run: a pool size for tests, a worker cap, a higher `max_connections` in the local Postgres, or a mix, whichever costs least. CI runs one suite alone and has not shown it; the local devcontainer runs several sessions at once.
+
+_Acceptance criteria:_
+
+- The peak connections a full `npm run test:coverage` holds is measured and recorded, per worker and in all
+- A full run holds no more than half of `max_connections`, asserted by a guard that reads the configured pool size and worker count, so a change that raises either fails it
+- The three files above pass together, ten runs in a row, beside an e2e server holding its connections
+- `claude-docs/testing.md` says how many connections a run takes and why the limit holds
