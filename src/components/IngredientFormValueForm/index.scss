@@ -1,0 +1,33 @@
+@use '../../scss/variables' as *;
+
+// Layout only, on the form primitives; no styling past the tokens before the
+// admin section's design review (MB.115). CategoryForm's, under this name.
+.ingredient-form-value-form__actions {
+  flex-wrap: wrap;
+}
+
+// Apart from Save and Cancel, at the far end, so it is not pressed for either.
+.ingredient-form-value-form__delete {
+  margin-left: auto;
+}
+
+.ingredient-form-value-form__confirm {
+  margin-top: space(4);
+}
+
+// The rename note, a `.field__hint`, sits by the buttons it describes:
+// the row's own gap above it, and a closer one between it and Save. Under
+// the form's class, since the primitives are emitted under `body` and would
+// otherwise win on specificity.
+.ingredient-form-value-form .ingredient-form-value-form__note {
+  margin-top: space(4);
+
+  + .modal__actions {
+    margin-top: space(2);
+  }
+}
+
+// Hard against the label, in the error red: it marks what a save will ask for.
+.ingredient-form-value-form__required {
+  color: $secondary;
+}

@@ -2,7 +2,7 @@
 
 `src/components/Pager/` — a paged list's Prev and Next (M5.6), on the
 `.pager` primitive ([`styling.md`](../styling.md), "Buttons"). CategoryList
-and UserList are its first two owners. Every list pages through the M3.6
+and UserList are its first two owners, and IngredientFormValueList its third. Every list pages through the M3.6
 cursor helper (rule 8), so every list that shows its pages shows them here.
 
 ## Props
@@ -30,10 +30,11 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   muted ink, as text rather than a control. The owner reads it as DESIGN.md §7
   computes it for the compendium: page `floor(countBefore / size) + 1` of
   `max(1, ceil(totalCount / size))`, counted from the page's first row.
-  CategoryList passes it, and UserList does not count its rows yet.
+  CategoryList and IngredientFormValueList pass it, and UserList does not
+  count its rows yet.
 - **Named "Prev" and "Next"**, the chevrons `aria-hidden` beside them in
   `.pager__mark` spans.
-- **`soft` is the list's choice.** CategoryList's page guards itself on
+- **`soft` is the list's choice.** CategoryList's page, as the forms', guards itself on
   every render, so a soft navigation is enough, and opening its modal works
   the same way. UserList keeps plain anchors, whose full load also runs the
   admin layout's guard again, as AdminNav does.
