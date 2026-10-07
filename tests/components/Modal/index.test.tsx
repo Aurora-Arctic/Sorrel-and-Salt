@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal from '@/components/Modal';
 
 // A dialog over the page, on the native element's modal mode, which brings
@@ -63,6 +63,171 @@ describe('Modal', () => {
     expect(cancel.defaultPrevented).toBe(true);
     expect(onClose).toHaveBeenCalledTimes(1);
     expect(dialog).toHaveAttribute('open');
+  });
+
+  // The owner's call during M5.5: a click outside closes it, as Escape does.
+  // The backdrop is the dialog's own box to an event, so outside is told by
+  // the point: the dialog stands at 100,100 to 300,300 here, jsdom laying
+  // nothing out.
+  describe('a click outside', () => {
+    const at = (x: number, y: number) => ({ clientX: x, clientY: y });
+    let dialog: HTMLElement;
+    beforeEach(() => {
+      vi.spyOn(HTMLDialogElement.prototype, 'getBoundingClientRect').mockReturnValue(
+        DOMRect.fromRect({ x: 100, y: 100, width: 200, height: 200 }),
+      );
+    });
+    const press = (target: HTMLElement, x: number, y: number) => {
+      fireEvent.mouseDown(target, at(x, y));
+      fireEvent.click(dialog, at(x, y));
+    };
+
+    it('asks its owner to close it when pressed and released on the backdrop', () => {
+      const onClose = renderModal();
+      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      press(dialog, 20, 150);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('stays open for a click on its own padding, inside its box', () => {
+      const onClose = renderModal();
+      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      press(dialog, 110, 110);
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('stays open when a press inside is released outside, a selection dragged out', () => {
+      const onClose = renderModal();
+      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      fireEvent.mouseDown(screen.getByRole('textbox', { name: 'Name' }), at(150, 150));
+      fireEvent.click(dialog, at(20, 150));
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('stays open for a click on its contents', () => {
+      const onClose = renderModal();
+      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+      const field = screen.getByRole('textbox', { name: 'Name' });
+
+      fireEvent.mouseDown(field, at(150, 150));
+      fireEvent.click(field, at(150, 150));
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+  });
+
+  // The owner's call during M5.5: it fades in and out. In is CSS alone. Out
+  // is the modal's: it fades, then asks its owner to close, since the owner's
+  // unmount would take it away at once. jsdom draws no transition, so its end
+  // is fired here, and `matchMedia` is stood in for: jsdom has none.
+  describe('fading out', () => {
+    const motion = (reduced: boolean) =>
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({ matches: reduced && query.includes('reduce') })),
+      );
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.useRealTimers();
+    });
+
+    it('fades before asking its owner to close it', () => {
+      motion(false);
+      const onClose = renderModal();
+      const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      expect(dialog).toHaveClass('is-closing');
+      expect(onClose).not.toHaveBeenCalled();
+      fireEvent.transitionEnd(dialog);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks once, however many ways it was asked to close', () => {
+      motion(false);
+      const onClose = renderModal();
+      const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      fireEvent(dialog, new Event('cancel', { cancelable: true }));
+      fireEvent.transitionEnd(dialog);
+      fireEvent.transitionEnd(dialog);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes all the same if the fade never reports its end', () => {
+      vi.useFakeTimers();
+      motion(false);
+      const onClose = renderModal();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      act(() => vi.advanceTimersByTime(1000));
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes at once under reduced motion', () => {
+      motion(true);
+      const onClose = renderModal();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    // A save or a delete closes it from inside: the content is handed the
+    // modal's own close, so that fades too.
+    it('hands its contents a close that fades as well', () => {
+      motion(false);
+      const onClose = vi.fn();
+      render(
+        <Modal title="Edit Category" onClose={onClose}>
+          {(close) => (
+            <button type="button" onClick={close}>
+              Save Category
+            </button>
+          )}
+        </Modal>,
+      );
+      const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Save Category' }));
+
+      expect(onClose).not.toHaveBeenCalled();
+      fireEvent.transitionEnd(dialog);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // A long form's width (M5.5); the class is the whole of the size, so it is what is asserted.
+  it('widens for a long form only when asked', () => {
+    const { rerender } = render(
+      <Modal title="Add Ingredient" onClose={vi.fn()} size="wide">
+        <p>Body</p>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Add Ingredient' })).toHaveClass(
+      'modal-dialog--wide',
+    );
+
+    rerender(
+      <Modal title="Add Ingredient" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Add Ingredient' })).not.toHaveClass(
+      'modal-dialog--wide',
+    );
   });
 
   it('closes the element when it unmounts', () => {
