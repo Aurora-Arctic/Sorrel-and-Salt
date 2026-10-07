@@ -18,6 +18,12 @@ type Documents = {
     "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryDocument,
     "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": typeof types.DeleteCategoryDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
+    "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
+    "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
+    "\n  mutation DeleteCategoryGroup($id: ID!, $moveTo: ID) {\n    deleteCategoryGroup(id: $id, moveTo: $moveTo)\n  }\n": typeof types.DeleteCategoryGroupDocument,
+    "\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateIngredientFormGroupDocument,
+    "\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateIngredientFormGroupDocument,
+    "\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n": typeof types.DeleteIngredientFormGroupDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
@@ -48,6 +54,12 @@ const documents: Documents = {
     "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryDocument,
     "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": types.DeleteCategoryDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
+    "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
+    "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
+    "\n  mutation DeleteCategoryGroup($id: ID!, $moveTo: ID) {\n    deleteCategoryGroup(id: $id, moveTo: $moveTo)\n  }\n": types.DeleteCategoryGroupDocument,
+    "\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateIngredientFormGroupDocument,
+    "\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateIngredientFormGroupDocument,
+    "\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n": types.DeleteIngredientFormGroupDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
@@ -104,6 +116,30 @@ export function graphql(source: "\n  mutation DeleteCategory($id: ID!) {\n    de
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n"): (typeof documents)["\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteCategoryGroup($id: ID!, $moveTo: ID) {\n    deleteCategoryGroup(id: $id, moveTo: $moveTo)\n  }\n"): (typeof documents)["\n  mutation DeleteCategoryGroup($id: ID!, $moveTo: ID) {\n    deleteCategoryGroup(id: $id, moveTo: $moveTo)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n"): (typeof documents)["\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

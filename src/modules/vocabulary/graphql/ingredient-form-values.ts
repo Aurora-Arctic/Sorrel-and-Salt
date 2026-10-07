@@ -4,10 +4,10 @@ import {
   countIngredientFormValues,
   createIngredientFormValue,
   deleteIngredientFormValue,
-  listIngredientFormGroups,
   listIngredientFormValues,
   updateIngredientFormValue,
 } from '../services/ingredient-form-values';
+import { listIngredientFormGroups } from '../services/ingredient-form-groups';
 import type {
   IngredientFormGroupRow,
   IngredientFormValueFilter,
