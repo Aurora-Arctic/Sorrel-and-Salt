@@ -6,6 +6,7 @@ import {
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
 import { RowId } from '../../../lib/validation';
+import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
   DeityFields,
@@ -98,14 +99,15 @@ const deity = z.object({ deityId: optionalText, name: optionalText });
 
 /**
  * A reference the ingredient cites (DESIGN.md §7): an existing reference's id,
- * trimmed, and its locator, blank as none. The id is required, as
+ * trimmed, and its locator, blank as none — every place the source is cited
+ * at, in one, tidied and its ranges dashed as the form shows it (MB.154). The id is required, as
  * `ReferenceLinkInput`'s `ID!` is; a blank one is refused by `referenceRules`
  * rather than dropped, as a blank substitute is, so a service's refusal counts
  * the entries the caller sent.
  */
 const referenceLink = z.object({
   referenceId: z.string({ error: 'Choose a source' }).trim(),
-  locator: optionalText,
+  locator: optionalText.transform((value) => (value == null ? value : formatLocator(value))),
 });
 
 /**
