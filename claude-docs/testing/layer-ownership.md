@@ -88,6 +88,25 @@ A file over the budget is split along the owning layer above, not argued for:
 render the smaller component, seed once per file instead of per test, move the
 rule to the layer that owns it. The budget is not raised.
 
+Two files stand over it by the owner's decision, and the ⚠ on them is expected:
+
+- `tests/components/IngredientForm/index.test.tsx`, whose 55 tests are what
+  needs the whole 25-field form — the save payload, kind↔name coupling, error
+  routing, the save flow, one wiring test per lookup — after MB.181 moved
+  everything else onto the components. Splitting it into two whole-form files
+  would shorten the wall clock and not the summed time, which was judged not
+  worth a second file to keep in step.
+- `tests/modules/ingredients/services/common-names-plan.test.ts`, whose time is
+  the 80,000-row seed its plan is read over. The row count is what makes the
+  planner choose the trigram indexes (`claude-docs/db/fuzzy-matching.md`), and
+  plan tests keep their row counts (MB.184).
+
+CI's figures come from a free GitHub-hosted runner, shared and unpinned, so a
+single run's block is a reading, not a measurement: one tree ran 64 s and
+110 s of wall, and `index.test.tsx` 13 s and 30 s (MB.189). Compare medians of
+several runs, and read a file against its own run's total. Nothing in the repo
+removes the variance while the runners stay free.
+
 ## What this amends
 
 The doctrine change — "each refusal is asserted as the browser receives it"

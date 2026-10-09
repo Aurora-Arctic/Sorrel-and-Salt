@@ -3421,6 +3421,8 @@ _Acceptance criteria:_
 - Per-file coverage of `src/components/IngredientForm/**` and `src/components/Combobox/**` not below the previous run
 - The two component docs describe the files as they now are
 
+_Not met, and why:_ `index.test.tsx` ran 13.2 s, 29.8 s and 24.9 s in three istanbul CI runs (median 24.9 s, from 82.7 s at the baseline). It stands over the budget by the owner's decision, its remaining tests being the ones that need the whole form ([`layer-ownership.md`](../testing/layer-ownership.md), "The file budget").
+
 **MB.182 — The reference panel and compendium mode on their own harness** · 1.5h
 
 _Story:_ As a developer, I want the reference panel tested on the panel alone and the compendium-mode file to hold only what is about the mode, so that no dom file renders the whole form for what a part of it answers.
@@ -3528,6 +3530,8 @@ _Acceptance criteria:_
 - No file over 10 s in CI's slowest-files block
 - Summed worker time under 140 s and vitest wall under 45 s, recorded in the PR body
 - The page docs name what each page test keeps
+
+_Not met, and why:_ the median of three istanbul CI runs (#735, #737, #739) is 73.5 s of wall and 187.6 s summed, with two files over 10 s, against 114.2 s and 215.4 s at the baseline, read the same way from the job log. The two files over the budget stand by the owner's decision ([`layer-ownership.md`](../testing/layer-ownership.md), "The file budget"). The rest of the gap is the free runners' variance, one tree having run 64 s and 110 s, and the suite's growth from 248 files to 282 meanwhile. The criteria are left as written and recorded as unmet, on the owner's call, rather than restated to the result.
 
 **MB.190 — Release and main-sync PRs skip the gate's checks** · 1.5h
 
