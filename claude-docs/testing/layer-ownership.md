@@ -39,7 +39,10 @@ The PR body carries a two-column table, _deleted test_ → _owning test
 checks that nothing was merely dropped, and the owner column cites the table
 above. Per-file coverage of the touched `src/` directories is compared against
 the previous run's `.reports/coverage/coverage-summary.json` too: the 80 %
-threshold alone would let a file lose its only test.
+threshold alone would let a file lose its only test. The previous run must be
+under the same provider: istanbul and v8 count statements and branches
+differently, so a figure from before MB.191's switch is not a baseline
+([`mb.191-coverage-provider.md`](../design-decisions/mb.191-coverage-provider.md)).
 
 Never deleted, whatever the table says:
 
@@ -77,7 +80,9 @@ Why 10 s: on an 8-vCPU runner the suite's summed time divided by its seven
 workers is the floor for the wall clock, and one file over the budget is the
 wall clock whatever the worker count, because a file is never split across
 workers. When the budget was set the summed time was 215 s, the longest file
-82.7 s, and the wall 114 s — so the wall was the file, not the suite.
+82.7 s, and the wall 114 s — so the wall was the file, not the suite. Those
+were v8 coverage figures; the run has been timed under istanbul since MB.191,
+which takes the instrumentation out of most of a dom file's time.
 
 A file over the budget is split along the owning layer above, not argued for:
 render the smaller component, seed once per file instead of per test, move the
