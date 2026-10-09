@@ -500,7 +500,8 @@ closing the list or reaching the form; Backspace and Delete handed to `onRemoveL
 text; a box with no source never opening; the status region; the chevron,
 the clear and the entries inside the control; two rows reading alike told
 apart by their keys; and the select-only box, its name, placeholder, list
-and choices, "None" among them; and the multi-select box, its name and
+and choices, "None" among them, its control the suggesting box's, focusable
+and with its chevron, and no native select; and the multi-select box, its name and
 placeholder, chips inside the control in the order chosen, the list
 offering only what is left and staying open, the arrows, Enter, Space and
 Escape, Backspace taking the last, an × and the clear, a press on the
@@ -517,8 +518,10 @@ a row to the nearest place, Left from a row's start onto the row above and
 back, Home and End to either end, nothing past either end or row, and the
 chips laid out while one is held as the row would lay them, with no
 overlap or gap; a list that is not
-sortable has no handle. `IngredientForm`'s test drives the select by the keyboard. Role and label queries only,
-in the `dom` project.
+sortable has no handle; and the select-only box chosen by the keyboard, the
+arrows opening and moving, Enter choosing and Escape closing on what it had.
+That test and the control's were `IngredientForm`'s until MB.181 moved them
+here, the only ones of `ComboboxSelect`'s keyboard and of its control. Role and label queries only, in the `dom` project.
 
 jsdom lays nothing out, and dnd-kit finds where a chip may go from each
 chip's box, so `tests/support/sortable.ts` gives every chip one, on one

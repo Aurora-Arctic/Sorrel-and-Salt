@@ -1330,6 +1330,18 @@ describe('Combobox', () => {
       expect(element()).toHaveAttribute('aria-expanded', 'false');
     });
 
+    // The owner's call during MB.131: a closed set wears the suggesting
+    // box's control and list, with nothing to type.
+    it("draws the suggesting box's control, focusable, with its chevron, and no native select", () => {
+      render(<SelectHarness />);
+
+      expect(element().tagName).not.toBe('SELECT');
+      expect(element()).toHaveClass('combobox__control');
+      expect(element()).toHaveAttribute('aria-expanded', 'false');
+      expect(element()).toHaveAttribute('tabindex', '0');
+      expect(element().querySelector('svg')).toBeInTheDocument();
+    });
+
     it('chooses None, the choice whose value is blank, like any other', () => {
       render(<SelectHarness placeholder="Choose an element" />);
 
@@ -1338,6 +1350,29 @@ describe('Combobox', () => {
 
       expect(element()).toHaveTextContent('None');
       expect(element()).not.toHaveTextContent('Choose an element');
+    });
+
+    it('chooses by the keyboard: the arrows open and move, Enter chooses, Escape closes', () => {
+      render(<SelectHarness placeholder="Choose an element" />);
+      act(() => element().focus());
+
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      expect(element()).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      expect(element()).toHaveAttribute(
+        'aria-activedescendant',
+        screen.getByRole('option', { name: 'Earth' }).id,
+      );
+      fireEvent.keyDown(element(), { key: 'Enter' });
+      expect(element()).toHaveAttribute('aria-expanded', 'false');
+      expect(element()).toHaveTextContent('Earth');
+
+      // Escape closes without choosing what the arrows reached.
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      fireEvent.keyDown(element(), { key: 'ArrowDown' });
+      fireEvent.keyDown(element(), { key: 'Escape' });
+      expect(element()).toHaveAttribute('aria-expanded', 'false');
+      expect(element()).toHaveTextContent('Earth');
     });
 
     // A regression (M5.6): the list sat in the flow, so opening it in a
