@@ -178,6 +178,16 @@ describe('CategoryPicker', () => {
     expect(entry('Ablefix')).toHaveTextContent(/^Ablefix/);
   });
 
+  it("edges each row in its group's stored colour pair", () => {
+    renderPicker();
+
+    open();
+    expect(option('Ablefix')).toHaveClass('combobox__option', 'is-coloured');
+    expect(option('Ablefix').style.getPropertyValue('--chip-dark')).toBe('#8e7bd1');
+    expect(option('Ablefix').style.getPropertyValue('--chip-light')).toBe('#5a3fa8');
+    expect(option('Testward').style.getPropertyValue('--chip-dark')).toBe('#4e8bc2');
+  });
+
   it('takes an entry out by its x, keeps the focus in the box, and says so', () => {
     renderControlled(['c-ab', 'c-tw']);
 

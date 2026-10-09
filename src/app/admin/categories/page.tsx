@@ -59,10 +59,17 @@ const readCategories = cache(
 );
 
 // Every group on one page of the maximum: eight are seeded, and an admin adds
-// a group rarely (MB.35). The modal picks a group by id, the filter by slug.
+// a group rarely (MB.35). The modal picks a group by id, the filter by slug,
+// and the list draws each in its chip.
 const readGroups = cache(async () => {
   const page = await resolvePage({ first: MAX_PAGE_SIZE }, listCategoryGroups);
-  return page.edges.map(({ node }) => ({ id: node.id, slug: node.slug, name: node.name }));
+  return page.edges.map(({ node }) => ({
+    id: node.id,
+    slug: node.slug,
+    name: node.name,
+    colorDark: node.colorDark,
+    colorLight: node.colorLight,
+  }));
 });
 
 /**
@@ -116,13 +123,14 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
   // Only a group that exists is kept, so an unknown slug leaves every link.
   const filter = { query, group: group?.slug ?? '' };
   const here = { ...filter, after, before };
-  const groupNames = new Map(groups.map((each) => [each.id, each.name]));
+  const groupsById = new Map(groups.map((each) => [each.id, each]));
   const categories = page.edges.map(({ node }): CategoryListEntry => ({
     id: node.id,
     name: node.name,
     slug: node.slug,
     description: node.description,
-    groupName: groupNames.get(node.groupId) ?? '',
+    groupName: groupsById.get(node.groupId)?.name ?? '',
+    groupColors: groupsById.get(node.groupId),
     editHref: categoriesHref(here, { edit: node.slug }),
   }));
   const closeHref = categoriesHref(here);

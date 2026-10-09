@@ -7,14 +7,15 @@ import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES, seedCategories } from '@/db/seed/categories';
-import { CATEGORY_GROUPS, SASS_TOKEN_BY_GROUP_NAME } from '@/db/seed/category-groups';
+import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
+import { toHsl } from '@/lib/group-colors';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types';
 
 // §6's eight groups and every category, asserted against their sources rather
-// than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
-// resolved by compiling `category-group-color()`, the contrast floor recomputed
-// from the seeded hex. Against the real tables, emptied first —
+// than copies: the vocabulary parsed from DESIGN.md §6's table, the rotation
+// turned from `$sorrel` as the stylesheet compiles it, the contrast floor
+// recomputed from the seeded hex. Against the real tables, emptied first —
 // claude-docs/db/category-seed.md, "The category seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
@@ -56,39 +57,37 @@ function designSlug(designName: string): string {
   return slugify(designName);
 }
 
-// --- M0.7, resolved ---------------------------------------------------------
+// --- M0.7's rotation, resolved ---------------------------------------------
 
-function resolveSassTokenColors(): Record<string, { dark: string; light: string }> {
+// The eight hues sit on the odd multiples of 22.5° off `$sorrel`, so none lands
+// on the accent or secondary hue. The owner tuned each pair by hand, so a hue
+// may drift off its step, but by no more than ROTATION_TOLERANCE. The widest
+// drift is Love & Connection's dark colour, at 1.04°.
+const ROTATION_STEP = 22.5;
+const ROTATION_TOLERANCE = 2;
+const ODD_STEPS = [1, 3, 5, 7, 9, 11, 13, 15];
+
+function sorrelHue(): number {
   const css = sassCompiler.compileString(
-    `@use 'sass:map';
+    `@use 'sass:color';
      @use 'variables' as v;
-     .probe {
-       @each $slug, $spec in v.$category-groups {
-         --#{$slug}-dark: #{v.category-group-color($slug, dark)};
-         --#{$slug}-light: #{v.category-group-color($slug, light)};
-       }
-     }`,
-    { style: 'expanded', loadPaths: [SCSS_DIR] },
+     .probe { --hue: #{color.channel(v.$sorrel, 'hue', $space: hsl)}; }`,
+    { loadPaths: [SCSS_DIR] },
   ).css;
-
-  const resolved: Record<string, { dark: string; light: string }> = {};
-  for (const line of css.split('\n')) {
-    const match = line.match(
-      /--([a-z-]+)-(dark|light): (?:rgb\(([\d.]+)%, ([\d.]+)%, ([\d.]+)%\)|(#[0-9a-f]{6}))/,
-    );
-    if (!match) continue;
-    const [, key, theme, r, g, b, hex] = match;
-    const value = hex ?? toHex([Number(r), Number(g), Number(b)]);
-    resolved[key] = { ...(resolved[key] ?? { dark: '', light: '' }), [theme]: value };
-  }
-  return resolved;
+  return parseFloat(css.match(/--hue: ([\d.]+)/)![1]);
 }
 
-function toHex(percentages: number[]): string {
-  return `#${percentages
-    .map((p) => Math.round((p / 100) * 255))
-    .map((c) => c.toString(16).padStart(2, '0'))
-    .join('')}`;
+const SORREL_HUE = sorrelHue();
+
+/** How far a hex's hue sits from the odd step `step`, the short way round, in degrees. */
+function offStep(hex: string, step: number): number {
+  const gap = Math.abs(toHsl(hex)[0] - ((SORREL_HUE + step * ROTATION_STEP) % 360));
+  return Math.min(gap, 360 - gap);
+}
+
+/** The odd step nearest a hex's hue. */
+function nearestStep(hex: string): number {
+  return ODD_STEPS.reduce((best, step) => (offStep(hex, step) < offStep(hex, best) ? step : best));
 }
 
 // WCAG 2.1 contrast, recomputed from the stored hex.
@@ -103,8 +102,6 @@ function contrastRatio(a: string, b: string): number {
   const [lighter, darker] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
   return (lighter + 0.05) / (darker + 0.05);
 }
-
-const SASS_TOKEN_COLORS = resolveSassTokenColors();
 
 // --- database ---------------------------------------------------------------
 
@@ -180,26 +177,26 @@ describe('the seed data matches DESIGN.md §6', () => {
   });
 });
 
-describe('the colours carry M0.7’s tuning across into data', () => {
-  it('maps each §6 group onto exactly one M0.7 token, and each token onto one group', () => {
-    expect(Object.keys(SASS_TOKEN_BY_GROUP_NAME).sort()).toEqual(
-      CATEGORY_GROUPS.map((g) => g.name).sort(),
-    );
-    expect(Object.values(SASS_TOKEN_BY_GROUP_NAME).sort()).toEqual(
-      Object.keys(SASS_TOKEN_COLORS).sort(),
+describe('the colours keep M0.7’s rotation and clear the floor', () => {
+  // Precondition: the hue really was compiled, or every step would measure off 0°.
+  it('turns the rotation from the stylesheet’s own `$sorrel`', () => {
+    expect(SORREL_HUE).toBeGreaterThan(90);
+    expect(SORREL_HUE).toBeLessThan(100);
+  });
+
+  it('puts each of the eight groups on its own odd step', () => {
+    expect(CATEGORY_GROUPS.map((g) => nearestStep(g.colorDark)).sort((a, b) => a - b)).toEqual(
+      ODD_STEPS,
     );
   });
 
-  it.each(CATEGORY_GROUPS.map((g) => g.name))(
-    '%s carries both hexes resolved from its M0.7 token',
-    (name) => {
-      const group = CATEGORY_GROUPS.find((g) => g.name === name)!;
-      const token = SASS_TOKEN_COLORS[SASS_TOKEN_BY_GROUP_NAME[name]];
+  it.each(CATEGORY_GROUPS.map((g) => g.name))('%s keeps both hexes on its step', (name) => {
+    const group = CATEGORY_GROUPS.find((g) => g.name === name)!;
+    const step = nearestStep(group.colorDark);
 
-      expect(group.colorDark).toBe(token.dark);
-      expect(group.colorLight).toBe(token.light);
-    },
-  );
+    expect(offStep(group.colorDark, step)).toBeLessThanOrEqual(ROTATION_TOLERANCE);
+    expect(offStep(group.colorLight, step)).toBeLessThanOrEqual(ROTATION_TOLERANCE);
+  });
 
   it.each(CATEGORY_GROUPS.map((g) => g.name))('%s clears 4.5:1 on both grounds', (name) => {
     const group = CATEGORY_GROUPS.find((g) => g.name === name)!;

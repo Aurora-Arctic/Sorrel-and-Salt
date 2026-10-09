@@ -69,6 +69,16 @@
     // the button does not sit on the box's edge.
     padding-bottom: space(4);
   }
+
+  // The warning's text tight to the box's top, and its triangle set to that
+  // first line, which runs at the body's taller line height (the owner's call).
+  .notice--warn p {
+    margin-top: 0;
+  }
+
+  .notice--warn::before {
+    inset-block-start: 1rem;
+  }
 }
 
 // The references (MB.154): rows beneath the search box rather than chips

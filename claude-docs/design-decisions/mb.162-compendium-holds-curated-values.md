@@ -65,6 +65,10 @@ renamed a row an entry holds. The owner chose, for each:
 error naming the entries, and the admin edits them first. So is deleting a
 form group or deity tradition with such a row under it, since a form under a
 deleted group, or a deity under a deleted tradition, is no longer curated.
+Amended by M5.6b for form groups: deleting one first moves its forms to
+another live group the admin picks, so they stay curated and the delete is
+not refused for the compendium; deity traditions are unchanged
+([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)).
 Weighed:
 
 - _Strip the value from those entries in the same write._ The rule holds, but

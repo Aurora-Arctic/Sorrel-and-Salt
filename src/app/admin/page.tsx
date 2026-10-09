@@ -13,7 +13,8 @@ export default async function AdminPage() {
       <h1>Admin</h1>
       <p>
         The shared reference every coven reads from: the compendium, its categories, and the
-        vocabularies of forms, planets and zodiac signs.
+        vocabularies of forms, planets and zodiac signs, with the groups that organise categories
+        and forms.
       </p>
     </main>
   );

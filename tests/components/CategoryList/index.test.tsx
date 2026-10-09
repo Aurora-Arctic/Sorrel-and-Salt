@@ -20,6 +20,7 @@ const ENTRIES: CategoryListEntry[] = [
     slug: 'testcraft',
     description: 'An invented category',
     groupName: 'Fixture Protection',
+    groupColors: { colorDark: '#5d8ab1', colorLight: '#286ba6' },
     editHref: categoriesHref({}, { edit: 'testcraft' }),
   },
   {
@@ -53,6 +54,16 @@ describe('CategoryList', () => {
     expect(within(rows[1]).getByRole('cell', { name: 'Testcraft' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'Fixture Protection' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'An invented category' })).toBeInTheDocument();
+  });
+
+  // The owner's call: the group as the reader meets it, in its own chip.
+  it("draws a group in its chip, wearing the group's pair, and plain where it has none", () => {
+    render(<CategoryList {...props()} />);
+
+    const chip = screen.getByText('Fixture Protection', { selector: '.chip' });
+    expect(chip.style.getPropertyValue('--chip-dark')).toBe('#5d8ab1');
+    expect(chip.style.getPropertyValue('--chip-light')).toBe('#286ba6');
+    expect(screen.getByRole('cell', { name: 'Fixture Healing' }).querySelector('.chip')).toBeNull();
   });
 
   it('links each row to its edit modal, named for the category', () => {

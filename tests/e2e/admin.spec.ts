@@ -53,7 +53,9 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
   for (const [name, href] of [
     ['Compendium', '/admin/compendium'],
     ['Categories', '/admin/categories'],
+    ['Category groups', '/admin/category-groups'],
     ['Forms', '/admin/forms'],
+    ['Form groups', '/admin/form-groups'],
     ['Planets', '/admin/planets'],
     ['Zodiac signs', '/admin/zodiac-signs'],
   ]) {
@@ -480,4 +482,115 @@ test('an admin is told which compendium entries list a planet before it can go',
   // Still live: its address still opens it.
   await page.goto('/admin/planets?edit=sun');
   await expect(editing).toBeVisible();
+});
+
+test('a signed-in non-admin is refused at both group pages with the 403 page', async ({ page }) => {
+  await signInAs(page, 'not-an-admin@admin-groups.test');
+
+  for (const path of ['/admin/category-groups?new', '/admin/form-groups?new']) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(403);
+    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+});
+
+// M5.6b: a category group's colours held to 4.5:1 on their own grounds, and a
+// group deleted only once its categories have moved to one the admin picks.
+test('an admin adds a category group, is refused a colour too dark for its ground, and moves its category before deleting it', async ({
+  page,
+}) => {
+  await signInAs(page, 'an-admin@admin-groups.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/category-groups');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Category Groups — Admin — Sorrel & Salt');
+  // The seeded eight, each drawn in its own chip.
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(9);
+
+  await page.getByRole('link', { name: 'Add Group' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Category Group' });
+  await expect(page).toHaveURL(/\/admin\/category-groups\?new$/);
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Wards');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  // A light-theme ink, far too dark for the dark card.
+  const dark = adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true });
+  await dark.fill('#0c5393');
+  await adding.getByRole('textbox', { name: 'Light Theme Colour', exact: true }).fill('#0c5393');
+  await adding.getByRole('button', { name: 'Save Group' }).click();
+  await expect(dark).toHaveAccessibleDescription(
+    /The dark theme colour reads 2\.16:1 on the dark card — it needs at least 4\.5:1/,
+  );
+  await dark.fill('#4e8bc2');
+  await expect(adding.getByText('4.68:1 on the dark card')).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Group' }).click();
+  await expect(adding).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testwort Wards/ })).toBeVisible();
+
+  // A category filed under it, so the delete has something to move.
+  await page.goto('/admin/categories?new');
+  const category = page.getByRole('dialog', { name: 'Add Category' });
+  await category.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Moved');
+  await category.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await category.getByRole('combobox', { name: 'Group' }).click();
+  await category.getByRole('option', { name: 'Aaa Testwort Wards' }).click();
+  await category.getByRole('button', { name: 'Save Category' }).click();
+  await expect(category).toHaveCount(0);
+
+  await page.goto('/admin/category-groups?edit=aaa-testwort-wards');
+  const editing = page.getByRole('dialog', { name: 'Edit Category Group' });
+  await editing.getByRole('button', { name: 'Delete Group' }).click();
+  await editing.getByRole('combobox', { name: 'Move its 1 category to' }).click();
+  await editing.getByRole('option', { name: 'Cleansing & Release' }).click();
+  await editing.getByRole('button', { name: 'Continue' }).click();
+  await expect(
+    editing.getByText(
+      /^Move 1 category to "Cleansing & Release" and delete "Aaa Testwort Wards"\?/,
+    ),
+  ).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Move and Delete' }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Testwort Wards/ })).toHaveCount(0);
+
+  await page.goto('/admin/categories?query=Aaa+Testcraft+Moved');
+  await expect(
+    page
+      .getByRole('row', { name: /Aaa Testcraft Moved/ })
+      .getByRole('cell', { name: 'Cleansing & Release' }),
+  ).toBeVisible();
+});
+
+test('an admin adds, renames and deletes a form group', async ({ page }) => {
+  await signInAs(page, 'form-admin@admin-groups.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/form-groups?new');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Form Groups — Admin — Sorrel & Salt');
+  const adding = page.getByRole('dialog', { name: 'Add Form Group' });
+  await expect(adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true })).toHaveCount(
+    0,
+  );
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Matter');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Group' }).click();
+  await expect(adding).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Edit Aaa Fixture Matter' }).click();
+  const editing = page.getByRole('dialog', { name: 'Edit Form Group' });
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
+  await editing.getByRole('button', { name: 'Save Group' }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Fixture Stuff/ })).toBeVisible();
+
+  await page.goto('/admin/form-groups?edit=aaa-fixture-stuff');
+  await editing.getByRole('button', { name: 'Delete Group' }).click();
+  await expect(
+    editing.getByText('Delete "Aaa Fixture Stuff"? No form is filed under it.'),
+  ).toBeVisible();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
 });

@@ -368,12 +368,18 @@ export default function Foundations(): ReactElement {
 
       <section id="fd-notices">
         <SectionHead eyebrow="_primitives.scss · .notice" title="Notices">
-          A sentence about the whole view rather than one field — a form’s root error, a sent
-          confirmation. The role is the markup’s: an <code>alert</code> for an error that arrived
-          late, an <code>&lt;output&gt;</code> for news of success.
+          A sentence about the whole view rather than one field — a form’s root error, a warning, a
+          sent confirmation. An error and a warning lead with a triangle: the error’s red
+          throughout, the warning’s plain box with the triangle alone in red, for what needs
+          attention but does not block. The role is the markup’s: an <code>alert</code> for an error
+          that arrived late, an <code>&lt;output&gt;</code> for news.
         </SectionHead>
         <div className="panel fd-notices">
           <p className="notice notice--error">That link has expired. Send a new one below.</p>
+          <p className="notice notice--warn">
+            Close to the dark theme colour of “Testwort Wards”, so their chips may be hard to tell
+            apart.
+          </p>
           <p className="notice notice--success">
             We’ve sent a link to ada@example.test. Open it in this browser within an hour.
           </p>
