@@ -196,6 +196,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.190 | ~~Release and main-sync PRs skip the gate's checks~~ — **retired, not done**                   | —       | —                      |
 | MB.191 | The coverage provider chosen by measurement, istanbul against v8                               | Wave 8  | —                      |
 | MB.192 | A reseed of standard puts a deleted deity pick back at the end of its list                     | Wave 8  | —                      |
+| MB.193 | The workspace creation ledger (schema)                                                         | Wave 8  | M5.8                   |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -1494,12 +1495,13 @@ _Story:_ As a site admin, I want to make another user an admin, or stop one bein
 
 This is the behaviour half of M2.9. It builds on MB.58's table and MB.60's primary admin, and adds a control to MB.52's `/admin/users` next to the one M5.8 puts on the same row. The decision, and the approaches it rejected, are in [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
 
-A `setUserRole` service sits behind an admin-only GraphQL mutation, writes through `withAudit`, and appends a ledger row in the same transaction. Any admin may grant admin to any live user, verified or not, and confirming who they are from MB.52's list is the granting admin's job; a grant also sets `canCreateWorkspace`, as MB.177's CHECK requires of every admin, and a revoke leaves it. Any admin may revoke any other admin, themselves included, **except the primary admin** — the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL` when the check runs — whom no one can revoke. **A count guards the gap** a change of the variable opens: the service also refuses any revoke that would leave zero live admins, counting under a `for update` lock on the live admin rows. MB.60's sign-in promotion and MB.68's verification promotion call this same service with the user's own session, so each `bootstrap` row is written through `withAudit`, and the `standard` seed writes one for fixture E. Why each rule is what it is: the record's "The primary admin", "Granting" and "Revoking".
+A `setUserRole` service sits behind an admin-only GraphQL mutation, writes through `withAudit`, and appends a ledger row in the same transaction. Any admin may grant admin to any live user, verified or not, and confirming who they are from MB.52's list is the granting admin's job; a grant also sets `canCreateWorkspace`, as MB.177's CHECK requires of every admin, and a revoke leaves it. A grant that turns the flag on also appends an `admin` row to MB.193's `workspace_creation_changes`, in the same transaction (amended by M5.8, [`design-decisions/m5.8-revoking-workspace-creation.md`](../design-decisions/m5.8-revoking-workspace-creation.md)). Any admin may revoke any other admin, themselves included, **except the primary admin** — the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL` when the check runs — whom no one can revoke. **A count guards the gap** a change of the variable opens: the service also refuses any revoke that would leave zero live admins, counting under a `for update` lock on the live admin rows. MB.60's sign-in promotion and MB.68's verification promotion call this same service with the user's own session, so each `bootstrap` row is written through `withAudit`, and the `standard` seed writes one for fixture E. Why each rule is what it is: the record's "The primary admin", "Granting" and "Revoking".
 
 _Acceptance criteria:_
 
 - An admin can grant admin to a user and revoke it from `/admin/users`, with a confirmation that names the user. Granting does not require the grantee's email to be verified
 - Each change appends one ledger row naming the subject, the direction, the actor (taken from the session) and the time. A request body cannot set the actor
+- A grant to a user without `canCreateWorkspace` also appends one `admin` row to `workspace_creation_changes` in the same transaction, and a grant to one who holds it appends none (amended by M5.8)
 - Granting admin to someone who is already an admin, or revoking it from someone who isn't, is refused with a message and writes no ledger row
 - Revoking the primary admin is refused for every caller, the primary admin included, with an explaining `Forbidden` in plain language that names no variable. The test asserts the target is a live admin who could otherwise have been revoked
 - Revoking the last live admin is refused with an explaining `Forbidden`, asserted with the primary admin absent from the fixture so the count is what refuses. Two concurrent transactions revoking the only two admins leave exactly one, asserted with real concurrent transactions
@@ -3592,3 +3594,19 @@ _Acceptance criteria:_
 - Removing a deity pick from the middle of a compendium entry's list through the service and reseeding `standard` succeeds, the pick live again at the end of its list, with the precondition that the pick below had taken its position asserted first
 - The seed-shape sweep holds: a second run adds nothing and moves nothing, and the `demo` row still keeps the deletion
 - `db/standard-scenario.md` describes the placement, and its known-limitation paragraph is gone
+
+**MB.193 — The workspace creation ledger (schema)** · 1.5h
+
+_Story:_ As a site admin, I want every change to who may create a coven recorded where a later edit cannot overwrite it, so that "who approved this person, and who revoked them" still has an answer after their row has changed again.
+
+M5.8's table half, minted while building M5.8 on the owner's calls: an admin may revoke the flag as well as grant it, and each change is recorded in a ledger ([`design-decisions/m5.8-revoking-workspace-creation.md`](../design-decisions/m5.8-revoking-workspace-creation.md)). `users.updated_by` is overwritten by the next update to the row — a verified email change, a role grant, Better Auth's own writes — so an approval's provenance would last only until then, the gap M2.9's record left to M5.8. The ledger is MB.58's shape for a second privilege. It is not the v2 edit history.
+
+`workspace_creation_changes`: `id`, `userId` → `users.id`, `change` (`grant` | `revoke` | `invitation` | `admin`, a pgEnum because the set is closed), plus the full `...auditColumns` spread like every non-join table. `created_by` is the actor and `created_at` is when. `grant` and `revoke` are an admin's act on `/admin/users` (M5.8); `invitation` is accepting a workspace invitation, which sets the flag (M7.5); `admin` is being made admin while the flag was off, since a grant sets it in the same write (MB.177, MB.59). Nothing in v1 updates or deletes a row: the writer refuses the table every update and delete, as `NotAppendOnly` does MB.58's. **No backfill**: who set a flag held before the ledger is not known, and a row stamped by guess would be a false record, so a holder with no row predates the ledger.
+
+_Acceptance criteria:_
+
+- Migration creates the table, its enum and its `CREATE OR REPLACE TRIGGER` line for `set_updated_at`, so `updated-at-trigger.test.ts` stays green without an edit
+- The migration only adds, so the destructive-DDL check passes with no sidecar
+- The schema test asserts the columns, the enum values and the foreign key
+- The repository offers an insert and a read for the table and nothing that updates or deletes it, asserted at the type level
+- No row exists after migration, asserted against the seeded template
