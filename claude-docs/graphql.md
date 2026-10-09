@@ -75,6 +75,14 @@ In [`graphql/schema.md`](graphql/schema.md#references-reference-createreference-
 
 In [`graphql/schema.md`](graphql/schema.md#categories-categories-createcategory-updatecategory-and-deletecategory).
 
+### Forms: `ingredientFormGroups` and the three form writes
+
+In [`graphql/schema.md`](graphql/schema.md#forms-ingredientformgroups-and-the-three-form-writes).
+
+### Groups: the category-group and form-group writes
+
+In [`graphql/schema.md`](graphql/schema.md#groups-the-category-group-and-form-group-writes).
+
 ### Auth scopes: the second check
 
 In [`graphql/schema.md`](graphql/schema.md#auth-scopes-the-second-check).

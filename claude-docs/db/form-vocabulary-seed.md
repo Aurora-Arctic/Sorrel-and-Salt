@@ -20,8 +20,8 @@ idempotency keyed on the seed key and **ignoring `deleted_at`** (MB.172), no upd
 anything already present, every slug derived rather than written down — a
 category's by `slugify(name)`, a form's by `formSlug(name, group)` (M5.6a) — and the whole run inside one transaction that publishes
 `app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section
-an autofill dropdown rather than tinting a chip, so there is no Sass map to
-resolve and no contrast floor to clear (§5, MB.35).
+an autofill dropdown rather than tinting a chip, so there is no colour pair to
+write and no contrast floor to clear (§5, MB.35).
 
 **The groups answer "what are you holding", not "how was it made".** Three
 by source — Botanical, Animal, Mineral — for what still has the shape it grew

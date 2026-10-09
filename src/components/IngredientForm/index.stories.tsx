@@ -270,14 +270,14 @@ const SAVE_DELAY_MS = 2000;
  * all, as one page.
  */
 const CATEGORY_GROUPS = [
-  ['Protection & Defense', '#4e8bc2', '#0c5393', ['Testward', 'Fixture Shield']],
-  ['Cleansing & Release', '#35987d', '#097255', ['Rinse Trial', 'Mock Release']],
-  ['Prosperity & Work', '#7b9132', '#576d09', ['Stub Fortune', 'Test Trade']],
-  ['Love & Connection', '#cb6883', '#930c31', ['Mock Bond', 'Fixture Mending']],
-  ['Mind & Spirit', '#8e7bd1', '#2b0c93', ['Test Sight', 'Stub Dream']],
-  ['Wellbeing', '#379835', '#0d770a', ['Fixture Rest', 'Test Ease']],
-  ['Craft & Change', '#c45dc7', '#8f0c93', ['Mock Change', 'Stub Making']],
-  ['Practice & Place', '#b7783f', '#934c0c', ['Test Hearth', 'Fixture Ground']],
+  ['Protection & Defense', '#5d8ab1', '#286ba6', ['Testward', 'Fixture Shield']],
+  ['Cleansing & Release', '#50a58e', '#1d755d', ['Rinse Trial', 'Mock Release']],
+  ['Prosperity & Work', '#86964a', '#606c2f', ['Stub Fortune', 'Test Trade']],
+  ['Love & Connection', '#cf6e87', '#a44c63', ['Mock Bond', 'Fixture Mending']],
+  ['Mind & Spirit', '#8e7bd1', '#6e4ce6', ['Test Sight', 'Stub Dream']],
+  ['Wellbeing', '#559c54', '#326d31', ['Fixture Rest', 'Test Ease']],
+  ['Craft & Change', '#c371c6', '#a13ba5', ['Mock Change', 'Stub Making']],
+  ['Practice & Place', '#b7783f', '#8a5628', ['Test Hearth', 'Fixture Ground']],
 ] as const;
 const CATEGORIES = CATEGORY_GROUPS.flatMap(([name, colorDark, colorLight, categories], group) =>
   categories.map((category, index) => ({

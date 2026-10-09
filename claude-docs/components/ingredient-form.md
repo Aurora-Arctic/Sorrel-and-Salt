@@ -480,7 +480,7 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a plain `.notice`: "Did you mean Cat's
+The warning sits beneath the field, a `.notice--warn`, the plain box with the red triangle: "Did you mean Cat's
 Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?", with a
 Create Anyway button. Each match is a link named by its label and its formal
 name, since the label alone can name five plants; one with no formal name
@@ -495,7 +495,7 @@ form's alone.
 
 **The warning has to be answered before the form saves**, the owner's call,
 which corrects the issue's "does not block submission". While it is only
-typed against, it is a plain notice and the name is not marked. A save that
+typed against, it is a warning notice and the name is not marked. A save that
 passes validation asks about the very name it is sending, through the query
 client's `fetchQuery`: the cached answer when the typing had settled, asked
 there and then when it had not, so a save inside the debounce cannot slip past

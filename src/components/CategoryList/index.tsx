@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { chipColors } from '../../lib/chip-colors';
 import Pager from '../Pager';
 import CategoryListFilter from './filter';
 import type { CategoryListProps } from './types';
@@ -42,7 +43,16 @@ const CategoryList = ({
             {categories.map((category) => (
               <tr key={category.id}>
                 <td>{category.name}</td>
-                <td>{category.groupName}</td>
+                <td>
+                  {/* The group in its own chip, as the category picker shows it. */}
+                  {category.groupColors ? (
+                    <span className="chip" style={chipColors(category.groupColors)}>
+                      {category.groupName}
+                    </span>
+                  ) : (
+                    category.groupName
+                  )}
+                </td>
                 <td className="category-list__description">{category.description}</td>
                 <td>
                   {/* Soft navigation: the page renders again with the modal open. */}

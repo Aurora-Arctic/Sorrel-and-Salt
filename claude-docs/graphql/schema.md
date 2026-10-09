@@ -714,6 +714,44 @@ from one table of names, so the two cannot drift.
 `tests/modules/vocabulary/graphql/astrology.test.ts` runs both lists and the
 six writes through Yoga.
 
+### Groups: the category-group and form-group writes
+
+The two group vocabularies' writes (M5.6b), registered by `vocabulary` over
+`services/category-groups.ts` and `services/ingredient-form-groups.ts`
+([`db/categories.md`](../db/categories.md), "Group writes"), in the
+categories' shape. There is no new list query: the admin pages read the
+services on navigation (rule 1), and `ingredientFormGroups` already answers
+the browser.
+
+- **Two inputs, each for both of its writes.** `CategoryGroupInput` is
+  `name`, `description`, `colorDark` and `colorLight`, all required;
+  `IngredientFormGroupInput` is `name` and `description`. No slug, which
+  follows the name.
+- **`createCategoryGroup`, `updateCategoryGroup` and `deleteCategoryGroup`;
+  `createIngredientFormGroup`, `updateIngredientFormGroup` and
+  `deleteIngredientFormGroup`.** Each carries `admin`, and
+  `assertSiteAdmin` refuses again in the service, which is the gate. A colour
+  under 4.5:1 on its own ground is `VALIDATION` on `colorDark` or
+  `colorLight`, the message naming the theme, the surface and the ratio
+  verbatim (MB.36, MB.43). A slug collision is `VALIDATION` on `name`, as is
+  a form-group rename that would re-slug a form onto another's address. An
+  unknown, deleted or malformed id is `NOT_FOUND`.
+- **A delete takes an optional `moveTo` and answers the deleted id.** The
+  group's live categories or forms move to the group `moveTo` names, a form
+  re-slugged there, before the soft delete, in one transaction. A group with
+  live rows and no other live group named, or a moved form that would take
+  another's address, is `VALIDATION` on `moveTo`. A form group is never
+  `FORBIDDEN` for a compendium entry's pick, since the moved forms stay
+  curated.
+- **The writes clear the loaders an earlier root field may have filled**:
+  `categoryGroupsById` on a category group's update and delete, and
+  `categoriesByIngredient` on its delete; `ingredientFormGroupsById` and
+  `ingredientFormsById` on a form group's update and delete. Revalidating the
+  `compendium` tag is M8.7's.
+
+`tests/modules/vocabulary/graphql/category-groups.test.ts` and
+`ingredient-form-groups.test.ts` run the writes through Yoga.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
