@@ -18,3 +18,17 @@ export interface ListedUserRow {
   id: string;
   name: string;
 }
+
+export interface CreationFlagRow {
+  can_create_workspace: boolean;
+  updated_by: string;
+  updated_at: Date;
+}
+
+/** One `workspace_creation_changes` row as the ledger tests read it, `change` cast to text. */
+export interface CreationChangeRow {
+  user_id: string;
+  change: string;
+  created_by: string;
+  updated_by: string;
+}

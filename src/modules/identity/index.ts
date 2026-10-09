@@ -8,6 +8,7 @@ export * from './services/provisional-accounts';
 export * from './services/site-admin';
 export * from './services/user-list';
 export * from './services/workshop-access';
+export * from './services/workspace-creation';
 export * from './graphql/user';
 export * from './loaders/providers-by-user';
 export type {
