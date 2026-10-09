@@ -4,10 +4,6 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { ingredientSlug } from '@/lib/slugify';
-import { CATEGORIES } from '@/db/seed/categories';
-import { PLANETS, ZODIAC_SIGNS } from '@/db/seed/astrology';
-import { DEITIES, DEITY_TRADITIONS } from '@/db/seed/deities';
-import { FORMS } from '@/db/seed/forms';
 import {
   COMPENDIUM_INGREDIENTS,
   FIXTURE_USERS,
@@ -15,16 +11,16 @@ import {
   WORKSPACE_X_ID,
   seedStandard,
 } from '@/db/seed/standard';
-import { seed } from '@/db/seed/index';
 import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 
-// The `standard` scenario against the real schema, every table emptied first:
-// membership is two real foreign keys and the compendium's identity a
-// generated column. It is awkward on purpose — five "Cat's Claw"s, a mineral
-// variety, a `none`, an `unknown` —
-// claude-docs/db/standard-scenario.md, "The standard scenario".
-
-const PROBE = 'standard_probe_acting_user';
+// The `standard` scenario against the real schema: membership is two real
+// foreign keys and the compendium's identity a generated column. It is
+// awkward on purpose — five "Cat's Claw"s, a mineral variety, a `none`, an
+// `unknown` — claude-docs/db/standard-scenario.md, "The standard scenario".
+// The cast, the workspaces, the vocabulary counts and the curated picks are
+// seeded-template.test.ts's, and the shape every seed shares index.test.ts's
+// (MB.183). What is left reads the clone, which already holds the scenario,
+// bar the two re-runs that write and so empty every table first.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -48,66 +44,17 @@ async function countOf(table: string): Promise<number> {
   return Number(count);
 }
 
-/** Each compendium entry's deities as the seed literal lists them, entry by entry. */
-const DEITIES_IN_COMPENDIUM = [...COMPENDIUM_INGREDIENTS]
-  .sort((a, b) => a.name.localeCompare(b.name))
-  .flatMap((entry) => (entry.deities ?? []).map((name) => [entry.name, name] as const));
-
-/** A curated vocabulary's names, spelt as the rows spell them. */
-async function curatedNames(table: string): Promise<Set<string>> {
-  const rows = await sql<{ name: string }[]>`select name from ${sql(table)}`;
-  return new Set(rows.map((row) => row.name));
-}
-
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-
-  // Records what `app.current_user_id` held inside the inserting transaction;
-  // it is transaction-local and gone by the time a test could read it.
-  await sql`create table ${sql(PROBE)} (ingredient_id uuid not null, acting_user text)`;
-  await sql.unsafe(`
-    create function ${PROBE}() returns trigger language plpgsql as $$
-    begin
-      insert into ${PROBE} (ingredient_id, acting_user)
-      values (new.id, current_setting('app.current_user_id', true));
-      return new;
-    end
-    $$
-  `);
-  await sql.unsafe(
-    `create trigger ${PROBE} after insert on ingredients for each row execute function ${PROBE}()`,
-  );
 });
 
-beforeEach(async () => {
-  await truncateAllTables(sql);
-});
-
-// Only this file's own objects come down.
 afterAll(async () => {
-  await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
-  await sql`drop table if exists ${sql(PROBE)}`;
   await sql.end();
 });
 
 describe('the cast: five fixture users, A–E', () => {
-  it('creates all five, under the ids the fixtures name, plus the bootstrap user', async () => {
-    // Precondition: the truncated clone really starts empty, so these rows are this seed's.
-    expect(await countOf('users')).toBe(0);
-
-    await seedStandard(db);
-
-    const users = await allUsers();
-    expect(users.filter((u) => u.deleted_at !== null)).toHaveLength(0);
-    expect(new Set(users.map((u) => u.id))).toEqual(
-      new Set([BOOTSTRAP_USER_ID, ...Object.values(FIXTURE_USERS).map((u) => u.id)]),
-    );
-  });
-
   it('gives each the role DESIGN.md’s fixture table documents', async () => {
-    await seedStandard(db);
-
     const byId = new Map((await allUsers()).map((u) => [u.id, u]));
     expect(byId.get(FIXTURE_USERS.A.id)?.role).toBe('user');
     expect(byId.get(FIXTURE_USERS.B.id)?.role).toBe('user');
@@ -116,21 +63,10 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.E.id)?.role).toBe('admin');
   });
 
-  // The bootstrap user is the seed's identity, not cast, and no admin (MB.58).
-  it('makes E the only site admin', async () => {
-    await seedStandard(db);
-
-    const users = await allUsers();
-    expect(users.find((u) => u.id === BOOTSTRAP_USER_ID)?.role).toBe('user');
-    expect(users.filter((u) => u.role === 'admin').map((u) => u.id)).toEqual([FIXTURE_USERS.E.id]);
-  });
-
   // Invite-gate: A–D earned the flag by joining a workspace; E is in none and
   // never invited, and holds it by being an admin, as the users CHECK makes
   // every admin hold it (MB.177).
   it('grants canCreateWorkspace to the four who joined a workspace, and to the admin', async () => {
-    await seedStandard(db);
-
     const byId = new Map((await allUsers()).map((u) => [u.id, u]));
     expect(byId.get(FIXTURE_USERS.A.id)?.can_create_workspace).toBe(true);
     expect(byId.get(FIXTURE_USERS.B.id)?.can_create_workspace).toBe(true);
@@ -138,30 +74,10 @@ describe('the cast: five fixture users, A–E', () => {
     expect(byId.get(FIXTURE_USERS.D.id)?.can_create_workspace).toBe(true);
     expect(byId.get(FIXTURE_USERS.E.id)?.can_create_workspace).toBe(true);
   });
-
-  it('stamps every user as the bootstrap user’s', async () => {
-    await seedStandard(db);
-
-    const seeded = (await allUsers()).filter((u) => u.id !== BOOTSTRAP_USER_ID);
-    expect(seeded.map((u) => u.created_by)).toEqual(seeded.map(() => BOOTSTRAP_USER_ID));
-    expect(seeded.map((u) => u.updated_by)).toEqual(seeded.map(() => BOOTSTRAP_USER_ID));
-  });
 });
 
 describe('the workspaces: W, X, and nothing shared', () => {
-  it('creates both, each under a fixed id and a derived slug', async () => {
-    await seedStandard(db);
-
-    const rows = await sql<{ id: string; name: string; slug: string }[]>`
-      select id, name, slug from workspaces order by slug
-    `;
-    expect(new Set(rows.map((r) => r.id))).toEqual(new Set([WORKSPACE_W_ID, WORKSPACE_X_ID]));
-    expect(rows.every((r) => r.slug.length > 0)).toBe(true);
-  });
-
   it('seats A as owner, B as member and C as viewer in W', async () => {
-    await seedStandard(db);
-
     const inW = (await allMembers()).filter((m) => m.workspace_id === WORKSPACE_W_ID);
     expect(inW.map((m) => [m.user_id, m.role])).toEqual(
       expect.arrayContaining([
@@ -174,16 +90,12 @@ describe('the workspaces: W, X, and nothing shared', () => {
   });
 
   it('seats D in X and nobody else', async () => {
-    await seedStandard(db);
-
     const inX = (await allMembers()).filter((m) => m.workspace_id === WORKSPACE_X_ID);
     expect(inX.map((m) => [m.user_id, m.role])).toEqual([[FIXTURE_USERS.D.id, 'member']]);
   });
 
   // An intersection with its preconditions stated: two empty sets also intersect empty.
   it('shares no member between W and X', async () => {
-    await seedStandard(db);
-
     const members = await allMembers();
     const inW = new Set(
       members.filter((m) => m.workspace_id === WORKSPACE_W_ID).map((m) => m.user_id),
@@ -198,8 +110,6 @@ describe('the workspaces: W, X, and nothing shared', () => {
   });
 
   it('leaves E in no workspace at all', async () => {
-    await seedStandard(db);
-
     const members = await allMembers();
     // Precondition: E exists and other memberships exist, so "no row for E"
     // is the seed's doing rather than an empty table.
@@ -210,81 +120,7 @@ describe('the workspaces: W, X, and nothing shared', () => {
 });
 
 describe('the compendium', () => {
-  it('seeds the admin-curated reference data the scenario stands on', async () => {
-    await seedStandard(db);
-
-    // A whole compendium: categories are what an entry is filed under, and
-    // the forms, planets, signs and deities what its `form`, `planets`,
-    // `zodiacSigns` and `deities` are autofilled from.
-    expect(await countOf('categories')).toBe(CATEGORIES.length);
-    expect(await countOf('ingredient_forms')).toBe(FORMS.length);
-    expect(await countOf('planets')).toBe(PLANETS.length);
-    expect(await countOf('zodiac_signs')).toBe(ZODIAC_SIGNS.length);
-    expect(await countOf('deity_traditions')).toBe(DEITY_TRADITIONS.length);
-    expect(await countOf('deities')).toBe(DEITIES.length);
-  });
-
-  // MB.162: the compendium holds only curated values, in the row's own
-  // spelling, so the comparison is exact. A coven's uncurated value is
-  // `demo`'s to seed.
-  // Each list column shares its vocabulary table's name.
-  it.each([
-    ['planets', PLANETS.length, 5],
-    ['zodiac_signs', ZODIAC_SIGNS.length, 2],
-  ] as const)(
-    'sets only curated %s, spelt as the curated rows spell them',
-    async (list, vocabularySize, minimumInUse) => {
-      await seedStandard(db);
-
-      const curated = await curatedNames(list);
-      const inUse = [...new Set((await compendium()).flatMap((e) => e[list] ?? []))];
-
-      // Precondition: there are values on both sides to compare.
-      expect(curated.size).toBe(vocabularySize);
-      expect(inUse.length).toBeGreaterThanOrEqual(minimumInUse);
-
-      expect(inUse.filter((value) => !curated.has(value))).toEqual([]);
-    },
-  );
-
-  // MB.167: a compendium entry's form and deities are picks, each linked to
-  // the curated row its text spells, the deities in the literal's order.
-  it('picks every compendium form and deity, linked to the row its text spells, in order', async () => {
-    await seedStandard(db);
-
-    const forms = await sql<{ form: string; picked: string | null }[]>`
-      select i.form, f.name as picked from ingredients i
-      left join ingredient_forms f on f.id = i.form_id
-      where i.workspace_id is null and i.form is not null`;
-    const deities = await sql<{ entry: string; name: string; picked: string | null }[]>`
-      select i.name as entry, d.name, t.name as picked from ingredient_deities d
-      join ingredients i on i.id = d.ingredient_id
-      left join deities t on t.id = d.deity_id
-      where i.workspace_id is null and d.deleted_at is null
-      order by i.name, d.position`;
-
-    // Precondition: there are picks of each kind to compare.
-    expect(forms.length).toBe(COMPENDIUM_INGREDIENTS.filter((e) => e.form).length);
-    expect(deities.length).toBe(DEITIES_IN_COMPENDIUM.length);
-
-    expect(forms.filter((row) => row.picked !== row.form)).toEqual([]);
-    expect(deities.map((row) => [row.entry, row.name, row.picked])).toEqual(
-      DEITIES_IN_COMPENDIUM.map(([entry, name]) => [entry, name, name]),
-    );
-  });
-
-  it('holds enough entries to exercise search', async () => {
-    await seedStandard(db);
-
-    const entries = await compendium();
-    expect(entries.length).toBe(COMPENDIUM_INGREDIENTS.length);
-    expect(entries.length).toBeGreaterThanOrEqual(20);
-    expect(entries.every((e) => e.workspace_id === null)).toBe(true);
-  });
-
   it('declares a nomenclature on every entry, spanning more than one naming system', async () => {
-    await seedStandard(db);
-
     const entries = await compendium();
     expect(entries.filter((e) => e.nomenclature === null)).toEqual([]);
     // The column is NOT NULL, so the line above cannot fail alone; the claim is
@@ -293,8 +129,6 @@ describe('the compendium', () => {
   });
 
   it('carries a `none`, an `unknown`, and a mineral variety', async () => {
-    await seedStandard(db);
-
     const entries = await compendium();
     const none = entries.filter((e) => e.nomenclature === 'none');
     const unknown = entries.filter((e) => e.nomenclature === 'unknown');
@@ -312,8 +146,6 @@ describe('the compendium', () => {
 
   // §5's own worked example, and the reason identity moved off the label.
   it('seeds the full Cat’s Claw set — four plants and a cat — under one label', async () => {
-    await seedStandard(db);
-
     const catsClaws = (await compendium()).filter((e) => e.name === "Cat's Claw");
 
     expect(catsClaws.map((e) => e.canonical_name).sort()).toEqual([
@@ -336,9 +168,8 @@ describe('the compendium', () => {
   // rule): the label, the form and the formal name, and no two alike among the
   // live entries.
   it('gives every entry the slug of its label, form and formal name, no two alike', async () => {
-    await seedStandard(db);
-
     const entries = await compendium();
+    // Precondition: the whole compendium is here to be slugged.
     expect(entries.length).toBe(COMPENDIUM_INGREDIENTS.length);
     for (const entry of entries) {
       expect(entry.slug).toBe(ingredientSlug(entry.name, entry.form, entry.canonical_name));
@@ -354,25 +185,7 @@ describe('the compendium', () => {
     expect(new Set(barks.map((e) => e.slug)).size).toBe(2);
   });
 
-  // MB.162: an uncurated form is a coven's to write, never the compendium's —
-  // `rhizome` moved to `demo`'s W.
-  it('draws every in-use form from the curated vocabulary, spelt as it is there', async () => {
-    await seedStandard(db);
-
-    const curated = await curatedNames('ingredient_forms');
-    // Precondition: the vocabulary is there to be outside of.
-    expect(curated.size).toBe(FORMS.length);
-
-    const inUse = [...new Set((await compendium()).map((e) => e.form).filter(Boolean))] as string[];
-
-    expect(inUse.filter((form) => !curated.has(form))).toEqual([]);
-    // Enough of it in use that the autofill's claimants have something to show.
-    expect(inUse.length).toBeGreaterThanOrEqual(10);
-  });
-
   it('files entries under categories, and gives some of them folk names', async () => {
-    await seedStandard(db);
-
     expect(await countOf('ingredient_categories')).toBeGreaterThan(0);
     expect(await countOf('ingredient_folk_names')).toBeGreaterThan(0);
 
@@ -384,55 +197,19 @@ describe('the compendium', () => {
     `;
     expect(Number(dangling)).toBe(0);
   });
-
-  it('publishes the bootstrap user as app.current_user_id for every ingredient insert', async () => {
-    await seedStandard(db);
-
-    const rows = await sql<{ acting_user: string | null }[]>`select acting_user from ${sql(PROBE)}`;
-    expect(rows).toHaveLength(COMPENDIUM_INGREDIENTS.length);
-    expect(rows.every((r) => r.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
-  });
 });
 
 describe('re-running the scenario', () => {
-  it('is idempotent: a second run adds nothing anywhere', async () => {
-    await seedStandard(db);
-
-    const before = {
-      users: await countOf('users'),
-      workspaces: await countOf('workspaces'),
-      members: await countOf('workspace_members'),
-      ingredients: await countOf('ingredients'),
-      folkNames: await countOf('ingredient_folk_names'),
-      assignments: await countOf('ingredient_categories'),
-      categories: await countOf('categories'),
-      forms: await countOf('ingredient_forms'),
-      planets: await countOf('planets'),
-      zodiacSigns: await countOf('zodiac_signs'),
-      deities: await countOf('deities'),
-    };
-
-    await expect(seedStandard(db)).resolves.toBeUndefined();
-
-    expect({
-      users: await countOf('users'),
-      workspaces: await countOf('workspaces'),
-      members: await countOf('workspace_members'),
-      ingredients: await countOf('ingredients'),
-      folkNames: await countOf('ingredient_folk_names'),
-      assignments: await countOf('ingredient_categories'),
-      categories: await countOf('categories'),
-      forms: await countOf('ingredient_forms'),
-      planets: await countOf('planets'),
-      zodiacSigns: await countOf('zodiac_signs'),
-      deities: await countOf('deities'),
-    }).toEqual(before);
+  beforeEach(async () => {
+    await truncateAllTables(sql);
   });
 
   // A database seeded before MB.162 holds the forms lower-cased. Keyed on the
   // spelling, a reseed would insert the title-cased entry beside its own
   // identity and fail the whole scenario on the canonical-key index.
   it('adds nothing over an earlier run that spelt the forms in another case', async () => {
+    // Precondition: the truncated clone really starts empty, so the rows re-cased are this run's.
+    expect(await countOf('ingredients')).toBe(0);
     await seedStandard(db);
     const recased = await sql`
       update ingredients set form = lower(form)
@@ -446,32 +223,49 @@ describe('re-running the scenario', () => {
     expect(await countOf('ingredients')).toBe(COMPENDIUM_INGREDIENTS.length);
   });
 
-  // Keyed on identity, ignoring `deleted_at`: the partial indexes stop only a second live row.
-  it('does not resurrect a compendium entry an admin has soft-deleted', async () => {
+  // The owner's call: `standard` is the fixture scenario, so a reseed resets
+  // the fixtures and puts back a compendium deity pick an admin deleted;
+  // `demo` keeps the deletion (index.test.ts's sweep), since a person explores
+  // it. The pick deleted is its entry's last, so the position it goes back to
+  // is free — see claude-docs/db/standard-scenario.md for the case where it is not.
+  it('puts back a compendium deity pick an admin has since deleted', async () => {
+    // Precondition: the truncated clone really starts empty, so the pick is this run's.
+    expect(await countOf('ingredient_deities')).toBe(0);
     await seedStandard(db);
-    const [victim] = await compendium();
-
+    const [pick] = await sql<
+      { id: string; ingredient_id: string; name: string; position: number }[]
+    >`
+      select d.id, d.ingredient_id, d.name, d.position from ingredient_deities d
+      join ingredients i on i.id = d.ingredient_id
+      where i.workspace_id is null and d.deleted_at is null
+        and d.position = (
+          select max(position) from ingredient_deities
+          where ingredient_id = d.ingredient_id and deleted_at is null
+        )
+      order by i.name limit 1
+    `;
+    const live = () => sql`
+      select 1 from ingredient_deities
+      where ingredient_id = ${pick.ingredient_id} and lower(name) = lower(${pick.name})
+        and deleted_at is null
+    `;
+    // Precondition: the pick was live, and the delete leaves it with no live twin.
+    expect(await live()).toHaveLength(1);
     await sql`
-      update ingredients set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where id = ${victim.id}
+      update ingredient_deities set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+      where id = ${pick.id}
     `;
-    expect((await compendium()).some((e) => e.id === victim.id)).toBe(true);
+    expect(await live()).toEqual([]);
 
-    await seedStandard(db);
+    await expect(seedStandard(db)).resolves.toBeUndefined();
 
-    const live = await sql<{ id: string }[]>`
-      select id from ingredients where workspace_id is null and deleted_at is null
+    const [restored] = await sql<{ id: string; position: number }[]>`
+      select id, position from ingredient_deities
+      where ingredient_id = ${pick.ingredient_id} and lower(name) = lower(${pick.name})
+        and deleted_at is null
     `;
-    expect(live.map((r) => r.id)).not.toContain(victim.id);
-    expect(await countOf('ingredients')).toBe(COMPENDIUM_INGREDIENTS.length);
-  });
-});
-
-describe('seed(db, { scenario })', () => {
-  it('routes "standard" to this scenario', async () => {
-    await seed(db, { scenario: 'standard' });
-
-    expect(await countOf('workspaces')).toBe(2);
-    expect(await countOf('ingredients')).toBe(COMPENDIUM_INGREDIENTS.length);
+    expect(restored).toBeDefined();
+    expect(restored.id).not.toBe(pick.id);
+    expect(restored.position).toBe(pick.position);
   });
 });

@@ -97,9 +97,9 @@ The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
 `SiteAdmin` proof instead ([`auth/admin-users.md`](../auth/admin-users.md),
 "The user list").
 
-`tests/db/repository/index.test.ts` and `soft-delete-finder-guard.test.ts`
-both pin the repository's export list, so a fifth exception is a decision
-rather than an addition.
+`tests/guards/soft-delete-finder-guard.test.ts` pins the repository's export
+list (once, since MB.184), so a fifth exception is a decision rather than an
+addition.
 
 ### Where the proof is weaker than a policy
 

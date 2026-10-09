@@ -57,3 +57,25 @@ export interface SeededTable {
 
 /** What the compendium writes take, which the module keeps to itself. */
 export type CompendiumWrite = Parameters<typeof updateCompendiumEntry>[2];
+
+/** A row as the raw client writes and returns it. */
+export type Row = Record<string, unknown>;
+
+/**
+ * How the partial-unique sweep builds a row inside one index's predicate.
+ * `row` makes a fresh, valid live row every call; `clash` names the columns a
+ * second row copies from the first to collide on this index alone, where the
+ * catalogue's own list would collide on another index first or names a
+ * generated column.
+ */
+export interface PartialIndexRow {
+  row: () => Promise<Row>;
+  clash?: string[];
+}
+
+/** A partial unique index as the catalogue reports it: every column it reads, predicate included. */
+export interface PartialUniqueIndex {
+  index: string;
+  table: string;
+  columns: string[];
+}

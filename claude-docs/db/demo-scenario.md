@@ -53,6 +53,14 @@ ignoring `deleted_at` — for the spells (fixed id), W's ingredients
 pair). **`spell_ingredients` is the exception: the unit keyed on is the spell,
 not the layer.**
 
+The `standard` rows it writes through `seedStandardContent(tx)` keep their
+deletions too: `demo` passes `restoreDeletedDeityPicks: false`, so the one
+row a reseed of `standard` puts back, a compendium deity pick an admin
+deleted, stays deleted here, since a person explores this scenario
+(claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
+pick back; demo does not"). `tests/db/seed/index.test.ts`'s resurrection
+sweep holds it, listing `ingredient_deities` among the demo scenario's tables.
+
 Every other seeded row stands on its own, so "insert what is missing" is well
 defined per row. A layer does not — its identity is a depth in a sequence, and
 the sequence is shared. Patch one row back into a stack a member has since

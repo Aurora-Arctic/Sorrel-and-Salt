@@ -90,11 +90,19 @@ that summary — see ["The form vocabulary seed"](form-vocabulary-seed.md),
 One rule a later scenario inherits: write through the handle, stamping via
 `applyAudit`, in `minimal.ts`'s shape.
 
-`tests/db/seed/index.test.ts` is the `db`-project test: it applies the full
-migration set into the worker's clone (the M1.18 pattern — the seed writes
-into the real `users` table with its real self-referencing FKs, and "the
-compendium is empty" needs tables to count), hands `seed()` a handle of its
-own, and asserts the two rows, the fixed ids, the creator chain, idempotency,
-and — through an `AFTER INSERT` trigger recording `current_setting('app.
-current_user_id', true)` — that the GUC was published, the same
-observation trick `tests/db/repository/write.test.ts` uses.
+`tests/db/seed/index.test.ts` is the `db`-project test, against the worker's
+clone with every table emptied first: it hands `seed()` a handle of its own
+and asserts `minimal`'s two rows, the fixed ids and the creator chain from one
+run, then the shape every seed entry point shares — `minimal`, `standard`,
+`demo`, and the category, form, astrology, deity and sources seeds run alone
+— once over all of them in an `it.each(SEED_ENTRIES)` (MB.183;
+[`testing/layer-ownership.md`](../testing/layer-ownership.md)): from empty
+tables, the bootstrap user inserted as a plain user, every row of the seed's
+own tables stamped as it and, through one `AFTER INSERT` trigger on every
+table recording `current_setting('app.current_user_id', true)` — the
+observation trick `tests/db/repository/write.test.ts` uses — published as the
+acting user of every insert; a second run that changes no row anywhere; and a
+row an admin soft-deleted left deleted. Each entry names the tables it is the
+seed of, which is also what proves `seed()` routed a scenario to its own seed.
+`categories.test.ts` keeps what is the category seed's alone: the literal
+against §6 and M0.7, and a reseed over a colour pair an admin changed.

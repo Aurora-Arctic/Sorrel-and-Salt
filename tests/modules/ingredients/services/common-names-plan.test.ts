@@ -29,8 +29,7 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
 });
 
-beforeEach(async () => {
-  await sql`truncate ingredients cascade`;
+beforeEach(() => {
   logged.length = 0;
 });
 
@@ -84,15 +83,18 @@ describe('the common-name suggestion query', () => {
   });
 
   describe('EXPLAIN', () => {
-    // As in duplicates-plan.test.ts: sequential scans off, distinct (md5)
-    // trigrams, and enough rows that the planner's choice is between the GIN
-    // probe and a walk of a partial unique index, not a foregone one. The
-    // display-name arm needs more than the folk-name arm: its scope is the
-    // compendium's own partial index, which the planner walks in preference
-    // to the probe at thirty thousand entries and not at fifty. Eighty thousand
-    // rows through six trigram indexes outrun the 10s default hook timeout on
-    // CI's shared runner, so the seed carries its own.
-    beforeEach(async () => {
+    // Seeded once per file (MB.184), here rather than at the top so the
+    // statement-shape tests above read the log over a small table. As in
+    // duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams,
+    // and enough rows that the planner's choice is between the GIN probe and
+    // a walk of a partial unique index, not a foregone one. The display-name
+    // arm needs more than the folk-name arm: its scope is the compendium's
+    // own partial index, which the planner walks in preference to the probe
+    // at thirty thousand entries and not at fifty. Eighty thousand rows
+    // through six trigram indexes outrun the 10s default hook timeout on CI's
+    // shared runner, so the seed carries its own.
+    beforeAll(async () => {
+      await sql`truncate ingredients cascade`;
       await sql`
         insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
         select md5('name' || g), md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
@@ -106,6 +108,12 @@ describe('the common-name suggestion query', () => {
       await sql`analyze ingredients`;
       await sql`analyze ingredient_folk_names`;
     }, 60_000);
+
+    // The seed is the plan's precondition: fewer rows and the walk wins.
+    it('plans over the seeded rows', async () => {
+      const [{ count }] = await sql`select count(*) from ingredient_folk_names`;
+      expect(Number(count)).toBe(30000);
+    });
 
     async function planOf({ query, params }: Logged): Promise<string> {
       return await sql.begin(async (tx) => {

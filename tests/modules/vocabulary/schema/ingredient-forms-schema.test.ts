@@ -201,15 +201,6 @@ async function insertForm(groupId: string, overrides: Row = {}): Promise<string>
   return inserted.id as string;
 }
 
-async function softDelete(
-  table: 'ingredient_forms' | 'ingredient_form_groups',
-  id: string,
-): Promise<void> {
-  await sql`
-    update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
-  `;
-}
-
 // Cascades to `ingredients` as well, through `form_id` (MB.165), so each test
 // seeds the ingredients it links.
 beforeEach(async () => {
@@ -236,31 +227,6 @@ describe('ingredient_form_groups table', () => {
     for (const column of ORDERING_COLUMNS) {
       expect(columns).not.toContain(column);
     }
-  });
-
-  describe('slug uniqueness', () => {
-    it('rejects a second live group sharing a slug', async () => {
-      await insertGroup();
-      const error = await failureOf(insertGroup({ name: 'Part of the organism' }));
-
-      // 23505 is unique_violation, named: the index refused, not something earlier.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(GROUPS_SLUG_UNIQUE);
-    });
-
-    // The test above is the precondition: without the soft delete the second
-    // insert is refused, so this pass is the predicate and not an empty table.
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const first = await insertGroup();
-      await softDelete('ingredient_form_groups', first);
-
-      const second = await insertGroup({ name: 'Part of the organism' });
-
-      const rows = await sql`select id, deleted_at from ingredient_form_groups order by created_at`;
-      expect(rows.map((r) => r.id)).toEqual([first, second]);
-      expect(rows[0].deleted_at).not.toBeNull();
-      expect(rows[1].deleted_at).toBeNull();
-    });
   });
 
   it('requires the name, slug and description', async () => {
@@ -332,28 +298,6 @@ describe('ingredient_forms table', () => {
   });
 
   describe('slug uniqueness', () => {
-    it('rejects a second live form sharing a slug', async () => {
-      const group = await insertGroup();
-      await insertForm(group);
-      const error = await failureOf(insertForm(group, { name: 'Rootstock' }));
-
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(FORMS_SLUG_UNIQUE);
-    });
-
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const group = await insertGroup();
-      const first = await insertForm(group);
-      await softDelete('ingredient_forms', first);
-
-      const second = await insertForm(group, { name: 'Rootstock' });
-
-      const rows = await sql`select id, deleted_at from ingredient_forms order by created_at`;
-      expect(rows.map((r) => r.id)).toEqual([first, second]);
-      expect(rows[0].deleted_at).not.toBeNull();
-      expect(rows[1].deleted_at).toBeNull();
-    });
-
     // Global rather than per group, as on `categories`: the seed's idempotency
     // key reads the slug alone.
     it('rejects a shared slug across two different groups', async () => {

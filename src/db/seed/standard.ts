@@ -395,8 +395,17 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
  * writes its grimoire alongside these rows, so a half-applied scenario cannot
  * be a grimoire referencing rows that are not there. Assumes the GUC is
  * published and the bootstrap user exists.
+ *
+ * `restoreDeletedDeityPicks` is `standard`'s reset of its fixtures: on, a
+ * compendium deity pick an admin deleted comes back on the next run. `demo`
+ * turns it off, since a person explores it and a deletion there is theirs —
+ * claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
+ * pick back; demo does not".
  */
-export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
+export async function seedStandardContent(
+  tx: SeedTransaction,
+  { restoreDeletedDeityPicks = true }: { restoreDeletedDeityPicks?: boolean } = {},
+): Promise<void> {
   // Reference data first: an ingredient is filed under a category by foreign
   // key. Inside this transaction so a scenario is never half-applied.
   await seedFormVocabulary(tx);
@@ -412,7 +421,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
 
   const ingredientIds = await insertMissingIngredients(tx);
   await insertMissingFolkNames(tx, ingredientIds);
-  await insertMissingDeities(tx, ingredientIds);
+  await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
 }
 
@@ -631,11 +640,13 @@ async function insertMissingFolkNames(
  * list keeps the order entered. Keyed on the case-folded name the row holds
  * rather than the pick, over the live rows: a database that ran MB.166's fill
  * already holds these deities as typed names at these positions, and a pick
- * beside each would take a position its typed twin holds.
+ * beside each would take a position its typed twin holds. Over every row
+ * instead when `restoreDeleted` is off, so a deleted pick counts as present.
  */
 async function insertMissingDeities(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
+  restoreDeleted: boolean,
 ): Promise<void> {
   const deityIds = await pickedIdByName(tx, deities);
   const wanted = COMPENDIUM_INGREDIENTS.flatMap((entry) =>
@@ -653,7 +664,7 @@ async function insertMissingDeities(
         await tx
           .select({ ingredientId: ingredientDeities.ingredientId, name: ingredientDeities.name })
           .from(ingredientDeities)
-          .where(isNull(ingredientDeities.deletedAt))
+          .where(restoreDeleted ? isNull(ingredientDeities.deletedAt) : undefined)
       ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
     keyOf: (deity) => `${deity.ingredientId}|${deity.name.toLowerCase()}`,
     toRow: (deity) => deity,
