@@ -8,13 +8,14 @@ import type {
   CreateIngredientFormValueMutation,
   CreateIngredientFormValueMutationVariables,
   DeleteIngredientFormValueMutation,
-  DeleteIngredientFormValueMutationVariables,
   UpdateIngredientFormValueMutation,
   UpdateIngredientFormValueMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
+import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
+import type { GroupedValueFormSubject } from '../../support/types';
 
 // The admin's form form (M5.6a): a name, a description and a form group,
 // saved through the ingredient-form mutations, and on an existing form a
@@ -45,6 +46,36 @@ function renderForm(props: Partial<IngredientFormValueFormProps> = {}) {
   return onDone;
 }
 
+// The tests it shares with CategoryForm: tests/support/grouped-value-form.tsx.
+const SUBJECT: GroupedValueFormSubject = {
+  noun: 'Form',
+  describeRefusal: 'Describe the form',
+  groups: [GROUPS[0], GROUPS[1]],
+  value: FORM,
+  render: ({ onDone, editing }) => (
+    <IngredientFormValueForm
+      groups={GROUPS}
+      onDone={onDone}
+      formValue={editing ? FORM : undefined}
+    />
+  ),
+  create: {
+    operation: 'CreateIngredientFormValue',
+    data: {
+      createIngredientFormValue: { id: FORM.id, slug: 'testwort-shard' },
+    } satisfies CreateIngredientFormValueMutation,
+  },
+  remove: {
+    operation: 'DeleteIngredientFormValue',
+    data: { deleteIngredientFormValue: FORM.id } satisfies DeleteIngredientFormValueMutation,
+  },
+  slugClash: {
+    name: 'Testwort-Shard',
+    message:
+      '"Testwort Shard" already has the address "testwort-shard-fixture-mineral" — choose another name',
+  },
+};
+
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const group = () => screen.getByRole('combobox', { name: 'Group' });
@@ -69,6 +100,8 @@ const RENAME_NOTE =
 
 describe('IngredientFormValueForm', () => {
   describe('adding', () => {
+    it.each(ADDING)('%s', (_, run) => run(SUBJECT));
+
     it('starts empty, the group unchosen, with nothing to delete', () => {
       renderForm();
 
@@ -76,14 +109,6 @@ describe('IngredientFormValueForm', () => {
       expect(description()).toHaveValue('');
       expect(group()).toHaveTextContent('Choose a group');
       expect(screen.queryByRole('button', { name: 'Delete Form' })).not.toBeInTheDocument();
-    });
-
-    // A field named "name" reads to Chrome as a person's name: it flags it in
-    // the Issues panel and offers the user's own name to fill it.
-    it('turns autofill off on the name, which names no person', () => {
-      renderForm();
-
-      expect(name()).toHaveAttribute('autocomplete', 'off');
     });
 
     it('creates the form from what was entered, then is done', async () => {
@@ -116,90 +141,12 @@ describe('IngredientFormValueForm', () => {
       ]);
     });
 
-    it('marks every field required', () => {
-      renderForm();
-
-      // The asterisk is for the eye; the name stays the label alone.
-      expect(name()).toHaveAttribute('aria-required', 'true');
-      expect(description()).toHaveAttribute('aria-required', 'true');
-      expect(group()).toBeRequired();
-    });
-
-    // The owner's rule for every form: Save is offered only when there is
-    // something to save.
-    it('keeps Save off until something is entered', () => {
-      renderForm();
-
-      expect(save()).toBeDisabled();
-      type(name(), 'T');
-      expect(save()).toBeEnabled();
-      type(name(), '');
-      expect(save()).toBeDisabled();
-    });
-
-    it('refuses a blank description and group before asking the server', async () => {
-      const onDone = renderForm();
-
-      type(name(), 'Testwort Shard');
-      press('Save Form');
-
-      expect(await screen.findByText('Describe the form')).toBeInTheDocument();
-      expect(description()).toHaveAccessibleDescription('Describe the form');
-      expect(group()).toHaveAccessibleDescription('Choose a group');
-      expect(onDone).not.toHaveBeenCalled();
-    });
-
     it('says nothing of renaming on a new form', () => {
       renderForm();
 
       type(name(), 'Testwort Shard');
 
       expect(screen.queryByText(RENAME_NOTE)).not.toBeInTheDocument();
-    });
-
-    it('says it is saving, busy and held down, until the answer', async () => {
-      let release = () => {};
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      server.use(
-        graphqlLink.mutation('CreateIngredientFormValue', async () => {
-          await held;
-          return HttpResponse.json({
-            data: { createIngredientFormValue: { id: FORM.id, slug: 'testwort-shard' } },
-          });
-        }),
-      );
-      const onDone = renderForm();
-      type(name(), 'Testwort Shard');
-      type(description(), 'Held');
-      chooseGroup('Fixture Mineral');
-      press('Save Form');
-
-      const busy = await screen.findByRole('button', { name: 'Saving Form' });
-      expect(busy).toBeDisabled();
-      expect(busy).toHaveAttribute('aria-busy', 'true');
-      release();
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-    });
-
-    it("lands the server's slug refusal beside Name", async () => {
-      const message =
-        '"Testwort Shard" already has the address "testwort-shard-fixture-mineral" — choose another name';
-      mockGraphQLError('CreateIngredientFormValue', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'], message }],
-      });
-      const onDone = renderForm();
-
-      type(name(), 'Testwort-Shard');
-      type(description(), 'A clash');
-      chooseGroup('Fixture Mineral');
-      press('Save Form');
-
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(name()).toHaveAccessibleDescription(message);
-      expect(onDone).not.toHaveBeenCalled();
     });
 
     it("lands the server's group refusal beside Group, and a pathless one above the fields", async () => {
@@ -223,6 +170,8 @@ describe('IngredientFormValueForm', () => {
   });
 
   describe('editing', () => {
+    it.each(EDITING)('%s', (_, run) => run(SUBJECT));
+
     it('starts from the form as it is', () => {
       renderForm({ formValue: FORM });
 
@@ -256,24 +205,6 @@ describe('IngredientFormValueForm', () => {
           },
         },
       ]);
-    });
-
-    it('keeps Save off until something changes, and off again once it is put back', () => {
-      renderForm({ formValue: FORM });
-
-      expect(save()).toBeDisabled();
-      chooseGroup('Fixture Mineral');
-      expect(save()).toBeEnabled();
-      chooseGroup('Fixture Substance');
-      expect(save()).toBeDisabled();
-    });
-
-    it('is done without saving on Cancel', () => {
-      const onDone = renderForm({ formValue: FORM });
-
-      press('Cancel');
-
-      expect(onDone).toHaveBeenCalledTimes(1);
     });
 
     // MB.162: a rename carries onto every compendium entry that picked the
@@ -433,6 +364,8 @@ describe('IngredientFormValueForm', () => {
   });
 
   describe('deleting', () => {
+    it.each(DELETING)('%s', (_, run) => run(SUBJECT));
+
     const CONFIRM =
       'Delete "Testwort Shard"? It can\'t be deleted while a compendium entry picks it. Covens\' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.';
 
@@ -445,24 +378,6 @@ describe('IngredientFormValueForm', () => {
       press('Keep It');
       expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
-    });
-
-    it('deletes on confirmation, then is done', async () => {
-      const calls: DeleteIngredientFormValueMutationVariables[] = [];
-      mockGraphQLMutation<
-        DeleteIngredientFormValueMutation,
-        DeleteIngredientFormValueMutationVariables
-      >('DeleteIngredientFormValue', (variables) => {
-        calls.push(variables);
-        return { deleteIngredientFormValue: FORM.id };
-      });
-      const onDone = renderForm({ formValue: FORM });
-
-      press('Delete Form');
-      press('Delete');
-
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-      expect(calls).toEqual([{ id: FORM.id }]);
     });
 
     it('shows the refusal of a form a compendium entry picks, and stays open', async () => {

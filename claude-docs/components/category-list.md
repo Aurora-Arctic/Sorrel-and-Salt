@@ -102,8 +102,15 @@ Render-only, no test ids, no snapshots.
 links, the pager, both empty messages, the filter form's action, method,
 names, kept values and group options, the Filter button's disabled and
 enabled states, the address it opens, and `categoriesHref`.
-`tests/app/admin/categories/page.test.tsx` covers the filter the services
-are called with, an unknown group slug ignored, and the filter kept on the
-pager, each Edit, Add Category and the modal's way back.
+`tests/app/admin/categories/page.test.tsx` keeps the page's half
+([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"): the guard refusing before any read; the first page
+of 25 read (26, to know of a next) and an unreadable cursor read as the
+first page; the filter read from `?query=` and `?group=` into the list and
+its count, a blank one as none and an unknown group slug ignored; the
+position counted from the page's first row, or from none when the filter leaves it empty; each group's name joined onto its
+rows; Add Category on the heading's line; and the filter and cursor kept on
+the pager, each Edit, Add Category and the modal's way back. How the list
+shows what it is given — the empty messages included — is this component's
+test's alone.
 `tests/e2e/admin.spec.ts` filters the seeded list by part of a name and by a
 group.

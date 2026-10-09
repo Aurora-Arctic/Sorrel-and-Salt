@@ -101,3 +101,40 @@ export interface ProbeSet {
   /** Committed files linted beside the probes, for an exemption the guard asserts. */
   files: string[];
 }
+
+/** A grouped curated value as its form edits it: a category, an ingredient form. */
+export interface GroupedValue {
+  id: string;
+  name: string;
+  description: string;
+  groupId: string;
+}
+
+/**
+ * One copy of the grouped-value form, as the tests its copies share drive it
+ * (tests/support/grouped-value-form.tsx).
+ */
+export interface GroupedValueFormSubject {
+  /** What Save, Saving and Delete name: `Category`, `Form`. */
+  noun: string;
+  /** The schema's refusal of a blank description. */
+  describeRefusal: string;
+  /** The two groups it is rendered with, in the picker's order. */
+  groups: readonly [{ id: string; name: string }, { id: string; name: string }];
+  /** The value an edit starts from, filed under the second group. */
+  value: GroupedValue;
+  /** The form, empty or editing `value`, calling `onDone` when it is done. */
+  render: (props: { onDone: () => void; editing: boolean }) => ReactNode;
+  /** The create mutation's operation, and a successful answer to it. */
+  create: { operation: string; data: Record<string, unknown> };
+  /** The delete mutation's operation, and a successful answer to it. */
+  remove: { operation: string; data: Record<string, unknown> };
+  /** A name the server refuses for the address it would take, and the refusal. */
+  slugClash: { name: string; message: string };
+}
+
+/** A shared test: its title, and what it does to a subject. */
+export type GroupedValueFormCase = [
+  title: string,
+  run: (subject: GroupedValueFormSubject) => void | Promise<void>,
+];

@@ -67,7 +67,6 @@ const EmailForm = ({
   landing,
   error,
   waitSeconds = 0,
-  resendDelaySeconds = RESEND_DELAY_SECONDS,
 }: EmailFormProps): ReactElement => {
   const inputId = useId();
   const fieldErrorId = useId();
@@ -103,7 +102,7 @@ const EmailForm = ({
     mutationFn: (address: string) => graphqlRequest(SetEmailDocument, { email: address, next }),
     onSuccess: (_data, address) => {
       setSentTo(normalise(address));
-      setCooldownUntil(Date.now() + resendDelaySeconds * 1000);
+      setCooldownUntil(Date.now() + RESEND_DELAY_SECONDS * 1000);
     },
     onError: (failure) => {
       const { field, alert: message } = readFailure(failure);

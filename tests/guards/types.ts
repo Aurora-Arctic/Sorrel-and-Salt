@@ -96,3 +96,8 @@ export interface Project {
   test?: { name?: unknown };
   plugins?: unknown;
 }
+
+/** A Vitest project's file globs, as the db-project guard reads them. */
+export interface ProjectGlobs {
+  test: { name: string; include: string[]; exclude?: string[] };
+}

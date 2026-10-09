@@ -1,19 +1,47 @@
+import { globSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
 
 const require = createRequire(import.meta.url);
 const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
 
-// What neither `unit` nor `dom` runs: the other projects' trees, the acceptance
-// suite, and Playwright's (its specs end `.spec.ts`, but say so).
-export const NOT_UNIT = [
-  'tests/db/**',
-  'tests/modules/**',
-  'tests/rsc/**',
-  'tests/acceptance/**',
-  'tests/e2e/**',
+// The `db` project's trees: the database layer's tests and the modules'.
+const DB_INCLUDE = ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'];
+
+// The files under them that never reach a database — a schema's shape read
+// through Drizzle's introspection, a validation schema, a pure policy or
+// constant — and so run in `unit` rather than wait on a fresh clone of the
+// seeded database before each (MB.189). They stay where they mirror src/,
+// which is why this is a list rather than a directory.
+// tests/guards/db-project-queries.test.ts holds every file left in `db` to a
+// database client of its own or a service reached as a fixture user, so a
+// database-free file added there fails until it is named here.
+export const DB_FREE = [
+  'tests/modules/**/validation/**',
+  'tests/db/audit.test.ts',
+  'tests/db/bootstrap.test.ts',
+  'tests/db/repository/index.test.ts',
+  'tests/modules/coven/schema/workspaces-schema.test.ts',
+  'tests/modules/coven/services/access-control.test.ts',
+  'tests/modules/identity/services/site-admin.test.ts',
+  'tests/modules/identity/services/workshop-access.test.ts',
+  'tests/modules/ingredients/schema/units.test.ts',
 ];
+
+// What `db` runs, listed at config load: Vitest's `exclude` takes no
+// negation, so `unit` cannot exclude the two trees and carve DB_FREE back out
+// of them. A file added under them during a watch session is in both projects
+// until the session restarts.
+const DB_FILES = globSync(DB_INCLUDE, {
+  cwd: fileURLToPath(new URL('.', import.meta.url)),
+  exclude: DB_FREE,
+});
+
+// What neither `unit` nor `dom` runs: the other projects' files, the
+// acceptance suite, and Playwright's (its specs end `.spec.ts`, but say so).
+export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/acceptance/**', 'tests/e2e/**'];
 
 // The `.ts` tests that need jsdom's `location` all the same: Better Auth's
 // client reads `window.location.origin` and `document.cookie`, and the MSW
@@ -141,7 +169,8 @@ export default defineConfig({
         plugins: [boundedPostgres()],
         test: {
           name: 'db',
-          include: ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'],
+          include: DB_INCLUDE,
+          exclude: DB_FREE,
           ...dbHarness,
         },
       },

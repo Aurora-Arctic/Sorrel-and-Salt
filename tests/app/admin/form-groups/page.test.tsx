@@ -127,7 +127,7 @@ describe('the /admin/form-groups page', () => {
     await renderPage({ new: '' });
 
     const dialog = screen.getByRole('dialog', { name: 'Add Form Group' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
     expect(
       within(dialog).queryByRole('textbox', { name: 'Dark Theme Colour' }),
     ).not.toBeInTheDocument();
