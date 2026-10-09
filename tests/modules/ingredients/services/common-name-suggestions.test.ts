@@ -37,16 +37,19 @@ function pageOf(
   session: Session,
   query: string,
   args: ConnectionArgs = {},
-  workspaceId = WORKSPACE_W_ID,
+  workspaceId: string | null = WORKSPACE_W_ID,
 ): Promise<Page<CommonNameSuggestion>> {
   return resolvePage(args, (request) => suggestCommonNames(session, workspaceId, query, request));
 }
 
-/** Every suggestion in one page — the lists here are far shorter than the maximum. */
+/**
+ * Every suggestion in one page — the lists here are far shorter than the
+ * maximum. A null workspace is the compendium form's.
+ */
 async function all(
   session: Session,
   query: string,
-  workspaceId = WORKSPACE_W_ID,
+  workspaceId: string | null = WORKSPACE_W_ID,
 ): Promise<CommonNameSuggestion[]> {
   const page = await pageOf(session, query, { first: 100 }, workspaceId);
   expect(page.pageInfo.hasNextPage).toBe(false);
@@ -134,19 +137,6 @@ describe('suggestCommonNames', () => {
       await sql`update ingredient_folk_names set deleted_at = now(), deleted_by = ${A.id}`;
 
       expect(await all(asUser(B), 'moonwort minor')).toEqual([]);
-    });
-
-    it('drops a soft-deleted ingredient’s names, label and folk names alike', async () => {
-      const id = await addIngredient({
-        name: 'Testwort',
-        workspaceId: WORKSPACE_W_ID,
-        folkNames: ['Fixture Bane'],
-      });
-      expect(valuesOf(await all(asUser(B), ''))).toEqual(['Fixture Bane', 'Testwort']);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      expect(await all(asUser(B), '')).toEqual([]);
     });
 
     it('drops a soft-deleted claimant but keeps the name another still claims', async () => {
@@ -252,6 +242,24 @@ describe('suggestCommonNames', () => {
       const forged = encodeCursor({ key: ['testwort'], id: 'testwort' });
 
       await expect(pageOf(asUser(B), '', { after: forged })).rejects.toThrow(InvalidCursor);
+    });
+  });
+
+  // M5.5: the admin's compendium form names no coven, so a null workspace
+  // offers the names in use in the compendium alone and asks for no membership.
+  describe('without a coven', () => {
+    it('offers the compendium’s names and no coven’s, to anyone signed in', async () => {
+      await addIngredient({ name: 'Testwort', folkNames: ['Fixture Bane'] });
+      await addIngredient({ name: 'Testbane', workspaceId: WORKSPACE_W_ID });
+      await addIngredient({ name: 'Testroot', workspaceId: WORKSPACE_X_ID });
+      // Why a coven's could have been offered: under its coven, each is.
+      expect(valuesOf(await all(asUser(B), ''))).toEqual(['Fixture Bane', 'Testbane', 'Testwort']);
+      expect(valuesOf(await all(asUser(D), '', WORKSPACE_X_ID))).toContain('Testroot');
+
+      // E belongs to no coven, and D's is not W: neither is asked for one.
+      for (const user of [B, D, E]) {
+        expect(valuesOf(await all(asUser(user), '', null))).toEqual(['Fixture Bane', 'Testwort']);
+      }
     });
   });
 

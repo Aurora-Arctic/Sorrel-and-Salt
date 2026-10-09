@@ -7,21 +7,31 @@ import { ingredientSlug } from '@/lib/slugify';
 import {
   categoriesOf,
   createWorkspaceIngredient,
+  deitiesOf,
   deleteWorkspaceIngredient,
   findPossibleDuplicates,
   folkNamesOf,
   getIngredient,
   getWorkspaceIngredient,
+  referencesOf,
+  substitutesOf,
   suggestCommonNames,
+  suggestIngredients,
   updateWorkspaceIngredient,
 } from '@/modules/ingredients';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
-import { suggestForms } from '@/modules/vocabulary';
+import {
+  suggestDeities,
+  suggestForms,
+  suggestPlanets,
+  suggestZodiacSigns,
+} from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
 import {
   type IngredientFixture,
@@ -366,13 +376,6 @@ describe('getWorkspaceIngredient', () => {
 
   it('does not answer a compendium entry, which is not the coven’s own', async () => {
     const id = await seed(makeIngredient());
-
-    await expect(getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
-  });
-
-  it('does not answer a soft-deleted ingredient', async () => {
-    const id = await seed(local());
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
 
     await expect(getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
   });
@@ -765,8 +768,9 @@ describe('a deleted coven ingredient', () => {
       throw error;
     });
 
-  // Every read a member reaches the coven's own ingredients through, each asked
-  // whether it still shows this one.
+  // Every exported read a member reaches the coven's own ingredients through,
+  // each asked whether it still shows this one: what owns the soft-delete
+  // filter of each, so no reader carries a one-off of its own.
   const READS: [string, (id: string) => Promise<boolean>][] = [
     [
       'a read by id',
@@ -791,6 +795,35 @@ describe('a deleted coven ingredient', () => {
       },
     ],
     [
+      'its substitutes',
+      async (id) => {
+        const [listed] = await substitutesOf(member, ref(id));
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its deities',
+      async (id) => {
+        const [listed] = await deitiesOf(member, ref(id));
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its references',
+      async (id) => {
+        const [cited] = await referencesOf(member, ref(id));
+        return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    [
+      'the substitute picker',
+      async (id) =>
+        (await suggestIngredients(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
       'the duplicate warning',
       async (id) =>
         (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
@@ -811,10 +844,41 @@ describe('a deleted coven ingredient', () => {
           node.claimants.some((claimant) => claimant.name === 'Testwort'),
         ),
     ],
+    [
+      'the planet suggestions',
+      async () =>
+        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Star',
+        ),
+    ],
+    [
+      'the sign suggestions',
+      async () =>
+        (await suggestZodiacSigns(member, WORKSPACE_W_ID, 'fixture sign', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Sign',
+        ),
+    ],
+    [
+      'the deity suggestions',
+      async () =>
+        (await suggestDeities(member, WORKSPACE_W_ID, 'fixture deity', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Deity',
+        ),
+    ],
   ];
 
   it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
-    const id = await seed(local({ folkNames: ['Test Root'], categories: ['Protection'] }));
+    const id = await seed(
+      local({
+        folkNames: ['Test Root'],
+        categories: ['Protection'],
+        substitutes: ['Fixture Stand-in'],
+        deities: ['Fixture Deity'],
+        planets: ['Fixture Star'],
+        zodiacSigns: ['Fixture Sign'],
+      }),
+    );
+    await insertReferenceLink(sql, id, await insertReference(sql, {}, A.id), A.id);
     // Why the read could have gone on showing it: it does, until the delete.
     expect(await shows(id)).toBe(true);
 

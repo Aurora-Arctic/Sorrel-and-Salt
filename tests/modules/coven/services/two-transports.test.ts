@@ -12,10 +12,15 @@ import type { Context } from '@/graphql/types';
 
 // CLAUDE.md rule 1, asserted rather than stated: a server component calling
 // the service and a resolver reaching it over the schema get one answer,
-// because the check is in the service and nowhere else. No production field
-// reads a workspace yet, so the schema is a throwaway from `createBuilder()`;
-// the context is built the way `createContext` builds it, minus the cookie
-// parsing tests/graphql/context.test.ts covers.
+// because the check is in the service and nowhere else. Production fields
+// read a workspace now — the ingredients mutations, `ingredient`, the
+// suggestion queries — and each one's own refusal on the wire is its GraphQL
+// file's (claude-docs/graphql/schema.md). The schema here is still a throwaway
+// from `createBuilder()`, one field doing nothing but the membership check,
+// so that what this file proves — the two paths end in the same check and
+// agree — is not tangled with any field's arguments, loaders or service
+// logic. The context is built the way `createContext` builds it, minus the
+// cookie parsing tests/graphql/context.test.ts covers.
 
 const READ: WorkspacePermission = { workspace: ['read'] };
 

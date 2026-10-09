@@ -297,14 +297,6 @@ describe('suggestDeities', () => {
 
       expect(await all(asUser(B), 'abnoba')).toEqual([]);
     });
-
-    it('drops a soft-deleted ingredient’s deities', async () => {
-      await sql`
-        update ingredients set deleted_at = now(), deleted_by = ${A.id}
-        where workspace_id = ${WORKSPACE_W_ID}`;
-
-      expect(await all(asUser(B), 'abnoba')).toEqual([]);
-    });
   });
 
   describe('the query', () => {

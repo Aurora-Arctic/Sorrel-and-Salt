@@ -178,4 +178,6 @@ predicates, and the fold. It captures the statements as
 `form-suggestions.test.ts`, `deity-suggestions.test.ts` and
 `common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
-possible.
+possible; a soft-deleted ingredient's dropping out of each is the `READS`
+tables' in `workspace-ingredients.test.ts` and `compendium-entries.test.ts`
+(MB.187).

@@ -27,8 +27,13 @@ hold live answers `NotFound`. Its folk names, category links and stock row stay.
 A spell holding the ingredient still reaches it (["What a spell
 holds"](spell-visibility.md#what-a-spell-holds-m53)), and nothing else reads
 past a deleted parent — stock included, whose reads go through a live ingredient
-(M9.3). The service test asks each read a member reaches the coven's ingredients
-through whether it shows the ingredient, before the delete and after, then
+(M9.3). The service test's `READS` table asks every exported read a member
+reaches the coven's ingredients through whether it shows the ingredient,
+before the delete and after — the read by id, with and without the coven
+named; its folk names, categories, substitutes, deities and references; the
+substitute picker, the duplicate warning, and the common-name, form, planet,
+sign and deity suggestions — so the table is where each reader's soft-delete
+filter is proved, and no reader's own test carries a one-off (MB.187). It then
 brings back its label, its formal name under another label and the whole
 ingredient at its old address, each refused while it was live. Inside a coven
 the label is unique too, so there a label coming back does prove its index's

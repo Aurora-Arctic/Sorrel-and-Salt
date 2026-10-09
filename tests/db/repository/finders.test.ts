@@ -261,19 +261,15 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
+  // The writers' half of the mechanism, once per family: the writes by
+  // condition, which AND the proof's workspace onto the caller's `where`
+  // (updateInWorkspace here, softDeleteInWorkspace the same `and`), and the
+  // writes by id, which share `inWorkspaceById` (softDeleteByIdInWorkspace
+  // here, updateByIdInWorkspace the same predicate). The readers' half is
+  // findOneByIdInWorkspace's above: findOneInWorkspace is the same
+  // findManyInWorkspace. Who may hold a proof of which workspace is each
+  // service's to prove, by direct id, in tests/modules/*/services/.
   describe('a direct id belonging to another workspace', () => {
-    it('is not readable, though the row exists and its own workspace finds it', async () => {
-      const [row] = await insertJar(inX, 'Nettle');
-
-      // Why the read below could have succeeded: this exact id resolves under
-      // X's own proof, so the row is present and the finder is reached.
-      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
-        label: 'Nettle',
-      });
-
-      await expect(findOneInWorkspace(inW, jars, eq(jars.id, row.id))).resolves.toBeUndefined();
-    });
-
     it('is not updatable, and the row is left as it was', async () => {
       const [row] = await insertJar(inX, 'Nettle');
 
@@ -284,19 +280,6 @@ describe('the Membership proof (M6.3)', () => {
       expect(updated).toEqual([]);
       await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
         label: 'Nettle',
-      });
-    });
-
-    it('is not soft-deletable, and keeps its null deleted_at', async () => {
-      const [row] = await insertJar(inX, 'Nettle');
-
-      const deleted = await withAudit(session, (write) =>
-        write.softDeleteInWorkspace(inW, jars, eq(jars.id, row.id)),
-      );
-
-      expect(deleted).toEqual([]);
-      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
-        deletedAt: null,
       });
     });
 

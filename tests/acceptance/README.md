@@ -17,8 +17,11 @@ Files arrive with each wave's scaffold task, deliberately red:
 | `07-admin.test.ts`           | 17–18   | M5.1                |
 | `08-email-and-admin.test.ts` | 58–61   | MB.61 / MB.58       |
 
-Story 19 is covered by the workspace-isolation suite (M6.6). Numbers 35–46
-belong to v2 and are not reused; `tests/guards/story-naming.test.ts` rejects a
+Story 19 is covered by the workspace-isolation suite (M6.6),
+`tests/db/workspace-isolation.test.ts`: the per-entity sweep of a coven's
+ingredients and grimoire, refused to a member of another coven and to a site
+admin through the services a caller reaches them by, with the refusal the same
+for a real id and a made-up one (MB.187). Numbers 35–46 belong to v2 and are not reused; `tests/guards/story-naming.test.ts` rejects a
 top-level `describe` that names one of them, or none at all.
 
 These files run under the `acceptance` project in `vitest.stories.config.mts`

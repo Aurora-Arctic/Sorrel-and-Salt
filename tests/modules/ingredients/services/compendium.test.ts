@@ -261,11 +261,4 @@ describe('getIngredient', () => {
     ).rejects.toBeInstanceOf(NotFound);
     await expect(getIngredient(null, 'not-a-uuid')).rejects.toBeInstanceOf(NotFound);
   });
-
-  it('answers NotFound for a soft-deleted entry', async () => {
-    await sql`
-      update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${compendiumId}`;
-
-    await expect(getIngredient(null, compendiumId)).rejects.toBeInstanceOf(NotFound);
-  });
 });

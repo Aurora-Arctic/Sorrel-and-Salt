@@ -102,26 +102,15 @@ describe('createReference', () => {
   });
 
   // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees
-  // them: each issue on the field that failed, never a constraint's name.
-  it.each([
-    [
-      'a web page with no address or day',
-      { kind: 'web_page', title: 'Testwort' },
-      ['url', 'accessed'],
-    ],
-    ['a chapter with no book', { kind: 'chapter', title: 'On Testwort' }, ['container']],
-    ['an article with no journal', { kind: 'article', title: 'On Testwort' }, ['container']],
-    ['an entry with no reference work', { kind: 'entry', title: 'Testwort' }, ['container']],
-    ['a book with no date', { kind: 'book', title: 'Fixtures' }, ['published']],
-    // An address with a host but no scheme is taken as https (MB.154); one
-    // with no host to read is still refused.
-    ['a relative address', { ...BOOK, url: 'fixtures/a' }, ['url']],
-    ['a day read with no address', { ...BOOK, accessed: '2026-10-06' }, ['accessed']],
-    ['a blank title', { ...BOOK, title: '  ' }, ['title']],
-  ])('refuses %s, pathed to the field', async (_case, input, fields) => {
-    const issues = await refusal(createReference(asUser(B), WORKSPACE_W_ID, input as never));
+  // them: each issue on the field that failed, never a constraint's name. One
+  // case proves the service parses its input; every rule the schema holds is
+  // tests/modules/ingredients/validation/reference.test.ts's.
+  it('refuses a web page with no address or day, pathed to each field', async () => {
+    const issues = await refusal(
+      createReference(asUser(B), WORKSPACE_W_ID, { kind: 'web_page', title: 'Testwort' } as never),
+    );
 
-    expect(issues.map((issue) => issue.path)).toEqual(fields.map((field) => [field]));
+    expect(issues.map((issue) => issue.path)).toEqual([['url'], ['accessed']]);
     for (const { message } of issues) expect(message).not.toMatch(/references_|violates/);
   });
 });

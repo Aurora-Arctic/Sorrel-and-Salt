@@ -435,8 +435,9 @@ each loader, and one `VALIDATION`; what each filter matches is
 coven forwarded, one `NOT_FOUND` and one `FORBIDDEN`. `duplicates.test.ts`,
 `common-names.test.ts` and `ingredient-suggestions.test.ts` hold the nodes,
 the edge's `score` where there is one, a page by cursor, the compendium-only
-mode and one `FORBIDDEN`; the thresholds, the scope and who is refused are
-their services' tests'.
+mode reaching its service with a null workspace, and one `FORBIDDEN`; the
+thresholds, the scope, what the compendium-only mode answers and who is
+refused are their services' tests' (MB.187).
 
 ### The workspace ingredient mutations
 
