@@ -30,6 +30,17 @@ const USERS: readonly UserListEntry[] = [
     providers: ['microsoft'],
     emailVerified: false,
   },
+  // Approved, so the row offers Revoke rather than Approve (M5.8).
+  {
+    id: 'u-cy',
+    name: 'Cy Fixturewort',
+    email: 'cy@users.test',
+    role: 'user',
+    canCreateWorkspace: true,
+    createdAt: new Date('2026-06-07T08:09:10Z'),
+    providers: ['google'],
+    emailVerified: true,
+  },
 ];
 
 // Inside the admin layout's frame, so the workshop shows what the page shows.
@@ -48,7 +59,7 @@ export const Default: Story = () => (
 export const Filtered: Story = () => (
   <Frame>
     <UserList
-      users={USERS.slice(1)}
+      users={USERS.filter((user) => !user.canCreateWorkspace)}
       query="fixturewort"
       awaitingApproval
       previousHref="#previous"

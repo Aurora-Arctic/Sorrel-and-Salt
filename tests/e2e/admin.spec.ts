@@ -129,8 +129,44 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     /^\d{4}-\d{2}-\d{2}$/,
     'Discord, Google',
     'Yes',
+    // Nothing to approve: an admin may already create one.
+    '',
   ]);
   await assertNoAccessibilityViolations(page);
+});
+
+// M5.8: an admin approves a user with no invitation from their row, behind a
+// confirmation naming them, and then revokes it, the row saying so each time.
+test('an admin approves a user awaiting approval at /admin/users, then revokes it', async ({
+  page,
+}) => {
+  // Signed in once to make the account, then the page signs in as the admin.
+  await signInAs(page, 'awaiting@admin-approval.test');
+  await signInAs(page, 'an-admin@admin-approval.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
+  await expect(row.getByRole('cell').nth(3)).toHaveText('No');
+
+  await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
+  await expect(row.getByText('Let Fixture Person create covens?')).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Confirm' })).toBeFocused();
+  await assertNoAccessibilityViolations(page);
+
+  await row.getByRole('button', { name: 'Confirm' }).click();
+
+  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+
+  // And revoked again, behind its own confirmation.
+  await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();
+  await expect(
+    row.getByText('Stop Fixture Person creating covens? Covens they own stay theirs.'),
+  ).toBeVisible();
+  await row.getByRole('button', { name: 'Confirm' }).click();
+
+  await expect(row.getByRole('cell').nth(3)).toHaveText('No');
+  await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({

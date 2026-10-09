@@ -2,6 +2,10 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+
+const router = { refresh: vi.fn() };
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
@@ -64,6 +68,7 @@ describe('UserList', () => {
       'Signed up',
       'Sign-in methods',
       'Email verified',
+      'Approval',
     ]);
   });
 
@@ -78,6 +83,7 @@ describe('UserList', () => {
       '2026-03-04',
       'Discord, Google',
       'Yes',
+      '',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
       'Bo Fixturewort',
@@ -87,6 +93,7 @@ describe('UserList', () => {
       '2026-05-06',
       'None',
       'No',
+      'Approve',
     ]);
   });
 
@@ -272,5 +279,134 @@ describe('UserList filter', () => {
     fireEvent.click(filterButton());
 
     expect(assignMock).toHaveBeenCalledWith('/admin/users');
+  });
+});
+
+// M5.8: a user who may not yet create a coven is approved from their row, and
+// one who may is revoked, each behind a confirmation naming them; an admin's
+// row offers neither. The service is the guard; these put the control where an
+// admin looks, and show what the mutation answers.
+describe('UserList approval', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const boRow = () => screen.getByRole('row', { name: /Bo Fixturewort/ });
+
+  it('offers Approve on the row of a user awaiting approval, naming them, and nothing on an admin', () => {
+    render(<UserList {...props()} />);
+
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    expect(within(boRow()).queryByRole('button', { name: /Revoke/ })).not.toBeInTheDocument();
+    const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
+    expect(within(ada).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('offers Revoke on the row of a user who may create a coven, and no Approve', () => {
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+
+    expect(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    ).toBeEnabled();
+    expect(within(boRow()).queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
+  });
+
+  it('asks before approving, and Cancel puts the row back with nothing sent', () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+
+    expect(within(boRow()).getByText('Let Bo Fixturewort create covens?')).toBeInTheDocument();
+    expect(within(boRow()).getByRole('button', { name: 'Confirm' })).toHaveFocus();
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Cancel' }));
+
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toHaveFocus();
+    expect(calls).toEqual([]);
+  });
+
+  it('approves the row’s user on Confirm, busy until the list is read again', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Confirm' }));
+
+    const busy = within(boRow()).getByRole('button', { name: 'Approving' });
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('says why in the row when the service refuses, and offers Approve again', async () => {
+    mockGraphQLError('GrantWorkspaceCreation', {
+      code: 'FORBIDDEN',
+      message: 'Bo Fixturewort may already create a coven',
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Confirm' }));
+
+    expect(await within(boRow()).findByRole('alert')).toHaveTextContent(
+      'Bo Fixturewort may already create a coven',
+    );
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('revokes on Confirm, a destructive confirmation saying their covens stay theirs', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+
+    expect(
+      within(boRow()).getByText(
+        'Stop Bo Fixturewort creating covens? Covens they own stay theirs.',
+      ),
+    ).toBeInTheDocument();
+    const confirm = within(boRow()).getByRole('button', { name: 'Confirm' });
+    expect(confirm).toHaveFocus();
+    expect(confirm).toHaveClass('btn--destructive');
+    fireEvent.click(confirm);
+
+    expect(within(boRow()).getByRole('button', { name: 'Revoking' })).toBeDisabled();
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  // The refresh re-renders the same row with the flag turned over; the
+  // control must start afresh rather than stay busy under the other action.
+  it('offers Revoke, idle, once the refreshed row says the user was approved', async () => {
+    mockGraphQLMutation('GrantWorkspaceCreation', () => ({
+      grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true },
+    }));
+    const { rerender } = render(<UserList {...props()} />);
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Confirm' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+
+    rerender(<UserList {...props({ users: [ADA, { ...BO, canCreateWorkspace: true }] })} />);
+
+    expect(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    ).toBeEnabled();
+    expect(within(boRow()).queryByRole('button', { name: 'Revoking' })).not.toBeInTheDocument();
   });
 });

@@ -15,3 +15,16 @@
   align-items: end;
   gap: space(3) space(5);
 }
+
+// Approve's confirmation, in its cell: the question above its two buttons.
+.user-list__confirm {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+}
+
+.user-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}

@@ -39,3 +39,16 @@ export interface ImpersonateButtonProps {
   /** The user's name, completing the button's accessible name. */
   name: string;
 }
+
+/** What a row's creation control does: approve a user awaiting it, or revoke it (M5.8). */
+export type CreationAction = 'approve' | 'revoke';
+
+/** Where a creation control is: offering its action, asking to confirm, or waiting on the answer. */
+export type CreationStep = 'idle' | 'confirming' | 'sending';
+
+export interface CreationControlProps {
+  userId: string;
+  /** The user's name, completing the button's accessible name and the question. */
+  name: string;
+  action: CreationAction;
+}

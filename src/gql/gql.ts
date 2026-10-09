@@ -48,6 +48,8 @@ type Documents = {
     "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": typeof types.DeitySuggestionsDocument,
     "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.IngredientSuggestionsDocument,
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
+    "\n  mutation GrantWorkspaceCreation($userId: ID!) {\n    grantWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
+    "\n  mutation RevokeWorkspaceCreation($userId: ID!) {\n    revokeWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
     "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": typeof types.DeletePlanetDocument,
@@ -90,6 +92,8 @@ const documents: Documents = {
     "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": types.DeitySuggestionsDocument,
     "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": types.IngredientSuggestionsDocument,
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
+    "\n  mutation GrantWorkspaceCreation($userId: ID!) {\n    grantWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
+    "\n  mutation RevokeWorkspaceCreation($userId: ID!) {\n    revokeWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
     "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": types.DeletePlanetDocument,
@@ -248,6 +252,14 @@ export function graphql(source: "\n  query IngredientSuggestions($workspaceId: I
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation GrantWorkspaceCreation($userId: ID!) {\n    grantWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation GrantWorkspaceCreation($userId: ID!) {\n    grantWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeWorkspaceCreation($userId: ID!) {\n    revokeWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeWorkspaceCreation($userId: ID!) {\n    revokeWorkspaceCreation(userId: $userId) {\n      id\n      canCreateWorkspace\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

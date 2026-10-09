@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import UserListFilter from './filter';
+import CreationControl from './creation-control';
 import ImpersonateButton from './impersonate-button';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
@@ -39,6 +40,20 @@ const UserRow = ({
     </td>
     <td>{user.providers.length ? user.providers.map(providerLabel).join(', ') : 'None'}</td>
     <td>{yesNo(user.emailVerified)}</td>
+    {/* Approve or revoke (M5.8); nothing on an admin's row, whom the users
+        CHECK holds to the flag (MB.177). */}
+    <td>
+      {user.role === 'admin' ? null : (
+        // Keyed by the action, so the refresh after a change mounts a fresh
+        // control for the other one rather than keeping this one's busy state.
+        <CreationControl
+          key={user.canCreateWorkspace ? 'revoke' : 'approve'}
+          userId={user.id}
+          name={user.name}
+          action={user.canCreateWorkspace ? 'revoke' : 'approve'}
+        />
+      )}
+    </td>
     {/* Not on an admin's row: the endpoint refuses one (MB.53). */}
     {canImpersonate && (
       <td>
@@ -71,6 +86,7 @@ const UserList = ({
               <th scope="col">Signed up</th>
               <th scope="col">Sign-in methods</th>
               <th scope="col">Email verified</th>
+              <th scope="col">Approval</th>
               {canImpersonate && <th scope="col">Impersonate</th>}
             </tr>
           </thead>

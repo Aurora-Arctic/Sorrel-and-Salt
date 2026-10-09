@@ -12,6 +12,9 @@ import type { PageRequest } from '@/lib/types';
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
+// The rows' Approval controls hold the router, which only a mounted app provides.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
 const listUsers = vi.fn();
 const providersOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ listUsers, providersOf }));
