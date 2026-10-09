@@ -1,8 +1,8 @@
 import type { Route } from 'next';
 import type {
-  EditedIngredientFormValue,
-  IngredientFormGroupChoice,
-} from '../../../components/IngredientFormValueForm/types';
+  EditedGroupedValue,
+  GroupedValueGroupChoice,
+} from '../../../components/GroupedValueForm/types';
 
 export interface AdminFormsPageProps {
   // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
@@ -28,6 +28,6 @@ export interface FormDialogProps {
   title: string;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
-  formValue?: EditedIngredientFormValue;
-  groups: readonly IngredientFormGroupChoice[];
+  formValue?: EditedGroupedValue;
+  groups: readonly GroupedValueGroupChoice[];
 }

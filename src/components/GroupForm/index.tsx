@@ -12,8 +12,9 @@ import type { GroupColorColumn, ValidationIssue } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
+import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import type { DeleteStep, GroupFormProps, GroupKind, GroupValues } from './types';
+import type { DeleteStep, GroupFormKind, GroupFormProps, GroupKind, GroupValues } from './types';
 import './index.scss';
 
 // The admin's form for a group (M5.6b), one for both group vocabularies so
@@ -73,6 +74,30 @@ const DeleteIngredientFormGroupDocument = graphql(`
   }
 `);
 
+const CreateDeityTraditionDocument = graphql(`
+  mutation CreateDeityTradition($input: DeityTraditionInput!) {
+    createDeityTradition(input: $input) {
+      id
+      slug
+    }
+  }
+`);
+
+const UpdateDeityTraditionDocument = graphql(`
+  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {
+    updateDeityTradition(id: $id, input: $input) {
+      id
+      slug
+    }
+  }
+`);
+
+const DeleteDeityTraditionDocument = graphql(`
+  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {
+    deleteDeityTradition(id: $id, moveTo: $moveTo)
+  }
+`);
+
 const GENERIC_ERROR = "That didn't work. Please try again.";
 
 const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
@@ -80,25 +105,60 @@ type FieldName = (typeof FIELDS)[number];
 
 const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '' };
 
-/** What differs between the two vocabularies: the rows a group holds, and what a move does to them. */
-const KINDS: Record<
-  GroupKind,
-  { one: string; many: string; moved: string; resolver: Resolver<GroupValues> }
-> = {
+/**
+ * What differs between the vocabularies: what a group is called, the rows it
+ * holds, what a move does to them, and the requests that write it.
+ */
+const KINDS: Record<GroupKind, GroupFormKind> = {
   category: {
+    group: 'group',
+    title: 'Group',
     one: 'category',
     many: 'categories',
     moved: 'Each keeps its name, its address and every entry filed under it.',
     // The schema's output is the input the mutation takes; its type is the values'.
     resolver: zodResolver(CategoryGroupInput) as unknown as Resolver<GroupValues>,
+    save: async (input, id) => {
+      if (id) await graphqlRequest(UpdateCategoryGroupDocument, { id, input });
+      else await graphqlRequest(CreateCategoryGroupDocument, { input });
+    },
+    remove: async (variables) => {
+      await graphqlRequest(DeleteCategoryGroupDocument, variables);
+    },
   },
   form: {
+    group: 'group',
+    title: 'Group',
     one: 'form',
     many: 'forms',
     moved:
       'Each keeps its name, and its address follows its new group; every ingredient that picked one keeps it.',
     // Drops the two empty colours, which a form group's input does not take.
     resolver: zodResolver(IngredientFormGroupInput) as unknown as Resolver<GroupValues>,
+    save: async (input, id) => {
+      if (id) await graphqlRequest(UpdateIngredientFormGroupDocument, { id, input });
+      else await graphqlRequest(CreateIngredientFormGroupDocument, { input });
+    },
+    remove: async (variables) => {
+      await graphqlRequest(DeleteIngredientFormGroupDocument, variables);
+    },
+  },
+  // A deity's tradition (MB.132): a form group's shape, under its own name.
+  tradition: {
+    group: 'tradition',
+    title: 'Tradition',
+    one: 'deity',
+    many: 'deities',
+    moved:
+      'Each keeps its name, and its address follows its new tradition; every ingredient that picked one keeps it.',
+    resolver: zodResolver(DeityTraditionInput) as unknown as Resolver<GroupValues>,
+    save: async (input, id) => {
+      if (id) await graphqlRequest(UpdateDeityTraditionDocument, { id, input });
+      else await graphqlRequest(CreateDeityTraditionDocument, { input });
+    },
+    remove: async (variables) => {
+      await graphqlRequest(DeleteDeityTraditionDocument, variables);
+    },
   },
 };
 
@@ -131,7 +191,7 @@ const isField = (key: unknown): key is FieldName => FIELDS.includes(key as Field
 /**
  * The asterisk beside a required field's label, for the eye: hidden from the
  * field's name, so a screen reader hears the label and the control's
- * `aria-required` rather than "star", as CategoryForm's is.
+ * `aria-required` rather than "star", as GroupedValueForm's is.
  */
 const Required = (): ReactElement => (
   <span className="group-form__required" aria-hidden="true">
@@ -148,7 +208,8 @@ const GroupForm = ({
 }: GroupFormProps): ReactElement => {
   const id = useId();
   const ids = (field: string) => ({ control: `${id}-${field}`, error: `${id}-${field}-error` });
-  const { one, many, moved, resolver } = KINDS[kind];
+  const spec = KINDS[kind];
+  const { group: noun, title, one, many, moved, resolver } = spec;
   const {
     register,
     control,
@@ -191,16 +252,7 @@ const GroupForm = ({
   const [alert, setAlert] = useState<string>();
 
   const save = useMutation({
-    mutationFn: async (input: GroupValues): Promise<void> => {
-      if (kind === 'category') {
-        if (group) await graphqlRequest(UpdateCategoryGroupDocument, { id: group.id, input });
-        else await graphqlRequest(CreateCategoryGroupDocument, { input });
-      } else if (group) {
-        await graphqlRequest(UpdateIngredientFormGroupDocument, { id: group.id, input });
-      } else {
-        await graphqlRequest(CreateIngredientFormGroupDocument, { input });
-      }
-    },
+    mutationFn: (input: GroupValues): Promise<void> => spec.save(input, group?.id),
   });
 
   const remove = useMutation({
@@ -210,8 +262,7 @@ const GroupForm = ({
       const variables: { id: string; moveTo?: string } = target
         ? { id: group.id, moveTo: target }
         : { id: group.id };
-      if (kind === 'category') await graphqlRequest(DeleteCategoryGroupDocument, variables);
-      else await graphqlRequest(DeleteIngredientFormGroupDocument, variables);
+      await spec.remove(variables);
     },
   });
 
@@ -297,8 +348,8 @@ const GroupForm = ({
       return (
         <div className="group-form__confirm">
           <p>
-            &quot;{group?.name}&quot; holds {rows}, and there is no other group to move them to. Add
-            another group first.
+            &quot;{group?.name}&quot; holds {rows}, and there is no other {noun} to move them to.
+            Add another {noun} first.
           </p>
           <div className="modal__actions">{keepIt}</div>
         </div>
@@ -322,7 +373,7 @@ const GroupForm = ({
               setMoveError(undefined);
             }}
             choices={others.map((each) => ({ value: each.id, label: each.name }))}
-            placeholder="Choose a group"
+            placeholder={`Choose a ${noun}`}
             required
             aria-invalid={moveError ? true : undefined}
             aria-describedby={moveError ? moveIds.error : undefined}
@@ -397,7 +448,7 @@ const GroupForm = ({
           aria-busy={isSubmitting || undefined}
         >
           {isSubmitting && <span className="spinner" aria-hidden="true" />}
-          {isSubmitting ? 'Saving Group' : 'Save Group'}
+          {isSubmitting ? `Saving ${title}` : `Save ${title}`}
         </button>
         <button type="button" className="btn btn--quiet" onClick={onDone}>
           Cancel
@@ -411,7 +462,7 @@ const GroupForm = ({
               setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
             }}
           >
-            Delete Group
+            Delete {title}
           </button>
         )}
       </div>

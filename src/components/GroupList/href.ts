@@ -10,6 +10,7 @@ import type { GroupsDialog, GroupsPlace } from './types';
 const PATHS: Record<GroupKind, string> = {
   category: '/admin/category-groups',
   form: '/admin/form-groups',
+  tradition: '/admin/deity-traditions',
 };
 
 export function groupsHref(kind: GroupKind, place: GroupsPlace, dialog?: GroupsDialog): Route {

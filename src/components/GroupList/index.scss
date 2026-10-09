@@ -1,8 +1,9 @@
 @use '../../scss/variables' as *;
 
-// Layout only, until the admin area's design review (MB.115): CategoryList's
-// shape without the filter. The table, the chip, Edit and the pager are
-// primitives (`.data-table`, `.chip`, `.btn--small`, `.pager`).
+// Layout only, until the admin area's design review (MB.115):
+// GroupedValueList's shape without the filter. The table, the chip, Edit
+// and the pager are primitives (`.data-table`, `.chip`, `.btn--small`,
+// `.pager`).
 
 .group-list {
   display: flex;

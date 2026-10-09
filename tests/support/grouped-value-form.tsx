@@ -2,34 +2,39 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { HttpResponse } from 'msw';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { expect, vi } from 'vitest';
+import GroupedValueForm from '@/components/GroupedValueForm';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from './msw/graphql';
 import { server } from './msw/server';
 import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
-// CategoryForm and IngredientFormValueForm are one form twice: a name, a
-// description and a group, saved through a create, an update and a delete
-// mutation. The tests the two copies share are written once, here, as rows
-// each file runs with `it.each` under its own describe, so a third copy is a
-// subject rather than a file (MB.189). What only one of them does — the
-// rename note, the redirect question, its own confirmation and refusals —
-// stays in its own file.
+// GroupedValueForm is one form for every grouped vocabulary: a name, a
+// description and a group, saved through the kind's create, update and
+// delete mutations. The tests every kind shares are written once, here, as
+// rows tests/components/GroupedValueForm runs with `it.each` for each
+// subject, so a new kind is a subject rather than a copy of them (MB.189,
+// MB.132). The group field is found by the subject's own label, since a kind
+// may call its group something else. What only one kind does — the rename
+// note, the redirect question, its own confirmation and refusals — stays in
+// that kind's describe.
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
-const group = () => screen.getByRole('combobox', { name: 'Group' });
 const button = (label: string) => screen.getByRole('button', { name: label });
 const type = (field: HTMLElement, value: string) => fireEvent.change(field, { target: { value } });
 const press = (label: string) => {
   button(label).focus();
   fireEvent.click(button(label));
 };
-const chooseGroup = (label: string) => {
-  fireEvent.click(group());
+const group = (subject: GroupedValueFormSubject) =>
+  screen.getByRole('combobox', { name: subject.groupLabel });
+const chooseGroup = (subject: GroupedValueFormSubject, label: string) => {
+  fireEvent.click(group(subject));
   fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Group choices' })).getByRole('option', {
-      name: label,
-    }),
+    within(screen.getByRole('listbox', { name: `${subject.groupLabel} choices` })).getByRole(
+      'option',
+      { name: label },
+    ),
   );
 };
 
@@ -37,7 +42,12 @@ function renderSubject(subject: GroupedValueFormSubject, editing = false) {
   const onDone = vi.fn();
   render(
     <QueryClientProvider client={makeQueryClient()}>
-      {subject.render({ onDone, editing })}
+      <GroupedValueForm
+        kind={subject.kind}
+        value={editing ? subject.value : undefined}
+        groups={subject.groups}
+        onDone={onDone}
+      />
     </QueryClientProvider>,
   );
   return onDone;
@@ -62,7 +72,7 @@ export const ADDING: GroupedValueFormCase[] = [
       // The asterisk is for the eye; the name stays the label alone.
       expect(name()).toHaveAttribute('aria-required', 'true');
       expect(description()).toHaveAttribute('aria-required', 'true');
-      expect(group()).toBeRequired();
+      expect(group(subject)).toBeRequired();
     },
   ],
   // The owner's rule for every form: Save is offered only when there is
@@ -90,7 +100,7 @@ export const ADDING: GroupedValueFormCase[] = [
 
       expect(await screen.findByText(subject.describeRefusal)).toBeInTheDocument();
       expect(description()).toHaveAccessibleDescription(subject.describeRefusal);
-      expect(group()).toHaveAccessibleDescription('Choose a group');
+      expect(group(subject)).toHaveAccessibleDescription(subject.groupRefusal);
       expect(onDone).not.toHaveBeenCalled();
     },
   ],
@@ -110,7 +120,7 @@ export const ADDING: GroupedValueFormCase[] = [
       const onDone = renderSubject(subject);
       type(name(), subject.value.name);
       type(description(), 'Held');
-      chooseGroup(subject.groups[0].name);
+      chooseGroup(subject, subject.groups[0].name);
       press(`Save ${subject.noun}`);
 
       const busy = await screen.findByRole('button', { name: `Saving ${subject.noun}` });
@@ -132,7 +142,7 @@ export const ADDING: GroupedValueFormCase[] = [
 
       type(name(), subject.slugClash.name);
       type(description(), 'A clash');
-      chooseGroup(subject.groups[0].name);
+      chooseGroup(subject, subject.groups[0].name);
       press(`Save ${subject.noun}`);
 
       expect(await screen.findByText(message)).toBeInTheDocument();
@@ -150,9 +160,9 @@ export const EDITING: GroupedValueFormCase[] = [
       const save = () => button(`Save ${subject.noun}`);
 
       expect(save()).toBeDisabled();
-      chooseGroup(subject.groups[0].name);
+      chooseGroup(subject, subject.groups[0].name);
       expect(save()).toBeEnabled();
-      chooseGroup(subject.groups[1].name);
+      chooseGroup(subject, subject.groups[1].name);
       expect(save()).toBeDisabled();
     },
   ],

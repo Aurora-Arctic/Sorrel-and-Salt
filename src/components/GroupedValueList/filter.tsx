@@ -1,9 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactElement, useState, useTransition } from 'react';
-import { categoriesHref } from './href';
-import type { CategoryListFilterProps } from './types';
+import { type FormEvent, type ReactElement, useId, useState, useTransition } from 'react';
+import { groupedValuesHref } from './href';
+import { KINDS } from './kinds';
+import type { GroupedValueListFilterProps } from './types';
 
 // The filter, a GET form to the page itself (MB.178), as the user list's
 // (MB.52). Filter is offered only when the form differs from the filter the
@@ -14,7 +15,13 @@ import type { CategoryListFilterProps } from './types';
 // the form still submits natively, as `query=&group=`, which the page reads
 // as no filter. The list keys this by the filter shown, so a page showing
 // another — Back, say — starts it again from that one.
-const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactElement => {
+const GroupedValueListFilter = ({
+  kind,
+  filter,
+  groups,
+}: GroupedValueListFilterProps): ReactElement => {
+  const id = useId();
+  const { path, plural, groupLabel, groupPlural, groupParam } = KINDS[kind];
   const [draftQuery, setDraftQuery] = useState(filter.query);
   const [draftGroup, setDraftGroup] = useState(filter.group);
   const [filtering, startFiltering] = useTransition();
@@ -25,25 +32,25 @@ const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactE
     event.preventDefault();
     if (!changed || filtering) return;
     startFiltering(() => {
-      router.push(categoriesHref({ query: draftQuery.trim(), group: draftGroup }));
+      router.push(groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup }));
     });
   }
 
   return (
     <search>
       <form
-        className="category-list__search"
+        className="grouped-value-list__search"
         method="get"
-        action="/admin/categories"
-        aria-label="Filter categories"
+        action={path}
+        aria-label={`Filter ${plural}`}
         onSubmit={submit}
       >
         <div className="field">
-          <label className="field__label" htmlFor="category-list-query">
+          <label className="field__label" htmlFor={`${id}-query`}>
             Name
           </label>
           <input
-            id="category-list-query"
+            id={`${id}-query`}
             className="input"
             type="search"
             name="query"
@@ -52,17 +59,17 @@ const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactE
           />
         </div>
         <div className="field">
-          <label className="field__label" htmlFor="category-list-group">
-            Group
+          <label className="field__label" htmlFor={`${id}-group`}>
+            {groupLabel}
           </label>
           <select
-            id="category-list-group"
+            id={`${id}-group`}
             className="select"
-            name="group"
+            name={groupParam}
             value={draftGroup}
             onChange={(event) => setDraftGroup(event.target.value)}
           >
-            <option value="">All groups</option>
+            <option value="">All {groupPlural}</option>
             {groups.map((group) => (
               <option key={group.slug} value={group.slug}>
                 {group.name}
@@ -85,4 +92,4 @@ const CategoryListFilter = ({ filter, groups }: CategoryListFilterProps): ReactE
   );
 };
 
-export default CategoryListFilter;
+export default GroupedValueListFilter;

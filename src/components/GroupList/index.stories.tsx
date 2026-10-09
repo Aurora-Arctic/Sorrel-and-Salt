@@ -43,4 +43,23 @@ export const FormGroups: Story = () => (
   />
 );
 
+export const Traditions: Story = () => (
+  <GroupList
+    kind="tradition"
+    groups={['Fixtural', 'Mockish'].map((name) => {
+      const slug = slugify(name);
+      return {
+        id: slug,
+        name,
+        slug,
+        description: 'An invented tradition, for the workshop.',
+        editHref: groupsHref('tradition', {}, { edit: slug }),
+      };
+    })}
+  />
+);
+
 export const Empty: Story = () => <GroupList kind="form" groups={[]} />;
+
+// The traditions' empty message names them.
+export const TraditionsEmpty: Story = () => <GroupList kind="tradition" groups={[]} />;

@@ -5,7 +5,7 @@ table and pager (MB.95): `/admin/planets`' and `/admin/zodiac-signs`'. It is
 render-only and a server component: the page reads one page of the
 vocabulary under the address's query through `listAstrologyValues` and hands
 it over, each value with the address that opens it to edit. It is
-[`IngredientFormValueList`](ingredient-form-value-list.md) without the group:
+[`GroupedValueList`](grouped-value-list.md) without the group:
 a planet or a sign is filed under nothing.
 
 One component for both vocabularies, keyed by `vocabulary`, since the two
@@ -59,7 +59,7 @@ plus `editHref`.
 
 ## Styling
 
-IngredientFormValueList's: a wrapping filter row,
+GroupedValueList's: a wrapping filter row,
 `.vocabulary-value-list__search`, on the `.field`, `.input` and `.btn`
 primitives; the `.data-table` in its `.data-table-frame`; a description kept
 to `$measure`; each Edit `.btn--small.btn--quiet`; and `Pager`, soft

@@ -1,8 +1,30 @@
+import type { Resolver } from 'react-hook-form';
+
 /**
  * Which group vocabulary the form writes: the category groups, whose rows
- * carry a chip's two colours, or the ingredient form groups, which carry none.
+ * carry a chip's two colours; the ingredient form groups; or the deity
+ * traditions (MB.132), which carry none.
  */
-export type GroupKind = 'category' | 'form';
+export type GroupKind = 'category' | 'form' | 'tradition';
+
+/** One group vocabulary as the form uses it: its nouns, its schema and its requests. */
+export interface GroupFormKind {
+  /** A group, lower-case, as a sentence says it: "group", "tradition". */
+  group: string;
+  /** The same in title case, as a button says it: "Save Group". */
+  title: string;
+  /** One row it holds, lower-case: "category". */
+  one: string;
+  /** More than one: "categories". */
+  many: string;
+  /** What the move's confirmation says the rows keep. */
+  moved: string;
+  resolver: Resolver<GroupValues>;
+  /** Creates the group, or updates the one at `id`. */
+  save: (input: GroupValues, id: string | undefined) => Promise<void>;
+  /** Deletes it, moving its rows to `moveTo` when given. */
+  remove: (variables: { id: string; moveTo?: string }) => Promise<void>;
+}
 
 /**
  * A live group, as the move picker offers it and the form names it; a

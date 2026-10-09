@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
-import CategoryForm from '../../../components/CategoryForm';
+import GroupedValueForm from '../../../components/GroupedValueForm';
 import Modal from '../../../components/Modal';
 import type { CategoryDialogProps } from './types';
 
@@ -23,7 +23,9 @@ export default function CategoryDialog({
   return (
     <Modal title={title} onClose={close}>
       {/* The modal's own close, so a save or a delete fades it out as Close does (M5.5). */}
-      {(fadeOut) => <CategoryForm category={category} groups={groups} onDone={fadeOut} />}
+      {(fadeOut) => (
+        <GroupedValueForm kind="category" value={category} groups={groups} onDone={fadeOut} />
+      )}
     </Modal>
   );
 }

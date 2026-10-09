@@ -2,7 +2,7 @@
 
 `src/components/CompendiumList/` — `/admin/compendium`'s filter, table and
 pager (M5.5), built as the category list's is
-([`category-list.md`](category-list.md)). It is render-only and a server
+([`grouped-value-list.md`](grouped-value-list.md)). It is render-only and a server
 component: the page reads one page of the compendium under the address's
 filter through `listCompendium` and hands it over, each entry with its
 classification, its formal name, its form and the address that opens it to edit, with the filter

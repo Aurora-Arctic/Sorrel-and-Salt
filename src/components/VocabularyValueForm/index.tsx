@@ -17,9 +17,8 @@ import './index.scss';
 // The admin's form for a flat curated vocabulary (MB.95): a name and a
 // description, validated by the vocabulary's shared schema before the
 // mutation and again by the service, and on an existing value a delete behind
-// a confirmation. IngredientFormValueForm's shape without the group, and
-// without the redirect question: a planet or a sign is no part of an entry's
-// slug. A rename carries onto the entries listing it (MB.162), so it says so.
+// a confirmation. GroupedValueForm's shape without the group, and without
+// the redirect question: a planet or a sign is no part of an entry's slug. A rename carries onto the entries listing it (MB.162), so it says so.
 // It holds no modal of its own; the page puts it in one
 // (claude-docs/components/vocabulary-value-form.md).
 

@@ -20,8 +20,8 @@ without a page routed to it.
   owner's call). `Modal` opens with `showModal()`, which puts the dialog in the
   document's top layer: in the workshop's own document that covers Ladle's
   sidebar too. In its own iframe, carrying the global provider and styles, the
-  dialog covers the story's frame and nothing else. `Modal` and `CategoryForm`
-  are the first.
+  dialog covers the story's frame and nothing else. `Modal` and the category
+  form, now `GroupedValueForm`, are the first.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -133,7 +133,8 @@ without a page routed to it.
 - **`navigation.ts`** — what `next/navigation` resolves to here, by the same
   alias: a `useRouter` whose every method goes nowhere. Next's own throws with
   no App Router mounted, and the first component to navigate on its own,
-  CategoryList's filter (MB.178), would render no story without it.
+  the category list's filter (MB.178), now `GroupedValueList`'s, would
+  render no story without it.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).

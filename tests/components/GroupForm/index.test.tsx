@@ -6,10 +6,14 @@ import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
   CreateCategoryGroupMutation,
   CreateCategoryGroupMutationVariables,
+  CreateDeityTraditionMutation,
+  CreateDeityTraditionMutationVariables,
   CreateIngredientFormGroupMutation,
   CreateIngredientFormGroupMutationVariables,
   DeleteCategoryGroupMutation,
   DeleteCategoryGroupMutationVariables,
+  DeleteDeityTraditionMutation,
+  DeleteDeityTraditionMutationVariables,
   DeleteIngredientFormGroupMutation,
   DeleteIngredientFormGroupMutationVariables,
   UpdateCategoryGroupMutation,
@@ -19,7 +23,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The admin's form for a group (M5.6b), for both group vocabularies: a name, a
+// The admin's form for a group (M5.6b), for every group vocabulary, a deity's
+// traditions included (MB.132): a name, a
 // description, and for a category group its chip's two colours, each held to
 // 4.5:1 on its own ground (MB.36) before the request as well as by the
 // service. A delete of a group holding rows first asks where they go, then
@@ -476,5 +481,72 @@ describe('GroupForm, for a form group', () => {
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
+  });
+});
+
+// MB.132: a deity's tradition, a form group's shape under its own name, its
+// deities moved and re-slugged on a delete.
+describe('GroupForm, for a deity tradition', () => {
+  it('asks for no colours, and creates the tradition from its name and description alone', async () => {
+    const calls: CreateDeityTraditionMutationVariables[] = [];
+    mockGraphQLMutation<CreateDeityTraditionMutation, CreateDeityTraditionMutationVariables>(
+      'CreateDeityTradition',
+      (variables) => {
+        calls.push(variables);
+        return { createDeityTradition: { id: MATTER.id, slug: 'fixtural' } };
+      },
+    );
+    const onDone = renderForm({ kind: 'tradition' });
+
+    expect(screen.queryByRole('textbox', { name: 'Dark Theme Colour' })).not.toBeInTheDocument();
+    type(name(), 'Fixtural');
+    type(description(), 'A tradition the test made');
+    press('Save Tradition');
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([
+      { input: { name: 'Fixtural', description: 'A tradition the test made' } },
+    ]);
+  });
+
+  it('moves its deities on a confirmed delete, saying their addresses follow the tradition', async () => {
+    const calls: DeleteDeityTraditionMutationVariables[] = [];
+    mockGraphQLMutation<DeleteDeityTraditionMutation, DeleteDeityTraditionMutationVariables>(
+      'DeleteDeityTradition',
+      (variables) => {
+        calls.push(variables);
+        return { deleteDeityTradition: MATTER.id };
+      },
+    );
+    const onDone = renderForm({ kind: 'tradition', group: MATTER, memberCount: 1 });
+
+    press('Delete Tradition');
+    expect(screen.getByRole('combobox', { name: 'Move its 1 deity to' })).toHaveTextContent(
+      'Choose a tradition',
+    );
+    choose('Move its 1 deity to', 'Fixture Substance');
+    press('Continue');
+
+    expect(
+      screen.getByText(
+        'Move 1 deity to "Fixture Substance" and delete "Fixture Matter"? Each keeps its name, and its address follows its new tradition; every ingredient that picked one keeps it.',
+      ),
+    ).toBeInTheDocument();
+    press('Move and Delete');
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
+  });
+
+  it('says to add another tradition first when there is none to move its deities to', () => {
+    renderForm({ kind: 'tradition', group: MATTER, groups: [GROUPS[2]], memberCount: 2 });
+
+    press('Delete Tradition');
+
+    expect(
+      screen.getByText(
+        '"Fixture Matter" holds 2 deities, and there is no other tradition to move them to. Add another tradition first.',
+      ),
+    ).toBeInTheDocument();
   });
 });

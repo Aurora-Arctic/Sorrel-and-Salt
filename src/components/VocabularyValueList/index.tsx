@@ -7,7 +7,7 @@ import type { VocabularyValueListProps } from './types';
 import './index.scss';
 
 // A flat curated vocabulary's filter, table and pager (MB.95): the planets'
-// and the signs' admin pages, in IngredientFormValueList's shape without the
+// and the signs' admin pages, in GroupedValueList's shape without the
 // group. Render-only: the page reads one page of the vocabulary under the
 // address's query through the service and hands it here. Each Edit is an
 // address — the page opens its modal from the URL — so a modal can be linked

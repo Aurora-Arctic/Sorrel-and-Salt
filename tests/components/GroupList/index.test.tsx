@@ -61,6 +61,12 @@ describe('GroupList', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
+  it('says so in its own word when there is no tradition', () => {
+    render(<GroupList kind="tradition" groups={[]} />);
+
+    expect(screen.getByText('No traditions yet.')).toBeInTheDocument();
+  });
+
   it('pages by the links it is given', () => {
     render(
       <GroupList
@@ -80,6 +86,7 @@ describe('GroupList', () => {
 describe('groupsHref', () => {
   it("builds each page's address, keeping the cursor under a modal", () => {
     expect(groupsHref('form', {})).toBe('/admin/form-groups');
+    expect(groupsHref('tradition', {}, 'new')).toBe('/admin/deity-traditions?new');
     expect(groupsHref('form', { after: 'c' }, 'new')).toBe('/admin/form-groups?after=c&new');
     expect(groupsHref('category', { before: 'c' }, { edit: 'a b' })).toBe(
       '/admin/category-groups?before=c&edit=a+b',

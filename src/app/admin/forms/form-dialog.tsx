@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
-import IngredientFormValueForm from '../../../components/IngredientFormValueForm';
+import GroupedValueForm from '../../../components/GroupedValueForm';
 import Modal from '../../../components/Modal';
 import type { FormDialogProps } from './types';
 
@@ -26,7 +26,7 @@ export default function FormDialog({
     <Modal title={title} onClose={close}>
       {/* The modal's own close, so a save or a delete fades it out as Close does (M5.5). */}
       {(fadeOut) => (
-        <IngredientFormValueForm formValue={formValue} groups={groups} onDone={fadeOut} />
+        <GroupedValueForm kind="form" value={formValue} groups={groups} onDone={fadeOut} />
       )}
     </Modal>
   );

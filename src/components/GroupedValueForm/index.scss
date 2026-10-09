@@ -1,17 +1,17 @@
 @use '../../scss/variables' as *;
 
 // Layout only, on the form primitives; no styling past the tokens before the
-// admin section's design review (MB.115). CategoryForm's, under this name.
-.ingredient-form-value-form__actions {
+// admin section's design review (MB.115).
+.grouped-value-form__actions {
   flex-wrap: wrap;
 }
 
 // Apart from Save and Cancel, at the far end, so it is not pressed for either.
-.ingredient-form-value-form__delete {
+.grouped-value-form__delete {
   margin-left: auto;
 }
 
-.ingredient-form-value-form__confirm {
+.grouped-value-form__confirm {
   // Where the buttons it stands in for would be (M5.5).
   margin-block: space(2);
 }
@@ -20,7 +20,7 @@
 // the row's own gap above it, and a closer one between it and Save. Under
 // the form's class, since the primitives are emitted under `body` and would
 // otherwise win on specificity.
-.ingredient-form-value-form .ingredient-form-value-form__note {
+.grouped-value-form .grouped-value-form__note {
   margin-top: space(4);
 
   + .modal__actions {
@@ -29,6 +29,6 @@
 }
 
 // Hard against the label, in the error red: it marks what a save will ask for.
-.ingredient-form-value-form__required {
+.grouped-value-form__required {
   color: $secondary;
 }

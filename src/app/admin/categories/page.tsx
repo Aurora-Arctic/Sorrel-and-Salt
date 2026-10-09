@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cache } from 'react';
-import CategoryList from '../../../components/CategoryList';
-import { categoriesHref } from '../../../components/CategoryList/href';
-import type { CategoryListEntry } from '../../../components/CategoryList/types';
+import GroupedValueList from '../../../components/GroupedValueList';
+import { groupedValuesHref } from '../../../components/GroupedValueList/href';
+import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
 import { NotFound } from '../../../lib/errors';
 import {
   DEFAULT_PAGE_SIZE,
@@ -103,8 +103,9 @@ async function readEdited(slug: string) {
 // The global category vocabulary, for an admin to add to, edit and retire
 // (M5.6). A modal over the list does the writing, opened by the address —
 // `?new`, or `?edit=<slug>` — so it can be linked to and Back closes it
-// (claude-docs/components/category-form.md, "On the admin page"). The list
-// narrows by `?query=` and `?group=`, which every link here keeps (MB.178).
+// (claude-docs/components/grouped-value-form.md, "On the admin pages").
+// The list narrows by `?query=` and `?group=`, which every link here keeps
+// (MB.178).
 export default async function AdminCategoriesPage({ searchParams }: AdminCategoriesPageProps) {
   await requireAdminSession();
   const params: CategoriesSearchParams = await searchParams;
@@ -124,16 +125,16 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
   const filter = { query, group: group?.slug ?? '' };
   const here = { ...filter, after, before };
   const groupsById = new Map(groups.map((each) => [each.id, each]));
-  const categories = page.edges.map(({ node }): CategoryListEntry => ({
+  const categories = page.edges.map(({ node }): GroupedValueListEntry => ({
     id: node.id,
     name: node.name,
     slug: node.slug,
     description: node.description,
     groupName: groupsById.get(node.groupId)?.name ?? '',
     groupColors: groupsById.get(node.groupId),
-    editHref: categoriesHref(here, { edit: node.slug }),
+    editHref: groupedValuesHref('category', here, { edit: node.slug }),
   }));
-  const closeHref = categoriesHref(here);
+  const closeHref = groupedValuesHref('category', here);
 
   return (
     <main>
@@ -141,7 +142,7 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
           vocabulary page has it. */}
       <div className="page-header">
         <h1>Categories</h1>
-        <Link className="btn btn--solid" href={categoriesHref(here, 'new')}>
+        <Link className="btn btn--solid" href={groupedValuesHref('category', here, 'new')}>
           Add Category
         </Link>
       </div>
@@ -150,19 +151,20 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
           No category has that address — it may have been renamed or deleted.
         </p>
       )}
-      <CategoryList
-        categories={categories}
+      <GroupedValueList
+        kind="category"
+        values={categories}
         filter={filter}
         groups={groups}
         position={page.position}
         previousHref={
           page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
-            ? categoriesHref({ ...filter, before: page.pageInfo.startCursor })
+            ? groupedValuesHref('category', { ...filter, before: page.pageInfo.startCursor })
             : undefined
         }
         nextHref={
           page.pageInfo.hasNextPage && page.pageInfo.endCursor
-            ? categoriesHref({ ...filter, after: page.pageInfo.endCursor })
+            ? groupedValuesHref('category', { ...filter, after: page.pageInfo.endCursor })
             : undefined
         }
       />
