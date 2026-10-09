@@ -56,7 +56,11 @@
     `.github/scripts/audit-comment.cjs` under `actions/github-script` rather
     than `pr-comment`: a severity table and a package breakdown reported as a
     `[!WARNING]` on a step that passed, which `pr-comment`'s pass/fail
-    vocabulary has no way to say. The same script writes the same callout to
+    vocabulary has no way to say. Its "Fix available" column compares npm's
+    suggested version with the lockfile's, through
+    `.github/scripts/lib/audit-fix.cjs`: when no patched release exists,
+    `npm audit` can name an older major as the fix, and that reads as
+    "No — downgrade only". The same script writes the same callout to
     the job summary (MB.37). Until then the leg wrote no summary at all,
     because the pass/fail `job-summary` action would have put "Dependency
     Audit passed" directly above the table — and the audit was invisible on

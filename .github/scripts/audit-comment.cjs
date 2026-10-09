@@ -4,6 +4,7 @@
 // written, the comment only with a PR (under `act` there is none).
 module.exports = async ({ github, context, core }) => {
   const fs = require('fs');
+  const { fixCell } = require('/app/.github/scripts/lib/audit-fix.cjs');
   const marker = '<!-- ci-audit -->';
   const shortSha = context.sha.slice(0, 7);
   const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
@@ -14,20 +15,15 @@ module.exports = async ({ github, context, core }) => {
     const i = severityOrder.indexOf(severity);
     return i === -1 ? severityOrder.length : i;
   };
-  const fixCell = (fixAvailable) => {
-    if (fixAvailable === true) return 'Yes';
-    if (fixAvailable === false) return 'No';
-    if (fixAvailable && typeof fixAvailable === 'object') {
-      const { name, version, isSemVerMajor } = fixAvailable;
-      return `Yes (${name}@${version}${isSemVerMajor ? ', major' : ''})`;
-    }
-    return 'No';
-  };
-
   let report;
   try {
     const data = JSON.parse(fs.readFileSync('/app/audit-results.json', 'utf8'));
     const vulns = data.metadata?.vulnerabilities ?? {};
+    // The installed version a suggested fix is compared against, to tell a
+    // downgrade from a fix.
+    const lockPackages =
+      JSON.parse(fs.readFileSync('/app/package-lock.json', 'utf8')).packages ?? {};
+    const installed = (fix) => lockPackages[`node_modules/${fix?.name}`]?.version;
     const total = vulns.total ?? 0;
 
     if (total === 0) {
@@ -47,7 +43,10 @@ module.exports = async ({ github, context, core }) => {
       const max = 20;
       const rows = packages
         .slice(0, max)
-        .map((p) => `| ${p.name} | ${p.severity} | ${fixCell(p.fixAvailable)} |`);
+        .map(
+          (p) =>
+            `| ${p.name} | ${p.severity} | ${fixCell(p.fixAvailable, installed(p.fixAvailable))} |`,
+        );
       const packageTable = [
         '| Package | Severity | Fix available |',
         '| --- | --- | --- |',
