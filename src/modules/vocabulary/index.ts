@@ -9,6 +9,8 @@ export * from './services/categories';
 export * from './services/astrology';
 export * from './services/category-groups';
 export * from './services/ingredient-form-groups';
+export * from './services/deities';
+export * from './services/deity-traditions';
 export * from './loaders/groups-by-id';
 export * from './graphql/suggestions';
 export * from './graphql/categories';
@@ -24,6 +26,7 @@ export type {
   CategoryGroupRow,
   CategoryRow,
   CuratedField,
+  DeityFilter,
   DeityRow,
   DeityTraditionRow,
   IngredientFormGroupRow,

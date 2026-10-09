@@ -98,6 +98,14 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ ingredientFormGroups(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
+  deities: {
+    source: '{ deities(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
+  deityTraditions: {
+    source: '{ deityTraditions(first: 1) { edges { node { id } } } }',
+    outcome: 'answers',
+  },
   planets: {
     source: '{ planets(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -236,6 +244,7 @@ const WHOLE_INGREDIENT = {
 const NAMED = '{ name: "Fixture", description: "" }';
 const GROUP = `{ name: "Fixture", description: "", colorDark: "#ffffff", colorLight: "#000000" }`;
 const FILED = `{ name: "Fixture", description: "", groupId: "${NOWHERE}" }`;
+const TRADITIONED = `{ name: "Fixture", description: "", traditionId: "${NOWHERE}" }`;
 const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
@@ -290,6 +299,14 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { updateIngredientFormValue(id: "${NOWHERE}", input: ${FILED}) { id } }`,
   ),
   deleteIngredientFormValue: write(`mutation { deleteIngredientFormValue(id: "${NOWHERE}") }`),
+  createDeity: write(`mutation { createDeity(input: ${TRADITIONED}) { id } }`),
+  updateDeity: write(`mutation { updateDeity(id: "${NOWHERE}", input: ${TRADITIONED}) { id } }`),
+  deleteDeity: write(`mutation { deleteDeity(id: "${NOWHERE}") }`),
+  createDeityTradition: write(`mutation { createDeityTradition(input: ${NAMED}) { id } }`),
+  updateDeityTradition: write(
+    `mutation { updateDeityTradition(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
+  ),
+  deleteDeityTradition: write(`mutation { deleteDeityTradition(id: "${NOWHERE}") }`),
   createPlanet: write(`mutation { createPlanet(input: ${NAMED}) { id } }`),
   updatePlanet: write(`mutation { updatePlanet(id: "${NOWHERE}", input: ${NAMED}) { id } }`),
   deletePlanet: write(`mutation { deletePlanet(id: "${NOWHERE}") }`),

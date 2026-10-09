@@ -7,6 +7,7 @@ import type { IngredientRow } from '../../db/repository';
 export type {
   AstrologyValueFilter,
   CategoryFilter,
+  DeityFilter,
   IngredientFormValueFilter,
 } from '../../db/repository';
 
@@ -34,12 +35,21 @@ export interface FormRewrite {
 }
 
 /**
- * A live form a form group's rename or delete moves (M5.6b), and the slug its
- * name and its new group's name give it: the same slug when neither changed.
+ * A live row a group's rename or delete moves, whose slug carries the group's
+ * name — a form under its group (M5.6b), a deity under its tradition (MB.132)
+ * — and the slug its name and its new group's name give it: the same slug
+ * when neither changed.
  */
-export interface FormMove {
-  form: IngredientFormValueRow;
+export interface GroupMove {
+  row: { id: string; name: string; slug: string };
   slug: string;
+}
+
+/** The rows a group move writes: their table, its slug index, and what one is called in a refusal. */
+export interface MovedRows {
+  table: typeof ingredientForms | typeof deities;
+  slugIndex: string;
+  noun: string;
 }
 
 export type DeityRow = typeof deities.$inferSelect;

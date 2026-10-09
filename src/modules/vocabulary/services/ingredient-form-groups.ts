@@ -16,7 +16,20 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
-import type { FormMove, IngredientFormGroupRow } from '../types';
+import { refusal, refuseCollidingMoves } from './group-moves';
+import type {
+  GroupMove,
+  IngredientFormGroupRow,
+  IngredientFormValueRow,
+  MovedRows,
+} from '../types';
+
+/** The forms a group's rename or delete moves, re-slugged under its name. */
+const FORMS: MovedRows = {
+  table: ingredientForms,
+  slugIndex: 'ingredient_forms_slug_unique',
+  noun: 'form',
+};
 
 // The ingredient form groups: their reads, public reference data like every
 // curated vocabulary (MB.80), and their writes, the site admin's alone
@@ -95,18 +108,22 @@ export async function updateIngredientFormGroup(
   if (!current) throw new NotFound('No such group');
   const slug = slugify(fields.name);
   const moves = current.name === fields.name ? [] : await formsMoved(id, fields.name);
-  const refuse = refusal(['name'], (form) => `Renaming the group would move "${form.name}" to`);
-  await refuseCollidingMoves(moves, refuse);
+  const refuse = refusal(
+    FORMS,
+    ['name'],
+    (form) => `Renaming the group would move "${form.name}" to`,
+  );
+  await refuseCollidingMoves(FORMS, moves, refuse);
 
   return withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientFormGroups, id, { ...fields, slug });
     if (!row) throw new NotFound('No such group');
-    for (const { form, slug: moved } of moves) {
+    for (const { row: form, slug: moved } of moves) {
       await write.updateById(ingredientForms, form.id, { slug: moved });
     }
     return row;
   }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(moves, refuse, error);
+    await refuseCollidingMoves(FORMS, moves, refuse, error);
     return refuseCollision(error, slug);
   });
 }
@@ -135,22 +152,22 @@ export async function deleteIngredientFormGroup(
   const group = await findOneById(ingredientFormGroups, id);
   if (!group) throw new NotFound('No such group');
   const forms = await formsUnder(id);
-  let moves: FormMove[] = [];
+  let moves: GroupMove[] = [];
   if (forms.length > 0) {
     const target = await moveTarget(id, moveTo, forms.length);
-    moves = forms.map((form) => ({ form, slug: formSlug(form.name, target.name) }));
+    moves = forms.map((form) => ({ row: form, slug: formSlug(form.name, target.name) }));
   }
-  const refuse = refusal(['moveTo'], (form) => `Moving "${form.name}" would give it`);
-  await refuseCollidingMoves(moves, refuse);
+  const refuse = refusal(FORMS, ['moveTo'], (form) => `Moving "${form.name}" would give it`);
+  await refuseCollidingMoves(FORMS, moves, refuse);
 
   await withAudit(session, async (write) => {
-    for (const { form, slug } of moves) {
+    for (const { row: form, slug } of moves) {
       await write.updateById(ingredientForms, form.id, { groupId: moveTo, slug });
     }
     const [row] = await write.softDeleteByIds(ingredientFormGroups, [id]);
     if (!row) throw new NotFound('No such group');
   }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(moves, refuse, error);
+    await refuseCollidingMoves(FORMS, moves, refuse, error);
     throw error;
   });
 }
@@ -160,7 +177,7 @@ export async function deleteIngredientFormGroup(
  * own reader, so "live" means what the list means by it.
  */
 async function formsUnder(groupId: string) {
-  const rows: FormMove['form'][] = [];
+  const rows: IngredientFormValueRow[] = [];
   let after: Cursor | undefined;
   for (;;) {
     const page = await findIngredientFormValues(
@@ -174,9 +191,9 @@ async function formsUnder(groupId: string) {
 }
 
 /** The group's live forms, each beside the slug `groupName` gives it. */
-async function formsMoved(groupId: string, groupName: string): Promise<FormMove[]> {
+async function formsMoved(groupId: string, groupName: string): Promise<GroupMove[]> {
   const forms = await formsUnder(groupId);
-  return forms.map((form) => ({ form, slug: formSlug(form.name, groupName) }));
+  return forms.map((form) => ({ row: form, slug: formSlug(form.name, groupName) }));
 }
 
 /**
@@ -204,43 +221,6 @@ async function moveTarget(
     ]);
   }
   return target;
-}
-
-/**
- * How a write refuses a moved form's collision: on which field, and the words
- * that lead into the address — the rename's, or the delete's.
- */
-function refusal(path: string[], lead: (form: FormMove['form']) => string) {
-  return (form: FormMove['form'], slug: string, holder: string | undefined): never => {
-    const held = holder
-      ? `"${holder}" already has — rename one of them first`
-      : 'another form already has — try again';
-    throw new ValidationError([
-      { path, message: `${lead(form)} the address "${slug}", which ${held}` },
-    ]);
-  };
-}
-
-/**
- * Refuses a move that would put a form on another live form's address,
- * naming both. Read before the write, and again after one the form slug index
- * refused, since two admins can race: then `error` is that write's, and
- * anything but that collision passes through untouched. A collision the
- * second read cannot place is refused in general terms.
- */
-async function refuseCollidingMoves(
-  moves: readonly FormMove[],
-  refuse: ReturnType<typeof refusal>,
-  error?: unknown,
-): Promise<void> {
-  if (error !== undefined && violatedUniqueIndex(error) !== 'ingredient_forms_slug_unique') return;
-  for (const { form, slug } of moves) {
-    if (slug === form.slug) continue;
-    const holder = await findOneBySlug(ingredientForms, slug);
-    if (holder && holder.id !== form.id) refuse(form, slug, holder.name);
-  }
-  const [first] = moves;
-  if (error !== undefined && first) refuse(first.form, first.slug, undefined);
 }
 
 /**
