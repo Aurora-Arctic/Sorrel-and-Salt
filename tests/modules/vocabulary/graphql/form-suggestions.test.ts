@@ -1,20 +1,19 @@
-import { graphql, type ExecutionResult } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { A, B, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
-// The transport half of M4.7a's form lookup: a page of both buckets, each
-// curated row carrying its group and every suggestion its claimants, refused
-// signed out before the service is reached and by the service elsewhere.
+// The transport half of M4.7a's form lookup: the nodes, each curated row
+// carrying its group and every suggestion its claimants, an absent query sent
+// as none, a page by cursor and the compendium-only mode. Who is refused, what
+// each bucket holds and the scope are services/form-suggestions.test.ts's, and
+// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -39,22 +38,17 @@ beforeEach(async () => {
   );
 });
 
-function run(
-  session: Session | null,
-  variables: Record<string, unknown>,
-): Promise<ExecutionResult<{ formSuggestions: FormSuggestionConnection }>> {
-  return graphql({
-    schema,
-    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+const run = (session: Session | null, variables: Record<string, unknown>) =>
+  runOperation<{ formSuggestions: FormSuggestionConnection }>(
+    session,
+    `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
       formSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
         edges { cursor node { id value description group curated claimants { name canonicalName } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
-    variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
-    contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<ExecutionResult<{ formSuggestions: FormSuggestionConnection }>>;
-}
+    { workspaceId: WORKSPACE_W_ID, ...variables },
+  );
 
 describe('formSuggestions', () => {
   it('answers a member with both buckets, the group and the claimants', async () => {
@@ -109,40 +103,21 @@ describe('formSuggestions', () => {
       'root bark',
     ]);
   });
-
-  it('is refused signed out, before the service is reached', async () => {
-    const result = await run(null, { query: 'root' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.path).toEqual(['formSuggestions']);
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
-  });
-
-  it('is refused for a workspace the caller is not a member of', async () => {
-    // Why it could have succeeded: D is signed in and a member elsewhere.
-    expect(asUser(D).userId).toBe(D.id);
-
-    const result = await run(asUser(D), { query: 'root' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
-  });
 });
 
 // M5.5: the admin's compendium form has no coven to name, so a null
 // workspaceId reads the compendium tier alone.
 describe('formSuggestions without a coven', () => {
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
-    graphql({
-      schema,
-      source: `query ($workspaceId: ID, $query: String) {
+    runOperation<{ formSuggestions: FormSuggestionConnection }>(
+      session,
+      `query ($workspaceId: ID, $query: String) {
         formSuggestions(workspaceId: $workspaceId, query: $query, first: 100) {
           edges { node { value group curated claimants { name } } }
         }
       }`,
-      variableValues: { workspaceId: null, ...variables },
-      contextValue: { session, loaders: createLoaders(session) },
-    }) as Promise<ExecutionResult<{ formSuggestions: FormSuggestionConnection }>>;
+      { workspaceId: null, ...variables },
+    );
 
   it("offers the curated forms with the compendium's claimants, and not the coven's value", async () => {
     await insertIngredient(
@@ -172,9 +147,15 @@ describe('formSuggestions without a coven', () => {
   });
 
   it('is refused signed out', async () => {
+    // Why it could have answered: the same call signed in asks no membership.
+    expect((await runInCompendium(asUser(B), { query: 'root' })).errors).toBeUndefined();
+
     const result = await runInCompendium(null, { query: 'root' });
 
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['formSuggestions'],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 });

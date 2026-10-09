@@ -1,19 +1,20 @@
-import { getNamedType, graphql, isObjectType, type GraphQLObjectType } from 'graphql';
+import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { noSender } from '../../../support/email-verification';
+import { run } from '../../../support/graphql/run';
 import type { UsersQueryResult } from './types';
 
 // MB.52's `users` query, the admin user list's GraphQL half: the same service
 // the page calls, its nodes the ordinary `User`, so `email` resolves through
 // the scope it already carries rather than a second path around it
-// (claude-docs/auth/admin-users.md, "The user list").
+// (claude-docs/auth/admin-users.md, "The user list"). This file holds a page,
+// the cursor and the filters reaching the service, and `providers`' scope;
+// who is refused the list is services/user-list.test.ts's, and a signed-out
+// caller tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -39,14 +40,8 @@ beforeAll(async () => {
   `;
 });
 
-async function usersAs(session: Session | null, source: string, variables = {}) {
-  return graphql({
-    schema,
-    source,
-    variableValues: variables,
-    contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  });
-}
+const usersAs = (session: Session | null, source: string, variables = {}) =>
+  run(session, source, variables);
 
 const PAGE_OF_USERS = `
   query ($query: String, $awaitingApproval: Boolean, $after: String) {
@@ -108,19 +103,6 @@ describe('Query.users', () => {
     );
   });
 
-  // Why it could have succeeded: the same query answers E, and A is signed in.
-  it('refuses a signed-in user who is not an admin, and a signed-out one', async () => {
-    expect((await usersAs(asUser(E), PAGE_OF_USERS)).errors).toBeUndefined();
-
-    for (const session of [asUser(A), null]) {
-      const result = await usersAs(session, PAGE_OF_USERS);
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.path).toEqual(['users']);
-      expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
-    }
-  });
-
   // One `User`, so `email`'s scope is the one `me` already passes through.
   it('lists the ordinary User type, whose email carries its scope', () => {
     const typeOf = (type: GraphQLObjectType, field: string): GraphQLObjectType => {
@@ -142,10 +124,18 @@ describe('User.providers and User.emailVerified', () => {
   const ME = '{ me { id emailVerified providers } }';
 
   it("refuses the providers on a user's own row, whose account page reads them instead", async () => {
+    // Why it could have answered: the same query answers a site admin, on theirs.
+    const admin = await usersAs(asUser(E), ME);
+    expect(admin.errors).toBeUndefined();
+    expect(admin.data?.me).toMatchObject({ id: E.id, providers: expect.any(Array) });
+
     const result = await usersAs(asUser(A), ME);
 
-    expect(result.errors?.[0]?.path).toEqual(['me', 'providers']);
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['me', 'providers'],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 
   it('answers emailVerified on the user’s own row', async () => {

@@ -57,7 +57,12 @@ standard: it does not satisfy a test written for a `Forbidden`.
 operation through `tests/support/graphql/run.ts` (MB.185): `run(session, query,
 variables)` posts it to Yoga built on the route's schema and the route's own
 `maskedErrors`, with a fresh set of loaders, and answers the body the browser
-would receive. A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
+would receive. A fourth argument replaces part of that context (MB.186):
+loaders a test spies on or shares between operations, to read a cache either
+side of a write, or a sender that records what it was asked to mail.
+`runnerOn(schema)` builds the same over a scratch schema, for a field the
+production schema lacks; only `tests/modules/coven/services/two-transports.test.ts`
+needs one. A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
 `NOT_FOUND`, `VALIDATION` with its `fieldErrors` — because the wire carries no
 `originalError`, and a test that reads one through bare `graphql()` is watching
 the service, a second copy of its test. Which roles are refused is the service
