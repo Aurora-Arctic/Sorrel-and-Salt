@@ -41,6 +41,8 @@ const EXPORTED_FUNCTIONS = [
   'findCuratedRowsByIds',
   'findCuratedRowsByName',
   'findDeitiesOfIngredients',
+  'findDeityCount',
+  'findDeityPage',
   'findIngredientFormValueCount',
   'findIngredientFormValues',
   'findIngredientSuggestions',

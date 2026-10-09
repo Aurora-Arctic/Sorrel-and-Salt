@@ -8,6 +8,7 @@ import { db } from '../connection';
 import { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import { users } from '../../modules/identity/schema/users';
+import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
@@ -158,6 +159,22 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       }
       return rewritten;
     },
+    // One statement: no slug moves and the name is the deity's own, so every
+    // link takes the same rewrite. `deity_id` is matched here as the service
+    // read it, and the entry's tier and liveness by the builder's correlated
+    // `EXISTS`, so a coven's link is never reached.
+    carryDeityRename: (_admin, deityId, name) =>
+      update(
+        ingredientDeities,
+        { name },
+        and(
+          eq(ingredientDeities.deityId, deityId),
+          existsIn(
+            ingredients,
+            and(inCompendium(ingredients), eq(ingredients.id, ingredientDeities.ingredientId)),
+          ),
+        ),
+      ),
     // No conflict target: the one-open index is an expression index, and the
     // generated primary key is the only other unique.
     pauseAdminRoleChanges: () =>

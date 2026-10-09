@@ -29,6 +29,7 @@ import type {
   AstrologyValueFilter,
   AstrologyVocabulary,
   CategoryFilter,
+  DeityFilter,
   DeitySuggestion,
   FormSuggestion,
   IngredientFormValueFilter,
@@ -200,6 +201,68 @@ function categoryArms({ query, groupId }: CategoryFilter): (SQL | undefined)[] {
     existsIn(categoryGroups, eq(categoryGroups.id, categories.groupId)),
     query ? containsText(categories.name, query) : undefined,
     groupId ? eq(categories.groupId, groupId) : undefined,
+  ];
+}
+
+/**
+ * One page of the deity vocabulary under `filter`, by its tradition's name,
+ * then its own, then id, for the admin's deities page (MB.132): the live
+ * deities whose tradition is live too, read as `findCategoryPage` reads the
+ * categories, so a page lists each deity under its tradition. Public
+ * reference data, so no proof.
+ */
+export function findDeityPage(
+  filter: DeityFilter,
+  page: PageRequest,
+): Promise<PageEntry<typeof deities.$inferSelect>[]> {
+  const keyset = { ...DEITY_ORDER, request: page };
+  return selectFrom(
+    deities,
+    and(notSoftDeleted(deities), ...deityArms(filter), pageBounds(keyset)),
+    keyset,
+  );
+}
+
+/**
+ * How many deities `findDeityPage` pages under `filter`, and how many come
+ * before `start` in its order: "Page X of Y", as `findCategoryCount` counts
+ * the categories, over the page's own filter and key.
+ */
+export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
+  return selectFrom(deities, and(notSoftDeleted(deities), ...deityArms(filter)), {
+    count: DEITY_ORDER,
+    start,
+  });
+}
+
+/** The traditions, joined for their name alone: the row's own filter already holds the tradition live. */
+const filed = sql.identifier('filed');
+
+/**
+ * The deity vocabulary's key: by its tradition's name, then its own, then
+ * id, the categories' key for the same reason — a page reads as the
+ * traditions group it, and two traditions' namesakes sit apart. A page and
+ * its count share it, with the join that reads the tradition's name.
+ */
+const DEITY_ORDER: KeyOrder = {
+  sort: [{ expression: sql`${filed}.name`, type: 'text' }, deities.name],
+  id: deities.id,
+  join: {
+    source: sql`(select ${deityTraditions.id}, ${deityTraditions.name} from ${deityTraditions}) as ${filed}`,
+    on: eq(sql`${filed}.id`, deities.traditionId),
+  },
+};
+
+/**
+ * What a deity page and its count both read beside the row's own filter: its
+ * tradition live, and the filter's arms, each `undefined` when its part is
+ * absent.
+ */
+function deityArms({ query, traditionId }: DeityFilter): (SQL | undefined)[] {
+  return [
+    inLiveGroup(deities),
+    query ? containsText(deities.name, query) : undefined,
+    traditionId ? eq(deities.traditionId, traditionId) : undefined,
   ];
 }
 
