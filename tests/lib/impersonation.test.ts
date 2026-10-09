@@ -113,11 +113,4 @@ describe('registration', () => {
       expect(Object.keys(tables.user.fields)).not.toContain(field);
     }
   });
-
-  it('keeps impersonating another admin off', async () => {
-    const auth = await authUnder('true', 'preview');
-    const plugin = auth.options.plugins?.find(({ id }) => id === 'admin');
-
-    expect(plugin?.options).not.toMatchObject({ allowImpersonatingAdmins: true });
-  });
 });

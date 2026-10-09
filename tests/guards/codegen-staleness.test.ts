@@ -13,7 +13,8 @@ import type { FileOutput } from './types';
 // any file that differs, is missing, or is left over — so a document added,
 // changed or removed without `npm run codegen` fails CI's vitest job. A
 // document selecting a field the schema no longer has fails earlier, in
-// `generate` itself, which rejects it at validation.
+// `generate` itself, which rejects it at validation. The full run happens once,
+// in the first `beforeAll`; the other cases hand `generate` one document or none.
 
 const OUTPUT_DIR = 'src/gql';
 
@@ -120,8 +121,12 @@ describe('a document in client code', () => {
 });
 
 describe('custom scalars', () => {
+  // `strictScalars` rejects the schema before any document is read, so the
+  // run takes none: the glob over src/ is the staleness check's cost, not this one's.
   it('fail generation when one has no wire type mapped', async () => {
     const schema = `${readFileSync(fromRoot(config.schema as string), 'utf8')}\nscalar Unmapped\n`;
-    await expect(run({ schema })).rejects.toThrow(/Unknown scalar type Unmapped/);
+    await expect(run({ schema, documents: [], ignoreNoDocuments: true })).rejects.toThrow(
+      /Unknown scalar type Unmapped/,
+    );
   });
 });

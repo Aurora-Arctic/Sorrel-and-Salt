@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { statementsOfMigrationContaining } from '../../../support/db/migrations';
-import { tableFacts } from '../../../support/db/table-metadata';
+import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
 
@@ -10,6 +10,24 @@ import { users } from '@/modules/identity/schema/users';
 // seeded-template.test.ts.
 describe('users schema', () => {
   const { byName, indexes } = tableFacts(users);
+
+  // The whole set, audit spread included: tests/db/audit-columns.test.ts reads
+  // only the catalogue, so this is what catches the spread leaving the schema.
+  it('has its own columns and the six audit ones, and nothing else', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      [
+        'id',
+        'name',
+        'email',
+        'email_verified',
+        'image',
+        'role',
+        'can_create_workspace',
+        'verification_sent_at',
+        ...AUDIT_COLUMNS,
+      ].sort(),
+    );
+  });
 
   it('has DESIGN.md §5 columns: id, name, email, image, role, canCreateWorkspace', () => {
     expect(byName.name).toBeDefined();

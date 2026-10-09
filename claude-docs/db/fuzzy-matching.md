@@ -3,10 +3,16 @@
 **`ingredients_trgm` is one multicolumn index, not two single-column ones.**
 `USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)` — a multicolumn
 GIN index is reachable from a predicate naming either column on its own, which
-is a property of the access method rather than a hope, and
-`ingredients-trigram.test.ts` asserts it by `EXPLAIN` for each column
-separately. Reduce it to `name` alone and the `canonical_name` assertion
-reddens. It is neither unique nor partial: the three unique indexes _reserve_
+is a property of the access method rather than a hope. That it is reached is
+asserted by `EXPLAIN` on the SQL the services send (MB.184):
+`common-names-plan.test.ts` matches `name` alone and `duplicates-plan.test.ts`
+`name` or `canonical_name`, both under `enable_seqscan = off`, so reduce the
+index to `name` alone and the duplicates plan reddens: an `OR` reaches a
+bitmap scan only when both arms have an index, so the plan loses
+`Bitmap Index Scan on ingredients_trgm` altogether;
+`ingredients-trigram.test.ts` keeps the declaration pin and the negative
+control, a `similarity()` comparison that reaches no index on the same rows.
+It is neither unique nor partial: the three unique indexes _reserve_
 an identity, so a tombstone must fall outside them, while this one only answers
 "what is this called" for a finder that filters `deleted_at` itself.
 `ingredient_folk_names_trgm` stays its own index over its own table (M4.4a),

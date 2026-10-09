@@ -77,6 +77,13 @@ describe('migrate.yml resolving DATABASE_URL', () => {
   it('says which source it used', () => {
     expect(run).toMatch(/Resolved DATABASE_URL from/);
   });
+
+  // The value it picked goes to a file for the probe, which database-probe.test.ts
+  // holds to reading that file rather than the pulled one.
+  it('writes the resolved value to the file the probe reads', () => {
+    expect(step.env?.RESOLVED_ENV_FILE).toBeDefined();
+    expect(run).toMatch(/RESOLVED_ENV_FILE|resolved\.env/);
+  });
 });
 
 describe('deploy.yml overriding what the pull could not read', () => {

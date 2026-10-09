@@ -19,10 +19,14 @@ export interface UserRow {
   verification_sent_at: Date | null;
 }
 
-/** Whether a query answers a null session or refuses it. */
-export type Outcome = 'answers' | 'refuses';
+/**
+ * What a null session gets: an answer, a refusal at the field, or — for a
+ * null sent where the SDL requires an id — a request refused before any
+ * resolver runs.
+ */
+export type Outcome = 'answers' | 'refuses' | 'invalid';
 
-/** A `Query` field's probe, and what it gives a null session. */
+/** A `Query` or `Mutation` field's probe, and what it gives a null session. */
 export interface ScopeProbe {
   source: string;
   variables?: Record<string, unknown>;
@@ -53,3 +57,25 @@ export interface SeededTable {
 
 /** What the compendium writes take, which the module keeps to itself. */
 export type CompendiumWrite = Parameters<typeof updateCompendiumEntry>[2];
+
+/** A row as the raw client writes and returns it. */
+export type Row = Record<string, unknown>;
+
+/**
+ * How the partial-unique sweep builds a row inside one index's predicate.
+ * `row` makes a fresh, valid live row every call; `clash` names the columns a
+ * second row copies from the first to collide on this index alone, where the
+ * catalogue's own list would collide on another index first or names a
+ * generated column.
+ */
+export interface PartialIndexRow {
+  row: () => Promise<Row>;
+  clash?: string[];
+}
+
+/** A partial unique index as the catalogue reports it: every column it reads, predicate included. */
+export interface PartialUniqueIndex {
+  index: string;
+  table: string;
+  columns: string[];
+}

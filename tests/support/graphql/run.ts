@@ -1,0 +1,36 @@
+import { createYoga } from 'graphql-yoga';
+import { maskedErrors } from '@/graphql/errors';
+import { createLoaders } from '@/graphql/loaders';
+import { schema } from '@/graphql/schema';
+import type { Context } from '@/graphql/types';
+import type { Session } from '@/lib/session';
+import { noSender } from '../email-verification';
+import type { Answer } from './types';
+
+// A resolver test's one way in (MB.185): the route's schema behind Yoga with
+// the route's own `maskedErrors`, so a refusal is read as the browser reads it,
+// `extensions.code`, and never as the thrown type, which the wire does not
+// carry. Bare `graphql()` would hand a test `originalError`, the service's own
+// observation and a second copy of its test (claude-docs/testing/layer-ownership.md,
+// "The owning layer"). The context is built by hand rather than by the route's
+// `createContext`, which reads the session off a cookie.
+
+const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
+
+/** Runs one operation as `session`, with a fresh set of loaders, as one request would. */
+export async function run<T = Record<string, unknown>>(
+  session: Session | null,
+  query: string,
+  variables: Record<string, unknown> = {},
+): Promise<Answer<T>> {
+  const response = await yoga.fetch(
+    'http://localhost/graphql',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+    },
+    { session, loaders: createLoaders(session), emailVerification: noSender },
+  );
+  return (await response.json()) as Answer<T>;
+}

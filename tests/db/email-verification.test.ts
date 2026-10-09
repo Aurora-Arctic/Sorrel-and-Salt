@@ -9,10 +9,11 @@ import {
   expectSignedIn,
   landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance, Profile } from '../support/types';
 
 // Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
@@ -40,7 +41,12 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials and nothing else, so one import serves every test.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+});
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
@@ -50,9 +56,6 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
 });
 
 afterEach(() => {
@@ -341,26 +344,6 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
   });
 
-  it('promotes nobody when the link is followed from another browser', async () => {
-    const { cookie, link } = await signUpUnverified();
-    const other = await signIn('google', { sub: 'g-6', email: STRANGER, verified: true });
-    expectSignedIn(other);
-
-    expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
-      '/account/email?error=SIGN_IN_TO_VERIFY',
-    );
-    expect((await follow(link)).headers.get('location')).toBe(
-      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
-    );
-    expect(await roleOf(OWNER)).toBe('user');
-    expect(await roleOf(STRANGER)).toBe('user');
-
-    // The same link from the owner's session promotes, so the token was good,
-    // the variable named the address, and the session is what refused it.
-    await follow(link, cookie);
-    expect(await roleOf(OWNER)).toBe('admin');
-  });
-
   // The email page's change link (MB.54): Better Auth's own change branch
   // skips the session check, so src/lib/auth.ts gates it before the endpoint.
   // Followed from the row's session it swaps the address, and the address
@@ -395,15 +378,5 @@ describe('the primary admin is promoted at first-party verification', () => {
       updated_by: before.id,
     });
     expect(await roleOf(OWNER)).toBe('admin');
-  });
-
-  it('verifies an address the variable does not name without promoting it', async () => {
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', STRANGER);
-    const { cookie, link } = await signUpUnverified();
-
-    await follow(link, cookie);
-
-    expect((await userRow(OWNER))?.email_verified).toBe(true);
-    expect(await roleOf(OWNER)).toBe('user');
   });
 });

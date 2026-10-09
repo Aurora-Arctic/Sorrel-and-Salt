@@ -119,12 +119,17 @@ name and address, and carries Stop Impersonating, at the top of every page
 
 - `tests/lib/impersonation.test.ts`: the gate in every combination, the
   mounted set against the allowlist, the endpoints absent wherever the gate is
-  shut, and the declined ban columns.
+  shut, and the declined ban columns. That an admin target is refused is the
+  db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
+  (MB.188).
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
   refused, an admin target is refused, and the impersonation session is B's
-  with E recorded. B's coven is what the session sees, `/admin`'s check
-  refuses it, and a write is stamped B. Stop restores E's own session.
-- `tests/db/repository/write.test.ts`: `app.impersonated_by`.
+  with E recorded. B's coven is what the session sees, and `/admin`'s check
+  refuses it. Stop restores E's own session. The file builds Better Auth once,
+  with the flags on, in its `beforeAll` (MB.188).
+- `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
+  under an impersonation stamped as the user acted as — the session above is
+  B's, so that is the write stamped B.
 - `tests/modules/identity/schema/auth-schema.test.ts`: the column and its
   foreign key.
 - The component, page and layout tests: the control and the banner.

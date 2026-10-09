@@ -1,19 +1,19 @@
-import { graphql, type ExecutionResult } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import { ValidationError } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, asUser } from '../../../support/as-user';
 import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
+import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CompendiumConnection, SubstituteNode } from './types';
 
 // The `compendium` query over the standard seed's 26 entries: public (MB.80),
-// filtered in SQL, a page at a time, with folk names and categories batched.
+// a page at a time, with folk names and categories batched. What each filter
+// matches is tests/db/repository/ingredients.test.ts's, and how the service
+// reads the filter services/compendium.test.ts's; this file holds the
+// transport's half — the arguments reaching the read, the edge's score, the
+// page numbers, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository so the batching is a
 // number rather than a hope; the role lookup is counted to show a public
@@ -54,13 +54,10 @@ beforeEach(() => {
   Object.values(repository).forEach((spy) => spy.mockClear());
 });
 
-function run(
-  session: Session | null,
-  variables: Record<string, unknown> = {},
-): Promise<ExecutionResult<{ compendium: CompendiumConnection }>> {
-  return graphql({
-    schema,
-    source: `query (
+function run(session: Session | null, variables: Record<string, unknown> = {}) {
+  return runOperation<{ compendium: CompendiumConnection }>(
+    session,
+    `query (
       $query: String
       $categoryIds: [ID!]
       $form: String
@@ -88,9 +85,8 @@ function run(
         pageInfo { hasNextPage endCursor }
       }
     }`,
-    variableValues: variables,
-    contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  }) as Promise<ExecutionResult<{ compendium: CompendiumConnection }>>;
+    variables,
+  );
 }
 
 // Fifty, not the maximum: a page of 100 with categories and their groups costs
@@ -136,26 +132,6 @@ describe('compendium', () => {
     expect(nodes.map((node) => node.name)).not.toContain('Fixture Wroot');
   });
 
-  it("leaves a coven's own row out for its member too", async () => {
-    const names = (await nodesOf({}, asUser(B))).map((node) => node.name);
-
-    expect(names).toHaveLength(26);
-    expect(names).not.toContain('Fixture Wroot');
-  });
-
-  it('narrows by search, telling five entries sharing a label apart by their formal name', async () => {
-    const nodes = await nodesOf({ query: 'cat' });
-
-    expect(nodes.map((node) => node.name)).toEqual(Array(5).fill("Cat's Claw"));
-    expect(nodes.map((node) => node.canonicalName).sort()).toEqual([
-      'Dolichandra unguis-cati',
-      'Felis catus',
-      'Senegalia greggii',
-      'Uncaria guianensis',
-      'Uncaria tomentosa',
-    ]);
-  });
-
   // `sal` is a whole word of four seeded labels and half of two more: two
   // scores, each tied, so the order shows the score first and the name second.
   it('ranks a search best match first, with the score on each edge', async () => {
@@ -170,55 +146,6 @@ describe('compendium', () => {
       ['Sea Salt', 0.75],
       ['Mugwort', 0.5],
       ['Selenite', 0.5],
-    ]);
-  });
-
-  it('carries a null score on a list with no search', async () => {
-    const result = await run(null);
-
-    expect(result.errors).toBeUndefined();
-    const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
-    expect(edges).toHaveLength(25);
-    expect(edges.every((edge) => edge.score === null)).toBe(true);
-  });
-
-  it('treats a one-character query as no query: every entry, unranked', async () => {
-    const result = await run(null, { query: 'c', first: 50 });
-
-    expect(result.errors).toBeUndefined();
-    const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
-    expect(edges.map((edge) => edge.node.id)).toEqual(await expectedOrder());
-    expect(edges.every((edge) => edge.score === null)).toBe(true);
-  });
-
-  it('matches a folk name, accents folded', async () => {
-    const nodes = await nodesOf({ query: 'una de gato' });
-
-    expect(nodes.map((node) => node.canonicalName).sort()).toEqual([
-      'Uncaria guianensis',
-      'Uncaria tomentosa',
-    ]);
-    expect(nodes.every((node) => node.folkNames.includes('Uña de Gato'))).toBe(true);
-  });
-
-  it('narrows by categories, every one of them', async () => {
-    const both = await nodesOf({ categoryIds: [category('Healing'), category('Strength')] });
-    const healing = await nodesOf({ categoryIds: [category('Healing')] });
-
-    expect(both.map((node) => node.canonicalName)).toEqual(['Uncaria tomentosa']);
-    expect(healing.map((node) => node.name).sort()).toEqual([
-      "Cat's Claw",
-      "Cat's Claw",
-      'Comfrey',
-    ]);
-  });
-
-  it('narrows by form, folded', async () => {
-    const nodes = await nodesOf({ form: 'BARK' });
-
-    expect(nodes.map((node) => node.canonicalName).sort()).toEqual([
-      'Uncaria guianensis',
-      'Uncaria tomentosa',
     ]);
   });
 
@@ -263,15 +190,14 @@ describe('compendium', () => {
       updated_by: A.id,
     })}`;
 
-    const result = await graphql({
-      schema,
-      source: `query {
+    const result = await runOperation(
+      null,
+      `query {
         compendium(first: 50) {
           edges { node { id substitutes { name ingredient { id name } } } }
         }
       }`,
-      contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
-    });
+    );
 
     expect(result.errors).toBeUndefined();
     type Page = {
@@ -294,15 +220,14 @@ describe('compendium', () => {
   // MB.167: every entry on the page asks for its picked form and its deities,
   // and one read answers each, the curated deities joined in.
   it('resolves the picked forms and the deities of a page in one read each', async () => {
-    const result = await graphql({
-      schema,
-      source: `query {
+    const result = await runOperation(
+      null,
+      `query {
         compendium(first: 50) {
           edges { node { name form formChoice { name group { name } } deities { name deity { name tradition { name } } } } }
         }
       }`,
-      contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
-    });
+    );
 
     expect(result.errors).toBeUndefined();
     type Node = {
@@ -350,16 +275,15 @@ describe('compendium', () => {
     }
 
     async function counted(variables: Record<string, unknown>): Promise<Counted> {
-      const result = await graphql({
-        schema,
-        source: `query ($query: String, $nomenclature: Nomenclature, $first: Int, $after: String, $last: Int) {
+      const result = await runOperation(
+        null,
+        `query ($query: String, $nomenclature: Nomenclature, $first: Int, $after: String, $last: Int) {
           compendium(query: $query, nomenclature: $nomenclature, first: $first, after: $after, last: $last) {
             totalCount countBefore edges { node { id } } pageInfo { endCursor }
           }
         }`,
-        variableValues: variables,
-        contextValue: { session: null, loaders: createLoaders(null), emailVerification: noSender },
-      });
+        variables,
+      );
       expect(result.errors).toBeUndefined();
       return (result.data as { compendium: Counted }).compendium;
     }
@@ -404,17 +328,17 @@ describe('compendium', () => {
     });
   });
 
-  it('refuses a malformed cursor as bad input', async () => {
-    const result = await run(null, { after: 'not-a-cursor' });
+  it('refuses a category id that is not a uuid as VALIDATION', async () => {
+    // Why it could have answered: a real category's id narrows the same list.
+    expect((await run(null, { categoryIds: [category('Healing')] })).errors).toBeUndefined();
 
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.message).toBe('Invalid cursor');
-  });
-
-  it('refuses a category id that is not a uuid as a validation error', async () => {
     const result = await run(null, { categoryIds: ['not-a-uuid'] });
 
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(ValidationError);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['compendium'],
+      extensions: { code: 'VALIDATION' },
+    });
   });
 });

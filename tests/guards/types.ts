@@ -61,13 +61,6 @@ export interface VercelPull {
   command: string;
 }
 
-/** One entry of oxlint's `--format json` report. */
-export interface Diagnostic {
-  code: string;
-  filename: string;
-  help?: string;
-}
-
 /** One generated file; `generate`'s own typings return `any`. */
 export interface FileOutput {
   filename: string;

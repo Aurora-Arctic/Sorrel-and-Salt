@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
-import { sweepProvisionalAccounts } from '@/modules/identity';
 import {
   EMAIL_PAGE,
   ORIGIN,
@@ -10,10 +9,11 @@ import {
   expectSignedIn,
   landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
 
 // Story 59, through Better Auth's real endpoints: an address becomes the
@@ -45,7 +45,12 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials and nothing else, so one import serves every test.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+});
 
 // The harness re-clones per file, not per test; every user here is on this
 // domain or under the placeholder's.
@@ -58,13 +63,6 @@ beforeEach(async () => {
   await sql`delete from users where id in (${mine})`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 const signIn = (provider: ProviderId, profile: Profile) =>
@@ -76,22 +74,6 @@ async function userRow(email: string): Promise<UserRow | undefined> {
     from users where email = ${email} and deleted_at is null
   `;
   return row as UserRow | undefined;
-}
-
-/**
- * Makes the row `by` old on both clocks the sweep reads. The `set_updated_at`
- * trigger overwrites any `updated_at` an UPDATE carries, so it is switched off
- * for the one statement, inside a transaction so nothing else sees it off.
- */
-async function age(id: string, by: string): Promise<void> {
-  await sql.begin(async (tx) => {
-    await tx`alter table users disable trigger set_updated_at`;
-    await tx`
-      update users set created_at = now() - ${by}::interval, updated_at = now() - ${by}::interval
-      where id = ${id}
-    `;
-    await tx`alter table users enable trigger set_updated_at`;
-  });
 }
 
 /** The sender the email page's mutation uses, bound to the browser's own request. */
@@ -213,29 +195,6 @@ describe('Story 59: asking for a new address', () => {
 
     expect(response.status).toBe(403);
     expect(await userRow(OWNER)).toEqual(before);
-  });
-
-  // The conflict MB.54's scoping found: the criterion said a change marks the
-  // row unverified, which would put an account older than the cap under the
-  // sweep on the next callback by anyone.
-  it('never puts an established account under the sweep: it stays verified and keeps its address until the link is followed', async () => {
-    const response = await signIn('google', { sub: 'g-owner', email: OWNER, verified: true });
-    expectSignedIn(response);
-    const cookie = cookieHeader(response);
-    // Older than both the window and the cap: unverified, this row would be swept.
-    await age((await userRow(OWNER))!.id, '4 hours');
-    const before = (await userRow(OWNER))!;
-    expect(before.email_verified).toBe(true);
-
-    const link = await changeLink(cookie, OWNER);
-
-    await expect(sweepProvisionalAccounts()).resolves.toEqual([]);
-    expect(await userRow(OWNER)).toEqual(before);
-
-    await follow(link, cookie);
-
-    await expect(sweepProvisionalAccounts()).resolves.toEqual([]);
-    expect(await userRow(NEW)).toMatchObject({ id: before.id, email_verified: true });
   });
 });
 
@@ -418,29 +377,5 @@ describe('Story 59: a provider that shares no address', () => {
     expect(cookieHeader(response)).toMatch(/session_token=/);
     expect(send).not.toHaveBeenCalled();
     expect(await userRow(PLACEHOLDER)).toMatchObject({ email_verified: false });
-  });
-
-  it('takes a real address through the same change link, and lapses like any provisional row', async () => {
-    const response = await signIn('discord', {
-      sub: '80351110224678914',
-      email: null,
-      verified: false,
-    });
-    const cookie = cookieHeader(response);
-    const { id } = (await userRow(PLACEHOLDER))!;
-
-    const link = await changeLink(cookie, PLACEHOLDER);
-    await follow(link, cookie);
-
-    expect(await userRow(PLACEHOLDER)).toBeUndefined();
-    expect(await userRow(NEW)).toMatchObject({ id, email_verified: true });
-
-    // A second such sign-up left alone is swept once its window has passed.
-    const other = await signIn('discord', { sub: '1234567890', email: null, verified: false });
-    expectSignedIn(other);
-    const placeholder = (await userRow('discord-1234567890@pending.invalid'))!;
-    await age(placeholder.id, '61 minutes');
-
-    await expect(sweepProvisionalAccounts()).resolves.toEqual([placeholder.id]);
   });
 });

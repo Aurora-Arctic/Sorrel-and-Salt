@@ -8,6 +8,7 @@ import {
   verifiedLanding,
   verifyErrorMessage,
 } from '@/lib/account-email';
+import { UNSAFE_RETURN_PATHS } from '../support/return-paths';
 
 // The page a followed verification link lands on shows a sentence, never the
 // `?error=` code Better Auth or src/lib/auth.ts appended.
@@ -56,7 +57,7 @@ describe("the email page's paths", () => {
 
   // The open-redirect guard runs when the link is built, not only when the
   // page reads it back: a mailed link never names somewhere else.
-  it.each(['//evil.example', 'https://evil.example', '/\\evil.example', 'coven', ''])(
+  it.each([...UNSAFE_RETURN_PATHS, 'coven', ''])(
     'drops a return path that leaves the site (%s), landing as it always has',
     (next) => {
       expect(verifiedLanding(next)).toBe('/account/email?verified');

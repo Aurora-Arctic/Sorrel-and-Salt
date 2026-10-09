@@ -1,8 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import picomatch from 'picomatch';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { parse } from 'yaml';
 
 import { REPO_ROOT } from '../support/paths';
@@ -18,14 +17,9 @@ const RULE_FILES = ['components', 'database', 'graphql', 'task-tracking', 'testi
 /** 20 KB, counted in bytes: the ceiling MB.144 set for what every turn carries. */
 const CLAUDE_MD_MAX_BYTES = 20_000;
 
-const listed = (...paths: string[]) =>
-  execFileSync(
-    'git',
-    ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard', ...paths],
-    { cwd: REPO_ROOT, encoding: 'utf8' },
-  )
-    .split('\n')
-    .filter(Boolean);
+/** The unit project's shared listing (MB.184), the whole repo or one directory of it. */
+const listed = (directory?: string) =>
+  inject('repoFiles').filter((file) => directory === undefined || file.startsWith(`${directory}/`));
 
 const read = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');
 

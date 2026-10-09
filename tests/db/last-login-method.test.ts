@@ -11,10 +11,11 @@ import {
   link as linkThrough,
   providerHandlers,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance, Profile } from '../support/types';
 
 // Story 1, through Better Auth's real endpoints: the lastLoginMethod plugin
 // writes a readable cookie naming the provider whenever a callback sets the
@@ -41,7 +42,12 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials and nothing else, so one import serves every test.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+});
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
@@ -51,13 +57,6 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 const signIn = (provider: ProviderId, profile: Profile) =>

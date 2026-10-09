@@ -1,19 +1,18 @@
-import { graphql } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { run as runOperation } from '../../../support/graphql/run';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
-import type { Answer, DuplicateNode, IngredientSuggestionConnection } from './types';
+import type { DuplicateNode, IngredientSuggestionConnection } from './types';
 
 // The transport half of the substitute picker's search (MB.138), which
-// MB.131's combobox calls. The table is emptied per test, so every row a
-// result could come from is one this file wrote.
+// MB.131's combobox calls: the nodes, a page at a time, and one refusal on the
+// wire. What it matches, its scope and who is refused are
+// services/ingredient-suggestions.test.ts's. The table is emptied per test, so
+// every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -30,22 +29,20 @@ function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
 }
 
-function run(
+const run = (
   session: Session | null,
   variables: { query?: string; workspaceId?: string; first?: number; after?: string | null },
-): Promise<Answer<{ ingredientSuggestions: IngredientSuggestionConnection }>> {
-  return graphql({
-    schema,
-    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+) =>
+  runOperation<{ ingredientSuggestions: IngredientSuggestionConnection }>(
+    session,
+    `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
       ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
         edges { cursor node { id name canonicalName isGlobal folkNames } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
-    variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
-    contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<Answer<{ ingredientSuggestions: IngredientSuggestionConnection }>>;
-}
+    { workspaceId: WORKSPACE_W_ID, ...variables },
+  );
 
 async function nodesFor(
   session: Session,
@@ -81,28 +78,17 @@ describe('ingredientSuggestions', () => {
     ]);
   });
 
-  it('lists the compendium and this coven with no query', async () => {
-    await addIngredient({ name: 'Yarrow', workspaceId: WORKSPACE_W_ID });
-    await addIngredient({ name: 'Mugwort' });
-    // Why it could have come back: it is X's, and listed there.
-    await addIngredient({ name: 'Lovage', workspaceId: WORKSPACE_X_ID });
-    expect(
-      (await nodesFor(asUser(D), { workspaceId: WORKSPACE_X_ID })).map((node) => node.name),
-    ).toContain('Lovage');
+  it('refuses a member of another coven as FORBIDDEN', async () => {
+    // Why it could have answered: D is signed in, and answered in its own coven.
+    expect((await run(asUser(D), { workspaceId: WORKSPACE_X_ID })).errors).toBeUndefined();
 
-    const names = (await nodesFor(asUser(B), {})).map((node) => node.name);
-
-    expect(names).toEqual(['Mugwort', 'Yarrow']);
-  });
-
-  it('refuses a member of another coven, as the service does', async () => {
     const result = await run(asUser(D), { query: 'mugwort' });
 
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.path).toEqual(['ingredientSuggestions']);
-    expect(
-      (result.errors?.[0] as { originalError?: unknown } | undefined)?.originalError,
-    ).toBeInstanceOf(Forbidden);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['ingredientSuggestions'],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 
   it('pages by cursor, through the M3.6 helper', async () => {

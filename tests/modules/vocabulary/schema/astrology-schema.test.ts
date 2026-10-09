@@ -20,14 +20,12 @@ const VOCABULARIES = [
     name: 'planets',
     column: 'planets',
     row: { name: 'Testara', slug: 'testara', description: 'A body read only by fixtures.' },
-    rename: 'Testara Minor',
   },
   {
     table: zodiacSigns,
     name: 'zodiac_signs',
     column: 'zodiac_signs',
     row: { name: 'Fixturus', slug: 'fixturus', description: 'A sign read only by fixtures.' },
-    rename: 'Fixturus Rising',
   },
 ] as const;
 
@@ -116,7 +114,7 @@ beforeEach(async () => {
   await sql`truncate planets, zodiac_signs cascade`;
 });
 
-describe.each(VOCABULARIES)('$name table', ({ name, row, rename }) => {
+describe.each(VOCABULARIES)('$name table', ({ name, row }) => {
   function fullRow(overrides: Row = {}): Row {
     return { ...row, created_by: AUTHOR, updated_by: AUTHOR, ...overrides };
   }
@@ -162,33 +160,6 @@ describe.each(VOCABULARIES)('$name table', ({ name, row, rename }) => {
       `${name}_seed_key_unique`,
       `${name}_slug_unique`,
     ]);
-  });
-
-  describe('slug uniqueness', () => {
-    it('rejects a second live row sharing a slug', async () => {
-      await insert();
-      const error = await failureOf(insert({ name: rename }));
-
-      // 23505 is unique_violation, named: the index refused, not something earlier.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(`${name}_slug_unique`);
-    });
-
-    // The test above is the precondition: without the soft delete the second
-    // insert is refused, so this pass is the predicate and not an empty table.
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const first = await insert();
-      await sql`
-        update ${sql(name)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${first}
-      `;
-
-      const second = await insert({ name: rename });
-
-      const rows = await sql`select id, deleted_at from ${sql(name)} order by created_at, id`;
-      expect(rows.map((r) => r.id).sort()).toEqual([first, second].sort());
-      expect(rows.find((r) => r.id === first)?.deleted_at).not.toBeNull();
-      expect(rows.find((r) => r.id === second)?.deleted_at).toBeNull();
-    });
   });
 
   it('requires the name, slug and description', async () => {

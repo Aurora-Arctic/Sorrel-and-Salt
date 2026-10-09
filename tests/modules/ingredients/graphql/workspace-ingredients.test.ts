@@ -1,28 +1,27 @@
-import { createYoga } from 'graphql-yoga';
 import { GraphQLInputObjectType, isNonNullType } from 'graphql';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { maskedErrors } from '@/graphql/errors';
-import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { toValidationIssues } from '@/lib/validation';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
-import type { Answer, WorkspaceIngredientNode } from './types';
+import { run } from '../../../support/graphql/run';
+import type { WorkspaceIngredientNode } from './types';
 
-// Stories 15 and 34 over the wire: the two mutations a coven's ingredient form
-// saves through. Run through Yoga with the route's own error mapping, so a
-// refusal is asserted as the browser receives it — `extensions.code` and
-// `fieldErrors` — rather than as the thrown type. The service's own rules are
-// workspace-ingredients.test.ts's; this file holds the transport's half.
+// Stories 15, 25 and 34 over the wire: the three mutations a coven's
+// ingredient form saves and deletes through. This file holds the transport's
+// half (claude-docs/testing/layer-ownership.md): the SDL's own refusals, the
+// answer as a fresh read gives it, the loaders cleared between two writes in
+// one request, and one refusal per error code per mutation, read as the browser
+// reads it. Which roles are refused at which rows, and every Zod rule, are
+// services/workspace-ingredients.test.ts's and validation/ingredient.test.ts's;
+// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -32,25 +31,6 @@ useTestDatabase((client) => {
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
-
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-async function run<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown>,
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
 
 const FIELDS = `
   id name slug canonicalName nomenclature form formChoice { id name group { name } } description
@@ -250,28 +230,6 @@ describe('createWorkspaceIngredient', () => {
     expect(await countIngredients()).toBe(0);
   });
 
-  // A repeat is the schema's refusal, and a link outside the compendium and
-  // W the service's; both reach the form as a field error on the entry,
-  // never as the unique index's 23505 or a bare Forbidden.
-  it.each([
-    ['a repeated name', () => [{ name: 'Zest Root' }, { name: 'zest root' }]],
-    [
-      'a link to another coven’s ingredient',
-      (elsewhere: string) => [{ name: 'Zest Root' }, { ingredientId: elsewhere }],
-    ],
-  ])('answers %s as VALIDATION pathed to the entry, writing nothing', async (_case, list) => {
-    const elsewhere = await seed(local({ name: 'Xenoleaf', workspaceId: WORKSPACE_X_ID }));
-
-    const result = await create(asUser(B), { name: 'Testwort', substitutes: list(elsewhere) });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'VALIDATION',
-      fieldErrors: [expect.objectContaining({ path: ['substitutes', 1] })],
-    });
-    expect(await countIngredients()).toBe(1);
-  });
-
   it('refuses a viewer, who is a member and reads the coven, writing nothing', async () => {
     // Why it could have succeeded: C holds a live membership of W and reads its entries.
     const id = await seed(local({ name: 'Rootwort' }));
@@ -280,20 +238,6 @@ describe('createWorkspaceIngredient', () => {
     const result = await create(asUser(C), { name: 'Testwort' });
 
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect(await countIngredients()).toBe(1);
-  });
-
-  it.each([
-    ['a signed-out caller', null],
-    ['a member of another coven', asUser(D)],
-    ['a site admin', asUser(E)],
-  ])('refuses %s', async (_who, session) => {
-    // Why it could have succeeded: the same call as a member of W writes.
-    expect((await create(asUser(B), { name: 'Rootwort' })).errors).toBeUndefined();
-
-    const result = await create(session, { name: 'Testwort' });
-
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(await countIngredients()).toBe(1);
   });
@@ -338,18 +282,6 @@ describe('updateIngredient', () => {
       audit: { createdBy: A.id, updatedBy: B.id },
     });
     expect(answered).toEqual((await read(asUser(B), id)).data?.ingredient);
-  });
-
-  it('writes the folk names in the ingredient’s own transaction', async () => {
-    const id = await seed(local({ folkNames: ['Dropped Root'] }));
-
-    await update(asUser(B), id, wholeInput(local({ folkNames: ['Added Root'] })));
-
-    const row = await rowOf(id);
-    expect(row.updated_by).toBe(B.id);
-    expect(await folkNameRows(id)).toEqual([
-      { name: 'Added Root', created_by: B.id, xmin: row.xmin },
-    ]);
   });
 
   it('clears a text field sent as "", and a list sent as [], elements included', async () => {
@@ -429,46 +361,6 @@ describe('updateIngredient', () => {
   });
 
   describe('its elements', () => {
-    it('saves several in the order chosen', async () => {
-      const id = await seed(local());
-
-      const result = await update(
-        asUser(B),
-        id,
-        wholeInput(local({ elements: ['water', 'fire', 'spirit'] })),
-      );
-
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.updateIngredient.elements).toEqual(['water', 'fire', 'spirit']);
-      expect((await rowOf(id)).elements).toEqual(['water', 'fire', 'spirit']);
-    });
-
-    it('replaces the list whole rather than adding to it', async () => {
-      const id = await seed(local({ elements: ['earth', 'water'] }));
-
-      const result = await update(asUser(B), id, wholeInput(local({ elements: ['air', 'earth'] })));
-
-      expect(result.errors).toBeUndefined();
-      expect((await rowOf(id)).elements).toEqual(['air', 'earth']);
-    });
-
-    it('refuses one chosen twice as VALIDATION at the repeat, changing nothing', async () => {
-      const id = await seed(local({ elements: ['earth'] }));
-
-      const result = await update(
-        asUser(B),
-        id,
-        wholeInput(local({ elements: ['fire', 'air', 'fire'] })),
-      );
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.extensions).toEqual({
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['elements', 2], message: 'Fire is already chosen' }],
-      });
-      expect((await rowOf(id)).elements).toEqual(['earth']);
-    });
-
     // The enum refuses it before a resolver runs, so the service never sees it.
     it('refuses a value outside the five, changing nothing', async () => {
       const id = await seed(local({ elements: ['earth'] }));
@@ -523,39 +415,6 @@ describe('updateIngredient', () => {
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect((await rowOf(id)).name).toBe('Testwort');
-  });
-
-  describe('a W ingredient named by direct id from outside W', () => {
-    let id: string;
-
-    beforeEach(async () => {
-      id = await seed(local());
-      // Why the refusals could have passed wrongly: the id is live, and W's own member rewrites it.
-      expect((await update(asUser(B), id, wholeInput(local()))).errors).toBeUndefined();
-    });
-
-    it('is NOT_FOUND under another coven’s valid proof', async () => {
-      const result = await update(
-        asUser(D),
-        id,
-        wholeInput(local({ name: 'Nope' })),
-        WORKSPACE_X_ID,
-      );
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-      expect((await rowOf(id)).name).toBe('Testwort');
-    });
-
-    it.each([
-      ['a signed-out caller', null],
-      ['a member of another coven naming W', asUser(D)],
-      ['a site admin', asUser(E)],
-    ])('is FORBIDDEN to %s', async (_who, session) => {
-      const result = await update(session, id, wholeInput(local({ name: 'Nope' })));
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      expect((await rowOf(id)).name).toBe('Testwort');
-    });
   });
 
   it('is NOT_FOUND for an id that is not an id, not a driver error', async () => {
@@ -632,18 +491,6 @@ describe('categoryIds', () => {
     );
   });
 
-  it('replaces the set on update, and clears it on []', async () => {
-    const id = await seed(local({ categories: ['Protection'] }));
-    const love = await categoryId('Love');
-
-    const replaced = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [love] });
-    expect(replaced.errors).toBeUndefined();
-    expect(replaced.data?.updateIngredient.categories).toEqual([{ name: 'Love' }]);
-
-    const cleared = await update(asUser(B), id, { ...wholeInput(local()), categoryIds: [] });
-    expect(cleared.data?.updateIngredient.categories).toEqual([]);
-  });
-
   // Root mutation fields run one after another in one request, so the second
   // must not answer the categories the first one read.
   it('answers its own categories when one request updates the entry twice', async () => {
@@ -667,21 +514,6 @@ describe('categoryIds', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.first.categories).toEqual([{ name: 'Protection' }]);
     expect(result.data?.second.categories).toEqual([{ name: 'Love' }]);
-  });
-
-  it('refuses an id naming no live category as VALIDATION, beside the entry', async () => {
-    const protection = await categoryId('Protection');
-
-    const result = await create(asUser(B), {
-      name: 'Testwort',
-      categoryIds: [protection, '00000000-0000-4000-8000-0000000000c9'],
-    });
-
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'VALIDATION',
-      fieldErrors: [{ path: ['categoryIds', 1], message: expect.any(String) }],
-    });
-    expect(await countIngredients()).toBe(0);
   });
 });
 
@@ -715,34 +547,6 @@ describe('deleteIngredient', () => {
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect((await rowOf(id)).deleted_at).toBeNull();
-  });
-
-  describe('a W ingredient named by direct id from outside W', () => {
-    let id: string;
-
-    beforeEach(async () => {
-      id = await seed(local());
-      // Why the refusals could have passed wrongly: the id is live, and W's own member reads it.
-      expect((await read(asUser(B), id)).data?.ingredient).toMatchObject({ id });
-    });
-
-    it('is NOT_FOUND under another coven’s valid proof', async () => {
-      const result = await remove(asUser(D), id, WORKSPACE_X_ID);
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-      expect((await rowOf(id)).deleted_at).toBeNull();
-    });
-
-    it.each([
-      ['a signed-out caller', null],
-      ['a member of another coven naming W', asUser(D)],
-      ['a site admin', asUser(E)],
-    ])('is FORBIDDEN to %s', async (_who, session) => {
-      const result = await remove(session, id);
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      expect((await rowOf(id)).deleted_at).toBeNull();
-    });
   });
 
   it('is NOT_FOUND for a compendium entry, which stays live, and for an id that is not an id', async () => {
