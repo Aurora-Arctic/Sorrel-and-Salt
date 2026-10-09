@@ -1,11 +1,8 @@
-import { graphql } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import type { getMe as GetMe } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
+import { run } from '../../../support/graphql/run';
 
 // The schema's second check on `User.email`, `emailVerified`, `role` and
 // `canCreateWorkspace` (DESIGN.md §7). `getMe` takes no id, and `users`
@@ -27,11 +24,7 @@ vi.mock('@/modules/identity/services/profile', async (importOriginal) => {
 
 async function meAs(session: Session, field: string) {
   getMe.mockResolvedValue(await actual.getMe(asUser(B)));
-  return graphql({
-    schema,
-    source: `query { me { id name ${field} } }`,
-    contextValue: { session, loaders: createLoaders(session) },
-  });
+  return run(session, `query { me { id name ${field} } }`);
 }
 
 describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s', (field) => {
@@ -60,7 +53,9 @@ describe.each(['email', 'emailVerified', 'role', 'canCreateWorkspace'])('User.%s
     const result = await meAs(asUser(A), field);
 
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.path).toEqual(['me', field]);
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['me', field],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 });

@@ -1,16 +1,13 @@
-import { graphql } from 'graphql';
 import { describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { createLoaders } from '@/graphql/loaders';
-import { noSender } from '../../../support/email-verification';
-import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
-import type { Session } from '@/lib/session';
 import { A, asUser } from '../../../support/as-user';
-import type { Context } from '@/graphql/types';
+import { run } from '../../../support/graphql/run';
 
-// `me` over the real schema, with the context built the way `createContext`
-// builds it minus the cookie parsing tests/graphql/context.test.ts covers.
+// `me` over the real schema, through the shared harness: the signed-in user's
+// own row and its memberships through the request's loader. A signed-out
+// caller is tests/db/graphql-query-scopes.test.ts's, and the route carrying
+// that refusal tests/app/api/graphql/route.test.ts's.
 
 const ME = /* GraphQL */ `
   query {
@@ -31,21 +28,9 @@ const ME = /* GraphQL */ `
   }
 `;
 
-function run(session: Session | null, contextValue?: Context) {
-  return graphql({
-    schema,
-    source: ME,
-    contextValue: contextValue ?? {
-      session,
-      loaders: createLoaders(session),
-      emailVerification: noSender,
-    },
-  });
-}
-
 describe('the me query', () => {
   it('answers the signed-in user, private fields included', async () => {
-    const result = await run(asUser(A));
+    const result = await run(asUser(A), ME);
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.me).toMatchObject({
@@ -62,21 +47,11 @@ describe('the me query', () => {
     const loaders = createLoaders(session);
     const load = vi.spyOn(loaders.membershipsByUser, 'load');
 
-    const result = await run(session, { session, loaders, emailVerification: noSender });
+    const result = await run(session, ME, {}, { loaders });
 
     expect(load).toHaveBeenCalledWith(A.id);
     expect(result.data?.me).toMatchObject({
       memberships: [{ role: 'owner', workspace: { id: WORKSPACE_W_ID } }],
     });
-  });
-
-  it('refuses a signed-out request', async () => {
-    // Why this could have answered: the same query resolves for a session.
-    expect((await run(asUser(A))).data?.me).toBeTruthy();
-
-    const result = await run(null);
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
   });
 });
