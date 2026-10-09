@@ -81,7 +81,12 @@ export default defineConfig({
       html: '.reports/vitest/html/index.html',
     },
     coverage: {
-      provider: 'v8',
+      // Istanbul instruments only the `include` files, at transform time. v8
+      // collected everything a worker ran, jsdom and React's development build
+      // included, and remapped it onto src/, which made the coverage run half as
+      // long again as the plain one; istanbul's costs it a few seconds
+      // (claude-docs/design-decisions/mb.191-coverage-provider.md).
+      provider: 'istanbul',
       reportsDirectory: '.reports/coverage',
       // 'json-summary' feeds .github/scripts/summarize-vitest.mjs.
       reporter: process.env.CLAUDECODE

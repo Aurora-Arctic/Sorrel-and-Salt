@@ -49,7 +49,8 @@ resolve: async (_query, { workspaceId }, { session }) =>
 - **The service enforces its own authorization,** never trusting a caller to
   have checked. `tests/modules/coven/services/two-transports.test.ts` proves one refusal
   arrives the same way by both paths: a direct call and a resolver over a
-  throwaway schema, for a member of another workspace and for a site admin.
+  throwaway schema, read through the shared harness as the browser reads it
+  (MB.186), for a member of another workspace and for a site admin.
 - **The boundary is mechanical.** Lint stops a resolver, page or component
   importing anything under `src/db` at runtime, and `server-only` fails the
   build of a client bundle that reaches a service (["The access

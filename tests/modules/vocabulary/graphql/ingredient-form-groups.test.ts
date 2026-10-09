@@ -1,21 +1,18 @@
-import { graphql } from 'graphql';
-import { createYoga } from 'graphql-yoga';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import type { Session } from '@/lib/session';
 import { formSlug, slugify } from '@/lib/slugify';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { noSender } from '../../../support/email-verification';
-import type { Context } from '@/graphql/types';
-import type { Answer, FormGroupNode } from './types';
+import { A, E, asUser } from '../../../support/as-user';
+import { run } from '../../../support/graphql/run';
+import type { FormGroupNode } from './types';
 
-// M5.6b's three form-group writes, run through Yoga with the route's own error
-// mapping, so a refusal is asserted as the browser receives it. The services'
-// own rules — the forms' slugs following a rename, and moving with a delete —
-// are services/ingredient-form-groups.test.ts's.
+// M5.6b's three form-group writes over the wire. This file holds the
+// transport's half (claude-docs/testing/layer-ownership.md): the loaders
+// cleared by a write, `moveTo` reaching the delete, and per write one refusal
+// per error code, read as the browser reads it. Which roles are refused, and
+// the services' own rules — the forms' slugs following a rename, and moving
+// with a delete — are services/ingredient-form-groups.test.ts's; a signed-out
+// caller at every field is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -34,25 +31,6 @@ beforeEach(async () => {
   await sql`delete from ingredient_forms where name like 'Fixture%'`;
   await sql`delete from ingredient_form_groups where name like 'Fixture %'`;
 });
-
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-async function send<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown> = {},
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
 
 const FIELDS = 'id name slug description';
 const CREATE = `mutation ($input: IngredientFormGroupInput!) {
@@ -85,9 +63,22 @@ async function seedForm(name: string, groupId: string, groupName: string): Promi
 const groupOf = async (id: string) =>
   (await sql`select * from ingredient_form_groups where id = ${id}`)[0];
 
+// The one non-admin each write refuses here, since `authScopes: { admin: true }`
+// is a gate of its own in front of the service: a coven's owner, the most a
+// workspace role grants, which is still not the site role these writes turn
+// on. Every other role is services/ingredient-form-groups.test.ts's.
+const OWNER = asUser(A);
+
+// Why the refusals could have been something else: the session the scope
+// reads says `user`, and E's says `admin`.
+it('is testing a session whose site role is `user`, beside an admin', () => {
+  expect(OWNER.role).toBe('user');
+  expect(asUser(E).role).toBe('admin');
+});
+
 describe('createIngredientFormGroup', () => {
   it('writes one for a site admin', async () => {
-    const result = await send<{ createIngredientFormGroup: FormGroupNode }>(asUser(E), CREATE, {
+    const result = await run<{ createIngredientFormGroup: FormGroupNode }>(asUser(E), CREATE, {
       input: input(),
     });
 
@@ -98,13 +89,28 @@ describe('createIngredientFormGroup', () => {
     });
   });
 
-  it('refuses every non-admin, the coven owner A included, and a signed-out request, as FORBIDDEN, writing nothing', async () => {
-    for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-      const result = await send(session, CREATE, { input: input() });
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    }
+  it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
+    const result = await run(OWNER, CREATE, { input: input() });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(
       await sql`select 1 from ingredient_form_groups where name = 'Fixture Matter'`,
+    ).toHaveLength(0);
+  });
+
+  it('answers a slug collision as VALIDATION on `name`, writing nothing', async () => {
+    await seedGroup('Fixture Matter');
+
+    const result = await run(asUser(E), CREATE, { input: input('Fixture-Matter') });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'] }],
+    });
+    expect(
+      await sql`select 1 from ingredient_form_groups where name = 'Fixture-Matter'`,
     ).toHaveLength(0);
   });
 });
@@ -114,9 +120,10 @@ describe('updateIngredientFormGroup', () => {
     const id = await seedGroup('Fixture Matter');
     await seedForm('Fixture Shard', id, 'Fixture Matter');
     const session = asUser(E);
-    const context = { session, loaders: createLoaders(session), emailVerification: noSender };
+    // One set of loaders across the three, so the read before fills the cache.
+    const context = { loaders: createLoaders(session) };
     const READ = `query { ingredientFormValues(query: "Fixture Shard") { edges { node { slug group { name } } } } }`;
-    const before = await graphql({ schema, source: READ, contextValue: context });
+    const before = await run(session, READ, {}, context);
     expect(before.data).toEqual({
       ingredientFormValues: {
         edges: [
@@ -125,13 +132,8 @@ describe('updateIngredientFormGroup', () => {
       },
     });
 
-    const result = await graphql({
-      schema,
-      source: UPDATE,
-      variableValues: { id, input: input('Fixture Stuff') },
-      contextValue: context,
-    });
-    const after = await graphql({ schema, source: READ, contextValue: context });
+    const result = await run(session, UPDATE, { id, input: input('Fixture Stuff') }, context);
+    const after = await run(session, READ, {}, context);
 
     expect(result.errors).toBeUndefined();
     expect(after.data).toEqual({
@@ -143,17 +145,30 @@ describe('updateIngredientFormGroup', () => {
     });
   });
 
-  it('refuses every non-admin and a signed-out request as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
+  it('refuses a coven owner as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
     const id = await seedGroup('Fixture Kept');
     const before = await groupOf(id);
 
-    for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-      const refused = await send(session, UPDATE, { id, input: input() });
-      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    }
-    const missing = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
+    const refused = await run(OWNER, UPDATE, { id, input: input() });
+    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    const missing = await run(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect(await groupOf(id)).toEqual(before);
+  });
+
+  it("answers a rename onto another group's address as VALIDATION on `name`, leaving the row", async () => {
+    const id = await seedGroup('Fixture Kept');
+    await seedGroup('Fixture Taken');
+    const before = await groupOf(id);
+
+    const result = await run(asUser(E), UPDATE, { id, input: input('Fixture-Taken') });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'] }],
+    });
     expect(await groupOf(id)).toEqual(before);
   });
 });
@@ -163,8 +178,8 @@ describe('deleteIngredientFormGroup', () => {
     const id = await seedGroup('Fixture Matter');
     const shard = await seedForm('Fixture Shard', id, 'Fixture Matter');
 
-    const refused = await send(asUser(E), DELETE, { id });
-    const moved = await send<{ deleteIngredientFormGroup: string }>(asUser(E), DELETE, {
+    const refused = await run(asUser(E), DELETE, { id });
+    const moved = await run<{ deleteIngredientFormGroup: string }>(asUser(E), DELETE, {
       id,
       moveTo: substance,
     });
@@ -178,13 +193,19 @@ describe('deleteIngredientFormGroup', () => {
     expect(form).toEqual({ group_id: substance, slug: 'fixture-shard-substance' });
   });
 
-  it('refuses every non-admin and a signed-out request as FORBIDDEN, leaving the row live', async () => {
+  it('refuses a coven owner as FORBIDDEN, leaving the row live', async () => {
     const id = await seedGroup('Fixture Standing');
 
-    for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-      const result = await send(session, DELETE, { id });
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    }
+    const result = await run(OWNER, DELETE, { id });
+
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect((await groupOf(id)).deleted_at).toBeNull();
+  });
+
+  it('answers an unknown id as NOT_FOUND', async () => {
+    const result = await run(asUser(E), DELETE, { id: 'not-a-uuid' });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 });

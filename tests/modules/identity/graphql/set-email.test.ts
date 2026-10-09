@@ -1,15 +1,16 @@
-import { graphql } from 'graphql';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
 import type { EmailVerificationSender } from '@/modules/identity';
 import { noSender } from '../../../support/email-verification';
 import { B, asUser } from '../../../support/as-user';
+import { run as runOperation } from '../../../support/graphql/run';
 
 // `setEmail` over the real schema, with a sender that records what it was
 // asked to mail: the mutation's `next` is where the link lands afterwards
-// (claude-docs/auth/admin-bootstrap.md, "The email page").
+// (claude-docs/auth/admin-bootstrap.md, "The email page"), and its one
+// `VALIDATION` read as the browser reads it. What the service refuses, and
+// why, is services/email.test.ts's; a signed-out caller is
+// tests/db/graphql-query-scopes.test.ts's.
 
 const NEW = 'new@set-email.test';
 
@@ -35,15 +36,8 @@ async function run(variables: Record<string, unknown>) {
   // Out of the cooldown, so the service reaches the sender.
   await sql`update users set verification_sent_at = null where id = ${B.id}`;
   const requestChange = vi.fn<EmailVerificationSender['requestChange']>(async () => {});
-  const result = await graphql({
-    schema,
-    source: SET_EMAIL,
-    variableValues: variables,
-    contextValue: {
-      session: asUser(B),
-      loaders: createLoaders(asUser(B)),
-      emailVerification: { ...noSender, requestChange },
-    },
+  const result = await runOperation(asUser(B), SET_EMAIL, variables, {
+    emailVerification: { ...noSender, requestChange },
   });
   return { result, requestChange };
 }
@@ -61,5 +55,18 @@ describe('the setEmail mutation', () => {
 
     expect(result.errors).toBeUndefined();
     expect(requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+  });
+
+  // Why it could have been sent: the two above, the same session and sender,
+  // reach the sender with a well-formed address.
+  it('answers a malformed address as VALIDATION on `email`, sending nothing', async () => {
+    const { result, requestChange } = await run({ email: 'not an address' });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['setEmail'],
+      extensions: { code: 'VALIDATION', fieldErrors: [{ path: ['email'] }] },
+    });
+    expect(requestChange).not.toHaveBeenCalled();
   });
 });

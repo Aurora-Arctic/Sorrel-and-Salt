@@ -101,6 +101,19 @@ changes only once the mailed link is followed
 another verified account or a second mail inside the minute included, is a
 `VALIDATION` error on the `email` field.
 
+Their GraphQL files hold the transport's half (MB.180, MB.186;
+["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
+says what that half is), and a signed-out caller at `me`, `users` and
+`setEmail` is `tests/db/graphql-query-scopes.test.ts`'s.
+`tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
+`memberships` through the request's loader. `users.test.ts` holds the default
+page, the cursor and the filters reaching `listUsers`, the nodes being `me`'s
+`User`, and `providers`' `admin` scope refused on a user's own row; who is
+refused the list is `services/user-list.test.ts`'s. `user-private-fields.test.ts`
+holds the four private fields' `self`-or-`admin` scope, below.
+`set-email.test.ts` holds `next` reaching the sender, and one `VALIDATION`;
+every refusal's rule is `services/email.test.ts`'s.
+
 ### `planetSuggestions` and `zodiacSuggestions`
 
 The autofill behind the planet and zodiac fields (MB.94), registered by
@@ -139,6 +152,14 @@ type CorrespondenceSuggestion {
   The form, not the field, keeps a compendium entry to the curated rows
   (MB.162; [`components/ingredient-form.md`](../components/ingredient-form.md),
   "On the compendium").
+
+`tests/modules/vocabulary/graphql/suggestions.test.ts` holds the transport's
+half (MB.186): the nodes, an absent `query` sent as a blank one, a page by
+cursor, `zodiacSuggestions` reading its own vocabulary, and the compendium-only
+mode with its one `FORBIDDEN`, signed out. The buckets, the thresholds and who
+is refused under a coven are `services/suggestions.test.ts`'s; a signed-out
+caller under a coven is `tests/db/graphql-query-scopes.test.ts`'s, and a `workspaceId` naming no
+coven `tests/db/graphql-workspace-ids.test.ts`'s.
 
 ### `formSuggestions` and `commonNameSuggestions`
 
@@ -203,6 +224,13 @@ type SuggestionClaimant {
   included. So is a null `workspaceId`, which reads the compendium alone
   (M5.5), its claimants included.
 
+`tests/modules/vocabulary/graphql/form-suggestions.test.ts` holds what
+`suggestions.test.ts` holds for the two above, with each curated row's `id`
+and `group` and every suggestion's `claimants`; the rules are
+`services/form-suggestions.test.ts`'s. `commonNameSuggestions`' file,
+`ingredients/graphql/common-names.test.ts`, is described with the compendium's
+reads, below.
+
 ### `deitySuggestions`
 
 The autofill behind the deities field (MB.130), registered by `vocabulary`
@@ -230,6 +258,10 @@ type DeitySuggestion {
   (MB.167), is one value in use, folded and counted once, from the compendium
   and the named workspace only.
 - The refusals, and a null `workspaceId`, are `planetSuggestions`'.
+
+`tests/modules/vocabulary/graphql/deity-suggestions.test.ts` holds what
+`suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
+the rules are `services/deity-suggestions.test.ts`'s.
 
 ### `possibleDuplicates`
 
@@ -551,10 +583,11 @@ the loaders cleared after a write, one read per page, the edge fields, and a mod
 no service test reaches. Which roles are refused at which rows, and every Zod
 rule, are the service and validation tests' alone
 ([`design-decisions/mb.180-graphql-transport-half.md`](../design-decisions/mb.180-graphql-transport-half.md)).
-Every ingredients file runs through `tests/support/graphql/run.ts`, Yoga with the
-route's `maskedErrors`, and reads a refusal as `extensions.code`, never as the
-thrown type (MB.185); MB.186 brings the vocabulary, identity and coven files to
-the same shape.
+Every GraphQL test file runs through `tests/support/graphql/run.ts`, Yoga with
+the route's `maskedErrors`, and reads a refusal as `extensions.code`, never as
+the thrown type — the ingredients files since MB.185, the vocabulary, identity
+and coven files since MB.186. A test that watches a loader or shares one across
+operations, or records what a sender was asked to mail, hands `run` its own.
 
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
 mutations' half: the input that names a stamp or a tier, or leaves a field out,
@@ -690,8 +723,14 @@ sketch, as the chips read them (MB.36).
   to the admin. Both writes clear `categoriesByIngredient`, which an earlier
   root field may have filled. Revalidating the `compendium` tag is M8.7's.
 
-`tests/modules/vocabulary/graphql/categories.test.ts` runs the list and the
-writes through Yoga.
+`tests/modules/vocabulary/graphql/categories.test.ts` holds their half (MB.186):
+a page with its groups in one read, the count, the cursor, the two filters
+reaching the read and the count, and per write one refusal per error code —
+`FORBIDDEN` to a coven's owner, since `authScopes: { admin: true }` is a gate
+of its own; `VALIDATION` on the create and the update; `NOT_FOUND` on the
+update and the delete; and the delete's in-use `FORBIDDEN`, its message
+verbatim. Every other non-admin, what a filter matches, a malformed `groupId`
+and every collision are `services/categories.test.ts`'s.
 
 ### Forms: `ingredientFormGroups` and the three form writes
 
@@ -723,8 +762,10 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
   many more. Update and delete clear `ingredientFormsById`, which an earlier
   root field may have filled reading a `formChoice`.
 
-`tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` runs the
-list, the groups and the writes through Yoga.
+`tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` holds their
+half as `categories.test.ts` does, with the groups' page, `ingredientFormsById`
+cleared by an update, and `endRedirect` reaching the update as its
+`VALIDATION`; the rules are `services/ingredient-form-values.test.ts`'s.
 
 ### Planets and signs: `planets`, `zodiacSigns` and the six writes
 
@@ -750,8 +791,11 @@ from one table of names, so the two cannot drift.
   entries and how many more. No loader holds a planet or a sign, so neither
   write clears one.
 
-`tests/modules/vocabulary/graphql/astrology.test.ts` runs both lists and the
-six writes through Yoga.
+`tests/modules/vocabulary/graphql/astrology.test.ts` holds both lists' half — a
+page counted, and `query` reaching the read and the count — and the six
+writes' as `categories.test.ts` does, a held value's `FORBIDDEN` included. A
+rename carried onto the entries, and every other rule, are
+`services/astrology.test.ts`'s.
 
 ### Groups: the category-group and form-group writes
 
@@ -789,7 +833,12 @@ the browser.
   `compendium` tag is M8.7's.
 
 `tests/modules/vocabulary/graphql/category-groups.test.ts` and
-`ingredient-form-groups.test.ts` run the writes through Yoga.
+`ingredient-form-groups.test.ts` hold the writes' half: the loaders cleared by
+an update, `moveTo` reaching the delete, and per write one refusal per error
+code — `FORBIDDEN` to a coven's owner, `VALIDATION` (a colour, a collision or
+`moveTo`), and `NOT_FOUND` on the update and the delete. Every other
+non-admin, each colour and every collision are
+`services/category-groups.test.ts`'s and `services/ingredient-form-groups.test.ts`'s.
 
 ### Auth scopes: the second check
 
@@ -811,7 +860,8 @@ category writes and M5.5's three compendium writes carry it from the first. `ok`
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the
-wrong one, which is the bug the scope is behind. A
+wrong one, which is the bug the scope is behind, and reads each refusal as
+`extensions.code` through the shared harness. A
 scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
 service throws, so the transport maps one refusal shape whichever check said
 no (MB.43).
