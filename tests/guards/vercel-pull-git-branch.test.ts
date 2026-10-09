@@ -60,19 +60,10 @@ const isPreviewPull = (pull: VercelPull) => pull.command.includes('--environment
 describe('every `vercel pull` in CI', () => {
   const pulls = everyVercelPull();
 
-  // Precondition: the sweep found the pulls it checks — a renamed `run:` would
-  // empty the list and leave the suite green. Two per file, one arm per
-  // target, so a file that lost an arm fails here rather than leaving the
-  // assertions below vacuous over the survivor.
-  it('is found by the sweep — deploy.yml and migrate.yml each pull once per target', () => {
-    expect(pulls.map(({ file }) => file).sort()).toEqual([
-      'deploy.yml',
-      'deploy.yml',
-      'migrate.yml',
-      'migrate.yml',
-    ]);
-  });
-
+  // Which workflows pull at all is pulled-env-assertion.test.ts's sweep
+  // (MB.184); this file's precondition is the per-target count below — a
+  // renamed `run:` empties the list and fails it, so the assertions after it
+  // are never vacuous over a survivor.
   it('names its target literally, so every invocation is classifiable', () => {
     for (const pull of pulls) {
       expect(

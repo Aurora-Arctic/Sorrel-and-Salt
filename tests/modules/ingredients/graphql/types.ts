@@ -1,4 +1,4 @@
-import type { ExecutionResult } from 'graphql';
+import type { Answer } from '../../../support/graphql/types';
 
 export interface CommonNameConnection {
   edges: { cursor: string; node: Record<string, unknown> }[];
@@ -34,7 +34,7 @@ export interface DuplicateConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
-export type Result = ExecutionResult<{ possibleDuplicates: DuplicateConnection }>;
+export type Result = Answer<{ possibleDuplicates: DuplicateConnection }>;
 
 export interface IngredientNode {
   id: string;
@@ -44,17 +44,6 @@ export interface IngredientNode {
   isGlobal: boolean;
   folkNames: string[];
   categories: { name: string }[];
-}
-
-export interface WireError {
-  message: string;
-  path?: (string | number)[];
-  extensions?: { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] };
-}
-
-export interface Answer<T> {
-  data?: T | null;
-  errors?: WireError[];
 }
 
 /** One `IngredientDeity`, its curated deity selected by id and tradition (MB.167). */

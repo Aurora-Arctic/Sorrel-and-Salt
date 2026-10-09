@@ -1,9 +1,8 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { compile, compileString } from 'sass';
-import { describe, expect, it } from 'vitest';
-import { REPO_ROOT, fromRoot } from '../support/paths';
+import { describe, expect, inject, it } from 'vitest';
+import { fromRoot } from '../support/paths';
 
 // A chip wears its group's colour pair from the row, inline (MB.36). The shape
 // it replaced — a `--group-<slug>` custom property and a `.chip--<slug>` class
@@ -22,23 +21,10 @@ const OLD_SHAPE_IN_CSS = /--group-|\.chip--/;
 
 const SCANNED = /\.(scss|tsx?|mts|mjs)$/;
 
-/** Everything under the two trees that style or render a chip, untracked included. */
-const files = execFileSync(
-  'git',
-  [
-    '-c',
-    'safe.directory=*',
-    'ls-files',
-    '--cached',
-    '--others',
-    '--exclude-standard',
-    'src',
-    '.ladle',
-  ],
-  { cwd: REPO_ROOT, encoding: 'utf8' },
-)
-  .split('\n')
-  .filter((file) => SCANNED.test(file));
+/** Everything under the two trees that style or render a chip, untracked included (MB.184's listing). */
+const files = inject('repoFiles').filter(
+  (file) => (file.startsWith('src/') || file.startsWith('.ladle/')) && SCANNED.test(file),
+);
 
 /** A partial emits only through a stylesheet that `@use`s it, which is scanned. */
 const stylesheets = files.filter(

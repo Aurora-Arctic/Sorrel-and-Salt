@@ -1,7 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 import { slugify } from '@/lib/slugify';
@@ -31,12 +30,10 @@ const IMPORTS_PACKAGE = new RegExp(
  * Tracked files plus untracked ones git would not ignore: the file this guard
  * exists to catch was just written and is untracked until committed, so a
  * tracked-only scan would pass vacuously in exactly the diff that needed it.
+ * The listing is the unit project's shared one (MB.184).
  */
 function sourceFiles(): string[] {
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  return execFileSync('git', [...args, '*.ts', '*.tsx'], { cwd: REPO_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter(Boolean);
+  return inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
 }
 
 function read(file: string): string {

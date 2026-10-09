@@ -37,16 +37,38 @@ Three consequences worth knowing before writing a test:
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
-statement about the tree; it scans the git index, so a test written in `src/`
-fails in the diff that adds it as soon as it is staged. It deliberately does
-not scan untracked files the way `slug-rule.test.ts` does: that guard reads
-file contents, where a duplicate is harmless, while this one enumerates
-locations, where a stray copy is the finding. CI's container keeps every file
-deleted since its image was built — `checkout-to-app` lays the checkout over
-a baked `/app` with `cp -a`, which never deletes — and an untracked scan
-reports all of them. The failure it prevents is
-silent: `include` is scoped to `tests/`, so a misplaced test is not a red
-test, it is a file nothing runs.
+statement about the tree; it reads the shared listing below — the index plus
+the untracked files git would not ignore — so a test written in `src/` fails
+in the diff that adds it, before it is staged. Until MB.42 it read the index
+alone: CI's container then kept every file deleted since its image was built
+(`checkout-to-app` lays the checkout over `/app` with `cp -a`, which never
+deletes), and an untracked scan reported all of them; the image carries no
+source layer now, which `image-source-layer.test.ts` holds. The failure it
+prevents is silent: `include` is scoped to `tests/`, so a misplaced test is
+not a red test, it is a file nothing runs.
+
+**The guards share one scan** (MB.184; [`layer-ownership.md`](layer-ownership.md),
+"The owning layer"). `tests/support/unit-global-setup.ts`, the `unit`
+project's `globalSetup`, runs `git ls-files --cached --others
+--exclude-standard` once — the spelling `scripts/doc-citations.mjs` uses, so
+the two sweeps see one tree — drops what is in the index but gone from the
+working tree, and `provide`s the list as `repoFiles`; a guard that
+enumerates files `inject`s it and filters by prefix and extension where it
+used to pass git a pathspec. The same setup writes every lint guard's probes
+(`tests/support/lint-probes/`, one module per guard, each exporting its probe
+tables and a `ProbeSet`), runs oxlint once over all of them under
+`.oxlintrc.json`, and provides the report as `lintDiagnostics` with the
+file list it was pointed at as `lintedFiles`, removing the probes as soon as
+oxlint has read them, so no test in any project finds them on disk and a
+watch session does not leave them in `src/`. A watch rerun takes both scans
+again (`onTestsRerun`), so a file added since the last run is seen. Each guard still opens by asserting it found what it scans — an
+empty listing satisfies every `toEqual([])` — and the lint guards assert
+their probes are in `lintedFiles` and drew a diagnostic.
+`tests/guards/shared-scan.test.ts` holds the setup to what it provides, and
+holds every other test to reading it: a file under `tests/` that imports
+`node:child_process` and names the listing or the linter's binary fails there.
+Reading a file's contents stays in the guard; it is the listing that is
+shared, not the reading.
 
 - **`unit`** — `environment: 'node'`, `globals: true`. `include`s
   `tests/**/*.test.ts`, excluding `tests/db/**`, `tests/modules/**`,
@@ -60,7 +82,10 @@ test, it is a file nothing runs.
   — against the `server` exported from `tests/support/msw/server.ts`
   (`setupServer()`, no base handlers — every operation is registered per
   test, see `dom` below). `dom` runs the same file, so a guard that reaches
-  for the network fails as loudly as a component test does.
+  for the network fails as loudly as a component test does. Its
+  `globalSetup` is `tests/support/unit-global-setup.ts`, the guards' shared
+  scan (above), which provides `repoFiles`, `lintDiagnostics` and
+  `lintedFiles` the way the `db` project's provides `templateDatabase`.
   - **A `unit` or `dom` test that opens a connection gets the plain `sorrel`
     database, not a clone.** The per-worker `sorrel_test_<n>` rewrite is
     `db`-only — it lives in that project's `setupFiles` (below) and nothing

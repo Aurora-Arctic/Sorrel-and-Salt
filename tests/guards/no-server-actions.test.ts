@@ -1,27 +1,21 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // A write reaches the database through `/api/graphql` and nothing else
 // (CLAUDE.md rule 1; claude-docs/graphql/two-transports.md, "The two transports"). A server
 // action is the one way a page could write without it, and it is a directive
 // rather than an import, so no `no-restricted-imports` rule will ever see one.
-// Untracked files are scanned too, for the reason slug-rule.test.ts gives.
+// Untracked files are scanned too, for the reason slug-rule.test.ts gives:
+// the listing is the unit project's shared one (MB.184).
 
 // A directive is a statement of its own on its own line; a mention in a
 // comment or a string inside a call is not one.
 const DIRECTIVE = /^\s*(['"])use server\1\s*;?\s*$/m;
 
 function sourceFiles(): string[] {
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  return execFileSync('git', [...args, 'src/*.ts', 'src/*.tsx'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter(Boolean);
+  return inject('repoFiles').filter((file) => file.startsWith('src/') && /\.tsx?$/.test(file));
 }
 
 function read(file: string): string {

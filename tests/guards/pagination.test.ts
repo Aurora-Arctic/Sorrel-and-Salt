@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -8,7 +7,7 @@ import {
   isObjectType,
   type GraphQLSchema,
 } from 'graphql';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { createBuilder } from '@/graphql/builder';
 import { schema } from '@/graphql/schema';
 import { REPO_ROOT } from '../support/paths';
@@ -49,13 +48,7 @@ function unsizedConnections(checked: GraphQLSchema): string[] {
 
 /** Tracked and untracked source, as slug-rule.test.ts reads it: the offending file is new. */
 function sourceFiles(): string[] {
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  return execFileSync('git', [...args, 'src/*.ts', 'src/*.tsx'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter(Boolean);
+  return inject('repoFiles').filter((file) => file.startsWith('src/') && /\.tsx?$/.test(file));
 }
 
 // Assembled, so this file does not match its own search.

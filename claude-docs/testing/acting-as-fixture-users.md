@@ -52,3 +52,14 @@ answers an unauthorized read with an empty list or an unauthorized write with a
 success. Both look like success to a caller, and only an assertion that
 demands a rejection tells them apart. A `NotFound` is held to the same
 standard: it does not satisfy a test written for a `Forbidden`.
+
+**Over GraphQL, assert the code, never the type.** A resolver test runs its
+operation through `tests/support/graphql/run.ts` (MB.185): `run(session, query,
+variables)` posts it to Yoga built on the route's schema and the route's own
+`maskedErrors`, with a fresh set of loaders, and answers the body the browser
+would receive. A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
+`NOT_FOUND`, `VALIDATION` with its `fieldErrors` — because the wire carries no
+`originalError`, and a test that reads one through bare `graphql()` is watching
+the service, a second copy of its test. Which roles are refused is the service
+test's; a GraphQL file keeps one refusal per error code per field, with its
+precondition ([`layer-ownership.md`](layer-ownership.md), "The owning layer").
