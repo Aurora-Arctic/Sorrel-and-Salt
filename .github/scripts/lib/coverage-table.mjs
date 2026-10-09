@@ -1,5 +1,5 @@
-// Shared by summarize-vitest.mjs and summarize-playwright.mjs: coverage-v8
-// and monocart both emit the same istanbul-style coverage-summary.json.
+// Shared by summarize-vitest.mjs and summarize-playwright.mjs: Vitest's istanbul
+// provider and monocart both emit the same istanbul-style coverage-summary.json.
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,7 +11,7 @@ function formatPct(pct) {
 }
 
 // The short stat and a collapsible per-file table, or null when the run never
-// wrote the file. Keys are absolute under coverage-v8 but webpack-namespaced
+// wrote the file. Keys are absolute under Vitest's provider but webpack-namespaced
 // under monocart, so only paths under repoRoot are relativized.
 export function buildCoverageSection(summaryPath, repoRoot) {
   if (!fs.existsSync(summaryPath)) return null;

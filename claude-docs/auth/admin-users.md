@@ -72,8 +72,9 @@ order, the cursor, both filters, the literal wildcards, the bootstrap user,
 soft-deleted rows and
 the refusal of every non-admin fixture user by direct call, after proving that
 the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
-the default page of 25, the resumed cursor, the refusal signed in and signed
-out, and that the nodes are the same `User` as `me`'s.
+the transport's half (MB.186): the default page of 25, the resumed cursor, the
+filters reaching the service, and that the nodes are the same `User` as
+`me`'s; a signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/app/admin/users/page.test.tsx` covers the guard running first and the
 search parameters becoming the filter and the pager's links.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built

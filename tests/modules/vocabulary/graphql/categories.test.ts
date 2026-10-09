@@ -1,23 +1,20 @@
-import { createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { maskedErrors } from '@/graphql/errors';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { B, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
-import type { Answer, CategoryConnection, CategoryNode, FilteredCategories } from './types';
+import { run } from '../../../support/graphql/run';
+import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
 // M5.6 over the wire: the public `categories` list and the admin's three
-// writes, run through Yoga with the route's own error mapping, so a refusal
-// is asserted as the browser receives it. The services' own rules are
-// services/categories.test.ts's; this file holds the transport's half.
+// writes. This file holds the transport's half (claude-docs/testing/layer-ownership.md):
+// a page, its groups in one read, its count, the filters reaching the read,
+// and per write one refusal per error code, read as the browser reads it.
+// Which roles are refused, what a filter matches and every collision are
+// services/categories.test.ts's; a signed-out caller at every field is
+// tests/db/graphql-query-scopes.test.ts's.
 
 // The group reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
@@ -45,25 +42,6 @@ beforeEach(async () => {
   await sql`delete from categories where name like 'Testcraft%'`;
 });
 
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-async function run<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown> = {},
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
-
 const FIELDS = 'id name slug description group { id name }';
 
 const LIST = `query ($first: Int, $after: String) {
@@ -84,6 +62,19 @@ const UPDATE = `mutation ($id: ID!, $input: CategoryInput!) {
 const DELETE = 'mutation ($id: ID!) { deleteCategory(id: $id) }';
 
 const input = (name = 'Testcraft') => ({ name, description: 'Made over the wire', groupId });
+
+// The one non-admin each write refuses here, since `authScopes: { admin: true }`
+// is a gate of its own in front of the service: a coven's owner, the most a
+// workspace role grants, which is still not the site role these writes turn
+// on. Every other role is services/categories.test.ts's.
+const OWNER = asUser(A);
+
+// Why the refusals could have been something else: the session the scope
+// reads says `user`, and E's says `admin`.
+it('is testing a session whose site role is `user`, beside an admin', () => {
+  expect(OWNER.role).toBe('user');
+  expect(asUser(E).role).toBe('admin');
+});
 
 async function seed(name: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
@@ -183,15 +174,6 @@ describe('categories', () => {
     });
     expect(elsewhere.data?.categories).toEqual({ totalCount: 0, edges: [] });
   });
-
-  it('answers a group id that is not a uuid with an empty page, not an error', async () => {
-    const result = await run<{ categories: FilteredCategories }>(null, FILTERED, {
-      groupId: 'not-a-uuid',
-    });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.categories).toEqual({ totalCount: 0, edges: [] });
-  });
 });
 
 describe('createCategory', () => {
@@ -208,11 +190,11 @@ describe('createCategory', () => {
     });
   });
 
-  it('refuses a member and a signed-out request, as FORBIDDEN, writing nothing', async () => {
-    for (const session of [asUser(B), null]) {
-      const result = await run(session, CREATE, { input: input() });
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    }
+  it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
+    const result = await run(OWNER, CREATE, { input: input() });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     const rows = await sql`select 1 from categories where name = 'Testcraft'`;
     expect(rows).toHaveLength(0);
   });
@@ -247,14 +229,29 @@ describe('updateCategory', () => {
     expect(result.data?.updateCategory).toMatchObject({ id, name: 'Testcraft New' });
   });
 
-  it('refuses a member as FORBIDDEN, and answers an unknown id as NOT_FOUND', async () => {
+  it('refuses a coven owner as FORBIDDEN, and answers an unknown id as NOT_FOUND', async () => {
     const id = await seed('Testcraft Kept');
 
-    const refused = await run(asUser(B), UPDATE, { id, input: input('Testcraft Taken Over') });
+    const refused = await run(OWNER, UPDATE, { id, input: input('Testcraft Taken Over') });
     const missing = await run(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
     expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    const [row] = await sql`select name from categories where id = ${id}`;
+    expect(row.name).toBe('Testcraft Kept');
+  });
+
+  it("answers a rename onto another category's address as VALIDATION on `name`", async () => {
+    const id = await seed('Testcraft Kept');
+    await seed('Testcraft Ward');
+
+    const result = await run(asUser(E), UPDATE, { id, input: input('Testcraft-Ward') });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'] }],
+    });
     const [row] = await sql`select name from categories where id = ${id}`;
     expect(row.name).toBe('Testcraft Kept');
   });
@@ -269,12 +266,21 @@ describe('deleteCategory', () => {
     expect(result.data?.deleteCategory).toBe(id);
   });
 
-  it('refuses a member as FORBIDDEN', async () => {
+  it('refuses a coven owner as FORBIDDEN, the row left live', async () => {
     const id = await seed('Testcraft Standing');
 
-    const result = await run(asUser(B), DELETE, { id });
+    const result = await run(OWNER, DELETE, { id });
 
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    const [row] = await sql`select deleted_at from categories where id = ${id}`;
+    expect(row.deleted_at).toBeNull();
+  });
+
+  it('answers an unknown id as NOT_FOUND', async () => {
+    const result = await run(asUser(E), DELETE, { id: 'not-a-uuid' });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 
   it("carries the in-use refusal's message to the admin verbatim", async () => {
