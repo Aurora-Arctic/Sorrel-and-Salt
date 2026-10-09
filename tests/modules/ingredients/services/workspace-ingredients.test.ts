@@ -513,6 +513,18 @@ describe('updateWorkspaceIngredient', () => {
     expect((await rowOf(id)).name).toBe('Testwort');
   });
 
+  it('refuses the site admin, whose role reaches no coven', async () => {
+    const id = await seed(local());
+    // Why it could have succeeded: the row is live, and E's role is admin.
+    await expect(getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).resolves.toBeDefined();
+    expect(asUser(E).role).toBe('admin');
+
+    await expect(
+      updateWorkspaceIngredient(asUser(E), WORKSPACE_W_ID, id, inputOf(local({ name: 'Nope' }))),
+    ).rejects.toThrow(Forbidden);
+    expect((await rowOf(id)).name).toBe('Testwort');
+  });
+
   it('does not reach a compendium entry, and leaves it as it was', async () => {
     const id = await seed(makeIngredient());
 
