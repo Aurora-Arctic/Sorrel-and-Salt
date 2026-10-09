@@ -1,19 +1,13 @@
-import { graphql, type ExecutionResult } from 'graphql';
-import { createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { maskedErrors } from '@/graphql/errors';
 import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { formSlug } from '@/lib/slugify';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
+import { run as runOperation } from '../../../support/graphql/run';
 import type {
-  Answer,
   FilteredFormValues,
   FormGroupConnection,
   FormValueConnection,
@@ -23,9 +17,13 @@ import type {
 // `ingredientFormValues`: the curated form vocabulary as `IngredientFormValue`
 // — named apart from the `IngredientForm` component — a page at a time, each
 // with its group, answered to a signed-out visitor (MB.80); the groups it is
-// filed under; and M5.6a's three admin writes, run through Yoga with the
-// route's own error mapping, so a refusal is asserted as the browser receives
-// it. The services' own rules are services/ingredient-form-values.test.ts's.
+// filed under; and M5.6a's three admin writes. This file holds the transport's
+// half (claude-docs/testing/layer-ownership.md): a page, its groups in one
+// read, its count, the filters reaching the read, the loaders cleared by a
+// write, and per write one refusal per error code, read as the browser reads
+// it. Which roles are refused, what a filter matches and every collision are
+// services/ingredient-form-values.test.ts's; a signed-out caller at every
+// field is tests/db/graphql-query-scopes.test.ts's.
 
 // The reads a page makes, counted at the repository: one for the groups of a
 // whole page, and never a role lookup.
@@ -48,22 +46,17 @@ beforeEach(() => {
   repository.findWorkspaceRole.mockClear();
 });
 
-function run(
-  session: Session | null,
-  variables: Record<string, unknown> = {},
-): Promise<ExecutionResult<{ ingredientFormValues: FormValueConnection }>> {
-  return graphql({
-    schema,
-    source: `query ($first: Int, $after: String) {
+const run = (session: Session | null, variables: Record<string, unknown> = {}) =>
+  runOperation<{ ingredientFormValues: FormValueConnection }>(
+    session,
+    `query ($first: Int, $after: String) {
       ingredientFormValues(first: $first, after: $after) {
         edges { cursor node { id name slug description group { id name slug description } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
-    variableValues: variables,
-    contextValue: { session, loaders: createLoaders(session), emailVerification: noSender },
-  }) as Promise<ExecutionResult<{ ingredientFormValues: FormValueConnection }>>;
-}
+    variables,
+  );
 
 /** The curated forms in the finder's order, from the database's own collation. */
 async function expectedOrder(): Promise<string[]> {
@@ -123,24 +116,20 @@ describe('ingredientFormValues', () => {
 // The writes and the counted list, over the wire. Every form written here is
 // named `Fixture …`, and goes before the next test.
 describe('the admin writes', () => {
-  const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
+  const send = runOperation;
 
-  async function send<T>(
-    session: Session | null,
-    query: string,
-    variables: Record<string, unknown> = {},
-  ): Promise<Answer<T>> {
-    const response = await yoga.fetch(
-      'http://localhost/graphql',
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ query, variables }),
-      },
-      { session, loaders: createLoaders(session), emailVerification: noSender },
-    );
-    return (await response.json()) as Answer<T>;
-  }
+  // The one non-admin each write refuses here, since `authScopes: { admin: true }`
+  // is a gate of its own in front of the service: a coven's owner, the most a
+  // workspace role grants, which is still not the site role these writes turn
+  // on. Every other role is services/ingredient-form-values.test.ts's.
+  const OWNER = asUser(A);
+
+  // Why the refusals could have been something else: the session the scope
+  // reads says `user`, and E's says `admin`.
+  it('is testing a session whose site role is `user`, beside an admin', () => {
+    expect(OWNER.role).toBe('user');
+    expect(asUser(E).role).toBe('admin');
+  });
 
   const FIELDS = 'id name slug description group { id name }';
   const CREATE = `mutation ($input: IngredientFormValueInput!) {
@@ -243,15 +232,6 @@ describe('the admin writes', () => {
       });
       expect(elsewhere.data?.ingredientFormValues).toEqual({ totalCount: 0, edges: [] });
     });
-
-    it('answers a group id that is not a uuid with an empty page, not an error', async () => {
-      const result = await send<{ ingredientFormValues: FilteredFormValues }>(null, FILTERED, {
-        groupId: 'not-a-uuid',
-      });
-
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.ingredientFormValues).toEqual({ totalCount: 0, edges: [] });
-    });
   });
 
   describe('ingredientFormGroups', () => {
@@ -285,11 +265,11 @@ describe('the admin writes', () => {
       });
     });
 
-    it('refuses every non-admin, the coven owner A included, and a signed-out request, as FORBIDDEN, writing nothing', async () => {
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const result = await send(session, CREATE, { input: input() });
-        expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+    it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
+      const result = await send(OWNER, CREATE, { input: input() });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       const rows = await sql`select 1 from ingredient_forms where name = 'Fixture Shard'`;
       expect(rows).toHaveLength(0);
     });
@@ -321,45 +301,33 @@ describe('the admin writes', () => {
         E.id,
       );
       const session = asUser(E);
-      const loaders = createLoaders(session);
-      const context = { session, loaders, emailVerification: noSender };
+      // One set of loaders across the three, so the read before fills the cache.
+      const context = { loaders: createLoaders(session) };
       // The pick read first, so the request's loader holds the form as it was.
-      const before = await graphql({
-        schema,
-        source: PICKED,
-        variableValues: { id: picked },
-        contextValue: context,
-      });
+      const before = await send(session, PICKED, { id: picked }, context);
       expect(before.data).toEqual({ ingredient: { formChoice: { id, name: 'Fixture Old' } } });
 
-      const result = await graphql({
-        schema,
-        source: `mutation ($id: ID!, $input: IngredientFormValueInput!) {
+      const result = await send(
+        session,
+        `mutation ($id: ID!, $input: IngredientFormValueInput!) {
           updateIngredientFormValue(id: $id, input: $input) { id name }
         }`,
-        variableValues: { id, input: input('Fixture New') },
-        contextValue: context,
-      });
-      const after = await graphql({
-        schema,
-        source: PICKED,
-        variableValues: { id: picked },
-        contextValue: context,
-      });
+        { id, input: input('Fixture New') },
+        context,
+      );
+      const after = await send(session, PICKED, { id: picked }, context);
 
       expect(result.errors).toBeUndefined();
       expect(result.data).toEqual({ updateIngredientFormValue: { id, name: 'Fixture New' } });
       expect(after.data).toEqual({ ingredient: { formChoice: { id, name: 'Fixture New' } } });
     });
 
-    it('refuses every non-admin and a signed-out request as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
+    it('refuses a coven owner as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
       const id = await seed('Fixture Kept');
       const before = await formOf(id);
 
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const refused = await send(session, UPDATE, { id, input: input('Fixture Taken Over') });
-        expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+      const refused = await send(OWNER, UPDATE, { id, input: input('Fixture Taken Over') });
+      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       const missing = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
       expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
@@ -414,14 +382,20 @@ describe('the admin writes', () => {
       expect((await formOf(id)).deleted_at).toBeInstanceOf(Date);
     });
 
-    it('refuses every non-admin and a signed-out request as FORBIDDEN, leaving the row live', async () => {
+    it('refuses a coven owner as FORBIDDEN, leaving the row live', async () => {
       const id = await seed('Fixture Standing');
 
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const result = await send(session, DELETE, { id });
-        expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+      const result = await send(OWNER, DELETE, { id });
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       expect((await formOf(id)).deleted_at).toBeNull();
+    });
+
+    it('answers an unknown id as NOT_FOUND', async () => {
+      const result = await send(asUser(E), DELETE, { id: 'not-a-uuid' });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     });
 
     it("carries the in-use refusal's message to the admin verbatim", async () => {

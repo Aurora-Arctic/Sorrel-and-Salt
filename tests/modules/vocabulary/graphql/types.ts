@@ -70,21 +70,6 @@ export interface FilteredCategories {
   edges: { node: { name: string } }[];
 }
 
-/** One error as the route sends it: the message, and the code and field errors MB.43 attaches. */
-export interface WireError {
-  message: string;
-  path?: (string | number)[];
-  extensions?: {
-    code?: string;
-    fieldErrors?: { path: (string | number)[]; message: string }[];
-  };
-}
-
-export interface Answer<T> {
-  data?: T | null;
-  errors?: WireError[];
-}
-
 export interface AstrologyValueNode {
   id: string;
   name: string;

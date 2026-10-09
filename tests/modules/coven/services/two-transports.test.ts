@@ -1,21 +1,18 @@
-import { graphql } from 'graphql';
 import { describe, expect, it } from 'vitest';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { createBuilder } from '@/graphql/builder';
-import { createLoaders } from '@/graphql/loaders';
-import { noSender } from '../../../support/email-verification';
 import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { type WorkspacePermission, assertMembership } from '@/modules/coven';
 import { D, E, asUser } from '../../../support/as-user';
-import type { Context } from '@/graphql/types';
+import { runnerOn } from '../../../support/graphql/run';
 
 // CLAUDE.md rule 1, asserted rather than stated: a server component calling
 // the service and a resolver reaching it over the schema get one answer,
 // because the check is in the service and nowhere else. No production field
-// reads a workspace yet, so the schema is a throwaway from `createBuilder()`;
-// the context is built the way `createContext` builds it, minus the cookie
-// parsing tests/graphql/context.test.ts covers.
+// reads a workspace yet, so the schema is a throwaway from `createBuilder()`,
+// run through the shared harness behind the route's `maskedErrors`, so the
+// second path's refusal is read as the browser reads it.
 
 const READ: WorkspacePermission = { workspace: ['read'] };
 
@@ -33,25 +30,17 @@ scratch.queryType({
     }),
   }),
 });
-const schema = scratch.toSchema();
+const overGraphQLRun = runnerOn(scratch.toSchema());
 
 /** Path one: what a server component does. */
 async function direct(session: Session, workspaceId: string) {
   return (await assertMembership(session, workspaceId, READ)).role;
 }
 
-/** Path two: what the browser's query does once Yoga has parsed the request. */
+/** Path two: what the browser's query does, through Yoga. */
 function overGraphQL(session: Session, workspaceId: string) {
-  const contextValue: Context = {
-    session,
-    loaders: createLoaders(session),
-    emailVerification: noSender,
-  };
-  return graphql({
-    schema,
-    source: 'query ($id: ID!) { workspaceRole(workspaceId: $id) }',
-    variableValues: { id: workspaceId },
-    contextValue,
+  return overGraphQLRun(session, 'query ($id: ID!) { workspaceRole(workspaceId: $id) }', {
+    id: workspaceId,
   });
 }
 
@@ -70,7 +59,10 @@ describe('one service, two transports', () => {
 
     const result = await overGraphQL(asUser(D), WORKSPACE_W_ID);
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['workspaceRole'],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 
   it('refuses a site admin on both paths', async () => {
@@ -82,6 +74,9 @@ describe('one service, two transports', () => {
 
     const result = await overGraphQL(asUser(E), WORKSPACE_W_ID);
     expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['workspaceRole'],
+      extensions: { code: 'FORBIDDEN' },
+    });
   });
 });

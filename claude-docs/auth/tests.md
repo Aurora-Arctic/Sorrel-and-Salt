@@ -59,7 +59,7 @@
 - **The email page (MB.54, MB.111, MB.113)** —
   `tests/modules/identity/services/email.test.ts` (the service, with a fake
   sender), `tests/modules/identity/graphql/set-email.test.ts` (the
-  mutation's `next` reaching the sender), `tests/db/email-change.test.ts`
+  mutation's `next` reaching the sender, and its `VALIDATION` on the wire), `tests/db/email-change.test.ts`
   (the whole round trip through Better Auth's endpoints, including that an
   aged verified account survives the sweep before and after a change, and
   the change and resend links' landings), `tests/db/email-verification.test.ts`

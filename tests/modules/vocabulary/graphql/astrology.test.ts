@@ -1,23 +1,20 @@
-import { createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { maskedErrors } from '@/graphql/errors';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
-import type { Answer, AstrologyValueConnection, AstrologyValueNode } from './types';
+import { run as send } from '../../../support/graphql/run';
+import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
 // `planets` and `zodiacSigns`: the two curated astrology vocabularies as
 // `Planet` and `ZodiacSign`, a page at a time, answered to a signed-out
-// visitor (MB.80), and MB.95's six admin writes, run through Yoga with the
-// route's own error mapping, so a refusal is asserted as the browser receives
-// it. The services' own rules are services/astrology.test.ts's.
+// visitor (MB.80), and MB.95's six admin writes. This file holds the
+// transport's half (claude-docs/testing/layer-ownership.md): a page and its
+// count, the query reaching the read, and per write one refusal per error
+// code, read as the browser reads it. Which roles are refused, a rename
+// carried onto the entries and every collision are services/astrology.test.ts's;
+// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -25,31 +22,24 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
 });
 
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
+// The one non-admin each write refuses here, since `authScopes: { admin: true }`
+// is a gate of its own in front of the service: a coven's owner, the most a
+// workspace role grants, which is still not the site role these writes turn
+// on. Every other role is services/astrology.test.ts's.
+const OWNER = asUser(A);
 
-async function send<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown> = {},
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
+// Why the refusals could have been something else: the session the scope
+// reads says `user`, and E's says `admin`.
+it('is testing a session whose site role is `user`, beside an admin', () => {
+  expect(OWNER.role).toBe('user');
+  expect(asUser(E).role).toBe('admin');
+});
 
 const VOCABULARIES = [
   {
     query: 'planets',
     type: 'Planet',
     table: 'planets',
-    column: 'planets',
     field: 'planets',
     listNoun: 'planets',
   },
@@ -57,13 +47,12 @@ const VOCABULARIES = [
     query: 'zodiacSigns',
     type: 'ZodiacSign',
     table: 'zodiac_signs',
-    column: 'zodiac_signs',
     field: 'zodiacSigns',
     listNoun: 'zodiac signs',
   },
 ] as const;
 
-describe.each(VOCABULARIES)('$query', ({ query, type, table, column, field, listNoun }) => {
+describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) => {
   const FIELDS = 'id name slug description';
   const CREATE = `mutation ($input: ${type}Input!) { create${type}(input: $input) { ${FIELDS} } }`;
   const UPDATE = `mutation ($id: ID!, $input: ${type}Input!) {
@@ -150,11 +139,11 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, column, field, list
       });
     });
 
-    it('refuses every non-admin, the coven owner A included, and a signed-out request, as FORBIDDEN, writing nothing', async () => {
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const result = await send(session, CREATE, { input: input() });
-        expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+    it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
+      const result = await send(OWNER, CREATE, { input: input() });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       const rows = await sql`select 1 from ${sql(table)} where name = 'Fixture Body'`;
       expect(rows).toHaveLength(0);
     });
@@ -177,13 +166,8 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, column, field, list
   });
 
   describe(`update${type}`, () => {
-    it('rewrites one for a site admin, carrying a rename onto the compendium entry holding it', async () => {
+    it('rewrites one for a site admin, answering its new slug', async () => {
       const id = await seed('Fixture Old');
-      const held = await insertIngredient(
-        sql,
-        makeIngredient({ name: 'Testwort', nomenclature: 'none', [field]: ['Fixture Old'] }),
-        E.id,
-      );
 
       const result = await send<Record<string, AstrologyValueNode>>(asUser(E), UPDATE, {
         id,
@@ -192,19 +176,39 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, column, field, list
 
       expect(result.errors).toBeUndefined();
       expect(result.data?.[`update${type}`]).toMatchObject({ id, slug: 'fixture-new' });
-      const [entry] = await sql`select * from ingredients where id = ${held}`;
-      expect(entry[column]).toEqual(['Fixture New']);
+      expect((await rowOf(id)).name).toBe('Fixture New');
     });
 
-    it('refuses every non-admin and a signed-out request by id, as FORBIDDEN, leaving it as it was', async () => {
+    it('refuses a coven owner by id, as FORBIDDEN, leaving it as it was', async () => {
       const id = await seed('Fixture Kept');
       const before = await rowOf(id);
 
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const result = await send(session, UPDATE, { id, input: input('Fixture Taken Over') });
-        expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+      const result = await send(OWNER, UPDATE, { id, input: input('Fixture Taken Over') });
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       expect(await rowOf(id)).toEqual(before);
+    });
+
+    it("answers a rename onto another row's address as VALIDATION on `name`, leaving it as it was", async () => {
+      const id = await seed('Fixture Kept');
+      await seed('Fixture Taken');
+      const before = await rowOf(id);
+
+      const result = await send(asUser(E), UPDATE, { id, input: input('Fixture-Taken') });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions).toMatchObject({
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['name'] }],
+      });
+      expect(await rowOf(id)).toEqual(before);
+    });
+
+    it('answers an unknown id as NOT_FOUND', async () => {
+      const result = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     });
   });
 
@@ -219,14 +223,20 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, column, field, list
       expect((await rowOf(id)).deleted_by).toBe(E.id);
     });
 
-    it('refuses every non-admin and a signed-out request by id, as FORBIDDEN, the row left live', async () => {
+    it('refuses a coven owner by id, as FORBIDDEN, the row left live', async () => {
       const id = await seed('Fixture Kept');
 
-      for (const session of [asUser(A), asUser(B), asUser(C), asUser(D), null]) {
-        const result = await send(session, DELETE, { id });
-        expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      }
+      const result = await send(OWNER, DELETE, { id });
+
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
       expect((await rowOf(id)).deleted_at).toBeNull();
+    });
+
+    it('answers an unknown id as NOT_FOUND', async () => {
+      const result = await send(asUser(E), DELETE, { id: 'not-a-uuid' });
+
+      expect(result.data).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     });
 
     it('answers a held value as FORBIDDEN with the message naming the entry', async () => {
