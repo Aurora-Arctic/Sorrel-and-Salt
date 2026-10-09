@@ -20,6 +20,9 @@ const POSITION_INDEX = 'ingredient_deities_position_unique';
 const LINK_INDEX = 'ingredient_deities_link_unique';
 const NAME_INDEX = 'ingredient_deities_name_unique';
 const INDEXES = [POSITION_INDEX, LINK_INDEX, NAME_INDEX].sort();
+// MB.132's reverse index on the link, for a deity's delete and rename, which
+// read the live rows picking it (MB.167).
+const DEITY_PICKS_INDEX = 'ingredient_deities_deity_id_idx';
 const INGREDIENT_FK = 'ingredient_deities_ingredient_id_ingredients_id_fk';
 const DEITY_FK = 'ingredient_deities_deity_id_deities_id_fk';
 
@@ -70,11 +73,12 @@ describe('ingredient_deities schema', () => {
     expect(foreignKeyByColumn.name).toBeUndefined();
   });
 
-  it('declares exactly the three unique indexes DESIGN.md §5 names', () => {
-    expect(Object.keys(indexByName).sort()).toEqual(INDEXES);
+  it('declares exactly the three unique indexes DESIGN.md §5 names, and the pick index', () => {
+    expect(Object.keys(indexByName).sort()).toEqual([...INDEXES, DEITY_PICKS_INDEX].sort());
     for (const name of INDEXES) {
       expect(indexByName[name].config.unique).toBe(true);
     }
+    expect(indexByName[DEITY_PICKS_INDEX].config.unique).toBe(false);
   });
 
   it('declares the one check', () => {
@@ -194,6 +198,17 @@ describe('ingredient_deities table', () => {
       expect(index?.unique).toBe(true);
       expect(index?.predicate).toBe('((deity_id IS NULL) AND (deleted_at IS NULL))');
       expect(index?.definition).toContain('USING btree (ingredient_id, lower(name))');
+    });
+
+    // The pick read backwards (MB.132): the live rows linking a deity, which
+    // hold its delete and follow its rename. Partial on live links, the only
+    // rows either reads; the parent's tier is the reader's to join.
+    it('reads the live links by deity', async () => {
+      const index = await catalogue.indexRow('ingredient_deities', DEITY_PICKS_INDEX);
+
+      expect(index?.unique).toBe(false);
+      expect(index?.predicate).toBe('((deity_id IS NOT NULL) AND (deleted_at IS NULL))');
+      expect(index?.definition).toContain('USING btree (deity_id)');
     });
 
     it('carries no unique index beyond the primary key and those three', async () => {

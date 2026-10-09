@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { deities } from '../../vocabulary/schema/deities';
 import { ingredients } from './ingredients';
@@ -47,6 +47,13 @@ export const ingredientDeities = pgTable(
     uniqueIndex('ingredient_deities_name_unique')
       .on(table.ingredientId, sql`lower(${table.name})`)
       .where(sql`${table.deityId} is null and ${table.deletedAt} is null`),
+    // The pick read backwards (MB.132): the live rows linking a deity, which
+    // hold its delete and follow its rename (MB.167). Partial on live links,
+    // the only rows either reads; the parent's tier is the reader's to join,
+    // and a deity is soft-deleted, so the foreign key's own check never runs.
+    index('ingredient_deities_deity_id_idx')
+      .on(table.deityId)
+      .where(sql`${table.deityId} is not null and ${table.deletedAt} is null`),
 
     // Required *and non-empty*: NOT NULL alone accepts ''.
     check('ingredient_deities_name_not_blank', sql`btrim(name) <> ''`),
