@@ -3,9 +3,10 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { slugify } from '@/lib/slugify';
 import {
+  countCategoryGroups,
   createCategoryGroup,
   deleteCategoryGroup,
   getCategoryGroupBySlug,
@@ -126,6 +127,31 @@ describe('listCategoryGroups', () => {
     const page = await resolvePage({ first: 100 }, listCategoryGroups);
 
     expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.map((row) => row.id));
+  });
+});
+
+// "Page X of Y" on the group page: what the list pages, counted in its order.
+describe('countCategoryGroups', () => {
+  it('counts the groups listCategoryGroups pages, and how many come before a page’s first row', async () => {
+    const first = await resolvePage({ first: 2 }, listCategoryGroups);
+    const [{ cursor: startOfSecond }] = await listCategoryGroups({
+      after: decodeCursor(first.pageInfo.endCursor as string),
+      limit: 1,
+      inverted: false,
+    });
+    const [{ n }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from category_groups where deleted_at is null`;
+    // The precondition: more than one page of two.
+    expect(n).toBeGreaterThan(2);
+
+    await expect(countCategoryGroups(undefined)).resolves.toEqual({
+      totalCount: n,
+      countBefore: null,
+    });
+    await expect(countCategoryGroups(startOfSecond)).resolves.toEqual({
+      totalCount: n,
+      countBefore: 2,
+    });
   });
 });
 

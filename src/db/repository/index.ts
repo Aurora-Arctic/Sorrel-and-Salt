@@ -19,6 +19,7 @@ export {
   findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
+  findPageCount,
   findPageInWorkspace,
 } from './finders';
 export {

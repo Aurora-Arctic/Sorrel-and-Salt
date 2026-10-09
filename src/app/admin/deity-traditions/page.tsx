@@ -5,11 +5,15 @@ import GroupList from '../../../components/GroupList';
 import { groupsHref } from '../../../components/GroupList/href';
 import type { GroupListEntry } from '../../../components/GroupList/types';
 import { NotFound } from '../../../lib/errors';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
+import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { ConnectionArgs } from '../../../lib/types';
-import { countDeities, getDeityTraditionBySlug, listDeityTraditions } from '@/modules/vocabulary';
+import {
+  countDeities,
+  getDeityTraditionBySlug,
+  countDeityTraditions,
+  listDeityTraditions,
+} from '@/modules/vocabulary';
 import TraditionDialog from './tradition-dialog';
 import type { AdminDeityTraditionsPageProps, TraditionsSearchParams } from './types';
 
@@ -20,13 +24,11 @@ export const metadata: Metadata = {
 // One page of the traditions, through the service `deityTraditions` reads,
 // paged by the M3.6 helper (CLAUDE.md rule 1, rule 8); the writes are the
 // modal's, through the tradition mutations. Cached so a second render in the
-// request reads once.
-const readPage = cache(async (after: string | undefined, before: string | undefined) => {
-  const args: ConnectionArgs = before
-    ? { last: DEFAULT_PAGE_SIZE, before }
-    : { first: DEFAULT_PAGE_SIZE, after };
-  return resolvePage(args, listDeityTraditions);
-});
+// request reads once; "Page X of Y" beside it, counted from the page's first
+// row (src/lib/pagination.ts).
+const readPage = cache((after: string | undefined, before: string | undefined) =>
+  resolveNumberedPage({ after, before }, listDeityTraditions, countDeityTraditions),
+);
 
 // Every tradition on one page of the maximum, for the delete's move picker:
 // thirty-five are seeded, and an admin adds one rarely.
@@ -98,6 +100,7 @@ export default async function AdminDeityTraditionsPage({
       <GroupList
         kind="tradition"
         groups={groups}
+        position={page.position}
         previousHref={
           page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
             ? groupsHref('tradition', { before: page.pageInfo.startCursor })

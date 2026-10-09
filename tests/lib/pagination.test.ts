@@ -6,9 +6,10 @@ import {
   decodeCursor,
   encodeCursor,
   pageSize,
+  resolveNumberedPage,
   resolvePage,
 } from '@/lib/pagination';
-import type { PageEntry, PageRequest } from '@/lib/types';
+import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 
 const ID = '0f9c2b1e-6a51-4c3f-9d7e-2b8a4e1c5d60';
 
@@ -185,5 +186,64 @@ describe('resolvePage', () => {
       hasNextPage: false,
       hasPreviousPage: false,
     });
+  });
+});
+
+// An admin list's page and its "Page X of Y": one page of the default size
+// after or before a cursor, counted from its own first row.
+describe('resolveNumberedPage', () => {
+  it('reads the first page of the default size, and counts from its first row', async () => {
+    let asked: PageRequest | undefined;
+    let counted: Cursor | undefined | null = null;
+
+    const page = await resolveNumberedPage(
+      {},
+      (request) => {
+        asked = request;
+        return rows(DEFAULT_PAGE_SIZE + 1);
+      },
+      (start) => {
+        counted = start;
+        return Promise.resolve({ totalCount: 63, countBefore: 0 });
+      },
+    );
+
+    expect(asked).toEqual({ limit: DEFAULT_PAGE_SIZE + 1, inverted: false });
+    expect(counted).toEqual({ key: ['k000'], id: ID });
+    expect(page.edges).toHaveLength(DEFAULT_PAGE_SIZE);
+    expect(page.position).toEqual({ page: 1, pages: 3 });
+  });
+
+  it('reads backwards from `before` when there is no `after`, and places that page', async () => {
+    let asked: PageRequest | undefined;
+    const before = encodeCursor({ key: ['k050'], id: ID });
+
+    const page = await resolveNumberedPage(
+      { before },
+      (request) => {
+        asked = request;
+        return rows(DEFAULT_PAGE_SIZE + 1, 24).reverse();
+      },
+      () => Promise.resolve({ totalCount: 63, countBefore: 25 }),
+    );
+
+    expect(asked).toMatchObject({ before: { key: ['k050'], id: ID }, inverted: true });
+    expect(page.position).toEqual({ page: 2, pages: 3 });
+  });
+
+  it('counts an empty page from no row, as page 1 of 1', async () => {
+    let counted: Cursor | undefined | null = null;
+
+    const page = await resolveNumberedPage(
+      {},
+      () => [],
+      (start) => {
+        counted = start;
+        return Promise.resolve({ totalCount: 0, countBefore: null });
+      },
+    );
+
+    expect(counted).toBeUndefined();
+    expect(page.position).toEqual({ page: 1, pages: 1 });
   });
 });

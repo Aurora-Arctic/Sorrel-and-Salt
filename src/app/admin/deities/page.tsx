@@ -5,15 +5,9 @@ import GroupedValueList from '../../../components/GroupedValueList';
 import { groupedValuesHref } from '../../../components/GroupedValueList/href';
 import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
 import { NotFound } from '../../../lib/errors';
-import {
-  DEFAULT_PAGE_SIZE,
-  MAX_PAGE_SIZE,
-  decodeCursor,
-  resolvePage,
-} from '../../../lib/pagination';
+import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { ConnectionArgs } from '../../../lib/types';
 import {
   type DeityFilter,
   countDeities,
@@ -40,21 +34,12 @@ const readDeities = cache(
     before: string | undefined,
   ) => {
     const filter: DeityFilter = { query: query || undefined, traditionId };
-    const args: ConnectionArgs = before
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
-    const page = await resolvePage(args, (request) => listDeities(filter, request));
-    // "Page X of Y", counted from the page's first row as the forms' pager
-    // is: page floor(before / size) + 1 of ceil(total / size).
-    const { totalCount, countBefore } = await countDeities(
-      filter,
-      page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
+    // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
+    return resolveNumberedPage(
+      { after, before },
+      (request) => listDeities(filter, request),
+      (start) => countDeities(filter, start),
     );
-    const position = {
-      page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
-      pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
-    };
-    return { ...page, position };
   },
 );
 

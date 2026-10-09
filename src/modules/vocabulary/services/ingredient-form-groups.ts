@@ -4,13 +4,14 @@ import {
   findOneById,
   findOneBySlug,
   findPage,
+  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { formSlug, slugify } from '../../../lib/slugify';
-import type { Cursor, PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -45,6 +46,14 @@ export function listIngredientFormGroups(
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormGroupRow>[]> {
   return findPage(ingredientFormGroups, [ingredientFormGroups.name], page);
+}
+
+/**
+ * How many live form groups `listIngredientFormGroups` pages, and how many come before `start`
+ * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
+ */
+export function countIngredientFormGroups(start: Cursor | undefined): Promise<PageCount> {
+  return findPageCount(ingredientFormGroups, [ingredientFormGroups.name], start);
 }
 
 /**

@@ -16,10 +16,12 @@ const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
 const listIngredientFormGroups = vi.fn();
+const countIngredientFormGroups = vi.fn();
 const getIngredientFormGroupBySlug = vi.fn();
 const countIngredientFormValues = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
   listIngredientFormGroups,
+  countIngredientFormGroups,
   getIngredientFormGroupBySlug,
   countIngredientFormValues,
 }));
@@ -69,6 +71,8 @@ beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listIngredientFormGroups.mockReset();
+  countIngredientFormGroups.mockReset();
+  countIngredientFormGroups.mockResolvedValue({ totalCount: 2, countBefore: 0 });
   listIngredientFormGroups.mockResolvedValue([entry(MENDING), entry(WARDS)]);
   getIngredientFormGroupBySlug.mockReset();
   getIngredientFormGroupBySlug.mockResolvedValue(WARDS);
@@ -104,6 +108,19 @@ describe('the /admin/form-groups page', () => {
     await renderPage();
 
     expect(listIngredientFormGroups).toHaveBeenCalledWith({ limit: 101, inverted: false });
+  });
+
+  it('says which page of how many, counted from the first row of the page', async () => {
+    countIngredientFormGroups.mockResolvedValue({ totalCount: 30, countBefore: 25 });
+
+    await renderPage({ after: encodeCursor({ key: ['Fixture Mending'], id: MENDING.id }) });
+
+    // The page's first row, as its list read it.
+    expect(countIngredientFormGroups).toHaveBeenCalledWith({
+      key: [expect.any(String)],
+      id: expect.any(String),
+    });
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 2');
   });
 
   it('reads the page after a readable cursor, and the first page for one that is not', async () => {

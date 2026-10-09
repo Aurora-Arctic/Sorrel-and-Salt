@@ -4,13 +4,14 @@ import {
   findOneById,
   findOneBySlug,
   findPage,
+  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
-import type { Cursor, PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -29,6 +30,14 @@ import type { CategoryGroupRow, CategoryRow } from '../types';
 /** One page of the live category groups, alphabetical by name (MB.35): the group a category is filed under is picked from these. */
 export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
   return findPage(categoryGroups, [categoryGroups.name], page);
+}
+
+/**
+ * How many live category groups `listCategoryGroups` pages, and how many come before `start`
+ * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
+ */
+export function countCategoryGroups(start: Cursor | undefined): Promise<PageCount> {
+  return findPageCount(categoryGroups, [categoryGroups.name], start);
 }
 
 /**

@@ -16,10 +16,12 @@ const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
 const listCategoryGroups = vi.fn();
+const countCategoryGroups = vi.fn();
 const getCategoryGroupBySlug = vi.fn();
 const countCategories = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
   listCategoryGroups,
+  countCategoryGroups,
   getCategoryGroupBySlug,
   countCategories,
 }));
@@ -69,6 +71,8 @@ beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listCategoryGroups.mockReset();
+  countCategoryGroups.mockReset();
+  countCategoryGroups.mockResolvedValue({ totalCount: 2, countBefore: 0 });
   listCategoryGroups.mockResolvedValue([entry(MENDING), entry(WARDS)]);
   getCategoryGroupBySlug.mockReset();
   getCategoryGroupBySlug.mockResolvedValue(WARDS);
@@ -104,6 +108,19 @@ describe('the /admin/category-groups page', () => {
     await renderPage();
 
     expect(listCategoryGroups).toHaveBeenCalledWith({ limit: 101, inverted: false });
+  });
+
+  it('says which page of how many, counted from the first row of the page', async () => {
+    countCategoryGroups.mockResolvedValue({ totalCount: 30, countBefore: 25 });
+
+    await renderPage({ after: encodeCursor({ key: ['Fixture Mending'], id: MENDING.id }) });
+
+    // The page's first row, as its list read it.
+    expect(countCategoryGroups).toHaveBeenCalledWith({
+      key: [expect.any(String)],
+      id: expect.any(String),
+    });
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 2');
   });
 
   it('reads the page after a readable cursor, and the first page for one that is not', async () => {

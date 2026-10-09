@@ -9,10 +9,9 @@ import type {
   VocabularyValueListEntry,
 } from '../../components/VocabularyValueList/types';
 import { NotFound } from '../../lib/errors';
-import { DEFAULT_PAGE_SIZE, decodeCursor, resolvePage } from '../../lib/pagination';
+import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import { readableCursor, single } from '../../lib/search-params';
-import type { ConnectionArgs } from '../../lib/types';
 import {
   countAstrologyValues,
   getAstrologyValueBySlug,
@@ -36,23 +35,12 @@ const readValues = cache(
     before: string | undefined,
   ) => {
     const filter = { query: query || undefined };
-    const args: ConnectionArgs = before
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
-    const page = await resolvePage(args, (request) =>
-      listAstrologyValues(vocabulary, filter, request),
+    // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
+    return resolveNumberedPage(
+      { after, before },
+      (request) => listAstrologyValues(vocabulary, filter, request),
+      (start) => countAstrologyValues(vocabulary, filter, start),
     );
-    // "Page X of Y", counted from the page's first row as the forms' pager is.
-    const { totalCount, countBefore } = await countAstrologyValues(
-      vocabulary,
-      filter,
-      page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
-    );
-    const position = {
-      page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
-      pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
-    };
-    return { ...page, position };
   },
 );
 

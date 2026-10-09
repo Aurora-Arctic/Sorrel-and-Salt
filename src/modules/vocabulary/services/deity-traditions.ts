@@ -4,13 +4,14 @@ import {
   findOneById,
   findOneBySlug,
   findPage,
+  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { deitySlug, slugify } from '../../../lib/slugify';
-import type { Cursor, PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -35,6 +36,14 @@ const DEITIES: MovedRows = { table: deities, slugIndex: 'deities_slug_unique', n
 /** One page of the live traditions, alphabetical by name (MB.35): a deity's tradition is picked from these. */
 export function listDeityTraditions(page: PageRequest): Promise<PageEntry<DeityTraditionRow>[]> {
   return findPage(deityTraditions, [deityTraditions.name], page);
+}
+
+/**
+ * How many live traditions `listDeityTraditions` pages, and how many come before `start`
+ * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
+ */
+export function countDeityTraditions(start: Cursor | undefined): Promise<PageCount> {
+  return findPageCount(deityTraditions, [deityTraditions.name], start);
 }
 
 /**

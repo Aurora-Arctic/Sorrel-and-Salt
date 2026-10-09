@@ -3,7 +3,13 @@ import postgres from 'postgres';
 import { eq, sql as fragment } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '@/modules/identity/schema/users';
-import { type SortPart, findPage, findPageInWorkspace, withAudit } from '@/db/repository';
+import {
+  type SortPart,
+  findPage,
+  findPageCount,
+  findPageInWorkspace,
+  withAudit,
+} from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { InvalidCursor } from '@/lib/errors';
 import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
@@ -292,6 +298,31 @@ const COMPUTED: SortPart[] = [
   { expression: fragment`-(length(${leaves.name})::real / 3)`, type: 'real' },
   leaves.name,
 ];
+
+// "Page X of Y" for a list read through `findPage`: the count of its own rows,
+// soft-deleted ones left out, and how many come before a page's first row in
+// its own order, ties split by id as the page splits them.
+describe('findPageCount', () => {
+  it('counts the live rows findPage pages, and how many come before a page’s first row', async () => {
+    await seedLeaves();
+    const first = await leafPage({ first: 25 });
+    const second = await leafPage({ first: 25, after: first.pageInfo.endCursor });
+    // The precondition: the second page opens between two rows sharing a name,
+    // so only the id can place its first row.
+    const [{ name: lastOfFirst }] = await sql<{ name: string }[]>`
+      select name from pagination_probe_leaves
+      where id = ${first.edges[24].node.id}`;
+    expect(second.edges[0].node.name).toBe(lastOfFirst);
+
+    await expect(findPageCount(leaves, [leaves.name], undefined)).resolves.toEqual({
+      totalCount: 60,
+      countBefore: null,
+    });
+    await expect(
+      findPageCount(leaves, [leaves.name], decodeCursor(second.pageInfo.startCursor as string)),
+    ).resolves.toEqual({ totalCount: 60, countBefore: 25 });
+  });
+});
 
 describe('Keyset pagination on a compound, computed key', () => {
   /**

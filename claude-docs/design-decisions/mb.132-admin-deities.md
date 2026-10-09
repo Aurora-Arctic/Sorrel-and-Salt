@@ -112,6 +112,27 @@ Weighed:
   task, but ships 500 more duplicated lines for the merge to remove.
 - _A third copy of each, no follow-up._ Rejected for the same lines, kept.
 
+## Every group page numbers its pages, through one helper
+
+Seen on the built page: the traditions page paged without "Page X of Y".
+`GroupList` was built for the category and form groups, eight and six rows,
+one page each, so it took no position and its pages counted nothing; the 35
+seeded traditions run to two pages.
+
+**Decided: all three group pages count their pages**, the owner's call, not
+the traditions alone. `GroupList` takes an optional `position`, as
+`GroupedValueList` does, and each group service gains a count —
+`countCategoryGroups`, `countIngredientFormGroups`, `countDeityTraditions` —
+over one generic repository finder, `findPageCount`, the count of a
+`findPage` list, rather than three finders of their own.
+
+**Decided: one helper numbers every admin page.** The read-then-count block
+that turns a page into "Page X of Y" was pasted into each admin list page,
+eight copies with these three. `resolveNumberedPage` in
+`src/lib/pagination.ts` reads the page through `resolvePage`, counts it from
+its first row, and returns the position beside it, and every admin list page
+reads through it.
+
 ## Calls made without asking
 
 - **Firing the `compendium` tag is M8.7's**, as MB.95 corrected for its
