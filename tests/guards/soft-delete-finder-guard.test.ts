@@ -67,6 +67,7 @@ const EXPORTED_FUNCTIONS = [
   'findAdminInvitationByToken',
   'findOpenAdminRoleChangePause',
   'findPage',
+  'findPageCount',
   'findPageInWorkspace',
   'findProvidersOfUsers',
   'findReferenceSuggestions',

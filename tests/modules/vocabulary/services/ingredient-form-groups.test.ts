@@ -2,9 +2,10 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { formSlug, slugify } from '@/lib/slugify';
 import {
+  countIngredientFormGroups,
   createIngredientFormGroup,
   deleteIngredientFormGroup,
   formChoicesOf,
@@ -140,6 +141,31 @@ describe('listIngredientFormGroups', () => {
     const page = await resolvePage({ first: 100 }, listIngredientFormGroups);
 
     expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.map((row) => row.id));
+  });
+});
+
+// "Page X of Y" on the group page: what the list pages, counted in its order.
+describe('countIngredientFormGroups', () => {
+  it('counts the groups listIngredientFormGroups pages, and how many come before a page’s first row', async () => {
+    const first = await resolvePage({ first: 2 }, listIngredientFormGroups);
+    const [{ cursor: startOfSecond }] = await listIngredientFormGroups({
+      after: decodeCursor(first.pageInfo.endCursor as string),
+      limit: 1,
+      inverted: false,
+    });
+    const [{ n }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from ingredient_form_groups where deleted_at is null`;
+    // The precondition: more than one page of two.
+    expect(n).toBeGreaterThan(2);
+
+    await expect(countIngredientFormGroups(undefined)).resolves.toEqual({
+      totalCount: n,
+      countBefore: null,
+    });
+    await expect(countIngredientFormGroups(startOfSecond)).resolves.toEqual({
+      totalCount: n,
+      countBefore: 2,
+    });
   });
 });
 

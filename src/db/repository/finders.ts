@@ -1,7 +1,7 @@
 import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
-import type { PageEntry, PageRequest } from '../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { notSoftDeleted, scopedTo } from './predicates';
 import { pageBounds, selectFrom } from './select';
 import type {
@@ -110,6 +110,26 @@ export function findPage<
 ): Promise<PageEntry<TTable['$inferSelect']>[]> {
   const keyset = { sort, id: table.id, request: page };
   return selectFrom(table, and(notSoftDeleted(table), where, pageBounds(keyset)), keyset);
+}
+
+/**
+ * How many live rows `findPage` pages under the same `sort` and `where`, and
+ * how many come before `start` — a page's first row, none on an empty page —
+ * in its order: "Page X of Y" for a list read through it, as each vocabulary's
+ * own count finder answers its list. One statement, over the page's own key.
+ */
+export function findPageCount<
+  TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
+>(
+  table: TTable,
+  sort: readonly SortPart[],
+  start: Cursor | undefined,
+  where?: SQL,
+): Promise<PageCount> {
+  return selectFrom(table, and(notSoftDeleted(table), where), {
+    count: { sort, id: table.id },
+    start,
+  });
 }
 
 /** The same, inside the workspace the proof names. */

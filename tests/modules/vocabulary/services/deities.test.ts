@@ -6,6 +6,7 @@ import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { deitySlug } from '@/lib/slugify';
 import {
   countDeities,
+  countDeityTraditions,
   createDeity,
   deleteDeity,
   getDeityBySlug,
@@ -224,6 +225,31 @@ describe('listDeityTraditions', () => {
     const listed = page.edges.map((edge) => edge.node.id);
     expect(listed).toEqual(expected.map((row) => row.id));
     expect(listed).not.toContain(retired.id);
+  });
+});
+
+// "Page X of Y" on the group page: what the list pages, counted in its order.
+describe('countDeityTraditions', () => {
+  it('counts the groups listDeityTraditions pages, and how many come before a page’s first row', async () => {
+    const first = await resolvePage({ first: 2 }, listDeityTraditions);
+    const [{ cursor: startOfSecond }] = await listDeityTraditions({
+      after: decodeCursor(first.pageInfo.endCursor as string),
+      limit: 1,
+      inverted: false,
+    });
+    const [{ n }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from deity_traditions where deleted_at is null`;
+    // The precondition: more than one page of two.
+    expect(n).toBeGreaterThan(2);
+
+    await expect(countDeityTraditions(undefined)).resolves.toEqual({
+      totalCount: n,
+      countBefore: null,
+    });
+    await expect(countDeityTraditions(startOfSecond)).resolves.toEqual({
+      totalCount: n,
+      countBefore: 2,
+    });
   });
 });
 
