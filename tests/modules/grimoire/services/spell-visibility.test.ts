@@ -6,7 +6,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
-import { A, B, C, D, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { makeSpell } from '../../../support/fixtures';
 import type { SpellVisibility } from '@/modules/grimoire';
 
@@ -177,6 +177,24 @@ describe('setSpellVisibility', () => {
       await expect(
         setSpellVisibility(asUser(D), WORKSPACE_W_ID, spellId, 'workspace'),
       ).rejects.toBeInstanceOf(Forbidden);
+    });
+
+    // The service's one site-admin refusal; tests/db/workspace-isolation.test.ts
+    // sweeps it beside the coven's other entities.
+    it('refuses a site admin, who belongs to no coven, leaving the spell as it was', async () => {
+      const spellId = await cast(B, 'private');
+      // Why this could have succeeded: E's session says `admin`, and the
+      // author widens this very spell in the same breath.
+      expect(asUser(E).role).toBe('admin');
+
+      await expect(
+        setSpellVisibility(asUser(E), WORKSPACE_W_ID, spellId, 'workspace'),
+      ).rejects.toBeInstanceOf(Forbidden);
+      expect(await visibilityOf(spellId)).toBe('private');
+
+      await expect(
+        setSpellVisibility(asUser(B), WORKSPACE_W_ID, spellId, 'workspace'),
+      ).resolves.toBeDefined();
     });
 
     // The author rule needs no clause of its own: a private spell is not

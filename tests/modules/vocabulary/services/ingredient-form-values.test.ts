@@ -162,15 +162,20 @@ describe('listIngredientFormValues', () => {
   });
 });
 
+// Which forms are curated — a live form under a live group — is the finder's
+// (tests/db/repository/vocabularies.test.ts); the service's rule is that it
+// counts what its own list pages, so the list is what the count is held to.
 describe('countIngredientFormValues', () => {
   it("counts the forms listIngredientFormValues pages, and how many come before a page's first row", async () => {
     const deleted = await seed('Fixture Uncounted');
     await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
-    const [{ n }] = await sql<{ n: number }[]>`
-      select count(*)::int as n from ingredient_forms f
-      where f.deleted_at is null
-        and exists (select 1 from ingredient_form_groups g where g.id = f.group_id and g.deleted_at is null)`;
+    const listed = await resolvePage({ first: 100 }, (page) => listIngredientFormValues({}, page));
+    // The precondition: one page holds the whole list, more than a page of 25,
+    // and a deleted form the count must leave out as the list does.
+    expect(listed.pageInfo.hasNextPage).toBe(false);
+    const n = listed.edges.length;
     expect(n).toBeGreaterThan(25);
+    expect(listed.edges.map((edge) => edge.node.id)).not.toContain(deleted);
 
     const first = await resolvePage({ first: 25 }, (page) => listIngredientFormValues({}, page));
     const [{ cursor: startOfSecond }] = await listIngredientFormValues(
@@ -529,7 +534,12 @@ describe('updateIngredientFormValue', () => {
   // MB.162 on the pick (MB.167): a form is identity, so its new spelling is
   // carried onto every live compendium entry that picked it, re-keyed and
   // re-slugged as any compendium update would (MB.82). The clock is pinned,
-  // so the retirement's instant is exact.
+  // so the retirement's instant is exact. Which entries pick the form is
+  // findCompendiumPage's formId filter (tests/db/repository/ingredients.test.ts),
+  // and what the carry writes, stamps and leaves alone row by row is
+  // write.carryFormRename's (tests/db/repository/slugs.test.ts): what stays here
+  // is the rule — the slug each entry moves to, when nothing moves, the
+  // refusals — and that no coven's pick is an admin's to rewrite (M6.6).
   describe('a rename, while live compendium entries pick the form', () => {
     const NOW = new Date('2026-03-01T12:00:00.000Z');
 
@@ -615,21 +625,6 @@ describe('updateIngredientFormValue', () => {
       expect((await formOf(id)).slug).toBe('fixture-resin-botanical');
       expect(await ingredientOf(picked)).toEqual(before);
       expect(await retirements()).toEqual([]);
-    });
-
-    it('leaves alone an entry that only spells the form, or picked its namesake, or is deleted', async () => {
-      const id = await seed('Fixture Wax', 'Substance');
-      const namesake = await seed('Fixture Wax', 'Animal');
-      const typed = await entry('Testwort', 'Fixture Wax', null);
-      const other = await entry('Testleaf', 'Fixture Wax', namesake);
-      const gone = await entry('Testroot', 'Fixture Wax', id);
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-      const before = await Promise.all([typed, other, gone].map(ingredientOf));
-
-      await updateIngredientFormValue(admin, id, input({ name: 'Fixture Tallow' }));
-
-      expect((await formOf(id)).name).toBe('Fixture Tallow');
-      expect(await Promise.all([typed, other, gone].map(ingredientOf))).toEqual(before);
     });
 
     it("never rewrites a coven's ingredient that picked the form", async () => {

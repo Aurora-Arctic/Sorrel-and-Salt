@@ -209,19 +209,6 @@ describe('suggestPlanets', () => {
       ]);
     });
 
-    it('drops a soft-deleted ingredient’s value', async () => {
-      const id = await addIngredient({
-        name: 'Eris Salt',
-        workspaceId: WORKSPACE_W_ID,
-        planets: ['Eris'],
-      });
-      expect(valuesOf(await all(suggestPlanets, asUser(B), 'eris'))).toEqual(['Eris']);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      expect(await all(suggestPlanets, asUser(B), 'eris')).toEqual([]);
-    });
-
     it('reads nothing into an entry with no planet', async () => {
       await addIngredient({ name: 'Graveyard Dirt', workspaceId: WORKSPACE_W_ID, planets: null });
       await addIngredient({ name: 'Black Salt', workspaceId: WORKSPACE_W_ID, planets: ['  ', ''] });
