@@ -60,9 +60,13 @@ Never deleted, whatever the table says:
 
 ## The file budget
 
-A file's `startTime` to `endTime` in Vitest's JSON results is its
-tests-and-hooks time on the runner, which is what the summed worker time is
-made of. `.github/scripts/summarize-vitest.mjs` lists the ten slowest files in
+A file's `startTime` to `endTime` in Vitest's JSON results is the span from
+its first test's start to its last test's end — the tests and the hooks that
+run between them, which is most of what the summed worker time is made of.
+Module-level code, a file-level `beforeAll` and collection fall outside the
+span, so a seed moved from a nested hook to the top of a file leaves the
+number without leaving the runner (MB.184); the plan tests keep theirs inside
+the `describe` that plans. `.github/scripts/summarize-vitest.mjs` lists the ten slowest files in
 the PR comment and job summary, marks each over `BUDGET_MS` — 10 s, set in
 `.github/scripts/lib/slowest-files.mjs` — with ⚠, and adds the count to the
 stat line so the warning is read without opening the block. It warns and never

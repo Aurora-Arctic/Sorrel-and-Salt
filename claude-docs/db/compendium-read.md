@@ -23,8 +23,10 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   expression, which is what `ingredients_unaccent_trgm` and
   `ingredient_folk_names_unaccent_trgm` (migration 0027) are for, and
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
-  needs; `ingredients-unaccent.test.ts` proves by `EXPLAIN` that each
-  predicate reaches its index. The three matches are a `UNION ALL`, the
+  needs; `compendium-search-query.test.ts` proves by `EXPLAIN` that the
+  statement the finder sends reaches both (below), and
+  `ingredients-unaccent.test.ts` keeps the declarations, the wrapper and the
+  fold (MB.184). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope.
 - **The score is the row's best word similarity** across the three, and it is
@@ -36,12 +38,13 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   alike, once per matched row. The alternative, a `greatest(…)` over the three
   with a correlated subquery for the folk names, is a `SubPlan` that a page
   bound evaluates against every compendium row. `compendium-search-query.test.ts`
-  runs `EXPLAIN ANALYZE` on the statement the finder sends, over ~20,000
-  entries and as many folk names under `enable_seqscan = off`: the first page
-  and the page after a cursor both start from `ingredients_unaccent_trgm` and
-  `ingredient_folk_names_unaccent_trgm`, with no `SubPlan` and no sequential
-  scan, and the test prints the ranked and unranked timings — about 7 ms and
-  5 ms when it was written.
+  runs `EXPLAIN` on the statement the finder sends, over ~20,000 entries and
+  as many folk names seeded once per file, under `enable_seqscan = off`: the
+  first page and the page after a cursor both start from
+  `ingredients_unaccent_trgm` and `ingredient_folk_names_unaccent_trgm`, with
+  no `SubPlan` and no sequential scan. When it was written the ranked page
+  ran in about 7 ms against the unranked shape's 5 ms; the test that printed
+  those timings asserted only that they were positive, and went with MB.184.
 - **A keyset, not a capped top-N or pg_trgm's `<<->`.** A top-N would leave
   every match past the cap unreachable and give a search a different shape
   from a browse, against rule 8. `<<->` is a nearest-neighbour order: it needs

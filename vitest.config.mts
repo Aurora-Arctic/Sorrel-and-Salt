@@ -108,6 +108,9 @@ export default defineConfig({
           globals: true,
           include: ['tests/**/*.test.ts'],
           exclude: [...NOT_UNIT, ...DOM_TS],
+          // One `git ls-files` and one oxlint for every guard, provided to the
+          // workers (MB.184): tests/support/unit-global-setup.ts.
+          globalSetup: ['./tests/support/unit-global-setup.ts'],
           setupFiles: ['./tests/support/setup-msw.ts'],
         },
       },
