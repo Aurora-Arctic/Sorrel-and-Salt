@@ -29,7 +29,7 @@ read beside it.
   a `<search>` landmark: a search box labelled "Name or email" (`query`), an
   "Awaiting approval only" checkbox (`awaiting`), and a Filter button. A
   filtered page is an address, and filtering starts again from the first page,
-  since the form carries no cursor. It is `filter.tsx`, the second client file
+  since the form carries no cursor. It is `filter.tsx`, one of three client files
   here.
 - **Filter is offered only when there is a new filter to apply** (MB.53, on
   the owner's word). It is `disabled` while the trimmed query and the checkbox
@@ -42,9 +42,9 @@ read beside it.
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Seven columns**: Name, Email, Role, Can create a coven, Signed up, Sign-in
-  methods and Email verified. The last two are what an admin granting admin
-  judges a person by (MB.59). Booleans read Yes or No. The signup is the UTC
+- **Eight columns**: Name, Email, Role, Can create a coven, Signed up, Sign-in
+  methods, Email verified and Approval. Sign-in methods and Email verified are
+  what an admin granting admin judges a person by (MB.59). Booleans read Yes or No. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows by its
   `SOCIAL_PROVIDERS` label, or by its id when the roster has none, so an
   account linked by a provider since removed still says so; an account with
@@ -54,22 +54,36 @@ read beside it.
   Prev and Next, an end with no page disabled, and nothing at all on a list of
   one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
-- **Impersonate is an eighth column, only where impersonation is registered**
+- **Impersonate is a ninth column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
   column does not exist. Each non-admin row holds an Impersonate button named
-  "Impersonate <name>", from `impersonate-button.tsx`, the one client file
-  here. An admin's row holds none, because the endpoint refuses to
+  "Impersonate <name>", from `impersonate-button.tsx`, a client file. An admin's row holds none, because the endpoint refuses to
   impersonate an admin. A success is a full load of `/` as the user. A refusal
   says "<name> could not be impersonated." in the row, and the page stays.
   The endpoint is the guard: the button only puts it where an admin looks.
-- **The controls M5.8 and MB.59 add sit on these rows.** Neither exists yet;
-  each adds its own column in its own PR.
+- **Approval is a column of its own** (M5.8,
+  [`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
+  creation"), from `creation-control.tsx`. A user who may not yet create a
+  coven has an Approve button named "Approve <name>"; one who may has a Revoke
+  button named "Revoke approval for <name>"; an admin's row holds nothing,
+  since every admin holds the flag (MB.177). Each asks first, in the cell:
+  "Let <name> create covens?", or "Stop <name> creating covens? Covens they own
+  stay theirs.", with Confirm, which takes focus, and a quiet Cancel, which
+  hands focus back. Revoke's Confirm is `.btn--destructive`, Approve's
+  `.btn--solid`. Confirm sends the mutation and stays busy, spinner and
+  "Approving" or "Revoking", until `router.refresh()` re-reads the page, whose
+  row then offers the other action: the control is keyed by its action, so
+  the refreshed row mounts a fresh one rather than keeping the busy state. A refusal puts the service's message in
+  the row as an alert and offers the action again. The service is the guard.
+- **MB.59's grant control sits on these rows too.** It does not exist yet, and
+  adds its own column in its own PR.
 
 ## Styling
 
 Layout only, until the admin area's design review (MB.115). The filter is a
-wrapping row of the field, the checkbox and the button, built on the
+wrapping row of the field, the checkbox and the button, and the Approval
+column's confirmation a column of the question over a wrapping row of its buttons, built on the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
 `.data-table` primitive, filling the layout's width and scrolling inside its
 `.data-table-frame` on a narrow screen rather than widening the page: its rows
@@ -79,8 +93,9 @@ are banded and its header carries a hairline, as every admin list's does, and it
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
 `Default`, `Filtered`, `NoMatch` and `WithImpersonation`, inside the admin
-layout's frame. In the workshop an Impersonate reaches no server, so a click
-shows the refusal.
+layout's frame; the list holds an admin, a user awaiting approval and an
+approved user, so each control shows. In the workshop neither Impersonate nor Approval reaches a
+server, so a click shows the refusal.
 Render-only, no test ids, no snapshots.
 
 ## Testing
@@ -90,6 +105,10 @@ disabled and enabled states, the bare `awaiting` it opens, the column headers, e
 row's cells, the `<time>`, a provider outside the roster, the empty list, the
 form's action, method, names and kept values, the pager's links, and the
 Impersonate column: absent when off, on non-admin rows only, the call and
-the landing, and the refusal.
+the landing, and the refusal; and the Approval column: Approve on rows awaiting
+approval, Revoke on approved ones and nothing on an admin's, each confirmation
+and its focus, Cancel sending nothing, each call and its busy state until the
+refresh, and the refusal. `tests/e2e/admin.spec.ts` approves and revokes a user
+against the built server, with axe over the open confirmation.
 `tests/app/admin/users/page.test.tsx` covers what the page hands it, the
 impersonation gate included, and `awaiting` read by its presence.

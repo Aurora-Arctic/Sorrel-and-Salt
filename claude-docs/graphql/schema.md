@@ -101,10 +101,18 @@ changes only once the mailed link is followed
 another verified account or a second mail inside the minute included, is a
 `VALIDATION` error on the `email` field.
 
+`grantWorkspaceCreation(userId: ID!): User!` and
+`revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
+undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's
+ledger, and answers the row. Each carries the `admin` scope, and its service
+refuses anyone but a site admin again, as it refuses a change that changes
+nothing and an admin's flag, as `FORBIDDEN` with a message naming the user ([`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
+creation").
+
 Their GraphQL files hold the transport's half (MB.180, MB.186;
 ["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
-says what that half is), and a signed-out caller at `me`, `users` and
-`setEmail` is `tests/db/graphql-query-scopes.test.ts`'s.
+says what that half is), and a signed-out caller at `me`, `users`,
+`setEmail` and the two creation writes is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
 `memberships` through the request's loader. `users.test.ts` holds the default
 page, the cursor and the filters reaching `listUsers`, the nodes being `me`'s
@@ -113,6 +121,8 @@ refused the list is `services/user-list.test.ts`'s. `user-private-fields.test.ts
 holds the four private fields' `self`-or-`admin` scope, below.
 `set-email.test.ts` holds `next` reaching the sender, and one `VALIDATION`;
 every refusal's rule is `services/email.test.ts`'s.
+`workspace-creation.test.ts` holds, per write, an admin's answer and one
+refusal per error code; who is refused is `services/workspace-creation.test.ts`'s.
 
 ### `planetSuggestions` and `zodiacSuggestions`
 
@@ -901,7 +911,8 @@ gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
 either does; M5.7 puts `admin` on every admin mutation, and M5.6's three
-category writes and M5.5's three compendium writes carry it from the first. `ok` and the
+category writes and M5.5's three compendium writes carry it from the first, as
+M5.8's two creation writes do. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the

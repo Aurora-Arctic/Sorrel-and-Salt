@@ -79,3 +79,51 @@ filters reaching the service, and that the nodes are the same `User` as
 search parameters becoming the filter and the pager's links.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built
 server, with axe.
+
+## Approving workspace creation (M5.8)
+
+An admin approves someone who has no invitation from that person's row on
+`/admin/users`, so a person starting a coven of their own gets in without
+knowing an existing user, and can revoke the approval from the same row. It is
+the second of the flag's routes: the first is accepting a workspace invitation
+(M7.5), and being made admin sets it in its own write (MB.177). Neither act
+touches anything but the flag: it confers no workspace access on the admin,
+creates no workspace, and a revoke leaves every workspace the user already
+created, and their ownership of it
+([`m5.8-revoking-workspace-creation.md`](../design-decisions/m5.8-revoking-workspace-creation.md)).
+
+- **One service, two transports.** `grantWorkspaceCreation(session, userId)`
+  and `revokeWorkspaceCreation(session, userId)`
+  (`src/modules/identity/services/workspace-creation.ts`) assert the site
+  role themselves, by direct call, and the two mutations in front of them carry
+  the `admin` scope as the second check
+  ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes"). The page has
+  no path of its own: the row's control sends the mutation.
+- **Each change is a ledger row, in the same transaction.** The flag is an
+  `updateById` on the user's row through `withAudit`, and beside it a
+  `grant` or `revoke` row in MB.193's `workspace_creation_changes`, stamped
+  as the admin from the session, never the request. The row's own
+  `updated_by` goes with its next update; the ledger's row does not.
+- **A change that changes nothing is refused, not repeated.** Approving a user
+  who may already create a workspace, or revoking one who cannot, is refused
+  with a `Forbidden` naming them, and writes no ledger row: it would record a
+  change that never happened.
+- **An admin's flag cannot be revoked.** MB.177's CHECK holds every admin to
+  it, so the service refuses first with a `Forbidden` saying revoking their
+  admin role is the route, and the row offers no control. A revoke racing a
+  grant of admin is refused by the CHECK itself and writes nothing.
+- **A soft-deleted user is `NotFound`**, as an unknown id is: the read and the
+  update both drop the row (rule 4), and a user deleted between the two rolls
+  the transaction back before the ledger hears of it.
+- **Each asks first**, in the user's row, naming them; a revoke's Confirm is
+  destructive and says their covens stay theirs
+  ([`components/user-list.md`](../components/user-list.md)).
+
+**Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
+each write, its stamps and its ledger row; each non-admin fixture user refused
+by direct call, with the same call proven to succeed for E; the repeated
+change refused with nothing written; an admin's flag refused; A's ownership
+of W surviving a revoke; and a soft-deleted or unknown user. The transport's
+half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
+signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
+`tests/e2e/admin.spec.ts` approves and revokes a user against the built server.
