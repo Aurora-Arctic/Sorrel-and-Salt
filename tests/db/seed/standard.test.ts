@@ -11,6 +11,8 @@ import {
   WORKSPACE_X_ID,
   seedStandard,
 } from '@/db/seed/standard';
+import { updateCompendiumEntry } from '@/modules/ingredients';
+import { E, asUser } from '../../support/as-user';
 import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 
 // The `standard` scenario against the real schema: membership is two real
@@ -20,7 +22,7 @@ import type { CompendiumEntryRow, MemberRow, UserRow } from './types';
 // The cast, the workspaces, the vocabulary counts and the curated picks are
 // seeded-template.test.ts's, and the shape every seed shares index.test.ts's
 // (MB.183). What is left reads the clone, which already holds the scenario,
-// bar the two re-runs that write and so empty every table first.
+// bar the three re-runs that write and so empty every table first.
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -226,8 +228,8 @@ describe('re-running the scenario', () => {
   // The owner's call: `standard` is the fixture scenario, so a reseed resets
   // the fixtures and puts back a compendium deity pick an admin deleted;
   // `demo` keeps the deletion (index.test.ts's sweep), since a person explores
-  // it. The pick deleted is its entry's last, so the position it goes back to
-  // is free — see claude-docs/db/standard-scenario.md for the case where it is not.
+  // it. The pick deleted is its entry's last, so the end of its list is the
+  // position it held; the next test takes one that is not.
   it('puts back a compendium deity pick an admin has since deleted', async () => {
     // Precondition: the truncated clone really starts empty, so the pick is this run's.
     expect(await countOf('ingredient_deities')).toBe(0);
@@ -267,5 +269,50 @@ describe('re-running the scenario', () => {
     expect(restored).toBeDefined();
     expect(restored.id).not.toBe(pick.id);
     expect(restored.position).toBe(pick.position);
+  });
+
+  // MB.192: the service renumbers the picks it keeps, so a pick removed from
+  // anywhere but the end leaves its position held by the pick below it. The
+  // reseed puts it back at the end of the list as the admin left it, moving
+  // no live row — claude-docs/db/standard-scenario.md.
+  it('puts back a pick removed from the middle of its list at the end of it', async () => {
+    // Precondition: the truncated clone really starts empty, so the picks are this run's.
+    expect(await countOf('ingredient_deities')).toBe(0);
+    await seedStandard(db);
+    const [mugwort] = await sql<{ id: string; form_id: string }[]>`
+      select id, form_id from ingredients where workspace_id is null and name = 'Mugwort'
+    `;
+    const picks = () =>
+      sql<{ id: string; name: string; position: number; deity_id: string }[]>`
+        select id, name, position, deity_id from ingredient_deities
+        where ingredient_id = ${mugwort.id} and deleted_at is null
+        order by position
+      `;
+    const [artemis, diana] = await picks();
+    // Precondition: Artemis heads a list of two, so removing her is not removing the last.
+    expect([artemis, diana].map(({ name, position }) => ({ name, position }))).toEqual([
+      { name: 'Artemis', position: 0 },
+      { name: 'Diana', position: 1 },
+    ]);
+
+    await updateCompendiumEntry(asUser(E), mugwort.id, {
+      name: 'Mugwort',
+      canonicalName: 'Artemisia vulgaris',
+      nomenclature: 'botanical',
+      form: 'Herb',
+      formId: mugwort.form_id,
+      deities: [{ deityId: diana.deity_id }],
+    });
+    // Precondition: the pick below took the removed pick's position, which the seed's index would want.
+    expect(await picks()).toEqual([expect.objectContaining({ id: diana.id, position: 0 })]);
+
+    await expect(seedStandard(db)).resolves.toBeUndefined();
+
+    const after = await picks();
+    expect(after).toEqual([
+      expect.objectContaining({ id: diana.id, name: 'Diana', position: 0 }),
+      expect.objectContaining({ name: 'Artemis', position: 1 }),
+    ]);
+    expect(after[1].id).not.toBe(artemis.id);
   });
 });

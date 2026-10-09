@@ -129,7 +129,7 @@ MB.162 holds the compendium's forms lower-case, and compose's `db-init`
 reseeds it on every start, so a key on the spelling would insert each entry
 beside itself and fail the scenario on the canonical-key index.
 `tests/db/seed/standard.test.ts` re-cases the forms and reseeds to hold it —
-one of its two tests that write, the other the deity pick below; the rest
+one of its three tests that write, the others the deity picks below; the rest
 read the clone, which already holds the scenario, and the cast and counts are
 `seeded-template.test.ts`'s.
 Ginger is the exception it cannot cover: its form changed rather than its
@@ -148,23 +148,26 @@ a local one.
 Both run the same `seedStandardContent(tx)`; its
 `restoreDeletedDeityPicks` option, on by default and passed `false` by
 `demo`, decides which rows the picks are keyed over. On, over the live rows
-alone: a deleted pick is missing, so it is inserted again, as a new row at its
-literal position beside the tombstone. Off, over every row, so the tombstone
-counts as present. Every other seeded row ignores `deleted_at` in both
-scenarios.
+alone: a deleted pick is missing, so it is inserted again, as a new row beside
+the tombstone. Off, over every row, so the tombstone counts as present. Every
+other seeded row ignores `deleted_at` in both scenarios.
+
+A pick put back goes at the end of its list as the admin left it: the first
+position above every live pick of its entry, several in the literal's order
+(MB.192). Its literal index would collide. `replaceDeities` renumbers the
+picks it keeps, so a pick removed through the app from anywhere but the end
+leaves its index held by the pick below it, and an insert there would fail
+`ingredient_deities_position_unique` and with it the whole scenario, on every
+compose `db-init` until a `db:reset`. Resetting the list to the literal's
+order instead would move rows an admin ordered, which a seed that adds what is
+missing has never done. On an entry with no live pick the end is the literal
+index, so a fresh database is seeded exactly as the literal reads, and a pick
+deleted from the end of its list returns to the position it held.
 
 `tests/db/seed/index.test.ts`'s resurrection sweep therefore lists
 `ingredient_deities` under the demo scenario and leaves it out of the
-standard one, and `tests/db/seed/standard.test.ts` asserts the restoration —
-the pick deleted is gone before the reseed and live again after, under a new
-id at the same position.
-
-What the restoration cannot survive is a pick removed through the app from
-the middle of a list. `replaceDeities` renumbers the picks below it, so the
-position the seed wants back is held by another live pick, and the insert
-fails `ingredient_deities_position_unique` and with it the whole scenario —
-the same arithmetic that makes `demo` key a jar's layers on the spell
-(claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at
-all"). A deleted last pick, which is the case the test takes, frees its
-position and comes back cleanly. Since compose's `db-init` reseeds on every
-start, the other case fails each start until a `db:reset`.
+standard one, and `tests/db/seed/standard.test.ts` asserts the restoration
+twice: a last pick deleted is live again after the reseed, under a new id at
+the same position; a first pick removed through the service, once the pick
+below has taken its position, is live again at the end of the list, the pick
+below unmoved.
