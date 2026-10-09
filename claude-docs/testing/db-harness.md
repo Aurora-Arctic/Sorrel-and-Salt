@@ -40,7 +40,8 @@ run as a test.
   `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`), `updated-at-trigger.test.ts`,
   `test-database-isolation.test.ts`, `seeded-template.test.ts` and
   `tests/db/seed/*` still open their own client — the isolation test's subject
-  _is_ the connection, and the others truncate everything first.
+  _is_ the connection, and the others either read the clone as the template
+  built it or truncate everything before a seed run they assert (MB.183).
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups every schema test used to build by hand:

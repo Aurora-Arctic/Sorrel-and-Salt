@@ -10,9 +10,12 @@ import { formSlug, slugify } from '@/lib/slugify';
 import type { DesignFormGroup, FormGroupRow, FormRow } from './types';
 
 // §5's six form groups and every form under them, asserted against §5's own
-// table rather than a copy, against the real tables emptied first —
-// claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed". The regrouping's own property
-// is asserted too: no section holds more than half the list.
+// table rather than a copy, against the clone, which holds the vocabulary as
+// `standard` wrote it through the same function; a re-run over an admin's
+// edit empties the tables first, and the shape every seed shares is
+// index.test.ts's (MB.183) — claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed".
+// The regrouping's own property is asserted too: no section holds more than
+// half the list.
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 
@@ -77,18 +80,9 @@ async function allForms(): Promise<FormRow[]> {
   return sql<FormRow[]>`select * from ingredient_forms order by slug`;
 }
 
-async function countOf(table: string): Promise<number> {
-  const [{ count }] = await sql<{ count: string }[]>`select count(*) from ${sql(table)}`;
-  return Number(count);
-}
-
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-beforeEach(async () => {
-  await truncateAllTables(sql);
 });
 
 afterAll(async () => {
@@ -195,28 +189,13 @@ describe('every row explains itself', () => {
   });
 
   it('writes them through to the database', async () => {
-    await seedForms(db);
-
     expect((await allGroups()).filter((group) => group.description.trim() === '')).toEqual([]);
     expect((await allForms()).filter((form) => form.description.trim() === '')).toEqual([]);
   });
 });
 
 describe('seedForms(db)', () => {
-  // Precondition: the truncated clone really starts at zero.
-  it('starts from two empty tables', async () => {
-    expect(await countOf('ingredient_form_groups')).toBe(0);
-    expect(await countOf('ingredient_forms')).toBe(0);
-
-    await seedForms(db);
-
-    expect(await countOf('ingredient_form_groups')).toBe(DESIGN_GROUPS.length);
-    expect(await countOf('ingredient_forms')).toBe(DESIGN_VALUES.length);
-  });
-
   it('writes the groups before the forms, each form pointing at its own group', async () => {
-    await seedForms(db);
-
     const groupSlugById = new Map((await allGroups()).map((group) => [group.id, group.slug]));
     const seeded = (await allForms()).map((form) => ({
       key: form.seed_key,
@@ -234,8 +213,6 @@ describe('seedForms(db)', () => {
   // so the address carries the group. The key stays the name, as every
   // database seeded before holds it, and never changes after.
   it('slugs each form by its name and its group, and keys it by its name', async () => {
-    await seedForms(db);
-
     const byKey = new Map((await allForms()).map((form) => [form.seed_key, form]));
     for (const form of FORMS) {
       expect(byKey.get(slugify(form.name))?.slug, form.name).toBe(formSlug(form.name, form.group));
@@ -243,150 +220,97 @@ describe('seedForms(db)', () => {
     expect(byKey.get('bark')?.slug).toBe('bark-botanical');
   });
 
-  it('stamps every row as the bootstrap user, with no tombstone', async () => {
-    await seedForms(db);
-
-    for (const row of [...(await allGroups()), ...(await allForms())]) {
-      expect(row.created_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.updated_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.deleted_at, row.slug).toBeNull();
-    }
-  });
-
-  it('is idempotent: re-running adds nothing and moves nothing', async () => {
-    await seedForms(db);
-    const groups = await allGroups();
-    const forms = await allForms();
-
-    await expect(seedForms(db)).resolves.toBeUndefined();
-
-    expect(await allGroups()).toEqual(groups);
-    expect(await allForms()).toEqual(forms);
-  });
-
-  // The vocabulary is the admin's (MB.35), and a description is the part of a
-  // curated row most likely to be rewritten.
-  it('does not overwrite a description an admin has since rewritten', async () => {
-    await seedForms(db);
-    await sql`
-      update ingredient_forms set description = 'The bark of the root, not the stem.'
-      where seed_key = 'bark'
-    `;
-
-    await seedForms(db);
-
-    const [bark] = (await allForms()).filter((form) => form.seed_key === 'bark');
-    expect(bark.description).toBe('The bark of the root, not the stem.');
-  });
-
-  // Keyed on the slug, ignoring `deleted_at`: the partial index stops only a second live row.
-  it('does not resurrect a form an admin has since deleted', async () => {
-    await seedForms(db);
-    await sql`
-      update ingredient_forms set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where seed_key = 'curio'
-    `;
-
-    await seedForms(db);
-
-    const curio = (await allForms()).filter((form) => form.seed_key === 'curio');
-    expect(curio).toHaveLength(1);
-    expect(curio[0].deleted_at).not.toBeNull();
-  });
-
-  // An admin's own row under a seed name and group holds the address the
-  // seed's would, and the slug index would refuse a second.
-  it('does not insert a form an admin wrote under its name and group', async () => {
-    await seedForms(db);
-    await sql`delete from ingredient_forms where seed_key = 'herb'`;
-    const [botanical] =
-      await sql`select id from ingredient_form_groups where seed_key = 'botanical'`;
-    await sql`
-      insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
-      values ('Herb', 'herb-botanical', 'Written by an admin.', ${botanical.id},
-        ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-    `;
-
-    await expect(seedForms(db)).resolves.toBeUndefined();
-
-    const herbs = (await allForms()).filter((form) => form.name === 'Herb');
-    expect(herbs).toHaveLength(1);
-    expect(herbs[0]).toMatchObject({ seed_key: null, description: 'Written by an admin.' });
-  });
-
-  // The seed is the backfill (claude-docs/db/ingredient-slugs.md's precedent): a
-  // database seeded before M5.6a holds `slugify(name)`, and a SQL rewrite
-  // would be a second slug rule.
-  describe('the slugs a database seeded before M5.6a holds', () => {
-    it('re-derives every live form’s slug from its name and its group’s, as the bootstrap user', async () => {
-      await seedForms(db);
-      await sql`update ingredient_forms set slug = seed_key`;
-      // The precondition: every slug is the old rule's.
-      expect((await allForms()).filter((form) => form.slug !== form.seed_key)).toEqual([]);
-
-      await seedForms(db);
-
-      const forms = await allForms();
-      const groupNameById = new Map((await allGroups()).map((group) => [group.id, group.name]));
-      for (const form of forms) {
-        expect(form.slug, form.name).toBe(
-          formSlug(form.name, groupNameById.get(form.group_id) as string),
-        );
-        expect(form.updated_by, form.name).toBe(BOOTSTRAP_USER_ID);
-      }
+  describe('over a database an admin has edited', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+      // Precondition: the truncated clone really starts empty, so the rows edited are this run's.
+      expect(await allForms()).toEqual([]);
     });
 
-    it('writes only the rows whose slug differs', async () => {
+    // The vocabulary is the admin's (MB.35), and a description is the part of a
+    // curated row most likely to be rewritten.
+    it('does not overwrite a description an admin has since rewritten', async () => {
       await seedForms(db);
-      await sql`update ingredient_forms set slug = 'bark' where seed_key = 'bark'`;
-      const others = (await allForms()).filter((form) => form.seed_key !== 'bark');
-
-      await seedForms(db);
-
-      const forms = await allForms();
-      expect(forms.find((form) => form.seed_key === 'bark')?.slug).toBe('bark-botanical');
-      expect(forms.filter((form) => form.seed_key !== 'bark')).toEqual(others);
-    });
-
-    it('follows a group renamed since, and leaves a deleted form as it was', async () => {
-      await seedForms(db);
-      await sql`update ingredient_form_groups set name = 'Oddment' where seed_key = 'curio'`;
       await sql`
-        update ingredient_forms set slug = 'egg', deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-        where seed_key = 'egg'
+        update ingredient_forms set description = 'The bark of the root, not the stem.'
+        where seed_key = 'bark'
       `;
-      const [deleted] = (await allForms()).filter((form) => form.seed_key === 'egg');
 
       await seedForms(db);
 
-      const forms = await allForms();
-      expect(forms.find((form) => form.seed_key === 'curio')?.slug).toBe('curio-oddment');
-      expect(forms.find((form) => form.seed_key === 'egg')).toEqual(deleted);
+      const [bark] = (await allForms()).filter((form) => form.seed_key === 'bark');
+      expect(bark.description).toBe('The bark of the root, not the stem.');
     });
-  });
 
-  it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
-    await sql`create table seed_forms_probe (slug text, acting_user text)`;
-    await sql.unsafe(`
-      create function seed_forms_probe() returns trigger language plpgsql as $$
-      begin
-        insert into seed_forms_probe (slug, acting_user)
-        values (new.slug, current_setting('app.current_user_id', true));
-        return new;
-      end
-      $$
-    `);
-    await sql.unsafe(`
-      create trigger seed_forms_probe after insert on ingredient_form_groups
-      for each row execute function seed_forms_probe()
-    `);
+    // An admin's own row under a seed name and group holds the address the
+    // seed's would, and the slug index would refuse a second.
+    it('does not insert a form an admin wrote under its name and group', async () => {
+      await seedForms(db);
+      await sql`delete from ingredient_forms where seed_key = 'herb'`;
+      const [botanical] =
+        await sql`select id from ingredient_form_groups where seed_key = 'botanical'`;
+      await sql`
+        insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
+        values ('Herb', 'herb-botanical', 'Written by an admin.', ${botanical.id},
+          ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      `;
 
-    await seedForms(db);
+      await expect(seedForms(db)).resolves.toBeUndefined();
 
-    const rows = await sql<{ acting_user: string | null }[]>`
-      select acting_user from seed_forms_probe
-    `;
-    expect(rows).toHaveLength(DESIGN_GROUPS.length);
-    expect(rows.every((row) => row.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
+      const herbs = (await allForms()).filter((form) => form.name === 'Herb');
+      expect(herbs).toHaveLength(1);
+      expect(herbs[0]).toMatchObject({ seed_key: null, description: 'Written by an admin.' });
+    });
+
+    // The seed is the backfill (claude-docs/db/ingredient-slugs.md's precedent): a
+    // database seeded before M5.6a holds `slugify(name)`, and a SQL rewrite
+    // would be a second slug rule.
+    describe('the slugs a database seeded before M5.6a holds', () => {
+      it('re-derives every live form’s slug from its name and its group’s, as the bootstrap user', async () => {
+        await seedForms(db);
+        await sql`update ingredient_forms set slug = seed_key`;
+        // The precondition: every slug is the old rule's.
+        expect((await allForms()).filter((form) => form.slug !== form.seed_key)).toEqual([]);
+
+        await seedForms(db);
+
+        const forms = await allForms();
+        const groupNameById = new Map((await allGroups()).map((group) => [group.id, group.name]));
+        for (const form of forms) {
+          expect(form.slug, form.name).toBe(
+            formSlug(form.name, groupNameById.get(form.group_id) as string),
+          );
+          expect(form.updated_by, form.name).toBe(BOOTSTRAP_USER_ID);
+        }
+      });
+
+      it('writes only the rows whose slug differs', async () => {
+        await seedForms(db);
+        await sql`update ingredient_forms set slug = 'bark' where seed_key = 'bark'`;
+        const others = (await allForms()).filter((form) => form.seed_key !== 'bark');
+
+        await seedForms(db);
+
+        const forms = await allForms();
+        expect(forms.find((form) => form.seed_key === 'bark')?.slug).toBe('bark-botanical');
+        expect(forms.filter((form) => form.seed_key !== 'bark')).toEqual(others);
+      });
+
+      it('follows a group renamed since, and leaves a deleted form as it was', async () => {
+        await seedForms(db);
+        await sql`update ingredient_form_groups set name = 'Oddment' where seed_key = 'curio'`;
+        await sql`
+          update ingredient_forms set slug = 'egg', deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
+          where seed_key = 'egg'
+        `;
+        const [deleted] = (await allForms()).filter((form) => form.seed_key === 'egg');
+
+        await seedForms(db);
+
+        const forms = await allForms();
+        expect(forms.find((form) => form.seed_key === 'curio')?.slug).toBe('curio-oddment');
+        expect(forms.find((form) => form.seed_key === 'egg')).toEqual(deleted);
+      });
+    });
   });
 });

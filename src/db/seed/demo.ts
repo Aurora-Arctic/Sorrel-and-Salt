@@ -198,7 +198,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
 export async function seedDemo(db: SeedDatabase): Promise<void> {
   await beginSeedTransaction(db, async (tx) => {
     // Inside the same transaction: every spell points at rows `standard` writes.
-    await seedStandardContent(tx);
+    // A deity pick someone deleted stays deleted, as a spell does.
+    await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
 
     await insertMissingWorkspaceIngredients(tx);
     await insertMissingSpells(tx);
