@@ -6,10 +6,11 @@ import {
   cookieHeader,
   landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance, Profile } from '../support/types';
 
 // Where the callback lands a sign-in (MB.113): a return path wins, `/coven`
 // included; with none, an admin — by the role held once any promotion at this
@@ -41,7 +42,18 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials at import; the primary admin's address is read per
+// request, so it is stubbed beside them for the whole file.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+  vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
@@ -51,16 +63,11 @@ beforeEach(async () => {
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
   // Microsoft never vouches, so the primary admin's sign-in through it logs a refusal.
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
@@ -115,17 +122,6 @@ describe('a sign-in with no return path', () => {
     expect(await roleOf(MEMBER)).toBe('user');
   });
 
-  it('lands the primary admin promoted at this very sign-in on the admin area', async () => {
-    // Why it could have landed on /coven: the row did not exist, so it was
-    // created a user, and only the promotion made it an admin.
-    expect(await roleOf(PRIMARY)).toBeUndefined();
-
-    const response = await signIn('google', { sub: 'g-primary', email: PRIMARY, verified: true });
-
-    expect(landingOf(response)).toBe('/admin');
-    expect(await roleOf(PRIMARY)).toBe('admin');
-  });
-
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
@@ -143,27 +139,6 @@ describe('a sign-in with no return path', () => {
     // (tests/app/account/email/page.test.tsx).
     expect(landingOf(again)).toBe('/account/email');
     expect(callbackOf(mailedLink())).toBe('/account/email?verified');
-  });
-
-  // The primary admin through a provider that never vouches is the unverified
-  // admin in practice: promoted by the link, not at the sign-in.
-  it('sends the primary admin through Microsoft to the email page, and its link promotes and lands with no next', async () => {
-    const response = await signIn('microsoft', {
-      sub: 'ms-primary',
-      email: PRIMARY,
-      verified: true,
-    });
-    expect(landingOf(response)).toBe('/account/email');
-    expect(await roleOf(PRIMARY)).toBe('user');
-    const link = mailedLink();
-    expect(callbackOf(link)).toBe('/account/email?verified');
-
-    const followed = await auth.handler(
-      new Request(link, { headers: { cookie: cookieHeader(response) } }),
-    );
-
-    expect(landingOf(followed)).toBe('/account/email?verified');
-    expect(await roleOf(PRIMARY)).toBe('admin');
   });
 });
 

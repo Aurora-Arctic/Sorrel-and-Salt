@@ -76,3 +76,6 @@ export interface NavigatingProps {
   push: Mock;
   children: ReactNode;
 }
+
+/** The Better Auth instance `@/lib/auth` exports, as `importAuth` hands it back. */
+export type AuthInstance = (typeof import('@/lib/auth'))['auth'];

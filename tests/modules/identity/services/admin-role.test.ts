@@ -10,10 +10,12 @@ import {
 import { asUser } from '../../../support/as-user';
 import {
   expectSignedIn,
+  landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../../../support/oauth';
-import type { Profile } from '../../../support/types';
+import { importAuth } from '../../../support/auth-module';
+import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProviderId } from '@/lib/types';
 
 // The primary admin is promoted at a sign-in whose fresh provider profile is
@@ -232,13 +234,17 @@ describe('Promotion at sign-in', () => {
   afterEach(() => server.resetHandlers());
   afterAll(() => server.close());
 
-  let auth: typeof import('@/lib/auth').auth;
+  let auth: AuthInstance;
 
-  beforeEach(async () => {
-    stubProviderCredentials(vi.stubEnv);
+  // Provider credentials, read at import, once for the describe.
+  beforeAll(async () => {
+    auth = await importAuth(PROVIDER_CREDENTIALS);
+  });
+
+  // Read per request, so a test that varies it re-stubs it; the file's
+  // afterEach puts it back.
+  beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@Primary-Admin.test');
-    vi.resetModules();
-    ({ auth } = await import('@/lib/auth'));
   });
 
   const signIn = (provider: ProviderId, profile: Profile) =>
@@ -248,6 +254,9 @@ describe('Promotion at sign-in', () => {
     const response = await signIn('google', { sub: 'g-1', email: PRIMARY, verified: true });
 
     expectSignedIn(response);
+    // The landing reads the role after the promotion: the row was created a
+    // user, so only the promotion at this very sign-in sends it to /admin.
+    expect(landingOf(response)).toBe('/admin');
     const row = await userRow(PRIMARY);
     expect(row?.role).toBe('admin');
     expect(row?.can_create_workspace).toBe(true);
