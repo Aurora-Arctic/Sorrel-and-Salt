@@ -83,6 +83,10 @@ In [`graphql/schema.md`](graphql/schema.md#forms-ingredientformgroups-and-the-th
 
 In [`graphql/schema.md`](graphql/schema.md#groups-the-category-group-and-form-group-writes).
 
+### Deities: `deities`, `deityTraditions` and the six writes
+
+In [`graphql/schema.md`](graphql/schema.md#deities-deities-deitytraditions-and-the-six-writes).
+
 ### Auth scopes: the second check
 
 In [`graphql/schema.md`](graphql/schema.md#auth-scopes-the-second-check).

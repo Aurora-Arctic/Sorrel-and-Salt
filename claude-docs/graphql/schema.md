@@ -840,6 +840,51 @@ code — `FORBIDDEN` to a coven's owner, `VALIDATION` (a colour, a collision or
 non-admin, each colour and every collision are
 `services/category-groups.test.ts`'s and `services/ingredient-form-groups.test.ts`'s.
 
+### Deities: `deities`, `deityTraditions` and the six writes
+
+The deity vocabulary's reads and writes (MB.132), registered by `vocabulary`
+over `services/deities.ts` and `services/deity-traditions.ts`
+([`db/deity-vocabulary.md`](../db/deity-vocabulary.md), "The admin's
+writes"), the forms' and form groups' shape together. `Deity` and
+`DeityTradition` are MB.167's types, built for an ingredient's pick; the
+admin's input takes the name `DeityInput`, which MB.167 left free by naming
+the pick's `IngredientDeityInput`.
+
+- **`deities` and `deityTraditions` are public** (MB.80). `deities` counts
+  its pages for the admin page's "Page X of Y" and lists each deity under its
+  tradition, by the tradition's name and then its own; `query` and
+  `traditionId` narrow it as `categories`' two arguments do, a
+  `traditionId` that is not a uuid an empty page. `deityTraditions` is the
+  live traditions by name and carries no count.
+- **`DeityInput`** is `name`, `description` and `traditionId`, required;
+  **`DeityTraditionInput`** is `name` and `description`. No slug, which
+  follows the name, and a deity's its tradition too; no `endRedirect`, since a
+  deity moves no entry's address.
+- **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
+  service. A slug collision is `VALIDATION` on `name`; a retired or unknown
+  tradition is `VALIDATION` on `traditionId`; an unknown, deleted or
+  malformed id is `NOT_FOUND`. A deity's rename carries onto every live
+  compendium entry's link to it.
+- **`deleteDeity` answers the deleted id**, and is `FORBIDDEN` while a live
+  compendium entry picked the deity, naming the entries and how many more.
+  **`deleteDeityTradition` takes an optional `moveTo`** and answers the
+  deleted id: its live deities move to the tradition `moveTo` names first,
+  each re-slugged there, and one with live deities and no other live
+  tradition named, or a move onto another deity's address, is `VALIDATION` on
+  `moveTo`. A tradition's rename re-slugs its deities, and one that would
+  collide is `VALIDATION` on `name`. It is never `FORBIDDEN` for a
+  compendium entry's pick.
+- **The writes clear the loaders an earlier root field may have filled**:
+  `deitiesByIngredient` on every deity and tradition write but a create, and
+  `deityTraditionsById` on a tradition's update and delete.
+  Revalidating the `compendium` tag is M8.7's.
+
+`tests/modules/vocabulary/graphql/deities.test.ts` holds their half: a
+filtered page and its count, the loaders cleared by an update, `moveTo`
+reaching the delete, and per write one refusal per error code. Every other
+role and rule is `services/deities.test.ts`'s and
+`services/deity-traditions.test.ts`'s.
+
 ### Auth scopes: the second check
 
 `@pothos/plugin-scope-auth` gives the schema three scopes, all read off the

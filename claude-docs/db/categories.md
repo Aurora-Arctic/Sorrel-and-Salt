@@ -283,7 +283,8 @@ to`. The form group's say "form" and "forms". A moved form that would take
   and named the same way.
 - **The rows are moved one at a time** through the writer's `updateById`,
   not a new writer method: `tests/db/repository/write.test.ts` caps the
-  writer at twenty-two methods, and a group holds a handful of rows.
+  writer's methods, and a group holds a handful of rows. A deity tradition's
+  delete moves its deities the same way (MB.132).
 - **The rows are read before the transaction**, through the vocabularies' own
   page readers, so "live" means what their lists mean. One added under the
   group in the instant between is left under the deleted group, which every

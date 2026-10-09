@@ -32,7 +32,8 @@ which replaced the list MB.168 dropped
 stay told apart after a save, and the text stays the value. Soft-deleting a
 row rewrites none of a coven's, its value moving into the in-use bucket instead. A compendium entry's
 deities are each a pick of a curated row, so a deity one picks is not
-deleted, nor the tradition over it, and a rename carries onto it
+deleted, a tradition's delete moves its deities rather than orphaning them,
+and a rename carries onto it
 ([MB.162](../design-decisions/mb.162-compendium-holds-curated-values.md); on
 the pick since [MB.167](../design-decisions/mb.167-read-and-write-the-pick.md)).
 `tradition_id` can be a key because only an admin
@@ -95,8 +96,49 @@ returns a tradition's name, and never searches it.
 offers curated rows first, each with its tradition, then uncurated values in
 use in the compendium and the current workspace only, and since MB.162 every
 one of those is the workspace's. The admin's read (MB.132) is the compendium
-tier only — the live entries picking a deity, which refuse its delete or its
-tradition's and take its rename — since an admin reaches no workspace's
+tier only — the live entries picking a deity, which refuse its delete and
+take its rename — since an admin reaches no workspace's
 ingredients (M6.6). A value is uncurated when `lower(btrim(value))`
 matches no live row's `lower(name)`, and a deity is curated only while its
 tradition is live too, as a form is only while its group is.
+
+### The admin's writes (MB.132)
+
+`/admin/deities` and `/admin/deity-traditions` write the two tables through
+`vocabulary`'s `services/deities.ts` and `services/deity-traditions.ts`, the
+site admin's alone, on the forms' and form groups' rules
+([`design-decisions/mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)):
+
+- **A deity's slug is its name and its tradition's**, `deitySlug(name,
+tradition)` — `hecate-greek` — as a form's is its name and its group's, so
+  a Greek and a Roman Hecate hold two addresses. It follows a rename and a
+  move to another tradition; renaming a tradition re-slugs every live deity
+  under it, and a move onto another live deity's address is refused, naming
+  both. The seed slugs by the same rule and re-derives the slugs a database
+  seeded before held, as the forms' seed does; the seed key stays the slug of
+  the name. No ingredient is rewritten by any of it: a link holds a deity's
+  name and id, never its slug.
+- **A rename rewrites the link's name and nothing else.** Renaming a deity
+  carries the new spelling onto every live `ingredient_deities` row linking it
+  whose ingredient is a live compendium entry, in the same transaction, through
+  the writer's `carryDeityRename` — the repository's, because `vocabulary` may
+  not name `ingredients`' tables. A deity is no part of an entry's identity or
+  slug, so no entry is re-keyed and no redirect is asked about. A coven's
+  link, a deleted entry's and a typed name keep the old spelling; MB.167's
+  save writes a kept pick's current spelling onto a coven's row the next time
+  it is saved.
+- **A delete is refused while a live compendium entry links the deity**, by
+  `ingredient_deities.deity_id`, naming the first three entries and counting
+  the rest, so Greek Hecate's delete is not refused by an entry that picked a
+  namesake. The read is the compendium's own filter, `deityId`, which
+  `ingredient_deities_deity_id_idx` answers: partial on live links, since a
+  dropped link holds nothing.
+- **A tradition's delete moves its live deities to a tradition the admin
+  picks**, each re-slugged there, refused on `moveTo` when it has some and
+  names no other live one, or when a moved deity would take another's
+  address, then soft-deletes the tradition, in one transaction. The deities
+  stay curated, so a compendium entry never refuses it.
+
+The deities page lists the curated deities by their tradition's name, then
+their own (`findDeityPage`, the categories' key), narrowed by a name query and
+a tradition.
