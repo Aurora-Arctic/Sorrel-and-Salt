@@ -1,13 +1,10 @@
-import { and, eq, isNull } from 'drizzle-orm';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { beginSeedTransaction } from './idempotent';
 import {
   ingredientFormGroups,
   ingredientForms,
 } from '../../modules/vocabulary/schema/ingredient-forms';
 import { formSlug } from '../../lib/slugify';
-import { seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { reslugItems, seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type {
   SeedDatabase,
   SeedIngredientForm,
@@ -372,36 +369,10 @@ export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
     itemNoun: 'Form',
     slugOf: (form, groupName) => formSlug(form.name, groupName),
   });
-  await reslugForms(tx);
-}
-
-/**
- * The backfill M5.6a's slug rule needs, run on every seed: each live form's
- * slug re-derived from its name and its group's name, and written where it
- * differs, so a reseed with nothing to change writes nothing. A database
- * seeded before holds `slugify(name)`; a rewrite in SQL would be a second slug
- * rule, so the seed is the backfill, as it was for ingredient slugs
- * (claude-docs/db/ingredient-slugs.md). A soft-deleted form keeps its slug:
- * the index reserves none.
- */
-async function reslugForms(tx: SeedTransaction): Promise<void> {
-  const forms = await tx
-    .select({
-      id: ingredientForms.id,
-      name: ingredientForms.name,
-      slug: ingredientForms.slug,
-      groupName: ingredientFormGroups.name,
-    })
-    .from(ingredientForms)
-    .innerJoin(ingredientFormGroups, eq(ingredientFormGroups.id, ingredientForms.groupId))
-    .where(isNull(ingredientForms.deletedAt));
-
-  for (const { id, name, slug, groupName } of forms) {
-    const derived = formSlug(name, groupName);
-    if (derived === slug) continue;
-    await tx
-      .update(ingredientForms)
-      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION))
-      .where(and(eq(ingredientForms.id, id), isNull(ingredientForms.deletedAt)));
-  }
+  await reslugItems(tx, {
+    itemTable: ingredientForms,
+    groupTable: ingredientFormGroups,
+    groupKey: ingredientForms.groupId,
+    slugOf: formSlug,
+  });
 }

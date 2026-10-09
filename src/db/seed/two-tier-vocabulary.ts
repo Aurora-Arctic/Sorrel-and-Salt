@@ -1,3 +1,7 @@
+import { and, eq, isNull } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import { applyAudit } from '../audit';
+import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { insertMissing, presentKeys, requireFrom } from './idempotent';
 import { slugify } from '../../lib/slugify';
 import type { GroupTable, ItemTable, SeedTransaction, TwoTierVocabulary } from './types';
@@ -7,7 +11,8 @@ import type { GroupTable, ItemTable, SeedTransaction, TwoTierVocabulary } from '
 // name it was seeded under (MB.172), a slug nobody writes down. The literals
 // stay with their own vocabulary, which also names the item's group, its key
 // column — `tradition` and `traditionId` for a deity — and, for a form, a
-// slug carrying the group (M5.6a); only the two inserts are one.
+// slug carrying the group (M5.6a), as a deity's carries its tradition
+// (MB.132); only the two inserts, and that slug's backfill, are one.
 
 /**
  * Groups first — `group_id` is a NOT NULL foreign key — then items, each
@@ -102,4 +107,51 @@ async function groupsByItemKey(
   for (const row of rows) if (row.seedKey !== null) groups.set(row.seedKey, row);
 
   return groups;
+}
+
+/**
+ * The backfill a slug carrying its group needs, run on every seed of a
+ * vocabulary whose slug does — the forms (M5.6a) and the deities (MB.132):
+ * each live item's slug re-derived by `slugOf` from its name and its group's
+ * name, and written where it differs, so a reseed with nothing to change
+ * writes nothing. A database seeded before holds `slugify(name)`; a rewrite
+ * in SQL would be a second slug rule, so the seed is the backfill, as it was
+ * for ingredient slugs (claude-docs/db/ingredient-slugs.md). A soft-deleted
+ * item keeps its slug: the index reserves none.
+ */
+export async function reslugItems(
+  tx: SeedTransaction,
+  {
+    itemTable,
+    groupTable,
+    groupKey,
+    slugOf,
+  }: {
+    itemTable: ItemTable;
+    groupTable: GroupTable;
+    /** The item's key to its group: `groupId`, or a deity's `traditionId`. */
+    groupKey: AnyPgColumn;
+    slugOf: (name: string, groupName: string) => string;
+  },
+): Promise<void> {
+  // The cast `selectFrom` makes: `.from()` is typed against one table, not the union.
+  const items = await tx
+    .select({
+      id: itemTable.id,
+      name: itemTable.name,
+      slug: itemTable.slug,
+      groupName: groupTable.name,
+    })
+    .from(itemTable as never)
+    .innerJoin(groupTable, eq(groupTable.id, groupKey))
+    .where(isNull(itemTable.deletedAt));
+
+  for (const { id, name, slug, groupName } of items) {
+    const derived = slugOf(name, groupName);
+    if (derived === slug) continue;
+    await tx
+      .update(itemTable)
+      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION) as never)
+      .where(and(eq(itemTable.id, id), isNull(itemTable.deletedAt)));
+  }
 }

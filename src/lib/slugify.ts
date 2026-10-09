@@ -38,3 +38,13 @@ export function ingredientSlug(
 export function formSlug(name: string, groupName: string): string {
   return slugify(`${name} ${groupName}`);
 }
+
+/**
+ * A curated deity's slug: its name, then its tradition's (MB.132), as a form's
+ * is its name and its group's, so two live deities sharing a name under two
+ * traditions hold two addresses — Hecate under Greek is `hecate-greek`, under
+ * Roman `hecate-roman`. It follows a change to either.
+ */
+export function deitySlug(name: string, traditionName: string): string {
+  return slugify(`${name} ${traditionName}`);
+}
