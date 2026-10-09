@@ -18,6 +18,8 @@ export interface GroupListProps {
   groups: readonly GroupListEntry[];
   previousHref?: Route;
   nextHref?: Route;
+  /** Where this page stands among them all, for the pager; none says nothing of it. */
+  position?: { page: number; pages: number };
 }
 
 /** Where the list stands: the cursor of the page a modal opens over. */

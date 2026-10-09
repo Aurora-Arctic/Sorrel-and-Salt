@@ -4,7 +4,15 @@ import {
   validateConnectionArguments,
 } from '@pothos/core';
 import { InvalidCursor } from './errors';
-import type { ConnectionArgs, Cursor, PageRequest, PageEntry, Page } from './types';
+import type {
+  ConnectionArgs,
+  Cursor,
+  Page,
+  PageCount,
+  PageEntry,
+  PagePosition,
+  PageRequest,
+} from './types';
 
 // CLAUDE.md rule 8, the one pagination rule: the numbers, the cursor codec,
 // and the page a connection is built from; the shapes they pass are in
@@ -92,4 +100,32 @@ export async function resolvePage<T, Edge extends object = {}>(
       hasPreviousPage: hasPreviousPage(entries.length),
     },
   };
+}
+
+/**
+ * One page of an admin list, `DEFAULT_PAGE_SIZE` rows after `after` or else
+ * before `before`, and where it stands, for the pager's "Page X of Y":
+ * `count` reads the list's total and the rows before the page's first row —
+ * none on an empty page — and the position is page floor(before / size) + 1
+ * of ceil(total / size), never fewer than one. Every admin list page reads
+ * through it, so the arithmetic is written once (MB.132).
+ */
+export async function resolveNumberedPage<T, Edge extends object = {}>(
+  { after, before }: { after?: string; before?: string },
+  fetch: (request: PageRequest) => PageEntry<T, Edge>[] | Promise<PageEntry<T, Edge>[]>,
+  count: (start: Cursor | undefined) => Promise<PageCount>,
+): Promise<Page<T, Edge> & { position: PagePosition }> {
+  const args: ConnectionArgs =
+    after === undefined && before !== undefined
+      ? { last: DEFAULT_PAGE_SIZE, before }
+      : { first: DEFAULT_PAGE_SIZE, after };
+  const page = await resolvePage(args, fetch);
+  const { totalCount, countBefore } = await count(
+    page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
+  );
+  const position = {
+    page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
+    pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
+  };
+  return { ...page, position };
 }

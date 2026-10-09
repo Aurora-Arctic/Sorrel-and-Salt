@@ -16,10 +16,12 @@ const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
 const listDeityTraditions = vi.fn();
+const countDeityTraditions = vi.fn();
 const getDeityTraditionBySlug = vi.fn();
 const countDeities = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
   listDeityTraditions,
+  countDeityTraditions,
   getDeityTraditionBySlug,
   countDeities,
 }));
@@ -67,6 +69,8 @@ beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listDeityTraditions.mockReset();
+  countDeityTraditions.mockReset();
+  countDeityTraditions.mockResolvedValue({ totalCount: 2, countBefore: 0 });
   listDeityTraditions.mockResolvedValue([entry(MOCKISH), entry(FIXTURAL)]);
   getDeityTraditionBySlug.mockReset();
   getDeityTraditionBySlug.mockResolvedValue(FIXTURAL);
@@ -102,6 +106,19 @@ describe('the /admin/deity-traditions page', () => {
     await renderPage();
 
     expect(listDeityTraditions).toHaveBeenCalledWith({ limit: 101, inverted: false });
+  });
+
+  it('says which page of how many, counted from the first row of the page', async () => {
+    countDeityTraditions.mockResolvedValue({ totalCount: 30, countBefore: 25 });
+
+    await renderPage({ after: encodeCursor({ key: ['Mockish'], id: MOCKISH.id }) });
+
+    // The page's first row, as its list read it.
+    expect(countDeityTraditions).toHaveBeenCalledWith({
+      key: [expect.any(String)],
+      id: expect.any(String),
+    });
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 2');
   });
 
   it('reads the page after a readable cursor, and the first page for one that is not', async () => {

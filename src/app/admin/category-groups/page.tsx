@@ -5,11 +5,15 @@ import GroupList from '../../../components/GroupList';
 import { groupsHref } from '../../../components/GroupList/href';
 import type { GroupListEntry } from '../../../components/GroupList/types';
 import { NotFound } from '../../../lib/errors';
-import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
+import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { ConnectionArgs } from '../../../lib/types';
-import { countCategories, getCategoryGroupBySlug, listCategoryGroups } from '@/modules/vocabulary';
+import {
+  countCategories,
+  getCategoryGroupBySlug,
+  countCategoryGroups,
+  listCategoryGroups,
+} from '@/modules/vocabulary';
 import CategoryGroupDialog from './group-dialog';
 import type { AdminCategoryGroupsPageProps, GroupsSearchParams } from './types';
 
@@ -20,13 +24,11 @@ export const metadata: Metadata = {
 // One page of the groups, through the service the categories' group picker
 // reads, paged by the M3.6 helper (CLAUDE.md rule 1, rule 8); the writes are
 // the modal's, through the category-group mutations. Cached so a second
-// render in the request reads once.
-const readPage = cache(async (after: string | undefined, before: string | undefined) => {
-  const args: ConnectionArgs = before
-    ? { last: DEFAULT_PAGE_SIZE, before }
-    : { first: DEFAULT_PAGE_SIZE, after };
-  return resolvePage(args, listCategoryGroups);
-});
+// render in the request reads once; "Page X of Y" beside it, counted from the
+// page's first row (src/lib/pagination.ts).
+const readPage = cache((after: string | undefined, before: string | undefined) =>
+  resolveNumberedPage({ after, before }, listCategoryGroups, countCategoryGroups),
+);
 
 // Every group on one page of the maximum, for the delete's move picker and
 // the colour pickers' near-colour warning: eight are seeded, and an admin adds
@@ -105,6 +107,7 @@ export default async function AdminCategoryGroupsPage({
       <GroupList
         kind="category"
         groups={groups}
+        position={page.position}
         previousHref={
           page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
             ? groupsHref('category', { before: page.pageInfo.startCursor })

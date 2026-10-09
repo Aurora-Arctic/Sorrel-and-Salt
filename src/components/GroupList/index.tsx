@@ -14,7 +14,13 @@ import './index.scss';
 // — so a modal can be linked to and Back closes it
 // (claude-docs/components/group-list.md).
 
-const GroupList = ({ kind, groups, previousHref, nextHref }: GroupListProps): ReactElement => (
+const GroupList = ({
+  kind,
+  groups,
+  previousHref,
+  nextHref,
+  position,
+}: GroupListProps): ReactElement => (
   <div className="group-list">
     {groups.length ? (
       <div className="data-table-frame">
@@ -62,7 +68,7 @@ const GroupList = ({ kind, groups, previousHref, nextHref }: GroupListProps): Re
       <p>{kind === 'tradition' ? 'No traditions yet.' : 'No groups yet.'}</p>
     )}
 
-    <Pager previousHref={previousHref} nextHref={nextHref} soft />
+    <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
   </div>
 );
 
