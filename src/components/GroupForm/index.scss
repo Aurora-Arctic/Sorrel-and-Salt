@@ -1,7 +1,8 @@
 @use '../../scss/variables' as *;
 
 // Layout only, on the form primitives; no styling past the tokens before the
-// admin section's design review (MB.115). CategoryForm's, under this name.
+// admin section's design review (MB.115). GroupedValueForm's, under this
+// name.
 .group-form__actions {
   flex-wrap: wrap;
 }

@@ -108,6 +108,12 @@ type Deity {
   tradition: DeityTradition!
 }
 
+input DeityInput {
+  description: String!
+  name: String!
+  traditionId: ID!
+}
+
 type DeitySuggestion {
   curated: Boolean!
   description: String
@@ -123,6 +129,11 @@ type DeityTradition {
   id: ID!
   name: String!
   slug: String!
+}
+
+input DeityTraditionInput {
+  description: String!
+  name: String!
 }
 
 type FormSuggestion {
@@ -287,6 +298,8 @@ type Mutation {
     endRedirect: Boolean
     input: CompendiumIngredientInput!
   ): Ingredient!
+  createDeity(input: DeityInput!): Deity!
+  createDeityTradition(input: DeityTraditionInput!): DeityTradition!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
   createPlanet(input: PlanetInput!): Planet!
@@ -308,6 +321,16 @@ type Mutation {
 
   """A soft delete; a spell holding the entry still reaches it."""
   deleteCompendiumIngredient(id: ID!): ID!
+
+  """
+  A soft delete, refused while a live compendium entry picked the deity; a coven keeps its pick.
+  """
+  deleteDeity(id: ID!): ID!
+
+  """
+  A soft delete; the live deities under it move to `moveTo` first, re-slugged there, which they need when there are any.
+  """
+  deleteDeityTradition(id: ID!, moveTo: ID): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
 
   """
@@ -348,6 +371,16 @@ type Mutation {
     id: ID!
     input: CompendiumIngredientUpdateInput!
   ): Ingredient!
+
+  """
+  Replaces the deity; the slug follows the name and the tradition. A rename is carried onto every live compendium entry that picked the deity.
+  """
+  updateDeity(id: ID!, input: DeityInput!): Deity!
+
+  """
+  Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
+  """
+  updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 
   """
@@ -410,7 +443,17 @@ type Query {
   categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
+
+  """
+  The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
+  """
+  deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryDeitySuggestionsConnection!
+
+  """
+  The live traditions by name: the tradition a deity is filed under is picked from these.
+  """
+  deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
@@ -492,6 +535,23 @@ type QueryCompendiumConnectionEdge {
   score: Float
 }
 
+type QueryDeitiesConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryDeitiesConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryDeitiesConnectionEdge {
+  cursor: String!
+  node: Deity!
+}
+
 type QueryDeitySuggestionsConnection {
   edges: [QueryDeitySuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -500,6 +560,16 @@ type QueryDeitySuggestionsConnection {
 type QueryDeitySuggestionsConnectionEdge {
   cursor: String!
   node: DeitySuggestion!
+}
+
+type QueryDeityTraditionsConnection {
+  edges: [QueryDeityTraditionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryDeityTraditionsConnectionEdge {
+  cursor: String!
+  node: DeityTradition!
 }
 
 type QueryFormSuggestionsConnection {

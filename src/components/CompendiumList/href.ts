@@ -3,7 +3,7 @@ import type { CompendiumDialog, CompendiumPlace } from './types';
 
 // The address of `/admin/compendium` under a filter, at a page, with a modal
 // open over it or not: the list's links, the pager, the filter's submit and
-// the modal's way back all build it, as `categoriesHref` does for the
+// the modal's way back all build it, as `groupedValuesHref` does for the
 // categories. A blank filter is written as none, and Without References as
 // `withoutReferences=1`, the value its checkbox submits natively. `new` is a
 // bare flag, read by its presence.

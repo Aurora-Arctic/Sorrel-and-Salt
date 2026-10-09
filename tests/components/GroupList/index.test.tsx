@@ -61,6 +61,12 @@ describe('GroupList', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
+  it('says so in its own word when there is no tradition', () => {
+    render(<GroupList kind="tradition" groups={[]} />);
+
+    expect(screen.getByText('No traditions yet.')).toBeInTheDocument();
+  });
+
   it('pages by the links it is given', () => {
     render(
       <GroupList
@@ -75,11 +81,33 @@ describe('GroupList', () => {
       '/admin/category-groups?after=cursor',
     );
   });
+
+  it('says which page of how many when given its position, and nothing of it when not', () => {
+    const { rerender } = render(
+      <GroupList
+        kind="tradition"
+        groups={[WARDS]}
+        nextHref={groupsHref('tradition', { after: 'cursor' })}
+        position={{ page: 1, pages: 2 }}
+      />,
+    );
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 1 of 2');
+
+    rerender(
+      <GroupList
+        kind="tradition"
+        groups={[WARDS]}
+        nextHref={groupsHref('tradition', { after: 'cursor' })}
+      />,
+    );
+    expect(screen.getByRole('navigation', { name: 'Pages' })).not.toHaveTextContent(/Page \d/);
+  });
 });
 
 describe('groupsHref', () => {
   it("builds each page's address, keeping the cursor under a modal", () => {
     expect(groupsHref('form', {})).toBe('/admin/form-groups');
+    expect(groupsHref('tradition', {}, 'new')).toBe('/admin/deity-traditions?new');
     expect(groupsHref('form', { after: 'c' }, 'new')).toBe('/admin/form-groups?after=c&new');
     expect(groupsHref('category', { before: 'c' }, { edit: 'a b' })).toBe(
       '/admin/category-groups?before=c&edit=a+b',

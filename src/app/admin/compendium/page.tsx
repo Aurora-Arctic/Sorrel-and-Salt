@@ -9,10 +9,9 @@ import type {
   CompendiumListFilter,
 } from '../../../components/CompendiumList/types';
 import { NotFound } from '../../../lib/errors';
-import { DEFAULT_PAGE_SIZE, decodeCursor, resolvePage } from '../../../lib/pagination';
+import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { ConnectionArgs } from '../../../lib/types';
 import { countCompendium, listCompendium, resolveCompendiumSlug } from '@/modules/ingredients';
 import {
   NOMENCLATURE_KINDS,
@@ -39,20 +38,12 @@ const readCompendium = cache(
     before: string | undefined,
   ) => {
     const filter = { query: query || undefined, nomenclature, withoutReferences };
-    const args: ConnectionArgs = before
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
-    const page = await resolvePage(args, (request) => listCompendium(filter, request));
-    // "Page X of Y", counted from the page's first row as the categories' is.
-    const { totalCount, countBefore } = await countCompendium(
-      filter,
-      page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
+    // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
+    return resolveNumberedPage(
+      { after, before },
+      (request) => listCompendium(filter, request),
+      (start) => countCompendium(filter, start),
     );
-    const position = {
-      page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
-      pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
-    };
-    return { ...page, position };
   },
 );
 

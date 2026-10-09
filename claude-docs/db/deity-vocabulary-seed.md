@@ -17,14 +17,14 @@ specification: §5 states the model and points here.
 **Names are written as their tradition spells them in English**, one spelling
 each, and the seed copies them exactly: unlike §5's lower-case planet table,
 this one is already cased, and not every word is capitalised (`Manannan mac
-Lir`). Every name is plain ASCII, so a slug is the name lower-cased and
-hyphenated, and the other spellings a reader might type — _Hekate_, _Freyja_,
-_Bast_, _Guanyin_ — are in the description, which the autofill matches
-(§5). **A deity is filed under one tradition** even where several honour it:
+Lir`). Every name is plain ASCII, so a slug is the name and its tradition
+lower-cased and hyphenated (`apollo-greek`, MB.132), and the other
+spellings a reader might type — _Hekate_, _Freyja_, _Bast_, _Guanyin_ — are
+in the description, which the autofill matches (§5). **A deity is filed under one tradition** even where several honour it:
 Apollo is Greek, and his description says Roman too; Lilith is Akkadian and
 Babylonian, and hers names Jewish folklore. A practice that wants a second
-row, a Roman Apollo, can have one: uniqueness is on the slug, so it needs a
-name of its own, as the forms' `wax` does
+row, a Roman Apollo, can have one under the same name: the slug carries the
+tradition, `apollo-roman`, as a form's carries its group
 ([the form seed](form-vocabulary-seed.md)).
 
 **A tradition is a people or a religion, never a region**, the owner's call:

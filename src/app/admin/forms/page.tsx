@@ -1,19 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cache } from 'react';
-import IngredientFormValueList from '../../../components/IngredientFormValueList';
-import { formsHref } from '../../../components/IngredientFormValueList/href';
-import type { IngredientFormValueListEntry } from '../../../components/IngredientFormValueList/types';
+import GroupedValueList from '../../../components/GroupedValueList';
+import { groupedValuesHref } from '../../../components/GroupedValueList/href';
+import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
 import { NotFound } from '../../../lib/errors';
-import {
-  DEFAULT_PAGE_SIZE,
-  MAX_PAGE_SIZE,
-  decodeCursor,
-  resolvePage,
-} from '../../../lib/pagination';
+import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { ConnectionArgs } from '../../../lib/types';
 import {
   type IngredientFormValueFilter,
   countIngredientFormValues,
@@ -41,21 +35,12 @@ const readForms = cache(
     before: string | undefined,
   ) => {
     const filter: IngredientFormValueFilter = { query: query || undefined, groupId };
-    const args: ConnectionArgs = before
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
-    const page = await resolvePage(args, (request) => listIngredientFormValues(filter, request));
-    // "Page X of Y", counted from the page's first row as the categories'
-    // pager is: page floor(before / size) + 1 of ceil(total / size).
-    const { totalCount, countBefore } = await countIngredientFormValues(
-      filter,
-      page.pageInfo.startCursor ? decodeCursor(page.pageInfo.startCursor) : undefined,
+    // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
+    return resolveNumberedPage(
+      { after, before },
+      (request) => listIngredientFormValues(filter, request),
+      (start) => countIngredientFormValues(filter, start),
     );
-    const position = {
-      page: Math.floor((countBefore ?? 0) / DEFAULT_PAGE_SIZE) + 1,
-      pages: Math.max(1, Math.ceil(totalCount / DEFAULT_PAGE_SIZE)),
-    };
-    return { ...page, position };
   },
 );
 
@@ -99,7 +84,7 @@ async function readEdited(slug: string) {
 // retire (M5.6a), in M5.6's page shape: a modal over the list does the
 // writing, opened by the address — `?new`, or `?edit=<slug>` — so it can be
 // linked to and Back closes it
-// (claude-docs/components/ingredient-form-value-form.md, "On the admin page").
+// (claude-docs/components/grouped-value-form.md, "On the admin pages").
 // The list narrows by `?query=` and `?group=`, which every link here keeps,
 // as the categories page's does (MB.178).
 export default async function AdminFormsPage({ searchParams }: AdminFormsPageProps) {
@@ -121,15 +106,15 @@ export default async function AdminFormsPage({ searchParams }: AdminFormsPagePro
   const filter = { query, group: group?.slug ?? '' };
   const here = { ...filter, after, before };
   const groupNames = new Map(groups.map((each) => [each.id, each.name]));
-  const forms = page.edges.map(({ node }): IngredientFormValueListEntry => ({
+  const forms = page.edges.map(({ node }): GroupedValueListEntry => ({
     id: node.id,
     name: node.name,
     slug: node.slug,
     description: node.description,
     groupName: groupNames.get(node.groupId) ?? '',
-    editHref: formsHref(here, { edit: node.slug }),
+    editHref: groupedValuesHref('form', here, { edit: node.slug }),
   }));
-  const closeHref = formsHref(here);
+  const closeHref = groupedValuesHref('form', here);
 
   return (
     <main>
@@ -137,7 +122,7 @@ export default async function AdminFormsPage({ searchParams }: AdminFormsPagePro
           vocabulary page has it. */}
       <div className="page-header">
         <h1>Forms</h1>
-        <Link className="btn btn--solid" href={formsHref(here, 'new')}>
+        <Link className="btn btn--solid" href={groupedValuesHref('form', here, 'new')}>
           Add Form
         </Link>
       </div>
@@ -146,19 +131,20 @@ export default async function AdminFormsPage({ searchParams }: AdminFormsPagePro
           No form has that address — it may have been renamed or deleted.
         </p>
       )}
-      <IngredientFormValueList
-        forms={forms}
+      <GroupedValueList
+        kind="form"
+        values={forms}
         filter={filter}
         groups={groups}
         position={page.position}
         previousHref={
           page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
-            ? formsHref({ ...filter, before: page.pageInfo.startCursor })
+            ? groupedValuesHref('form', { ...filter, before: page.pageInfo.startCursor })
             : undefined
         }
         nextHref={
           page.pageInfo.hasNextPage && page.pageInfo.endCursor
-            ? formsHref({ ...filter, after: page.pageInfo.endCursor })
+            ? groupedValuesHref('form', { ...filter, after: page.pageInfo.endCursor })
             : undefined
         }
       />

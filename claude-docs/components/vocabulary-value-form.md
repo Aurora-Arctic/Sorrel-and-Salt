@@ -6,7 +6,7 @@ a description, saves through the vocabulary's own create or update mutation,
 and on an existing value offers a delete behind a confirmation. It holds no
 modal of its own: the page puts it in one.
 
-It is [`IngredientFormValueForm`](ingredient-form-value-form.md) without the
+It is [`GroupedValueForm`](grouped-value-form.md) without the
 group, and without the redirect question: a planet or a sign is no part of a
 compendium entry's identity or slug, so a rename moves no address. Everything
 that page says of field errors, required marks, the save rules and the
@@ -73,7 +73,7 @@ address — it may have been renamed or deleted." above the list.
 
 ## Styling
 
-IngredientFormValueForm's, under this name: the actions wrap, the delete
+GroupedValueForm's, under this name: the actions wrap, the delete
 sits at the far end, the required asterisk is `$secondary`, and the rename
 note sits a step above the actions. Nothing goes further before MB.115's
 design review.

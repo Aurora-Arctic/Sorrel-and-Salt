@@ -92,6 +92,10 @@ from … [join …] where …   -- no order, no limit
   so a `wordMatch` count sets 0.5 in its own transaction as the page does.
 - **A position, not an offset.** The count labels a page and never seeks one,
   so a cursor stays a key.
+- **`findPageCount` counts a `findPage` list** under the same sort and
+  `where`, for a list with no finder of its own: the three group pages count
+  through it (MB.132), where each vocabulary's own list keeps its own count
+  finder beside its own filter.
 
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like

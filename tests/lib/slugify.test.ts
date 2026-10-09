@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formSlug, ingredientSlug, slugify } from '@/lib/slugify';
+import { deitySlug, formSlug, ingredientSlug, slugify } from '@/lib/slugify';
 
 // These pin the options, not the package: what breaks silently is a change to
 // `strict` or the charmap extension.
@@ -107,5 +107,21 @@ describe('formSlug', () => {
     expect(formSlug('Testleaf', 'Fixture Group')).toBe(slugify('Testleaf Fixture Group'));
     expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testroot', 'Fixture Group'));
     expect(formSlug('Testleaf', 'Fixture Group')).not.toBe(formSlug('Testleaf', 'Fixture Other'));
+  });
+});
+
+// A deity's address carries its tradition (MB.132), as a form's carries its
+// group, so a Greek and a Roman Hecate hold two addresses.
+describe('deitySlug', () => {
+  it('joins the name and the tradition under the one slug rule', () => {
+    expect(deitySlug('Hecate', 'Greek')).toBe('hecate-greek');
+    expect(deitySlug('Hecate', 'Roman')).toBe('hecate-roman');
+    expect(deitySlug('Manannan mac Lir', 'Irish')).toBe('manannan-mac-lir-irish');
+  });
+
+  it('is exactly slugify of the two, so either moves it', () => {
+    expect(deitySlug('Testra', 'Fixture Folk')).toBe(slugify('Testra Fixture Folk'));
+    expect(deitySlug('Testra', 'Fixture Folk')).not.toBe(deitySlug('Mockra', 'Fixture Folk'));
+    expect(deitySlug('Testra', 'Fixture Folk')).not.toBe(deitySlug('Testra', 'Fixture Lore'));
   });
 });

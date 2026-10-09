@@ -1,6 +1,7 @@
 import { beginSeedTransaction } from './idempotent';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
-import { seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { deitySlug } from '../../lib/slugify';
+import { reslugItems, seedTwoTierVocabulary } from './two-tier-vocabulary';
 import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } from './types';
 
 // MB.127's deity vocabulary: thirty-five traditions and the deities filed
@@ -9,7 +10,8 @@ import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } fro
 // itself. Transcribed from the seed doc's two tables, which deities.test.ts
 // parses and compares row by row; the doc, not this file, is where a row is
 // argued and sourced. Names are copied as written, never title-cased
-// (`Manannan mac Lir`), and no slug is written down
+// (`Manannan mac Lir`), and no slug is written down — a deity's is its name and
+// its tradition's (MB.132), derived here and re-derived on every seed
 // (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 /** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
@@ -1510,5 +1512,12 @@ export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
     groupOf: (deity) => deity.tradition,
     toItemRow: (row, traditionId) => ({ ...row, traditionId }),
     itemNoun: 'Deity',
+    slugOf: (deity, traditionName) => deitySlug(deity.name, traditionName),
+  });
+  await reslugItems(tx, {
+    itemTable: deities,
+    groupTable: deityTraditions,
+    groupKey: deities.traditionId,
+    slugOf: deitySlug,
   });
 }

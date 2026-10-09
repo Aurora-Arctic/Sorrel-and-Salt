@@ -48,10 +48,11 @@ deleting a row at the same instant can see one entry written with it, the
 window MB.148 would let a lock close
 ([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
 The vocabulary writes keep the rule after the write: deleting a row a live
-entry holds — picks, for a form or a deity — is refused, and a rename carries onto the entries (M5.6a, MB.95,
-MB.132). Deleting a form group is not refused for the compendium: its forms
-move to another live group first, so they stay curated and no entry's pick
-is rewritten (M5.6b).
+entry holds — picks, for a form or a deity — is refused, and a rename carries
+onto the entries (M5.6a, MB.95, MB.132). Deleting a form group or a deity
+tradition is not refused for the compendium: its forms or deities move to
+another live one first, so they stay curated and no entry's pick is rewritten
+(M5.6b, MB.132).
 
 **The reach is the compendium's live rows.** A coven's ingredient, a
 soft-deleted entry, an id that names nothing and one that is not a uuid are

@@ -674,7 +674,7 @@ site admin's, through the compendium mutations
   `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
 "Testwort"? It leaves the compendium; a spell holding it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
-  [`CategoryForm`](category-form.md) asks. Delete sends
+  [`GroupedValueForm`](grouped-value-form.md) asks. Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
   as an alert above the fields.
@@ -687,7 +687,7 @@ site admin's, through the compendium mutations
   drops the question and sends nothing, the entry left as typed.
 
 **On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
-size from its address, as `/admin/categories` opens CategoryForm: `?new` an
+size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
 empty form, `?edit=<slug>` the entry at that slug, through
 `resolveCompendiumSlug`. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above
@@ -797,7 +797,7 @@ the row a list's box shares with Add, draws an entry's tooltip, and puts each
 label and its info tip, or a legend and its tip, on one positioned row, so an
 open tip lies above the label from the column's edge rather than hanging off
 the icon. The actions wrap on a narrow screen, an edit's Delete Ingredient
-pushed to the far end, away from the saves, as CategoryForm's Delete
+pushed to the far end, away from the saves, as GroupedValueForm's Delete
 Category is, and a question asked in their place sits a step below the
 fields. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap

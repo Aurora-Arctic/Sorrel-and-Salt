@@ -16,7 +16,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
 import { A, B, D, E, asUser } from '../../support/as-user';
-import { insertIngredient } from '../../support/db/insert-ingredient';
+import { insertDeityLink, insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
@@ -433,6 +433,55 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // A deity is a pick too (MB.167): what a deity's delete reads (MB.132), so
+  // only the entries holding a live link to this row answer, not every entry
+  // spelling it, nor one that picked a namesake.
+  describe('deityId', () => {
+    let hecate: string;
+    let hermes: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from deities where name in ('Hecate', 'Hermes') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      hecate = byName.get('Hecate') as string;
+      hermes = byName.get('Hermes') as string;
+    });
+
+    beforeEach(async () => {
+      await insertDeityLink(sql, await add('Fixture Picked'), hecate, 0, A.id);
+      const second = await add('Fixture Also Picked');
+      await insertDeityLink(sql, second, hermes, 0, A.id);
+      await insertDeityLink(sql, second, hecate, 1, A.id);
+      await add('Fixture Typed', { deities: ['Hecate'] });
+      await insertDeityLink(sql, await add('Fixture Hermes'), hermes, 0, A.id);
+      const coven = await add('Fixture Coven', { workspaceId: WORKSPACE_W_ID });
+      await insertDeityLink(sql, coven, hecate, 0, A.id);
+      const gone = await add('Fixture Gone');
+      await insertDeityLink(sql, gone, hecate, 0, A.id);
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+      const dropped = await add('Fixture Dropped');
+      const link = await insertDeityLink(sql, dropped, hecate, 0, A.id);
+      await sql`
+        update ingredient_deities set deleted_at = now(), deleted_by = ${A.id} where id = ${link}`;
+    });
+
+    it('lists the live compendium entries holding a live link to the deity, by name, and no other', async () => {
+      // Why the others could have been listed: each names Hecate, and four link her.
+      const [{ count }] = await sql`
+        select count(distinct ingredient_id)::int as count from ingredient_deities
+        where name = 'Hecate'`;
+      expect(count).toBe(6);
+
+      expect(await namesOf({ deityId: hecate })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
+      await expect(findCompendiumCount({ deityId: hecate }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+      expect(await namesOf({ deityId: hermes })).toEqual(['Fixture Also Picked', 'Fixture Hermes']);
+    });
+  });
+
   // The lists hold spellings, not picks (MB.162): what a planet's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
   // suggestions' fold.
@@ -736,5 +785,80 @@ describe('write.carryAstrologyRename', () => {
     await rename('zodiacSigns', 'Aries', 'The Ram');
 
     expect(await rowOf(id)).toMatchObject({ planets: ['Aries'], zodiac_signs: ['The Ram', 'Leo'] });
+  });
+});
+
+describe('write.carryDeityRename', () => {
+  const linkOf = async (id: string) =>
+    (await sql`select * from ingredient_deities where id = ${id}`)[0];
+  const rename = (deityId: string, name: string) =>
+    withAudit(asUser(E), (write) =>
+      write.carryDeityRename(assertSiteAdmin(asUser(E)), deityId, name),
+    );
+  let hecate: string;
+  let hermes: string;
+
+  beforeAll(async () => {
+    const rows = await sql`
+      select id, name from deities where name in ('Hecate', 'Hermes') and deleted_at is null`;
+    const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+    hecate = byName.get('Hecate') as string;
+    hermes = byName.get('Hermes') as string;
+  });
+
+  it('renames each live compendium link to the deity in place, stamped by the session', async () => {
+    const one = await add('Testwort');
+    await insertDeityLink(sql, one, hermes, 0, A.id);
+    const picked = await insertDeityLink(sql, one, hecate, 1, A.id);
+    const other = await insertDeityLink(sql, await add('Testleaf'), hecate, 0, A.id);
+    const before = await linkOf(picked);
+
+    const rows = await rename(hecate, 'Hekate');
+
+    expect(rows.map((row) => row.id).sort()).toEqual([picked, other].sort());
+    expect(await linkOf(picked)).toMatchObject({
+      id: picked,
+      name: 'Hekate',
+      deity_id: hecate,
+      position: before.position,
+      created_by: A.id,
+      updated_by: E.id,
+      deleted_at: null,
+    });
+    expect((await linkOf(other)).name).toBe('Hekate');
+  });
+
+  // Why each could have been written: each names Hecate, and all but the typed one link her.
+  it("leaves a coven's link, a deleted entry's, a dropped link, a typed name and another deity's as they were", async () => {
+    const coven = await insertDeityLink(
+      sql,
+      await add('Testwort', { workspaceId: WORKSPACE_W_ID }),
+      hecate,
+      0,
+      A.id,
+    );
+    const goneEntry = await add('Testgone');
+    const gone = await insertDeityLink(sql, goneEntry, hecate, 0, A.id);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${goneEntry}`;
+    const dropped = await insertDeityLink(sql, await add('Testdrop'), hecate, 0, A.id);
+    await sql`
+      update ingredient_deities set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
+    await add('Testtyped', { deities: ['Hecate'] });
+    const [typed] = await sql`select id from ingredient_deities where deity_id is null`;
+    const others = await insertDeityLink(sql, await add('Testherm'), hermes, 0, A.id);
+    const ids = [coven, gone, dropped, typed.id as string, others];
+    const before = await Promise.all(ids.map(linkOf));
+    expect(before.map((row) => row.name)).toEqual([
+      'Hecate',
+      'Hecate',
+      'Hecate',
+      'Hecate',
+      'Hermes',
+    ]);
+
+    const rows = await rename(hecate, 'Hekate');
+
+    expect(rows).toEqual([]);
+    expect(await Promise.all(ids.map(linkOf))).toEqual(before);
   });
 });

@@ -49,6 +49,12 @@ export interface PageCount {
   countBefore: number | null;
 }
 
+/** Where a page stands among them all, for a pager's "Page X of Y". */
+export interface PagePosition {
+  page: number;
+  pages: number;
+}
+
 export interface Page<T, Edge extends object = {}> {
   edges: ({ cursor: string; node: T } & Edge)[];
   pageInfo: {

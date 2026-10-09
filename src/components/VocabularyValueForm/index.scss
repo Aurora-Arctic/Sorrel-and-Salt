@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 
 // Layout only, on the form primitives; no styling past the tokens before the
-// admin section's design review (MB.115). IngredientFormValueForm's, under
-// this name.
+// admin section's design review (MB.115). GroupedValueForm's, under this
+// name.
 .vocabulary-value-form__actions {
   flex-wrap: wrap;
 }

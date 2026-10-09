@@ -3,16 +3,18 @@
 `src/components/AdminNav/` — the `/admin` layout's nav, a `<nav>` labelled
 "Admin" listing one link per admin-curated resource, in this order:
 
-| Label           | Route                    | Built by |
-| --------------- | ------------------------ | -------- |
-| Compendium      | `/admin/compendium`      | M5.5     |
-| Categories      | `/admin/categories`      | M5.6     |
-| Category groups | `/admin/category-groups` | M5.6b    |
-| Forms           | `/admin/forms`           | M5.6a    |
-| Form groups     | `/admin/form-groups`     | M5.6b    |
-| Planets         | `/admin/planets`         | MB.95    |
-| Zodiac signs    | `/admin/zodiac-signs`    | MB.95    |
-| Users           | `/admin/users`           | MB.52    |
+| Label            | Route                     | Built by |
+| ---------------- | ------------------------- | -------- |
+| Compendium       | `/admin/compendium`       | M5.5     |
+| Categories       | `/admin/categories`       | M5.6     |
+| Category groups  | `/admin/category-groups`  | M5.6b    |
+| Forms            | `/admin/forms`            | M5.6a    |
+| Form groups      | `/admin/form-groups`      | M5.6b    |
+| Planets          | `/admin/planets`          | MB.95    |
+| Zodiac signs     | `/admin/zodiac-signs`     | MB.95    |
+| Deities          | `/admin/deities`          | MB.132   |
+| Deity traditions | `/admin/deity-traditions` | MB.132   |
+| Users            | `/admin/users`            | MB.52    |
 
 It takes no props. `src/app/admin/layout.tsx` renders it above the page, after
 the guard has passed, so it appears for admins only
@@ -26,8 +28,9 @@ only too.
   admin resource to it adds its row here in its own PR, as `/admin/users`
   (MB.52) did: the user list is no curated resource, but it is where an admin
   acts on a person. A vocabulary's group page follows the vocabulary it
-  organises, Category groups after Categories and Form groups after Forms
-  (M5.6b, [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).
+  organises, Category groups after Categories, Form groups after Forms and
+  Deity traditions after Deities (M5.6b, MB.132;
+  [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).
 - **`<Link>`, now that every route exists.** `typedRoutes` refuses an `href`
   for a route the build does not contain, so the list was plain anchors until
   each of its pages had landed. M5.6b's two group pages were the last, and
@@ -56,8 +59,8 @@ the marker sat against the previous link. No tokens used.
 
 ## Testing
 
-`tests/components/AdminNav/index.test.tsx` covers the landmark's name and the
-six links, labels and routes, in order. `tests/app/admin/layout.test.tsx`
+`tests/components/AdminNav/index.test.tsx` covers the landmark's name and
+every link, its label and its route, in order. `tests/app/admin/layout.test.tsx`
 checks the layout renders it only once the guard resolves, and
 `tests/e2e/admin.spec.ts` that an admin sees it and a non-admin's 403 page
 carries none of it.

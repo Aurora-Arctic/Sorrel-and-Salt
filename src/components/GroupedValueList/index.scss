@@ -1,0 +1,38 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115). The table, the
+// chip, Edit and the pager are primitives (`.data-table`, `.chip`,
+// `.btn--small`, `.pager`).
+
+.grouped-value-list {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+
+  > p {
+    margin: 0;
+  }
+}
+
+// The user list's filter row: the fields and the button, wrapping.
+.grouped-value-list__search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: space(3) space(5);
+}
+
+// Running text that is not a `<p>`, so it takes the measure itself.
+.grouped-value-list__description {
+  max-width: $measure;
+}
+
+// More room in a category's row than the primitive gives, and its contents
+// centred, as the group list's: a chip and a small button stand taller than
+// a line of text (the owner's call). The category kind's alone, since only
+// its groups are drawn in chips. Under the list's class, which outranks the
+// primitive's `body` scope.
+.grouped-value-list--category .data-table td {
+  padding-block: space(3);
+  vertical-align: middle;
+}

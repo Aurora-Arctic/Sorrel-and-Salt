@@ -50,8 +50,40 @@ export const EditingAFormGroup: Story = () => (
   </Modal>
 );
 
+const TRADITIONS = [
+  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
+  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
+];
+
+export const AddingATradition: Story = () => (
+  <Modal title="Add Tradition" onClose={done}>
+    <GroupForm kind="tradition" groups={TRADITIONS} onDone={done} />
+  </Modal>
+);
+
+// Press Delete Tradition to see the move: its two deities to another tradition.
+export const EditingATradition: Story = () => (
+  <Modal title="Edit Tradition" onClose={done}>
+    <GroupForm
+      kind="tradition"
+      group={{
+        id: TRADITIONS[0].id,
+        name: 'Fixtural',
+        description: 'An invented tradition, for the workshop.',
+        colorDark: '',
+        colorLight: '',
+      }}
+      groups={TRADITIONS}
+      memberCount={2}
+      onDone={done}
+    />
+  </Modal>
+);
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategoryGroup.meta = { iframed: true };
 EditingACategoryGroup.meta = { iframed: true };
 EditingAFormGroup.meta = { iframed: true };
+AddingATradition.meta = { iframed: true };
+EditingATradition.meta = { iframed: true };

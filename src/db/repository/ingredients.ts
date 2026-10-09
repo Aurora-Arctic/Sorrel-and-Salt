@@ -329,6 +329,15 @@ function compendiumList(filter: IngredientFilter): {
       filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
       listArm(ingredients.planets, filter.planet),
       listArm(ingredients.zodiacSigns, filter.zodiacSign),
+      filter.deityId
+        ? existsIn(
+            ingredientDeities,
+            and(
+              eq(ingredientDeities.ingredientId, ingredients.id),
+              eq(ingredientDeities.deityId, filter.deityId),
+            ),
+          )
+        : undefined,
       filter.withoutReferences ? citesNothing() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),

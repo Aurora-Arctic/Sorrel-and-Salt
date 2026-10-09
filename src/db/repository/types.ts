@@ -358,6 +358,20 @@ export interface AuditWriter {
     to: string,
   ): Promise<IngredientRow[]>;
   /**
+   * Carry a curated deity's new name onto the compendium's links to it
+   * (MB.132): every live `ingredient_deities` row whose `deity_id` is
+   * `deityId` and whose ingredient is a live compendium entry takes `name`,
+   * in its place. A coven's link, a deleted entry's, a dropped link and a
+   * typed name are left alone and not returned; nothing of the entry itself
+   * moves, since a deity is no part of its identity or slug. Named for its
+   * tables, as `carryFormRename` is.
+   */
+  carryDeityRename(
+    admin: SiteAdmin,
+    deityId: string,
+    name: string,
+  ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
+  /**
    * Open a pause on admin role changes, stamped from the session (MB.62). No
    * row comes back while one is already open: the one-open index refuses a
    * second, and the call writes nothing rather than failing the transaction.
@@ -459,6 +473,12 @@ export interface IngredientFilter {
   planet?: string;
   /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
   zodiacSign?: string;
+  /**
+   * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
+   * (MB.167): how a deity's delete finds the entries holding it (MB.132). A
+   * uuid; the caller checks one first.
+   */
+  deityId?: string;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
@@ -612,6 +632,17 @@ export interface IngredientFormValueFilter {
   query?: string;
   /** Only the forms filed under this group. */
   groupId?: string;
+}
+
+/**
+ * What the admin deity list is narrowed by (MB.132), as `IngredientFormValueFilter`
+ * narrows the forms. Each part is optional, and absent means no filter.
+ */
+export interface DeityFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the deities filed under this tradition. */
+  traditionId?: string;
 }
 
 /** One provider account linked to a user, without the tokens its row holds. */

@@ -19,6 +19,7 @@ export {
   findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
+  findPageCount,
   findPageInWorkspace,
 } from './finders';
 export {
@@ -51,6 +52,8 @@ export {
   findCategoryPage,
   findCuratedRowsByIds,
   findCuratedRowsByName,
+  findDeityCount,
+  findDeityPage,
   findIngredientFormValueCount,
   findIngredientFormValues,
   findVocabularySuggestions,
@@ -74,6 +77,7 @@ export type {
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
+  DeityFilter,
   DeitySuggestion,
   FormRenameEntry,
   FormSuggestion,

@@ -1,3 +1,8 @@
+import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
+import type {
+  GroupedValueGroupOption,
+  GroupedValueListEntry,
+} from '@/components/GroupedValueList/types';
 import type { users } from '@/modules/identity/schema/users';
 import type { ViteUserConfig } from 'vitest/config';
 import type { ReactNode } from 'react';
@@ -111,20 +116,23 @@ export interface GroupedValue {
 }
 
 /**
- * One copy of the grouped-value form, as the tests its copies share drive it
+ * One kind of the grouped-value form, as the tests its kinds share drive it
  * (tests/support/grouped-value-form.tsx).
  */
 export interface GroupedValueFormSubject {
+  kind: GroupedValueKind;
   /** What Save, Saving and Delete name: `Category`, `Form`. */
   noun: string;
+  /** The group field's label, which also names its list: `Group`. */
+  groupLabel: string;
   /** The schema's refusal of a blank description. */
   describeRefusal: string;
+  /** The schema's refusal of an unchosen group. */
+  groupRefusal: string;
   /** The two groups it is rendered with, in the picker's order. */
   groups: readonly [{ id: string; name: string }, { id: string; name: string }];
   /** The value an edit starts from, filed under the second group. */
   value: GroupedValue;
-  /** The form, empty or editing `value`, calling `onDone` when it is done. */
-  render: (props: { onDone: () => void; editing: boolean }) => ReactNode;
   /** The create mutation's operation, and a successful answer to it. */
   create: { operation: string; data: Record<string, unknown> };
   /** The delete mutation's operation, and a successful answer to it. */
@@ -138,3 +146,31 @@ export type GroupedValueFormCase = [
   title: string,
   run: (subject: GroupedValueFormSubject) => void | Promise<void>,
 ];
+
+/**
+ * One kind of the grouped-value list, as tests/components/GroupedValueList
+ * drives every kind through the same rows.
+ */
+export interface GroupedValueListSubject {
+  kind: GroupedValueKind;
+  /** The page the list is on, which its links and its filter address: `/admin/categories`. */
+  path: string;
+  /** The filter form's name: `Filter categories`. */
+  filterName: string;
+  /** The group column's heading and the filter's label: `Group`. */
+  groupLabel: string;
+  /** The address parameter the filter names a group by: `group`. */
+  groupParam: string;
+  /** The group filter's first option: `All groups`. */
+  allGroups: string;
+  /** What an unfiltered empty list says: `No categories yet.`. */
+  noneYet: string;
+  /** What a filtered empty list says: `No category matches.`. */
+  noMatch: string;
+  /** Two rows as the page hands them over. */
+  entries: readonly [GroupedValueListEntry, GroupedValueListEntry];
+  /** Two live groups, alphabetical, as the filter offers them. */
+  groups: readonly [GroupedValueGroupOption, GroupedValueGroupOption];
+  /** Part of a name, as the filter's query. */
+  query: string;
+}

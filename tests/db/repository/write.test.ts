@@ -255,15 +255,19 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // matching only an entry that still picks the form. Twenty-two since MB.95,
   // whose planet and sign renames rewrite the compendium entries listing them,
   // for the same reason: the list is rewritten below the boundary, matching
-  // only an entry that still holds the old spelling. A twenty-third is the
-  // next such decision.
-  it('offers exactly twenty-two writer methods — a twenty-third is a decision, not a convenience', async () => {
+  // only an entry that still holds the old spelling. Twenty-three since
+  // MB.132, whose deity rename rewrites the compendium's links to the deity:
+  // `ingredient_deities` is the ingredients module's, so the rewrite is named
+  // below the boundary, matching only a live link whose entry is a live
+  // compendium row. A twenty-fourth is the next such decision.
+  it('offers exactly twenty-three writer methods — a twenty-fourth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
       [
         'acceptAdminInvitation',
         'carryAstrologyRename',
+        'carryDeityRename',
         'carryFormRename',
         'delete',
         'deleteLapsedSlugRetirements',
