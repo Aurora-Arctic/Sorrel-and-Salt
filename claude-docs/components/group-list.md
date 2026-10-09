@@ -13,13 +13,14 @@ There is no filter. A vocabulary of eight sections, or six, needs none, where th
 | `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                             |
 | `groups`                   | The page's groups: `{ id, name, slug, description, editHref }`, plus `colorDark`, `colorLight` for a category group |
 | `previousHref`, `nextHref` | The pager's links, none at either end                                                                               |
+| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                   |
 
 `groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's cursor, and `?new` or `?edit=<slug>` for a modal.
 
 ## Contracts
 
 - **Each Edit is a soft link**, named "Edit <name>" for a screen reader, so the page renders again with the modal open and Back closes it.
-- **The pager is soft**, as every admin list's is. No "Page X of Y": the groups have no count reader, and the list rarely runs past one page — the traditions' runs to two.
+- **The pager is soft**, as every admin list's is, and says "Page X of Y" when the page passes `position`, as each of the three group pages does, counted through `countCategoryGroups`, `countIngredientFormGroups` or `countDeityTraditions` from the page's first row (MB.132). The traditions run to two pages; the category and form groups to one, which the pager still names.
 - **No groups reads "No groups yet."**, and no traditions "No traditions yet."
 
 ## Styling

@@ -45,7 +45,8 @@ each keep to their own rules:
   `score` is the one so far. `count` adds `totalCount` and `countBefore` to
   the connection (below).
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
-  query (claude-docs/db/keyset-pages.md, "Keyset pages").
+  query, and `findPageCount` counts a `findPage` list
+  (claude-docs/db/keyset-pages.md, "Keyset pages").
 
 **A cursor is the sort key and the id, never an offset**: base64url of
 `{"k": [<part>, …], "i": <id>}`, one part per sort part. An offset moves when
@@ -72,7 +73,10 @@ type QueryCompendiumConnection {
 
 - **The client derives "Page X of Y".** For a page of `size` rows, the page
   is `floor(countBefore / size) + 1` and the number of pages is
-  `max(1, ceil(totalCount / size))`. "Showing 11–20 of 26" is
+  `max(1, ceil(totalCount / size))`. The admin pages, which read services
+  rather than the connection, do it once in `resolveNumberedPage`
+  (`src/lib/pagination.ts`), which reads a page through `resolvePage` and
+  counts it from its first row (MB.132). "Showing 11–20 of 26" is
   `countBefore + 1` to `countBefore + edges.length` of `totalCount`.
 - **A count, so it has no base to guess.** The first page's `countBefore` is
   0 because no rows come before it. The name is not `startIndex`: Google's
