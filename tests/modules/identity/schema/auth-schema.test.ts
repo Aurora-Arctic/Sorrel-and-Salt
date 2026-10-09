@@ -5,6 +5,9 @@ import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { rateLimits, sessions } from '@/modules/identity/schema/auth';
+import { warmImport } from '../../../support/warm-import';
+
+warmImport(() => import('@/lib/auth'));
 
 // Better Auth's `rateLimit` model for `storage: 'database'`: `key` unique,
 // `count`, and `lastRequest` a bigint of epoch milliseconds, which outgrows an

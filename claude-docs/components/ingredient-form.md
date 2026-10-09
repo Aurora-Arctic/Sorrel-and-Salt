@@ -872,21 +872,25 @@ workshop's global provider's: a second provider would split the cache, which
 
 ## Testing
 
-Four files hold the form's own tests, split along the owning layer (MB.181;
-[`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
-layer"): `index.test.tsx` for what needs the whole form, and three for parts
-of it on their own — `list-field.test.tsx` for a list field,
-`lookups.test.tsx` for the Form box and a list's box with their lookups, and
-`duplicates.test.tsx` for the name field and its warning. What the box, its
-chips, its handles and its closed-set variants do is Combobox's
+Seven files hold the form's own tests, split along the owning layer (MB.181,
+MB.182; [`testing/layer-ownership.md`](../testing/layer-ownership.md), "The
+owning layer"): `index.test.tsx` for what needs the whole form,
+`compendium.test.tsx` for what the compendium's mode changes, and five for
+parts of it on their own — `list-field.test.tsx` for a list field,
+`lookups.test.tsx` for the Form box and a list's box with their lookups,
+`duplicates.test.tsx` for the name field and its warning,
+`references.test.tsx` for the References field, and `reference-panel.test.tsx`
+for the new reference panel. What the box, its chips, its handles and its
+closed-set variants do is Combobox's
 (`tests/components/Combobox/index.test.tsx`, which also drives the select-only
 box by the keyboard), what the picker does is CategoryPicker's, and the
 debounce itself is `tests/lib/debounce.test.tsx`'s; none of it is repeated
-here. The lookups are answered through `tests/support/msw/ingredient-lookups.ts`,
-each recording the variables it was asked with, and run on fake timers that
-still advance, so the mocked answers arrive; a later answer wins, so a test
-about one answers it after rendering. Role and label queries only, in the
-`dom` project.
+here. The lookups are answered through
+`tests/support/msw/ingredient-lookups.ts`, each recording the variables it was
+asked with, and run on fake timers that still advance, so the mocked answers
+arrive; a later answer wins, so a test about one answers it after rendering.
+The panel's `CreateReference` is answered there too, by `acceptReference`.
+Role and label queries only, in the `dom` project.
 
 `tests/components/IngredientForm/index.test.tsx` mounts the whole form and
 answers `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a
@@ -1043,47 +1047,64 @@ with its tradition. `tests/support/sortable.ts`'s real 60 ms waits stay:
 fake timers would couple to the dnd sensor.
 
 **The references** are `tests/components/IngredientForm/references.test.tsx`
-(MB.154): the search asking only once the box is used and the typing
-settles, each source by its citation and tier after "Add a reference", and
-none already listed; a pick by click and by keyboard adding a row beneath
-the box, announced, the box emptied and focused; each row's locator
-labelled and read with its citation; the × and Backspace removing a row;
-Enter with nothing picked submitting nothing; each source sent by its id
-with its locator as typed and no citation, `[]` for none, and parsed by
-`LocalIngredientInput`; a server error naming a source on its row alone;
-Save & Add Another clearing them; a search left in the box, and an open
-panel, each stopping the save. The panel: opened by New Reference and by
-the create row, Kind focused and nothing else shown; each of the five
-kinds showing exactly its fields in order, the required ones marked; a
-chapter with no book and a web page with no address or day refused beside
-the fields, the first focused; a server field error on the element a
-resolver error uses; a refusal naming no field as an alert inside it; a
-save adding the new source by id and closing, the box focused; only the
-chosen kind's fields sent; Enter in a field saving the source and not the
-ingredient; Cancel; and, asked for again while open, Kind focused again
-with what was typed kept. And MB.154's formatting and checks: the
-Locator's tip read with its box; a locator, a title, an edition, a date
-range and a bare address each tidied as it is left; and a date with no year
-refused beside Published. The formats and checks themselves are tested
-where the schema is, `tests/modules/ingredients/validation/`
-(`reference-format.test.ts` and `reference.test.ts`), with the server's
-storing of them in `services/references.test.ts`.
+(MB.154), which renders `ReferencesField` alone (MB.182), in a
+`QueryClientProvider` and a form on the form's resolver, as `lookups.test.tsx`
+renders a list's box, and reads what the field sends from what the resolver
+hands the submit: the search asking about this coven only once the box is
+used; "Add a reference" first, then each source by its citation and tier, none
+already listed and no typed row; a pick by click and by keyboard adding a row
+beneath the box, announced, the box emptied and focused; each row's locator
+labelled and read with its citation and its tip, and tidied as it is left; the
+× and Backspace removing a row; Enter with nothing picked submitting nothing;
+a search left in the box, and an open panel, each stopping the save. The panel
+from the field: opened by New Reference and by the create row, each taking you
+to Kind, the row again while it is open; a source it saves listed by its id,
+the panel closed, the box focused, and sent with the ingredient; and Cancel
+closing it, adding nothing, the focus back in the box. Two tests mount the
+whole form, for what only it does with the field: each source sent by its id
+with its locator as typed and no citation, parsed by `LocalIngredientInput`,
+and the rows cleared, the panel shut, by Save & Add Another; and a server
+error naming a source on its row alone, the box focused — `fieldNameOf`'s
+references branch and the form's focus, which no list entry's test reaches.
+`[]` for no references is `index.test.tsx`'s whole-input test.
+
+`tests/components/IngredientForm/reference-panel.test.tsx` renders
+`ReferencePanel` alone, asked for again by a rerender that raises its
+`summons`, as New Reference does: Kind focused and nothing else shown as it
+opens, and Kind focused again, what was typed kept, when it is asked for
+again; each of the five kinds showing exactly its fields in order, the
+required ones marked; a resolver error beside its field, focused, with nothing
+sent, and a server field error on the element it uses; a refusal naming no
+field as an alert inside it; a save sending the coven and only the chosen
+kind's fields, a blank day as null, and handing back the saved source; Enter
+in a field saving the source, held back from the form around it; each field
+tidied by its own format as it is left; Save Reference held down, busy and
+saying so, with Cancel, while in flight; and Cancel sending nothing. The
+formats and checks themselves are tested where the schema is,
+`tests/modules/ingredients/validation/` — `reference-format.test.ts`, and
+`reference.test.ts` for a chapter with no book, a web page with no address or
+day, and a date with no year — with the server's storing of them in
+`services/references.test.ts`.
 
 **On the compendium** is `tests/components/IngredientForm/compendium.test.tsx`
-(M5.5), with the compendium mutations answered by MSW. A new entry: the
-classification marked required and a save refused without one; a create
-sent with `categoryIds: []` and `'open'`; Save & Add Another kept; Cancel
-offered when given; a near match linked where `duplicateHref` says. The
-lookups: every one asked with a null `workspaceId`; the vocabulary boxes
-offering the curated rows alone, flat, and no typed row; no Add on a planet, sign
-or deity; Enter on text not picked refused, the text kept; a save held while
-a pick-only box holds text, and on a typed form; substitutes from
-`compendium`, less the entry itself. An entry given: its values shown, one
-save, off until something changes; the update sent whole, its categories
-carried through, and shown picked with a new pick saved beside them; the duplicate warning leaving the entry out; MB.82's
-question, End Redirect & Save sending again with `endRedirect: true`, and
-Keep It sending nothing; a delete confirmed and `onDeleted` called; Keep It,
-and a refused delete's alert.
+(M5.5), holding only what the mode changes (MB.182), with the compendium
+mutations answered by MSW. A new entry: the classification marked required and
+a save refused without one, then a create sent with `categoryIds: []` and
+`'open'`, Save & Add Another kept; Cancel, and where a near match links, taken
+from the page. The lookups: every one asked with a null `workspaceId`, the
+Form box offering no typed row; no Add on a planet, sign or deity; substitutes
+from `compendium`, less the entry itself. The Form box and a deity's box
+alone, on `compendiumResolver`: the Form box offering the curated forms alone,
+flat, with no typed row; a save held while a pick-only box holds text, and on
+a typed form. What a pick-only list does on its own — the curated rows alone
+and flat, Enter on text not picked refused — is `list-field.test.tsx`'s. An
+entry given: its values shown, one save, off until something changes, and the
+update sent whole, its categories carried through; the duplicate warning
+leaving the entry out; MB.82's question, Keep It sending nothing and End
+Redirect & Save sending again with `endRedirect: true`; and a delete kept by
+Keep It, a refused delete's alert, and a confirmed delete calling `onDeleted`.
+An entry's categories shown picked, and a pick beside them sent, are
+CategoryPicker's and `index.test.tsx`'s.
 
 Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
 `npm run test:coverage`.

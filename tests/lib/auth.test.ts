@@ -1,6 +1,9 @@
 import { describe, expect, it, afterEach, vi } from 'vitest';
 import type { BetterAuthOptions } from 'better-auth';
 import { getAuthTables } from '@better-auth/core/db';
+import { warmImport } from '../support/warm-import';
+
+warmImport(() => import('@/lib/auth'));
 
 // Better Auth's own production check swallows its rejection and answers 200
 // on the default secret, so the repo enforces it synchronously before

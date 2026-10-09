@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getAuthTables } from 'better-auth/db';
 import { IMPERSONATION_PATHS, impersonationEnabled } from '@/lib/impersonation';
+import { warmImport } from '../support/warm-import';
+
+warmImport(() => import('@/lib/auth'));
 
 // MB.53: Better Auth's `admin` plugin is registered for impersonation alone,
 // and only where both conditions hold — the flag set, and a deploy target that
