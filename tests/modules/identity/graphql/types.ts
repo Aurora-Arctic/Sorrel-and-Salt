@@ -15,3 +15,11 @@ export interface UsersQueryResult {
     pageInfo: { hasNextPage: boolean; endCursor: string | null };
   };
 }
+
+export interface GrantedUserResult {
+  grantWorkspaceCreation: { id: string; canCreateWorkspace: boolean };
+}
+
+export interface RevokedUserResult {
+  revokeWorkspaceCreation: { id: string; canCreateWorkspace: boolean };
+}

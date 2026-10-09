@@ -5,6 +5,7 @@ import { userRole } from '../schema/users';
 import { setEmail } from '../services/email';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
+import { grantWorkspaceCreation, revokeWorkspaceCreation } from '../services/workspace-creation';
 import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
@@ -83,3 +84,35 @@ builder.queryField('users', (t) =>
     },
   }),
 );
+
+// M5.8's approval and its revoke: the site admin's alone, scoped here and
+// refused again by the service, which is the real gate. Each answers the row,
+// so the list re-reads it.
+const CREATION_WRITES = [
+  {
+    field: 'grantWorkspaceCreation',
+    description: 'Lets a user with no invitation create a coven. Refused once they may.',
+    write: grantWorkspaceCreation,
+  },
+  {
+    field: 'revokeWorkspaceCreation',
+    description:
+      'Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.',
+    write: revokeWorkspaceCreation,
+  },
+] as const;
+
+for (const { field, description, write } of CREATION_WRITES) {
+  builder.mutationField(field, (t) =>
+    t.field({
+      type: UserRef,
+      description,
+      args: { userId: t.arg.id({ required: true }) },
+      authScopes: { admin: true },
+      resolve: (_root, { userId }, { session }) => {
+        if (!session) throw new Forbidden();
+        return write(session, userId);
+      },
+    }),
+  );
+}

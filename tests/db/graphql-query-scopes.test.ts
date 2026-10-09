@@ -249,6 +249,10 @@ const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
+  grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
+  revokeWorkspaceCreation: write(
+    `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
+  ),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort" }) { id } }`,
   ),

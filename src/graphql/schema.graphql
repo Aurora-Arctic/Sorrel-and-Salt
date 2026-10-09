@@ -352,6 +352,14 @@ type Mutation {
   A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
   """
   deleteZodiacSign(id: ID!): ID!
+
+  """Lets a user with no invitation create a coven. Refused once they may."""
+  grantWorkspaceCreation(userId: ID!): User!
+
+  """
+  Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
+  """
+  revokeWorkspaceCreation(userId: ID!): User!
   setEmail(email: String!, next: String): User!
 
   """Replaces the category; the slug follows the name."""
