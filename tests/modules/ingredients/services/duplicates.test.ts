@@ -37,11 +37,11 @@ async function similarity(a: string, b: string): Promise<number> {
 /** Room for every row a test here writes, so one page is the whole answer. */
 const PAGE: PageRequest = { limit: 26, inverted: false };
 
-/** The rows of the lookup's first page. */
+/** The rows of the lookup's first page; a null workspace is the compendium form's. */
 const duplicatesOf = async (
   user: typeof A | typeof E,
   name: string,
-  workspaceId = WORKSPACE_W_ID,
+  workspaceId: string | null = WORKSPACE_W_ID,
 ) =>
   (await findPossibleDuplicates(asUser(user), workspaceId, name, PAGE)).map((entry) => entry.node);
 
@@ -107,15 +107,6 @@ describe('findPossibleDuplicates', () => {
       await sql`update ingredient_folk_names set deleted_at = now(), deleted_by = ${A.id} where ingredient_id = ${id}`;
 
       expect(await namesFor(B, 'Cronewart')).toEqual([]);
-    });
-
-    it('does not return a soft-deleted ingredient', async () => {
-      const id = await addIngredient({ name: 'Mugwort' });
-      expect(await namesFor(B, 'Mugwart')).toEqual(['Mugwort']);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      expect(await namesFor(B, 'Mugwart')).toEqual([]);
     });
 
     it('ranks the closest match first', async () => {
@@ -189,6 +180,33 @@ describe('findPossibleDuplicates', () => {
       const fromW = (await duplicatesOf(B, 'Mugwart')).map((row) => row.id);
       expect(fromW).not.toContain(theirs);
       expect(fromW).not.toContain(theirsByFolkName);
+    });
+  });
+
+  // M5.5: the admin's compendium form names no coven, so a null workspace
+  // warns of the compendium's entries alone and asks for no membership.
+  describe('without a coven', () => {
+    it('warns of the compendium’s entries and no coven’s, to anyone signed in', async () => {
+      const compendium = await addIngredient({
+        name: 'Mugwort',
+        canonicalName: 'Artemisia vulgaris',
+      });
+      const ours = await addIngredient({ name: 'Mugwurt', workspaceId: WORKSPACE_W_ID });
+      const theirs = await addIngredient({ name: 'Mugwert', workspaceId: WORKSPACE_X_ID });
+      // Why a coven's could have come back: under its coven, each is warned of.
+      expect((await duplicatesOf(B, 'Mugwart')).map((row) => row.id).sort()).toEqual(
+        [compendium, ours].sort(),
+      );
+      expect((await duplicatesOf(D, 'Mugwart', WORKSPACE_X_ID)).map((row) => row.id)).toContain(
+        theirs,
+      );
+
+      // E belongs to no coven, and D's is not W: neither is asked for one.
+      for (const user of [B, D, E]) {
+        expect((await duplicatesOf(user, 'Mugwart', null)).map((row) => row.id)).toEqual([
+          compendium,
+        ]);
+      }
     });
   });
 

@@ -9,24 +9,34 @@ import {
   countCompendium,
   createWorkspaceIngredient,
   createCompendiumEntry,
+  deitiesOf,
   deleteCompendiumEntry,
   findPossibleDuplicates,
   folkNamesOf,
   getIngredient,
   getWorkspaceIngredient,
   listCompendium,
+  referencesOf,
   resolveCompendiumSlug,
+  substitutesOf,
   suggestCommonNames,
+  suggestIngredients,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
-import { suggestForms } from '@/modules/vocabulary';
+import {
+  suggestDeities,
+  suggestForms,
+  suggestPlanets,
+  suggestZodiacSigns,
+} from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
 import {
   type IngredientFixture,
@@ -403,8 +413,10 @@ describe('a deleted entry', () => {
 
   const member = asUser(B);
 
-  // Every read an entry reaches anyone through — signed out, and a coven's
-  // member typing into a form — each asked whether it still shows this one.
+  // Every exported read an entry reaches anyone through — signed out, and a
+  // coven's member typing into a form — each asked whether it still shows
+  // this one: what owns the soft-delete filter of each, so no reader carries
+  // a one-off of its own.
   const READS: [string, (id: string) => Promise<boolean>][] = [
     [
       'the compendium list',
@@ -443,6 +455,35 @@ describe('a deleted entry', () => {
       },
     ],
     [
+      'its substitutes',
+      async (id) => {
+        const [listed] = await substitutesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its deities',
+      async (id) => {
+        const [listed] = await deitiesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its references',
+      async (id) => {
+        const [cited] = await referencesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    [
+      "a coven's substitute picker",
+      async (id) =>
+        (await suggestIngredients(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
       "a coven's duplicate warning",
       async (id) =>
         (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
@@ -463,10 +504,39 @@ describe('a deleted entry', () => {
           node.claimants.some((claimant) => claimant.name === 'Testwort'),
         ),
     ],
+    [
+      "a coven's planet suggestions",
+      async () =>
+        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Star',
+        ),
+    ],
+    [
+      "a coven's sign suggestions",
+      async () =>
+        (await suggestZodiacSigns(member, WORKSPACE_W_ID, 'fixture sign', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Sign',
+        ),
+    ],
+    [
+      "a coven's deity suggestions",
+      async () =>
+        (await suggestDeities(member, WORKSPACE_W_ID, 'fixture deity', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Deity',
+        ),
+    ],
   ];
 
   it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
-    const id = await seed({ folkNames: ['Test Root'], categories: ['Protection'] });
+    const id = await seed({
+      folkNames: ['Test Root'],
+      categories: ['Protection'],
+      substitutes: ['Fixture Stand-in'],
+      deities: ['Fixture Deity'],
+      planets: ['Fixture Star'],
+      zodiacSigns: ['Fixture Sign'],
+    });
+    await insertReferenceLink(sql, id, await insertReference(sql, {}, A.id), A.id);
     await sql`
       insert into retired_ingredient_slugs ${sql({
         ingredient_id: id,
@@ -870,18 +940,11 @@ describe('the slug', () => {
   });
 });
 
+// The redirect's window and what a retirement answers are
+// tests/db/repository/slugs.test.ts's (findCompendiumSlugRedirect), and the
+// service's answer for a moved slug is the READS table's 'the address it moved
+// off' row above: what stays here is the entry, and a coven's slug kept private.
 describe('resolveCompendiumSlug', () => {
-  const NOW = new Date('2026-03-01T12:00:00.000Z');
-  const EXPIRES = new Date('2026-08-28T00:00:00.000Z');
-
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(NOW);
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('answers the entry at its slug, with no session and no moved-away entry', async () => {
     const id = await seed();
 
@@ -890,20 +953,6 @@ describe('resolveCompendiumSlug', () => {
       entry: expect.objectContaining({ id }),
       movedAway: null,
     });
-  });
-
-  it('answers a slug an entry moved off with its current slug, until expires_at and not from it', async () => {
-    const id = await seed();
-    await updateCompendiumEntry(admin, id, entry({ name: 'Testwort, relabelled' }));
-
-    vi.setSystemTime(new Date(EXPIRES.getTime() - 1));
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
-      kind: 'moved',
-      slug: 'testwort-relabelled-herb-fixtura-testalis',
-    });
-
-    vi.setSystemTime(EXPIRES);
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).rejects.toThrow(NotFound);
   });
 
   it("answers NotFound for a coven's slug — its existence is private — and for one that names nothing", async () => {

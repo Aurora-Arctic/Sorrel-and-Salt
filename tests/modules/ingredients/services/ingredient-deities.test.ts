@@ -251,13 +251,17 @@ async function traditionOf(deity: string): Promise<string> {
   return row.tradition_id as string;
 }
 
+// One repeat proves the service parses its input before the index can
+// answer; the pick repeated and the name repeated are each the validation
+// test's (tests/modules/ingredients/validation/ingredient.test.ts).
 describe('a repeated deity', () => {
-  it.each([
-    ['pick', () => [picked(thor), typed('Testara'), picked(thor)]],
-    ['typed name, in another case', () => [typed('Testara'), picked(thor), typed(' tESTARA')]],
-  ])('is a field error pathed to the repeated %s, never the index’s 23505', async (_kind, list) => {
+  it('is a field error pathed to the repeated typed name, in another case, never the index’s 23505', async () => {
     const issues = await refusal(
-      createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Testwort', list())),
+      createWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        input('Testwort', [typed('Testara'), picked(thor), typed(' tESTARA')]),
+      ),
     );
 
     expect(issues).toEqual([expect.objectContaining({ path: ['deities', 2] })]);

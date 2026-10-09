@@ -604,35 +604,24 @@ describe('findOneIngredient', () => {
     localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
   });
 
-  it('answers a compendium row with no proof at all', async () => {
-    await expect(findOneIngredient([], compendiumId)).resolves.toMatchObject({
-      id: compendiumId,
-      workspaceId: null,
-    });
-  });
-
-  it("answers a workspace row under its own coven's proof only", async () => {
+  // The mechanism, once: the proofs AND a workspace row's coven onto the
+  // read, and the compendium tier answers beside them. Who may hold which
+  // proof, and the soft-delete filter of every reader built on this finder,
+  // are the services' (tests/modules/ingredients/services/compendium.test.ts,
+  // and the READS tables of compendium-entries and workspace-ingredients).
+  it("answers a workspace row under its own coven's proof only, the compendium under any", async () => {
     // Why the refusals below could have passed wrongly: the row is there, and
     // the right proof reaches it.
     await expect(findOneIngredient([inW], localId)).resolves.toMatchObject({ id: localId });
 
     await expect(findOneIngredient([], localId)).resolves.toBeUndefined();
     await expect(findOneIngredient([inX], localId)).resolves.toBeUndefined();
-  });
-
-  it('answers the compendium under any proof', async () => {
-    await expect(findOneIngredient([inX], compendiumId)).resolves.toMatchObject({
-      id: compendiumId,
-    });
-  });
-
-  it('answers nothing for a soft-deleted row, proof or not', async () => {
-    await sql`
-      update ingredients set deleted_at = now(), deleted_by = ${A.id}
-      where id in (${compendiumId}, ${localId})`;
-
-    await expect(findOneIngredient([], compendiumId)).resolves.toBeUndefined();
-    await expect(findOneIngredient([inW], localId)).resolves.toBeUndefined();
+    for (const proofs of [[], [inX]]) {
+      await expect(findOneIngredient(proofs, compendiumId)).resolves.toMatchObject({
+        id: compendiumId,
+        workspaceId: null,
+      });
+    }
   });
 });
 

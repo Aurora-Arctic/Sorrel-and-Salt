@@ -65,10 +65,14 @@ and their unique indexes are per ingredient. A `workspaceId` in the input is str
 and `insertInCompendium` would overwrite it if it were not.
 
 **A deleted entry is gone from every read and frees what it held** (M5.3).
-The service test asks each read an entry reaches anyone through — the list
-and its count, the read by id, its address and one it moved off, its folk
-names and categories, and a coven's duplicate warning and its common-name and
-form suggestions — whether it shows the entry, before the delete and after.
+The service test's `READS` table asks every exported read an entry reaches
+anyone through — the list and its count, the read by id, its address and one
+it moved off, its folk names, categories, substitutes, deities and
+references, and a coven's substitute picker, duplicate warning, and
+common-name, form, planet, sign and deity suggestions — whether it shows the
+entry, before the delete and after. The table is where each reader's
+soft-delete filter is proved, so no reader's own test carries a one-off
+(MB.187).
 It then adds the entry's formal name and form again under another label, the
 write the identity index refused while the entry was live: the index's
 `deleted_at IS NULL` is all that lets it through. The proof is on the formal

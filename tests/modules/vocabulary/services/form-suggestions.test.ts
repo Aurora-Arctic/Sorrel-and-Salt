@@ -209,19 +209,6 @@ describe('suggestForms', () => {
     it('offers a curated value nobody claims, with no claimants', async () => {
       expect(find(await all(asUser(B), 'ointment'), 'Ointment').claimants).toEqual([]);
     });
-
-    it('drops a soft-deleted ingredient from the claimants', async () => {
-      const id = await addIngredient({
-        name: 'Testwort',
-        workspaceId: WORKSPACE_W_ID,
-        form: 'root',
-      });
-      expect(find(await all(asUser(B), 'root'), 'Root').claimants).toHaveLength(1);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      expect(find(await all(asUser(B), 'root'), 'Root').claimants).toEqual([]);
-    });
   });
 
   describe('what counts as curated', () => {
