@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import altairPackage from 'altair-static/package.json';
+import { warmImport } from '../../../support/warm-import';
+
+warmImport(() => import('@/app/api/graphql/route'));
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
