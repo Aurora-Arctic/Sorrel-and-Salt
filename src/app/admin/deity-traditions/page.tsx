@@ -1,0 +1,132 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { cache } from 'react';
+import GroupList from '../../../components/GroupList';
+import { groupsHref } from '../../../components/GroupList/href';
+import type { GroupListEntry } from '../../../components/GroupList/types';
+import { NotFound } from '../../../lib/errors';
+import { DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
+import { requireAdminSession } from '../../../lib/request-session';
+import { readableCursor, single } from '../../../lib/search-params';
+import type { ConnectionArgs } from '../../../lib/types';
+import { countDeities, getDeityTraditionBySlug, listDeityTraditions } from '@/modules/vocabulary';
+import TraditionDialog from './tradition-dialog';
+import type { AdminDeityTraditionsPageProps, TraditionsSearchParams } from './types';
+
+export const metadata: Metadata = {
+  title: 'Deity Traditions — Admin — Sorrel & Salt',
+};
+
+// One page of the traditions, through the service `deityTraditions` reads,
+// paged by the M3.6 helper (CLAUDE.md rule 1, rule 8); the writes are the
+// modal's, through the tradition mutations. Cached so a second render in the
+// request reads once.
+const readPage = cache(async (after: string | undefined, before: string | undefined) => {
+  const args: ConnectionArgs = before
+    ? { last: DEFAULT_PAGE_SIZE, before }
+    : { first: DEFAULT_PAGE_SIZE, after };
+  return resolvePage(args, listDeityTraditions);
+});
+
+// Every tradition on one page of the maximum, for the delete's move picker:
+// thirty-five are seeded, and an admin adds one rarely.
+const readChoices = cache(async () => {
+  const page = await resolvePage({ first: MAX_PAGE_SIZE }, listDeityTraditions);
+  return page.edges.map(({ node }) => ({ id: node.id, name: node.name }));
+});
+
+/**
+ * The tradition `?edit=` names, and how many live deities it holds, which
+ * its delete must move; none when no live tradition holds the address.
+ */
+async function readEdited(slug: string) {
+  try {
+    const group = await getDeityTraditionBySlug(slug);
+    const { totalCount } = await countDeities({ traditionId: group.id }, undefined);
+    return { group, memberCount: totalCount };
+  } catch (error) {
+    if (error instanceof NotFound) return undefined;
+    throw error;
+  }
+}
+
+// The deity traditions, for an admin to add to, edit and retire (MB.132), in
+// the form groups' page shape (M5.6b): a modal over the list does the writing,
+// opened by the address — `?new`, or `?edit=<slug>` — so it can be linked to
+// and Back closes it (claude-docs/components/group-form.md, "On the admin
+// pages").
+export default async function AdminDeityTraditionsPage({
+  searchParams,
+}: AdminDeityTraditionsPageProps) {
+  await requireAdminSession();
+  const params: TraditionsSearchParams = await searchParams;
+  const after = readableCursor(single(params.after));
+  const before = after ? undefined : readableCursor(single(params.before));
+  const editSlug = single(params.edit);
+  const adding = params.new !== undefined;
+
+  const [page, choices, edited] = await Promise.all([
+    readPage(after, before),
+    readChoices(),
+    !adding && editSlug ? readEdited(editSlug) : undefined,
+  ]);
+  const here = { after, before };
+  const groups = page.edges.map(({ node }): GroupListEntry => ({
+    id: node.id,
+    name: node.name,
+    slug: node.slug,
+    description: node.description,
+    editHref: groupsHref('tradition', here, { edit: node.slug }),
+  }));
+  const closeHref = groupsHref('tradition', here);
+
+  return (
+    <main>
+      {/* The page's one primary action on its heading's line, as every admin
+          vocabulary page has it. */}
+      <div className="page-header">
+        <h1>Deity traditions</h1>
+        <Link className="btn btn--solid" href={groupsHref('tradition', here, 'new')}>
+          Add Tradition
+        </Link>
+      </div>
+      {!adding && editSlug && !edited && (
+        <p className="notice notice--error" role="alert">
+          No tradition has that address — it may have been renamed or deleted.
+        </p>
+      )}
+      <GroupList
+        kind="tradition"
+        groups={groups}
+        previousHref={
+          page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
+            ? groupsHref('tradition', { before: page.pageInfo.startCursor })
+            : undefined
+        }
+        nextHref={
+          page.pageInfo.hasNextPage && page.pageInfo.endCursor
+            ? groupsHref('tradition', { after: page.pageInfo.endCursor })
+            : undefined
+        }
+      />
+      {adding && <TraditionDialog title="Add Tradition" closeHref={closeHref} groups={choices} />}
+      {edited && (
+        <TraditionDialog
+          // A fresh form per tradition: one opened after another starts from its own values.
+          key={edited.group.id}
+          title="Edit Tradition"
+          closeHref={closeHref}
+          group={{
+            id: edited.group.id,
+            name: edited.group.name,
+            description: edited.group.description,
+            colorDark: '',
+            colorLight: '',
+          }}
+          groups={choices}
+          memberCount={edited.memberCount}
+        />
+      )}
+    </main>
+  );
+}

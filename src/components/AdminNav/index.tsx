@@ -17,6 +17,8 @@ const RESOURCES: readonly { href: Route; label: string }[] = [
   { href: '/admin/form-groups', label: 'Form groups' },
   { href: '/admin/planets', label: 'Planets' },
   { href: '/admin/zodiac-signs', label: 'Zodiac signs' },
+  { href: '/admin/deities', label: 'Deities' },
+  { href: '/admin/deity-traditions', label: 'Deity traditions' },
   { href: '/admin/users', label: 'Users' },
 ];
 

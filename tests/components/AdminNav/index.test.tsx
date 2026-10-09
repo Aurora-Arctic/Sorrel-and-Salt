@@ -12,7 +12,7 @@ describe('AdminNav', () => {
     expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
   });
 
-  it('lists the compendium, categories and their groups, forms and theirs, planets, zodiac signs and users, in that order', () => {
+  it('lists the compendium, categories and their groups, forms and theirs, planets, zodiac signs, deities and their traditions, and users, in that order', () => {
     render(<AdminNav />);
 
     const links = within(screen.getByRole('navigation', { name: 'Admin' })).getAllByRole('link');
@@ -24,6 +24,8 @@ describe('AdminNav', () => {
       ['Form groups', '/admin/form-groups'],
       ['Planets', '/admin/planets'],
       ['Zodiac signs', '/admin/zodiac-signs'],
+      ['Deities', '/admin/deities'],
+      ['Deity traditions', '/admin/deity-traditions'],
       ['Users', '/admin/users'],
     ]);
   });

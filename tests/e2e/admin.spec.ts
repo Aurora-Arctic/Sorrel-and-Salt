@@ -58,6 +58,8 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Form groups', '/admin/form-groups'],
     ['Planets', '/admin/planets'],
     ['Zodiac signs', '/admin/zodiac-signs'],
+    ['Deities', '/admin/deities'],
+    ['Deity traditions', '/admin/deity-traditions'],
   ]) {
     await expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
   }
@@ -593,4 +595,142 @@ test('an admin adds, renames and deletes a form group', async ({ page }) => {
   await editing.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(editing).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
+});
+
+test('a signed-in non-admin is refused at both deity pages with the 403 page', async ({ page }) => {
+  await signInAs(page, 'not-an-admin@admin-deities.test');
+
+  for (const path of ['/admin/deities?new', '/admin/deity-traditions?new']) {
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(403);
+    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  }
+});
+
+// MB.132: the curated deity vocabulary in the forms page's shape — each deity
+// under its tradition, its address its name and its tradition's.
+test('an admin adds, renames and deletes a deity in the modal over the list', async ({ page }) => {
+  await signInAs(page, 'an-admin@admin-deities.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/deities');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Deities — Admin — Sorrel & Salt');
+  await expect(page.getByRole('heading', { level: 1, name: 'Deities' })).toBeVisible();
+  // The seeded vocabulary pages 25 at a time, by tradition and then name.
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+  await expect(page.getByRole('navigation', { name: 'Pages' })).toContainText(/Page 1 of \d+/);
+
+  await page.getByRole('link', { name: 'Add Deity' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Deity' });
+  await expect(page).toHaveURL(/\/admin\/deities\?new$/);
+  await expect(adding.getByRole('button', { name: 'Save Deity' })).toBeDisabled();
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testra');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await adding.getByRole('combobox', { name: 'Tradition' }).click();
+  await adding.getByRole('option', { name: 'Greek', exact: true }).click();
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Deity' }).click();
+  await expect(adding).toHaveCount(0);
+
+  // Its address carries its tradition, which the list shows beside it.
+  await page.goto('/admin/deities?tradition=greek&query=aaa');
+  const row = page.getByRole('row', { name: /Aaa Testra/ });
+  await expect(row.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();
+  await row.getByRole('link', { name: 'Edit Aaa Testra' }).click();
+  const editing = page.getByRole('dialog', { name: 'Edit Deity' });
+  await expect(page).toHaveURL(
+    /\/admin\/deities\?query=aaa&tradition=greek&edit=aaa-testra-greek$/,
+  );
+  // A rename carries onto the compendium, and says so before it is saved.
+  const note = editing.getByText('Saving renames it on every compendium entry that picked it.');
+  await expect(note).toHaveCount(0);
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockra');
+  await expect(note).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Save Deity' }).click();
+  await expect(editing).toHaveCount(0);
+  const renamed = page.getByRole('row', { name: /Aaa Mockra/ });
+  await expect(renamed).toBeVisible();
+
+  await renamed.getByRole('link', { name: 'Edit Aaa Mockra' }).click();
+  await expect(page).toHaveURL(/edit=aaa-mockra-greek$/);
+  await editing.getByRole('button', { name: 'Delete Deity' }).click();
+  await expect(editing.getByText(/^Delete "Aaa Mockra"\?/)).toBeVisible();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa / })).toHaveCount(0);
+});
+
+test('an admin is told which compendium entries pick a deity before it can go', async ({
+  page,
+}) => {
+  await signInAs(page, 'held-admin@admin-deities.test', ['discord'], 'admin');
+  // The standard seed's Bay Laurel picks the curated Apollo, filed under Greek.
+  await page.goto('/admin/deities?edit=apollo-greek');
+  const editing = page.getByRole('dialog', { name: 'Edit Deity' });
+  await expect(editing.getByRole('textbox', { name: 'Name' })).toHaveValue('Apollo');
+
+  await editing.getByRole('button', { name: 'Delete Deity' }).click();
+  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
+
+  await expect(editing.getByRole('alert')).toContainText(
+    /^"Apollo" is among the deities of \d+ compendium entr(y|ies) — .+\. Take it off (its|their) deities first\.$/,
+  );
+  await page.goto('/admin/deities?edit=apollo-greek');
+  await expect(editing).toBeVisible();
+});
+
+// A tradition's rename re-slugs its deities, and its delete moves them to the
+// tradition the admin picks, re-slugged there.
+test('an admin adds and renames a tradition, then moves its deity before deleting it', async ({
+  page,
+}) => {
+  await signInAs(page, 'tradition-admin@admin-deities.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/deity-traditions?new');
+  expect(response?.status()).toBe(200);
+  await expect(page).toHaveTitle('Deity Traditions — Admin — Sorrel & Salt');
+  const adding = page.getByRole('dialog', { name: 'Add Tradition' });
+  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixtural');
+  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Tradition' }).click();
+  await expect(adding).toHaveCount(0);
+
+  await page.goto('/admin/deities?new');
+  const deity = page.getByRole('dialog', { name: 'Add Deity' });
+  await deity.getByRole('textbox', { name: 'Name' }).fill('Aaa Testra');
+  await deity.getByRole('textbox', { name: 'Description' }).fill('Filed under the tradition');
+  await deity.getByRole('combobox', { name: 'Tradition' }).click();
+  await deity.getByRole('option', { name: 'Aaa Fixtural', exact: true }).click();
+  await deity.getByRole('button', { name: 'Save Deity' }).click();
+  await expect(deity).toHaveCount(0);
+
+  await page.goto('/admin/deity-traditions?edit=aaa-fixtural');
+  const editing = page.getByRole('dialog', { name: 'Edit Tradition' });
+  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
+  await editing.getByRole('button', { name: 'Save Tradition' }).click();
+  await expect(editing).toHaveCount(0);
+  // The deity's address followed its tradition's name.
+  await page.goto('/admin/deities?edit=aaa-testra-aaa-mockish');
+  await expect(
+    page.getByRole('dialog', { name: 'Edit Deity' }).getByRole('textbox', { name: 'Name' }),
+  ).toHaveValue('Aaa Testra');
+
+  await page.goto('/admin/deity-traditions?edit=aaa-mockish');
+  await editing.getByRole('button', { name: 'Delete Tradition' }).click();
+  await editing.getByRole('combobox', { name: 'Move its 1 deity to' }).click();
+  await editing.getByRole('option', { name: 'Greek', exact: true }).click();
+  await editing.getByRole('button', { name: 'Continue' }).click();
+  await editing.getByRole('button', { name: 'Move and Delete' }).click();
+  await expect(editing).toHaveCount(0);
+  await expect(page.getByRole('row', { name: /Aaa Mockish/ })).toHaveCount(0);
+
+  await page.goto('/admin/deities?edit=aaa-testra-greek');
+  const moved = page.getByRole('dialog', { name: 'Edit Deity' });
+  await expect(moved.getByRole('combobox', { name: 'Tradition' })).toHaveText(/Greek/);
+  await moved.getByRole('button', { name: 'Delete Deity' }).click();
+  await moved.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(moved).toHaveCount(0);
 });
