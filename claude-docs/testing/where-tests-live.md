@@ -307,6 +307,14 @@ since Wave 3's schema tests landed (~92% of lines at M1.21), so
 that pulls a metric back under 80% — which is the threshold doing its job,
 not a defect.
 
+istanbul instruments at transform time, so a file's first import of a large
+graph — `@/lib/auth`, or the GraphQL route and its schema — costs more than it
+did under `v8`, and `vi.resetModules()` keeps the transform cache, so only that
+first import pays. A file that imports one inside its tests calls
+`warmImport` (`tests/support/warm-import.ts`) to pay it in a `beforeAll` with its
+own timeout instead: charged to a test, it overran the 5 s budget on CI's
+loaded runner (#737).
+
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
 (`vitest run --coverage`) both run all four projects — and neither runs
 `tests/acceptance/`, which `unit` and `dom` exclude and only
