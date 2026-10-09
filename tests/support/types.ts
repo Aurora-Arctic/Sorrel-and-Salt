@@ -77,6 +77,9 @@ export interface NavigatingProps {
   children: ReactNode;
 }
 
+/** The Better Auth instance `@/lib/auth` exports, as `importAuth` hands it back. */
+export type AuthInstance = (typeof import('@/lib/auth'))['auth'];
+
 /** One entry of oxlint's `--format json` report, as the lint guards read it. */
 export interface Diagnostic {
   code: string;

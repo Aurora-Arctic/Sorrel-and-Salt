@@ -26,6 +26,15 @@ four plus two rather than listing them twice is what stops the two sets
 drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
 the same builder object in both.
 
+**Where a table's audit columns are proved** (MB.188). Since every table
+spreads these same instances, what they declare — the four stamps required,
+the delete pair nullable, every id a key to `users.id` — is asserted once, in
+`tests/db/audit.test.ts`. That each table spreads them is its module schema
+test's exact column set, `[...OWN, ...AUDIT_COLUMNS]` or the stamp set, and
+that the migrated database carries them is `tests/db/audit-columns.test.ts`'s
+catalogue sweep ([`testing/db-harness.md`](../testing/db-harness.md), "The db
+test harness").
+
 `createdBy`/`updatedBy`/`deletedBy` carry
 `.references((): AnyPgColumn => users.id)` per DESIGN.md §5, including for
 `users`' own rows (`users.created_by -> users.id`, a genuine self-reference,

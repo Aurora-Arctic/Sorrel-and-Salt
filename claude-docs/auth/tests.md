@@ -17,6 +17,22 @@
   reusing one `import('@/lib/auth')` across cases in the same test file would
   otherwise replay the first result instead of re-evaluating against new
   env vars.
+- **`@/lib/auth` once per file whose env does not change (MB.188).** The
+  integration files that drive `auth.handler` — `tests/db/` account-linking,
+  email-change, email-verification, sign-in-landing, last-login-method,
+  oauth-token-encryption and impersonation, and
+  `tests/modules/identity/services/{admin-role,provisional-accounts}.test.ts`
+  and `tests/acceptance/08-email-and-admin.test.ts` — build Better Auth once,
+  in `beforeAll`, through `tests/support/auth-module.ts`'s
+  `importAuth(env)`: `vi.resetModules()`, the env applied for the import
+  alone, `import('@/lib/auth')`, the env restored. The module reads its
+  secret, provider credentials (`PROVIDER_CREDENTIALS` in
+  `tests/support/oauth.ts`), origin, limiter and impersonation flags at
+  import, so the `beforeAll` states the whole env the file runs under.
+  `ADMIN_BOOTSTRAP_EMAIL` is read per request, so a file or test that varies
+  it stubs it where it varies and needs no second import. `tests/lib/auth.test.ts`
+  and `tests/lib/impersonation.test.ts` still import per test, since the env
+  is what each of their cases varies.
 - **`tests/lib/auth.test.ts` (M2.3, MB.60 additions)** — asserts `role` and
   `canCreateWorkspace` are registered with `input: false`; calls
   `databaseHooks.user.create.before` directly (no real Better Auth request, no
@@ -39,7 +55,9 @@
   the harness re-clones per file, not per test.
 - **`tests/lib/auth.test.ts` (MB.66 additions)** — pins every
   `emailVerification` value, `requireLocalEmailVerified` at its default, no
-  provider requiring verification, and the Facebook and Microsoft mappers.
+  provider requiring verification. The Facebook and Microsoft mappers' pin went
+  in MB.188: `tests/db/email-verification.test.ts`'s "which providers vouch"
+  is their behaviour, and the placeholder mapping test keeps the rest.
 - **`tests/db/email-verification.test.ts` (MB.66)** — the same
   `auth.handler` round trip, through `tests/support/oauth.ts` (shared with
   the admin-role test), with `@/lib/mail` mocked. A sign-up mails once and
@@ -48,21 +66,21 @@
   succeeds from the owner's session, so the refusal was the session's. Each
   stamp assertion first hands `updated_by` to the bootstrap user, because
   the create hook already stamps a new row as itself. MB.68 adds the
-  promotion: a Microsoft-only owner is promoted by following the link from
-  their own session and by nothing else; the refusals from another browser
-  and from none leave the role alone and the owner's session then promotes,
-  so it was the session binding that refused; and a change link to the
-  bootstrap address, minted by hand, is sent to sign-in from no session with
-  the row unchanged, then swaps the address and promotes from the row's own
-  session. `tests/modules/identity/services/admin-role.test.ts`
-  covers `promotePrimaryAdminAtVerification`'s outcomes directly.
+  promotion's wiring: a Microsoft-only owner is promoted by following the
+  link from their own session, and a change link to the bootstrap address,
+  minted by hand, is sent to sign-in from no session with the row unchanged,
+  then swaps the address and promotes from the row's own session. The link's
+  refusals are the file's own "following the link" cases, and which address
+  promotes is `tests/modules/identity/services/admin-role.test.ts`'s, which
+  covers `promotePrimaryAdminAtVerification`'s outcomes directly (MB.188).
 - **The email page (MB.54, MB.111, MB.113)** —
   `tests/modules/identity/services/email.test.ts` (the service, with a fake
   sender), `tests/modules/identity/graphql/set-email.test.ts` (the
   mutation's `next` reaching the sender), `tests/db/email-change.test.ts`
-  (the whole round trip through Better Auth's endpoints, including that an
-  aged verified account survives the sweep before and after a change, and
-  the change and resend links' landings), `tests/db/email-verification.test.ts`
+  (the whole round trip through Better Auth's endpoints, the one-a-minute
+  resend and the change and resend links' landings; that a change leaves a
+  verified account outside the sweep is `email.test.ts`'s untouched row and
+  `provisional-accounts.test.ts`'s never-swept verified row), `tests/db/email-verification.test.ts`
   (the sign-up link's landing and its refusals), `tests/lib/account-email.test.ts`
   (`verifiedLanding` and `returnPathOf`), `tests/lib/auth.test.ts` (the
   placeholder mapping), `tests/app/account/email/page.test.tsx` (where
@@ -80,9 +98,11 @@
   in its body and landing under another user's session, which still attaches
   to its starter; `/link-social` with no session; and unlinking. A removed
   provider is refused again, the last one survives, and a stranger holding
-  two providers cannot remove the owner's. `tests/lib/auth.test.ts` pins
-  `allowDifferentEmails` and `allowUnlinkingAll`, and
-  `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
+  two providers cannot remove the owner's. The different-address link and the
+  last-provider refusal are `allowDifferentEmails` and `allowUnlinkingAll`
+  in behaviour, so `tests/lib/auth.test.ts` no longer pins either (MB.188);
+  it still pins `trustedProviders` empty, which this file proves for
+  Microsoft alone. `tests/e2e/account.spec.ts` scans `/account` signed in (`tests/e2e/session.ts`).
 - **`tests/db/rate-limiting.test.ts` (MB.76)**: `/sign-in/social` through
   `auth.handler` at the staging origin, at `NODE_ENV=production` with Vitest's
   `TEST` cleared. Better Auth reads `NODE_ENV` once, as it loads, so the stub
@@ -97,16 +117,17 @@
 - **`tests/db/oauth-token-encryption.test.ts` (MB.76)**: a Google sign-in
   stores an access token that is not the one issued, and `getAccessToken`
   hands back the one issued; a token overwritten in plaintext still reads.
-  `tests/lib/auth.test.ts` pins the limiter's `enabled`, `storage` and
-  header, `encryptOAuthTokens`, and the three session lifetimes.
+  `tests/lib/auth.test.ts` pins the limiter's `enabled` and the three session
+  lifetimes; `storage`, the header and `encryptOAuthTokens` are proved by
+  the two files above, so their pins went in MB.188.
 - **`tests/db/last-login-method.test.ts` (MB.77)**: through `auth.handler`
   on `tests/support/oauth.ts`. A verified callback sets the last-used cookie to
   its provider, without `HttpOnly`, and so does an unverified one landing on
   the email page. `/sign-in/social` alone, a callback refused with
   `account_not_linked`, and a link callback set none. Each case first asserts
   whether the session cookie was set, since that is what the plugin keys on.
-  `tests/lib/auth.test.ts` pins the plugin's options to the shared cookie name
-  alone and asserts Better Auth's `user` table gains no `lastLoginMethod`.
+  `tests/lib/auth.test.ts` asserts Better Auth's `user` table gains no
+  `lastLoginMethod`; the shared cookie name is this file's (MB.188).
 - **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and `NotFound`
   are distinguishable by type in a `catch` and in an
   `expect().rejects.toThrow(Class)`, and that neither an empty list nor a
@@ -117,7 +138,7 @@
 - **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
-  `false` default, every `...auditColumns` field present, and the email
+  `false` default, the exact column set with the audit spread (MB.188), and the email
   index being a partial unique index (`WHERE deleted_at IS NULL`) rather
   than a plain unique constraint. It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
@@ -143,9 +164,9 @@
   template carried no schema, so a test asserting these tables exist in a
   cloned `sorrel_test_<n>` database would have failed regardless of whether
   the migration was correct. Every clone now carries the full schema, and
-  `tests/db/updated-at-trigger.test.ts` reads `accounts`, `sessions` and
+  `tests/db/audit-columns.test.ts` reads `accounts`, `sessions` and
   `verifications` from the catalogue as its named counter-example — the
-  three tables that carry `updated_at` and no trigger.
+  three tables that carry `updated_at` and no audit id, and so no trigger.
 - **`tests/acceptance/01-accounts.test.ts` (M2.1)** — stories 1 and 2,
   deliberately red. Both are blocked on UI Wave 6 hasn't built yet, not on the
   auth wiring: story 1 checks for `/sign-in` (DESIGN.md §9) at

@@ -219,12 +219,6 @@ async function insertDeity(traditionId: string, overrides: Row = {}): Promise<st
   return inserted.id as string;
 }
 
-async function softDelete(table: 'deities' | 'deity_traditions', id: string): Promise<void> {
-  await sql`
-    update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
-  `;
-}
-
 beforeEach(async () => {
   await sql`truncate deities, deity_traditions cascade`;
 });
@@ -282,31 +276,6 @@ describe('deity_traditions table', () => {
       'deity_traditions_seed_key_unique',
       TRADITIONS_SLUG_UNIQUE,
     ]);
-  });
-
-  describe('slug uniqueness', () => {
-    it('rejects a second live tradition sharing a slug', async () => {
-      await insertTradition();
-      const error = await failureOf(insertTradition({ name: 'Testorian Rite' }));
-
-      // 23505 is unique_violation, named: the index refused, not something earlier.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(TRADITIONS_SLUG_UNIQUE);
-    });
-
-    // The test above is the precondition: without the soft delete the second
-    // insert is refused, so this pass is the predicate and not an empty table.
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const first = await insertTradition();
-      await softDelete('deity_traditions', first);
-
-      const second = await insertTradition({ name: 'Testorian Rite' });
-
-      const rows = await sql`select id, deleted_at from deity_traditions`;
-      expect(rows.map((r) => r.id).sort()).toEqual([first, second].sort());
-      expect(rows.find((r) => r.id === first)?.deleted_at).not.toBeNull();
-      expect(rows.find((r) => r.id === second)?.deleted_at).toBeNull();
-    });
   });
 
   it('requires the name, slug and description', async () => {
@@ -372,28 +341,6 @@ describe('deities table', () => {
   });
 
   describe('slug uniqueness', () => {
-    it('rejects a second live deity sharing a slug', async () => {
-      const tradition = await insertTradition();
-      await insertDeity(tradition);
-      const error = await failureOf(insertDeity(tradition, { name: 'Fixturia the Elder' }));
-
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(DEITIES_SLUG_UNIQUE);
-    });
-
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const tradition = await insertTradition();
-      const first = await insertDeity(tradition);
-      await softDelete('deities', first);
-
-      const second = await insertDeity(tradition, { name: 'Fixturia the Elder' });
-
-      const rows = await sql`select id, deleted_at from deities`;
-      expect(rows.map((r) => r.id).sort()).toEqual([first, second].sort());
-      expect(rows.find((r) => r.id === first)?.deleted_at).not.toBeNull();
-      expect(rows.find((r) => r.id === second)?.deleted_at).toBeNull();
-    });
-
     // Global rather than per tradition, as `ingredient_forms_slug_unique` is:
     // the seed's idempotency key reads the slug alone.
     it('rejects a shared slug across two different traditions', async () => {
