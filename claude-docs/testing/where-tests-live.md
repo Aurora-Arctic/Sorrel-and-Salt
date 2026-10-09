@@ -32,8 +32,11 @@ Three consequences worth knowing before writing a test:
   `tests/db/` or `tests/modules/` lands in `unit` or `dom`, against the
   plain `sorrel` database; of those two, a `.tsx` file gets jsdom and a
   `.ts` file gets plain node unless the config's `DOM_TS` names it (MB.97).
-  A test that has to watch a server render is under `tests/rsc/`, or React's
-  `cache()` is a pass-through and there is nothing to watch.
+  The one exception runs the other way: a file under those two trees that
+  never reaches the database is named in the config's `DB_FREE` and runs in
+  `unit` (MB.189; `db`, below). A test that has to watch a server render is
+  under `tests/rsc/`, or React's `cache()` is a pass-through and there is
+  nothing to watch.
 
 `tests/guards/test-location.test.ts` holds the rule. It is a test rather than
 a lint rule because Oxlint has no custom-rule API and cannot express a
@@ -71,9 +74,13 @@ Reading a file's contents stays in the guard; it is the listing that is
 shared, not the reading.
 
 - **`unit`** — `environment: 'node'`, `globals: true`. `include`s
-  `tests/**/*.test.ts`, excluding `tests/db/**`, `tests/modules/**`,
-  `tests/rsc/**`, `tests/acceptance/**`, `tests/e2e/**` and the two `DOM_TS`
-  files `dom` claims (below). That glob does reach a test inside a directory
+  `tests/**/*.test.ts`, excluding every file `db` runs, `tests/rsc/**`,
+  `tests/acceptance/**`, `tests/e2e/**` and the two `DOM_TS` files `dom`
+  claims (below). `db`'s files are listed by a `globSync` when the config
+  loads rather than excluded as two trees, since Vitest's `exclude` takes no
+  negation and `DB_FREE` could not be carved back out of them; a file added
+  under those trees during a watch session is in both projects until the
+  session restarts. That glob does reach a test inside a directory
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming. Its one setup file is `tests/support/setup-msw.ts`, the MSW
@@ -135,7 +142,12 @@ shared, not the reading.
     - a `localStorage` polyfill (`Object.defineProperty(window,
 'localStorage', …)` with a minimal in-memory `Storage` class),
       because Node's own native `localStorage` global shadows jsdom's once
-      Vitest merges jsdom's `window` into the global scope.
+      Vitest merges jsdom's `window` into the global scope;
+    - an `afterEach` emptying that `localStorage` (MB.189), as `cleanup()`
+      empties the document, so nothing one test stores is there for the next.
+      Until then `vitest-setup.test.tsx`'s "starts empty" passed only because
+      the test before it called `clear()` itself; that test now leaves an item
+      behind, so the hook is the only thing that can empty it.
     - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each
       hook's effect directly rather than testing the setup files themselves.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
@@ -168,15 +180,33 @@ shared, not the reading.
     override from one test never leaks into the next.
     Covered by `tests/support/msw/graphql.test.ts`.
 - **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
-  `tests/modules/**/*.test.ts`. The `tests/db/**` half is real as of Wave 1
+  `tests/modules/**/*.test.ts`, and `exclude`s the config's `DB_FREE`
+  (MB.189): the files under those trees that never reach a database, which
+  run in `unit` instead of waiting on a fresh clone before each. They are
+  `tests/modules/**/validation/**` — Zod schemas, which run in the browser
+  too — and `tests/db/audit.test.ts` (`applyAudit` and the audit column
+  instances), `tests/db/bootstrap.test.ts` (a constant),
+  `tests/db/repository/index.test.ts` (that loading the repository builds
+  `users`; it opens no connection), `tests/modules/coven/schema/workspaces-schema.test.ts`
+  (Drizzle's introspection of the table), `tests/modules/coven/services/access-control.test.ts`
+  (the permission matrix), `tests/modules/identity/services/site-admin.test.ts`
+  and `workshop-access.test.ts` (checks that read the session alone), and
+  `tests/modules/ingredients/schema/units.test.ts` (the unit vocabulary).
+  They stay where they mirror `src/`, which is why it is a list.
+  `tests/guards/db-project-queries.test.ts` holds every file left in `db` to
+  reaching the database — the harness client (`useTestDatabase`), a
+  `postgres` client of its own, a seeded clone, the repository's probe
+  tables, a fixture user's session (`as-user`), or the repository or
+  connection imported — and asserts that none of `DB_FREE`'s files carries
+  one, so its markers tell the two kinds apart; a database-free file added to
+  `db` fails there until it is named in `DB_FREE`. The `tests/db/**` half is real as of Wave 1
   (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts
   against the real table (`tests/db/seeded-template.test.ts` states that
   baseline) and no file builds tables of its own. The `tests/modules/**` half
-  is real as of M6.3 (`membership`, `access-control`) — a service test lands
-  here rather than in `unit` because a service reads Postgres, and the split is
-  a path glob. Nothing in this
+  is real as of M6.3 (`membership`) — a service test lands here rather than
+  in `unit` because a service reads Postgres, and the split is a path glob. Nothing in this
   project's config ever points at
   Neon (`Docker/docker-compose.yaml`'s `postgres` service publishes **5432**
   for exactly this — "the host-side Vitest `db` project").

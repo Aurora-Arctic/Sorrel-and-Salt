@@ -82,7 +82,16 @@ MB.115's design review.
 ## Testing
 
 `tests/components/CategoryForm/index.test.tsx`, with the mutations answered by
-MSW in the route's own shape. The page's half, the address opening and closing
-the modal, is `tests/app/admin/categories/page.test.tsx`. The e2e spec adds,
+MSW in the route's own shape. The nine tests it shares with
+`IngredientFormValueForm` — autofill, the required marks, the save rules, the
+schema's refusal, the busy Save, the slug refusal, Cancel and the confirmed
+delete — are rows of `tests/support/grouped-value-form.tsx`, which each file
+runs under its own describe, so a third copy of the form is a row rather than
+a file (MB.189). The page's half is `tests/app/admin/categories/page.test.tsx`:
+`?new` opening the empty modal without a read, `?edit=` reading the category
+by its slug and filling the modal from it, a slug no category holds an alert
+and any other failure thrown, and the modal closing back to the page, filter
+and cursor included, that it opened over. What the modal shows once open is
+this file's. The e2e spec adds,
 renames and deletes a category through the real server, and is refused
 deleting Protection, which seeded compendium entries are filed under.

@@ -127,8 +127,7 @@ describe('the /admin/category-groups page', () => {
     await renderPage({ new: '' });
 
     const dialog = screen.getByRole('dialog', { name: 'Add Category Group' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
-    expect(within(dialog).getByRole('textbox', { name: 'Dark Theme Colour' })).toHaveValue('');
+    expect(within(dialog).getByRole('textbox', { name: 'Dark Theme Colour' })).toBeInTheDocument();
     expect(getCategoryGroupBySlug).not.toHaveBeenCalled();
   });
 

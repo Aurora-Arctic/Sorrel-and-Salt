@@ -35,6 +35,9 @@ describe('setup-dom.ts — localStorage polyfill', () => {
     window.localStorage.setItem('b', '2');
     window.localStorage.clear();
     expect(window.localStorage.length).toBe(0);
+
+    // Left behind for the next test, so only the hook can have emptied it.
+    window.localStorage.setItem('left-behind', 'yes');
   });
 
   it('starts empty in a fresh test, proving state does not leak between tests', () => {

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -10,7 +10,11 @@ import type { PageRequest } from '@/lib/types';
 // vocabulary under the address's filter and the form groups, and the modal its
 // address opens — `?new` empty, `?edit=` a form by slug. The guard and the services are mocked: what
 // they decide is tests/lib/request-session.test.ts's and
-// tests/modules/vocabulary's.
+// tests/modules/vocabulary's. This file holds the page's half — the address
+// read into service calls, the guard, NotFound against any other error, and
+// what the page builds for the list and the modal; how the list and the form
+// behave given those props is their own tests'
+// (claude-docs/testing/layer-ownership.md, "The owning layer").
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -185,8 +189,12 @@ describe('the /admin/forms page', () => {
     await renderPage({ new: '' });
 
     const dialog = screen.getByRole('dialog', { name: 'Add Form' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
-    expect(within(dialog).getByRole('button', { name: 'Save Form' })).toBeDisabled();
+    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Group' }));
+    expect(
+      within(screen.getByRole('listbox', { name: 'Group choices' }))
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['Fixture Mineral', 'Fixture Substance']);
     expect(getIngredientFormValueBySlug).not.toHaveBeenCalled();
   });
 
@@ -202,7 +210,6 @@ describe('the /admin/forms page', () => {
     expect(within(dialog).getByRole('combobox', { name: 'Group' })).toHaveTextContent(
       'Fixture Substance',
     );
-    expect(within(dialog).getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
   });
 
   it('says so, and opens nothing, when ?edit= names no form', async () => {
@@ -320,12 +327,17 @@ describe('the /admin/forms filter', () => {
     );
   });
 
-  it('says no form matches when the filter finds none', async () => {
+  // What the list says of it is the list's own test's.
+  it('counts a page the filter leaves empty from no row', async () => {
     listIngredientFormValues.mockResolvedValue([]);
     countIngredientFormValues.mockResolvedValue({ totalCount: 0, countBefore: undefined });
 
     await renderPage({ query: 'nothing' });
 
-    expect(screen.getByText('No form matches.')).toBeInTheDocument();
+    expect(countIngredientFormValues).toHaveBeenCalledWith(
+      { query: 'nothing', groupId: undefined },
+      undefined,
+    );
+    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
   });
 });

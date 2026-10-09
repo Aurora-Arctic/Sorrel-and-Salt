@@ -47,3 +47,9 @@ Object.defineProperty(window, 'localStorage', {
   writable: true,
   configurable: true,
 });
+
+// Emptied after every test, as the render is: what one test stores — a theme,
+// a remembered choice — is not there for the next to find.
+afterEach(() => {
+  window.localStorage.clear();
+});

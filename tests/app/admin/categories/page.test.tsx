@@ -10,7 +10,11 @@ import type { PageRequest } from '@/lib/types';
 // vocabulary under the address's filter and the groups, and the modal its
 // address opens — `?new` empty, `?edit=` a category by slug. The guard and the services are mocked: what they
 // decide is tests/lib/request-session.test.ts's and
-// tests/modules/vocabulary/services/categories.test.ts's.
+// tests/modules/vocabulary/services/categories.test.ts's. This file holds the
+// page's half — the address read into service calls, the guard, NotFound
+// against any other error, and what the page builds for the list and the
+// modal; how the list and the form behave given those props is their own
+// tests' (claude-docs/testing/layer-ownership.md, "The owning layer").
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -155,8 +159,8 @@ describe('the /admin/categories page', () => {
   it('opens the empty modal on ?new', async () => {
     await renderPage({ new: '' });
 
-    const dialog = screen.getByRole('dialog', { name: 'Add Category' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
+    expect(screen.getByRole('dialog', { name: 'Add Category' })).toBeInTheDocument();
+    expect(getCategoryBySlug).not.toHaveBeenCalled();
   });
 
   it("opens a category's modal on ?edit=, filled from the category", async () => {
@@ -179,6 +183,12 @@ describe('the /admin/categories page', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(
       'No category has that address — it may have been renamed or deleted.',
     );
+  });
+
+  it('lets any other failure reading ?edit= through', async () => {
+    getCategoryBySlug.mockRejectedValue(new Error('database down'));
+
+    await expect(renderPage({ edit: 'testcraft' })).rejects.toThrow('database down');
   });
 
   it('closes the modal back to the page it opened over', async () => {
@@ -281,12 +291,17 @@ describe('the /admin/categories filter', () => {
     );
   });
 
-  it('says no category matches when the filter finds none', async () => {
+  // What the list says of it is the list's own test's.
+  it('counts a page the filter leaves empty from no row', async () => {
     listCategories.mockResolvedValue([]);
     countCategories.mockResolvedValue({ totalCount: 0, countBefore: undefined });
 
     await renderPage({ query: 'nothing' });
 
-    expect(screen.getByText('No category matches.')).toBeInTheDocument();
+    expect(countCategories).toHaveBeenCalledWith(
+      { query: 'nothing', groupId: undefined },
+      undefined,
+    );
+    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
   });
 });

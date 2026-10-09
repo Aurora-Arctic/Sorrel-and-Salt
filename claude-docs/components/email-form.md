@@ -84,8 +84,9 @@ than counted in ticks, so a tab left in the background waits the real minute.
 This is a courtesy: the rule is the service's, which refuses a second mail
 within the minute with a `VALIDATION` field error naming the wait
 ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page"), and that lands beside the input
-like any other. The `resendDelaySeconds` prop exists so the test can wait
-one second rather than fake the timers MSW's fetch shares.
+like any other. The test fakes the clock to cross the minute, with
+`shouldAdvanceTime` so MSW's fetch and `waitFor` still see time pass; the
+`resendDelaySeconds` prop that once shortened the wait for it went in MB.189.
 
 ## No native validation
 
@@ -140,7 +141,7 @@ visit; the status lines; the submit disabled for
 an unchanged verified address (case and whitespace included) and enabled once
 edited, or when unverified; the typed value sent as typed and named, normalised,
 in the status, with `next` beside it, or none; a `VALIDATION` field error beside the
-input with `aria-invalid` and `aria-describedby`; a `FORBIDDEN` message in the alert; the last outcome
+input with `aria-invalid` and `aria-describedby`; a `FORBIDDEN` message in the alert; a send that never reached the server as the generic sentence; the last outcome
 cleared on resubmit; the cooldown, a submit refused inside it and the button
 back once it passes, and one started from `waitSeconds`; an empty field sent
 to the server with no native check in the way; a passed-in `error` as an

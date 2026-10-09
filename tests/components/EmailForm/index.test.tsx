@@ -1,11 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { HttpResponse } from 'msw';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import EmailForm from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The /account/email form. The mutation is answered by MSW in the shape
 // /api/graphql answers (tests/support/msw/graphql.ts), so what the component
@@ -140,30 +142,29 @@ describe('EmailForm', () => {
   });
 
   // One mail per minute from a form, so a held-down Enter key or a nervous
-  // reader cannot fill an inbox; the wait is shortened here rather than faked,
-  // since MSW's fetch and waitFor share the timers a fake would take.
+  // reader cannot fill an inbox. The clock is faked, so the minute passes at
+  // once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`,
+  // as the IngredientForm files fake it.
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     const calls = acceptSetEmail();
-    renderForm(
-      <EmailForm
-        email="ada@example.test"
-        verified={false}
-        landing="/coven"
-        resendDelaySeconds={1}
-      />,
-    );
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
     await screen.findByRole('status');
 
-    const waiting = screen.getByRole('button', { name: 'Send Again in 1s' });
+    const waiting = screen.getByRole('button', { name: 'Send Again in 60s' });
     expect(waiting).toBeDisabled();
     fireEvent.submit(waiting.closest('form') as HTMLFormElement);
     expect(calls).toHaveLength(1);
 
-    expect(
-      await screen.findByRole('button', { name: 'Send Confirmation' }, { timeout: 3000 }),
-    ).toBeEnabled();
+    await act(() => vi.advanceTimersByTimeAsync(59_000));
+    expect(screen.getByRole('button', { name: 'Send Again in 1s' })).toBeDisabled();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByRole('button', { name: 'Send Confirmation' })).toBeEnabled();
   });
 
   it('puts a field error beside the input and marks the input invalid', async () => {
@@ -195,6 +196,17 @@ describe('EmailForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Sign in to change your email');
     expect(emailField()).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('says a send that never reached the server failed, without a reason it does not have', async () => {
+    server.use(graphqlLink.mutation('SetEmail', () => HttpResponse.error()));
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "That didn't work. Please try again.",
+    );
   });
 
   it('clears the last outcome when a new submit starts', async () => {
@@ -243,14 +255,17 @@ describe('EmailForm', () => {
   // The sign-up mail went out before the page was ever seen, so the server's
   // wait is the countdown's starting point rather than a surprise on submit.
   it('starts counting down from the wait the server reports', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     renderForm(
       <EmailForm email="ada@example.test" verified={false} landing="/coven" waitSeconds={1} />,
     );
 
     expect(screen.getByRole('button', { name: 'Send Again in 1s' })).toBeDisabled();
-    expect(
-      await screen.findByRole('button', { name: 'Send Confirmation' }, { timeout: 3000 }),
-    ).toBeEnabled();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(screen.getByRole('button', { name: 'Send Confirmation' })).toBeEnabled();
   });
 
   // No browser bubble: the form is `noValidate` and the input not `required`,

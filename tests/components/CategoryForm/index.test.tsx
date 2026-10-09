@@ -1,5 +1,4 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { HttpResponse } from 'msw';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import CategoryForm from '@/components/CategoryForm';
@@ -8,13 +7,13 @@ import type {
   CreateCategoryMutation,
   CreateCategoryMutationVariables,
   DeleteCategoryMutation,
-  DeleteCategoryMutationVariables,
   UpdateCategoryMutation,
   UpdateCategoryMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { server } from '../../support/msw/server';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
+import type { GroupedValueFormSubject } from '../../support/types';
 
 // The admin's category form (M5.6): a name, a description and a group, saved
 // through the category mutations, and on an existing category a delete behind
@@ -43,6 +42,31 @@ function renderForm(props: Partial<CategoryFormProps> = {}) {
   return onDone;
 }
 
+// The tests it shares with IngredientFormValueForm: tests/support/grouped-value-form.tsx.
+const SUBJECT: GroupedValueFormSubject = {
+  noun: 'Category',
+  describeRefusal: 'Describe the category',
+  groups: [GROUPS[0], GROUPS[1]],
+  value: CATEGORY,
+  render: ({ onDone, editing }) => (
+    <CategoryForm groups={GROUPS} onDone={onDone} category={editing ? CATEGORY : undefined} />
+  ),
+  create: {
+    operation: 'CreateCategory',
+    data: {
+      createCategory: { id: CATEGORY.id, slug: 'testcraft' },
+    } satisfies CreateCategoryMutation,
+  },
+  remove: {
+    operation: 'DeleteCategory',
+    data: { deleteCategory: CATEGORY.id } satisfies DeleteCategoryMutation,
+  },
+  slugClash: {
+    name: 'Testcraft-Ward',
+    message: '"Testcraft Ward" already has the address "testcraft-ward" — choose another name',
+  },
+};
+
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const group = () => screen.getByRole('combobox', { name: 'Group' });
@@ -63,6 +87,8 @@ const press = (label: string) => {
 
 describe('CategoryForm', () => {
   describe('adding', () => {
+    it.each(ADDING)('%s', (_, run) => run(SUBJECT));
+
     it('starts empty, the group unchosen', () => {
       renderForm();
 
@@ -70,14 +96,6 @@ describe('CategoryForm', () => {
       expect(description()).toHaveValue('');
       expect(group()).toHaveTextContent('Choose a group');
       expect(screen.queryByRole('button', { name: 'Delete Category' })).not.toBeInTheDocument();
-    });
-
-    // A field named "name" reads to Chrome as a person's name: it flags it in
-    // the Issues panel and offers the user's own name to fill it.
-    it('turns autofill off on the name, which names no person', () => {
-      renderForm();
-
-      expect(name()).toHaveAttribute('autocomplete', 'off');
     });
 
     it('creates the category from what was entered, then is done', async () => {
@@ -107,87 +125,11 @@ describe('CategoryForm', () => {
         },
       ]);
     });
-
-    it('marks every field required', () => {
-      renderForm();
-
-      // The asterisk is for the eye; the name stays the label alone.
-      expect(name()).toHaveAttribute('aria-required', 'true');
-      expect(description()).toHaveAttribute('aria-required', 'true');
-      expect(group()).toBeRequired();
-    });
-
-    // The owner's rule for every form: Save is offered only when there is
-    // something to save.
-    it('keeps Save off until something is entered', () => {
-      renderForm();
-
-      expect(screen.getByRole('button', { name: 'Save Category' })).toBeDisabled();
-      type(name(), 'T');
-      expect(screen.getByRole('button', { name: 'Save Category' })).toBeEnabled();
-      type(name(), '');
-      expect(screen.getByRole('button', { name: 'Save Category' })).toBeDisabled();
-    });
-
-    it('refuses a blank description and group before asking the server', async () => {
-      const onDone = renderForm();
-
-      type(name(), 'Testcraft');
-      press('Save Category');
-
-      expect(await screen.findByText('Describe the category')).toBeInTheDocument();
-      expect(description()).toHaveAccessibleDescription('Describe the category');
-      expect(group()).toHaveAccessibleDescription('Choose a group');
-      expect(onDone).not.toHaveBeenCalled();
-    });
-
-    it('says it is saving, busy and held down, until the answer', async () => {
-      let release = () => {};
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      server.use(
-        graphqlLink.mutation('CreateCategory', async () => {
-          await held;
-          return HttpResponse.json({
-            data: { createCategory: { id: CATEGORY.id, slug: 'testcraft' } },
-          });
-        }),
-      );
-      const onDone = renderForm();
-      type(name(), 'Testcraft');
-      type(description(), 'Held');
-      chooseGroup('Fixture Healing');
-      press('Save Category');
-
-      const busy = await screen.findByRole('button', { name: 'Saving Category' });
-      expect(busy).toBeDisabled();
-      expect(busy).toHaveAttribute('aria-busy', 'true');
-      release();
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-    });
-
-    it("lands the server's slug refusal beside Name", async () => {
-      const message =
-        '"Testcraft Ward" already has the address "testcraft-ward" — choose another name';
-      mockGraphQLError('CreateCategory', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'], message }],
-      });
-      const onDone = renderForm();
-
-      type(name(), 'Testcraft-Ward');
-      type(description(), 'A clash');
-      chooseGroup('Fixture Protection');
-      press('Save Category');
-
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(name()).toHaveAccessibleDescription(message);
-      expect(onDone).not.toHaveBeenCalled();
-    });
   });
 
   describe('editing', () => {
+    it.each(EDITING)('%s', (_, run) => run(SUBJECT));
+
     it('starts from the category as it is', () => {
       renderForm({ category: CATEGORY });
 
@@ -222,28 +164,11 @@ describe('CategoryForm', () => {
         },
       ]);
     });
-
-    it('keeps Save off until something changes, and off again once it is put back', () => {
-      renderForm({ category: CATEGORY });
-      const save = () => screen.getByRole('button', { name: 'Save Category' });
-
-      expect(save()).toBeDisabled();
-      chooseGroup('Fixture Protection');
-      expect(save()).toBeEnabled();
-      chooseGroup('Fixture Healing');
-      expect(save()).toBeDisabled();
-    });
-
-    it('is done without saving on Cancel', () => {
-      const onDone = renderForm({ category: CATEGORY });
-
-      press('Cancel');
-
-      expect(onDone).toHaveBeenCalledTimes(1);
-    });
   });
 
   describe('deleting', () => {
+    it.each(DELETING)('%s', (_, run) => run(SUBJECT));
+
     it('asks first, saying what a coven loses, and deletes nothing on Keep It', () => {
       const onDone = renderForm({ category: CATEGORY });
 
@@ -257,24 +182,6 @@ describe('CategoryForm', () => {
       press('Keep It');
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
-    });
-
-    it('deletes on confirmation, then is done', async () => {
-      const calls: DeleteCategoryMutationVariables[] = [];
-      mockGraphQLMutation<DeleteCategoryMutation, DeleteCategoryMutationVariables>(
-        'DeleteCategory',
-        (variables) => {
-          calls.push(variables);
-          return { deleteCategory: CATEGORY.id };
-        },
-      );
-      const onDone = renderForm({ category: CATEGORY });
-
-      press('Delete Category');
-      press('Delete');
-
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-      expect(calls).toEqual([{ id: CATEGORY.id }]);
     });
 
     it('shows the refusal of a category still in the compendium, and stays open', async () => {

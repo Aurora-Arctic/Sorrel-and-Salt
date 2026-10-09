@@ -112,7 +112,14 @@ mutations answered by MSW in the route's own shape: the fields, the schema's
 refusals, create, update and delete with their variables, server field
 errors placed, the save rules, the rename note, the redirect question sent
 again with `endRedirect` and withdrawn by an edit or Keep Editing, and the
-delete's confirmation and refusal. The page's half is
-`tests/app/admin/forms/page.test.tsx`. `tests/e2e/admin.spec.ts` adds,
+delete's confirmation and refusal. The nine tests it shares with
+`CategoryForm` are rows of `tests/support/grouped-value-form.tsx`
+(category-form.md, "Testing"). The page's half is
+`tests/app/admin/forms/page.test.tsx`: `?new` opening the empty modal with
+every group to choose from and without a read, `?edit=` reading the form by
+its slug and filling the modal from it, a slug no form holds an alert and any
+other failure thrown, and the modal closing back to the page, filter and
+cursor included, that it opened over, re-reading it. What the modal shows once
+open is this file's. `tests/e2e/admin.spec.ts` adds,
 renames and deletes a form through the real server, and is refused
 deleting Root, which seeded compendium entries pick.

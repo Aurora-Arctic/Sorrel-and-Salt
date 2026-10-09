@@ -12,7 +12,6 @@ export interface EmailFormProps {
   error?: string;
   /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */
   waitSeconds?: number;
-  resendDelaySeconds?: number;
 }
 
 export interface Failure {

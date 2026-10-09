@@ -101,9 +101,15 @@ Render-only, no test ids, no snapshots.
 the Edit links, the pager and its position, both empty messages, the filter
 form's action, method, names, kept values and group options, the Filter
 button's disabled, enabled and busy states, the address it opens, and
-`formsHref`. `tests/app/admin/forms/page.test.tsx` covers the guard, the page
-and group reads, the filter the services are called with, an unknown group
-slug ignored, the filter and cursor kept on the pager, each Edit, Add Form
-and the modal's way back, and the modal the address opens.
+`formsHref`. `tests/app/admin/forms/page.test.tsx` keeps the page's half
+([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"): the guard refusing before any read; the page
+and group reads, an unreadable cursor read as the first page; the filter
+read from `?query=` and `?group=` into the list and its count, a blank one
+as none and an unknown group slug ignored; the position counted from the
+page's first row, or from none when the filter leaves it empty; each group's name joined onto its rows; Add Form on the
+heading's line; the filter and cursor kept on the pager, each Edit, Add Form
+and the modal's way back; and the modal the address opens. How the list
+shows what it is given — the empty messages included — is this component's
+test's alone.
 `tests/e2e/admin.spec.ts` lists the seeded vocabulary's first page, and
 filters it by part of a name and by a group.
