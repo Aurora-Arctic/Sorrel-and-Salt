@@ -59,11 +59,12 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
-// And for the admin ledger (MB.58): `admin_role_changes` is append-only by
-// the repository rather than by grant, since `sorrel` owns its tables and a
-// REVOKE would not bind it. Its `change` column marks it, as `visibility`
-// marks `spells`, and `NotAppendOnly` takes it off every update and delete
-// below, leaving it the insert and the finders.
+// And for the two ledgers, MB.58's `admin_role_changes` and MB.193's
+// `workspace_creation_changes`: each is append-only by the repository rather
+// than by grant, since `sorrel` owns its tables and a REVOKE would not bind
+// it. A `change` column marks one, as `visibility` marks `spells`, and
+// `NotAppendOnly` takes it off every update and delete below, leaving it the
+// insert and the finders.
 export type NotAppendOnly = { change?: never };
 
 // And for the pause ledger (MB.62): `admin_role_change_pauses` is opened and

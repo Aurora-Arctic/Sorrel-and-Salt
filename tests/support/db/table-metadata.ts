@@ -50,6 +50,7 @@ export const AUDITED_TABLES = [
   'spell_ingredients',
   'spells',
   'users',
+  'workspace_creation_changes',
   'workspace_invitations',
   'workspace_members',
   'workspaces',

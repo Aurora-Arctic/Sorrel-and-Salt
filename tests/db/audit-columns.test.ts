@@ -71,8 +71,8 @@ async function byReferencesOf(table: string): Promise<Record<string, Reference>>
 const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
 
 describe('the audited tables', () => {
-  it('are the twenty-seven the updated_at sweep names: twenty-five audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(25);
+  it('are the twenty-eight the updated_at sweep names: twenty-six audited, two stamped', () => {
+    expect(AUDITED).toHaveLength(26);
     expect(AUDITED_TABLES).toEqual(expect.arrayContaining(STAMPED));
   });
 
