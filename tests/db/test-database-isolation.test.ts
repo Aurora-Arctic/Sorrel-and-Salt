@@ -1,4 +1,4 @@
-import { describe, expect, inject, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 // The connection itself is this test's subject: which database `db` points at.
 // oxlint-disable-next-line no-restricted-imports
@@ -11,23 +11,6 @@ describe('per-worker test database', () => {
       'select current_database()',
     );
     expect(name).toBe(`sorrel_test_${process.env.VITEST_POOL_ID}`);
-  });
-
-  // The derived name must be one globalSetup actually cloned: `workerDatabases`
-  // is the list it made, so this compares against the real thing rather than
-  // recomputing the bound and agreeing with itself.
-  it('connects to one of the databases globalSetup actually created', async () => {
-    const [{ current_database: name }] = await db.execute<{ current_database: string }>(
-      'select current_database()',
-    );
-    expect(inject('workerDatabases')).toContain(name);
-  });
-
-  it('has the migrations journal, since the template it was cloned from was migrated', async () => {
-    const [{ exists }] = await db.execute<{ exists: boolean }>(
-      "select exists (select 1 from information_schema.tables where table_schema = 'drizzle' and table_name = '__drizzle_migrations') as exists",
-    );
-    expect(exists).toBe(true);
   });
 
   it('is a real, writable database distinct from a crashed run leftover', async () => {

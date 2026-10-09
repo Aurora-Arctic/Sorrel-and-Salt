@@ -28,8 +28,9 @@ place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
 ### The last-used provider (MB.77)
 
 `lastLoginMethod` adds an after-hook and nothing else: no route, no write,
-and no `users` column, since `storeInDatabase` is unset (pinned in
-`tests/lib/auth.test.ts`). On any response that sets the session cookie it
+and no `users` column, since `storeInDatabase` is unset
+(`tests/lib/auth.test.ts` asserts the column absent;
+`tests/db/last-login-method.test.ts` proves the cookie). On any response that sets the session cookie it
 also sets `better-auth.last_used_login_method` to the provider id, readable
 by the page (not `HttpOnly`), for thirty days, with the session cookie's other
 attributes. So a sign-in callback marks its provider, including an unverified

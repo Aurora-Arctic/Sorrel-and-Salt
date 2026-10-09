@@ -65,9 +65,9 @@ What makes forgetting that a failing test rather than a review note is
 `tests/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the
 sweep-task rule requires. It applies the whole migration set into the worker's
 clone — which tables the sweep reached is the thing under test, so unlike the
-per-table schema tests it stubs nothing — and then compares two catalogue
-queries: the tables carrying all four audit stamps, and the tables carrying a
-`set_updated_at` trigger. A new audited table reddens it without that
-file being edited. The list of twenty-seven is transcribed as well, as
-`AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, because
-two empty sets are equal and something has to say they aren't.
+per-table schema tests it stubs nothing — and then compares the tables carrying a `set_updated_at` trigger with `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`,
+the twenty-seven transcribed because two empty sets are equal and something
+has to say they aren't. `tests/db/audit-columns.test.ts` holds that list to
+the catalogue's tables carrying all four audit stamps, and proves Better
+Auth's adapter tables carry an `updated_at` and no audit id (MB.188), so a
+new audited table reddens one file or the other without either being edited.

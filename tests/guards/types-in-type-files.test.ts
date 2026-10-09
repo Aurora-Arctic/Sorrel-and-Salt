@@ -1,7 +1,6 @@
-import { execFileSync } from 'node:child_process';
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 
 // A type or interface lives in a type-only file — by default the `types.ts`
@@ -28,25 +27,12 @@ const ALLOWED = ['src/db/repository/select.ts:Executor', 'src/db/repository/writ
 /** The lint guards' throwaway probe directories. */
 const isProbe = (path: string) => /(^|\/)__lint-probe[^/]*__(\/|$)/.test(path);
 
-function exists(path: string): boolean {
-  try {
-    statSync(join(REPO_ROOT, path));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
+/** The unit project's shared listing (MB.184), under the three roots, declarations left out. */
 function sourceFiles(): string[] {
-  // `-c safe.directory=*`: CI's vitest job runs as root over a checkout owned
-  // by uid 1000, which git refuses as "dubious ownership".
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  const globs = ROOTS.flatMap((root) => [`${root}/*.ts`, `${root}/*.tsx`, `${root}/*.mts`]);
-  return execFileSync('git', [...args, ...globs], { cwd: REPO_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter((file) => file && !isProbe(file) && !file.startsWith('src/gql/'))
-    .filter((file) => !/\.d\.m?ts$/.test(file))
-    .filter((file) => exists(file)); // still in the index, gone from the working tree
+  return inject('repoFiles')
+    .filter((file) => ROOTS.some((root) => file.startsWith(`${root}/`)) && /\.m?tsx?$/.test(file))
+    .filter((file) => !isProbe(file) && !file.startsWith('src/gql/'))
+    .filter((file) => !/\.d\.m?ts$/.test(file));
 }
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');

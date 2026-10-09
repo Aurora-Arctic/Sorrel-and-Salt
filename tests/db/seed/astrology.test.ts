@@ -4,13 +4,15 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
-import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { PLANETS, ZODIAC_SIGNS, seedAstrology } from '@/db/seed/astrology';
 import { slugify } from '@/lib/slugify';
 import type { VocabularyRow } from './types';
 
 // §5's planet and zodiac vocabularies, asserted against §5's own table rather
-// than a copy, against the real tables emptied first — claude-docs/db/astrology-vocabulary-seed.md,
+// than a copy, against the clone, which holds the vocabulary as `standard`
+// wrote it through the same function; a re-run over an admin's edit empties
+// the tables first, and the shape every seed shares is index.test.ts's
+// (MB.183) — claude-docs/db/astrology-vocabulary-seed.md,
 // "The astrology vocabulary seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
@@ -53,18 +55,9 @@ async function allRows(table: string): Promise<VocabularyRow[]> {
   return sql<VocabularyRow[]>`select * from ${sql(table)} order by slug`;
 }
 
-async function countOf(table: string): Promise<number> {
-  const [{ count }] = await sql<{ count: string }[]>`select count(*) from ${sql(table)}`;
-  return Number(count);
-}
-
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-beforeEach(async () => {
-  await truncateAllTables(sql);
 });
 
 afterAll(async () => {
@@ -127,22 +120,9 @@ describe('the seed data matches DESIGN.md §5', () => {
 });
 
 describe('seedAstrology(db)', () => {
-  // Precondition: the truncated clone really starts at zero.
-  it('starts from two empty tables and fills both', async () => {
-    expect(await countOf('planets')).toBe(0);
-    expect(await countOf('zodiac_signs')).toBe(0);
-
-    await seedAstrology(db);
-
-    expect(await countOf('planets')).toBe(DESIGN_PLANETS.length);
-    expect(await countOf('zodiac_signs')).toBe(DESIGN_ZODIAC_SIGNS.length);
-  });
-
   it.each(VOCABULARIES)(
     'writes each $table row as the literal reads',
     async ({ table, seeded }) => {
-      await seedAstrology(db);
-
       const written = (await allRows(table)).map(({ name, slug, description }) => ({
         name,
         slug,
@@ -157,102 +137,48 @@ describe('seedAstrology(db)', () => {
     },
   );
 
-  it('stamps every row as the bootstrap user, with no tombstone', async () => {
-    await seedAstrology(db);
-
-    for (const row of [...(await allRows('planets')), ...(await allRows('zodiac_signs'))]) {
-      expect(row.created_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.updated_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.deleted_at, row.slug).toBeNull();
-    }
-  });
-
-  it('is idempotent: re-running adds nothing and moves nothing', async () => {
-    await seedAstrology(db);
-    const planets = await allRows('planets');
-    const signs = await allRows('zodiac_signs');
-
-    await expect(seedAstrology(db)).resolves.toBeUndefined();
-
-    expect(await allRows('planets')).toEqual(planets);
-    expect(await allRows('zodiac_signs')).toEqual(signs);
-  });
-
-  // The vocabulary is the admin's (MB.91), and a description is the part of a
-  // curated row most likely to be rewritten.
-  it('does not overwrite a description an admin has since rewritten', async () => {
-    await seedAstrology(db);
-    await sql`
-      update zodiac_signs set description = 'The Bull - fixed earth, ruled by Venus.'
-      where slug = 'taurus'
-    `;
-
-    await seedAstrology(db);
-
-    const [taurus] = (await allRows('zodiac_signs')).filter((row) => row.slug === 'taurus');
-    expect(taurus.description).toBe('The Bull - fixed earth, ruled by Venus.');
-  });
-
-  // Keyed on the slug, ignoring `deleted_at`: the partial index stops only a second live row.
-  it('does not resurrect a body an admin has since deleted', async () => {
-    await seedAstrology(db);
-    await sql`
-      update planets set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where slug = 'earth'
-    `;
-
-    await seedAstrology(db);
-
-    const earth = (await allRows('planets')).filter((row) => row.slug === 'earth');
-    expect(earth).toHaveLength(1);
-    expect(earth[0].deleted_at).not.toBeNull();
-  });
-
   it('keys every row it writes by its slug at insert', async () => {
-    await seedAstrology(db);
-
-    for (const row of [...(await allRows('planets')), ...(await allRows('zodiac_signs'))]) {
+    const rows = [...(await allRows('planets')), ...(await allRows('zodiac_signs'))];
+    // Precondition: the vocabularies are there to be keyed.
+    expect(rows.length).toBe(PLANETS.length + ZODIAC_SIGNS.length);
+    for (const row of rows) {
       expect(row.seed_key, row.slug).toBe(row.slug);
     }
   });
 
-  // MB.172: the key, not the slug an admin's rename moves, is what the seed knows.
-  it('leaves a body an admin has since renamed alone, and adds nothing', async () => {
-    await seedAstrology(db);
-    await sql`update planets set name = 'Terra', slug = 'terra' where slug = 'earth'`;
-    const planets = await allRows('planets');
-    // Precondition: the slug is no longer the key, so slug keying would twin it.
-    expect(planets.find(({ slug }) => slug === 'terra')?.seed_key).toBe('earth');
+  describe('over a database an admin has edited', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+      // Precondition: the truncated clone really starts empty, so the rows edited are this run's.
+      expect(await allRows('planets')).toEqual([]);
+    });
 
-    await seedAstrology(db);
+    // The vocabulary is the admin's (MB.91), and a description is the part of a
+    // curated row most likely to be rewritten.
+    it('does not overwrite a description an admin has since rewritten', async () => {
+      await seedAstrology(db);
+      await sql`
+        update zodiac_signs set description = 'The Bull - fixed earth, ruled by Venus.'
+        where slug = 'taurus'
+      `;
 
-    expect(await allRows('planets')).toEqual(planets);
-  });
+      await seedAstrology(db);
 
-  it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
-    await sql`create table seed_astrology_probe (slug text, acting_user text)`;
-    await sql.unsafe(`
-      create function seed_astrology_probe() returns trigger language plpgsql as $$
-      begin
-        insert into seed_astrology_probe (slug, acting_user)
-        values (new.slug, current_setting('app.current_user_id', true));
-        return new;
-      end
-      $$
-    `);
-    for (const table of ['planets', 'zodiac_signs']) {
-      await sql.unsafe(`
-        create trigger seed_astrology_probe after insert on ${table}
-        for each row execute function seed_astrology_probe()
-      `);
-    }
+      const [taurus] = (await allRows('zodiac_signs')).filter((row) => row.slug === 'taurus');
+      expect(taurus.description).toBe('The Bull - fixed earth, ruled by Venus.');
+    });
 
-    await seedAstrology(db);
+    // MB.172: the key, not the slug an admin's rename moves, is what the seed knows.
+    it('leaves a body an admin has since renamed alone, and adds nothing', async () => {
+      await seedAstrology(db);
+      await sql`update planets set name = 'Terra', slug = 'terra' where slug = 'earth'`;
+      const planets = await allRows('planets');
+      // Precondition: the slug is no longer the key, so slug keying would twin it.
+      expect(planets.find(({ slug }) => slug === 'terra')?.seed_key).toBe('earth');
 
-    const rows = await sql<{ acting_user: string | null }[]>`
-      select acting_user from seed_astrology_probe
-    `;
-    expect(rows).toHaveLength(DESIGN_PLANETS.length + DESIGN_ZODIAC_SIGNS.length);
-    expect(rows.every((row) => row.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
+      await seedAstrology(db);
+
+      expect(await allRows('planets')).toEqual(planets);
+    });
   });
 });

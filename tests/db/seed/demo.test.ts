@@ -11,15 +11,13 @@ import {
   WORKSPACE_X_ID,
 } from '@/db/seed/standard';
 import { DEMO_SPELLS, WORKSPACE_W_INGREDIENTS, seedDemo } from '@/db/seed/demo';
-import { seed } from '@/db/seed/index';
 import type { IngredientSlugRow, LayerRow, SpellRow } from './types';
 
 // The `demo` scenario against the real schema: a layer's integrity is three
 // CHECKs, two partial indexes and a composite key no returned object can
-// demonstrate. Every table is emptied first, and `seedDemo` lays `standard`
-// down itself — claude-docs/db/demo-scenario.md, "The demo scenario".
-
-const PROBE = 'demo_probe_acting_user';
+// demonstrate. One run over emptied tables serves every read; a re-run over
+// an edited grimoire empties them again first. The shape every seed shares is
+// index.test.ts's (MB.183) — claude-docs/db/demo-scenario.md, "The demo scenario".
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -49,262 +47,188 @@ async function countOf(table: string): Promise<number> {
   return Number(count);
 }
 
-async function counts(): Promise<Record<string, number>> {
-  return {
-    users: await countOf('users'),
-    workspaces: await countOf('workspaces'),
-    members: await countOf('workspace_members'),
-    ingredients: await countOf('ingredients'),
-    folkNames: await countOf('ingredient_folk_names'),
-    ingredientCategories: await countOf('ingredient_categories'),
-    categories: await countOf('categories'),
-    forms: await countOf('ingredient_forms'),
-    spells: await countOf('spells'),
-    layers: await countOf('spell_ingredients'),
-    spellCategories: await countOf('spell_categories'),
-  };
-}
-
-beforeAll(async () => {
+beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-
-  // Records what `app.current_user_id` held inside the inserting transaction;
-  // it is transaction-local and gone by the time a test could read it.
-  await sql`create table ${sql(PROBE)} (spell_id uuid not null, acting_user text)`;
-  await sql.unsafe(`
-    create function ${PROBE}() returns trigger language plpgsql as $$
-    begin
-      insert into ${PROBE} (spell_id, acting_user)
-      values (new.id, current_setting('app.current_user_id', true));
-      return new;
-    end
-    $$
-  `);
-  await sql.unsafe(
-    `create trigger ${PROBE} after insert on spells for each row execute function ${PROBE}()`,
-  );
 });
 
-beforeEach(async () => {
-  await truncateAllTables(sql);
-});
-
-// Only this file's own objects come down.
 afterAll(async () => {
-  await sql.unsafe(`drop function if exists ${PROBE}() cascade`);
-  await sql`drop table if exists ${sql(PROBE)}`;
   await sql.end();
 });
 
-describe('demo is standard plus spells', () => {
-  it('seeds everything standard does, in the same one transaction', async () => {
-    expect(
-      await countOf('users'),
-      'the truncated clone starts empty, so these rows are this seed’s',
-    ).toBe(0);
-
+describe('one run of the scenario', () => {
+  beforeAll(async () => {
+    await truncateAllTables(sql);
+    // Precondition: the truncated clone really starts empty, so every row read below is this run's.
+    expect(await countOf('users')).toBe(0);
+    expect(await countOf('spells')).toBe(0);
     await seedDemo(db);
-
-    // "standard plus", not a second scenario that happens to look similar.
-    const users = await sql<{ id: string }[]>`select id from users`;
-    expect(new Set(users.map((u) => u.id))).toEqual(
-      new Set([BOOTSTRAP_USER_ID, ...Object.values(FIXTURE_USERS).map((u) => u.id)]),
-    );
-    expect(await countOf('workspaces')).toBe(2);
-    expect((await ingredientsIn(null)).length).toBe(COMPENDIUM_INGREDIENTS.length);
-    expect(await countOf('categories')).toBeGreaterThan(0);
-    expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
   });
 
-  it('adds W’s own ingredients, which the compendium does not carry', async () => {
-    await seedDemo(db);
+  describe('demo is standard plus spells', () => {
+    it('seeds everything standard does, in the same one transaction', async () => {
+      // "standard plus", not a second scenario that happens to look similar.
+      const users = await sql<{ id: string }[]>`select id from users`;
+      expect(new Set(users.map((u) => u.id))).toEqual(
+        new Set([BOOTSTRAP_USER_ID, ...Object.values(FIXTURE_USERS).map((u) => u.id)]),
+      );
+      expect(await countOf('workspaces')).toBe(2);
+      expect((await ingredientsIn(null)).length).toBe(COMPENDIUM_INGREDIENTS.length);
+      expect(await countOf('categories')).toBeGreaterThan(0);
+      expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
+    });
 
-    const local = await ingredientsIn(WORKSPACE_W_ID);
-    expect(local.map((i) => i.name).sort()).toEqual(
-      WORKSPACE_W_INGREDIENTS.map((i) => i.name).sort(),
-    );
-    expect(await ingredientsIn(WORKSPACE_X_ID)).toEqual([]);
-    // Slugged as the compendium is: label, form and formal name, by the one rule.
-    for (const row of local) {
-      expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
-    }
+    it('adds W’s own ingredients, which the compendium does not carry', async () => {
+      const local = await ingredientsIn(WORKSPACE_W_ID);
+      expect(local.map((i) => i.name).sort()).toEqual(
+        WORKSPACE_W_INGREDIENTS.map((i) => i.name).sort(),
+      );
+      expect(await ingredientsIn(WORKSPACE_X_ID)).toEqual([]);
+      // Slugged as the compendium is: label, form and formal name, by the one rule.
+      for (const row of local) {
+        expect(row.slug).toBe(ingredientSlug(row.name, row.form, row.canonical_name));
+      }
+    });
+
+    // MB.162: the compendium holds only curated forms, so the uncurated value a
+    // member writes before an admin curates it — §5's `rhizome` — lives here.
+    it('gives W an entry with the uncurated form `rhizome`, which no compendium entry holds', async () => {
+      const rhizomes = await sql<{ workspace_id: string | null }[]>`
+        select workspace_id from ingredients where lower(btrim(form)) = 'rhizome'
+      `;
+      expect(rhizomes.map((row) => row.workspace_id)).toEqual([WORKSPACE_W_ID]);
+
+      // Uncurated: no form row, live or retired, folds to it.
+      const curated = await sql`
+        select 1 from ingredient_forms where lower(btrim(name)) = 'rhizome'
+      `;
+      expect(curated).toEqual([]);
+      // Precondition: the vocabulary is there to be outside of.
+      expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
+    });
   });
 
-  // MB.162: the compendium holds only curated forms, so the uncurated value a
-  // member writes before an admin curates it — §5's `rhizome` — lives here.
-  it('gives W an entry with the uncurated form `rhizome`, which no compendium entry holds', async () => {
-    await seedDemo(db);
+  describe('the grimoire', () => {
+    it('holds at least two spells, all of them W’s', async () => {
+      const spells = await allSpells();
+      expect(spells.length).toBeGreaterThanOrEqual(2);
+      expect(spells.length).toBe(DEMO_SPELLS.length);
+      expect(spells.every((s) => s.workspace_id === WORKSPACE_W_ID)).toBe(true);
+      expect(spells.every((s) => s.deleted_at === null)).toBe(true);
+      expect(new Set(spells.map((s) => s.id))).toEqual(new Set(DEMO_SPELLS.map((s) => s.id)));
+    });
 
-    const rhizomes = await sql<{ workspace_id: string | null }[]>`
-      select workspace_id from ingredients where lower(btrim(form)) = 'rhizome'
-    `;
-    expect(rhizomes.map((row) => row.workspace_id)).toEqual([WORKSPACE_W_ID]);
+    it('writes a working rather than a title: intent, instructions and the jar’s details', async () => {
+      const spells = await allSpells();
+      expect(spells.every((s) => (s.intent ?? '').length > 0)).toBe(true);
 
-    // Uncurated: no form row, live or retired, folds to it.
-    const curated = await sql`
-      select 1 from ingredient_forms where lower(btrim(name)) = 'rhizome'
-    `;
-    expect(curated).toEqual([]);
-    // Precondition: the vocabulary is there to be outside of.
-    expect(await countOf('ingredient_forms')).toBeGreaterThan(0);
-  });
-});
+      const detailed = await sql<{ jar_size: string | null; instructions: string | null }[]>`
+        select jar_size, instructions from spells
+      `;
+      expect(detailed.every((s) => (s.instructions ?? '').length > 0)).toBe(true);
+      expect(detailed.filter((s) => (s.jar_size ?? '').length > 0).length).toBeGreaterThanOrEqual(
+        1,
+      );
+    });
 
-describe('the grimoire', () => {
-  it('holds at least two spells, all of them W’s', async () => {
-    await seedDemo(db);
+    // The seed names no visibility, so what these rows carry is the column's own
+    // default (M10.3). A demo coven whose jars were invisible to everyone but
+    // the bootstrap user would be a demo of nothing.
+    it('shares every seeded spell with the coven', async () => {
+      const visibilities = await sql<{ visibility: string }[]>`
+        select visibility::text from spells
+      `;
+      expect(visibilities).toHaveLength(DEMO_SPELLS.length);
+      expect(visibilities.every((row) => row.visibility === 'workspace')).toBe(true);
+    });
 
-    const spells = await allSpells();
-    expect(spells.length).toBeGreaterThanOrEqual(2);
-    expect(spells.length).toBe(DEMO_SPELLS.length);
-    expect(spells.every((s) => s.workspace_id === WORKSPACE_W_ID)).toBe(true);
-    expect(spells.every((s) => s.deleted_at === null)).toBe(true);
-    expect(new Set(spells.map((s) => s.id))).toEqual(new Set(DEMO_SPELLS.map((s) => s.id)));
-  });
+    it('seeds a draft beside a finished spell, so the status badge has both to show', async () => {
+      const statuses = new Set((await allSpells()).map((s) => s.status));
+      expect(statuses).toEqual(new Set(['draft', 'complete']));
+    });
 
-  it('writes a working rather than a title: intent, instructions and the jar’s details', async () => {
-    await seedDemo(db);
+    it('assigns each spell categories that resolve to real seeded rows', async () => {
+      expect(await countOf('spell_categories')).toBe(
+        DEMO_SPELLS.reduce((total, spell) => total + spell.categories.length, 0),
+      );
 
-    const spells = await allSpells();
-    expect(spells.every((s) => (s.intent ?? '').length > 0)).toBe(true);
-
-    const detailed = await sql<{ jar_size: string | null; instructions: string | null }[]>`
-      select jar_size, instructions from spells
-    `;
-    expect(detailed.every((s) => (s.instructions ?? '').length > 0)).toBe(true);
-    expect(detailed.filter((s) => (s.jar_size ?? '').length > 0).length).toBeGreaterThanOrEqual(1);
-  });
-
-  // The seed names no visibility, so what these rows carry is the column's own
-  // default (M10.3). A demo coven whose jars were invisible to everyone but
-  // the bootstrap user would be a demo of nothing.
-  it('shares every seeded spell with the coven', async () => {
-    await seedDemo(db);
-
-    const visibilities = await sql<{ visibility: string }[]>`
-      select visibility::text from spells
-    `;
-    expect(visibilities).toHaveLength(DEMO_SPELLS.length);
-    expect(visibilities.every((row) => row.visibility === 'workspace')).toBe(true);
+      const [{ count: dangling }] = await sql<{ count: string }[]>`
+        select count(*) from spell_categories sc
+        where not exists (select 1 from categories c where c.id = sc.category_id)
+           or not exists (select 1 from spells s where s.id = sc.spell_id)
+      `;
+      expect(Number(dangling)).toBe(0);
+    });
   });
 
-  it('seeds a draft beside a finished spell, so the status badge has both to show', async () => {
-    await seedDemo(db);
+  describe('layers: ingredients, and the order they go into the jar', () => {
+    it('gives every spell a stack, numbered from one without a gap or a repeat', async () => {
+      for (const spell of DEMO_SPELLS) {
+        const layers = await layersOf(spell.id);
 
-    const statuses = new Set((await allSpells()).map((s) => s.status));
-    expect(statuses).toEqual(new Set(['draft', 'complete']));
-  });
+        expect(layers.length, `${spell.title} has layers`).toBeGreaterThanOrEqual(2);
+        expect(layers.map((l) => l.layer_order)).toEqual(layers.map((_layer, index) => index + 1));
+      }
+    });
 
-  it('assigns each spell categories that resolve to real seeded rows', async () => {
-    await seedDemo(db);
+    it('measures most layers, and leaves one unmeasured — a pinch is not a quantity', async () => {
+      const layers = await sql<LayerRow[]>`select * from spell_ingredients`;
+      expect(
+        layers.filter((l) => l.quantity !== null && l.unit !== null).length,
+      ).toBeGreaterThanOrEqual(3);
+      expect(
+        layers.filter((l) => l.quantity === null && l.unit === null).length,
+      ).toBeGreaterThanOrEqual(1);
+      expect(layers.filter((l) => (l.note ?? '').length > 0).length).toBeGreaterThanOrEqual(1);
+    });
 
-    expect(await countOf('spell_categories')).toBe(
-      DEMO_SPELLS.reduce((total, spell) => total + spell.categories.length, 0),
-    );
+    // A real jar mixes what the compendium knows with what the coven wrote down itself.
+    it('mixes compendium entries with W’s own ingredients', async () => {
+      const tierById = new Map(
+        [...(await ingredientsIn(null)), ...(await ingredientsIn(WORKSPACE_W_ID))].map((row) => [
+          row.id,
+          row.workspace_id === null ? 'compendium' : 'workspace',
+        ]),
+      );
 
-    const [{ count: dangling }] = await sql<{ count: string }[]>`
-      select count(*) from spell_categories sc
-      where not exists (select 1 from categories c where c.id = sc.category_id)
-         or not exists (select 1 from spells s where s.id = sc.spell_id)
-    `;
-    expect(Number(dangling)).toBe(0);
-  });
-});
+      const linked = (await sql<LayerRow[]>`select * from spell_ingredients`).filter(
+        (l) => l.ingredient_id !== null,
+      );
+      const tiers = linked.map((l) => tierById.get(l.ingredient_id as string));
 
-describe('layers: ingredients, and the order they go into the jar', () => {
-  it('gives every spell a stack, numbered from one without a gap or a repeat', async () => {
-    await seedDemo(db);
+      // Precondition: both tiers are populated.
+      expect(new Set(tierById.values())).toEqual(new Set(['compendium', 'workspace']));
+      expect(tiers.filter((tier) => tier === 'compendium').length).toBeGreaterThanOrEqual(1);
+      expect(tiers.filter((tier) => tier === 'workspace').length).toBeGreaterThanOrEqual(1);
+      // Every linked layer points at an ingredient, never at a stock row.
+      expect(tiers.filter((tier) => tier === undefined)).toEqual([]);
+    });
 
-    for (const spell of DEMO_SPELLS) {
-      const layers = await layersOf(spell.id);
+    // Story 57: a one-off layer named for this jar only, never added to the ingredients.
+    it('carries one custom, one-off layer beside the linked ones', async () => {
+      const custom = (await sql<LayerRow[]>`select * from spell_ingredients`).filter(
+        (l) => l.ingredient_id === null,
+      );
 
-      expect(layers.length, `${spell.title} has layers`).toBeGreaterThanOrEqual(2);
-      expect(layers.map((l) => l.layer_order)).toEqual(layers.map((_layer, index) => index + 1));
-    }
-  });
+      expect(custom).toHaveLength(1);
+      expect(custom[0].name).toBeTruthy();
+      expect(custom[0].form).toBeTruthy();
 
-  it('measures most layers, and leaves one unmeasured — a pinch is not a quantity', async () => {
-    await seedDemo(db);
+      const siblings = await layersOf(custom[0].spell_id);
+      expect(siblings.filter((l) => l.ingredient_id !== null).length).toBeGreaterThanOrEqual(1);
 
-    const layers = await sql<LayerRow[]>`select * from spell_ingredients`;
-    expect(
-      layers.filter((l) => l.quantity !== null && l.unit !== null).length,
-    ).toBeGreaterThanOrEqual(3);
-    expect(
-      layers.filter((l) => l.quantity === null && l.unit === null).length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(layers.filter((l) => (l.note ?? '').length > 0).length).toBeGreaterThanOrEqual(1);
-  });
-
-  // A real jar mixes what the compendium knows with what the coven wrote down itself.
-  it('mixes compendium entries with W’s own ingredients', async () => {
-    await seedDemo(db);
-
-    const tierById = new Map(
-      [...(await ingredientsIn(null)), ...(await ingredientsIn(WORKSPACE_W_ID))].map((row) => [
-        row.id,
-        row.workspace_id === null ? 'compendium' : 'workspace',
-      ]),
-    );
-
-    const linked = (await sql<LayerRow[]>`select * from spell_ingredients`).filter(
-      (l) => l.ingredient_id !== null,
-    );
-    const tiers = linked.map((l) => tierById.get(l.ingredient_id as string));
-
-    // Precondition: both tiers are populated.
-    expect(new Set(tierById.values())).toEqual(new Set(['compendium', 'workspace']));
-    expect(tiers.filter((tier) => tier === 'compendium').length).toBeGreaterThanOrEqual(1);
-    expect(tiers.filter((tier) => tier === 'workspace').length).toBeGreaterThanOrEqual(1);
-    // Every linked layer points at an ingredient, never at a stock row.
-    expect(tiers.filter((tier) => tier === undefined)).toEqual([]);
-  });
-
-  // Story 57: a one-off layer named for this jar only, never added to the ingredients.
-  it('carries one custom, one-off layer beside the linked ones', async () => {
-    await seedDemo(db);
-
-    const custom = (await sql<LayerRow[]>`select * from spell_ingredients`).filter(
-      (l) => l.ingredient_id === null,
-    );
-
-    expect(custom).toHaveLength(1);
-    expect(custom[0].name).toBeTruthy();
-    expect(custom[0].form).toBeTruthy();
-
-    const siblings = await layersOf(custom[0].spell_id);
-    expect(siblings.filter((l) => l.ingredient_id !== null).length).toBeGreaterThanOrEqual(1);
-
-    // One-off: the name is not an ingredient in either tier.
-    const named = await sql<{ id: string }[]>`
-      select id from ingredients where lower(name) = lower(${custom[0].name as string})
-    `;
-    expect(named).toEqual([]);
-  });
-
-  it('stamps every layer as the bootstrap user’s and publishes it as the acting user', async () => {
-    await seedDemo(db);
-
-    const layers = await sql<LayerRow[]>`select * from spell_ingredients`;
-    expect(layers.every((l) => l.created_by === BOOTSTRAP_USER_ID)).toBe(true);
-
-    const probe = await sql<
-      { acting_user: string | null }[]
-    >`select acting_user from ${sql(PROBE)}`;
-    expect(probe).toHaveLength(DEMO_SPELLS.length);
-    expect(probe.every((r) => r.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
+      // One-off: the name is not an ingredient in either tier.
+      const named = await sql<{ id: string }[]>`
+        select id from ingredients where lower(name) = lower(${custom[0].name as string})
+      `;
+      expect(named).toEqual([]);
+    });
   });
 });
 
-describe('re-running the scenario', () => {
-  it('is idempotent: a second run adds nothing anywhere', async () => {
-    await seedDemo(db);
-    const before = await counts();
-
-    await expect(seedDemo(db)).resolves.toBeUndefined();
-
-    expect(await counts()).toEqual(before);
+describe('re-running the scenario over an edited grimoire', () => {
+  beforeEach(async () => {
+    await truncateAllTables(sql);
   });
 
   // The stack is keyed as a whole: patching one layer back into an edited jar
@@ -383,30 +307,5 @@ describe('re-running the scenario', () => {
     const after = await layersOf(spell.id);
     expect(after).toHaveLength(layers.length);
     expect(after.map((l) => l.layer_order)).toEqual(layers.map((l) => l.layer_order));
-  });
-
-  it('does not resurrect a spell someone has soft-deleted', async () => {
-    await seedDemo(db);
-    const [victim] = await allSpells();
-
-    await sql`
-      update spells set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where id = ${victim.id}
-    `;
-
-    await seedDemo(db);
-
-    const live = await sql<{ id: string }[]>`select id from spells where deleted_at is null`;
-    expect(live.map((r) => r.id)).not.toContain(victim.id);
-    expect(await countOf('spells')).toBe(DEMO_SPELLS.length);
-  });
-});
-
-describe('seed(db, { scenario })', () => {
-  it('routes "demo" to this scenario', async () => {
-    await seed(db, { scenario: 'demo' });
-
-    expect(await countOf('spells')).toBe(DEMO_SPELLS.length);
-    expect(await countOf('workspaces')).toBe(2);
   });
 });

@@ -23,9 +23,9 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   the middle to fall out of step, and a user a test creates mid-run acts
   through the same helper.
 - **It never touches the database.** Whether A exists is
-  `tests/db/seed/standard.test.ts`'s claim, made against real rows; re-proving
-  it here would cost a second migrate-and-seed harness to assert something
-  already asserted.
+  `tests/db/seeded-template.test.ts`'s claim, made against the real rows every
+  `db` file is cloned from (MB.183); re-proving it here would cost a second
+  migrate-and-seed harness to assert something already asserted.
 - **`tests/support/as-user.test.ts` loops over `FIXTURE_USERS` rather than naming
   five cases**, so a sixth fixture user is covered the day it is added. It
   also carries a `@ts-expect-error` compile assertion that an id alone cannot

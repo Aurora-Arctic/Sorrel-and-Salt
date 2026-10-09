@@ -40,7 +40,8 @@ run as a test.
   `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`), `updated-at-trigger.test.ts`,
   `test-database-isolation.test.ts`, `seeded-template.test.ts` and
   `tests/db/seed/*` still open their own client — the isolation test's subject
-  _is_ the connection, and the others truncate everything first.
+  _is_ the connection, and the others either read the clone as the template
+  built it or truncate everything before a seed run they assert (MB.183).
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups every schema test used to build by hand:
@@ -71,23 +72,39 @@ run as a test.
   withhold. Its test is `tests/db/insert-spell.test.ts`.
 
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
-  file.** It holds two transcribed lists of Drizzle table _objects_ — the
-  twenty-five six-column tables and the two four-column join tables — asserts
-  both non-empty and their names equal to `AUDITED_TABLES`, and loops the same
-  expectations over each, on **both sides**: the schema (the columns are
-  defined, the stamps `NOT NULL`, `deleted_at` nullable or absent, every
-  `*_by` a foreign key to `users.id`, `deleted_by` absent on a join table) and
-  the catalogue (`information_schema.columns` carries the names,
-  `referential_constraints` shows each `*_by` referencing `users(id)`). Both
-  sides because they can disagree: a spread deleted from a schema file leaves
-  the migrated database's columns standing, and a catalogue-only sweep would
-  stay green. The `UNAUDITED_TABLES` are asserted to exist and carry none of the
-  three audit ids by name (`sessions.impersonated_by` is no audit id, MB.53), which is what stops the catalogue half being satisfied by a table
-  with nothing to check. The per-file `spreads the shared audit columns` /
-  `references users.id from every audit id` tests are gone; a schema test now
-  asserts the table's _own_ columns, constraints and behaviour. A new
-  audited table added without `...auditColumns` fails this file, where
-  before it would simply have had no test.
+  file, on the catalogue side** (MB.188). It splits `AUDITED_TABLES` into
+  the twenty-five six-column tables and the two four-column join tables,
+  asserts the twenty-seven are exactly the tables `information_schema` finds
+  carrying the four stamps, and loops the same expectations over each: the
+  columns are there, the stamps `NOT NULL`, the delete pair nullable or
+  absent, and `referential_constraints` shows each `*_by` referencing
+  `users(id)`. It reads `getTableConfig` nowhere. The code side is the
+  module schema tests': **each asserts its table's exact column set,
+  `[...OWN, ...AUDIT_COLUMNS]` or `[...OWN, ...STAMP_COLUMNS]`**, which is
+  what fails when a spread leaves a schema file — the migrated database's
+  columns would stand, so the catalogue alone would stay green. What the
+  spread instances declare — the stamps required, every id a key to
+  `users.id` — is asserted once, in `tests/db/audit.test.ts`, since every
+  table spreads the same ones. The `UNAUDITED_TABLES` are asserted to exist
+  with an `updated_at` and carry none of the three audit ids by name
+  (`sessions.impersonated_by` is no audit id, MB.53), which is what stops the
+  sweep being satisfied by a table with nothing to check. A new audited table
+  added without `...auditColumns` fails its own schema test, and one the list
+  does not name fails this file.
+
+- **`tests/db/partial-unique-indexes.test.ts` — rule 4 once, for every
+  table** (MB.188). One test reads every partial unique index in `public`
+  from `pg_index`, with each column its key, expressions and predicate read
+  (through `pg_depend`), asserts the set non-empty and every index
+  classified in its `ROWS` map — keyed by index rather than table, since one
+  table's indexes can sit on opposite sides of a predicate — then, per index,
+  inserts a holder, proves a second live row sharing those columns is refused
+  by that index by name, soft-deletes the holder and proves the same row is
+  admitted. A per-index `clash` names the columns to share where the
+  catalogue's list would collide on another index first or names a generated
+  column (`ingredients.canonical_key`). A new partial unique index fails the
+  sweep until it is classified; a schema test keeps only what is particular to
+  its table, such as a slug shared across two groups.
 
 ### Connections per run (MB.179)
 

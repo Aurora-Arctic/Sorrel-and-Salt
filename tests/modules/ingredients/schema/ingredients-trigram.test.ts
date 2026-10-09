@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
@@ -8,10 +8,12 @@ import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
-// §9's one multicolumn gin index serves a predicate on either column alone,
-// which the planner assertions below prove —
-// claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule
-// every caller is bound by".
+// §9's one multicolumn gin index serves a predicate on either column alone.
+// That it is reached is proved on the SQL the services send, in
+// common-names-plan.test.ts and duplicates-plan.test.ts (MB.184); what stays
+// here is the declaration, the threshold, and the negative control that makes
+// those plans meaningful — claude-docs/db/fuzzy-matching.md, "Fuzzy matching:
+// one index, and a rule every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
 const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
 // The folded twin, owned by ingredients-unaccent.test.ts; named here so the
@@ -76,7 +78,7 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
   return inserted.id as string;
 }
 
-// Enough varied rows that "the index was chosen" means something; the planner
+// Enough varied rows that "no index was chosen" means something; the planner
 // assertions disable sequential scans regardless.
 async function fillWithDecoys(): Promise<void> {
   await sql`
@@ -112,10 +114,6 @@ async function matchingNames(name: string, threshold?: number): Promise<string[]
   return rows.map((row) => row.name as string);
 }
 
-beforeEach(async () => {
-  await sql`truncate ingredients cascade`;
-});
-
 describe('pg_trgm', () => {
   // Enabled by migration 0000; asserted because `gin_trgm_ops` is not resolvable without it.
   it('is installed in this database', async () => {
@@ -143,25 +141,13 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // One index, reached from either column alone.
-  describe('the planner reaches it from either column alone', () => {
-    beforeEach(async () => {
+  // The negative control behind the plan tests' "never a similarity()
+  // comparison": the same rows, once per file.
+  describe('the planner cannot reach it from a similarity() comparison', () => {
+    beforeAll(async () => {
+      await sql`truncate ingredients cascade`;
       await addIngredient('Mugwort', 'Artemisia vulgaris');
       await fillWithDecoys();
-    });
-
-    it('uses it for a predicate on name alone', async () => {
-      const plan = await planFor(`select id from ingredients where name % 'Mugwart'`);
-
-      expect(plan).toContain(`Bitmap Index Scan on ${TRIGRAM_INDEX}`);
-    });
-
-    it('uses it for a predicate on canonical_name alone', async () => {
-      const plan = await planFor(
-        `select id from ingredients where canonical_name % 'Artemisia vulgare'`,
-      );
-
-      expect(plan).toContain(`Bitmap Index Scan on ${TRIGRAM_INDEX}`);
     });
 
     // §9's trap: `similarity(a, b) > 0.4` is a function call no trigram index
@@ -176,8 +162,8 @@ describe('ingredients trigram index', () => {
       expect(plan).not.toContain(TRIGRAM_INDEX);
     });
 
-    // Why the two above could have passed wrongly: if `%` could not reach the
-    // index either, their plans would read like this one.
+    // Why the plan tests could have passed wrongly: if `%` could not reach
+    // the index either, their plans would read like the one above.
     it('is what separates the two forms — same rows, different plans', async () => {
       const operatorPlan = await planFor(`select id from ingredients where name % 'Mugwart'`);
       const functionPlan = await planFor(
@@ -189,32 +175,12 @@ describe('ingredients trigram index', () => {
     });
   });
 
-  // Folk names match through their own index, never this table's.
-  describe('the folk-names index stays independent (M4.4a)', () => {
-    it('is reached for a predicate on ingredient_folk_names.name', async () => {
-      const mugwort = await addIngredient('Mugwort', 'Artemisia vulgaris');
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        select ${mugwort}, 'Folk ' || g, ${AUTHOR}, ${AUTHOR} from generate_series(1, 2000) g
-      `;
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        values (${mugwort}, 'Cronewort', ${AUTHOR}, ${AUTHOR})
-      `;
-      await sql`analyze ingredient_folk_names`;
-
-      const plan = await planFor(`select id from ingredient_folk_names where name % 'Cronewart'`);
-
-      expect(plan).toContain(`Bitmap Index Scan on ${FOLK_NAMES_TRIGRAM_INDEX}`);
-      expect(plan).not.toContain(TRIGRAM_INDEX);
-    });
-  });
-
   // `%` means "similar by pg_trgm.similarity_threshold", default 0.3 rather
   // than §9's 0.4. Set per transaction; asserted both to change the answer and
   // not to leak past the transaction.
   describe('the similarity threshold is set per transaction', () => {
     beforeEach(async () => {
+      await sql`truncate ingredients cascade`;
       // 0.4545 against 'Mugwart' — above 0.4, so it survives either threshold.
       await addIngredient('Mugwort', 'Artemisia vulgaris');
       // 0.3125 against 'Mugwart' — above the 0.3 default, below 0.4: the one
@@ -261,10 +227,10 @@ describe('ingredients trigram index', () => {
   });
 });
 
-// The plan assertion above matches this index's name as a string; a rename
-// would redden it as "wrong index chosen". This reddens beside it, correctly.
+// The plan tests match this index's name as a string; a rename would redden
+// them as "wrong index chosen". This reddens beside them, correctly.
 describe('folk-names index name is the one M4.4a declared', () => {
-  it('matches the constant this file plans against', () => {
+  it('matches the name the plan tests look for', () => {
     const { indexes } = tableFacts(ingredientFolkNames);
 
     expect(indexes.map((index) => index.config.name)).toContain(FOLK_NAMES_TRIGRAM_INDEX);

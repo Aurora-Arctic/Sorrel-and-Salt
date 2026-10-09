@@ -33,6 +33,12 @@ describe('workspaces schema', () => {
 describe('workspace_members schema', () => {
   const { byName, primaryKeys, foreignKeyByColumn } = tableFacts(workspaceMembers);
 
+  it('has its own columns and the six audit ones, and nothing else', () => {
+    expect(Object.keys(byName).sort()).toEqual(
+      ['workspace_id', 'user_id', 'role', 'joined_at', ...AUDIT_COLUMNS].sort(),
+    );
+  });
+
   it('has DESIGN.md §5 columns: workspaceId, userId, role, joinedAt', () => {
     expect(byName.workspace_id.notNull).toBe(true);
     expect(byName.user_id.notNull).toBe(true);

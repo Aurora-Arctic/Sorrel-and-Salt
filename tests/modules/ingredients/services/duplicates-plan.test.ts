@@ -30,8 +30,7 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
 });
 
-beforeEach(async () => {
-  await sql`truncate ingredients cascade`;
+beforeEach(() => {
   logged.length = 0;
 });
 
@@ -73,16 +72,20 @@ describe('the fuzzy duplicate query', () => {
   });
 
   describe('EXPLAIN', () => {
-    // Sequential scans are disabled, as ingredients-trigram.test.ts does: a
-    // seq scan that survives `enable_seqscan = off` is one with no
-    // alternative. That alone is not enough here. The folk-name arm filters
-    // `deleted_at IS NULL`, which is `ingredient_folk_names_unique`'s partial
-    // predicate, so that index offers a whole-table walk that is cheaper than
-    // a GIN probe on a small table and reads like "an index was used". So the
-    // folk names are numerous and their trigrams distinct — md5, not a shared
-    // prefix — enough that the planner's choice is between the probe and the
-    // walk rather than a foregone one.
-    beforeEach(async () => {
+    // Seeded once per file (MB.184), here rather than at the top so the
+    // statement-shape tests above read the log over a small table.
+    // Sequential scans are disabled, as ingredients-trigram.test.ts does for
+    // its negative control: a seq scan that survives `enable_seqscan = off`
+    // is one with no alternative. That alone is not enough here. The
+    // folk-name arm filters `deleted_at IS NULL`, which is
+    // `ingredient_folk_names_unique`'s partial predicate, so that index
+    // offers a whole-table walk that is cheaper than a GIN probe on a small
+    // table and reads like "an index was used". So the folk names are
+    // numerous and their trigrams distinct — md5, not a shared prefix —
+    // enough that the planner's choice is between the probe and the walk
+    // rather than a foregone one.
+    beforeAll(async () => {
+      await sql`truncate ingredients cascade`;
       await sql`
         insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
         select md5('name' || g), md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
@@ -94,6 +97,12 @@ describe('the fuzzy duplicate query', () => {
       `;
       await sql`analyze ingredients`;
       await sql`analyze ingredient_folk_names`;
+    }, 60_000);
+
+    // The seed is the plan's precondition: fewer rows and the walk wins.
+    it('plans over the seeded rows', async () => {
+      const [{ count }] = await sql`select count(*) from ingredient_folk_names`;
+      expect(Number(count)).toBe(30000);
     });
 
     async function planOf({ query, params }: Logged): Promise<string> {

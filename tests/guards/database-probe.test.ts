@@ -176,13 +176,9 @@ describe('every workflow that consumes DATABASE_URL', () => {
   // drizzle-kit receives the value `Resolve DATABASE_URL` picked — possibly a
   // GitHub secret, not anything the pull returned — so the probe in the
   // migrating job must be pointed at the resolved file, not `.vercel/.env.*`.
+  // That the step exists and writes that file is ci-secret-environments.test.ts's.
   it('validates the resolved DATABASE_URL, not only the pulled file', () => {
     const [migrating] = jobsRunning(MIGRATE);
-    const resolve = migrating.steps.find((step) => /Resolve DATABASE_URL/.test(step.name ?? ''));
-    expect(resolve, 'migrate.yml no longer resolves DATABASE_URL').toBeDefined();
-
-    expect(resolve?.run).toMatch(/RESOLVED_ENV_FILE|resolved\.env/);
-
     const probe = migrating.steps.find((step) => PROBE.test(step.run ?? ''));
     expect(probe?.run).toMatch(/RESOLVED_ENV_FILE|resolved\.env/);
     expect(probe?.run).not.toMatch(/\.vercel\/\.env/);
