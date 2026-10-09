@@ -1,7 +1,6 @@
-import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
 import { REPO_ROOT } from '../support/paths';
 import type { ImportEdge } from './types';
 
@@ -14,8 +13,8 @@ import type { ImportEdge } from './types';
 // path no glob names, and whether the edge it makes is one the graph allows is not a
 // question about the specifier at all. So this guard resolves every import in
 // `src/` to a file and checks the edge — the same scan as slug-rule.test.ts,
-// over the index plus untracked files, so a violation fails in the diff that
-// adds it.
+// the unit project's shared listing of the index plus untracked files
+// (MB.184), so a violation fails in the diff that adds it.
 //
 // Type-only imports count exactly like runtime ones for the three rules
 // below: `import type { Membership } from '../../coven/services/membership'`
@@ -108,16 +107,13 @@ const TIER_READ = /\binCompendium\(|workspace_?[iI]d[^\n]*\bis null\b|isNull\([^
 const isProbe = (path: string) => /(^|\/)__lint-probe[^/]*__(\/|$)/.test(path);
 
 function sourceFiles(): string[] {
-  // `-c safe.directory=*`: CI's vitest job runs as root over a checkout owned
-  // by uid 1000, which git refuses as "dubious ownership".
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  return execFileSync('git', [...args, 'src/*.ts', 'src/*.tsx'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  })
-    .split('\n')
-    .filter((file) => file && !isProbe(file) && !file.startsWith('src/gql/'))
-    .filter((file) => exists(file)); // still in the index, gone from the working tree
+  return inject('repoFiles').filter(
+    (file) =>
+      file.startsWith('src/') &&
+      /\.tsx?$/.test(file) &&
+      !isProbe(file) &&
+      !file.startsWith('src/gql/'),
+  );
 }
 
 function exists(path: string): boolean {

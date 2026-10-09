@@ -1,6 +1,4 @@
-import { execFileSync } from 'node:child_process';
-import { describe, expect, it } from 'vitest';
-import { REPO_ROOT } from '../support/paths';
+import { describe, expect, inject, it } from 'vitest';
 
 // The browser reaches the server through `/api/graphql` and Better Auth's
 // `/api/auth/*`, and nothing else (CLAUDE.md rule 1; claude-docs/graphql/two-transports.md,
@@ -8,7 +6,7 @@ import { REPO_ROOT } from '../support/paths';
 // page could write without GraphQL, beside the server action
 // no-server-actions.test.ts refuses, and it is a file rather than an import,
 // so no lint rule sees it. Untracked files are scanned too, for the reason
-// slug-rule.test.ts gives.
+// slug-rule.test.ts gives: the listing is the unit project's shared one (MB.184).
 
 /** Every extension Next accepts for a `route` file. */
 const ROUTE_FILE = /\/route\.(?:ts|tsx|js|jsx|mjs)$/;
@@ -16,10 +14,7 @@ const ROUTE_FILE = /\/route\.(?:ts|tsx|js|jsx|mjs)$/;
 const ALLOWED = ['src/app/api/auth/[...all]/route.ts', 'src/app/api/graphql/route.ts'];
 
 function appFiles(): string[] {
-  const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
-  return execFileSync('git', [...args, 'src/app/'], { cwd: REPO_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter(Boolean);
+  return inject('repoFiles').filter((file) => file.startsWith('src/app/'));
 }
 
 const FILES = appFiles();

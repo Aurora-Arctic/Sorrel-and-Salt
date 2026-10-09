@@ -12,7 +12,10 @@ import { ingredientSlug } from '@/lib/slugify';
 
 // The compendium search folds accents through `unaccent_immutable`, and the
 // two expression indexes are what let a fold reach a trigram index at all —
-// claude-docs/db/compendium-read.md, "The compendium read".
+// claude-docs/db/compendium-read.md, "The compendium read". That they are
+// reached is proved on the SQL the finder sends, in
+// tests/db/repository/compendium-search-query.test.ts (MB.184); what stays
+// here is the declaration, the wrapper, and the fold.
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 const FOLK_NAMES_UNACCENT_INDEX = 'ingredient_folk_names_unaccent_trgm';
 const WRAPPER = 'unaccent_immutable';
@@ -77,28 +80,6 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
   return inserted.id as string;
 }
 
-// Enough varied rows that "the index was chosen" means something; the planner
-// assertions disable sequential scans regardless.
-async function fillWithDecoys(): Promise<void> {
-  await sql`
-    insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
-    select 'Decoy ' || g, 'decoy-' || g, 'Decoyus ' || g, 'botanical', ${AUTHOR}, ${AUTHOR}
-    from generate_series(1, 2000) g
-  `;
-  await sql`analyze ingredients`;
-}
-
-// `explain` as one string, with sequential scans disabled: the question is
-// "can this predicate reach the index at all", not what the planner prefers
-// on a small table.
-async function planFor(query: string): Promise<string> {
-  return await sql.begin(async (tx) => {
-    await tx`set local enable_seqscan = off`;
-    const rows = await tx.unsafe(`explain ${query}`);
-    return rows.map((row) => row['QUERY PLAN'] as string).join('\n');
-  });
-}
-
 // Which rows match, not the order they come in: sorted here by code unit, so
 // the expectation does not depend on the database's collation.
 async function namesMatching(query: string): Promise<string[]> {
@@ -159,50 +140,8 @@ describe('the unaccent trigram indexes', () => {
     });
   });
 
-  describe('the planner reaches them from a folded word match', () => {
-    beforeEach(async () => {
-      await addIngredient("Cat's Claw", 'Uncaria tomentosa');
-      await fillWithDecoys();
-    });
-
-    it('uses the ingredients index for a predicate on name alone', async () => {
-      const plan = await planFor(
-        `select id from ingredients where ${WRAPPER}('una') <% ${WRAPPER}(name)`,
-      );
-
-      expect(plan).toContain(`Bitmap Index Scan on ${UNACCENT_INDEX}`);
-    });
-
-    it('uses the ingredients index for a predicate on canonical_name alone', async () => {
-      const plan = await planFor(
-        `select id from ingredients where ${WRAPPER}('tomentosa') <% ${WRAPPER}(canonical_name)`,
-      );
-
-      expect(plan).toContain(`Bitmap Index Scan on ${UNACCENT_INDEX}`);
-    });
-
-    it('uses the folk-names index for a predicate on a folk name', async () => {
-      const [{ id }] = await sql`select id from ingredients where name = 'Cat''s Claw'`;
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        select ${id as string}, 'Folk ' || g, ${AUTHOR}, ${AUTHOR} from generate_series(1, 2000) g
-      `;
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        values (${id as string}, 'Uña de Gato', ${AUTHOR}, ${AUTHOR})
-      `;
-      await sql`analyze ingredient_folk_names`;
-
-      const plan = await planFor(
-        `select id from ingredient_folk_names where ${WRAPPER}('una') <% ${WRAPPER}(name)`,
-      );
-
-      expect(plan).toContain(`Bitmap Index Scan on ${FOLK_NAMES_UNACCENT_INDEX}`);
-      expect(plan).not.toContain(UNACCENT_INDEX);
-    });
-  });
-
-  // Why the plans above mean something: the fold changes the answer, both ways.
+  // Why the plans in compendium-search-query.test.ts mean something: the fold
+  // changes the answer, both ways.
   describe('the fold matches across accents', () => {
     beforeEach(async () => {
       await addIngredient('Uña de Gato', null);

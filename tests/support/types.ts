@@ -76,3 +76,25 @@ export interface NavigatingProps {
   push: Mock;
   children: ReactNode;
 }
+
+/** One entry of oxlint's `--format json` report, as the lint guards read it. */
+export interface Diagnostic {
+  code: string;
+  filename: string;
+  help?: string;
+}
+
+/**
+ * One lint guard's probes: the deliberate violations and the committed files
+ * the `unit` project's setup lints in one run (tests/support/lint-probes/).
+ */
+export interface ProbeSet {
+  /** The guard's name, for the setup's own failure messages. */
+  name: string;
+  /** Probe files by repo-relative path, each with the source written there. */
+  probes: ReadonlyMap<string, string>;
+  /** The throwaway directories the probes land in, removed once linted. */
+  directories: string[];
+  /** Committed files linted beside the probes, for an exemption the guard asserts. */
+  files: string[];
+}
