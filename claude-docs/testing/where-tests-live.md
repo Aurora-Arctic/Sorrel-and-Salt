@@ -262,8 +262,9 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     (`tests/rsc/modules/coven/membership.test.ts`). A service's authorization is
     still tested in `db`, against the real rows.
 
-**Coverage** (`test.coverage`, provider `v8`): thresholds are 80% on lines,
-branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
+**Coverage** (`test.coverage`, provider `istanbul`, which replaced `v8` on
+measurement in MB.191: [`mb.191-coverage-provider.md`](../design-decisions/mb.191-coverage-provider.md)):
+thresholds are 80% on lines, branches, functions, and statements, `include: ['src/**/*.{ts,tsx}']`,
 excluding `*.stories.tsx`, `src/db/migrations/**`, and `src/db/seed/**` —
 each a set of files that really exists, for its own stated reason. Two more,
 `src/**/*.test.{ts,tsx}` and `src/test/**`, outlived MB.41's move of the suite
