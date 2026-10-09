@@ -1,7 +1,6 @@
-import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
-import { REPO_ROOT, fromRoot } from '../support/paths';
+import { describe, expect, inject, it } from 'vitest';
+import { fromRoot } from '../support/paths';
 
 // The browser's GraphQL client is graphql-request under TanStack Query, not
 // Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack
@@ -21,16 +20,12 @@ function lockedPackages(): string[] {
 // `@graphql-tools/apollo-engine-loader`, a codegen loader, is not Apollo's.
 const isApollo = (name: string) => name.startsWith('@apollo/') || name.startsWith('apollo-');
 
-/** Tracked and untracked files under src/ whose source matches `pattern`. */
-function sourcesMatching(pattern: string): string[] {
-  const args = ['-c', 'safe.directory=*', 'grep', '-l', '--untracked', '-E', pattern];
-  const grep = spawnSync('git', [...args, '--', 'src/*.ts', 'src/*.tsx'], {
-    cwd: REPO_ROOT,
-    encoding: 'utf8',
-  });
-  // git grep exits 1 on no match, and anything above that on a real failure.
-  if (grep.status !== 0 && grep.status !== 1) throw new Error(grep.stderr);
-  return grep.stdout.split('\n').filter(Boolean).sort();
+/** Tracked and untracked files under src/ (MB.184's listing) whose source matches `pattern`. */
+function sourcesMatching(pattern: RegExp): string[] {
+  return inject('repoFiles')
+    .filter((file) => file.startsWith('src/') && /\.tsx?$/.test(file))
+    .filter((file) => pattern.test(readFileSync(fromRoot(file), 'utf8')))
+    .sort();
 }
 
 describe('the GraphQL client', () => {
@@ -50,7 +45,7 @@ describe('the GraphQL client', () => {
   });
 
   it('mounts one QueryClientProvider, from the root layout', () => {
-    expect(sourcesMatching('<QueryClientProvider')).toEqual(['src/app/providers.tsx']);
-    expect(sourcesMatching('<Providers[ >]')).toEqual(['src/app/layout.tsx']);
+    expect(sourcesMatching(/<QueryClientProvider/)).toEqual(['src/app/providers.tsx']);
+    expect(sourcesMatching(/<Providers[ >]/)).toEqual(['src/app/layout.tsx']);
   });
 });

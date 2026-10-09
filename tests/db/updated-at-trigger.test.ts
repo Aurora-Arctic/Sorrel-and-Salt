@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import { AUDITED_TABLES, UNAUDITED_TABLES } from '../support/db/table-metadata';
+import { AUDITED_TABLES } from '../support/db/table-metadata';
 import { eq } from 'drizzle-orm';
 import { makeWorkspace, workspaceColumns } from '../support/fixtures';
 import { truncateAllTables } from '../support/seeded-database';
@@ -90,20 +90,10 @@ afterAll(async () => {
 });
 
 describe('the updated_at trigger', () => {
-  // Both sides are catalogue queries, so a later table that forgets its
-  // trigger line reddens without this file being edited.
+  // A catalogue query against the transcribed list, which audit-columns.test.ts
+  // holds to the catalogue's stamped tables and the adapter tables outside it:
+  // a later table that forgets its trigger line reddens without this file being edited.
   describe('coverage', () => {
-    async function auditedTables(): Promise<string[]> {
-      const rows = await sql<{ table_name: string }[]>`
-        select table_name from information_schema.columns
-        where table_schema = 'public'
-          and column_name in ('created_at', 'created_by', 'updated_at', 'updated_by')
-        group by table_name having count(*) = 4
-        order by table_name
-      `;
-      return rows.map((row) => row.table_name);
-    }
-
     async function triggeredTables(): Promise<string[]> {
       const rows = await sql<{ relname: string }[]>`
         select c.relname from pg_trigger t
@@ -115,30 +105,8 @@ describe('the updated_at trigger', () => {
       return rows.map((row) => row.relname);
     }
 
-    // Precondition: with no audited tables both queries are empty, and equal.
-    it('finds the audited tables DESIGN.md §5 specifies', async () => {
-      expect(await auditedTables()).toEqual(AUDITED_TABLES);
-    });
-
     it('attaches to every audited table', async () => {
       expect(await triggeredTables()).toEqual(AUDITED_TABLES);
-    });
-
-    it('leaves Better Auth’s adapter tables alone', async () => {
-      const triggered = await triggeredTables();
-
-      for (const table of UNAUDITED_TABLES) {
-        expect(triggered).not.toContain(table);
-      }
-      // Why they could have been skipped wrongly: they exist, and carry the
-      // `updated_at` a careless sweep would have matched on.
-      const withUpdatedAt = await sql<{ table_name: string }[]>`
-        select table_name from information_schema.columns
-        where table_schema = 'public' and column_name = 'updated_at'
-          and table_name in ${sql(UNAUDITED_TABLES)}
-        order by table_name
-      `;
-      expect(withUpdatedAt.map((row) => row.table_name)).toEqual(UNAUDITED_TABLES);
     });
 
     it('fires before each updated row, and on nothing else', async () => {

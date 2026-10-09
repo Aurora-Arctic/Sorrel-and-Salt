@@ -17,6 +17,13 @@ const GROUPS: readonly CategoryGroupOption[] = [
 
 const NO_FILTER: CategoryListFilter = { query: '', group: '' };
 
+// Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
+// which a component may not import, on the invented groups.
+const COLORS: Record<string, { colorDark: string; colorLight: string }> = {
+  'Fixture Protection': { colorDark: '#5d8ab1', colorLight: '#286ba6' },
+  'Fixture Healing': { colorDark: '#559c54', colorLight: '#326d31' },
+};
+
 const entry = (name: string, groupName: string, description: string) => {
   const slug = slugify(name);
   return {
@@ -25,6 +32,7 @@ const entry = (name: string, groupName: string, description: string) => {
     slug,
     description,
     groupName,
+    groupColors: COLORS[groupName],
     editHref: categoriesHref({}, { edit: slug }),
   };
 };

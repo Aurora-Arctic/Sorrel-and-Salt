@@ -60,98 +60,13 @@ $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
-// ---------------------------------------------------------------------------
-// Category groups
-// ---------------------------------------------------------------------------
-// The seed source M4.3 reads, and now its only job: a group's colours are a
-// pair of hexes on its row (MB.35), which a chip reads (MB.36), so nothing
-// renders from this map. One rotation of $sorrel in 22.5deg steps, odd
-// multiples only, so no group lands on the accent (96deg) or secondary (8deg)
-// hue. Saturation lifted once per theme, lightness trimmed per group to the
-// 4.5:1 floor. claude-docs/styling.md, "Category-group colours".
-$category-group-step: 22.5deg;
-$category-group-saturation: (
-  dark: 14%,
-  light: 50%,
-);
-
-// `step` is an odd multiple of $category-group-step. Keyed by M0.7's own
-// words; the seed's SASS_TOKEN_BY_GROUP_NAME maps each group's name onto one.
-$category-groups: (
-  // 208.5deg — steel blue
-  'protection': (
-      step: 5,
-      dark: 22%,
-      light: 0%,
-    ),
-  // 163.5deg — teal
-  'cleansing': (
-      step: 3,
-      dark: 9%,
-      light: -7%,
-    ),
-  // 73.5deg — gold
-  'prosperity': (
-      step: 15,
-      dark: 7%,
-      light: -8%,
-    ),
-  // 343.5deg — rose
-  'love': (
-      step: 11,
-      dark: 29%,
-      light: 0%,
-    ),
-  // 253.5deg — indigo
-  'mind': (
-      step: 7,
-      dark: 34%,
-      light: 0%,
-    ),
-  // 118.5deg — jade
-  'wellbeing': (
-      step: 1,
-      dark: 9%,
-      light: -6%,
-    ),
-  // 298.5deg — violet
-  'craft': (
-      step: 9,
-      dark: 26%,
-      light: 0%,
-    ),
-  // 28.5deg — hearth amber
-  'practice': (
-      step: 13,
-      dark: 17%,
-      light: 0%,
-    )
-);
-
-// Otherwise a mistyped theme surfaces as `null is not a number` inside color.adjust().
+// Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
     @error 'Unknown theme "#{$theme}". Expected dark or light.';
   }
 
   @return $theme;
-}
-
-// The seed test's only: it resolves each group's pair to the hexes M4.3 wrote.
-@function category-group-color($slug, $theme) {
-  $theme: _assert-theme($theme);
-  $spec: map.get($category-groups, $slug);
-
-  @if $spec == null {
-    @error 'Unknown category group "#{$slug}". The eight groups are: #{map.keys($category-groups)}.';
-  }
-
-  @return color.adjust(
-    $sorrel,
-    $hue: map.get($spec, step) * $category-group-step,
-    $saturation: map.get($category-group-saturation, $theme),
-    $lightness: map.get($spec, $theme)
-  );
 }
 
 // ---------------------------------------------------------------------------

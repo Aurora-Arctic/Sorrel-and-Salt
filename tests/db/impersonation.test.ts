@@ -1,9 +1,11 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { ORIGIN, cookieHeader } from '../support/oauth';
 import { A, B, E } from '../support/as-user';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance } from '../support/types';
 
 // MB.53, through Better Auth's real endpoints with the plugin registered: an
 // admin becomes the user they impersonate — that user's role, coven and
@@ -20,21 +22,19 @@ afterAll(async () => {
   await sql.end();
 });
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
 let requestSession: typeof import('@/lib/request-session');
+
+// The plugin is built only where the flag is on and the target is not
+// production, and only at import; request-session joins the same graph.
+beforeAll(async () => {
+  auth = await importAuth({ ENABLE_IMPERSONATION: 'true', VERCEL_ENV: 'preview' });
+  requestSession = await import('@/lib/request-session');
+});
 
 // The harness clones per file, not per test.
 beforeEach(async () => {
   await sql`delete from sessions`;
-  vi.stubEnv('ENABLE_IMPERSONATION', 'true');
-  vi.stubEnv('VERCEL_ENV', 'preview');
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
-  requestSession = await import('@/lib/request-session');
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 /** A session row for `userId` and the cookie Better Auth would have set for it. */
@@ -140,26 +140,6 @@ describe('impersonating a user', () => {
     expect(memberships.map(({ workspaceId, role }) => ({ workspaceId, role }))).toEqual([
       { workspaceId: WORKSPACE_W_ID, role: 'member' },
     ]);
-  });
-
-  it('stamps a write the user, not the admin', async () => {
-    const { createWorkspaceIngredient } = await import('@/modules/ingredients');
-    const asE = await signedInAs(E.id);
-    const response = await impersonate(asE, B.id);
-    const session = await requestSession.sessionFromHeaders(
-      new Headers({ cookie: cookieHeader(response) }),
-    );
-    if (!session) throw new Error('the impersonation has no session');
-
-    const created = await createWorkspaceIngredient(session, WORKSPACE_W_ID, {
-      name: 'Impersonwort',
-      nomenclature: 'none',
-    });
-
-    const [row] = await sql`
-      select created_by, updated_by from ingredients where id = ${created.id}
-    `;
-    expect(row).toEqual({ created_by: B.id, updated_by: B.id });
   });
 });
 

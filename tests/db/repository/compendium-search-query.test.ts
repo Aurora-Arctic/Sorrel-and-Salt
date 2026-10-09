@@ -121,22 +121,16 @@ async function statementFor(request: () => Promise<unknown>): Promise<Logged> {
 }
 
 /**
- * `explain analyze` of a logged statement, in a transaction holding the
- * search's threshold — and, for the plan, sequential scans disabled, so the
- * question is whether the indexes can be reached at all rather than what the
- * planner prefers.
+ * `explain` of a logged statement, in a transaction holding the search's
+ * threshold with sequential scans disabled, so the question is whether the
+ * indexes can be reached at all rather than what the planner prefers.
  */
-async function explain(
-  { query, params }: Logged,
-  { seqscan }: { seqscan: boolean },
-): Promise<{ plan: string; ms: number }> {
+async function explain({ query, params }: Logged): Promise<string> {
   return sql.begin(async (tx) => {
     await tx`select set_config('pg_trgm.word_similarity_threshold', '0.5', true)`;
-    if (!seqscan) await tx`set local enable_seqscan = off`;
-    const rows = await tx.unsafe(`explain analyze ${query}`, params as never[]);
-    const plan = rows.map((row) => row['QUERY PLAN'] as string).join('\n');
-    const ms = Number(/Execution Time: ([\d.]+) ms/.exec(plan)?.[1]);
-    return { plan, ms };
+    await tx`set local enable_seqscan = off`;
+    const rows = await tx.unsafe(`explain ${query}`, params as never[]);
+    return rows.map((row) => row['QUERY PLAN'] as string).join('\n');
   });
 }
 
@@ -146,10 +140,10 @@ describe('the ranked search plan over ~20,000 rows', () => {
   let pageTwo: Logged;
   let suggestions: Logged;
 
+  // Seeded once per file (MB.184): twenty thousand entries and as many folk
+  // names that share no word with `mugwort`, and a thousand that do — by
+  // label, by formal name and by folk name — at several scores.
   beforeAll(async () => {
-    // Twenty thousand entries and as many folk names that share no word with
-    // `mugwort`, and a thousand that do — by label, by formal name and by folk
-    // name — at several scores.
     await sql`
       insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
       select 'Decoy ' || md5(g::text), 'decoy-' || g, 'Decoyus ' || md5((-g)::text),
@@ -187,7 +181,7 @@ describe('the ranked search plan over ~20,000 rows', () => {
     ['ingredient suggestion page', () => suggestions],
   ] as const) {
     it(`starts the ${label} from both expression indexes, with no subplan`, async () => {
-      const { plan } = await explain(statement(), { seqscan: false });
+      const plan = await explain(statement());
 
       expect(plan).toContain(`Index Scan on ${UNACCENT_INDEX}`);
       expect(plan).toContain(`Index Scan on ${FOLK_NAMES_UNACCENT_INDEX}`);
@@ -195,43 +189,4 @@ describe('the ranked search plan over ~20,000 rows', () => {
       expect(plan).not.toContain('Seq Scan');
     });
   }
-
-  it('prints the ranked and unranked timings', async () => {
-    // M8.5's shape, the baseline: the same match as a filter, in (name, id) order.
-    const unranked = (after?: { name: string; id: string }): Logged => ({
-      query: `
-        select id, name from ingredients
-        where workspace_id is null and deleted_at is null
-          ${after ? 'and (name, id) > ($2::text, $3::uuid)' : ''}
-          and id in (
-            select c.id from ingredients c
-            where unaccent_immutable($1) <% unaccent_immutable(c.name)
-               or unaccent_immutable($1) <% unaccent_immutable(c.canonical_name)
-            union all
-            select f.ingredient_id from ingredient_folk_names f
-            where unaccent_immutable($1) <% unaccent_immutable(f.name) and f.deleted_at is null)
-        order by name, id limit 26`,
-      params: after ? ['mugwort', after.name, after.id] : ['mugwort'],
-    });
-    const [boundary] = await sql.begin(async (tx) => {
-      await tx`select set_config('pg_trgm.word_similarity_threshold', '0.5', true)`;
-      return tx.unsafe(`${unranked().query} offset 24`, ['mugwort']);
-    });
-
-    const timings = {
-      'ranked, first page': (await explain(pageOne, { seqscan: true })).ms,
-      'ranked, after a cursor': (await explain(pageTwo, { seqscan: true })).ms,
-      'unranked, first page': (await explain(unranked(), { seqscan: true })).ms,
-      'unranked, after a cursor': (
-        await explain(unranked(boundary as unknown as { name: string; id: string }), {
-          seqscan: true,
-        })
-      ).ms,
-    };
-    // The timings are this test's output, beside its assertions.
-    // oxlint-disable-next-line no-console
-    console.log('compendium search over ~20,000 rows (ms):', timings);
-
-    for (const ms of Object.values(timings)) expect(ms).toBeGreaterThan(0);
-  });
 });

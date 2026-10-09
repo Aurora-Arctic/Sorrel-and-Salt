@@ -9,7 +9,6 @@ import {
   findIngredientFormValues,
   findOneById,
   findOneBySlug,
-  findPage,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
@@ -24,12 +23,7 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
 import { describeEntry, heldBy } from './held-entries';
-import type {
-  FormRewrite,
-  IngredientFormGroupRow,
-  IngredientFormValueFilter,
-  IngredientFormValueRow,
-} from '../types';
+import type { FormRewrite, IngredientFormValueFilter, IngredientFormValueRow } from '../types';
 
 // The curated form vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6a).
@@ -65,13 +59,6 @@ export async function countIngredientFormValues(
 ): Promise<PageCount> {
   const read = readable(filter);
   return read ? findIngredientFormValueCount(read, start) : { totalCount: 0, countBefore: null };
-}
-
-/** One page of the live form groups, alphabetical by name (MB.35): a form's group is picked from these. */
-export function listIngredientFormGroups(
-  page: PageRequest,
-): Promise<PageEntry<IngredientFormGroupRow>[]> {
-  return findPage(ingredientFormGroups, [ingredientFormGroups.name], page);
 }
 
 /**

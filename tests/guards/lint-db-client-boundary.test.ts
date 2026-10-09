@@ -1,9 +1,22 @@
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
+import {
+  CLIENT_EXEMPT,
+  CLIENT_SPECIFIERS,
+  EXEMPT,
+  RESTRICTED,
+  clientProbes,
+  clientTypeProbe,
+  dbClientBoundary,
+  exemptClientProbe,
+  exemptRuntimeProbes,
+  runtimeProbes,
+  siblingModuleProbe,
+  subpathProbe,
+  typeOnlyProbes,
+} from '../support/lint-probes/db-client-boundary';
 import { REPO_ROOT } from '../support/paths';
-import type { Diagnostic } from './types';
 
 // Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
 // only `src/db/repository/` may import the database client (CLAUDE.md rule
@@ -16,175 +29,28 @@ import type { Diagnostic } from './types';
 // rule config rather than merging with it, so that copy must restate the
 // client ban — the regression that invites is asserted below.
 //
-// Probes are written to throwaway `__lint-probe__` directories inside the
-// repo, since both rules are path-scoped and a file in `tmpdir` matches no
-// `overrides` block; not committed, since oxlint skips anything matched by
-// `ignorePatterns` even when passed explicitly (`--no-ignore` does not override it).
+// The probes are tests/support/lint-probes/db-client-boundary.ts's, written
+// and linted once by the unit project's setup with every other lint guard's
+// (MB.184); this file reads its diagnostics off that run.
 
 const RULE = 'eslint(no-restricted-imports)';
-const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');
-const config = join(REPO_ROOT, '.oxlintrc.json');
 
-/** Untracked, gitignored, and removed in `afterAll`. */
-const PROBE = '__lint-probe__';
-
-/**
- * Everywhere the query-builder ban applies. `tests/db` is exempt below; the
- * rest of `tests/` is application code as far as rule 4 is concerned, and a
- * probe in each proves the exemption has not widened to the whole suite.
- */
-const RESTRICTED = [
-  'src/modules/coven/services',
-  'src/graphql',
-  'src/app',
-  'src/components',
-  'src/lib',
-  'tests/e2e',
-  'tests/lib',
-  'tests/support',
-  'tests/guards',
-];
-
-/**
- * The database layer, which builds queries for a living, a module's schema
- * files, which build tables with the same package — and the tests of both.
- */
-const EXEMPT = [
-  'src/db',
-  'src/modules/identity/schema',
-  'scripts',
-  'tests/db',
-  'tests/db/seed',
-  'tests/support/db',
-];
-
-/**
- * Files whose import of the client is exempted by a disable comment: the
- * repository's three that run a query — its transaction, its select and its
- * one users delete — and three outside it that need a client, not a writer.
- */
-const CLIENT_EXEMPT = [
-  'src/db/repository/write.ts',
-  'src/db/repository/select.ts',
-  'src/db/repository/provisional-users.ts',
-  'src/lib/auth.ts',
-  'scripts/db-seed.ts',
-  'tests/db/test-database-isolation.test.ts',
-];
-
-/** Probe files, keyed by the repo-relative path each is written to. */
-const probes = new Map<string, string>();
-
-/** Register a probe and return its path, for use as a lookup key. */
-function probe(directory: string, name: string, source: string): string {
-  const file = `${directory}/${PROBE}/${name}.ts`;
-  probes.set(file, source);
-  return file;
-}
-
-// Rule 1 — every shape an importer can reach connection.ts by. The `@/` alias
-// is the one that matters: the ban is a set of path globs, and `@/db/connection`
-// is not the relative shape any of the other five describe.
-const CLIENT_SPECIFIERS = [
-  './connection',
-  '../connection',
-  '../../db/connection',
-  '../../../../db/connection',
-  '../src/db/connection.ts',
-  '@/db/connection',
-];
-const clientProbes = CLIENT_SPECIFIERS.map((specifier) =>
-  probe(
-    'src/modules/coven/services',
-    `client-${specifier.replace(/\W/g, '')}`,
-    `import { db } from '${specifier}';\nexport const smuggled = db;\n`,
-  ),
-);
-const clientTypeProbe = probe(
-  'src/modules/coven/services',
-  'client-type',
-  "import type { db } from '../db/connection';\nexport type D = typeof db;\n",
-);
-const siblingModuleProbe = probe(
-  'src/modules/coven/services',
-  'sibling-module',
-  "import { withAudit } from '../../../../db/repository';\nexport const w = withAudit;\n",
-);
-
-// Rule 2 — a runtime import of the query builder from each restricted
-// location, the same import as a type, and the subpath form.
-const runtimeProbes = Object.fromEntries(
-  RESTRICTED.map((directory) => [
-    directory,
-    probe(directory, 'runtime', "import { eq } from 'drizzle-orm';\nexport const e = eq;\n"),
-  ]),
-);
-const typeOnlyProbes = Object.fromEntries(
-  RESTRICTED.map((directory) => [
-    directory,
-    probe(
-      directory,
-      'type-only',
-      "import type { SQL } from 'drizzle-orm';\nexport type S = SQL | undefined;\n",
-    ),
-  ]),
-);
-const subpathProbe = probe(
-  'src/graphql',
-  'subpath',
-  "import { pgTable } from 'drizzle-orm/pg-core';\nexport const t = pgTable;\n",
-);
-
-// The exempt tier: the database layer builds queries, and still may not reach
-// the client outside the repository.
-const exemptRuntimeProbes = Object.fromEntries(
-  EXEMPT.map((directory) => [
-    directory,
-    probe(directory, 'runtime', "import { eq } from 'drizzle-orm';\nexport const e = eq;\n"),
-  ]),
-);
-const exemptClientProbe = probe(
-  'src/db',
-  'client',
-  "import { db } from '../../db/connection';\nexport const smuggled = db;\n",
-);
-
-let diagnostics: Diagnostic[];
+const diagnostics = inject('lintDiagnostics');
 
 /** How many `no-restricted-imports` diagnostics one file drew. */
 const restricted = (file: string) =>
   diagnostics.filter((d) => d.code === RULE && d.filename === file).length;
 
-beforeAll(() => {
-  for (const [file, source] of probes) {
-    mkdirSync(join(REPO_ROOT, file, '..'), { recursive: true });
-    writeFileSync(join(REPO_ROOT, file), source);
-  }
-
-  // One spawn for every case: oxlint costs ~200ms of process start, and
-  // diagnostics carry their filename, so the cases partition one result.
-  let stdout: string;
-  try {
-    // oxlint exits non-zero when it reports errors; the diagnostics are still
-    // on the thrown error's stdout.
-    stdout = execFileSync(
-      oxlint,
-      ['-c', config, '--format', 'json', ...probes.keys(), ...CLIENT_EXEMPT, 'drizzle.config.ts'],
-      { cwd: REPO_ROOT, encoding: 'utf8' },
-    );
-  } catch (error) {
-    stdout = (error as { stdout?: string }).stdout ?? '';
-  }
-  diagnostics = (JSON.parse(stdout) as { diagnostics: Diagnostic[] }).diagnostics;
-});
-
-afterAll(() => {
-  for (const directory of [...RESTRICTED, ...EXEMPT]) {
-    rmSync(join(REPO_ROOT, directory, PROBE), { recursive: true, force: true });
-  }
-});
-
 describe('CLAUDE.md rule 2 — the db client import boundary', () => {
+  // Precondition: the shared run was pointed at every probe and exempt file
+  // here, and drew a diagnostic from at least one probe.
+  it('had its probes linted', () => {
+    expect(inject('lintedFiles')).toEqual(
+      expect.arrayContaining([...dbClientBoundary.probes.keys(), ...dbClientBoundary.files]),
+    );
+    expect(clientProbes.some((file) => restricted(file) > 0)).toBe(true);
+  });
+
   it.each(CLIENT_SPECIFIERS.map((specifier, index) => [specifier, clientProbes[index]]))(
     'bans importing the client as %s',
     (_specifier, file) => {
@@ -224,22 +90,17 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
   // anywhere" — `.oxlintrc.json` gained a second `no-restricted-imports`
   // pattern at M2.6 (social-providers-config.ts, a different boundary
   // entirely), and a file can legitimately carry a disable comment for that
-  // one without being an exemption from *this* one.
+  // one without being an exemption from *this* one. Untracked files count:
+  // a seventh is caught in the diff that adds it, not after it merges.
   it('has exactly six files carrying the exemption, and no others', () => {
-    // `-c safe.directory=*`: CI's vitest job runs as root over a checkout
-    // owned by uid 1000, which git refuses as "dubious ownership". `git
-    // ls-files` rather than a walk: tracked files are what "no others" means.
-    const tracked = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '*.ts', '*.tsx'], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-    })
-      .split('\n')
-      .filter(Boolean);
+    const files = inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
+    // Precondition: an empty listing has no seventh in it either.
+    expect(files).toEqual(expect.arrayContaining(CLIENT_EXEMPT));
 
     const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;
     const clientImport =
       /(?:from\s+['"]|import\(\s*['"])(?:\.\.?\/connection|.*\/db\/connection)(?:\.ts)?['"]/;
-    const exempt = tracked.filter((file) => {
+    const exempt = files.filter((file) => {
       const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
       return lines.some((line, i) => directive.test(line) && clientImport.test(lines[i + 1] ?? ''));
     });

@@ -19,6 +19,11 @@ export interface ComboboxOption {
   heading?: string;
   /** What tells it from a row that reads the same — an ingredient's id — where its text cannot. */
   key?: string;
+  /**
+   * Its group's colour pair, a category's (the owner's call): the row is
+   * edged in it, so the colour its chip will wear is seen before the pick.
+   */
+  colors?: GroupColors;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */

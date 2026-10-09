@@ -9,11 +9,15 @@ import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
+import { seedSources } from '@/db/seed/sources';
 import type { SeedEntry, UserRow } from './types';
 
-// The `minimal` scenario against the real schema, every table emptied first.
-// The handle is this file's own; that the seed writes through it rather than
-// a client of its own is enforced by lint, not here —
+// The `minimal` scenario against the real schema, and the shape every seed
+// entry point shares, asserted here once over all of them (MB.183) and in no
+// per-seed file: the bootstrap user inserted and published as the acting user,
+// every row stamped as it, a second run a no-op, and nothing an admin deleted
+// brought back. The handle is this file's own; that the seed writes through
+// it rather than a client of its own is enforced by lint, not here —
 // claude-docs/db/seed-module.md, "The seed module".
 
 // Every admin-curated table; `minimal` leaves all of them empty.
@@ -29,6 +33,10 @@ const PROBE = 'seed_probe_acting_user';
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
+/** Every table under test, the probe excluded. */
+let tables: string[];
+/** The tables that carry a tombstone; a hard-deleted join table has none to leave. */
+let tombstoned: Set<string>;
 
 async function allUsers(): Promise<UserRow[]> {
   return sql<UserRow[]>`
@@ -37,34 +45,62 @@ async function allUsers(): Promise<UserRow[]> {
   `;
 }
 
-async function countOf(table: string): Promise<number> {
-  const [{ count }] = await sql<{ count: string }[]>`select count(*) from ${sql(table)}`;
+async function countOf(table: string, where = ''): Promise<number> {
+  const [{ count }] = await sql.unsafe<{ count: string }[]>(
+    `select count(*) from "${table}" ${where}`,
+  );
   return Number(count);
+}
+
+/** Every row of every table, as text, so a second run's writes show as a diff. */
+async function snapshot(): Promise<Record<string, string[]>> {
+  const rows: Record<string, string[]> = {};
+  for (const table of tables) {
+    const found = await sql.unsafe<{ row: string }[]>(
+      `select to_jsonb(t)::text as row from "${table}" t`,
+    );
+    rows[table] = found.map((r) => r.row).sort();
+  }
+  return rows;
 }
 
 beforeAll(async () => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
 
-  // Records what `app.current_user_id` held inside the inserting transaction;
-  // it is transaction-local and gone by the time a test could read it.
-  await sql`create table ${sql(PROBE)} (user_id uuid not null, acting_user text)`;
+  tables = (
+    await sql<{ tablename: string }[]>`
+      select tablename from pg_tables where schemaname = 'public' order by tablename
+    `
+  ).map((row) => row.tablename);
+  tombstoned = new Set(
+    (
+      await sql<{ table_name: string }[]>`
+        select table_name from information_schema.columns
+        where table_schema = 'public' and column_name = 'deleted_at'
+      `
+    ).map((row) => row.table_name),
+  );
+
+  // Records, per inserted row, what `app.current_user_id` held inside the
+  // inserting transaction; it is transaction-local and gone by the time a test
+  // could read it. One function, a trigger on every table, so the one probe
+  // watches every seed's own rows and not only the bootstrap user's.
+  await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
     begin
-      insert into ${PROBE} (user_id, acting_user)
-      values (new.id, current_setting('app.current_user_id', true));
+      insert into ${PROBE} (table_name, acting_user)
+      values (tg_table_name, current_setting('app.current_user_id', true));
       return new;
     end
     $$
   `);
-  await sql.unsafe(
-    `create trigger ${PROBE} after insert on users for each row execute function ${PROBE}()`,
-  );
-});
-
-beforeEach(async () => {
-  await truncateAllTables(sql);
+  for (const table of tables) {
+    await sql.unsafe(
+      `create trigger ${PROBE} after insert on "${table}" for each row execute function ${PROBE}()`,
+    );
+  }
 });
 
 // Only this file's own objects come down.
@@ -75,10 +111,16 @@ afterAll(async () => {
 });
 
 describe('seed(db, { scenario: "minimal" })', () => {
+  // One run for the reads below; the shape every seed shares is asserted further down.
+  beforeAll(async () => {
+    await truncateAllTables(sql);
+    // Precondition: the truncated clone really starts empty, so the rows read are this seed's.
+    expect(await countOf('users')).toBe(0);
+    await seed(db, { scenario: 'minimal' });
+  });
+
   // MB.58: the system user is a creator, not an admin, so a bare install has none.
   it('produces exactly one system user and one user, and no admin', async () => {
-    await seed(db, { scenario: 'minimal' });
-
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([BOOTSTRAP_USER_ID, MINIMAL_USER_ID]);
     expect(users.map((u) => u.role)).toEqual(['user', 'user']);
@@ -87,16 +129,12 @@ describe('seed(db, { scenario: "minimal" })', () => {
 
   // The bootstrap row is its own creator under the fixed id: one self-satisfying insert.
   it('inserts the system user as its own createdBy/updatedBy, under the fixed MB.5 id', async () => {
-    await seed(db, { scenario: 'minimal' });
-
     const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
     expect(system.created_by).toBe(BOOTSTRAP_USER_ID);
     expect(system.updated_by).toBe(BOOTSTRAP_USER_ID);
   });
 
   it('creates the plain user as the bootstrap user, under a fixed id of its own', async () => {
-    await seed(db, { scenario: 'minimal' });
-
     const [user] = (await allUsers()).filter((u) => u.id === MINIMAL_USER_ID);
     expect(user.role).toBe('user');
     expect(user.created_by).toBe(BOOTSTRAP_USER_ID);
@@ -106,46 +144,13 @@ describe('seed(db, { scenario: "minimal" })', () => {
   // Invite-gated: a bare install has granted nothing, and a seed that flipped
   // this would hide the gate from every test built on it.
   it('leaves canCreateWorkspace false on both — nothing in a bare install has granted it', async () => {
-    await seed(db, { scenario: 'minimal' });
-
     expect((await allUsers()).map((u) => u.can_create_workspace)).toEqual([false, false]);
   });
 
-  it('publishes the bootstrap user as app.current_user_id for both inserts, as withAudit would', async () => {
-    await seed(db, { scenario: 'minimal' });
-
-    const rows = await sql<{ user_id: string; acting_user: string | null }[]>`
-      select user_id, acting_user from ${sql(PROBE)} order by user_id
-    `;
-    expect(rows.map((r) => r.user_id)).toEqual([BOOTSTRAP_USER_ID, MINIMAL_USER_ID]);
-    expect(rows.map((r) => r.acting_user)).toEqual([BOOTSTRAP_USER_ID, BOOTSTRAP_USER_ID]);
-  });
-
   it('leaves the compendium empty', async () => {
-    await seed(db, { scenario: 'minimal' });
-
     for (const table of COMPENDIUM_TABLES) {
       expect(await countOf(table), table).toBe(0);
     }
-  });
-
-  // Idempotent rather than truncate-first: the same two rows, and no trip on the unique index.
-  it('is idempotent: re-running leaves the same two rows', async () => {
-    await seed(db, { scenario: 'minimal' });
-    const first = await allUsers();
-
-    await expect(seed(db, { scenario: 'minimal' })).resolves.toBeUndefined();
-
-    expect(await allUsers()).toEqual(first);
-    expect(await countOf(PROBE), 'no second insert reached the users table').toBe(2);
-  });
-
-  // A run that wrote nothing would still find the compendium empty, so the
-  // users table is asserted empty first.
-  it('starts from an empty users table, so the two rows are the seed’s', async () => {
-    expect(await countOf('users')).toBe(0);
-    await seed(db, { scenario: 'minimal' });
-    expect(await countOf('users')).toBe(2);
   });
 });
 
@@ -187,28 +192,143 @@ describe('resolveScenario', () => {
 // and production. From wherever, it is no admin (MB.58): it has no OAuth
 // account and nobody can sign in as it, so as an admin it would only be a
 // revocable row on /admin/users.
+//
+// Each entry names the tables it is the seed of: the ones it fills from empty,
+// which is also what proves `seed()` routed a scenario to its own seed. The
+// `standard` list leaves out two it writes: `admin_role_changes`, whose one
+// ledger row is stamped as fixture E, the way MB.58's migration stamps every
+// admin's, and `ingredient_deities`, whose deleted pick a re-run of
+// `standard` puts back by design: it resets its fixtures, and
+// standard.test.ts asserts the restoration. `demo` keeps the deletion, so the
+// table is on its list — claude-docs/db/standard-scenario.md, "A reseed of
+// standard puts a deity pick back; demo does not".
 const SEED_ENTRIES: SeedEntry[] = [
-  ...SEED_SCENARIOS.map((scenario): SeedEntry => [
-    `the ${scenario} scenario`,
-    (handle) => seed(handle, { scenario }),
-  ]),
-  ['the category seed', seedCategories],
-  ['the form seed', seedForms],
-  ['the astrology seed', seedAstrology],
-  ['the deity seed', seedDeities],
+  {
+    name: 'the minimal scenario',
+    run: (db) => seed(db, { scenario: 'minimal' }),
+    tables: ['users'],
+  },
+  {
+    name: 'the standard scenario',
+    run: (db) => seed(db, { scenario: 'standard' }),
+    tables: [
+      'users',
+      'workspaces',
+      'workspace_members',
+      'ingredients',
+      'ingredient_folk_names',
+      'ingredient_categories',
+    ],
+  },
+  {
+    name: 'the demo scenario',
+    run: (db) => seed(db, { scenario: 'demo' }),
+    tables: ['spells', 'spell_ingredients', 'spell_categories', 'ingredient_deities'],
+  },
+  { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
+  { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
+  { name: 'the astrology seed', run: seedAstrology, tables: ['planets', 'zodiac_signs'] },
+  { name: 'the deity seed', run: seedDeities, tables: ['deity_traditions', 'deities'] },
+  {
+    // A source links rows the two vocabularies wrote, so alone it has nothing to link.
+    name: 'the sources seed, after the vocabularies it links',
+    run: async (db) => {
+      await seedDeities(db);
+      await seedAstrology(db);
+      await seedSources(db);
+    },
+    tables: ['references', 'reference_links'],
+  },
 ];
 
-describe('the bootstrap user, from every seed', () => {
-  it.each(SEED_ENTRIES)('%s inserts it as a plain user', async (_name, run) => {
-    // Precondition: the row is this run's insert, not one left over.
-    expect(await countOf('users')).toBe(0);
-
-    await run(db);
-
-    const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
-    expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
+describe('the shape every seed shares', () => {
+  beforeEach(async () => {
+    await truncateAllTables(sql);
   });
-});
 
-// The other scenarios are asserted in standard.test.ts and demo.test.ts; this
-// file's probe watches `users` alone.
+  // One run, read three ways: the bootstrap row it inserted, the stamps on
+  // every row of its own tables, and the acting user the probe saw on every
+  // insert — each with the precondition that the rows are this run's.
+  it.each(SEED_ENTRIES)(
+    '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
+    async ({ run, tables: own }) => {
+      // Precondition: the truncated clone really starts empty, so these rows are this run's.
+      for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
+
+      await run(db);
+
+      const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
+      expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
+
+      for (const table of own) {
+        const rows = await sql.unsafe<{ row: Record<string, unknown> }[]>(
+          `select to_jsonb(t) as row from "${table}" t`,
+        );
+        expect(rows.length, table).toBeGreaterThan(0);
+        for (const { row } of rows) {
+          expect(row.created_by, table).toBe(BOOTSTRAP_USER_ID);
+          expect(row.updated_by, table).toBe(BOOTSTRAP_USER_ID);
+          expect(row.deleted_at ?? null, table).toBeNull();
+        }
+      }
+
+      const inserts = await sql<{ table_name: string; acting_user: string | null }[]>`
+        select table_name, acting_user from ${sql(PROBE)}
+      `;
+      // Precondition: the probe saw this seed's own rows, not only the bootstrap user's.
+      const seen = new Set(inserts.map((row) => row.table_name));
+      for (const table of ['users', ...own]) expect(seen.has(table), table).toBe(true);
+      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID)).toEqual([]);
+    },
+  );
+
+  // Idempotent rather than truncate-first: every table byte for byte, and no
+  // trip on a unique index.
+  it.each(SEED_ENTRIES)(
+    '$name is idempotent: a second run adds nothing and moves nothing, anywhere',
+    async ({ run }) => {
+      await run(db);
+      const before = await snapshot();
+      const inserts = await countOf(PROBE);
+      // Precondition: the first run wrote rows for the second to leave alone.
+      expect(inserts).toBeGreaterThan(0);
+
+      await expect(run(db)).resolves.toBeUndefined();
+
+      expect(await snapshot()).toEqual(before);
+      expect(await countOf(PROBE), 'no second insert reached any table').toBe(inserts);
+    },
+  );
+
+  // Keyed on identity, ignoring `deleted_at`: the partial unique indexes stop
+  // only a second live row, and would let the tombstoned one's twin through.
+  it.each(SEED_ENTRIES)(
+    '$name does not resurrect a row an admin has since deleted, in any of its tables',
+    async ({ run, tables: own }) => {
+      await run(db);
+
+      const deletable = own.filter((table) => tombstoned.has(table));
+      // Precondition: there is a tombstone to leave, so an empty loop proves nothing.
+      expect(deletable.length).toBeGreaterThan(0);
+      for (const table of deletable) {
+        // The bootstrap user is every seed's own identity, written back by
+        // design; the victim is any other row.
+        const victim = table === 'users' ? `where id <> '${BOOTSTRAP_USER_ID}'` : '';
+        const deleted = await sql.unsafe(`
+          update "${table}" set deleted_at = now(), deleted_by = '${BOOTSTRAP_USER_ID}'
+          where ctid = (select ctid from "${table}" ${victim} limit 1)
+        `);
+        expect(deleted.count, table).toBe(1);
+      }
+      const before = new Map<string, number>();
+      for (const table of deletable) before.set(table, await countOf(table));
+
+      await run(db);
+
+      for (const table of deletable) {
+        expect(await countOf(table), `${table} gained a row`).toBe(before.get(table));
+        expect(await countOf(table, 'where deleted_at is not null'), table).toBe(1);
+      }
+    },
+  );
+});

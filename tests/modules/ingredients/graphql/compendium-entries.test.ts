@@ -1,25 +1,24 @@
-import { createYoga } from 'graphql-yoga';
 import { GraphQLInputObjectType, isNonNullType } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { maskedErrors } from '@/graphql/errors';
-import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
-import type { Answer, WorkspaceIngredientNode } from './types';
+import { run } from '../../../support/graphql/run';
+import type { WorkspaceIngredientNode } from './types';
 
-// Story 18 over the wire (M5.5): the site admin's three compendium writes,
-// run through Yoga with the route's own error mapping, so a refusal is
-// asserted as the browser receives it. The service's own rules are
-// services/compendium-entries.test.ts's; this file holds the transport's half.
+// Story 18 over the wire (M5.5): the site admin's three compendium writes.
+// This file holds the transport's half (claude-docs/testing/layer-ownership.md):
+// the SDL's own refusals, the loaders cleared between two writes in one
+// request, `endRedirect` reaching the service, and one refusal per error code
+// per mutation, read as the browser reads it. Who else is refused, and every
+// collision, are services/compendium-entries.test.ts's; a signed-out caller
+// at every field is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -37,25 +36,6 @@ beforeAll(async () => {
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
-
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-async function run<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown>,
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
 
 const FIELDS = `
   id name slug canonicalName nomenclature form isGlobal folkNames
@@ -166,21 +146,16 @@ const countIngredients = async () => {
   return row.n as number;
 };
 
-// Between them every workspace role there is, a coven that is not W, and no
-// session at all: none of it is the site role, which is the one thing these
-// writes turn on.
-const REFUSED = [
-  ['an owner of a coven', asUser(A)],
-  ['a member of a coven', asUser(B)],
-  ['a viewer in a coven', asUser(C)],
-  ['a member of another coven', asUser(D)],
-  ['a signed-out caller', null],
-] as const;
+// The one non-admin each write refuses here, since `authScopes: { admin: true }`
+// is a gate of its own in front of the service: a coven's owner, the most a
+// workspace role grants, which is still not the site role these writes turn
+// on. Every other role is services/compendium-entries.test.ts's.
+const REFUSED = [['an owner of a coven', asUser(A)]] as const;
 
-// Why a refusal of any of them could have been something else: the session
-// the scope reads says `user`, and E's says `admin`.
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, session] of REFUSED) expect(session?.role ?? null).not.toBe('admin');
+// Why the refusal could have been something else: the session the scope reads
+// says `user`, and E's says `admin`.
+it('is testing a session whose site role is `user`, beside an admin', () => {
+  for (const [, session] of REFUSED) expect(session.role).toBe('user');
   expect(asUser(E).role).toBe('admin');
 });
 
@@ -241,26 +216,6 @@ describe('createCompendiumIngredient', () => {
       ],
     });
     expect(await countIngredients()).toBe(1);
-  });
-
-  it("answers a label that is another entry's formal name as VALIDATION on `name`, naming it", async () => {
-    await seed();
-
-    const result = await create(asUser(E), {
-      ...testwort({ name: 'Fixtura Testalis' }),
-      canonicalName: null,
-      nomenclature: 'none',
-    });
-
-    expect(result.errors?.[0]?.extensions).toEqual({
-      code: 'VALIDATION',
-      fieldErrors: [
-        {
-          path: ['name'],
-          message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
-        },
-      ],
-    });
   });
 });
 

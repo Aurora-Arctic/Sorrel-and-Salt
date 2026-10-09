@@ -13,11 +13,14 @@ In each module's `validation/` directory, a third public surface beside
 `index.ts` and `schema/*.ts` ([`modules.md`](modules.md), "The public
 surface"):
 
-| File                                               | Exports                                             |
-| -------------------------------------------------- | --------------------------------------------------- |
-| `src/modules/ingredients/validation/ingredient.ts` | `LocalIngredientInput`, `CompendiumIngredientInput` |
-| `src/modules/ingredients/validation/stock.ts`      | `StockInput`                                        |
-| `src/modules/vocabulary/validation/category.ts`    | `CategoryInput`                                     |
+| File                                                         | Exports                                             |
+| ------------------------------------------------------------ | --------------------------------------------------- |
+| `src/modules/ingredients/validation/ingredient.ts`           | `LocalIngredientInput`, `CompendiumIngredientInput` |
+| `src/modules/ingredients/validation/stock.ts`                | `StockInput`                                        |
+| `src/modules/vocabulary/validation/category.ts`              | `CategoryInput`                                     |
+| `src/modules/vocabulary/validation/category-group.ts`        | `CategoryGroupInput`                                |
+| `src/modules/vocabulary/validation/ingredient-form-value.ts` | `IngredientFormValueInput`                          |
+| `src/modules/vocabulary/validation/ingredient-form-group.ts` | `IngredientFormGroupInput`                          |
 
 Each export is both a schema and, under the same name, the type of its parsed
 output. A form sends `z.input<typeof …>`: its values as typed, unparsed, so
@@ -33,7 +36,8 @@ can't go in `schema/` either: that folder is drizzle-kit's glob and holds the
 tables. So a validation file imports `zod` and dependency-free files, and
 nothing else. Those files are `schema/units.ts`, `schema/ingredient-enums.ts`
 and `schema/quantities.ts`, which the tables are built from too, so a closed
-set or a column's shape is written down once. `tests/guards/client-safe-validation.test.ts`
+set or a column's shape is written down once, and `src/lib/contrast.ts`, the
+contrast arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
 walks every validation file's imports, however indirect, and fails any that
 reach a package other than `zod`. A table file fails it, because it imports
 `drizzle-orm`, and the guard proves itself against one.
@@ -231,10 +235,25 @@ refused at `url` and `accessed` both.
 
 `CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
 `groupId` uuid. It takes no slug, which is derived from the name and dropped if
-sent. The group and form vocabularies (M5.6a, M5.6b) add their own schemas
-beside it when those tasks land, and so does the spell (MB.8).
+sent. `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
+optional `endRedirect`, the admin's confirmation that a rename may take an
+address another entry's redirect still runs from (MB.82).
+
+`IngredientFormGroupInput` (M5.6b) takes a trimmed, non-blank `name` and
+`description`, refused with "Give the group a name" and "Describe the group",
+and no slug. `CategoryGroupInput` extends it with `colorDark` and
+`colorLight`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
+refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
+held to 4.5:1 against its own theme's harder surface, the dark card or the
+light page (MB.36), through `chipContrast` in `src/lib/contrast.ts`, and
+refused at its own column with the ratio: "The light theme colour reads
+2.99:1 on the light page — it needs at least 4.5:1". The ratio is cut to two
+places rather than rounded, so a refused 4.499 never shows as 4.50. The check
+is the schema's rather than the service's alone, so the form refuses before
+the request; it reads nothing but the hex, so it stays client-safe. The pair is then held to one hue, to within 10° (`MAX_HUE_DISTANCE`, `src/lib/group-colors.ts`), or to two greys, and refused at `colorLight` otherwise; Zod runs that object-level check even after a colour has failed its own, so it speaks only once both colours have passed.
 
 The planet and zodiac vocabularies (MB.95) share one shape:
 `vocabulary/validation/astrology-value.ts` builds `PlanetInput` and
 `ZodiacSignInput` from one factory, a trimmed, non-blank `name` and
 `description`, each saying its own noun — "Give the sign a name". No slug.
+The spell (MB.8) adds its own schema when it lands.

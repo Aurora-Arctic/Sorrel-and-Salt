@@ -12,12 +12,18 @@ import type { CompendiumIngredientInput } from '@/modules/ingredients/validation
 import {
   createAstrologyValue,
   createCategory,
+  createCategoryGroup,
+  createIngredientFormGroup,
   createIngredientFormValue,
   deleteAstrologyValue,
+  deleteCategoryGroup,
+  deleteIngredientFormGroup,
   deleteCategory,
   deleteIngredientFormValue,
   updateAstrologyValue,
   updateCategory,
+  updateCategoryGroup,
+  updateIngredientFormGroup,
   updateIngredientFormValue,
 } from '@/modules/vocabulary';
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
@@ -30,8 +36,8 @@ import { type IngredientFixture, makeIngredient } from '../support/fixtures';
 import type { Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2), the category
-// vocabulary's (M5.6), the form vocabulary's (M5.6a) and the planets' and
-// the signs' (MB.95).
+// vocabulary's (M5.6), the form vocabulary's (M5.6a), the planets' and the
+// signs' (MB.95), and the two group vocabularies' (M5.6b).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -270,4 +276,66 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
       expect(deleted.deleted_at).not.toBeNull();
     },
   );
+
+  it('lets the site admin add, edit and soft-delete a group of each kind, moving what it holds, every write stamped as the admin', async () => {
+    const admin = asUser(E);
+    expect(await siteRole(E.id)).toBe('admin');
+    const [target] = await sql<{ id: string }[]>`
+      select id from category_groups where deleted_at is null order by name limit 1`;
+    const [substance] = await sql<{ id: string }[]>`
+      select id from ingredient_form_groups where name = 'Substance' and deleted_at is null`;
+
+    // A category group, its colours held to the floor, and a category moved off it.
+    const wards = await createCategoryGroup(admin, {
+      name: 'Fixture Wards',
+      description: 'A group this test made',
+      colorDark: '#4e8bc2',
+      colorLight: '#0c5393',
+    });
+    await expect(
+      updateCategoryGroup(admin, wards.id, {
+        name: 'Fixture Wards',
+        description: 'A group this test made',
+        colorDark: '#0c5393',
+        colorLight: '#0c5393',
+      }),
+    ).rejects.toMatchObject({ issues: [{ path: ['colorDark'] }] });
+    const category = await createCategory(admin, {
+      name: 'Testcraft Moved',
+      description: 'Filed under the group',
+      groupId: wards.id,
+    });
+    await deleteCategoryGroup(admin, wards.id, target.id);
+    const [moved] =
+      await sql`select group_id, updated_by from categories where id = ${category.id}`;
+    expect(moved).toEqual({ group_id: target.id, updated_by: E.id });
+    const [wardsRow] =
+      await sql`select deleted_by, created_by from category_groups where id = ${wards.id}`;
+    expect(wardsRow).toEqual({ deleted_by: E.id, created_by: E.id });
+
+    // A form group, renamed, its form re-slugged under the name, then moved off it.
+    const matter = await createIngredientFormGroup(admin, {
+      name: 'Fixture Matter',
+      description: 'A group this test made',
+    });
+    const form = await createIngredientFormValue(admin, {
+      name: 'Fixture Shard',
+      description: 'Filed under the group',
+      groupId: matter.id,
+    });
+    await updateIngredientFormGroup(admin, matter.id, {
+      name: 'Fixture Stuff',
+      description: 'A group this test made',
+    });
+    expect((await formRow(form.id)).slug).toBe(formSlug('Fixture Shard', 'Fixture Stuff'));
+    await deleteIngredientFormGroup(admin, matter.id, substance.id);
+    expect(await formRow(form.id)).toMatchObject({
+      group_id: substance.id,
+      slug: formSlug('Fixture Shard', 'Substance'),
+      updated_by: E.id,
+    });
+    const [matterRow] =
+      await sql`select deleted_by from ingredient_form_groups where id = ${matter.id}`;
+    expect(matterRow.deleted_by).toBe(E.id);
+  });
 });

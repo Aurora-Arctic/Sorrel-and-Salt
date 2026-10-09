@@ -1,12 +1,15 @@
 import type { Route } from 'next';
+import type { GroupColors } from '../../lib/types';
 
-/** One category as the list shows it: its group by name, and the address that opens it to edit. */
+/** One category as the list shows it: its group by name and colours, and the address that opens it to edit. */
 export interface CategoryListEntry {
   id: string;
   name: string;
   slug: string;
   description: string;
   groupName: string;
+  /** The group's chip pair, which its name is drawn in; none draws it plain. */
+  groupColors?: GroupColors;
   editHref: Route;
 }
 

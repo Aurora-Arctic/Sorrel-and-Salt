@@ -14,8 +14,10 @@ import type { DocLink, DocLinkKind, ReferenceLinkRow, ReferenceRow } from './typ
 
 // MB.156: the sources the deity and astrology seed docs record, asserted
 // against the docs themselves rather than a copy, through the one renderer,
-// against the real tables emptied first (claude-docs/db/references.md, "How
-// the seed reads the docs").
+// against the real tables emptied first: one run of the seed serves every read,
+// and a re-run over an admin's edit empties them again. The shape every seed
+// shares is index.test.ts's (MB.183) — claude-docs/db/references.md, "How
+// the seed reads the docs".
 
 const DEITY_DOC = readFileSync(fromRoot('claude-docs/db/deity-vocabulary-seed.md'), 'utf8');
 const ASTROLOGY_DOC = readFileSync(fromRoot('claude-docs/db/astrology-vocabulary-seed.md'), 'utf8');
@@ -177,10 +179,6 @@ beforeAll(() => {
   db = drizzle(sql);
 });
 
-beforeEach(async () => {
-  await truncateAllTables(sql);
-});
-
 afterAll(async () => {
   await sql.end();
 });
@@ -263,14 +261,15 @@ const sourceTitled = (title: string) => {
 };
 
 describe('seedSources', () => {
-  it('starts from empty tables', async () => {
+  beforeAll(async () => {
+    await truncateAllTables(sql);
+    // Precondition: the truncated clone really starts empty, so every row read below is this run's.
     expect(await allReferences()).toEqual([]);
     expect(await allLinks()).toEqual([]);
+    await seedAll();
   });
 
   it('writes every source as a compendium reference, keyed by its citation', async () => {
-    await seedAll();
-
     const rows = await allReferences();
     expect(rows).toHaveLength(SOURCES.length);
     expect(rows.every((row) => row.workspace_id === null)).toBe(true);
@@ -281,13 +280,10 @@ describe('seedSources', () => {
   });
 
   it('writes every link, a tradition’s source reaching each deity filed under it', async () => {
-    await seedAll();
-
     expect(await allLinks()).toHaveLength(expectedLinkCount());
   });
 
   it('links a tradition’s source to the tradition and every deity under it', async () => {
-    await seedAll();
     const source = SOURCES.find(({ traditions }) => traditions?.includes('Greek'));
     const greek = DEITIES.filter(({ tradition }) => tradition === 'Greek').map(({ name }) => name);
     if (!source) throw new Error('No Greek source');
@@ -303,7 +299,6 @@ describe('seedSources', () => {
   });
 
   it('links a per-deity citation to its deity alone, with its locator', async () => {
-    await seedAll();
     const adonis = sourceTitled('Adonis');
     const grimm = sourceTitled('Teutonic Mythology');
 
@@ -318,7 +313,6 @@ describe('seedSources', () => {
   });
 
   it('links each planet and sign source to the bodies the astrology doc names', async () => {
-    await seedAll();
     const pluto = sourceTitled('Planetary Correspondences of Pluto');
 
     expect(await namesLinkedFrom((await referenceCited(citationText(pluto.reference))).id)).toEqual(
@@ -326,125 +320,70 @@ describe('seedSources', () => {
     );
   });
 
-  it('stamps every reference and link as the bootstrap user, with no tombstone', async () => {
-    await seedAll();
+  describe('over a database an admin has edited', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+    });
 
-    for (const row of [...(await allReferences()), ...(await allLinks())]) {
-      expect(row.created_by).toBe(BOOTSTRAP_USER_ID);
-      expect(row.updated_by).toBe(BOOTSTRAP_USER_ID);
-      expect(row.deleted_at).toBeNull();
-    }
-  });
+    it('neither twins nor overwrites a reference an admin has since edited', async () => {
+      await seedAll();
+      const [edited] = await allReferences();
+      const before = citationText(edited);
+      await sql`
+        update "references" set title = 'Retitled by an Admin', updated_by = ${BOOTSTRAP_USER_ID}
+        where id = ${edited.id}
+      `;
+      // Precondition: the edit changed the citation, so keying by it would twin.
+      expect(citationText(await referenceById(edited.id))).not.toBe(before);
 
-  it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
-    await seedDeities(db);
-    await seedAstrology(db);
-    await sql`create table seed_sources_probe (acting_user text)`;
-    await sql.unsafe(`
-      create function seed_sources_probe() returns trigger language plpgsql as $$
-      begin
-        insert into seed_sources_probe values (current_setting('app.current_user_id', true));
-        return new;
-      end
-      $$
-    `);
-    await sql.unsafe(`
-      create trigger seed_sources_probe after insert on "references"
-      for each row execute function seed_sources_probe()
-    `);
+      await seedSources(db);
 
-    await seedSources(db);
+      expect(await allReferences()).toHaveLength(SOURCES.length);
+      expect((await referenceById(edited.id)).title).toBe('Retitled by an Admin');
+    });
 
-    const rows = await sql<
-      { acting_user: string | null }[]
-    >`select acting_user from seed_sources_probe`;
-    expect(rows).toHaveLength(SOURCES.length);
-    expect(rows.every((row) => row.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
-  });
+    // Unkeyed is what marks a row as not the seed's; an emptied database holds
+    // no user but the bootstrap one once a seed ran, so it writes the edits.
+    it('links an admin’s identical reference rather than duplicating it, and writes nothing to it', async () => {
+      await seedDeities(db);
+      await seedAstrology(db);
+      const pluto = sourceTitled('Planetary Correspondences of Pluto').reference;
+      const [admins] = await sql<{ id: string; updated_at: Date }[]>`
+        insert into "references" ${sql({
+          kind: pluto.kind,
+          title: pluto.title,
+          container: pluto.container ?? null,
+          url: pluto.url ?? null,
+          accessed: pluto.accessed ?? null,
+          created_by: BOOTSTRAP_USER_ID,
+          updated_by: BOOTSTRAP_USER_ID,
+        })}
+        returning id, updated_at
+      `;
 
-  it('is idempotent: re-running adds nothing', async () => {
-    await seedAll();
-    const [references, links] = [await allReferences(), await allLinks()];
+      await seedSources(db);
 
-    await seedSources(db);
+      const row = await referenceById(admins.id);
+      expect(await allReferences()).toHaveLength(SOURCES.length);
+      expect(row.seed_key).toBeNull();
+      expect(row.updated_at).toEqual(admins.updated_at);
+      expect(await namesLinkedFrom(admins.id)).toEqual([
+        { kind: 'planet', name: 'Pluto', locator: null },
+      ]);
+    });
 
-    expect(await allReferences()).toEqual(references);
-    expect(await allLinks()).toEqual(links);
-  });
+    it('links a deity an admin has since renamed, found by its seed key', async () => {
+      await seedDeities(db);
+      await seedAstrology(db);
+      await sql`update deities set name = 'Adonis Renamed', slug = 'adonis-renamed' where name = 'Adonis'`;
 
-  it('neither twins nor overwrites a reference an admin has since edited', async () => {
-    await seedAll();
-    const [edited] = await allReferences();
-    const before = citationText(edited);
-    await sql`
-      update "references" set title = 'Retitled by an Admin', updated_by = ${BOOTSTRAP_USER_ID}
-      where id = ${edited.id}
-    `;
-    // Precondition: the edit changed the citation, so keying by it would twin.
-    expect(citationText(await referenceById(edited.id))).not.toBe(before);
+      await seedSources(db);
 
-    await seedSources(db);
-
-    expect(await allReferences()).toHaveLength(SOURCES.length);
-    expect((await referenceById(edited.id)).title).toBe('Retitled by an Admin');
-  });
-
-  it('resurrects no reference or link an admin has since deleted', async () => {
-    await seedAll();
-    const [reference] = await allReferences();
-    const [link] = (await allLinks()).filter((row) => row.reference_id !== reference.id);
-    await sql`update "references" set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where id = ${reference.id}`;
-    await sql`update reference_links set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where id = ${link.id}`;
-
-    await seedSources(db);
-
-    expect(await allReferences()).toHaveLength(SOURCES.length);
-    expect(await allLinks()).toHaveLength(expectedLinkCount());
-    expect((await referenceById(reference.id)).deleted_at).not.toBeNull();
-    expect((await allLinks()).find((row) => row.id === link.id)?.deleted_at).not.toBeNull();
-  });
-
-  // Unkeyed is what marks a row as not the seed's; an emptied database holds
-  // no user but the bootstrap one once a seed ran, so it writes the edits.
-  it('links an admin’s identical reference rather than duplicating it, and writes nothing to it', async () => {
-    await seedDeities(db);
-    await seedAstrology(db);
-    const pluto = sourceTitled('Planetary Correspondences of Pluto').reference;
-    const [admins] = await sql<{ id: string; updated_at: Date }[]>`
-      insert into "references" ${sql({
-        kind: pluto.kind,
-        title: pluto.title,
-        container: pluto.container ?? null,
-        url: pluto.url ?? null,
-        accessed: pluto.accessed ?? null,
-        created_by: BOOTSTRAP_USER_ID,
-        updated_by: BOOTSTRAP_USER_ID,
-      })}
-      returning id, updated_at
-    `;
-
-    await seedSources(db);
-
-    const row = await referenceById(admins.id);
-    expect(await allReferences()).toHaveLength(SOURCES.length);
-    expect(row.seed_key).toBeNull();
-    expect(row.updated_at).toEqual(admins.updated_at);
-    expect(await namesLinkedFrom(admins.id)).toEqual([
-      { kind: 'planet', name: 'Pluto', locator: null },
-    ]);
-  });
-
-  it('links a deity an admin has since renamed, found by its seed key', async () => {
-    await seedDeities(db);
-    await seedAstrology(db);
-    await sql`update deities set name = 'Adonis Renamed', slug = 'adonis-renamed' where name = 'Adonis'`;
-
-    await seedSources(db);
-
-    const adonis = sourceTitled('Adonis');
-    expect(
-      await namesLinkedFrom((await referenceCited(citationText(adonis.reference))).id),
-    ).toEqual([{ kind: 'deity', name: 'Adonis Renamed', locator: null }]);
+      const adonis = sourceTitled('Adonis');
+      expect(
+        await namesLinkedFrom((await referenceCited(citationText(adonis.reference))).id),
+      ).toEqual([{ kind: 'deity', name: 'Adonis Renamed', locator: null }]);
+    });
   });
 });
 

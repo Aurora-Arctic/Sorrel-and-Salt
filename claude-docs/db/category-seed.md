@@ -20,17 +20,36 @@ every deploy would keep undoing it. Nothing already present is updated either,
 so a retitled category and a retuned colour pair both survive — the point of
 MB.35 is that the colour is the admin's from here on.
 
-**The colours are resolved once, here.** MB.35 made a group's colour a pair of
-hexes on the row, so M0.7's `$category-groups` Sass map is a seed source
-rather than a runtime lookup; the sixteen hexes are written out as literals in
-`CATEGORY_GROUPS`, in `src/db/seed/category-groups.ts` — a file of its own,
-importing nothing at runtime, so the workshop can render the pairs without
-bundling the seed (MB.36). `categories.test.ts` compiles M0.7's own
-`category-group-color($slug, $theme)` and compares all sixteen, so retuning
-the map without reseeding fails a test instead of drifting silently, and
-recomputes the WCAG ratio for each against its own theme's ground (`$soot`
-dark, `$parchment` light) rather than trusting M0.7's published table. Worst
-pairing in the set is wellbeing's light hex at 4.74:1.
+**The colours live here and nowhere else.** MB.35 made a group's colour a
+pair of hexes on the row; the sixteen are the owner's hand-tuned pairs,
+written out as literals in `CATEGORY_GROUPS`, in
+`src/db/seed/category-groups.ts` — a file of its own, importing nothing at
+runtime, so the workshop can render the pairs without bundling the seed
+(MB.36). M0.7's `$category-groups` Sass map, which they were once resolved
+from, is retired (M5.6b): it gave every group one saturation per theme, and
+the hand-tuned pairs follow no single formula
+([`styling.md`](../styling.md), "Category-group colours").
+
+`categories.test.ts` holds the pairs to what is still a rule. It compiles
+`$sorrel`'s hue from the stylesheet, puts each group on its own odd 22.5° step
+of the rotation, and holds both of its hexes within `ROTATION_TOLERANCE`, 2°,
+of that step; the widest drift is Love & Connection's dark hex, at 1.04°. It
+recomputes the WCAG ratio for each hex against its own theme's ground
+(`$soot` dark, `$parchment` light), and pins those two grounds to the
+literals `_variables.scss` defines, so a repalette cannot leave the ratios
+measuring against the wrong thing. Worst pairing in the set is Mind & Spirit's
+light hex at 4.52:1.
+
+**A retuned colour needs a migration as well as a seed edit**, because the
+seed inserts only missing rows and never reaches one already written.
+`0052_retune-category-group-colours.sql` carries M5.6b's retune onto databases
+the seed had already filled. It updates each colour column on its own, matched
+by `seed_key`, and only where the column still holds the old seed's value
+(compared case-insensitively) on a live row — so a colour an admin has since
+chosen stays theirs, and an admin who retuned one half of a pair keeps it while
+the other half moves. Only the values that changed are listed: six dark hexes
+and all eight light ones. It stamps `updated_by` as the bootstrap user, whose
+values these are.
 
 **Slugs are derived, not written down.** Every slug in the seed is
 `slugify(name)` — `src/lib/slugify.ts`, the `slugify` package under pinned
@@ -57,13 +76,6 @@ short slugs, one of which (`grounding`, for "Craft & Change") collided with a
 category slug inside its own group. Deriving removes that class of mistake
 rather than fixing this instance of it.
 
-`SASS_TOKEN_BY_GROUP_NAME` is where §6's vocabulary and M0.7's map keys meet,
-and the only place they do. It is keyed by group _name_ rather than slug,
-because the slug is derived and a map keyed on a derived value would need
-rewriting every time the rule changed. M0.7's keys stay M0.7's words: renaming
-one moves a token for no gain, now that nothing looks a colour up by slug
-(MB.35, MB.36).
-
 **It reaches staging and production on its own**, unlike every scenario seed:
 `migrate.yml` runs `npm run db:seed:categories` against the deployed database
 as a step after its own migrations, gated on a diff so it only fires when a
@@ -78,11 +90,19 @@ that summary — see ["The form vocabulary seed"](form-vocabulary-seed.md),
 One rule a later scenario inherits: write through the handle, stamping via
 `applyAudit`, in `minimal.ts`'s shape.
 
-`tests/db/seed/index.test.ts` is the `db`-project test: it applies the full
-migration set into the worker's clone (the M1.18 pattern — the seed writes
-into the real `users` table with its real self-referencing FKs, and "the
-compendium is empty" needs tables to count), hands `seed()` a handle of its
-own, and asserts the two rows, the fixed ids, the creator chain, idempotency,
-and — through an `AFTER INSERT` trigger recording `current_setting('app.
-current_user_id', true)` — that the GUC was published, the same
-observation trick `tests/db/repository/write.test.ts` uses.
+`tests/db/seed/index.test.ts` is the `db`-project test, against the worker's
+clone with every table emptied first: it hands `seed()` a handle of its own
+and asserts `minimal`'s two rows, the fixed ids and the creator chain from one
+run, then the shape every seed entry point shares — `minimal`, `standard`,
+`demo`, and the category, form, astrology, deity and sources seeds run alone
+— once over all of them in an `it.each(SEED_ENTRIES)` (MB.183;
+[`testing/layer-ownership.md`](../testing/layer-ownership.md)): from empty
+tables, the bootstrap user inserted as a plain user, every row of the seed's
+own tables stamped as it and, through one `AFTER INSERT` trigger on every
+table recording `current_setting('app.current_user_id', true)` — the
+observation trick `tests/db/repository/write.test.ts` uses — published as the
+acting user of every insert; a second run that changes no row anywhere; and a
+row an admin soft-deleted left deleted. Each entry names the tables it is the
+seed of, which is also what proves `seed()` routed a scenario to its own seed.
+`categories.test.ts` keeps what is the category seed's alone: the literal
+against §6 and M0.7, and a reseed over a colour pair an admin changed.

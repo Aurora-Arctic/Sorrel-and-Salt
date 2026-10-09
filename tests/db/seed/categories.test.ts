@@ -5,17 +5,19 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import * as sassCompiler from 'sass';
 import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
-import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES, seedCategories } from '@/db/seed/categories';
-import { CATEGORY_GROUPS, SASS_TOKEN_BY_GROUP_NAME } from '@/db/seed/category-groups';
+import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
+import { toHsl } from '@/lib/group-colors';
 import { slugify } from '@/lib/slugify';
 import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types';
 
 // §6's eight groups and every category, asserted against their sources rather
-// than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
-// resolved by compiling `category-group-color()`, the contrast floor recomputed
-// from the seeded hex. Against the real tables, emptied first —
-// claude-docs/db/category-seed.md, "The category seed".
+// than copies: the vocabulary parsed from DESIGN.md §6's table, the rotation
+// turned from `$sorrel` as the stylesheet compiles it, the contrast floor
+// recomputed from the seeded hex. Against the clone, which holds the vocabulary
+// as `standard` wrote it through the same function; a re-run over an admin's
+// edit empties the tables first, and the shape every seed shares is
+// index.test.ts's (MB.183) — claude-docs/db/category-seed.md, "The category seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 const SCSS_DIR = fromRoot('src/scss');
@@ -56,39 +58,37 @@ function designSlug(designName: string): string {
   return slugify(designName);
 }
 
-// --- M0.7, resolved ---------------------------------------------------------
+// --- M0.7's rotation, resolved ---------------------------------------------
 
-function resolveSassTokenColors(): Record<string, { dark: string; light: string }> {
+// The eight hues sit on the odd multiples of 22.5° off `$sorrel`, so none lands
+// on the accent or secondary hue. The owner tuned each pair by hand, so a hue
+// may drift off its step, but by no more than ROTATION_TOLERANCE. The widest
+// drift is Love & Connection's dark colour, at 1.04°.
+const ROTATION_STEP = 22.5;
+const ROTATION_TOLERANCE = 2;
+const ODD_STEPS = [1, 3, 5, 7, 9, 11, 13, 15];
+
+function sorrelHue(): number {
   const css = sassCompiler.compileString(
-    `@use 'sass:map';
+    `@use 'sass:color';
      @use 'variables' as v;
-     .probe {
-       @each $slug, $spec in v.$category-groups {
-         --#{$slug}-dark: #{v.category-group-color($slug, dark)};
-         --#{$slug}-light: #{v.category-group-color($slug, light)};
-       }
-     }`,
-    { style: 'expanded', loadPaths: [SCSS_DIR] },
+     .probe { --hue: #{color.channel(v.$sorrel, 'hue', $space: hsl)}; }`,
+    { loadPaths: [SCSS_DIR] },
   ).css;
-
-  const resolved: Record<string, { dark: string; light: string }> = {};
-  for (const line of css.split('\n')) {
-    const match = line.match(
-      /--([a-z-]+)-(dark|light): (?:rgb\(([\d.]+)%, ([\d.]+)%, ([\d.]+)%\)|(#[0-9a-f]{6}))/,
-    );
-    if (!match) continue;
-    const [, key, theme, r, g, b, hex] = match;
-    const value = hex ?? toHex([Number(r), Number(g), Number(b)]);
-    resolved[key] = { ...(resolved[key] ?? { dark: '', light: '' }), [theme]: value };
-  }
-  return resolved;
+  return parseFloat(css.match(/--hue: ([\d.]+)/)![1]);
 }
 
-function toHex(percentages: number[]): string {
-  return `#${percentages
-    .map((p) => Math.round((p / 100) * 255))
-    .map((c) => c.toString(16).padStart(2, '0'))
-    .join('')}`;
+const SORREL_HUE = sorrelHue();
+
+/** How far a hex's hue sits from the odd step `step`, the short way round, in degrees. */
+function offStep(hex: string, step: number): number {
+  const gap = Math.abs(toHsl(hex)[0] - ((SORREL_HUE + step * ROTATION_STEP) % 360));
+  return Math.min(gap, 360 - gap);
+}
+
+/** The odd step nearest a hex's hue. */
+function nearestStep(hex: string): number {
+  return ODD_STEPS.reduce((best, step) => (offStep(hex, step) < offStep(hex, best) ? step : best));
 }
 
 // WCAG 2.1 contrast, recomputed from the stored hex.
@@ -104,8 +104,6 @@ function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const SASS_TOKEN_COLORS = resolveSassTokenColors();
-
 // --- database ---------------------------------------------------------------
 
 let sql: ReturnType<typeof postgres>;
@@ -119,18 +117,9 @@ async function allCategories(): Promise<CategoryRow[]> {
   return sql<CategoryRow[]>`select * from categories order by slug`;
 }
 
-async function countOf(table: string): Promise<number> {
-  const [{ count }] = await sql<{ count: string }[]>`select count(*) from ${sql(table)}`;
-  return Number(count);
-}
-
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-beforeEach(async () => {
-  await truncateAllTables(sql);
 });
 
 afterAll(async () => {
@@ -180,26 +169,26 @@ describe('the seed data matches DESIGN.md §6', () => {
   });
 });
 
-describe('the colours carry M0.7’s tuning across into data', () => {
-  it('maps each §6 group onto exactly one M0.7 token, and each token onto one group', () => {
-    expect(Object.keys(SASS_TOKEN_BY_GROUP_NAME).sort()).toEqual(
-      CATEGORY_GROUPS.map((g) => g.name).sort(),
-    );
-    expect(Object.values(SASS_TOKEN_BY_GROUP_NAME).sort()).toEqual(
-      Object.keys(SASS_TOKEN_COLORS).sort(),
+describe('the colours keep M0.7’s rotation and clear the floor', () => {
+  // Precondition: the hue really was compiled, or every step would measure off 0°.
+  it('turns the rotation from the stylesheet’s own `$sorrel`', () => {
+    expect(SORREL_HUE).toBeGreaterThan(90);
+    expect(SORREL_HUE).toBeLessThan(100);
+  });
+
+  it('puts each of the eight groups on its own odd step', () => {
+    expect(CATEGORY_GROUPS.map((g) => nearestStep(g.colorDark)).sort((a, b) => a - b)).toEqual(
+      ODD_STEPS,
     );
   });
 
-  it.each(CATEGORY_GROUPS.map((g) => g.name))(
-    '%s carries both hexes resolved from its M0.7 token',
-    (name) => {
-      const group = CATEGORY_GROUPS.find((g) => g.name === name)!;
-      const token = SASS_TOKEN_COLORS[SASS_TOKEN_BY_GROUP_NAME[name]];
+  it.each(CATEGORY_GROUPS.map((g) => g.name))('%s keeps both hexes on its step', (name) => {
+    const group = CATEGORY_GROUPS.find((g) => g.name === name)!;
+    const step = nearestStep(group.colorDark);
 
-      expect(group.colorDark).toBe(token.dark);
-      expect(group.colorLight).toBe(token.light);
-    },
-  );
+    expect(offStep(group.colorDark, step)).toBeLessThanOrEqual(ROTATION_TOLERANCE);
+    expect(offStep(group.colorLight, step)).toBeLessThanOrEqual(ROTATION_TOLERANCE);
+  });
 
   it.each(CATEGORY_GROUPS.map((g) => g.name))('%s clears 4.5:1 on both grounds', (name) => {
     const group = CATEGORY_GROUPS.find((g) => g.name === name)!;
@@ -228,28 +217,13 @@ describe('every row carries a description', () => {
   });
 
   it('writes them through to the database', async () => {
-    await seedCategories(db);
-
     expect((await allGroups()).filter((g) => g.description.trim() === '')).toEqual([]);
     expect((await allCategories()).filter((c) => c.description.trim() === '')).toEqual([]);
   });
 });
 
 describe('seedCategories(db)', () => {
-  // Precondition: the truncated clone really starts at zero.
-  it('starts from two empty tables', async () => {
-    expect(await countOf('category_groups')).toBe(0);
-    expect(await countOf('categories')).toBe(0);
-
-    await seedCategories(db);
-
-    expect(await countOf('category_groups')).toBe(8);
-    expect(await countOf('categories')).toBe(DESIGN_CATEGORY_COUNT);
-  });
-
   it('writes the groups before the categories, each category pointing at its own group', async () => {
-    await seedCategories(db);
-
     const groupSlugById = new Map((await allGroups()).map((g) => [g.id, g.slug]));
     const seeded = (await allCategories()).map((c) => ({
       slug: c.slug,
@@ -263,78 +237,26 @@ describe('seedCategories(db)', () => {
     );
   });
 
-  it('stamps every row as the bootstrap user, with no tombstone', async () => {
-    await seedCategories(db);
+  describe('over a database an admin has edited', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+    });
 
-    for (const row of [...(await allGroups()), ...(await allCategories())]) {
-      expect(row.created_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.updated_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.deleted_at, row.slug).toBeNull();
-    }
-  });
+    // A group's colour is the admin's to change (MB.35); a re-asserting seed would undo it.
+    it('does not overwrite a colour pair an admin has since changed', async () => {
+      // Precondition: the truncated clone really starts empty, so the row re-coloured is this run's.
+      expect(await allGroups()).toEqual([]);
+      await seedCategories(db);
+      await sql`
+        update category_groups set color_dark = '#123456', color_light = '#654321'
+        where slug = 'protection-and-defense'
+      `;
 
-  it('is idempotent: re-running adds nothing and moves nothing', async () => {
-    await seedCategories(db);
-    const groups = await allGroups();
-    const categories = await allCategories();
+      await seedCategories(db);
 
-    await expect(seedCategories(db)).resolves.toBeUndefined();
-
-    expect(await allGroups()).toEqual(groups);
-    expect(await allCategories()).toEqual(categories);
-  });
-
-  // A group's colour is the admin's to change (MB.35); a re-asserting seed would undo it.
-  it('does not overwrite a colour pair an admin has since changed', async () => {
-    await seedCategories(db);
-    await sql`
-      update category_groups set color_dark = '#123456', color_light = '#654321'
-      where slug = 'protection-and-defense'
-    `;
-
-    await seedCategories(db);
-
-    const [protection] = (await allGroups()).filter((g) => g.slug === 'protection-and-defense');
-    expect(protection.color_dark).toBe('#123456');
-    expect(protection.color_light).toBe('#654321');
-  });
-
-  it('does not resurrect a category an admin has since deleted', async () => {
-    await seedCategories(db);
-    await sql`
-      update categories set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where slug = 'gambling'
-    `;
-
-    await seedCategories(db);
-
-    const gambling = (await allCategories()).filter((c) => c.slug === 'gambling');
-    expect(gambling).toHaveLength(1);
-    expect(gambling[0].deleted_at).not.toBeNull();
-  });
-
-  it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
-    await sql`create table seed_categories_probe (slug text, acting_user text)`;
-    await sql.unsafe(`
-      create function seed_categories_probe() returns trigger language plpgsql as $$
-      begin
-        insert into seed_categories_probe (slug, acting_user)
-        values (new.slug, current_setting('app.current_user_id', true));
-        return new;
-      end
-      $$
-    `);
-    await sql.unsafe(`
-      create trigger seed_categories_probe after insert on category_groups
-      for each row execute function seed_categories_probe()
-    `);
-
-    await seedCategories(db);
-
-    const rows = await sql<{ acting_user: string | null }[]>`
-      select acting_user from seed_categories_probe
-    `;
-    expect(rows).toHaveLength(8);
-    expect(rows.every((r) => r.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
+      const [protection] = (await allGroups()).filter((g) => g.slug === 'protection-and-defense');
+      expect(protection.color_dark).toBe('#123456');
+      expect(protection.color_light).toBe('#654321');
+    });
   });
 });

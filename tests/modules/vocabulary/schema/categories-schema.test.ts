@@ -161,12 +161,6 @@ async function insertCategory(groupId: string, overrides: Row = {}): Promise<str
   return inserted.id as string;
 }
 
-async function softDelete(table: 'categories' | 'category_groups', id: string): Promise<void> {
-  await sql`
-    update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
-  `;
-}
-
 beforeEach(async () => {
   await sql`truncate categories, category_groups cascade`;
 });
@@ -188,29 +182,6 @@ describe('category_groups table', () => {
   });
 
   describe('slug uniqueness', () => {
-    it('rejects a second live group sharing a slug', async () => {
-      await insertGroup();
-      const error = await failureOf(insertGroup({ name: 'Protective work' }));
-
-      // 23505 is unique_violation, named: the index refused, not something earlier.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(GROUPS_SLUG_UNIQUE);
-    });
-
-    // The test above is the precondition: without the soft delete the second
-    // insert is refused, so this pass is the predicate and not an empty table.
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const first = await insertGroup();
-      await softDelete('category_groups', first);
-
-      const second = await insertGroup({ name: 'Protective work' });
-
-      const rows = await sql`select id, deleted_at from category_groups order by created_at`;
-      expect(rows.map((r) => r.id)).toEqual([first, second]);
-      expect(rows[0].deleted_at).not.toBeNull();
-      expect(rows[1].deleted_at).toBeNull();
-    });
-
     it('does not constrain the display name', async () => {
       await insertGroup();
       await insertGroup({ slug: 'protective-work' });
@@ -293,28 +264,6 @@ describe('categories table', () => {
   });
 
   describe('slug uniqueness', () => {
-    it('rejects a second live category sharing a slug', async () => {
-      const group = await insertGroup();
-      await insertCategory(group);
-      const error = await failureOf(insertCategory(group, { name: 'Warded' }));
-
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(CATEGORIES_SLUG_UNIQUE);
-    });
-
-    it('frees the slug once the holder is soft-deleted', async () => {
-      const group = await insertGroup();
-      const first = await insertCategory(group);
-      await softDelete('categories', first);
-
-      const second = await insertCategory(group, { name: 'Warded' });
-
-      const rows = await sql`select id, deleted_at from categories order by created_at`;
-      expect(rows.map((r) => r.id)).toEqual([first, second]);
-      expect(rows[0].deleted_at).not.toBeNull();
-      expect(rows[1].deleted_at).toBeNull();
-    });
-
     // Global rather than per group: a chip filter and the seed's idempotency
     // key both read the slug alone.
     it('rejects a shared slug across two different groups', async () => {

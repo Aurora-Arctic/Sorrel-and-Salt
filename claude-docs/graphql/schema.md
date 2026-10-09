@@ -415,10 +415,28 @@ type QueryCompendiumConnectionEdge {
 - **The three refuse nothing a scope would, and a sweep holds the line.**
   `tests/db/graphql-query-scopes.test.ts` names every `Query` field with the
   outcome a null session gets, fails on a field it does not name, and runs
-  each. A query added later has to say which side it is on.
+  each. A query added later has to say which side it is on. Since MB.185 it
+  does the same for every `Mutation` field, all of which refuse, and for
+  every query taking a `workspaceId` it runs a null one too, so the
+  compendium-only mode is no way round the session; `ingredientSuggestions`,
+  whose `workspaceId` is `ID!`, is classified as refused by the SDL before
+  any resolver runs. Each table must equal the schema's field list, and none
+  may be empty, so no resolver file holds a signed-out test of its own.
 - **Cost.** A page of 100 with `categories { group { … } }` prices above
   `MAX_COST`, since a bare list multiplies its selection by 10, and is refused;
   the chip-decorated list pages at 25 or 50 (["Protections"](protections.md)).
+
+The read fields' GraphQL files hold their half the same way (MB.180, MB.185;
+["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
+below says what that half is). `compendium.test.ts` holds the filters reaching
+the read together, the edge's `score`, the page numbers, one read per page for
+each loader, and one `VALIDATION`; what each filter matches is
+`tests/db/repository/ingredients.test.ts`'s. `ingredient.test.ts` holds the
+coven forwarded, one `NOT_FOUND` and one `FORBIDDEN`. `duplicates.test.ts`,
+`common-names.test.ts` and `ingredient-suggestions.test.ts` hold the nodes,
+the edge's `score` where there is one, a page by cursor, the compendium-only
+mode and one `FORBIDDEN`; the thresholds, the scope and who is refused are
+their services' tests'.
 
 ### The workspace ingredient mutations
 
@@ -525,15 +543,24 @@ signatures DESIGN.md §7's sketch gives them.
   Either way `data` is null, and the transaction wrote nothing, folk names,
   substitutes and deities included.
 
-`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
-mutations through Yoga with the route's `maskedErrors`, so each refusal is
-asserted as the browser receives it.
-
-Since MB.180 the GraphQL file holds the transport's half alone — one refusal per
-error code per field, with its precondition, beside what only the transport can
-show — and the service test owns the rule; MB.185 and MB.186 bring each file and
-the sentences below to that shape
+A GraphQL test file holds the transport's half alone (MB.180): one refusal per
+error code per field, with the precondition that would have let it succeed, beside
+what only the transport can show — the SDL's own refusals, an `authScopes` gate,
+the loaders cleared after a write, one read per page, the edge fields, and a mode
+no service test reaches. Which roles are refused at which rows, and every Zod
+rule, are the service and validation tests' alone
 ([`design-decisions/mb.180-graphql-transport-half.md`](../design-decisions/mb.180-graphql-transport-half.md)).
+Every ingredients file runs through `tests/support/graphql/run.ts`, Yoga with the
+route's `maskedErrors`, and reads a refusal as `extensions.code`, never as the
+thrown type (MB.185); MB.186 brings the vocabulary, identity and coven files to
+the same shape.
+
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
+mutations' half: the input that names a stamp or a tier, or leaves a field out,
+refused before any resolver runs; the answer equal to a fresh read; the child
+loaders cleared between two updates in one request; and per mutation one
+`VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
+and the delete, one `NOT_FOUND`.
 
 ### The compendium mutations
 
@@ -570,8 +597,14 @@ curated values.
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
 
-`tests/modules/ingredients/graphql/compendium-entries.test.ts` runs the
-three through Yoga with the route's `maskedErrors`.
+`tests/modules/ingredients/graphql/compendium-entries.test.ts` holds the three
+writes' half: the input left short refused before any resolver runs, the
+loaders cleared between two updates, `endRedirect` reaching the service on the
+create and the update, and per mutation one `FORBIDDEN` — a coven's owner,
+since `authScopes: { admin: true }` is a gate of its own — one `NOT_FOUND` for
+the update and the delete, and one `VALIDATION` for the two that take an input.
+Every other non-admin, and every collision, is
+`services/compendium-entries.test.ts`'s.
 
 ### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
@@ -613,8 +646,13 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   alone, asking no membership, which is all a compendium entry may cite
   (M5.5; `planetSuggestions`' bullet says why it stays signed-in).
 
-`tests/modules/ingredients/graphql/references.test.ts` runs the writes, the
-search, `Ingredient.references` and the to-do filter through Yoga.
+`tests/modules/ingredients/graphql/references.test.ts` holds their half: the
+tier the `workspaceId` argument names, `referencesByIngredient` cleared by a
+write, `Ingredient.references` read signed out, `withoutReferences` reaching
+the read, the search's compendium-only mode, and one refusal per error code at
+each field — `FORBIDDEN` and `VALIDATION` on both writes, `NOT_FOUND` on the
+update. The tier rule, the order and who else is refused are
+`services/references.test.ts`'s and `services/ingredient-references.test.ts`'s.
 
 ### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
 
@@ -713,6 +751,44 @@ from one table of names, so the two cannot drift.
 
 `tests/modules/vocabulary/graphql/astrology.test.ts` runs both lists and the
 six writes through Yoga.
+
+### Groups: the category-group and form-group writes
+
+The two group vocabularies' writes (M5.6b), registered by `vocabulary` over
+`services/category-groups.ts` and `services/ingredient-form-groups.ts`
+([`db/categories.md`](../db/categories.md), "Group writes"), in the
+categories' shape. There is no new list query: the admin pages read the
+services on navigation (rule 1), and `ingredientFormGroups` already answers
+the browser.
+
+- **Two inputs, each for both of its writes.** `CategoryGroupInput` is
+  `name`, `description`, `colorDark` and `colorLight`, all required;
+  `IngredientFormGroupInput` is `name` and `description`. No slug, which
+  follows the name.
+- **`createCategoryGroup`, `updateCategoryGroup` and `deleteCategoryGroup`;
+  `createIngredientFormGroup`, `updateIngredientFormGroup` and
+  `deleteIngredientFormGroup`.** Each carries `admin`, and
+  `assertSiteAdmin` refuses again in the service, which is the gate. A colour
+  under 4.5:1 on its own ground is `VALIDATION` on `colorDark` or
+  `colorLight`, the message naming the theme, the surface and the ratio
+  verbatim (MB.36, MB.43). A slug collision is `VALIDATION` on `name`, as is
+  a form-group rename that would re-slug a form onto another's address. An
+  unknown, deleted or malformed id is `NOT_FOUND`.
+- **A delete takes an optional `moveTo` and answers the deleted id.** The
+  group's live categories or forms move to the group `moveTo` names, a form
+  re-slugged there, before the soft delete, in one transaction. A group with
+  live rows and no other live group named, or a moved form that would take
+  another's address, is `VALIDATION` on `moveTo`. A form group is never
+  `FORBIDDEN` for a compendium entry's pick, since the moved forms stay
+  curated.
+- **The writes clear the loaders an earlier root field may have filled**:
+  `categoryGroupsById` on a category group's update and delete, and
+  `categoriesByIngredient` on its delete; `ingredientFormGroupsById` and
+  `ingredientFormsById` on a form group's update and delete. Revalidating the
+  `compendium` tag is M8.7's.
+
+`tests/modules/vocabulary/graphql/category-groups.test.ts` and
+`ingredient-form-groups.test.ts` run the writes through Yoga.
 
 ### Auth scopes: the second check
 
