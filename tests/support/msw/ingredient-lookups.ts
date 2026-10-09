@@ -1,11 +1,15 @@
 import type {
   CommonNameSuggestionsQuery,
   CommonNameSuggestionsQueryVariables,
+  CreateReferenceMutation,
+  CreateReferenceMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
   PlanetSuggestionsQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
+  ReferenceSuggestionsQuery,
+  ReferenceSuggestionsQueryVariables,
 } from '@/gql/graphql';
 import type {
   CorrespondenceNode,
@@ -14,12 +18,14 @@ import type {
   FormNode,
   IngredientNode,
   NameNode,
+  ReferenceNode,
 } from '../../components/IngredientForm/types';
-import { mockGraphQLQuery } from './graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from './graphql';
 
 // The ingredient form's lookups answered as /api/graphql answers them, each
 // recording the variables it was asked with: shared by the form's test and
-// the tests of the fields that ask them (MB.181). A later answer wins, so a
+// the tests of the fields that ask them (MB.181), with the reference panel's
+// `CreateReference` beside them (MB.182). A later answer wins, so a
 // test answers a lookup after whatever answered it empty.
 
 /** The coven the form's tests act in. */
@@ -89,3 +95,32 @@ export const offerDeities = (nodes: DeityNode[]) =>
   offerList('DeitySuggestions', 'deitySuggestions', nodes);
 export const offerIngredients = (nodes: IngredientNode[]) =>
   offerList('IngredientSuggestions', 'ingredientSuggestions', nodes);
+
+/** Answers `ReferenceSuggestions` with these sources, recording each ask. */
+export function offerReferences(nodes: ReferenceNode[]) {
+  const calls: ReferenceSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<ReferenceSuggestionsQuery, ReferenceSuggestionsQueryVariables>(
+    'ReferenceSuggestions',
+    (variables) => {
+      calls.push(variables);
+      return { referenceSuggestions: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** The id `acceptReference` gives the source it saves. */
+export const NEW_REFERENCE_ID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+
+/** Answers `CreateReference` with a new coven source reading `citation`, recording each ask. */
+export function acceptReference(citation = 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.') {
+  const calls: CreateReferenceMutationVariables[] = [];
+  mockGraphQLMutation<CreateReferenceMutation, CreateReferenceMutationVariables>(
+    'CreateReference',
+    (variables) => {
+      calls.push(variables);
+      return { createReference: { id: NEW_REFERENCE_ID, citation, isGlobal: false } };
+    },
+  );
+  return calls;
+}
