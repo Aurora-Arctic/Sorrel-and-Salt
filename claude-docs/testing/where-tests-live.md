@@ -211,7 +211,11 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     `NO ACTION`, so a `delete from` against seeded rows is refused. The
     files that are _about_ seeding (`tests/db/seed/*`,
     `updated-at-trigger.test.ts`) call `truncateAllTables(sql)` from
-    `seeded-database.ts` first.
+    `seeded-database.ts` before a seed run they assert — once per file for
+    the reads, and in the test for a re-run over an admin's edit — and a
+    seed test that only reads what a seed wrote reads the clone, since the
+    template ran the same function (MB.183;
+    [`layer-ownership.md`](layer-ownership.md), "Seed content").
     - **What a `tests/db/` file may therefore assume**, and what its own
       header need not re-argue: every migration applied, the `standard`
       scenario present, and a database nothing else will touch. No file builds

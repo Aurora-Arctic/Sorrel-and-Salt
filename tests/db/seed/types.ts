@@ -1,7 +1,15 @@
 import type { SeedDatabase } from '@/db/seed/types';
 
-/** One seed entry point, named for its test: a scenario, or a reference-data seed run alone. */
-export type SeedEntry = [name: string, run: (handle: SeedDatabase) => Promise<void>];
+/**
+ * One seed entry point under the shape every seed shares: a scenario, or a
+ * reference-data seed run alone, and the tables that run is the seed of —
+ * empty before it, filled by it, every row the bootstrap user's.
+ */
+export interface SeedEntry {
+  name: string;
+  run: (handle: SeedDatabase) => Promise<void>;
+  tables: string[];
+}
 
 /** A `planets` or `zodiac_signs` row. */
 export interface VocabularyRow {

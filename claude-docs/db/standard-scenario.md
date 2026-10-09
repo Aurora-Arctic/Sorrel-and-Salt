@@ -114,8 +114,11 @@ composite key, compendium entries by `(name, canonicalName, form)`, folk names
 by ingredient plus `lower(name)`, assignments by their pair. Nothing already
 present is updated, so a renamed workspace or a retitled entry survives a
 reseed, and an entry an admin soft-deleted stays deleted rather than coming
-back on the next run — asserted by test, since the partial unique indexes stop
-only a second _live_ row and would let it through.
+back on the next run — asserted by `tests/db/seed/index.test.ts`'s sweep over
+every seed entry point (MB.183), since the partial unique indexes stop only a
+second _live_ row and would let it through. The one row that sweep leaves out
+is a compendium deity pick, which a reseed of `standard` puts back on
+purpose (below).
 
 The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
 deliberately: those are the three columns §5's generated expression reads, and
@@ -124,7 +127,44 @@ to keep in step — the one that lies is the one nobody runs. The form alone is
 folded, trimmed and lower-cased as the key folds it: a database seeded before
 MB.162 holds the compendium's forms lower-case, and compose's `db-init`
 reseeds it on every start, so a key on the spelling would insert each entry
-beside itself and fail the scenario on the canonical-key index. A test
-re-cases the forms and reseeds to hold it. Ginger is the exception it cannot
-cover: its form changed rather than its case, so such a database keeps its
-old `rhizome` row beside the new `Root` one until a `db:reset`.
+beside itself and fail the scenario on the canonical-key index.
+`tests/db/seed/standard.test.ts` re-cases the forms and reseeds to hold it —
+one of its two tests that write, the other the deity pick below; the rest
+read the clone, which already holds the scenario, and the cast and counts are
+`seeded-template.test.ts`'s.
+Ginger is the exception it cannot cover: its form changed rather than its
+case, so such a database keeps its old `rhizome` row beside the new `Root`
+one until a `db:reset`.
+
+### A reseed of `standard` puts a deity pick back; `demo` does not
+
+The owner's call: `standard` is the fixture scenario, so a reseed resets the
+fixtures, and a compendium deity pick an admin deleted comes back on the next
+run. `demo` is explored by a person, so a deletion there is theirs and stays,
+as a deleted spell does. Staging and production run neither — only the five
+vocabulary seeds (`.github/workflows/migrate.yml`) — so the restoring run is
+a local one.
+
+Both run the same `seedStandardContent(tx)`; its
+`restoreDeletedDeityPicks` option, on by default and passed `false` by
+`demo`, decides which rows the picks are keyed over. On, over the live rows
+alone: a deleted pick is missing, so it is inserted again, as a new row at its
+literal position beside the tombstone. Off, over every row, so the tombstone
+counts as present. Every other seeded row ignores `deleted_at` in both
+scenarios.
+
+`tests/db/seed/index.test.ts`'s resurrection sweep therefore lists
+`ingredient_deities` under the demo scenario and leaves it out of the
+standard one, and `tests/db/seed/standard.test.ts` asserts the restoration —
+the pick deleted is gone before the reseed and live again after, under a new
+id at the same position.
+
+What the restoration cannot survive is a pick removed through the app from
+the middle of a list. `replaceDeities` renumbers the picks below it, so the
+position the seed wants back is held by another live pick, and the insert
+fails `ingredient_deities_position_unique` and with it the whole scenario —
+the same arithmetic that makes `demo` key a jar's layers on the spell
+(claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at
+all"). A deleted last pick, which is the case the test takes, frees its
+position and comes back cleanly. Since compose's `db-init` reseeds on every
+start, the other case fails each start until a `db:reset`.

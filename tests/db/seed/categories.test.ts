@@ -5,7 +5,6 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import * as sassCompiler from 'sass';
 import { fromRoot } from '../../support/paths';
 import { truncateAllTables } from '../../support/seeded-database';
-import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { CATEGORIES, seedCategories } from '@/db/seed/categories';
 import { CATEGORY_GROUPS, SASS_TOKEN_BY_GROUP_NAME } from '@/db/seed/category-groups';
 import { slugify } from '@/lib/slugify';
@@ -14,8 +13,10 @@ import type { CategoryGroupRow, CategoryRow, DesignCategoryGroup } from './types
 // §6's eight groups and every category, asserted against their sources rather
 // than copies: the vocabulary parsed from DESIGN.md §6's table, the colours
 // resolved by compiling `category-group-color()`, the contrast floor recomputed
-// from the seeded hex. Against the real tables, emptied first —
-// claude-docs/db/category-seed.md, "The category seed".
+// from the seeded hex. Against the clone, which holds the vocabulary as
+// `standard` wrote it through the same function; a re-run over an admin's
+// edit empties the tables first, and the shape every seed shares is
+// index.test.ts's (MB.183) — claude-docs/db/category-seed.md, "The category seed".
 
 const DESIGN_DOC = fromRoot('claude-docs/DESIGN.md');
 const SCSS_DIR = fromRoot('src/scss');
@@ -119,18 +120,9 @@ async function allCategories(): Promise<CategoryRow[]> {
   return sql<CategoryRow[]>`select * from categories order by slug`;
 }
 
-async function countOf(table: string): Promise<number> {
-  const [{ count }] = await sql<{ count: string }[]>`select count(*) from ${sql(table)}`;
-  return Number(count);
-}
-
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
   db = drizzle(sql);
-});
-
-beforeEach(async () => {
-  await truncateAllTables(sql);
 });
 
 afterAll(async () => {
@@ -228,28 +220,13 @@ describe('every row carries a description', () => {
   });
 
   it('writes them through to the database', async () => {
-    await seedCategories(db);
-
     expect((await allGroups()).filter((g) => g.description.trim() === '')).toEqual([]);
     expect((await allCategories()).filter((c) => c.description.trim() === '')).toEqual([]);
   });
 });
 
 describe('seedCategories(db)', () => {
-  // Precondition: the truncated clone really starts at zero.
-  it('starts from two empty tables', async () => {
-    expect(await countOf('category_groups')).toBe(0);
-    expect(await countOf('categories')).toBe(0);
-
-    await seedCategories(db);
-
-    expect(await countOf('category_groups')).toBe(8);
-    expect(await countOf('categories')).toBe(DESIGN_CATEGORY_COUNT);
-  });
-
   it('writes the groups before the categories, each category pointing at its own group', async () => {
-    await seedCategories(db);
-
     const groupSlugById = new Map((await allGroups()).map((g) => [g.id, g.slug]));
     const seeded = (await allCategories()).map((c) => ({
       slug: c.slug,
@@ -263,78 +240,26 @@ describe('seedCategories(db)', () => {
     );
   });
 
-  it('stamps every row as the bootstrap user, with no tombstone', async () => {
-    await seedCategories(db);
+  describe('over a database an admin has edited', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+    });
 
-    for (const row of [...(await allGroups()), ...(await allCategories())]) {
-      expect(row.created_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.updated_by, row.slug).toBe(BOOTSTRAP_USER_ID);
-      expect(row.deleted_at, row.slug).toBeNull();
-    }
-  });
+    // A group's colour is the admin's to change (MB.35); a re-asserting seed would undo it.
+    it('does not overwrite a colour pair an admin has since changed', async () => {
+      // Precondition: the truncated clone really starts empty, so the row re-coloured is this run's.
+      expect(await allGroups()).toEqual([]);
+      await seedCategories(db);
+      await sql`
+        update category_groups set color_dark = '#123456', color_light = '#654321'
+        where slug = 'protection-and-defense'
+      `;
 
-  it('is idempotent: re-running adds nothing and moves nothing', async () => {
-    await seedCategories(db);
-    const groups = await allGroups();
-    const categories = await allCategories();
+      await seedCategories(db);
 
-    await expect(seedCategories(db)).resolves.toBeUndefined();
-
-    expect(await allGroups()).toEqual(groups);
-    expect(await allCategories()).toEqual(categories);
-  });
-
-  // A group's colour is the admin's to change (MB.35); a re-asserting seed would undo it.
-  it('does not overwrite a colour pair an admin has since changed', async () => {
-    await seedCategories(db);
-    await sql`
-      update category_groups set color_dark = '#123456', color_light = '#654321'
-      where slug = 'protection-and-defense'
-    `;
-
-    await seedCategories(db);
-
-    const [protection] = (await allGroups()).filter((g) => g.slug === 'protection-and-defense');
-    expect(protection.color_dark).toBe('#123456');
-    expect(protection.color_light).toBe('#654321');
-  });
-
-  it('does not resurrect a category an admin has since deleted', async () => {
-    await seedCategories(db);
-    await sql`
-      update categories set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID}
-      where slug = 'gambling'
-    `;
-
-    await seedCategories(db);
-
-    const gambling = (await allCategories()).filter((c) => c.slug === 'gambling');
-    expect(gambling).toHaveLength(1);
-    expect(gambling[0].deleted_at).not.toBeNull();
-  });
-
-  it('publishes the bootstrap user as app.current_user_id, as withAudit would', async () => {
-    await sql`create table seed_categories_probe (slug text, acting_user text)`;
-    await sql.unsafe(`
-      create function seed_categories_probe() returns trigger language plpgsql as $$
-      begin
-        insert into seed_categories_probe (slug, acting_user)
-        values (new.slug, current_setting('app.current_user_id', true));
-        return new;
-      end
-      $$
-    `);
-    await sql.unsafe(`
-      create trigger seed_categories_probe after insert on category_groups
-      for each row execute function seed_categories_probe()
-    `);
-
-    await seedCategories(db);
-
-    const rows = await sql<{ acting_user: string | null }[]>`
-      select acting_user from seed_categories_probe
-    `;
-    expect(rows).toHaveLength(8);
-    expect(rows.every((r) => r.acting_user === BOOTSTRAP_USER_ID)).toBe(true);
+      const [protection] = (await allGroups()).filter((g) => g.slug === 'protection-and-defense');
+      expect(protection.color_dark).toBe('#123456');
+      expect(protection.color_light).toBe('#654321');
+    });
   });
 });
