@@ -19,10 +19,14 @@ export interface UserRow {
   verification_sent_at: Date | null;
 }
 
-/** Whether a query answers a null session or refuses it. */
-export type Outcome = 'answers' | 'refuses';
+/**
+ * What a null session gets: an answer, a refusal at the field, or — for a
+ * null sent where the SDL requires an id — a request refused before any
+ * resolver runs.
+ */
+export type Outcome = 'answers' | 'refuses' | 'invalid';
 
-/** A `Query` field's probe, and what it gives a null session. */
+/** A `Query` or `Mutation` field's probe, and what it gives a null session. */
 export interface ScopeProbe {
   source: string;
   variables?: Record<string, unknown>;
