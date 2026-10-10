@@ -3,18 +3,19 @@
 `src/components/AdminNav/` — the `/admin` layout's nav, a `<nav>` labelled
 "Admin" listing one link per admin-curated resource, in this order:
 
-| Label            | Route                     | Built by |
-| ---------------- | ------------------------- | -------- |
-| Compendium       | `/admin/compendium`       | M5.5     |
-| Categories       | `/admin/categories`       | M5.6     |
-| Category groups  | `/admin/category-groups`  | M5.6b    |
-| Forms            | `/admin/forms`            | M5.6a    |
-| Form groups      | `/admin/form-groups`      | M5.6b    |
-| Planets          | `/admin/planets`          | MB.95    |
-| Zodiac signs     | `/admin/zodiac-signs`     | MB.95    |
-| Deities          | `/admin/deities`          | MB.132   |
-| Deity traditions | `/admin/deity-traditions` | MB.132   |
-| Users            | `/admin/users`            | MB.52    |
+| Label             | Route                      | Built by |
+| ----------------- | -------------------------- | -------- |
+| Compendium        | `/admin/compendium`        | M5.5     |
+| Categories        | `/admin/categories`        | M5.6     |
+| Category groups   | `/admin/category-groups`   | M5.6b    |
+| Forms             | `/admin/forms`             | M5.6a    |
+| Form groups       | `/admin/form-groups`       | M5.6b    |
+| Planets           | `/admin/planets`           | MB.95    |
+| Zodiac signs      | `/admin/zodiac-signs`      | MB.95    |
+| Deities           | `/admin/deities`           | MB.132   |
+| Deity traditions  | `/admin/deity-traditions`  | MB.132   |
+| Users             | `/admin/users`             | MB.52    |
+| Privilege changes | `/admin/privilege-changes` | MB.200   |
 
 It takes no props. `src/app/admin/layout.tsx` renders it above the page, after
 the guard has passed, so it appears for admins only
@@ -27,7 +28,8 @@ only too.
 - **The list is the admin area's table of contents.** A task that adds an
   admin resource to it adds its row here in its own PR, as `/admin/users`
   (MB.52) did: the user list is no curated resource, but it is where an admin
-  acts on a person. A vocabulary's group page follows the vocabulary it
+  acts on a person. So did the privilege ledger (MB.200), after Users, since
+  it is the history of what was done to them there. A vocabulary's group page follows the vocabulary it
   organises, Category groups after Categories, Form groups after Forms and
   Deity traditions after Deities (M5.6b, MB.132;
   [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).

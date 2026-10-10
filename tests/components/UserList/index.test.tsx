@@ -75,6 +75,7 @@ describe('UserList', () => {
       'Sign-In Methods',
       'Signed Up',
       'Coven Creation',
+      'History',
     ]);
   });
 
@@ -91,6 +92,7 @@ describe('UserList', () => {
       '2026-03-04',
       // The mark alone, no control: an admin holds the flag.
       'Yes',
+      'History of Ada Fixturewort’s privileges',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
       'Bo Fixturewort',
@@ -101,6 +103,7 @@ describe('UserList', () => {
       '2026-05-06',
       // The mark, then the control that changes it, in one cell.
       'NoApprove',
+      'History of Bo Fixturewort’s privileges',
     ]);
     // An admin's role in bold, a user's not.
     expect(
@@ -109,6 +112,20 @@ describe('UserList', () => {
     expect(
       within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('User').tagName,
     ).toBe('TD');
+  });
+
+  // MB.200: each row opens the privilege ledger narrowed to its user, an
+  // admin's included.
+  it('links every row to its user’s privilege history', () => {
+    render(<UserList {...props()} />);
+
+    for (const name of ['Ada Fixturewort', 'Bo Fixturewort']) {
+      const row = screen.getByRole('row', { name: new RegExp(name) });
+      const id = props().users.find((user) => user.name === name)?.id;
+      expect(
+        within(row).getByRole('link', { name: `History of ${name}’s privileges` }),
+      ).toHaveAttribute('href', `/admin/privilege-changes?user=${id}`);
+    }
   });
 
   // The owner's call: a green check or a red cross, the word kept for a

@@ -135,12 +135,13 @@ signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
 and approves an unverified one through the warning.
 
-## The privilege ledger (MB.199)
+## The privilege ledger (MB.199, MB.200)
 
 Every change to who is an admin and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
-application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read:
-the whole ledger, newest first, for the admin who suspects misuse (story 61).
+application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
+and MB.200 its page, `/admin/privilege-changes`: the whole ledger, newest
+first, for the admin who suspects misuse (story 61).
 
 - **One service, two transports.** `listPrivilegeChanges`
   (`src/modules/identity/services/privilege-changes.ts`) is a site admin's
@@ -161,6 +162,21 @@ the whole ledger, newest first, for the admin who suspects misuse (story 61).
   whose service, `usersForAdmin(session, userIds)`, answers a site admin each
   live user, null where none is live, and refuses every slot to anyone else.
   It is the admin's whole row, not MB.10's display-name `usersById`.
+- **One page, not one per privilege.** `/admin/privilege-changes` is one
+  ledger, filtered by user (`?user=<id>`, the History link on each
+  `/admin/users` row) and by privilege (`?privilege=admin|create_workspace`).
+  It is not merged with the pause or the invitations, which stay where they
+  are acted on; an accepted invitation is already in the ledger as its
+  `invitation` row. A server component under `requireAdminSession()`, it
+  calls the service through `cache()`, numbered by `resolveNumberedPage`
+  with `countPrivilegeChanges` as every admin list is (MB.132), and reads the
+  users a page names in one `usersForAdmin` call. A hand-edited privilege is
+  no filter; a user that is not an id is no filter either, and the page says
+  so; a cursor from another list reads the first page
+  ([`components/privilege-ledger.md`](../components/privilege-ledger.md)).
+- **A row links its people to their `/admin/users` rows**, the list filtered
+  to their address, except the seed's bootstrap user, which the list leaves
+  out (`listedOnUserList`).
 - **No index beyond the key.** The plan does not want one: the ledger holds a
   row per privilege an admin, an invitation or the bootstrap changes, a few
   rows a user, and the planner seq-scans it whole. At ten thousand rows an
@@ -175,4 +191,8 @@ non-admin fixture user refused by direct call with E proven to read the same
 rows. `tests/modules/identity/graphql/privilege-changes.test.ts` holds the
 transport's half: every field, the filters reaching the service, subject and
 actor in one user read per page by query count, and the scope's own refusal.
-A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
+A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
+half is `tests/app/admin/privilege-changes/page.test.tsx`, story 61's
+acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
+`tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
+the History link against the built server, with axe.

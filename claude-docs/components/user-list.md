@@ -45,8 +45,8 @@ read beside it.
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Six columns, in the owner's order**: Name, Email, Role, Sign-In Methods,
-  Signed Up and Coven Creation, each heading in title case (DESIGN.md §9). The Email
+- **Seven columns, in the owner's order**: Name, Email, Role, Sign-In Methods,
+  Signed Up, Coven Creation and History (MB.200), each heading in title case (DESIGN.md §9). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin
   granting admin judges a person by (MB.59). A yes-or-no is a mark, on the
@@ -72,7 +72,12 @@ read beside it.
   Prev and Next, an end with no page disabled, and nothing at all on a list of
   one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
-- **Impersonate is a seventh column, only where impersonation is registered**
+- **History opens the privilege ledger narrowed to the row's user** (MB.200),
+  on every row, an admin's included: a link reading History, named "History
+  of <name>'s privileges" by hidden text, to
+  `/admin/privilege-changes?user=<id>`, built by `PrivilegeLedger`'s
+  `privilegeLedgerHref` ([`privilege-ledger.md`](privilege-ledger.md)).
+- **Impersonate is an eighth column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
   column does not exist. Each non-admin row holds an Impersonate button named
@@ -154,7 +159,7 @@ disabled and enabled states, the bare `awaiting` it opens, the Role select
 and the `role` it opens, the column headers, each
 row's cells, the `<time>`, a provider outside the roster, the empty list, the
 form's action, method, names and kept values, the pager's links, and the
-Impersonate column: absent when off, on non-admin rows only, the call and
+History link on every row, the Impersonate column: absent when off, on non-admin rows only, the call and
 the landing, and the refusal; the yes-or-no marks and their words; and the creation cell: Approve on rows awaiting
 approval, Revoke on approved ones and nothing on an admin's, each modal
 and its focus, Cancel sending nothing, each call and its busy state until the
