@@ -20,6 +20,15 @@ id that is not a uuid included
 ingredient id that is not a uuid is `NotFound`, as `getIngredient` answers it,
 rather than a driver error.
 
+**Every read that shows a coven ingredient beside the compendium's names both
+tiers in one predicate** (MB.206). `readableInTiers(memberships, ingredients)`
+in `src/db/repository/predicates.ts` is the row live and in the compendium or
+a coven one of the proofs names, and `readableIngredientParent` is the same
+test made of a child row's parent, for the folk names, categories, deities,
+substitutes and references, which carry no `workspace_id` of their own. A
+coven ingredient reaches another coven's reader through neither, and
+`tests/guards/soft-delete-finder-guard.test.ts` pins what each holds.
+
 **A delete is soft, and frees what the ingredient held** (M5.3).
 `deleteWorkspaceIngredient` tombstones the row through
 `softDeleteByIdInWorkspace`, with the update's reach: an id this coven does not

@@ -51,10 +51,13 @@ The reads of it so far are `findSimilarIngredients` (see
 (see ["Ingredient children"](ingredient-children.md)), and
 `findIngredientsInSpellsIncludingSoftDeleted` through a spell holding it (see
 ["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)), each naming
-both tiers as explicitly as this paragraph asks, and each listed on
+both tiers as explicitly as this paragraph asks — through `readableInTiers`, or
+`readableIngredientParent` for a child's parent, or `inTiers` for the spell
+hatch's unfiltered one (MB.206) — and each listed on
 [the tier seam](../modules.md#the-tier-seam). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
-each ANDing `inCompendium` as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
+each paging through `findPageInTiers` under no proofs, which reads the
+compendium alone as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
 compendium or a proof's coven (["The compendium read"](compendium-read.md)), and
 `findCompendiumEntryByIdentity` (M5.2) reads the entry holding an identity
 (["Compendium writes"](compendium-writes.md)); the local-beats-compendium

@@ -1,11 +1,15 @@
 ## Keyset pages (M3.6)
 
 A list that can grow is read one page at a time (CLAUDE.md rule 8). The finder
-is `findPage(table, sort, page, where?)`, or
-`findPageInWorkspace(membership, table, sort, page, where?)` for a
-workspace-scoped table. `sort` is a list of parts, each ascending. Each finder
-ANDs the same soft-delete and workspace predicates as `findMany` and
-`findManyInWorkspace`, and adds a keyset bound:
+is `findPage(table, order, page, where?)`, or
+`findPageInWorkspace(membership, table, order, page, where?)` for a
+workspace-scoped table, or, inside the repository,
+`findPageInTiers(memberships, table, order, page, where?)` for a two-tier one
+(MB.206). `order` is a list of sort parts, each ascending, or a `ListOrder`:
+the parts with the join, threshold and carried values below. Each finder ANDs
+the same soft-delete and workspace predicates as `findMany` and
+`findManyInWorkspace` — the two-tier one `readableInTiers` — and adds a
+keyset bound, cut in one place, `finders.ts`'s `readPage`:
 
 ```sql
 where … and (a, b, id) > (cast($a as <a's type>), cast($b as <b's type>), cast($id as uuid))
@@ -82,8 +86,9 @@ from … [join …] where …   -- no order, no limit
 - **`KeyOrder` is what a page and its count share**: the sort parts, the id,
   the join and the two threshold flags, `wordMatch` and `similarityMatch`.
   `Keyset` is a `KeyOrder` plus the page's `request` and `carry`. A finder
-  builds its `KeyOrder` once, in one function, and hands it to both reads, so
-  the count cannot drift from the pages it numbers.
+  builds its `ListOrder` once and hands it to a page finder and its count,
+  which key it on the table's own `id` in one function, so the count cannot
+  drift from the pages it numbers.
 - **The `where` is the page's without `pageBounds`.** The second count uses
   the same row comparison a `before` bound does, built by the same two helpers
   (`rowKey`, `cursorKey`), so "before the first row" means what the page's
@@ -92,10 +97,10 @@ from … [join …] where …   -- no order, no limit
   so a `wordMatch` count sets 0.5 in its own transaction as the page does.
 - **A position, not an offset.** The count labels a page and never seeks one,
   so a cursor stays a key.
-- **`findPageCount` counts a `findPage` list** under the same sort and
-  `where`, for a list with no finder of its own: the three group pages count
-  through it (MB.132), where each vocabulary's own list keeps its own count
-  finder beside its own filter.
+- **`findPageCount` counts a `findPage` list** under the same order and
+  `where`, and `findPageCountInTiers` a `findPageInTiers` one: the three
+  group pages count through it (MB.132), and each vocabulary's own count
+  finder and the compendium's call one under their own filter (MB.206).
 
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like

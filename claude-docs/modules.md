@@ -206,16 +206,22 @@ compendium's. So the set is counted: **`TIER_SEAM` in
 `tests/guards/module-boundaries.test.ts` must name every top-level function in
 `src/db/repository/` whose SQL reads the compendium tier**, exported or not —
 anything calling `inCompendium(…)`, the predicate's one spelling since MB.100,
-or writing `workspace_id is null` or `isNull(workspaceId)` out by hand, and
-anything that reads both tiers in one statement. The guard cuts each file at
+or one of the builders that read both tiers through it — `inTiers`,
+`readableInTiers`, `readableIngredientParent` and `findPageInTiers` with its
+count, each the one spelling of its read since MB.206 — or writing
+`workspace_id is null` or `isNull(workspaceId)` out by hand, and anything
+that reads both tiers in one statement. The guard cuts each file at
 every top-level `function` and `const`, so a predicate is named by the
 declaration it is written in, and a private helper is listed under its own
 name rather than credited to whichever export happens to sit above it. It
 fails an unlisted function, and it fails a listed one that no longer exists or
 no longer reads the tier.
 
-It holds the predicate, seventeen functions and the writer today: `inCompendium` in
-`predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
+It holds the predicate, the five builders over it, seventeen functions and the
+writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
+NULL` itself; `inTiers`, `readableInTiers` and `readableIngredientParent`
+beside it, and `findPageInTiers` and `findPageCountInTiers` in `finders.ts`
+(MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 (M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
