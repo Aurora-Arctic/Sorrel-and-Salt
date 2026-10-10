@@ -989,6 +989,9 @@ describe('UserList admin changes switch', () => {
     ).toBeInTheDocument();
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause).not.toHaveAttribute('aria-disabled');
+    // Big and red, on the owner's call.
+    expect(pause).toHaveClass('btn', 'btn--destructive');
+    expect(pause).not.toHaveClass('btn--small');
     fireEvent.click(pause);
 
     const busy = screen.getByRole('button', { name: 'Pausing' });
@@ -1025,7 +1028,11 @@ describe('UserList admin changes switch', () => {
         'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
       ),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Resume Admin Changes' }));
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    // Full size, so the control keeps its size as it flips, and not red.
+    expect(resume).toHaveClass('btn');
+    expect(resume).not.toHaveClass('btn--small', 'btn--destructive');
+    fireEvent.click(resume);
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toBe(1);
@@ -1059,6 +1066,7 @@ describe('UserList admin changes switch', () => {
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause).toBeEnabled();
     expect(pause).toHaveAttribute('aria-disabled', 'true');
+    expect(pause).toHaveClass('btn', 'btn--destructive');
     expect(pause).toHaveAccessibleDescription(NOT_PRIMARY);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 

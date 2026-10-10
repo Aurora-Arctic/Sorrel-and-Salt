@@ -174,7 +174,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the state in words: "Admin changes are on: any admin can make someone an
   admin or stop them being one." or "Admin changes are paused: only the
   primary admin can make someone an admin or stop them being one.", then
-  Pause Admin Changes or Resume Admin Changes, quiet and `.btn--small`. For
+  Pause Admin Changes, full size and `.btn--destructive`, big and red on the
+  owner's call since it stops every other admin, or Resume Admin Changes, a
+  plain full-size `.btn`, so the control keeps its size as it flips. For
   the primary admin (`canToggle`) it sends the mutation at once, with no
   modal, since pausing takes nothing away and resuming is the way back, and
   stays busy, spinner and "Pausing" or "Resuming", until `router.refresh()`

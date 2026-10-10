@@ -31,12 +31,17 @@ const STATES = {
       'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
     label: 'Resume Admin Changes',
     busy: 'Resuming',
+    // Plain and full size: the way back takes nothing away, and the control
+    // keeps its size as it flips.
+    buttonClass: 'btn',
     send: () => graphqlRequest(ResumeAdminRoleChangesDocument),
   },
   open: {
     state: 'Admin changes are on: any admin can make someone an admin or stop them being one.',
     label: 'Pause Admin Changes',
     busy: 'Pausing',
+    // Big and red, on the owner's call: it stops every other admin.
+    buttonClass: 'btn btn--destructive',
     send: () => graphqlRequest(PauseAdminRoleChangesDocument),
   },
 } as const;
@@ -75,7 +80,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
       <p className="user-list__pause-state">{copy.state}</p>
       {canToggle ? (
         <button
-          className="btn btn--small btn--quiet"
+          className={copy.buttonClass}
           type="button"
           disabled={sending}
           aria-busy={sending || undefined}
@@ -89,7 +94,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {/* `aria-disabled`, not `disabled`: it keeps its place in the tab
               order, and a click says why rather than doing nothing. */}
           <button
-            className="btn btn--small btn--quiet"
+            className={copy.buttonClass}
             type="button"
             aria-disabled="true"
             aria-describedby={reasonId}
