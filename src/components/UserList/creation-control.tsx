@@ -1,23 +1,22 @@
 'use client';
 
-import { ClientError } from 'graphql-request';
-import { useRouter } from 'next/navigation';
-import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import Modal from '../Modal';
-import type { CreationAction, CreationControlProps, CreationStep } from './types';
+import ConfirmedAction from './confirmed-action';
+import { unverifiedWarning } from './warning';
+import type { CreationControlProps } from './types';
 
-// The row's Approve or Revoke (M5.8), beside the mark it changes, each asking
-// first in a modal: lets a user with no invitation create a
-// coven, or stops them, behind a confirmation naming them. The service is the
-// guard; this only puts it where an admin looks. A success re-reads the page,
-// whose row then offers the other action. Approving an unverified address
-// warns first, and still approves (MB.205).
+// The row's Approve or Revoke (M5.8), beside the mark it changes: lets a user
+// with no invitation create a coven, or stops them, behind a confirmation
+// naming them, with an optional reason the ledger keeps, as Grant and Revoke
+// of admin take one. A success re-reads the page, whose row then offers the
+// other action. Approving an unverified address warns first, and still
+// approves (MB.205).
 
 const GrantWorkspaceCreationDocument = graphql(`
-  mutation GrantWorkspaceCreation($userId: ID!) {
-    grantWorkspaceCreation(userId: $userId) {
+  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {
+    grantWorkspaceCreation(userId: $userId, note: $note) {
       id
       canCreateWorkspace
     }
@@ -25,185 +24,57 @@ const GrantWorkspaceCreationDocument = graphql(`
 `);
 
 const RevokeWorkspaceCreationDocument = graphql(`
-  mutation RevokeWorkspaceCreation($userId: ID!) {
-    revokeWorkspaceCreation(userId: $userId) {
+  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {
+    revokeWorkspaceCreation(userId: $userId, note: $note) {
       id
       canCreateWorkspace
     }
   }
 `);
 
-/** Each action's words, its confirm's style and its write. */
-const ACTIONS: Record<
-  CreationAction,
-  {
-    label: string;
-    /** The confirming modal's heading, in title case. */
-    title: string;
-    openClass: string;
-    accessibleName: (name: string) => string;
-    /** The modal's question, the user's name in bold, on the owner's call. */
-    question: (name: string) => ReactNode;
-    busy: string;
-    confirmClass: string;
-    send: (userId: string) => Promise<unknown>;
-  }
-> = {
-  approve: {
-    label: 'Approve',
-    title: 'Approve Coven Creation',
-    // Quiet, the body ink, on the owner's call.
-    openClass: 'btn btn--small btn--quiet',
-    accessibleName: (name) => `Approve ${name}`,
-    question: (name) => (
-      <>
-        Let <strong>{name}</strong> create covens?
-      </>
-    ),
-    busy: 'Approving',
-    confirmClass: 'btn btn--solid',
-    send: (userId) => graphqlRequest(GrantWorkspaceCreationDocument, { userId }),
-  },
-  revoke: {
-    label: 'Revoke',
-    title: 'Revoke Coven Creation',
-    // Red, on the owner's call: it takes something away.
-    openClass: 'btn btn--small btn--destructive',
-    accessibleName: (name) => `Revoke approval for ${name}`,
-    question: (name) => (
-      <>
-        Stop <strong>{name}</strong> from creating covens? Covens they own stay theirs.
-      </>
-    ),
-    busy: 'Revoking',
-    confirmClass: 'btn btn--destructive',
-    send: (userId) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId }),
-  },
-};
-
-/**
- * Approve's warning on an unverified address (MB.205): an admin vouches for
- * whoever holds it, and the vouching keeps the account from MB.67's sweep
- * (MB.204). A warning rather than a refusal, since M2.9 leaves confirming who
- * someone is to the admin.
- */
-const UNVERIFIED_WARNING =
-  'This email address has not been verified, so nobody has proved who holds it. Approving keeps the account rather than letting it lapse.';
-
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
-/** The service's own refusal, verbatim, or one generic sentence. */
-function messageOf(error: unknown): string {
-  if (!(error instanceof ClientError)) return GENERIC_ERROR;
-  return error.response.errors?.[0]?.message || GENERIC_ERROR;
-}
-
 const CreationControl = ({
   userId,
   name,
   emailVerified,
   action,
-}: CreationControlProps): ReactElement => {
-  const router = useRouter();
-  const copy = ACTIONS[action];
-  // Revoke vouches for no one, so it carries none.
-  const warns = action === 'approve' && !emailVerified;
-  const warningId = useId();
-  const [step, setStep] = useState<CreationStep>('idle');
-  const [failure, setFailure] = useState<string>();
-  const confirmRef = useRef<HTMLButtonElement>(null);
-  const openRef = useRef<HTMLButtonElement>(null);
-  // Set by Cancel only, so the first render takes no focus.
-  const returning = useRef(false);
-
-  // Focus follows the step: to the modal's action when asked, back to the
-  // row's on Cancel.
-  useEffect(() => {
-    if (step === 'confirming') confirmRef.current?.focus();
-    if (step === 'idle' && returning.current) {
-      returning.current = false;
-      openRef.current?.focus();
-    }
-  }, [step]);
-
-  async function confirm() {
-    setStep('sending');
-    setFailure(undefined);
-    try {
-      await copy.send(userId);
-      // Busy until the re-read replaces this row with one offering the other action.
-      router.refresh();
-    } catch (error) {
-      setStep('idle');
-      setFailure(messageOf(error));
-    }
-  }
-
-  function cancel() {
-    returning.current = true;
-    setStep('idle');
-  }
-
-  const sending = step === 'sending';
-  return (
-    <>
-      {/* The visible label opens the accessible name, so a voice command
-          saying what it sees still reaches it. */}
-      <button
-        ref={openRef}
-        className={copy.openClass}
-        type="button"
-        aria-label={copy.accessibleName(name)}
-        onClick={() => {
-          setFailure(undefined);
-          setStep('confirming');
-        }}
-      >
-        {copy.label}
-      </button>
-      {failure && (
-        <p className="notice notice--error" role="alert">
-          {failure}
-        </p>
-      )}
-      {/* Asks first, in a modal, on the owner's call. A success leaves it open,
-          busy, until the refresh replaces this control; a refusal closes it
-          and says why in the row. */}
-      {step !== 'idle' && (
-        <Modal title={copy.title} onClose={cancel}>
-          {(close) => (
-            <>
-              <p>{copy.question(name)}</p>
-              {warns && (
-                <p id={warningId} className="notice notice--warn user-list__warning">
-                  {UNVERIFIED_WARNING}
-                </p>
-              )}
-              <div className="modal__actions">
-                {/* Described by the warning: the focus lands here as the modal
-                    opens, so the warning is read with what it confirms. */}
-                <button
-                  ref={confirmRef}
-                  className={copy.confirmClass}
-                  type="button"
-                  aria-describedby={warns ? warningId : undefined}
-                  disabled={sending}
-                  aria-busy={sending || undefined}
-                  onClick={() => void confirm()}
-                >
-                  {sending && <span className="spinner" aria-hidden="true" />}
-                  {sending ? copy.busy : copy.label}
-                </button>
-                <button className="btn btn--quiet" type="button" disabled={sending} onClick={close}>
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
-      )}
-    </>
+}: CreationControlProps): ReactElement =>
+  action === 'approve' ? (
+    <ConfirmedAction
+      label="Approve"
+      accessibleName={`Approve ${name}`}
+      // Quiet, the body ink, on the owner's call.
+      openClass="btn btn--small btn--quiet"
+      title="Approve Coven Creation"
+      // The user's name in bold, on the owner's call.
+      question={
+        <>
+          Let <strong>{name}</strong> create covens?
+        </>
+      }
+      // Revoke vouches for no one, so it carries none.
+      warning={emailVerified ? undefined : unverifiedWarning('Approving')}
+      busy="Approving"
+      confirmClass="btn btn--solid"
+      withNote
+      send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
+    />
+  ) : (
+    <ConfirmedAction
+      label="Revoke"
+      accessibleName={`Revoke approval for ${name}`}
+      // Red, on the owner's call: it takes something away.
+      openClass="btn btn--small btn--destructive"
+      title="Revoke Coven Creation"
+      question={
+        <>
+          Stop <strong>{name}</strong> from creating covens? Covens they own stay theirs.
+        </>
+      }
+      busy="Revoking"
+      confirmClass="btn btn--destructive"
+      withNote
+      send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
+    />
   );
-};
 
 export default CreationControl;

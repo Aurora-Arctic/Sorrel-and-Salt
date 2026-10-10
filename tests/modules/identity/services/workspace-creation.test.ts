@@ -149,6 +149,27 @@ describe('grantWorkspaceCreation', () => {
   });
 });
 
+// The confirmation's optional reason, as MB.59's grant of admin takes one: the
+// trigger copies it onto the ledger row, a blank one as none.
+describe('the reason an approval or a revoke gives', () => {
+  const notes = () => sql`
+    select change::text, via::text, note, created_by from user_privilege_changes
+    where user_id = ${PENDING} order by created_at, id
+  `;
+
+  it('is kept as the ledger row’s note, trimmed, by the admin’s act, and a blank one as none', async () => {
+    expect(await notes()).toEqual([]);
+
+    await grantWorkspaceCreation(asUser(E), PENDING, '  Runs the Tuesday circle ');
+    await revokeWorkspaceCreation(asUser(E), PENDING, '   ');
+
+    expect(await notes()).toEqual([
+      { change: 'grant', via: 'admin', note: 'Runs the Tuesday circle', created_by: E.id },
+      { change: 'revoke', via: 'admin', note: null, created_by: E.id },
+    ]);
+  });
+});
+
 describe('revokeWorkspaceCreation', () => {
   it('stops a user creating covens, stamped as the admin and recorded in the ledger', async () => {
     await grantWorkspaceCreation(asUser(E), PENDING);

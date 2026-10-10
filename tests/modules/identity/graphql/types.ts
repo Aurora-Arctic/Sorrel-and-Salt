@@ -24,6 +24,10 @@ export interface RevokedUserResult {
   revokeWorkspaceCreation: { id: string; canCreateWorkspace: boolean };
 }
 
+export interface SetUserRoleResult {
+  setUserRole: { id: string; role: string; canCreateWorkspace: boolean };
+}
+
 export interface LedgerUser {
   id: string;
   name: string;

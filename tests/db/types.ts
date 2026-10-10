@@ -35,9 +35,10 @@ export interface ScopeProbe {
 
 /**
  * What an admin write changes: the closed list of what a site admin governs —
- * the curated reference data (CLAUDE.md, "Admins curate …") and who may create
- * a coven (M5.8) — so a write outside it is a new entry here that a reviewer
- * reads, not a line in a probe table. A coven's contents are never on it (M6.6).
+ * the curated reference data (CLAUDE.md, "Admins curate …"), who may create
+ * a coven (M5.8) and who is an admin (MB.59) — so a write outside it is a new
+ * entry here that a reviewer reads, not a line in a probe table. A coven's
+ * contents are never on it (M6.6).
  */
 export type Governed =
   | 'compendium'
@@ -50,7 +51,8 @@ export type Governed =
   | 'zodiac signs'
   | 'deities'
   | 'deity traditions'
-  | 'workspace creation';
+  | 'workspace creation'
+  | 'admin role';
 
 /**
  * A `Mutation` field only a site admin's scope admits. `probe` stands in for

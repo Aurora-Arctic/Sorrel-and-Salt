@@ -354,14 +354,19 @@ type Mutation {
   deleteZodiacSign(id: ID!): ID!
 
   """Lets a user with no invitation create a coven. Refused once they may."""
-  grantWorkspaceCreation(userId: ID!): User!
+  grantWorkspaceCreation(note: String, userId: ID!): User!
 
   """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
-  revokeWorkspaceCreation(userId: ID!): User!
+  revokeWorkspaceCreation(note: String, userId: ID!): User!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
+
+  """
+  Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.
+  """
+  setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { UserRole } from '../../lib/session';
 
 /** One listed user: the row's own facts and the providers read beside it. */
@@ -11,6 +12,8 @@ export interface UserListEntry {
   /** Provider ids, as the service sorted them. */
   providers: readonly string[];
   emailVerified: boolean;
+  /** Whether this is the primary admin, whom no one can revoke (MB.59). */
+  primaryAdmin: boolean;
 }
 
 export interface UserListProps {
@@ -57,8 +60,48 @@ export interface ImpersonateButtonProps {
 /** What a row's creation control does: approve a user awaiting it, or revoke it (M5.8). */
 export type CreationAction = 'approve' | 'revoke';
 
-/** Where a creation control is: offering its action, asking to confirm, or waiting on the answer. */
-export type CreationStep = 'idle' | 'confirming' | 'sending';
+/** Where a confirmed action is: offering itself, asking to confirm, or waiting on the answer. */
+export type ConfirmStep = 'idle' | 'confirming' | 'sending';
+
+/**
+ * A row's action that asks first, in a modal: what its button and the modal
+ * say, and the write it sends. The creation control and the role control
+ * each build one.
+ */
+export interface ConfirmedActionProps {
+  /** The row's button and the modal's confirm, one word or two. */
+  label: string;
+  /** The row's button's accessible name, opening with `label`. */
+  accessibleName: string;
+  openClass: string;
+  /** The modal's heading, in title case. */
+  title: string;
+  /** The modal's question, the user's name in bold. */
+  question: ReactNode;
+  /** A warning under the question, which the confirm is described by; none when absent. */
+  warning?: string;
+  /** The confirm's label while the write is out. */
+  busy: string;
+  confirmClass: string;
+  /** Whether the modal offers an optional reason, sent with the write. */
+  withNote?: boolean;
+  /** The write; `note` is the reason as typed, trimmed, or absent. */
+  send: (note?: string) => Promise<unknown>;
+}
+
+/** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
+export type RoleAction = 'grant' | 'revoke';
+
+export interface RoleControlProps {
+  userId: string;
+  /** The user's name, completing the button's accessible name and the question. */
+  name: string;
+  /** Whether the user's address is verified; Grant warns when it is not (MB.205). */
+  emailVerified: boolean;
+  /** Whether this is the primary admin, whose Revoke says why it cannot be used. */
+  primaryAdmin: boolean;
+  action: RoleAction;
+}
 
 export interface CreationControlProps {
   userId: string;

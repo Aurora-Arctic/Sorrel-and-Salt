@@ -1,7 +1,8 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
+import postgres from 'postgres';
+import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { PRIMARY_ADMIN_EMAIL, signInAs } from './session';
 
 // The `/admin` guard against the built server (M5.4; claude-docs/auth/admin-guard.md, "The
 // admin guard"): a signed-out visitor is sent to sign in, a signed-in
@@ -11,6 +12,22 @@ test.describe.configure({ mode: 'serial' });
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
+
+const PRIMARY_ADMIN_REASON =
+  "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
+
+/** The privilege ledger's rows for one user, as the trigger on `users` wrote them (MB.195). */
+async function privilegeChanges(userId: string) {
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    return await sql`
+      select privilege::text, change::text, via::text, note from user_privilege_changes
+      where user_id = ${userId} and via = 'admin' order by created_at, privilege
+    `;
+  } finally {
+    await sql.end();
+  }
+}
 
 test('a signed-out visit to /admin lands on /sign-in, keeping its path', async ({ page }) => {
   await page.goto('/admin?tab=forms');
@@ -128,13 +145,14 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     'Permissions HistoryFixture Person',
     // The verified mark's word, for the reader and in its tip, before the address.
     /an-admin@admin-users\.test$/,
-    'Admin',
-    // Each logo's name, for the reader and in its tip.
-    'DiscordDiscordGoogleGoogle',
-    /^\d{4}-\d{2}-\d{2}$/,
+    // The role, then the control that changes it (MB.59).
+    'AdminRevoke',
     // A mark alone: every admin may create a workspace, and the users CHECK
     // says so (MB.177), so the cell offers no control.
     'Yes',
+    // Each logo's name, for the reader and in its tip.
+    'DiscordDiscordGoogleGoogle',
+    /^\d{4}-\d{2}-\d{2}$/,
   ]);
   // The mark says what it marks on hover, in a tip bubble (the owner's review).
   const email = admin.getByRole('cell').nth(1);
@@ -144,7 +162,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText('Verified');
   // So does each sign-in logo, its provider's name.
-  const discord = admin.getByRole('cell').nth(3).locator('.user-list__provider--discord');
+  const discord = admin.getByRole('cell').nth(4).locator('.user-list__provider--discord');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
   await expect(discord.locator('.user-list__tip')).toHaveText('Discord');
@@ -157,13 +175,13 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   page,
 }) => {
   // Signed in once to make the account, then the page signs in as the admin.
-  await signInAs(page, 'awaiting@admin-approval.test');
+  const { userId } = await signInAs(page, 'awaiting@admin-approval.test');
   await signInAs(page, 'an-admin@admin-approval.test', ['discord'], 'admin');
 
   const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
@@ -171,12 +189,22 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
   // A verified address, so no warning (MB.205).
   await expect(approving).not.toContainText('has not been verified');
+  // An optional reason, as Grant and Revoke of admin take one.
+  await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
   await assertNoAccessibilityViolations(page);
 
   await approving.getByRole('button', { name: 'Approve' }).click();
   await expect(approving).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+  expect(await privilegeChanges(userId)).toEqual([
+    {
+      privilege: 'create_workspace',
+      change: 'grant',
+      via: 'admin',
+      note: 'Runs the Tuesday circle',
+    },
+  ]);
 
   // And revoked again, behind its own modal.
   await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();
@@ -187,7 +215,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   await revoking.getByRole('button', { name: 'Revoke' }).click();
   await expect(revoking).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
   await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
 });
 
@@ -207,7 +235,7 @@ test('an admin approves an unverified user at /admin/users through the warning',
   const row = page.getByRole('row', { name: /unverified@admin-approval\.test/ });
   // The precondition: the address is unverified and the user awaits approval.
   await expect(row.getByRole('cell').nth(1)).toHaveText(/^Unverified/);
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
@@ -223,10 +251,95 @@ test('an admin approves an unverified user at /admin/users through the warning',
   await approve.click();
   await expect(approving).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
   await expect(
     row.getByRole('button', { name: 'Revoke approval for Fixture Person' }),
   ).toBeVisible();
+});
+
+// MB.59: an admin grants admin to a user from their row, behind a modal naming
+// them with an optional reason the ledger keeps, and then revokes it.
+test('an admin grants admin to a user at /admin/users with a reason, then revokes it', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'grantee@admin-role.test');
+  await signInAs(page, 'an-admin@admin-role.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?query=grantee%40admin-role.test');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /grantee@admin-role\.test/ });
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+
+  await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
+  const granting = page.getByRole('dialog', { name: 'Grant Admin' });
+  await expect(granting).toContainText('Make Fixture Person an admin?');
+  await expect(granting.getByRole('button', { name: 'Grant' })).toBeFocused();
+  // A verified address, so no warning (MB.205).
+  await expect(granting).not.toContainText('has not been verified');
+  await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the planets');
+  await assertNoAccessibilityViolations(page);
+
+  await granting.getByRole('button', { name: 'Grant' }).click();
+  await expect(granting).toHaveCount(0);
+
+  // An admin now, who may create a coven, so the creation cell holds the mark alone.
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+  expect(await privilegeChanges(userId)).toEqual([
+    { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the planets' },
+    { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Curates the planets' },
+  ]);
+
+  // And revoked again, behind its own red modal; the flag stays.
+  await row.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
+  const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
+  await expect(revoking).toContainText('Stop Fixture Person being an admin?');
+  await revoking.getByRole('button', { name: 'Revoke' }).click();
+  await expect(revoking).toHaveCount(0);
+
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+  await expect(row.getByRole('button', { name: 'Grant admin to Fixture Person' })).toBeVisible();
+});
+
+// MB.59: the address ADMIN_BOOTSTRAP_EMAIL names is marked by a crown with a
+// tip, and its Revoke stays in view but cannot be used, its tip saying why on
+// hover and again when it is tried.
+test('the primary admin’s row is marked, and its Revoke says why it cannot be used', async ({
+  page,
+}) => {
+  await signInAs(page, PRIMARY_ADMIN_EMAIL, ['google'], 'admin');
+  await signInAs(page, 'another-admin@admin-role.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?role=admin&query=admin-bootstrap.invalid');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /admin-bootstrap\.invalid/ });
+  const crown = row.getByRole('button', { name: 'Primary Admin' });
+  const crownTip = row.getByText('Primary Admin', { exact: true });
+  await expect(crownTip).toBeHidden();
+  await crown.hover();
+  await expect(crownTip).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+
+  const revoke = row.getByRole('button', { name: 'Revoke admin from Fixture Person' });
+  await expect(revoke).toHaveAttribute('aria-disabled', 'true');
+  await expect(revoke).toHaveAccessibleDescription(PRIMARY_ADMIN_REASON);
+  const reason = row.getByText(PRIMARY_ADMIN_REASON);
+  await expect(reason).toBeHidden();
+  await revoke.hover();
+  await expect(reason).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+
+  // From the keyboard: it stays in the tab order, and Playwright's click
+  // waits for an enabled control, which an `aria-disabled` one never is.
+  await revoke.focus();
+  await page.keyboard.press('Enter');
+
+  await expect(row.getByRole('alert')).toHaveText(PRIMARY_ADMIN_REASON);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.reload();
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({

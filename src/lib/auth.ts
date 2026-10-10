@@ -23,6 +23,7 @@ import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
 import { impersonation, impersonationEnabled } from './impersonation';
+import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
 import {
   promotePrimaryAdmin,
@@ -173,17 +174,6 @@ function baseURL(): BetterAuthOptions['baseURL'] {
     };
   }
   return 'http://localhost:8000';
-}
-
-// Names the primary admin (claude-docs/auth/admin-bootstrap.md, "Admin bootstrap"). Required
-// wherever BETTER_AUTH_SECRET is, and for the same reason: every deploy runs at
-// NODE_ENV=production. Unset elsewhere, it promotes nobody.
-function primaryAdminEmail(): string | undefined {
-  const email = process.env.ADMIN_BOOTSTRAP_EMAIL;
-  if (!email && process.env.NODE_ENV === 'production') {
-    throw new Error('ADMIN_BOOTSTRAP_EMAIL is not set');
-  }
-  return email || undefined;
 }
 
 // The provider's fresh profile, carried from `validateUserInfo` — the one hook

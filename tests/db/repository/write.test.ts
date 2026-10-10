@@ -316,8 +316,11 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // MB.132, whose deity rename rewrites the compendium's links to the deity:
   // `ingredient_deities` is the ingredients module's, so the rewrite is named
   // below the boundary, matching only a live link whose entry is a live
-  // compendium row. A twenty-fourth is the next such decision.
-  it('offers exactly twenty-three writer methods — a twenty-fourth is a decision, not a convenience', async () => {
+  // compendium row. Twenty-four since MB.59, whose revoke counts the live
+  // admins under a `for update` lock: a read, and in the writer only because
+  // the lock must be taken in the transaction that writes. A twenty-fifth is
+  // the next such decision.
+  it('offers exactly twenty-four writer methods — a twenty-fifth is a decision, not a convenience', async () => {
     const methods = await withAudit(session, async (write) => Object.keys(write).sort());
 
     expect(methods).toEqual(
@@ -332,6 +335,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
         'insertInvitation',
         'insertInCompendium',
         'insertInWorkspace',
+        'lockLiveAdmins',
         'pauseAdminRoleChanges',
         'resumeAdminRoleChanges',
         'revokeInvitation',
