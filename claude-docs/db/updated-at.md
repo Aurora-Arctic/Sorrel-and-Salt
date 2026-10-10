@@ -66,7 +66,7 @@ What makes forgetting that a failing test rather than a review note is
 sweep-task rule requires. It applies the whole migration set into the worker's
 clone — which tables the sweep reached is the thing under test, so unlike the
 per-table schema tests it stubs nothing — and then compares the tables carrying a `set_updated_at` trigger with `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`,
-the twenty-eight transcribed because two empty sets are equal and something
+the twenty-nine transcribed because two empty sets are equal and something
 has to say they aren't. `tests/db/audit-columns.test.ts` holds that list to
 the catalogue's tables carrying all four audit stamps, and proves Better
 Auth's adapter tables carry an `updated_at` and no audit id (MB.188), so a
