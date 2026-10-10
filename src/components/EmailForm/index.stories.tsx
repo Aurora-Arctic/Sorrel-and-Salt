@@ -53,3 +53,16 @@ export const WithError: Story = () => (
     error={verifyErrorMessage('TOKEN_EXPIRED')}
   />
 );
+
+// The account page's Email section (MB.88): the section heads it, so the
+// form has no heading of its own, and it never shows the confirmed view.
+export const Embedded: Story = () => (
+  <main className="account-page">
+    <section className="account-page__section" aria-labelledby="email-story-heading">
+      <h2 id="email-story-heading" className="account-page__section-heading">
+        Email
+      </h2>
+      <EmailForm embedded email="ada@example.test" verified landing="/coven" />
+    </section>
+  </main>
+);

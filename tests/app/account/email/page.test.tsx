@@ -63,6 +63,13 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/coven');
   });
 
+  // Its own way across, offered to a verified account (MB.88).
+  it('links a verified account to the account page as "Your account"', async () => {
+    await renderPage('user', {});
+
+    expect(screen.getByRole('link', { name: 'Your account' })).toHaveAttribute('href', '/account');
+  });
+
   it('reads a next that leaves the site as none', async () => {
     await renderPage('admin', { verified: '', next: '//evil.example' });
 

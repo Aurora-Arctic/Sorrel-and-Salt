@@ -1,6 +1,7 @@
 # SignInMethods
 
-`src/components/SignInMethods/` — the `/account` page's list of the ways into
+`src/components/SignInMethods/` — the account page's Sign-In Methods section
+(MB.88), its list of the ways into
 the account: every roster provider, linked or addable, and removable while
 another one is left. Server component `src/app/account/page.tsx` reads the
 session, `linkedAccounts()` and `?error=`, and hands the results down as props.
@@ -8,6 +9,10 @@ This component renders the list and makes the two Better Auth calls. Why a
 second provider is added this way and never at sign-in is
 [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second
 provider".
+
+Its heading is an `<h2>`, "Sign-In Methods": the section's heading, under the
+page's `<h1>` "Your Account" ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md),
+"The account page").
 
 ## The props contract
 
@@ -73,7 +78,7 @@ AppShell exists yet.
   and its message, the survivor losing its Remove, and a mapped and an
   unmapped refusal.
 - `tests/e2e/account.spec.ts`: `/account` signed in through
-  `tests/e2e/session.ts`, axe-scanned with one provider and with two plus a
-  callback error.
+  `tests/e2e/session.ts`, axe-scanned with one provider, beside the Name and
+  Email sections, and with two plus a callback error.
 - The link and unlink flows themselves are asserted against Better Auth's
   endpoints in `tests/db/account-linking.test.ts`.

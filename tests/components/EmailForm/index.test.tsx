@@ -39,6 +39,17 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
+  // The account page's Email section (MB.88): the section heads it, and a
+  // followed link's confirmed view stays the email page's.
+  it('embedded, shows no heading of its own and never the confirmed view', () => {
+    renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
+
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
+    expect(emailField()).toHaveValue('ada@example.test');
+    expect(submit()).toBeDisabled();
+  });
+
   it('starts empty when the account has no address', () => {
     renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
