@@ -31,6 +31,7 @@ export const AUDIT_COLUMNS: readonly string[] = [
 export const AUDITED_TABLES = [
   'admin_invitations',
   'admin_role_change_pauses',
+  // Undeclared since MB.196, but in the catalogue until MB.197 drops it.
   'admin_role_changes',
   'categories',
   'category_groups',
@@ -53,6 +54,7 @@ export const AUDITED_TABLES = [
   'spells',
   'user_privilege_changes',
   'users',
+  // Undeclared since MB.196, but in the catalogue until MB.197 drops it.
   'workspace_creation_changes',
   'workspace_invitations',
   'workspace_members',
