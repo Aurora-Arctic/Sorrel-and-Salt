@@ -121,4 +121,5 @@ these writes keep them so after the write.
   an entry saved with the value in the instant between keeps a retired
   spelling.
 
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).

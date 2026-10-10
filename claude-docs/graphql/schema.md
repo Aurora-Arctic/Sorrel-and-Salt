@@ -696,8 +696,8 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   it: under their coven the id names nothing there, `NOT_FOUND`, and without
   one the admin check is `FORBIDDEN`. `updateReference` reaches every row
   citing it, so it clears `referencesByIngredient` whole. There is no
-  `deleteReference` in v1. Revalidating the `compendium` tag on a
-  compendium-tier write is M8.7's, with every other admin mutation.
+  `deleteReference` in v1. A compendium-tier write
+  expires the `compendium` tag, as every admin write does (M8.7).
 - **`referenceSuggestions` is the picker's search**, which MB.154's field
   reads: the compendium's references and the named coven's, never another's,
   matched at the compendium search's 0.5 word similarity against `authors`,
@@ -749,7 +749,7 @@ sketch, as the chips read them (MB.36).
   While a live compendium entry is filed under the category it is
   `FORBIDDEN`, and the message names the entries and how many more, verbatim
   to the admin. Both writes clear `categoriesByIngredient`, which an earlier
-  root field may have filled. Revalidating the `compendium` tag is M8.7's.
+  root field may have filled. Each write expires the `compendium` tag (M8.7).
 
 `tests/modules/vocabulary/graphql/categories.test.ts` holds their half (MB.186):
 a page with its groups in one read, the count, the cursor, the two filters
@@ -857,8 +857,8 @@ the browser.
 - **The writes clear the loaders an earlier root field may have filled**:
   `categoryGroupsById` on a category group's update and delete, and
   `categoriesByIngredient` on its delete; `ingredientFormGroupsById` and
-  `ingredientFormsById` on a form group's update and delete. Revalidating the
-  `compendium` tag is M8.7's.
+  `ingredientFormsById` on a form group's update and delete. Each write expires
+  the `compendium` tag (M8.7).
 
 `tests/modules/vocabulary/graphql/category-groups.test.ts` and
 `ingredient-form-groups.test.ts` hold the writes' half: the loaders cleared by
@@ -905,7 +905,7 @@ the pick's `IngredientDeityInput`.
 - **The writes clear the loaders an earlier root field may have filled**:
   `deitiesByIngredient` on every deity and tradition write but a create, and
   `deityTraditionsById` on a tradition's update and delete.
-  Revalidating the `compendium` tag is M8.7's.
+  Each write expires the `compendium` tag (M8.7).
 
 `tests/modules/vocabulary/graphql/deities.test.ts` holds their half: a
 filtered page and its count, the loaders cleared by an update, `moveTo`

@@ -3,7 +3,7 @@
 The curated reads every viewer sees alike are held in Next's data cache under
 one tag, `compendium`, so the most-read data on the site does not reach
 Postgres on every page (DESIGN.md §7, layer 3). An admin write expires the tag
-(M8.7), and anything workspace-scoped is never held (CLAUDE.md rule 6).
+(M8.7, "Expiring the tag" below), and anything workspace-scoped is never held (CLAUDE.md rule 6).
 
 ### The wrapper
 
@@ -69,6 +69,46 @@ naming it, and one `revalidateTag` refreshes the data and the HTML together.
 A page that sets its own `revalidate` takes the lower of its own and the
 reads' hour.
 
+### Expiring the tag
+
+`expireCompendium()`, beside the read wrapper, is
+`revalidateTag(COMPENDIUM_TAG, { expire: 0 })` (M8.7). Every admin write to
+something the cache holds calls it after its `withAudit` resolves, so a
+refused or rolled-back write expires nothing, and the admin's next read is
+a miss that reads Postgres. `{ expire: 0 }` rather than Next's recommended
+`'max'`, which would serve the stale entry while it revalidates, and
+`revalidateTag` rather than `updateTag`, which throws outside a Server
+Action, as DESIGN.md §7 argues. One tag means one call expires every cached
+read, so a write need not know which lists it touched: a form group's rename
+reaches the forms list through its group, and a planet's rename the
+compendium entries that list it.
+
+The writes that call it are every service in the `ingredients` and
+`vocabulary` modules gated by `assertSiteAdmin`: the compendium's create,
+update and delete; `createReference` and `updateReference` when
+`workspaceId` is null, and only then; and the create, update and delete of
+categories, category groups, forms, form groups, planets and zodiac signs,
+deities and deity traditions. That is 26 services, and an admin's write
+reaches only these, since the GraphQL mutations over them are its only path
+(CLAUDE.md rule 1).
+
+**The guard is keyed on those two modules, not on every admin mutation.**
+`tests/guards/compendium-expiry.test.ts` reads each exported service in
+`src/modules/ingredients/services/` and `src/modules/vocabulary/services/`,
+and fails one that calls `assertSiteAdmin` without calling
+`expireCompendium`. It first asserts it found the writes it names, so an
+empty scan cannot pass. The identity module's admin writes are outside it by
+construction: a user's role, a pause, an admin invitation and a coven-creation
+grant touch nothing the cache holds. A guard over every admin mutation would
+need a list of those exemptions, which each new identity write would have to
+join from its own task. Keying on the modules that own the compendium tier
+means only a write to that tier is held to the rule.
+`tests/modules/ingredients/services/compendium-expiry.test.ts` shows the
+call itself: once, with `{ expire: 0 }`, after the write; not after a
+refusal; and not after a coven's reference. `tests/e2e/compendium-cache.spec.ts`
+shows Next acting on it: the admin's added entry, and a rename the cache had
+been hiding, both appear on the next load.
+
 ### In tests
 
 **Vitest never caches.** Next's `unstable_cache` throws outside a request,
@@ -105,4 +145,5 @@ One more server keeps it: the compendium-cache server on 8101, over
 `tests/e2e/compendium-cache.spec.ts` alone in the `chromium-compendium-cache`
 project. The spec renames an entry underneath the admin's compendium list and
 asserts the reload does not show it, and that a filter never read before
-does.
+does. Then, as an admin adding an entry, it asserts the
+next load shows both the entry and the rename.

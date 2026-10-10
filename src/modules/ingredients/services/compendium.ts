@@ -9,7 +9,7 @@ import {
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
-import { cachedCompendiumRead } from '../../../lib/compendium-cache';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
@@ -157,7 +157,7 @@ export async function createCompendiumEntry(
   const at = new Date();
   await refuseEndingARedirect(slug, at, input.endRedirect);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
     const [row] = await write.insertInCompendium(admin, ingredients, {
       ...columnsOf(fields),
@@ -170,6 +170,8 @@ export async function createCompendiumEntry(
     await addCategories(write, row.id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -217,7 +219,7 @@ export async function updateCompendiumEntry(
   const moves = slug !== current.slug;
   if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
     const [row] = await write.updateByIdInCompendium(admin, ingredients, id, {
       ...columnsOf(fields),
@@ -238,6 +240,8 @@ export async function updateCompendiumEntry(
     await replaceCategories(write, [], id, fields.categoryIds ?? []);
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -362,6 +366,7 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
     const [row] = await write.softDeleteByIdInCompendium(admin, ingredients, id);
     if (!row) throw new NotFound('No such compendium entry');
   });
+  expireCompendium();
 }
 
 /**
