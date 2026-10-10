@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { requiredRowId } from '../../../lib/validation';
 
 // A curated form as an admin writes one (M5.6a). No slug: it is derived from
 // the name and the group's name by src/lib/slugify.ts, never written beside
@@ -14,7 +15,7 @@ export const IngredientFormValueInput = z.object({
     .string({ error: 'Describe the form' })
     .trim()
     .min(1, { error: 'Describe the form' }),
-  groupId: z.uuid({ error: 'Choose a group' }),
+  groupId: requiredRowId('Choose a group'),
   endRedirect: z.boolean().optional(),
 });
 

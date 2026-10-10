@@ -14,6 +14,12 @@ import type { ValidationIssue } from './types';
  */
 export const RowId = z.guid();
 
+/**
+ * RowId as a form field takes it: missing and malformed are refused alike, with
+ * `message` saying what to choose, since neither is anything the user typed.
+ */
+export const requiredRowId = (message: string) => z.guid({ error: message });
+
 /** One issue per Zod issue, path and message kept as Zod reported them. */
 export function toValidationIssues(error: z.ZodError): ValidationIssue[] {
   return error.issues.map((issue) => ({

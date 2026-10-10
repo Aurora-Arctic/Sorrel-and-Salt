@@ -62,6 +62,12 @@ compare with a `uuid` column, since anything else is a driver error there.
 `assertMembership` checks every `workspaceId` with it
 ([`db/membership-proof.md`](db/membership-proof.md#what-the-check-asks),
 "What the check asks").
+`requiredRowId(message)` is the same id as a form field takes it, missing
+and malformed refused alike with the message saying what to choose: a
+category's or a form's `groupId`, a deity's `traditionId`. It is
+`RowId`'s shape rather than `z.uuid()`'s, which refuses the seed's
+hand-written ids and so refused a parent the service would have found
+(MB.209).
 
 ## The two ingredient variants
 
@@ -234,7 +240,7 @@ refused at `url` and `accessed` both.
 ## Categories
 
 `CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
-`groupId` uuid. It takes no slug, which is derived from the name and dropped if
+`groupId` as `requiredRowId` takes it, refused with "Choose a group". It takes no slug, which is derived from the name and dropped if
 sent. `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
 optional `endRedirect`, the admin's confirmation that a rename may take an
 address another entry's redirect still runs from (MB.82).

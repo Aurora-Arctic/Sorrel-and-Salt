@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { requiredRowId } from '../../../lib/validation';
 
 // A curated deity as an admin writes one (MB.132), a form's shape with its
 // tradition in place of a group. No slug: it is derived from the name by
@@ -14,7 +15,7 @@ export const DeityInput = z.object({
     .string({ error: 'Describe the deity' })
     .trim()
     .min(1, { error: 'Describe the deity' }),
-  traditionId: z.uuid({ error: 'Choose a tradition' }),
+  traditionId: requiredRowId('Choose a tradition'),
 });
 
 export type DeityInput = z.output<typeof DeityInput>;
