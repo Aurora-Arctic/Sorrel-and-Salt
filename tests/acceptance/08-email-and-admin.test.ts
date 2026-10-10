@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { emailVerificationSender } from '@/lib/email-verification';
+import { invitationSender } from '@/lib/invitation-mail';
 import { fromRoot } from '../support/paths';
 import {
   EMAIL_PAGE,
@@ -19,10 +20,14 @@ import type { AuthInstance, Profile } from '../support/types';
 import { Forbidden } from '@/lib/errors';
 import { resolvePage } from '@/lib/pagination';
 import {
+  acceptInvitation,
+  createAdminInvitation,
   grantWorkspaceCreation,
+  invitationStanding,
   listPrivilegeChanges,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
+  revokeAdminInvitation,
   revokeWorkspaceCreation,
   setUserRole,
   usersForAdmin,
@@ -33,8 +38,8 @@ import { A, E, asUser } from '../support/as-user';
 // for the provider and the transport mocked (claude-docs/auth/admin-bootstrap.md, "First-party
 // verification" and "The email page"). Story 60 through the identity
 // service (MB.59, MB.63). Story 61, the privilege ledger, reads it through the
-// identity service MB.199 built and MB.200's page calls. Story 62 is MB.70's,
-// and has no test yet.
+// identity service MB.199 built and MB.200's page calls. Story 62, MB.70's,
+// through the identity service, its accounts made by real sign-ins.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
@@ -325,5 +330,142 @@ describe('Story 61: As an admin, see every change to who is an admin and who may
     await expect(
       listPrivilegeChanges(asUser(A), { userId: SUBJECT }, { limit: 26, inverted: false }),
     ).rejects.toThrow(Forbidden);
+  });
+});
+
+describe('Story 62: As an admin, invite someone by email to become an admin, accepted only by an account that has proved it owns that address.', () => {
+  // On the email stories' domain, so the file's cleanup takes the accounts
+  // these sign-ins make; the rows naming them go first.
+  const INVITED = `invited${DOMAIN}`;
+  const OTHER = `other${DOMAIN}`;
+
+  const sender = () => invitationSender(new Request(`${ORIGIN}/api/graphql`, { method: 'POST' }));
+
+  /** The token in the invitation mailed since the last reset: the inbox is the only place it is. */
+  function mailedInvitationToken(): string {
+    const mail = send.mock.calls.map(([message]) => message).find((m) => m.to === INVITED);
+    const token = mail?.text.match(new RegExp(`${ORIGIN}/invite/([A-Za-z0-9_-]+)`))?.[1];
+    if (!token) throw new Error('no invitation link was mailed');
+    return token;
+  }
+
+  async function invite(note?: string): Promise<string> {
+    await createAdminInvitation(asUser(E), INVITED, note, sender());
+    const token = mailedInvitationToken();
+    send.mockReset();
+    return token;
+  }
+
+  async function sessionOf(email: string) {
+    const row = await userRow(email);
+    if (!row) throw new Error(`no account at ${email}`);
+    return { userId: row.id, role: 'user' as const };
+  }
+
+  beforeEach(async () => {
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.privilege_route', 'manual', true)`;
+      await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
+    });
+    await sql`truncate admin_role_change_pauses`;
+  });
+
+  afterEach(async () => {
+    await sql`truncate invitations`;
+    await sql`truncate user_privilege_changes`;
+  });
+
+  it('mails the link to the invited address, and keeps only its hash', async () => {
+    const invitation = await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+
+    const token = mailedInvitationToken();
+    expect(send.mock.calls.map(([message]) => message.to)).toEqual([INVITED]);
+    expect(JSON.stringify(invitation)).not.toContain(token);
+    const rows = await sql`select token_hash from invitations`;
+    expect(rows).toHaveLength(1);
+    expect(rows[0].token_hash).not.toBe(token);
+  });
+
+  it('is refused to anyone but an admin', async () => {
+    expect(asUser(A).role).toBe('user');
+
+    await expect(createAdminInvitation(asUser(A), INVITED, undefined, sender())).rejects.toThrow(
+      Forbidden,
+    );
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('refuses the invited account until it has proved the address, then makes it an admin, recorded as accepting the invitation', async () => {
+    const token = await invite('Curates the resins');
+    const response = await signIn('microsoft', { sub: 'ms-62', email: INVITED, verified: true });
+    expectSignedIn(response);
+    const session = await sessionOf(INVITED);
+
+    expect(await invitationStanding(session, token)).toMatchObject({ reason: 'unverified' });
+    await expect(acceptInvitation(session, token)).rejects.toThrow(Forbidden);
+
+    await follow(mailedLink(), cookieHeader(response));
+    await acceptInvitation(session, token);
+
+    const [user] = await sql`
+      select role::text, can_create_workspace from users where id = ${session.userId}
+    `;
+    expect(user).toEqual({ role: 'admin', can_create_workspace: true });
+    const ledger = await sql`
+      select privilege::text, via::text, note, created_by from user_privilege_changes
+      where user_id = ${session.userId} order by privilege
+    `;
+    expect(ledger).toEqual([
+      {
+        privilege: 'admin',
+        via: 'invitation',
+        note: 'Curates the resins',
+        created_by: session.userId,
+      },
+      {
+        privilege: 'create_workspace',
+        via: 'invitation',
+        note: 'Curates the resins',
+        created_by: session.userId,
+      },
+    ]);
+  });
+
+  it('refuses an account that has proved a different address', async () => {
+    const token = await invite();
+    expectSignedIn(await signIn('google', { sub: 'g-62', email: OTHER, verified: true }));
+    const session = await sessionOf(OTHER);
+    expect(await userRow(OTHER)).toMatchObject({ email_verified: true });
+
+    await expect(acceptInvitation(session, token)).rejects.toThrow(/different email address/);
+    const [user] = await sql`select role::text from users where id = ${session.userId}`;
+    expect(user.role).toBe('user');
+  });
+
+  it('refuses a link that has been used, withdrawn or has run out, each in words of its own', async () => {
+    // All three first: once one is accepted, the address is an admin's.
+    const withdrawn = await invite();
+    const lapsed = await invite();
+    const used = await invite();
+    const [first, second] = await sql`select id from invitations order by created_at`;
+    await revokeAdminInvitation(asUser(E), first.id);
+    await sql`update invitations set expires_at = now() - interval '1 second' where id = ${second.id}`;
+    expectSignedIn(await signIn('google', { sub: 'g-62b', email: INVITED, verified: true }));
+    const session = await sessionOf(INVITED);
+    await acceptInvitation(session, used);
+
+    const messages = await Promise.all(
+      [used, withdrawn, lapsed].map((token) =>
+        acceptInvitation(session, token).then(
+          () => 'accepted',
+          (error: Error) => error.message,
+        ),
+      ),
+    );
+    expect(messages).toEqual([
+      'This invitation has already been accepted.',
+      'This invitation was withdrawn. Ask whoever sent it for a new one.',
+      'This invitation has expired. Ask whoever sent it for a new one.',
+    ]);
   });
 });
