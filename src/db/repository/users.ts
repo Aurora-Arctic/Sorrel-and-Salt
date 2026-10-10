@@ -4,8 +4,8 @@ import { userPrivilegeChanges } from '../../modules/identity/schema/user-privile
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type { PageEntry, PageRequest } from '../../lib/types';
-import { findMany, findPage } from './finders';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
 import { pageBounds, selectFrom } from './select';
 import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
@@ -92,6 +92,24 @@ export function findPrivilegeChangePage(
   page: PageRequest,
 ): Promise<PageEntry<typeof userPrivilegeChanges.$inferSelect>[]> {
   return findPage(userPrivilegeChanges, LEDGER_ORDER, page, and(...privilegeChangeArms(filter)));
+}
+
+/**
+ * How many rows `findPrivilegeChangePage` pages under `filter`, and how
+ * many come before `start`, a page's first row, none on an empty page: the
+ * ledger page's "Page X of Y" (MB.200).
+ */
+export function findPrivilegeChangeCount(
+  _admin: SiteAdmin,
+  filter: PrivilegeChangeFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(
+    userPrivilegeChanges,
+    LEDGER_ORDER,
+    start,
+    and(...privilegeChangeArms(filter)),
+  );
 }
 
 /** The ledger filter's arms, each `undefined` when its part is absent. */

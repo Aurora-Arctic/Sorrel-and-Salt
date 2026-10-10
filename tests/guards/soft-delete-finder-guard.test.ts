@@ -71,6 +71,7 @@ const EXPORTED_FUNCTIONS = [
   'findPageInWorkspace',
   'findPendingInvitationsInWorkspace',
   'findPendingSiteInvitations',
+  'findPrivilegeChangeCount',
   'findPrivilegeChangePage',
   'findProvidersOfUsers',
   'findReferenceSuggestions',

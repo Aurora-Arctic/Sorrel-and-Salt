@@ -62,6 +62,7 @@ export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export {
+  findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,
   findUserByEmail,

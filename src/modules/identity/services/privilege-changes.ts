@@ -1,8 +1,13 @@
 import 'server-only';
-import { findManyByIds, findPrivilegeChangePage } from '../../../db/repository';
+import {
+  findManyByIds,
+  findPrivilegeChangeCount,
+  findPrivilegeChangePage,
+} from '../../../db/repository';
+import { BOOTSTRAP_USER_ID } from '../../../db/bootstrap';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
@@ -25,15 +30,43 @@ const REFUSAL = 'Only a site admin may read the privilege ledger';
  */
 export async function listPrivilegeChanges(
   session: Session,
-  { userId, privilege }: PrivilegeChangeFilter,
+  filter: PrivilegeChangeFilter,
   page: PageRequest,
 ): Promise<PageEntry<PrivilegeChangeRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findPrivilegeChangePage(
-    admin,
-    { userId: userId === undefined ? undefined : parseInput(RowId, userId), privilege },
-    page,
-  );
+  return findPrivilegeChangePage(admin, parsedFilter(filter), page);
+}
+
+/**
+ * How many changes `listPrivilegeChanges` pages under `filter`, and how many
+ * come before `start`, a page's first row, none on an empty page: "Page X
+ * of Y" on `/admin/privilege-changes` (MB.200).
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ * @throws {ValidationError} `filter.userId` is not an id.
+ */
+export async function countPrivilegeChanges(
+  session: Session,
+  filter: PrivilegeChangeFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findPrivilegeChangeCount(admin, parsedFilter(filter), start);
+}
+
+/** The filter as the repository takes it, its subject checked to be an id. */
+function parsedFilter({ userId, privilege }: PrivilegeChangeFilter): PrivilegeChangeFilter {
+  return { userId: userId === undefined ? undefined : parseInput(RowId, userId), privilege };
+}
+
+/**
+ * Whether `/admin/users` lists this user, so a row naming them can link to
+ * theirs: everyone but the seed's bootstrap user, which stamps the seeded
+ * rows and which the list leaves out (claude-docs/auth/admin-users.md, "The
+ * user list").
+ */
+export function listedOnUserList(userId: string): boolean {
+  return userId !== BOOTSTRAP_USER_ID;
 }
 
 /**
