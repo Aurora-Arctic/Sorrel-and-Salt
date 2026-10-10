@@ -12,16 +12,16 @@ const RESOURCES: readonly { href: Route; label: string }[] = [
   { href: '/admin/compendium', label: 'Compendium' },
   { href: '/admin/categories', label: 'Categories' },
   // Each group vocabulary beside the one it organises (M5.6b).
-  { href: '/admin/category-groups', label: 'Category groups' },
+  { href: '/admin/category-groups', label: 'Category Groups' },
   { href: '/admin/forms', label: 'Forms' },
-  { href: '/admin/form-groups', label: 'Form groups' },
+  { href: '/admin/form-groups', label: 'Form Groups' },
   { href: '/admin/planets', label: 'Planets' },
-  { href: '/admin/zodiac-signs', label: 'Zodiac signs' },
+  { href: '/admin/zodiac-signs', label: 'Zodiac Signs' },
   { href: '/admin/deities', label: 'Deities' },
-  { href: '/admin/deity-traditions', label: 'Deity traditions' },
+  { href: '/admin/deity-traditions', label: 'Deity Traditions' },
   { href: '/admin/users', label: 'Users' },
   // Who holds which privilege, and who changed it (MB.200).
-  { href: '/admin/privilege-changes', label: 'Privilege changes' },
+  { href: '/admin/privilege-changes', label: 'Privilege Changes' },
 ];
 
 const AdminNav = (): ReactElement => (

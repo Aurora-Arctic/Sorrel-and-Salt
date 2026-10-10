@@ -60,7 +60,7 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await page
     .getByRole('navigation', { name: 'Admin' })
     .getByRole('link', {
-      name: 'Privilege changes',
+      name: 'Privilege Changes',
     })
     .click();
   await expect(page).toHaveURL(/\/admin\/privilege-changes$/);

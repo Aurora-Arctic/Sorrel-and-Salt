@@ -22,7 +22,7 @@ export function AdminInvitation({ url, origin = new URL(url).origin, part }: Adm
           ? `To accept, click the button below within ${LIFETIME}, then sign in with an account that uses this email address.`
           : `To accept, open the link below within ${LIFETIME}, then sign in with an account that uses this email address.`}
       </Paragraph>
-      <Action href={url} label="Accept the invitation" part={part} />
+      <Action href={url} label="Accept the Invitation" part={part} />
       <Paragraph muted>If you weren&apos;t expecting this, you can ignore this email.</Paragraph>
     </EmailLayout>
   );

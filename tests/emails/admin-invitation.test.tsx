@@ -38,5 +38,6 @@ describe('adminInvitationMessage', () => {
     expect(text.split(URL)).toHaveLength(2);
     expect(html).toContain('click the button below within seven days');
     expect(html.split(`href="${URL}"`)).toHaveLength(3);
+    expect(html).toMatch(/class="ss-button"[^>]*>[^<]*<span[^>]*>.*Accept the Invitation/s);
   });
 });
