@@ -34,6 +34,12 @@
   }
 }
 
+// A confirmation opens from its cell, so it would inherit the cell's single
+// line: its question, warning and hint wrap as prose again.
+.user-list .data-table .modal-dialog {
+  white-space: normal;
+}
+
 .user-list__search {
   display: flex;
   flex-wrap: wrap;
@@ -242,6 +248,14 @@
   margin-block: space(5);
 }
 
+// The confirmation's Reason field, given the warning's step of room above and
+// 2rem below, so it reads apart from the question and stands clear of
+// the buttons (the owner's call). Compounded with `.field` for the same
+// reason as the warning.
+.field.user-list__note {
+  margin-block: space(5) space(6);
+}
+
 // The role cell: the role and the primary admin's crown on the left, the
 // control that changes it on the right, centred on one line (the owner's
 // call).
@@ -317,4 +331,13 @@
   white-space: normal;
 
   @include tip-bubble;
+}
+
+// The locked Revoke's, placed against the viewport by its script rather than
+// the cell, so the table's scrolling frame cannot clip it. Its side margin is
+// the gutter the script keeps between it and the screen's edge.
+.user-list__control-tip--fixed {
+  position: fixed;
+  bottom: auto;
+  margin-inline: space(4);
 }

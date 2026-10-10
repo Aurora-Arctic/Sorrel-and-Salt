@@ -595,7 +595,9 @@ describe('UserList approval', () => {
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
     const approving = dialog('Approve Coven Creation');
     const reason = within(approving).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(/^Optional\./);
+    expect(reason).toHaveAccessibleDescription(
+      'Kept with the change in the record of who changed what.',
+    );
     // Below the warning, which keeps its own spacing class.
     const warning = within(approving).getByText(UNVERIFIED_WARNING);
     expect(warning).toHaveClass('notice', 'user-list__warning');
@@ -760,7 +762,9 @@ describe('UserList admin role', () => {
     expect(confirm).toHaveClass('btn--solid');
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(/^Optional\./);
+    expect(reason).toHaveAccessibleDescription(
+      'Kept with the change in the record of who changed what.',
+    );
     fireEvent.change(reason, { target: { value: '  Curates the planets  ' } });
     fireEvent.click(confirm);
 
