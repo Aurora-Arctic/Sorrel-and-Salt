@@ -1,4 +1,5 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
+import type { AuthContext } from '@better-auth/core';
 import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { lastLoginMethod } from 'better-auth/plugins';
@@ -14,11 +15,13 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { users } from '../modules/identity/schema/users';
 import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
-import { SOCIAL_PROVIDERS } from './social-providers';
+import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
-import { clientCredentials } from './social-providers-config';
-import type { UserRole, HookContext } from './session';
+import { PROFILE, clientCredentials } from './social-providers-config';
+import type { HookContext } from './session';
+import { toUserRole } from './session-role';
+import { requiredInProduction } from './env';
 import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
@@ -42,21 +45,6 @@ import {
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
-// Better Auth's own `validateSecret` is swallowed — with the secret unset it
-// logs and still answers 200 on the well-known default. Production-only:
-// `next dev` and Vitest have no use for it. See claude-docs/auth/config.md, "Config".
-function authSecret(): string | undefined {
-  const secret = process.env.BETTER_AUTH_SECRET;
-  if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error('BETTER_AUTH_SECRET is not set');
-  }
-  return secret;
-}
-
-// Registered only when id and secret are both present, so `next dev` runs with
-// neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
-// The roster itself lives in social-providers.ts, shared with the sign-in
-// page, so a provider added or removed there needs no second edit here.
 // A provider that shared no address — Discord for an account without a
 // verified one, Facebook under narrowed permissions — would end the callback
 // at `email_not_found`. The placeholder lets the row and its session exist, so
@@ -88,69 +76,41 @@ async function asksNoReturnPath(): Promise<boolean> {
   return (await hasRequestState()) && (await getOAuthState())?.noReturnPath === true;
 }
 
+/**
+ * A provider's `mapProfileToUser`, built from its `PROFILE` entry. Each
+ * mapping is spread after the provider's own, so it wins: one that never
+ * vouches answers `emailVerified: false`, and a link writes nothing to the
+ * row. Typed for any profile, since Better Auth types each provider's apart.
+ */
+function mapProfile(id: ProviderId) {
+  const { accountId, vouches } = PROFILE[id];
+  return async (profile: { email?: unknown }) => ({
+    ...(vouches ? {} : { emailVerified: false }),
+    ...orPlaceholder(
+      id,
+      Reflect.get(profile, accountId.find((field) => field in profile) ?? accountId[0]),
+      profile.email,
+    ),
+    ...(await vouchWhenLinking()),
+  });
+}
+
+// Registered only when id and secret are both present, so `next dev` runs with
+// neither. A sign-in earns an account and nothing else (CLAUDE.md invariants).
+// The roster lives in social-providers.ts, shared with the sign-in page, and
+// what differs between providers in social-providers-config.ts's `PROFILE`,
+// so a provider added there needs no edit here.
 function socialProviders(): BetterAuthOptions['socialProviders'] {
   const providers: NonNullable<BetterAuthOptions['socialProviders']> = {};
 
-  for (const provider of SOCIAL_PROVIDERS) {
-    const credentials = clientCredentials(provider.id);
+  for (const { id } of SOCIAL_PROVIDERS) {
+    const credentials = clientCredentials(id);
     if (!credentials) continue;
-
-    // Each mapping is spread after the provider's own, so it wins. Facebook
-    // and Microsoft never vouch for an address at sign-in (claude-docs/auth/admin-bootstrap.md,
-    // "First-party verification"), so a true users.emailVerified means
-    // Google, Discord or our own mail did. A link writes nothing to the row.
-    switch (provider.id) {
-      case 'google':
-        providers.google = {
-          ...credentials,
-          mapProfileToUser: async (profile) => ({
-            ...orPlaceholder('google', profile.sub, profile.email),
-            ...(await vouchWhenLinking()),
-          }),
-        };
-        break;
-      case 'discord':
-        providers.discord = {
-          ...credentials,
-          mapProfileToUser: async (profile) => ({
-            ...orPlaceholder('discord', profile.id, profile.email),
-            ...(await vouchWhenLinking()),
-          }),
-        };
-        break;
-      case 'facebook':
-        providers.facebook = {
-          ...credentials,
-          mapProfileToUser: async (profile) => ({
-            emailVerified: false,
-            // An id-token profile names the account `sub`; the Graph one, `id`.
-            ...orPlaceholder(
-              'facebook',
-              'sub' in profile ? profile.sub : profile.id,
-              profile.email,
-            ),
-            ...(await vouchWhenLinking()),
-          }),
-        };
-        break;
-      case 'microsoft':
-        // Personal Microsoft accounts must be able to sign in, so the tenant is
-        // stated explicitly rather than left to Better Auth's own "common"
-        // default — a dependency bump silently narrowing that default would
-        // otherwise fail every personal-account sign-in with no code change
-        // here to review. The app registration itself must also allow personal
-        // accounts (claude-docs/secrets.md); the tenant alone can't grant that.
-        providers.microsoft = {
-          ...credentials,
-          tenantId: process.env.MICROSOFT_TENANT_ID || 'common',
-          mapProfileToUser: async (profile) => ({
-            emailVerified: false,
-            ...orPlaceholder('microsoft', profile.oid, profile.email),
-            ...(await vouchWhenLinking()),
-          }),
-        };
-        break;
-    }
+    providers[id] = {
+      ...credentials,
+      ...PROFILE[id].extra?.(),
+      mapProfileToUser: mapProfile(id),
+    };
   }
 
   return providers;
@@ -217,19 +177,63 @@ function refuseVerification(ctx: HookContext, code: string, message: string): AP
   return new APIError('FORBIDDEN', { code, message });
 }
 
+/** A link opened from a session that does not hold the row it names. */
+function refuseWrongAccount(ctx: HookContext): APIError {
+  return refuseVerification(
+    ctx,
+    'SIGN_IN_TO_VERIFY',
+    'Open the link from a browser signed in to this account.',
+  );
+}
+
 /**
  * A link opened from no session at all: to the sign-in page, whose sentence
  * says to open the link again once signed in, and which sends the account on
- * to the email page. Nothing from the link travels with it.
+ * to the email page. Nothing from the link travels with it. A link carrying
+ * no `callbackURL` has no page to go back to, and gets the 403 a wrong
+ * account does.
  */
 function refuseSignedOut(ctx: HookContext): APIError {
-  if (typeof ctx.query?.callbackURL !== 'string') {
-    return new APIError('FORBIDDEN', {
-      code: 'SIGN_IN_TO_VERIFY',
-      message: 'Open the link from a browser signed in to this account.',
-    });
-  }
+  if (typeof ctx.query?.callbackURL !== 'string') return refuseWrongAccount(ctx);
   return new APIError('FOUND', undefined, { Location: SIGN_IN_TO_VERIFY_PATH });
+}
+
+/**
+ * The session the request carries, or `null`. Better Auth's helper is typed
+ * for an endpoint's context, which a hook's holds everything of but is not
+ * declared as.
+ */
+function sessionOf(ctx: HookContext) {
+  return getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+}
+
+/**
+ * Deletes every lapsed provisional account, logging what went at `info`. A
+ * failure is logged at `error` and never thrown: the sweep is housekeeping,
+ * and must not fail the sign-in or verification it runs ahead of.
+ */
+async function sweepQuietly(ctx: HookContext): Promise<void> {
+  try {
+    const swept = await sweepProvisionalAccounts();
+    if (swept.length > 0) {
+      ctx.context.logger.info(`provisional accounts swept: ${swept.join(', ')}`);
+    }
+  } catch (error) {
+    ctx.context.logger.error('provisional-account sweep failed', error);
+  }
+}
+
+/**
+ * The roster providers the user's accounts sign in with, for the mail that
+ * names them. Better Auth types `providerId` as any string; one outside the
+ * roster has no label to name it by, so it is left out.
+ */
+export async function linkedProviderIds(
+  context: Pick<AuthContext, 'internalAdapter'>,
+  userId: string,
+): Promise<ProviderId[]> {
+  const accounts = await context.internalAdapter.findAccounts(userId);
+  return accounts.map((account) => account.providerId).filter(isRosterProvider);
 }
 
 /**
@@ -238,7 +242,7 @@ function refuseSignedOut(ctx: HookContext): APIError {
  * someone else, and the stamp the mail sets would restart their window.
  */
 async function requireOwnResend(ctx: HookContext): Promise<void> {
-  const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+  const session = await sessionOf(ctx);
   const email = typeof ctx.body?.email === 'string' ? ctx.body.email.toLowerCase() : '';
   if (!session || session.user.email.toLowerCase() !== email) {
     throw new APIError('UNAUTHORIZED', {
@@ -269,21 +273,13 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   const claims = tokenClaims(ctx.query?.token);
   if (!claims?.email || !claims.updateTo) return;
 
-  const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
+  const session = await sessionOf(ctx);
   if (!session) throw refuseSignedOut(ctx);
   if (session.user.email.toLowerCase() !== claims.email.toLowerCase()) {
-    throw refuseVerification(
-      ctx,
-      'SIGN_IN_TO_VERIFY',
-      'Open the link from a browser signed in to this account.',
-    );
+    throw refuseWrongAccount(ctx);
   }
   // A lapsed row holding the address goes first, as it would on a callback.
-  try {
-    await sweepProvisionalAccounts();
-  } catch (error) {
-    ctx.context.logger.error('provisional-account sweep failed', error);
-  }
+  await sweepQuietly(ctx);
   if (await isEmailHeldByAnother(claims.updateTo, session.user.id)) {
     throw refuseVerification(ctx, 'EMAIL_TAKEN', 'That address is held by another account.');
   }
@@ -292,7 +288,9 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
-  secret: authSecret(),
+  // Better Auth's own `validateSecret` is swallowed — with the secret unset it
+  // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
+  secret: requiredInProduction('BETTER_AUTH_SECRET'),
   baseURL: baseURL(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
@@ -354,12 +352,11 @@ export const auth = betterAuth({
         ? undefined
         : returnPathOf(link.searchParams.get('callbackURL'));
       link.searchParams.set('callbackURL', verifiedLanding(next));
-      const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
       await send(
         await verifyEmailMessage({
           to: user.email,
           url: link.href,
-          providers: accounts.map((account) => account.providerId as ProviderId),
+          providers: await linkedProviderIds(ctx.context, user.id),
         }),
       );
     },
@@ -367,16 +364,10 @@ export const auth = betterAuth({
     // stranger's sign-up carrying your address is verified by your click on a
     // mail you never asked for.
     beforeEmailVerification: async (user) => {
-      const ctx = getCurrentAuthEndpointContext();
-      const session = await getSessionFromCtx(ctx as Parameters<typeof getSessionFromCtx>[0]);
-      if (!session) throw refuseSignedOut(ctx as HookContext);
-      if (session.user.id !== user.id) {
-        throw refuseVerification(
-          ctx as HookContext,
-          'SIGN_IN_TO_VERIFY',
-          'Open the link from a browser signed in to this account.',
-        );
-      }
+      const ctx = getCurrentAuthEndpointContext() as HookContext;
+      const session = await sessionOf(ctx);
+      if (!session) throw refuseSignedOut(ctx);
+      if (session.user.id !== user.id) throw refuseWrongAccount(ctx);
       await actingUser.set(user.id);
     },
     // Only for the row a gate admitted: this one's, or `gateEmailChange`'s for
@@ -384,7 +375,7 @@ export const auth = betterAuth({
     afterEmailVerification: async (user) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
       // The adapter returns the whole row; the hook's type omits additionalFields.
-      const { role } = user as typeof user & { role: UserRole };
+      const role = toUserRole(Reflect.get(user, 'role'));
       await promotePrimaryAdminAtVerification(
         { userId: user.id, role },
         { accountEmail: user.email, primaryAdminEmail: primaryAdminEmail() },
@@ -447,14 +438,7 @@ export const auth = betterAuth({
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
       if (ctx.path !== '/callback/:id') return;
-      try {
-        const swept = await sweepProvisionalAccounts();
-        if (swept.length > 0) {
-          ctx.context.logger.info(`provisional accounts swept: ${swept.join(', ')}`);
-        }
-      } catch (error) {
-        ctx.context.logger.error('provisional-account sweep failed', error);
-      }
+      await sweepQuietly(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
       const newSession = ctx.context.newSession;
@@ -462,7 +446,7 @@ export const auth = betterAuth({
 
       const { user } = newSession;
       const outcome = await promotePrimaryAdmin(
-        { userId: user.id, role: user.role as UserRole },
+        { userId: user.id, role: toUserRole(user.role) },
         {
           accountEmail: user.email,
           profile: await signInProfile.get(),
@@ -495,7 +479,7 @@ export const auth = betterAuth({
       // promotion just now; otherwise the endpoint's redirect already goes
       // where the sign-in asked, `/coven` included.
       if (noReturnPath) {
-        const role: UserRole = outcome === 'promoted' ? 'admin' : (user.role as UserRole);
+        const role = outcome === 'promoted' ? 'admin' : toUserRole(user.role);
         throw new APIError('FOUND', undefined, { Location: postSignInLanding(role) });
       }
     }),

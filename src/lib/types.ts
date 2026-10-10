@@ -72,6 +72,25 @@ export interface SocialProvider {
   label: string;
 }
 
+/** What registering a provider with Better Auth takes beyond its credentials. */
+export interface ProviderProfile {
+  /** The profile field naming the provider account; the first one present, where profiles come in more than one shape. */
+  accountId: readonly [string, ...string[]];
+  /** Whether a sign-in takes the provider's word that the address is verified. */
+  vouches: boolean;
+  /** The provider's own options, read when Better Auth is configured. */
+  extra?: () => { tenantId: string };
+}
+
+/**
+ * A profile for every id, none optional: a provider added to `ProviderId`
+ * without one fails to compile, where a switch without a default would let it
+ * build and never register.
+ */
+export type ProviderProfiles<Id extends string = ProviderId> = {
+  readonly [P in Id]: ProviderProfile;
+};
+
 /** One of a user's provider accounts: the row id `/unlink-account` takes, and its provider. */
 export interface LinkedAccount {
   id: string;

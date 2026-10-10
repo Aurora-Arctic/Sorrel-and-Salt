@@ -4,25 +4,17 @@ import { cache } from 'react';
 import { assertSiteAdmin } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
-import type { Session, UserRole, SessionState } from './session';
+import type { Session, SessionState } from './session';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
-import { SOCIAL_PROVIDERS } from './social-providers';
-import type { LinkedAccount, ProviderId } from './types';
+import { isRosterProvider } from './social-providers';
+import { toUserRole } from './session-role';
+import type { LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
 // never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
 // protection").
-
-const USER_ROLES: readonly UserRole[] = ['user', 'admin'];
-
-function toUserRole(role: unknown): UserRole {
-  if (USER_ROLES.includes(role as UserRole)) return role as UserRole;
-  // Better Auth types the additional field as a plain string. Reading an
-  // unknown value as 'user' would hide whatever wrote it.
-  throw new Error(`Unrecognised user role: ${String(role)}`);
-}
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
@@ -92,10 +84,6 @@ export async function requireAdminSession(): Promise<Session> {
     throw error;
   }
   return session;
-}
-
-function isRosterProvider(providerId: string): providerId is ProviderId {
-  return SOCIAL_PROVIDERS.some((provider) => provider.id === providerId);
 }
 
 /**

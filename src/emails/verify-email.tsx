@@ -1,6 +1,13 @@
 import { SOCIAL_PROVIDERS } from '../lib/social-providers';
-import { Action, EmailLayout, Paragraph, renderParts } from './parts/layout';
-import type { Message, ProviderId } from '../lib/types';
+import {
+  Action,
+  EmailLayout,
+  IgnoreNote,
+  Paragraph,
+  actionVerb,
+  defineMessage,
+} from './parts/layout';
+import type { ProviderId } from '../lib/types';
 import type { VerifyEmailProps } from './types';
 
 const SUBJECT = 'Confirm Your Email for Sorrel & Salt.';
@@ -31,24 +38,13 @@ export function VerifyEmail({
         {signedUpWith && purpose === 'sign-up' && <>, using {signedUpWith}</>}.
       </Paragraph>
       <Paragraph>
-        {part === 'html'
-          ? 'If that was you, click the button below within one hour, in the same browser where you are signed in to Sorrel & Salt.'
-          : 'If that was you, open the link below within one hour, in the same browser where you are signed in to Sorrel & Salt.'}
+        {`If that was you, ${actionVerb(part)} within one hour, in the same browser where you are signed in to Sorrel & Salt.`}
       </Paragraph>
       <Action href={url} label="Confirm My Email" part={part} />
-      <Paragraph muted>If it wasn&apos;t you, you can ignore this email.</Paragraph>
+      <IgnoreNote when="If it wasn't you" />
     </EmailLayout>
   );
 }
 
 /** The verification mail for `to`, rendered to the html and plain text `send` takes. */
-export async function verifyEmailMessage({
-  to,
-  ...props
-}: Omit<VerifyEmailProps, 'part'> & { to: string }): Promise<Message> {
-  return {
-    to,
-    subject: SUBJECT,
-    ...(await renderParts((part) => <VerifyEmail {...props} part={part} />)),
-  };
-}
+export const verifyEmailMessage = defineMessage<VerifyEmailProps>(SUBJECT, VerifyEmail);

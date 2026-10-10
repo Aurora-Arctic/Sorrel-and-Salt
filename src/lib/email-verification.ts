@@ -1,17 +1,16 @@
 import { verifiedLanding } from './account-email';
 import { VERIFICATION_LIFETIME_SECONDS, type EmailVerificationSender } from '@/modules/identity';
 import { verifyEmailMessage } from '../emails/verify-email';
-import type { ProviderId } from './types';
+import { requestOrigin } from './request-origin';
 
 // Where the email page's decisions meet Better Auth: a resend goes through its
 // endpoint, and a change mints the change token its /verify-email endpoint
 // already honours — under the same secret and the request's own base URL, so
 // a preview host gets a link to itself. Handed to the service by the GraphQL
 // context, since a service may not import `auth` (claude-docs/auth/admin-bootstrap.md, "The
-// email page"). `auth` is imported at call time: the GraphQL route is built
-// under NODE_ENV=production in its tests, where Better Auth refuses to start
-// without its secrets, and nothing there sends mail. Either link lands on the
-// page that shows the address it has just proved, with the way on.
+// email page"). `auth` is imported at call time, for the reason
+// `requestOrigin` gives. Either link lands on the page that shows the
+// address it has just proved, with the way on.
 
 export function emailVerificationSender(request: Request): EmailVerificationSender {
   return {
@@ -24,9 +23,8 @@ export function emailVerificationSender(request: Request): EmailVerificationSend
     },
 
     async requestChange(current, address, next) {
-      const [{ auth }, { resolveBaseURL }, { createEmailVerificationToken }] = await Promise.all([
+      const [{ auth, linkedProviderIds }, { createEmailVerificationToken }] = await Promise.all([
         import('./auth'),
-        import('better-auth'),
         import('better-auth/api'),
       ]);
       const ctx = await auth.$context;
@@ -39,19 +37,12 @@ export function emailVerificationSender(request: Request): EmailVerificationSend
         VERIFICATION_LIFETIME_SECONDS,
         { requestType: 'change-email-verification' },
       );
-      const base = resolveBaseURL(auth.options.baseURL, '/api/auth', request);
+      const base = await requestOrigin(request, '/api/auth');
       const url = `${base}/verify-email?token=${token}&callbackURL=${encodeURIComponent(verifiedLanding(next))}`;
       const holder = await ctx.internalAdapter.findUserByEmail(current);
-      const accounts = holder ? await ctx.internalAdapter.findAccounts(holder.user.id) : [];
+      const providers = holder ? await linkedProviderIds(ctx, holder.user.id) : [];
       const { send } = await import('./mail');
-      await send(
-        await verifyEmailMessage({
-          to: address,
-          url,
-          purpose: 'change',
-          providers: accounts.map((account) => account.providerId as ProviderId),
-        }),
-      );
+      await send(await verifyEmailMessage({ to: address, url, purpose: 'change', providers }));
     },
   };
 }

@@ -90,6 +90,30 @@ export function signInPath(returnPath: string | undefined): '/sign-in' | `/sign-
   return `/sign-in?next=${encodeURIComponent(path)}`;
 }
 
+/**
+ * A lookup from a callback's `?error=` code to one readable sentence:
+ * `undefined` for no code, and `generic` for a code the map does not name.
+ * Next hands a repeated key over as an array, which is no code.
+ */
+export function messageLookup(
+  messages: Readonly<Record<string, string>>,
+  generic: string,
+): (code: string | string[] | undefined) => string | undefined {
+  return (code) => {
+    if (typeof code !== 'string' || code.length === 0) return undefined;
+    return messages[code] ?? generic;
+  };
+}
+
+// The state is single-use and lives ten minutes, so retrying from the
+// provider's tab replays a dead one; the sentence sends the visitor here. One
+// sentence for Better Auth's three state codes, in each flow that can meet them.
+function stateExpired(sentence: string) {
+  return { state_mismatch: sentence, state_not_found: sentence, state_invalid: sentence };
+}
+
+const DID_NOT_COMPLETE = "Sign-in didn't complete. Please try again.";
+
 // Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/
 // oauth2/errors.mjs) plus the ones providers themselves return. Every
 // sentence here is ours — "a readable error, not a stack trace" means never
@@ -97,14 +121,14 @@ export function signInPath(returnPath: string | undefined): '/sign-in' | `/sign-
 // text we have not reviewed.
 const ERROR_MESSAGES: Record<string, string> = {
   access_denied: 'Sign-in was cancelled before it finished.',
-  no_code: "Sign-in didn't complete. Please try again.",
+  no_code: DID_NOT_COMPLETE,
   oauth_provider_not_found: "That sign-in option isn't available right now.",
-  issuer_missing: "Sign-in didn't complete. Please try again.",
-  issuer_mismatch: "Sign-in didn't complete. Please try again.",
+  issuer_missing: DID_NOT_COMPLETE,
+  issuer_mismatch: DID_NOT_COMPLETE,
   invalid_code: 'That sign-in link has expired. Please try again.',
   nonce_binding_missing: 'That sign-in link has expired. Please try again.',
   unable_to_get_user_info: "We couldn't retrieve your account details. Please try again.",
-  no_callback_url: "Sign-in didn't complete. Please try again.",
+  no_callback_url: DID_NOT_COMPLETE,
   // One sentence whatever the cause: a lapsing unverified account holding the
   // address and a provider that never vouches over an existing row share the
   // code, and a sentence naming either would confirm the address is taken.
@@ -112,17 +136,13 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Sign-in didn't work. If you signed in before with a different provider, sign in that way, then add this one under Account.",
   // At a sign-in, only a failed write of the account row. The link flow's
   // own codes land on /account instead (`linkErrorMessage`).
-  unable_to_link_account: "Sign-in didn't complete. Please try again.",
+  unable_to_link_account: DID_NOT_COMPLETE,
   // No `email_not_found`: a provider that shares no address gets a placeholder
   // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
   // Reached only if a provider ever requires verification; none does today.
   email_not_verified:
     'Please confirm your email address first: open the link we sent you, or change the address on your email page.',
-  // The state is single-use and lives ten minutes, so retrying from the
-  // provider's tab replays a dead one; the sentence sends the visitor here.
-  state_mismatch: 'That sign-in expired or was started in another tab. Please start again here.',
-  state_not_found: 'That sign-in expired or was started in another tab. Please start again here.',
-  state_invalid: 'That sign-in expired or was started in another tab. Please start again here.',
+  ...stateExpired('That sign-in expired or was started in another tab. Please start again here.'),
   // A verification link opened from a signed-out browser (src/lib/auth.ts):
   // the link still works, so the sentence says to open it again.
   sign_in_to_verify:
@@ -135,15 +155,10 @@ const ERROR_MESSAGES: Record<string, string> = {
 export const GENERIC_SIGN_IN_ERROR = "Sign-in didn't work. Please try again.";
 
 /** One readable sentence for a callback `?error=` code; `undefined` for none. */
-export function signInErrorMessage(code: string | string[] | undefined): string | undefined {
-  if (typeof code !== 'string' || code.length === 0) return undefined;
-  return ERROR_MESSAGES[code] ?? GENERIC_SIGN_IN_ERROR;
-}
+export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_ERROR);
 
 /** The account page, where a link starts and lands again, with `?error=` when it failed. */
 export const ACCOUNT_PATH = '/account';
-
-const STATE_EXPIRED = 'That expired or was started in another tab. Please start again here.';
 
 // The codes a link from /account lands back there with. With every provider
 // vouching inside a link and different addresses allowed, the rest are a
@@ -154,19 +169,14 @@ const LINK_ERROR_MESSAGES: Record<string, string> = {
   // reveals nothing they could not learn by signing in with it.
   account_already_linked_to_different_user:
     'That account already signs in to a different Sorrel & Salt account.',
-  state_mismatch: STATE_EXPIRED,
-  state_not_found: STATE_EXPIRED,
-  state_invalid: STATE_EXPIRED,
+  ...stateExpired('That expired or was started in another tab. Please start again here.'),
 };
 
 /** Also what SignInMethods shows when `/link-social` itself fails, before any redirect. */
 export const GENERIC_LINK_ERROR = "That sign-in method couldn't be added. Please try again.";
 
 /** One readable sentence for a link callback's `?error=` code on /account; `undefined` for none. */
-export function linkErrorMessage(code: string | string[] | undefined): string | undefined {
-  if (typeof code !== 'string' || code.length === 0) return undefined;
-  return LINK_ERROR_MESSAGES[code] ?? GENERIC_LINK_ERROR;
-}
+export const linkErrorMessage = messageLookup(LINK_ERROR_MESSAGES, GENERIC_LINK_ERROR);
 
 // Better Auth's /unlink-account refusals, by the `code` in its JSON body.
 const UNLINK_ERROR_MESSAGES: Record<string, string> = {
