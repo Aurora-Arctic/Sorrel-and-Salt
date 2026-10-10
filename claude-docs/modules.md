@@ -100,7 +100,7 @@ site-tier service calls the repository's named writes and finders under the
 `SiteAdmin` proof, and imports nothing of `coven`'s
 ([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
 The two tables it replaced, `workspace_invitations` and `admin_invitations`,
-are undeclared since MB.202 and dropped by MB.203.
+were undeclared by MB.202 and dropped by MB.203.
 
 ## The public surface
 

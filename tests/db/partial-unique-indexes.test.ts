@@ -118,10 +118,6 @@ const address = () => `${token()}@partial-unique.test`;
 // Keyed by index rather than table: one table's indexes can hold rows on
 // opposite sides of a predicate (`deity_id IS NULL` against `IS NOT NULL`).
 const ROWS: Record<string, PartialIndexRow> = {
-  // Undeclared since MB.202 and still in the catalogue until MB.203 drops it.
-  admin_invitations_token_hash_unique: {
-    row: async () => stamped({ email: address(), token_hash: token() }),
-  },
   // `(true)` where open: at most one open pause, whatever it holds.
   admin_role_change_pauses_one_open: { row: async () => stamped({}) },
   categories_seed_key_unique: { row: category },
@@ -190,16 +186,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   spell_ingredients_spell_id_ingredient_id_unique: { row: () => spellIngredient(true) },
   spell_ingredients_spell_id_layer_order_unique: { row: () => spellIngredient(true) },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
-  // Undeclared since MB.202 and still in the catalogue until MB.203 drops it.
-  workspace_invitations_token_hash_unique: {
-    row: async () =>
-      stamped({
-        workspace_id: WORKSPACE_W_ID,
-        email: address(),
-        role: 'member',
-        token_hash: token(),
-      }),
-  },
   workspaces_slug_unique: {
     row: async () => {
       const t = token();
