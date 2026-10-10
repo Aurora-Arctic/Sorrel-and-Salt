@@ -207,6 +207,8 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.201 | `invitations`, one two-tier table (schema)                                                     | Wave 8  | MB.202                 |
 | MB.202 | Invitations are written and read by tier                                                       | Wave 8  | MB.70, M7.2            |
 | MB.203 | Drop `workspace_invitations` and `admin_invitations`                                           | Wave 8  | —                      |
+| MB.204 | The provisional-account sweep skips an account holding a privilege change                      | Wave 8  | —                      |
+| MB.205 | Warn before approving an unverified account for coven creation                                 | Wave 8  | —                      |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -1511,7 +1513,7 @@ A `setUserRole` service sits behind an admin-only GraphQL mutation and writes th
 
 _Acceptance criteria:_
 
-- An admin can grant admin to a user and revoke it from `/admin/users`, with a confirmation that names the user. Granting does not require the grantee's email to be verified
+- An admin can grant admin to a user and revoke it from `/admin/users`, with a confirmation that names the user. Granting does not require the grantee's email to be verified. When it is unverified, the confirmation says so in plain words, and that granting keeps the account rather than letting it lapse (MB.204); the admin may still grant (amended by MB.205)
 - Each change is recorded as one `user_privilege_changes` row, `via` `admin`, naming the subject, the direction, the actor (taken from the session), the time and the confirmation's optional reason as `note`; the service writes no ledger row itself, and the same write without its declaration is refused by the trigger. A request body cannot set the actor (corrected by MB.195)
 - A grant to a user without `canCreateWorkspace` is recorded as two rows at one instant, `admin` and `create_workspace`, both `via` `admin`, and a grant to one who holds it as the `admin` row alone (amended by M5.8 and MB.195)
 - Granting admin to someone who is already an admin, or revoking it from someone who isn't, is refused with a message and writes no ledger row, because no column changed
@@ -3779,3 +3781,29 @@ _Acceptance criteria:_
 - Both tables leave `AUDITED_TABLES` and the partial-index sweep, MB.201's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations names either table
 - `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
 - The PR body names the release that carried MB.202 to production
+
+**MB.204 — The provisional-account sweep skips an account holding a privilege change** · 1h
+
+_Story:_ As the site owner, I want the sweep of lapsed unverified accounts to keep running when an admin has vouched for one of them, so that one approved account cannot stop every other one being cleaned up.
+
+Minted after MB.195 on the owner's call. `deleteProvisionalUsers` hard-deletes every lapsed unverified account holding a provider in one statement (MB.67; `auth/admin-bootstrap.md`, "Provisional accounts"). An admin may approve an unverified account for coven creation (M5.8) or make it an admin (MB.59), and either writes a `user_privilege_changes` row that references the account with a plain foreign key, as both earlier ledgers did. If that account never verifies, the sweep's delete violates the key and fails, and no lapsed account is removed on that run or any later one. The fix is the owner's: the sweep skips any account holding a ledger row, since an admin has vouched for it; the history stays, and MB.205 and MB.59 warn the admin before they vouch. Letting the rows go with the user was rejected: it erases what the ledger keeps, and `forbid_rewrite` refuses the delete and the update either way.
+
+_Acceptance criteria:_
+
+- A lapsed unverified account holding a provider and a ledger row is kept by the sweep, and a lapsed one beside it without a row is deleted in the same run; the test asserts the first would be deleted were its row absent, so it is the row that keeps it
+- The sweep never fails on the ledger's foreign key, asserted with such an account present
+- An account kept this way is otherwise unchanged: its sessions, accounts and ledger rows remain
+- `auth/admin-bootstrap.md`, "Provisional accounts", and `db/provisional-account-delete.md` say an account an admin has vouched for is not swept, and why
+
+**MB.205 — Warn before approving an unverified account for coven creation** · 1h
+
+_Story:_ As a site admin, I want to be told when the account I am about to approve has not verified its email, so that I vouch for it knowing nobody has proved who holds the address, and knowing it will not lapse.
+
+Minted with MB.204 on the owner's call. M5.8's Approve on `/admin/users` opens a confirmation naming the user. When the row's email is unverified, that confirmation also says so, in plain words: the address has not been proved, and approving keeps the account rather than letting it lapse (MB.204). The admin may still approve; it is a warning, not a refusal, since M2.9 leaves confirming who someone is to the admin. Revoke carries no warning. MB.59's grant gets the same warning in its own confirmation.
+
+_Acceptance criteria:_
+
+- Approving a user whose email is unverified shows the warning in the confirmation, and approving a verified user does not; both still approve on confirm
+- The warning is read with the confirmation by assistive technology, asserted by role and label queries, and the component's story shows the unverified case
+- The Playwright admin spec covers approving an unverified user through the warning, with `@axe-core/playwright` clean, run against the e2e container
+- `components/user-list.md` describes the warning
