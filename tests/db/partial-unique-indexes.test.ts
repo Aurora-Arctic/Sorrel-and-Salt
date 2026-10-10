@@ -167,6 +167,10 @@ const ROWS: Record<string, PartialIndexRow> = {
         ingredient_id: await idOf('ingredients', await workspaceIngredient()),
       }),
   },
+  // The site tier, a null pair: the index spans both tiers alike (MB.201).
+  invitations_token_hash_unique: {
+    row: async () => stamped({ email: address(), token_hash: token() }),
+  },
   planets_seed_key_unique: { row: planet },
   planets_slug_unique: { row: planet },
   reference_links_deity_tradition_unique: {

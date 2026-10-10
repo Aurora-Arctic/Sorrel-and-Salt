@@ -41,6 +41,7 @@ export const AUDITED_TABLES = [
   'ingredient_form_groups',
   'ingredient_forms',
   'ingredients',
+  'invitations',
   'inventory_items',
   'planets',
   'reference_links',
