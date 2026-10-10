@@ -31,3 +31,15 @@ export type WithoutAuditFields<T> = Omit<T, keyof AuditFields>;
 export interface ClientRegistry {
   __sorrelPostgresClients?: Map<string, postgres.Sql>;
 }
+
+/**
+ * The mark on a table written only through its own named writer methods
+ * (MB.198), put on it in its schema file by `namedWrites` in table-marks.ts.
+ * `$writes` is a phantom key beside Drizzle's `$inferSelect`: no column can
+ * be named like it, and nothing is added to the table at runtime
+ * (claude-docs/db/write-path.md, "Table marks").
+ */
+export type NamedWrites = { readonly $writes: 'named' };
+
+/** Every unmarked table: what each generic writer method demands, so a marked one is refused. */
+export type Generic = { $writes?: never };
