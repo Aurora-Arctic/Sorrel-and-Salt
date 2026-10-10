@@ -5,6 +5,7 @@ import CreationControl from './creation-control';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
 import ImpersonateButton from './impersonate-button';
+import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
@@ -105,18 +106,21 @@ const UserRow = ({
         {user.email}
       </span>
     </td>
-    {/* An admin's role in bold, on the owner's call: the rows to notice. Beside
-        it the control that changes it (MB.59), as Coven Creation holds its own:
-        one column rather than a second saying the same thing. The primary
-        admin is labelled, and its Revoke says why it cannot be used. */}
+    {/* An admin's role in bold, on the owner's call: the rows to notice. On
+        the right, the control that changes it (MB.59), as Coven Creation holds
+        its own: one column rather than a second saying the same thing. The
+        primary admin is marked by a crown with a tip, and its Revoke's tip
+        says why it cannot be used. */}
     <td>
       <div className="user-list__role">
-        {user.role === 'admin' ? (
-          <strong>{ROLE_LABELS.admin}</strong>
-        ) : (
-          <span>{ROLE_LABELS[user.role]}</span>
-        )}
-        {user.primaryAdmin && <span className="user-list__badge">Primary Admin</span>}
+        <span className="user-list__role-name">
+          {user.role === 'admin' ? (
+            <strong>{ROLE_LABELS.admin}</strong>
+          ) : (
+            <span>{ROLE_LABELS[user.role]}</span>
+          )}
+          {user.primaryAdmin && <PrimaryAdminMark />}
+        </span>
         {/* Keyed by the action, so the refresh after a change mounts a fresh
             control for the other one rather than keeping this one's busy state. */}
         <RoleControl

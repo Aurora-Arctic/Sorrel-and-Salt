@@ -141,17 +141,21 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   as the creation control's: both are `confirmed-action.tsx`'s
   `ConfirmedAction`, each control only its words and its write. Grant warns
   on an unverified address as Approve does, in its own verb (below).
-- **The primary admin's row is labelled "Primary Admin"**, a small outlined
-  tag beside the role, and its Revoke stays in view but is `aria-disabled`
-  rather than `disabled`, so it keeps its place in the tab order and a click
-  still lands. Beside it, in the muted ink, is the reason, the service's own
-  refusal in the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`,
-  one string for both): "This is the primary admin and can't be removed.
-  Changing who the primary admin is takes a change to the site's
-  configuration." It names no variable; how to change it is the docs'. The
-  button is described by it, and activating it opens nothing and sends
-  nothing but mounts the reason afresh as an alert, so a screen reader hears
-  it each time, rather than doing nothing.
+- **The primary admin's row is marked by a crown** beside the role
+  (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
+  saying so, as InfoTip's ⓘ is a button with its tip, and through the same
+  `useTip`: opened by hover, focus or a tap, kept open while the pointer is on
+  it, closed on Escape (on the owner's call, in place of an outlined tag). Its
+  Revoke stays in view but is `aria-disabled` rather than `disabled`, so it
+  keeps its place in the tab order and a click still lands. The reason is in a
+  tip on the button, opening as the crown's does: the service's own refusal in
+  the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`, one
+  string for both), "This is the primary admin and can't be removed. Changing
+  who the primary admin is takes a change to the site's configuration." It
+  names no variable; how to change it is the docs'. The button is described by
+  it, and activating it opens nothing and sends nothing but opens the tip and
+  mounts it afresh as an alert, so a screen reader hears it each time, rather
+  than doing nothing.
 
 ## Styling
 
@@ -161,9 +165,11 @@ buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
 a wrapping row of the mark and the control, and the role cell a wrapping row
-of the role, the primary admin's tag and the control, the tag outlined in
-`$text-muted` and the primary admin's reason taking the cell's full width
-below, in the muted ink at a smaller size (MB.59), and the confirmation is the
+of the role, with the primary admin's crown in `$text-muted` beside it, on the
+left and the control on the right, centred on one line (MB.59, on the owner's
+call). Both of the role cell's tips, the crown's and the locked Revoke's, are
+the `tip-bubble` mixin's, above their mark from its left edge, as InfoTip's.
+The confirmation is the
 `Modal`'s own layout, its buttons in `.modal__actions`, all built on the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
 `.data-table` primitive, filling the layout's width and scrolling inside its

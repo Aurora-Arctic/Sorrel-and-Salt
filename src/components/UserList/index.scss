@@ -150,31 +150,77 @@
   margin-block: space(5);
 }
 
-// The role cell: the role, the primary admin's label, then the control that
-// changes it, wrapping below on a narrow column as the creation cell does.
+// The role cell: the role and the primary admin's crown on the left, the
+// control that changes it on the right, centred on one line, and wrapping
+// below on a narrow column as the creation cell does (the owner's call).
 .user-list__role {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: space(2) space(3);
 }
 
-// The primary admin's label: a small outlined tag, the muted ink, so it reads
-// as a fact about the row rather than another control.
-.user-list__badge {
-  padding: 0 space(2);
-  border: 1px solid $text-muted;
-  border-radius: 999px;
-  color: $text-muted;
-  font-size: 0.875em;
-  white-space: nowrap;
+.user-list__role-name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
 }
 
-// Why the primary admin's Revoke cannot be used, beside it, in the muted ink
-// and at the cell's width rather than the reading measure.
-.user-list__reason {
-  flex-basis: 100%;
-  margin: 0;
+// The crown and its tip, the tip placed against this wrapper.
+.user-list__primary {
+  position: relative;
+  display: inline-flex;
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target around a 1rem glyph, as InfoTip's
+// button. The muted ink, so it reads as a fact about the row, not a control.
+.user-list__primary-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
   color: $text-muted;
-  font-size: 0.875em;
+  cursor: help;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The primary admin's Revoke and the tip saying why it cannot be used, the
+// tip placed against this wrapper.
+.user-list__locked {
+  position: relative;
+  display: inline-flex;
+}
+
+// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
+// InfoTip's, above the mark or button from its left edge, no wider than 18rem
+// so it stays on a phone.
+.user-list__tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - #{space(6)}));
+  margin-bottom: space(1);
+
+  @include tip-bubble;
 }

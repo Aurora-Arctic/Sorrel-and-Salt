@@ -795,7 +795,7 @@ describe('UserList admin role', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('labels the primary admin, whose Revoke is in view but aria-disabled, the reason beside it', () => {
+  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, the reason in a tip', () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('SetUserRole', (variables) => {
       calls.push(variables);
@@ -804,19 +804,36 @@ describe('UserList admin role', () => {
     render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }, BO] })} />);
     const primary = row('Ada Fixturewort');
 
-    expect(within(primary).getByText('Primary Admin')).toBeInTheDocument();
+    // The crown is named, and its tip opens on focus and closes on Escape.
+    const crown = within(primary).getByRole('button', { name: 'Primary Admin' });
+    const crownTip = within(primary).getByText('Primary Admin');
+    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.focus(crown);
+    expect(crownTip).toHaveAttribute('aria-hidden', 'false');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
+
     const revoke = within(primary).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
     });
-    // In view and reachable, not `disabled`, and described by the reason.
+    // In view and reachable, not `disabled`, and described by the reason,
+    // which is in a tip, closed until the button is hovered or focused.
     expect(revoke).toBeVisible();
     expect(revoke).toBeEnabled();
     expect(revoke).toHaveAttribute('aria-disabled', 'true');
     expect(revoke).toHaveAccessibleDescription(PRIMARY_REASON);
-    expect(within(primary).getByText(PRIMARY_REASON)).toBeInTheDocument();
+    const reason = within(primary).getByText(PRIMARY_REASON);
+    expect(reason).toHaveAttribute('role', 'tooltip');
+    expect(reason).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.focus(revoke);
+    expect(reason).toHaveAttribute('aria-hidden', 'false');
+    fireEvent.blur(revoke);
+    expect(reason).toHaveAttribute('aria-hidden', 'true');
     expect(within(primary).queryByRole('alert')).not.toBeInTheDocument();
-    // Only the primary admin's row says it.
-    expect(within(row('Bo Fixturewort')).queryByText('Primary Admin')).not.toBeInTheDocument();
+    // Only the primary admin's row is marked.
+    expect(
+      within(row('Bo Fixturewort')).queryByRole('button', { name: 'Primary Admin' }),
+    ).not.toBeInTheDocument();
   });
 
   it('states the reason when the primary admin’s Revoke is tried, opening nothing and sending nothing', () => {
@@ -833,7 +850,9 @@ describe('UserList admin role', () => {
 
     fireEvent.click(revoke);
 
+    // The tip opens, as an alert.
     expect(within(primary).getByRole('alert')).toHaveTextContent(PRIMARY_REASON);
+    expect(within(primary).getByRole('alert')).toHaveAttribute('aria-hidden', 'false');
     expect(within(primary).getAllByText(PRIMARY_REASON)).toHaveLength(1);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     // A second try says it again, as a fresh alert.

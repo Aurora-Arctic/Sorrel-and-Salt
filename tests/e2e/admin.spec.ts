@@ -302,9 +302,10 @@ test('an admin grants admin to a user at /admin/users with a reason, then revoke
   await expect(row.getByRole('button', { name: 'Grant admin to Fixture Person' })).toBeVisible();
 });
 
-// MB.59: the address ADMIN_BOOTSTRAP_EMAIL names is labelled, and its Revoke
-// stays in view but cannot be used, saying why when it is tried.
-test('the primary admin’s row is labelled, and its Revoke says why it cannot be used', async ({
+// MB.59: the address ADMIN_BOOTSTRAP_EMAIL names is marked by a crown with a
+// tip, and its Revoke stays in view but cannot be used, its tip saying why on
+// hover and again when it is tried.
+test('the primary admin’s row is marked, and its Revoke says why it cannot be used', async ({
   page,
 }) => {
   await signInAs(page, PRIMARY_ADMIN_EMAIL, ['google'], 'admin');
@@ -313,11 +314,20 @@ test('the primary admin’s row is labelled, and its Revoke says why it cannot b
   const response = await page.goto('/admin/users?role=admin&query=admin-bootstrap.invalid');
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /admin-bootstrap\.invalid/ });
-  await expect(row.getByText('Primary Admin', { exact: true })).toBeVisible();
+  const crown = row.getByRole('button', { name: 'Primary Admin' });
+  const crownTip = row.getByText('Primary Admin', { exact: true });
+  await expect(crownTip).toBeHidden();
+  await crown.hover();
+  await expect(crownTip).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+
   const revoke = row.getByRole('button', { name: 'Revoke admin from Fixture Person' });
   await expect(revoke).toHaveAttribute('aria-disabled', 'true');
   await expect(revoke).toHaveAccessibleDescription(PRIMARY_ADMIN_REASON);
-  await expect(row.getByText(PRIMARY_ADMIN_REASON)).toBeVisible();
+  const reason = row.getByText(PRIMARY_ADMIN_REASON);
+  await expect(reason).toBeHidden();
+  await revoke.hover();
+  await expect(reason).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
   // From the keyboard: it stays in the tab order, and Playwright's click

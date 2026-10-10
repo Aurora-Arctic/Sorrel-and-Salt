@@ -2,6 +2,7 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
+import { useTip } from '../InfoTip/use-tip';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { PRIMARY_ADMIN_REFUSAL } from '../../lib/primary-admin';
 import ConfirmedAction from './confirmed-action';
@@ -11,8 +12,8 @@ import type { RoleControlProps } from './types';
 // The row's Grant or Revoke of admin (MB.59), beside the role it changes,
 // each asking first in a modal naming the user, with an optional reason the
 // ledger keeps. The primary admin's Revoke stays in view but cannot be used,
-// its reason beside it and said again when it is tried
-// (claude-docs/components/user-list.md).
+// its reason in a tip that opens as InfoTip's does and said again when it is
+// tried (claude-docs/components/user-list.md).
 
 const SetUserRoleDocument = graphql(`
   mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {
@@ -27,33 +28,46 @@ const SetUserRoleDocument = graphql(`
 /**
  * The primary admin's Revoke: `aria-disabled` rather than `disabled`, so it
  * keeps its place in the tab order and a click still lands, which says why
- * rather than doing nothing. The reason is the button's description, and each
- * attempt mounts it afresh as an alert, so a screen reader hears it again.
+ * rather than doing nothing. The reason is the button's description, in a tip
+ * that opens on hover, focus and a tap, stays open while the pointer is on it
+ * and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each
+ * attempt also mounts the tip afresh as an alert, so a screen reader hears the
+ * reason again.
  */
 const PrimaryAdminRevoke = ({ name }: { name: string }): ReactElement => {
   const reasonId = useId();
+  const { open, show, hide, hideSoon } = useTip();
   const [attempts, setAttempts] = useState(0);
+
   return (
-    <>
+    // Hover on the wrapper, which holds the tip as well as the button, so the
+    // pointer can move onto the tip without closing it.
+    <span className="user-list__locked" onMouseEnter={show} onMouseLeave={hideSoon}>
       <button
         className="btn btn--small btn--destructive"
         type="button"
         aria-label={`Revoke admin from ${name}`}
         aria-disabled="true"
         aria-describedby={reasonId}
-        onClick={() => setAttempts((count) => count + 1)}
+        onFocus={show}
+        onBlur={hide}
+        onClick={() => {
+          show();
+          setAttempts((count) => count + 1);
+        }}
       >
         Revoke
       </button>
-      <p
+      <span
         key={attempts}
         id={reasonId}
-        className="user-list__reason"
-        role={attempts ? 'alert' : undefined}
+        role={attempts ? 'alert' : 'tooltip'}
+        className={open ? 'user-list__tip is-open' : 'user-list__tip'}
+        aria-hidden={!open}
       >
         {PRIMARY_ADMIN_REFUSAL}
-      </p>
-    </>
+      </span>
+    </span>
   );
 };
 
