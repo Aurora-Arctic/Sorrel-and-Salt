@@ -154,9 +154,14 @@ first, for the admin who suspects misuse (story 61).
   `SiteAdmin` proof, keyed on `created_at` negated, since a page's key is
   ascending, and read as `numeric` so a cursor keeps the microseconds; rows of
   one instant, a role grant and the flag it sets, follow by id.
-- **Narrowed by subject, by privilege, or both.** Each part is optional. A
-  subject that is not an id is a `ValidationError`, not a read: the keyset
-  read takes any data exception for a bad cursor.
+- **Narrowed by subject, by part of the subject's name or email, by
+  privilege, or any of them.** Each part is optional. The query matches as
+  the user list's `query` does, case-insensitively with `%` and `_` read
+  literally, on the subject's live row only, never the actor's: a
+  correlated `EXISTS` on `users`, in SQL, so no row is fetched to be dropped
+  (rule 7); a blank one is none. A subject that is not an id is a
+  `ValidationError`, not a read: the keyset read takes any data exception for
+  a bad cursor.
 - **Subject and actor in one read per page.** `PrivilegeChange.subject` and
   `.actor` (the row's `created_by`) both load through `usersByIdForAdmin`,
   whose service, `usersForAdmin(session, userIds)`, answers a site admin each

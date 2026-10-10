@@ -29,19 +29,22 @@ id.
 - **One ledger, filtered, not a page per privilege.** The filter is a GET
   form to `/admin/privilege-changes`, named "Filter privilege changes" inside
   a `<search>` landmark, as the user list's is
-  ([`user-list.md`](user-list.md)): a native Privilege dropdown
-  (`privilege`: All, Admin or Coven creation), on the owner's call, and a
-  Filter button. It is `filter.tsx`, the one client file here. A native
+  ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
+  (`query`), matching part of the subject's name or email, a native Privilege
+  dropdown (`privilege`: All, Admin or Coven creation), both on the owner's
+  call, and a Filter button. It is `filter.tsx`, the one client file here. A native
   `<select>`, so before hydration the form still submits, All as
   `privilege=`, which the page reads as no privilege, and the user the ledger
   is narrowed to rides along as a hidden `user`. Filter is `disabled` while
-  the dropdown matches the filter shown, as the user list's is (MB.53), and a
+  the trimmed query and the dropdown match the filter shown, as the user list's is (MB.53), and a
   submit opens the new filter from the first page as a full load, the user
   kept. `href.ts`'s `privilegeLedgerHref` builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
-  `?user=<id>` and `?privilege=admin|create_workspace`.
+  `?query=`, `?user=<id>` and `?privilege=admin|create_workspace`. The
+  query finds a user by name; `?user=` stays for the link from
+  `/admin/users`, since a name is not unique.
 - **Narrowed to one user, it says so**: "Changes to <name> only.", with a
-  Show Every User link that keeps the privilege.
+  Show Every User link that keeps the query and the privilege.
 - **Seven columns**: When, User, Privilege, Change, How, Changed By and Note,
   each heading in title case (DESIGN.md §9). When is the UTC minute, saying
   UTC since the server renders it, in a `<time>` carrying the full instant.
@@ -54,8 +57,9 @@ id.
 - **The note shows only where one was given**: an empty cell otherwise.
 - **Nothing to show is a sentence, not an empty table**, in plain words for
   the filter: "No privilege has changed yet.", "No changes to who is an
-  admin.", "No changes to <name>'s privileges.", or "No changes to whether
-  <name> may create a coven."
+  admin.", "No changes to <name>'s privileges.", "No changes to the privileges of
+  anyone matching “ada”.", or "No changes to whether <name> may create a
+  coven."
 - **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors and
   the page's position, as every admin list's.
 

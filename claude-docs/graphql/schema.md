@@ -91,8 +91,9 @@ service, `listUsers`, refuses anyone but a site admin, and the query carries
 no scope of its own: it is a read, which M5.7's mutation sweep does not reach
 ([`auth/admin-users.md`](../auth/admin-users.md), "The user list").
 
-`privilegeChanges(userId: ID, privilege: UserPrivilege)` is the privilege
-ledger (MB.199), a paged connection of `PrivilegeChange`, newest first: `id`,
+`privilegeChanges(userId: ID, privilege: UserPrivilege, query: String)` is
+the privilege ledger (MB.199; `query`, part of the subject's name or email,
+MB.200's), a paged connection of `PrivilegeChange`, newest first: `id`,
 `privilege`, `change` (`PrivilegeChangeKind`), `via` (`PrivilegeRoute`), the
 nullable `note`, `audit`, and `subject` and `actor` as the ordinary `User`,
 nullable where no live account holds the id. The two share the
