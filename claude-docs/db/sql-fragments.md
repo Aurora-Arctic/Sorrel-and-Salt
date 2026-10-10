@@ -17,9 +17,20 @@ one of these carries a one-clause comment saying which it is:
 | `set_config(…, true)`                                                                                                                                                                                                                                                                                  | `SET LOCAL` with a bind parameter, which no builder issues (rule 3; ["Fuzzy matching"](fuzzy-matching.md))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | A whole statement: the `union all` arms of a suggestion list, of `findSimilarIngredients`'s match or of `findCompendiumPage`'s search, a `Derived` source, the scalar subquery ranking a folk name, and the `not in (select …)` and `left join (select …)` inside them                                 | **Raw by rule, not for want of a builder.** Drizzle has `unionAll`, `.as()`, `.leftJoin()` and `notInArray(…, subquery)`, but each arm is a `.select(`, and the guard confines those to `select.ts`'s two builders. The arms' fields are the expressions above anyway, so building the frame would leave most of the tags where they are. The cost is the one `existsIn` closed for the four `EXISTS`: an arm's `notSoftDeleted` is by convention, inside a string the guard cannot read. Closing it means a third builder in `select.ts` that hands a union arm out filtered, argued for in its own task |
 
+**A fragment that recurs is written once** (MB.206), in `predicates.ts`:
+`fold` is `lower(btrim(…))`, the fold a suggestion, a list entry and a form
+compare under; `trigramMatch` is an autofill's `(text % query or query <%
+text)`; and `foldedWordMatch` is a search's accent-folded `<%` and
+`word_similarity`, the spelling migration 0027's expression indexes answer.
+`set_config` is written once too, in `select.ts`'s `readUnder`, which both a
+similarity read and a keyset read run under. A finder calls the helper rather
+than writing the fragment again, so a change to how a value is folded or
+matched is one edit.
+
 What is _not_ on the list, and was raw until MB.100: `… is null` where
 `isNull()` serves, the compendium-tier predicate, now `inCompendium` in
-`predicates.ts`, a correlated `exists (select 1 …)`, now `existsIn`
+`predicates.ts` — read with the proofs' covens through `inTiers` and
+`readableInTiers` beside it since MB.206 — a correlated `exists (select 1 …)`, now `existsIn`
 (["Soft-delete filtering"](soft-delete.md)), and a comparison written into the
 string — `a > b`, `x <> ''`,
 `id in (…)` — where `gt`, `ne` and `inArray` take a fragment on either side.

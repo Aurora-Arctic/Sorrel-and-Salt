@@ -8,7 +8,7 @@ import { db } from '../connection';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
+import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { adminRoleWrites } from './admin-roles';
 import { invitationWrites } from './invitations';
 import { existsIn } from './select';
@@ -103,18 +103,18 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     // `from` replaced and every other kept as written.
     carryAstrologyRename: (_admin, list, from, to) => {
       const column = ingredients[list];
-      const fold = sql`lower(btrim(${from}))`;
+      const fromFold = fold(from);
       const entry = sql.identifier('entry');
       const at = sql.identifier('at');
       return update(
         ingredients,
         {
           [list]: sql`array(
-            select case when lower(btrim(${entry})) = ${fold} then ${to}::text else ${entry} end
+            select case when ${fold(entry)} = ${fromFold} then ${to}::text else ${entry} end
             from unnest(${column}) with ordinality as listed(${entry}, ${at})
             order by ${at})`,
         },
-        and(inCompendium(ingredients), inArray(fold, listFolds(column))),
+        and(inCompendium(ingredients), inArray(fromFold, listFolds(column))),
       );
     },
     // One entry at a time: each takes its own slug, derived by the service from

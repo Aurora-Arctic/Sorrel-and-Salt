@@ -88,17 +88,48 @@ const EXPORTED_FUNCTIONS = [
 /** Folder-internal: exported for the siblings, never re-exported by the index. */
 const INTERNAL = [
   'selectFrom',
+  'selectOne',
   'existsIn',
   'writerFor',
   'scopedTo',
   'inCompendium',
+  'inTiers',
+  'readableInTiers',
+  'readableIngredientParent',
   'notSoftDeleted',
   'inLiveGroup',
+  'curated',
+  'fold',
+  'trigramMatch',
+  'foldedWordMatch',
   'readableSpells',
+  'findPageInTiers',
+  'findPageCountInTiers',
   'readSuggestionPage',
   'claimantList',
   'citesNothing',
 ];
+
+/**
+ * The two-tier read scope's builders (MB.206), each pinned below to what it
+ * holds: the tier, the tier with the row's tombstone filter, and the tier of
+ * a child's parent ingredient, whose filter `existsIn` adds.
+ */
+const TIER_PREDICATES = ['inTiers', 'readableInTiers', 'readableIngredientParent'];
+
+/** Every exported finder, the escape hatches included: each reads through the shared builders. */
+const FINDERS = EXPORTED_FUNCTIONS.filter((name) => name.startsWith('find'));
+
+/**
+ * The two-tier scope spelled out: the compendium ORed with a proof's
+ * workspace, one proof or a list mapped. A tier rule comparing a linked row
+ * with its parent, `or(inCompendium(references), eq(…))`, is not it.
+ */
+const TIER_SCOPE = /or\(\s*inCompendium\(\w+\),\s*(?:\.\.\.\w+\.map\(\(?\w+\)?\s*=>\s*)?scopedTo\(/;
+
+/** Where a page is cut and where it is counted, each once (MB.206). */
+const PAGE_READER = 'readPage';
+const COUNT_READER = 'readCount';
 
 /** Rule 5's half: a finder over a table carrying `workspace_id` scopes by the proof. */
 const SCOPED_FINDERS = [
@@ -251,11 +282,14 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     for (const finder of finders) {
       const body = functionBody(finder);
       // Either it filters itself, or it delegates to something that does: a
-      // sibling finder, `findPage` and its kin included, or `readableSpells`,
+      // sibling finder, `findPage` and its kin included; `readableSpells`,
       // which carries the filter for the three spell finders along with the
-      // visibility rule.
+      // visibility rule; `readableInTiers`, which carries it with the tier; or
+      // `curated`, with the group's. The last two are pinned below.
       expect(
-        /notSoftDeleted\(|find(?:Many|Page)\w*\(|readableSpells\(/.test(body),
+        /notSoftDeleted\(|find(?:Many|One|Page)\w*\(|readableSpells\(|readableInTiers\(|\bcurated\(/.test(
+          body,
+        ),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
     }
@@ -267,10 +301,67 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     for (const finder of SCOPED_FINDERS) {
       const body = functionBody(finder);
       expect(
-        /scopedTo\(|findMany\w*\(/.test(body),
+        /scopedTo\(|findMany\w*\(|findOneInWorkspace\(|\binTiers\(|readableInTiers\(|readableIngredientParent\(|findPageInTiers\(/.test(
+          body,
+        ),
         `${finder} reaches the database without scopedTo(membership, ...)`,
       ).toBe(true);
     }
+  });
+
+  // Where the scoped finders above get the proof's workspace when they read
+  // both tiers: each builder is pinned to what it holds, so one that stopped
+  // consulting the proofs, or the tombstone, fails here rather than passing
+  // every finder that names it.
+  it('builds the two-tier scope from the compendium and each proof’s workspace', () => {
+    for (const predicate of TIER_PREDICATES) {
+      expect(fileDeclaring(predicate)).toBe(`${REPOSITORY}/predicates.ts`);
+    }
+
+    const tiers = functionBody('inTiers');
+    expect(tiers).toMatch(/inCompendium\(table\)/);
+    expect(tiers).toMatch(/scopedTo\(membership, table\)/);
+    // The tier alone, which the spell hatch reads past a deleted ingredient.
+    expect(tiers).not.toMatch(/notSoftDeleted\(/);
+
+    const readable = functionBody('readableInTiers');
+    expect(readable).toMatch(/inTiers\(memberships, table\)/);
+    expect(readable).toMatch(/notSoftDeleted\(table\)/);
+
+    // The parent's tombstone filter is `existsIn`'s, pinned above.
+    const parent = functionBody('readableIngredientParent');
+    expect(parent).toMatch(/existsIn\(\s*ingredients\b/);
+    expect(parent).toMatch(/inTiers\(memberships, ingredients\)/);
+
+    for (const finder of ['findPageInTiers', 'findPageCountInTiers']) {
+      expect(functionBody(finder)).toMatch(/readableInTiers\(memberships, table\)/);
+    }
+
+    const live = functionBody('curated');
+    expect(live).toMatch(/notSoftDeleted\(vocabulary\)/);
+    expect(live).toMatch(/inLiveGroup\(vocabulary\)/);
+  });
+
+  // MB.206: a change to how a tier is read, or how a page is cut, is one edit.
+  // `pageBounds(` and a `count:` order are how a page and its count are built
+  // by hand, so outside `select.ts`, which defines them, each appears once.
+  it('spells the two-tier scope and the page-and-count pair once each', () => {
+    expect(FINDERS.length).toBeGreaterThan(0);
+    for (const finder of FINDERS) {
+      const body = functionBody(finder);
+      expect(body, `${finder} spells the two-tier scope by hand`).not.toMatch(TIER_SCOPE);
+      expect(body, `${finder} cuts a page by hand`).not.toMatch(/pageBounds\(|\bcount:/);
+    }
+
+    const outsideBuilder = FILES.filter((file) => file !== BUILDER && !file.endsWith('/types.ts'));
+    const occurrences = (pattern: RegExp) =>
+      outsideBuilder.flatMap((file) => source(file).match(pattern) ?? []);
+    expect(functionBody(PAGE_READER)).toMatch(/pageBounds\(/);
+    expect(occurrences(/pageBounds\(/g)).toHaveLength(1);
+    expect(functionBody(COUNT_READER)).toMatch(/\bcount:/);
+    expect(occurrences(/\bcount:/g)).toHaveLength(1);
+    expect(occurrences(new RegExp(TIER_SCOPE, 'g'))).toHaveLength(1);
+    expect(functionBody('inTiers')).toMatch(TIER_SCOPE);
   });
 
   // DESIGN.md §5 and CLAUDE.md rule 7: a private spell is excluded in SQL, so
@@ -313,8 +404,10 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     const held = functionBody('findIngredientsInSpellsIncludingSoftDeleted');
     expect(held).toMatch(/readableSpells\(/);
     expect(held).toMatch(/existsIn\(\s*spellIngredients\b/);
-    expect(held).toMatch(/inCompendium\(ingredients\)/);
-    expect(held).toMatch(/scopedTo\(membership, ingredients\)/);
+    // The tier from the proof, and no tombstone filter: `inTiers` holds the
+    // compendium and `scopedTo(membership, table)`, and no `notSoftDeleted(`,
+    // pinned above.
+    expect(held).toMatch(/\binTiers\(\[membership\], ingredients\)/);
     expect(held).not.toMatch(/notSoftDeleted\(/);
 
     const children = functionBody('findManyOfSpellIngredientsIncludingSoftDeleted');
@@ -330,9 +423,9 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     const body = functionBody(SUBSTITUTE_HATCH);
 
     expect(body).toMatch(/notSoftDeleted\(ingredientSubstitutes\)/);
-    expect(body).toMatch(/existsIn\(\s*ingredients\b/);
-    expect(body).toMatch(/inCompendium\(ingredients\)/);
-    expect(body).toMatch(/scopedTo\(membership, ingredients\)/);
+    // The parent live, through `existsIn(ingredients`, and in the proofs'
+    // tiers, both held by `readableIngredientParent`, pinned above.
+    expect(body).toMatch(/readableIngredientParent\(\s*memberships\b/);
     expect(body).toMatch(/inCompendium\(linked\)/);
     expect(body).toMatch(/eq\(linked\.workspaceId, ingredients\.workspaceId\)/);
     expect(body).not.toMatch(/notSoftDeleted\(linked\)/);
@@ -348,8 +441,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(body).toMatch(/notSoftDeleted\(referenceLinks\)/);
     expect(body).toMatch(/notSoftDeleted\(references\)/);
     expect(body).toMatch(/isNotNull\(references\.id\)/);
-    expect(body).toMatch(/existsIn\(\s*ingredients\b/);
-    expect(body).toMatch(/scopedTo\(membership, ingredients\)/);
+    expect(body).toMatch(/readableIngredientParent\(\s*memberships\b/);
     expect(body).toMatch(/inCompendium\(references\)/);
     expect(body).toMatch(/eq\(references\.workspaceId, ingredients\.workspaceId\)/);
   });

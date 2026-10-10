@@ -4,7 +4,7 @@ import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
-import { selectFrom } from './select';
+import { selectFrom, selectOne } from './select';
 import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
 
 /**
@@ -15,14 +15,13 @@ import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
  * (MB.70) reads it as the grant does, from a session that holds no proof. The
  * one-open index allows one at most.
  */
-export async function findOpenAdminRoleChangePause(
+export function findOpenAdminRoleChangePause(
   _asker: SiteAdmin | SiteInvitationRow,
 ): Promise<typeof adminRoleChangePauses.$inferSelect | undefined> {
-  const [row] = await selectFrom(
+  return selectOne(
     adminRoleChangePauses,
     and(notSoftDeleted(adminRoleChangePauses), isNull(adminRoleChangePauses.endedAt)),
   );
-  return row;
 }
 
 /**

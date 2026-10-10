@@ -1,17 +1,23 @@
 import { and, eq, inArray, isNotNull, not, or, sql, type SQL } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import { references } from '../../modules/ingredients/schema/references';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, pageBounds, selectFrom } from './select';
+import { findPageInTiers } from './finders';
+import {
+  foldedWordMatch,
+  inCompendium,
+  notSoftDeleted,
+  readableIngredientParent,
+  readableInTiers,
+} from './predicates';
+import { existsIn, selectFrom } from './select';
 import type {
   CitingLink,
   CompendiumScore,
   JoinedRow,
-  Keyset,
+  ListOrder,
   ReferenceLinkRow,
   ReferenceRow,
 } from './types';
@@ -45,16 +51,10 @@ export async function findReferencesOfIngredients(
       // A missing or deleted reference is a null joined row, whose tier
       // would otherwise read as the compendium's.
       isNotNull(references.id),
-      existsIn(
-        ingredients,
-        and(
-          eq(ingredients.id, referenceLinks.ingredientId),
-          or(
-            inCompendium(ingredients),
-            ...memberships.map((membership) => scopedTo(membership, ingredients)),
-          ),
-          or(inCompendium(references), eq(references.workspaceId, ingredients.workspaceId)),
-        ),
+      readableIngredientParent(
+        memberships,
+        referenceLinks.ingredientId,
+        or(inCompendium(references), eq(references.workspaceId, ingredients.workspaceId)),
       ),
     ),
     {
@@ -77,14 +77,7 @@ export function findManyReferences(
   if (ids.length === 0) return Promise.resolve([]);
   return selectFrom(
     references,
-    and(
-      or(
-        inCompendium(references),
-        ...memberships.map((membership) => scopedTo(membership, references)),
-      ),
-      notSoftDeleted(references),
-      inArray(references.id, [...ids]),
-    ),
+    and(readableInTiers(memberships, references), inArray(references.id, [...ids])),
   );
 }
 
@@ -104,40 +97,25 @@ export function findReferenceSuggestions(
   page: PageRequest,
 ): Promise<PageEntry<ReferenceRow, CompendiumScore>[]> {
   const trimmed = query.trim();
-  const scope = and(
-    or(
-      inCompendium(references),
-      ...memberships.map((membership) => scopedTo(membership, references)),
-    ),
-    notSoftDeleted(references),
-  );
   if (!trimmed) {
-    const keyset: Keyset<CompendiumScore> = {
+    const byTitle: ListOrder<CompendiumScore> = {
       sort: [references.title],
-      id: references.id,
-      request: page,
       carry: { score: sql<number | null>`null` },
     };
-    return selectFrom(references, and(scope, pageBounds(keyset)), keyset);
+    return findPageInTiers(memberships, references, byTitle, page);
   }
 
-  const folded = sql`unaccent_immutable(${trimmed})`;
+  const { matches, similarity } = foldedWordMatch(trimmed);
   const fields = [references.authors, references.title, references.container];
-  const matches = (text: AnyPgColumn) => sql`${folded} <% unaccent_immutable(${text})`;
   // `greatest` skips nulls, so a source without authors or a container
   // scores on what it has.
-  const score = sql<number>`greatest(${sql.join(
-    fields.map((text) => sql`word_similarity(${folded}, unaccent_immutable(${text}))`),
-    sql`, `,
-  )})`;
-  const keyset: Keyset<CompendiumScore> = {
+  const score = sql<number>`greatest(${sql.join(fields.map(similarity), sql`, `)})`;
+  const bestMatch: ListOrder<CompendiumScore> = {
     sort: [{ expression: sql`-${score}`, type: 'real' }, references.title],
-    id: references.id,
     wordMatch: true,
-    request: page,
     carry: { score },
   };
-  return selectFrom(references, and(scope, or(...fields.map(matches)), pageBounds(keyset)), keyset);
+  return findPageInTiers(memberships, references, bestMatch, page, or(...fields.map(matches)));
 }
 
 /**
