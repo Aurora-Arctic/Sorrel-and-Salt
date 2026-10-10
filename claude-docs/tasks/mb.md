@@ -3672,7 +3672,7 @@ The contract step's first half (`db/expand-contract.md`; CLAUDE.md rule 10). Aft
 
 _Acceptance criteria:_
 
-- No file under `src/` or `tests/` names either table or its enum, asserted by a search in the PR body
+- No file under `src/` names either table, nor any test file but the catalogue lists in `tests/support/db/table-metadata.ts` and MB.194's copy test, which go with the drop (MB.197), asserted by a search in the PR body (amended 2026-10-10: the catalogue sweeps read the tables while the database holds them)
 - `NotAppendOnly` is gone from `src/db/repository/types.ts` and every signature that carried it
 - No migration is added, and the destructive-DDL check passes with no sidecar
 - DESIGN.md §5 and §14, `modules.md`, `db/standard-scenario.md` and `db/migrations-and-scripts.md` name only `user_privilege_changes`, and the M2.9 and M5.8 records carry a dated pointer to MB.194
@@ -3681,12 +3681,13 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the two retired privilege ledgers dropped once no deploy reads them, so that the schema holds one ledger and not three.
 
-The contract step's second half. **It merges into `staging` only after a release carrying MB.196 has reached production**, never in the same release: production's deploy declares `admin_role_changes`, and a release runs every pending migration before it promotes (`db/expand-contract.md`, MB.137's worked case). `db:generate` emits the two drops and their enums; MB.194's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row the pre-switch deploy wrote during the rollout.
+The contract step's second half. **It merges into `staging` only after a release carrying MB.196 has reached production**, never in the same release: production's deploy declares `admin_role_changes`, and a release runs every pending migration before it promotes (`db/expand-contract.md`, MB.137's worked case). `db:generate` emits the two drops and their enums; MB.194's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row the pre-switch deploy wrote during the rollout. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, where MB.196 left them for the catalogue sweeps, and MB.194's copy test in `user-privilege-changes-schema.test.ts` becomes this migration's sweep test.
 
 _Acceptance criteria:_
 
 - The migration sweeps both tables into `user_privilege_changes`, then drops both tables and both enums
 - A row written to either old table after MB.194's copy lands in the new one with its id, asserted by re-running the sweep against such a row
+- Both tables leave `AUDITED_TABLES`, MB.194's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations names either table
 - `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
 - The PR body names the release that carried MB.196 to production
 
@@ -3767,10 +3768,12 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the two retired invitation tables dropped once no deploy reads them, so that the schema holds one.
 
-As MB.197, for MB.202's tables. **It merges into `staging` only after a release carrying MB.202 has reached production.** `db:generate` emits the drops; MB.201's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row written during the rollout. It may share a release with MB.197, as its own PR.
+As MB.197, for MB.202's tables. **It merges into `staging` only after a release carrying MB.202 has reached production.** `db:generate` emits the drops; MB.201's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row written during the rollout. It may share a release with MB.197, as its own PR. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts` and out of the partial-index sweep, where MB.202 left them for the catalogue sweeps, and MB.201's copy test becomes this migration's sweep test.
 
 _Acceptance criteria:_
 
 - The migration sweeps both tables into `invitations`, then drops both
+- A row written to either old table after MB.201's copy lands in `invitations` with its id, asserted by re-running the sweep against such a row
+- Both tables leave `AUDITED_TABLES` and the partial-index sweep, MB.201's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations names either table
 - `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
 - The PR body names the release that carried MB.202 to production
