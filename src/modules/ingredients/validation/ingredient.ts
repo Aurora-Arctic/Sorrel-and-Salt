@@ -5,7 +5,7 @@ import {
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
-import { RowId } from '../../../lib/validation';
+import { RowId, optionalText, requiredText } from '../../../lib/validation';
 import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
@@ -22,22 +22,6 @@ import type {
 // resolver runs these before a request is sent, and the service runs them
 // again because the browser is not the only caller. Two variants, one per
 // tier — see claude-docs/validation.md, "The two ingredient variants".
-
-/** Required text: trimmed, and blank is refused — as missing, not as a value. */
-const requiredText = (message: string) =>
-  z.string({ error: message }).trim().min(1, { error: message });
-
-/**
- * Optional text: trimmed, and a blank is an absence rather than an error —
- * '' is what a form sends for a field nobody touched, so it becomes null,
- * which the CHECKs on `canonical_name` and `form` accept. No format regex —
- * §5's formal names defeat one.
- */
-const optionalText = z
-  .string()
-  .trim()
-  .nullish()
-  .transform((value) => (value === '' ? null : value));
 
 /**
  * Blank entries are kept through the cross-field rules — an issue's index
@@ -88,14 +72,14 @@ const elementList = z
  * than dropped, so a service's refusal, made after the parse, still counts
  * the entries the caller sent.
  */
-const substitute = z.object({ ingredientId: optionalText, name: optionalText });
+const substitute = z.object({ ingredientId: optionalText(), name: optionalText() });
 
 /**
  * A deity links the curated one picked or names one (DESIGN.md §5,
  * `ingredient_deities`), as a substitute does, and is refused rather than
  * dropped when blank for the same reason: its index is its position.
  */
-const deity = z.object({ deityId: optionalText, name: optionalText });
+const deity = z.object({ deityId: optionalText(), name: optionalText() });
 
 /**
  * A reference the ingredient cites (DESIGN.md §7): an existing reference's id,
@@ -107,7 +91,7 @@ const deity = z.object({ deityId: optionalText, name: optionalText });
  */
 const referenceLink = z.object({
   referenceId: z.string({ error: 'Choose a source' }).trim(),
-  locator: optionalText.transform((value) => (value == null ? value : formatLocator(value))),
+  locator: optionalText(formatLocator),
 });
 
 /**
@@ -145,12 +129,13 @@ function asEntries<
 
 const fields = {
   name: requiredText('Give the ingredient a name'),
-  canonicalName: optionalText,
-  form: optionalText,
+  // No format regex: §5's formal names defeat one.
+  canonicalName: optionalText(),
+  form: optionalText(),
   // The curated form picked, beside its text (MB.165): whether it names one,
   // and the text that row's name, are the service's to read.
-  formId: optionalText,
-  description: optionalText,
+  formId: optionalText(),
+  description: optionalText(),
   elements: elementList,
   // Lists of free text like `form`'s one value (MB.134): the vocabularies
   // suggest, and nothing here refuses — the compendium service holds its tier
@@ -159,7 +144,7 @@ const fields = {
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
-  safetyNotes: optionalText,
+  safetyNotes: optionalText(),
   substitutes: z.array(substitute).nullish(),
   references: z.array(referenceLink).nullish(),
   folkNames: textList,

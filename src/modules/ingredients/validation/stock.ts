@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { optionalText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../schema/quantities';
 import { UNITS } from '../schema/units';
 
@@ -24,12 +25,7 @@ export const StockInput = z.object({
   // The units module's list, never a second one here.
   unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
   lowStockThreshold: amount('Low-stock threshold'),
-  // Blank is an absence, as on every optional text field.
-  source: z
-    .string()
-    .trim()
-    .nullish()
-    .transform((value) => (value === '' ? null : value)),
+  source: optionalText(),
   // A calendar date, as the `date` column holds it — no time of day.
   acquiredDate: z.iso.date({ error: 'Enter a date as YYYY-MM-DD' }).nullish(),
 });

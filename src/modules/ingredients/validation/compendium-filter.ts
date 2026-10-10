@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { RowId } from '../../../lib/validation';
+import { RowId, optionalText } from '../../../lib/validation';
 import { NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
 
 // The compendium list's filter as the `compendium` query receives it, parsed
@@ -7,12 +7,11 @@ import { NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
 // every validation file: the form's side of the search box loads it too
 // (claude-docs/validation.md, "Where the schemas live").
 
-/** Optional text: trimmed, and blank is an absence — no filter — rather than a value. */
-const optionalText = z
-  .string()
-  .trim()
-  .nullish()
-  .transform((value) => (value ? value : undefined));
+/**
+ * Optional text as a filter takes it: blank, null or missing is no filter, so
+ * undefined, where a column's optional text keeps null for the absence it stores.
+ */
+const filterText = optionalText().transform((value) => value ?? undefined);
 
 /**
  * The shortest query that searches. One character is a trigram or two that
@@ -23,14 +22,14 @@ export const MIN_QUERY_LENGTH = 2;
 
 export const CompendiumFilter = z.object({
   // Counted in composed code points, so `ñ` is one character however it was typed.
-  query: optionalText.transform((query) =>
+  query: filterText.transform((query) =>
     query && Array.from(query.normalize('NFC')).length >= MIN_QUERY_LENGTH ? query : undefined,
   ),
   categoryIds: z
     .array(RowId)
     .nullish()
     .transform((ids) => (ids && ids.length > 0 ? ids : undefined)),
-  form: optionalText,
+  form: filterText,
   // The admin's to-do list: entries citing nothing (MB.153). False is no filter.
   withoutReferences: z
     .boolean()

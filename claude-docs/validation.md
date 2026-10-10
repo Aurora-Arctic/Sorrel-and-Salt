@@ -69,6 +69,21 @@ category's or a form's `groupId`, a deity's `traditionId`. It is
 hand-written ids and so refused a parent the service would have found
 (MB.209).
 
+The text shapes every module shares are there too (MB.209), so a message or
+a rule changes in one place:
+
+- **`requiredText(message)`**: trimmed, and blank or missing refused with
+  the one message, since a blank is missing rather than a wrong value.
+- **`optionalText(format?)`**: trimmed, or tidied by `format` (a
+  reference field's, below), and a blank taken as `null`, the absence a
+  column's non-blank CHECK accepts. A filter has no column, and wants no
+  value as `undefined`, so `CompendiumFilter` maps `null` itself rather
+  than the helper hiding a second meaning of absent.
+- **`curatedValueInput(noun)`**: an admin-curated value's `name` and
+  `description`, each `requiredText` saying the noun — "Give the sign a
+  name", "Describe the tradition". Every vocabulary's schema is built on it
+  (below).
+
 ## The two ingredient variants
 
 Both take the same fields. Text is trimmed, and **a blank optional field is
@@ -239,15 +254,17 @@ refused at `url` and `accessed` both.
 
 ## Categories
 
-`CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
-`groupId` as `requiredRowId` takes it, refused with "Choose a group". It takes no slug, which is derived from the name and dropped if
-sent. `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
+Every curated vocabulary's schema is `curatedValueInput` with its own noun,
+extended where the vocabulary has more: a trimmed, non-blank `name` and
+`description`, and no slug, which is derived from the name and dropped if
+sent. `CategoryInput` adds a `groupId` as `requiredRowId` takes it,
+refused with "Choose a group", and `DeityInput` a `traditionId`, refused
+with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
 optional `endRedirect`, the admin's confirmation that a rename may take an
 address another entry's redirect still runs from (MB.82).
 
-`IngredientFormGroupInput` (M5.6b) takes a trimmed, non-blank `name` and
-`description`, refused with "Give the group a name" and "Describe the group",
-and no slug. `CategoryGroupInput` extends it with `colorDark` and
+`IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
+the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `colorDark` and
 `colorLight`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
 refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
 held to 4.5:1 against its own theme's harder surface, the dark card or the
@@ -260,6 +277,6 @@ the request; it reads nothing but the hex, so it stays client-safe. The pair is 
 
 The planet and zodiac vocabularies (MB.95) share one shape:
 `vocabulary/validation/astrology-value.ts` builds `PlanetInput` and
-`ZodiacSignInput` from one factory, a trimmed, non-blank `name` and
-`description`, each saying its own noun — "Give the sign a name". No slug.
+`ZodiacSignInput` as the shape alone, each saying its own noun — "Give the
+sign a name".
 The spell (MB.8) adds its own schema when it lands.

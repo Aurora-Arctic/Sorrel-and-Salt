@@ -20,6 +20,39 @@ export const RowId = z.guid();
  */
 export const requiredRowId = (message: string) => z.guid({ error: message });
 
+/** Required text: trimmed, and blank is refused — as missing, not as a value. */
+export const requiredText = (message: string) =>
+  z.string({ error: message }).trim().min(1, { error: message });
+
+/**
+ * Optional text: tidied by `format`, trimmed unless it says otherwise, and a
+ * blank is an absence rather than an error — '' is what a form sends for a
+ * field nobody touched, so it becomes null, which a column's non-blank CHECK
+ * accepts. A caller wanting no value as `undefined` instead, such as a filter,
+ * maps null itself, so the difference stays at the call site.
+ */
+export const optionalText = (format: (text: string) => string = (text) => text.trim()) =>
+  z
+    .string()
+    .nullish()
+    .transform((value) => {
+      if (value == null) return value;
+      const formatted = format(value);
+      return formatted === '' ? null : formatted;
+    });
+
+/**
+ * An admin-curated value's own fields, a name and the description the table
+ * requires non-blank, each refusal saying the vocabulary's noun — "Give the
+ * sign a name". No slug: one is derived from the name by src/lib/slugify.ts,
+ * never written beside it, so one in the input is dropped.
+ */
+export const curatedValueInput = (noun: string) =>
+  z.object({
+    name: requiredText(`Give the ${noun} a name`),
+    description: requiredText(`Describe the ${noun}`),
+  });
+
 /** One issue per Zod issue, path and message kept as Zod reported them. */
 export function toValidationIssues(error: z.ZodError): ValidationIssue[] {
   return error.issues.map((issue) => ({
