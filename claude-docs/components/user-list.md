@@ -224,7 +224,8 @@ unverified user, the refusal in the row, the fresh control after the
 refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
 by the reason and stating it as an alert each time it is tried, sending
 nothing; and the switch on admin changes (MB.63): absent without a state,
-each state in words, Pause and Resume busy until the refresh, a refusal
+each state in words, Pause and Resume busy until the refresh, the fresh
+switch after it, a refusal
 beside it, and another admin's unusable switch stating why. `tests/e2e/admin.spec.ts` approves
 and revokes a user against the built server, approves an unverified one
 through the warning, grants admin with a reason and revokes it, and tries

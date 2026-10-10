@@ -182,7 +182,9 @@ const UserList = ({
   adminChanges,
 }: UserListProps): ReactElement => (
   <div className="user-list">
-    {adminChanges && <PauseControl {...adminChanges} />}
+    {/* Keyed by the state, so the refresh after a flip mounts a fresh switch
+        rather than keeping this one's busy state. */}
+    {adminChanges && <PauseControl key={String(adminChanges.paused)} {...adminChanges} />}
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
 
     {users.length ? (

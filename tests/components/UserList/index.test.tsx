@@ -906,6 +906,20 @@ describe('UserList admin changes switch', () => {
     expect(calls).toBe(1);
   });
 
+  // The refresh turns the state over; the switch starts afresh as the other one.
+  it('offers Resume, idle, once the refreshed page says changes are paused', async () => {
+    mockGraphQLMutation('PauseAdminRoleChanges', () => ({ pauseAdminRoleChanges: true }));
+    const { rerender } = render(
+      <UserList {...props({ adminChanges: { paused: false, canToggle: true } })} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+
+    rerender(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
+
+    expect(screen.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+  });
+
   it('lets the primary admin resume, stating that changes are paused', async () => {
     let calls = 0;
     mockGraphQLMutation('ResumeAdminRoleChanges', () => {
