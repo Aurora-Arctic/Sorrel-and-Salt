@@ -88,7 +88,7 @@ proof, since only an admin's act asks:
 
 `NotPauseLedger`, `{ endedAt?: never }`, takes the table off the writer's
 generic insert, both updates, both soft deletes and the hard delete, as
-`NotAppendOnly` does for MB.58's ledger. Without it the generic insert would
+`NotAppendOnly` did for MB.58's ledger (removed 2026-10-10 by MB.196: that ledger's successor, `user_privilege_changes`, is append-only by a database trigger instead). Without it the generic insert would
 take a pause already ended, and the generic update would reopen one or
 backdate it. The two named writes take the writer from fifteen methods to
 seventeen, which `write.test.ts` pins as a decision.

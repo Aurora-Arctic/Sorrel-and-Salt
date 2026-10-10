@@ -64,7 +64,7 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
   `acceptedAt`, `acceptedBy`, `revokedAt`, `note`, + the full six-column
   audit spread. `workspace_invitations` without the workspace or the role,
   since accepting grants exactly one thing, and with a `note` saying why the
-  person is being invited, optional as `admin_role_changes.note` is.
+  person is being invited, optional as a privilege change's `note` is in `user_privilege_changes`.
 - **Everything above carries over**: only the hash is stored and the schema
   test pins it as a property of the table; the expiry defaults to seven days
   and is `NOT NULL`; `admin_invitations_token_hash_unique` is partial on
