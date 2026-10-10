@@ -464,7 +464,11 @@ type QueryCompendiumConnectionEdge {
   compendium-only mode is no way round the session; `ingredientSuggestions`,
   whose `workspaceId` is `ID!`, is classified as refused by the SDL before
   any resolver runs. Each table must equal the schema's field list, and none
-  may be empty, so no resolver file holds a signed-out test of its own.
+  may be empty, so no resolver file holds a signed-out test of its own. Since
+  M5.7 every `Mutation` field is also named as an admin write or one any
+  session may reach, and each admin write is run signed in as A, B, C and D
+  (["Auth scopes: the second check"](#auth-scopes-the-second-check) says how it tells
+  the scope from the service).
 - **Cost.** A page of 100 with `categories { group { … } }` prices above
   `MAX_COST`, since a bare list multiplies its selection by 10, and is refused;
   the chip-decorated list pages at 25 or 50 (["Protections"](protections.md)).
@@ -675,7 +679,8 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   under `assertSiteAdmin`; a coven's is written under
   `assertMembership(…, { ingredient: ['create'] })` or `['update']`, which
   owners and members hold and viewers, site admins and non-members do not.
-  Both carry `signedIn`. A member citing a compendium reference cannot edit
+  The scope follows the same argument: a null one carries `admin`, a coven's
+  `signedIn` (M5.7). A member citing a compendium reference cannot edit
   it: under their coven the id names nothing there, `NOT_FOUND`, and without
   one the admin check is `FORBIDDEN`. `updateReference` reaches every row
   citing it, so it clears `referencesByIngredient` whole. There is no
@@ -911,9 +916,10 @@ A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; M5.7 puts `admin` on every admin mutation, and M5.6's three
-category writes and M5.5's three compendium writes carry it from the first, as
-M5.8's two creation writes do. `ok` and the
+either does; every admin mutation carries `admin`, each from the task that
+built it, M5.8's two creation writes included, and `createReference` and
+`updateReference` carry it when their `workspaceId` is null, the compendium's
+tier, and `signedIn` otherwise. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the
@@ -922,6 +928,20 @@ wrong one, which is the bug the scope is behind, and reads each refusal as
 scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
 service throws, so the transport maps one refusal shape whichever check said
 no (MB.43).
+
+**The sweep proves the two checks apart (M5.7).**
+`tests/db/graphql-query-scopes.test.ts` names every `Mutation` field as an
+admin write, with what it governs, or one any session may reach, so a write
+added later says which it is. It runs each admin write signed in as A, B, C
+and D, and as E, who must pass the scope. The code cannot tell the checks
+apart, since both answer `FORBIDDEN`, but the message can: the scope's
+refusal is `Forbidden`'s default message, and `assertSiteAdmin` says "Only a
+site admin may do this". So a non-admin hearing the default was refused by
+the scope before the service ran, and the field fails the sweep the moment
+its `admin` scope goes. What the service refuses, and to whom, stays its own
+test's (MB.180). What an admin governs is a closed type, `Governed`, beside
+the sweep, so an admin write outside it is a visible change. The admin's
+reach into no coven is M6.6's (`tests/db/workspace-isolation.test.ts`).
 
 ### The SDL snapshot
 

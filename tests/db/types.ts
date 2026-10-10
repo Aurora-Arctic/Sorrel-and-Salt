@@ -34,6 +34,35 @@ export interface ScopeProbe {
 }
 
 /**
+ * What an admin write changes: the closed list of what a site admin governs —
+ * the curated reference data (CLAUDE.md, "Admins curate …") and who may create
+ * a coven (M5.8) — so a write outside it is a new entry here that a reviewer
+ * reads, not a line in a probe table. A coven's contents are never on it (M6.6).
+ */
+export type Governed =
+  | 'compendium'
+  | 'references'
+  | 'categories'
+  | 'category groups'
+  | 'forms'
+  | 'form groups'
+  | 'planets'
+  | 'zodiac signs'
+  | 'deities'
+  | 'deity traditions'
+  | 'workspace creation';
+
+/**
+ * A `Mutation` field only a site admin's scope admits. `probe` stands in for
+ * the field's null-session probe where that one does not ask for the admin's
+ * tier — a reference write names a coven there.
+ */
+export interface AdminWrite {
+  governs: Governed;
+  probe?: ScopeProbe;
+}
+
+/**
  * A field taking a `workspaceId`. `variables` is a thunk: the ids it names
  * exist only once `beforeAll` has run.
  */
