@@ -99,7 +99,7 @@ describe('the /admin/users page', () => {
 
     const row = screen.getByRole('row', { name: /Listed Fixture 01/ });
     expect(within(row).getByText('Google', { selector: '.visually-hidden' })).toBeInTheDocument();
-    // None linked is an empty cell, the fifth, after Coven Creation.
+    // None linked is an empty cell, the fifth.
     const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
       'cell',
     );
