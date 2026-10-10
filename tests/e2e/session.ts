@@ -20,16 +20,20 @@ function signed(value: string, secret: string): string {
 }
 
 /**
- * Makes `page` a browser signed in to a new verified user holding one account
- * per provider named, with the site role given. The cookie rides as a request
- * header rather than in the cookie jar: a `Secure` cookie is never sent to the
- * plain-http origin the remote browser reaches the server on.
+ * Makes `page` a browser signed in to a new user holding one account per
+ * provider named, with the site role given. The user is verified unless
+ * `emailVerified` says otherwise, as for an account an admin approves
+ * unverified (MB.205); signed in as itself, such a user reaches only
+ * `/account/email`. The cookie rides as a request header rather than in the
+ * cookie jar: a `Secure` cookie is never sent to the plain-http origin the
+ * remote browser reaches the server on.
  */
 export async function signInAs(
   page: Page,
   email: string,
   providers: readonly string[] = ['discord'],
   role: 'user' | 'admin' = 'user',
+  { emailVerified = true }: { emailVerified?: boolean } = {},
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret)
@@ -47,7 +51,7 @@ export async function signInAs(
       // Stamped as its own creator, as the sign-up hook stamps one.
       await tx`
         insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, true, ${role}, ${role === 'admin'}, ${userId}, ${userId})
+        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role === 'admin'}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

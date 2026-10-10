@@ -168,6 +168,8 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
   await expect(approving).toContainText('Let Fixture Person create covens?');
   await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
+  // A verified address, so no warning (MB.205).
+  await expect(approving).not.toContainText('has not been verified');
   await assertNoAccessibilityViolations(page);
 
   await approving.getByRole('button', { name: 'Approve' }).click();
@@ -186,6 +188,44 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
 
   await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
   await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
+});
+
+// MB.205: approving a user whose address is unverified warns that nobody has
+// proved who holds it and that approving keeps the account, read with the
+// modal's Approve, and still approves.
+test('an admin approves an unverified user at /admin/users through the warning', async ({
+  page,
+}) => {
+  await signInAs(page, 'unverified@admin-approval.test', ['discord'], 'user', {
+    emailVerified: false,
+  });
+  await signInAs(page, 'another-admin@admin-approval.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?query=unverified%40admin-approval.test');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /unverified@admin-approval\.test/ });
+  // The precondition: the address is unverified and the user awaits approval.
+  await expect(row.getByRole('cell').nth(1)).toHaveText(/^Unverified/);
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+
+  await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
+  const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+  const warning =
+    'This email address has not been verified, so nobody has proved who holds it. Approving keeps the account rather than letting it lapse.';
+  await expect(approving).toContainText('Let Fixture Person create covens?');
+  await expect(approving).toContainText(warning);
+  const approve = approving.getByRole('button', { name: 'Approve' });
+  await expect(approve).toBeFocused();
+  await expect(approve).toHaveAccessibleDescription(warning);
+  await assertNoAccessibilityViolations(page);
+
+  await approve.click();
+  await expect(approving).toHaveCount(0);
+
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(
+    row.getByRole('button', { name: 'Revoke approval for Fixture Person' }),
+  ).toBeVisible();
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({

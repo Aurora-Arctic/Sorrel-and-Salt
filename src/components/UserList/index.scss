@@ -139,3 +139,13 @@
   align-items: center;
   gap: space(2) space(3);
 }
+
+// Approve's warning for an unverified address, given a step more room than a
+// notice's own zero margin leaves between the question and the buttons, so it
+// reads as its own statement. Compounded with `.notice`, whose primitive is
+// `body .notice` in the app: a lone class loses to it there, while the
+// workshop's unweighted frame scope would hide that. Not nested under
+// `.user-list`: the confirmation is a modal, which need not render inside it.
+.notice.user-list__warning {
+  margin-block: space(5);
+}

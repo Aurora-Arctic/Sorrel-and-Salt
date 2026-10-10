@@ -120,8 +120,10 @@ created, and their ownership of it
   update both drop the row (rule 4), and a user deleted between the two rolls
   the transaction back before the ledger hears of it.
 - **Each asks first**, in the user's row, naming them; a revoke's Confirm is
-  destructive and says their covens stay theirs
-  ([`components/user-list.md`](../components/user-list.md)).
+  destructive and says their covens stay theirs, and an approval of an
+  unverified address warns that nobody has proved who holds it and that
+  approving keeps the account from lapsing (MB.204, MB.205), and still
+  approves ([`components/user-list.md`](../components/user-list.md)).
 
 **Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
 each write, its stamps and its ledger row; each non-admin fixture user refused
@@ -130,4 +132,5 @@ change refused with nothing written; an admin's flag refused; A's ownership
 of W surviving a revoke; and a soft-deleted or unknown user. The transport's
 half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
 signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
-`tests/e2e/admin.spec.ts` approves and revokes a user against the built server.
+`tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
+and approves an unverified one through the warning.
