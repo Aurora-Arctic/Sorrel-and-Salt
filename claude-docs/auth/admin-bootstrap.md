@@ -63,7 +63,7 @@ created, and only when that sign-in's provider vouches for the address
   trigger on `users` records both grants in `user_privilege_changes`, by that
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
-  revoke will make the same kind of write, declared `admin`.
+  revoke make the same kind of write, declared `admin`.
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and
@@ -93,8 +93,9 @@ Microsoft- or Facebook-only owner is promoted too.
   so there is no profile to check. A second use of a link finds the row
   verified and calls no hook, so a row already verified at the bootstrap
   address is promoted at a Google or Discord sign-in, or not at all.
-- **No ledger row yet.** MB.59 adds a `bootstrap` row to the shared role
-  write once MB.58's table exists, and so to both promotions at once.
+- **The ledger records it** as the sign-in promotion's is: the trigger on
+  `users` writes both grants by the `bootstrap` route, stamped as the user
+  (MB.195).
 
 **Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`**,
 since each would let the address on an account change and carry the
@@ -468,20 +469,25 @@ the tests [`tests.md`](tests.md).
   refuse what a provisional account may not do, which is everything but
   `me` and `setEmail`.
 
-### Granting a second admin — decided, not built (M2.9)
+### Granting a second admin (M2.9, MB.59)
 
 Specified in DESIGN.md §5 and argued in
-[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md);
-none of it is built yet. Until MB.59 lands, a second admin is an `UPDATE`
-in `psql`, setting `can_create_workspace` with `role`, since MB.177's CHECK
-refuses an admin without the flag, and declaring itself first, since the
-trigger on `users` refuses a privilege change that names no route (MB.195):
+[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
+An admin grants and revokes admin from a user's row on `/admin/users`
+(MB.59; [`admin-users.md`](admin-users.md), "Granting and revoking admin"),
+where the primary admin cannot be revoked and a revoke that would leave no
+admin is refused. Changing who the primary admin is, is that section's too.
+
+A hand fix in `psql` stays possible, for a database no admin can sign in to.
+It sets `can_create_workspace` with `role`, since MB.177's CHECK refuses an
+admin without the flag, and declares itself first, since the trigger on
+`users` refuses a privilege change that names no route (MB.195):
 
 ```sql
 begin;
 select set_config('app.privilege_route', 'manual', true);
 -- optional: why, kept on the ledger row as its note
-select set_config('app.privilege_note', 'Second admin while MB.59 is unbuilt', true);
+select set_config('app.privilege_note', 'Second admin while no admin can sign in', true);
 update users set role = 'admin', can_create_workspace = true, updated_by = '<your user id>'
 where id = '<their user id>';
 commit;
@@ -494,13 +500,15 @@ privilege, stamped with the row's `updated_by`, so setting it to your own id
 is what names you as the actor. The route is refused rather than defaulted so
 that no write, a hand-run one included, changes a privilege without saying how
 ([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
-The same holds for any hand fix to either column, a revoke included. The tasks
-that build it:
+The same holds for any hand fix to either column, a revoke included, and a
+hand fix checks neither the primary admin nor the count the service does. The
+tasks that build the rest:
 
-- **MB.58 and MB.59**: the ledger, `user_privilege_changes` since MB.194,
-  and granting and revoking any other admin from `/admin/users`. The primary admin can be
-  neither revoked nor deleted, and a revoke that would leave zero admins is
-  refused (the record's "The primary admin" and "Revoking").
+- **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
+  MB.194, and granting and revoking any other admin from `/admin/users`. The
+  primary admin can be neither revoked nor deleted, and a revoke that would
+  leave zero admins is refused (the record's "The primary admin" and
+  "Revoking").
 - **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
   the primary admin pauses granting and revoking for every other admin (the
   record's "Granting"; MB.62 built the table,
@@ -540,9 +548,10 @@ that build it:
   that is not a known field (`@better-auth/core`'s `transformInput` iterates
   `schema[model].fields` and skips anything else). All five carry
   `input: false`, so no client request can set them and the hook is the
-  only path, which is what enforces M2.3's "Nothing in the OAuth flow sets
-  the flag" and "No API or UI path grants admin" rather than leaving them
-  merely unimplemented. `verificationSentAt`, `createdBy` and `updatedBy`
+  only path through Better Auth, which is what enforces M2.3's "Nothing in
+  the OAuth flow sets the flag" rather than leaving it merely unimplemented,
+  and keeps every grant of admin on the paths that record it: the promotions
+  above and MB.59's `setUserRole`. `verificationSentAt`, `createdBy` and `updatedBy`
   also carry `returned: false`, keeping the mail clock and raw audit ids
   out of session and user responses. `deletedAt`/`deletedBy` are not
   registered: nothing soft-deletes a user through Better Auth.

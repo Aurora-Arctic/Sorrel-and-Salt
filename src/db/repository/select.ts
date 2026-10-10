@@ -25,6 +25,7 @@ import type {
   Keyset,
   KeysetCount,
   LeftJoin,
+  Locked,
   Similarity,
   SortColumn,
   SortPart,
@@ -87,10 +88,15 @@ export function selectFrom<TTable extends PgTable, TJoined extends PgTable>(
   where: SQL | undefined,
   join: LeftJoin<TJoined>,
 ): Promise<JoinedRow<TTable['$inferSelect'], TJoined['$inferSelect']>[]>;
+export function selectFrom<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+  locked: Locked,
+): Promise<TTable['$inferSelect'][]>;
 export async function selectFrom(
   relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
-  order?: Keyset<object> | Similarity | KeysetCount | LeftJoin<PgTable>,
+  order?: Keyset<object> | Similarity | KeysetCount | LeftJoin<PgTable> | Locked,
 ): Promise<unknown> {
   const keyset = order && 'sort' in order ? order : undefined;
   const tally = order && 'count' in order ? order : undefined;
@@ -132,6 +138,12 @@ export async function selectFrom(
     if (joined) query.leftJoin(joined.leftJoin, joined.on);
     return query.where(where);
   };
+
+  if (order && 'lockIn' in order) {
+    return build(order.lockIn as Executor)
+      .orderBy(order.lockOrder)
+      .for('update');
+  }
 
   if (order && 'orderBy' in order) {
     // `set_config(…, true)` is `SET LOCAL` with a bind parameter: it ends

@@ -89,13 +89,23 @@ own statement, and nothing else reads it.
 
 **Where the named writes live.** Beside the table's finders, in its
 repository file, rather than in `write.ts`: `admin-roles.ts` exports
-`adminRoleChangePauseWrites` and `invitations.ts`
+`adminRoleWrites` and `invitations.ts`
 `invitationWrites`, each a function of a `WriterContext` (the
 transaction, the session, and the writer's own stamped `insert` and
 `update`), whose result `writerFor` spreads into the writer. So a new marked
 table touches its own repository file, and the writer's surface,
 `AuditWriter`, is where its methods are argued for, as before:
 `write.test.ts` still pins their number.
+
+**One read sits among them** (MB.59): `adminRoleWrites` also holds
+`lockLiveAdmins`, the live admin rows locked `for update` in id order, which
+the admin revoke counts before it writes so two revokes at once cannot leave
+no admin ([`auth/admin-users.md`](../auth/admin-users.md), "Granting and
+revoking admin"). It is in the writer only because the lock must be taken in
+the transaction that writes, and it is still built by `selectFrom`, whose
+`Locked` shape runs the read in that transaction and appends `FOR UPDATE`, so
+every read is still built in `select.ts`. It took the writer to twenty-four
+methods.
 
 **The guard.** `tests/support/db/probe-tables.ts` declares two marked
 probes, never created as tables: `switches`, unscoped, and `tiers`, with a

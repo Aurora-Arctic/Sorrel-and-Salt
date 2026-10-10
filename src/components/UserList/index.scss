@@ -13,14 +13,31 @@
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
 // buttons, whose boxes put their baselines at different heights, so on the
-// baseline a row's contents sat unevenly (the owner's review). The signup
-// date stays on one line rather than breaking at its hyphens.
+// baseline a row's contents sat unevenly (the owner's review).
 .user-list .data-table td {
   vertical-align: middle;
 }
 
-.user-list .data-table time {
-  white-space: nowrap;
+// No cell wraps, heading or body, since the table scrolls inside its frame
+// (the owner's call, during MB.59): a row stays one line however narrow the
+// screen. Separate borders, not the primitive's collapsed ones, so each rule
+// belongs to its own cell: a collapsed rule belongs to the table's grid, and
+// the headings' muted hairline was drawn across the sticky Impersonate
+// heading's red one as the columns scrolled beneath it.
+.user-list .data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    white-space: nowrap;
+  }
+}
+
+// A confirmation opens from its cell, so it would inherit the cell's single
+// line: its question, warning and hint wrap as prose again.
+.user-list .data-table .modal-dialog {
+  white-space: normal;
 }
 
 .user-list__search {
@@ -73,10 +90,9 @@
   @include tip-bubble-open;
 }
 
-// The linked providers' logos in a wrapping row.
+// The linked providers' logos in a row.
 .user-list__providers {
   display: inline-flex;
-  flex-wrap: wrap;
   gap: space(1);
   vertical-align: middle;
 }
@@ -190,10 +206,22 @@
 // The Impersonate column, heading and cells: a red rule down its left, a
 // faded red tint and red text,
 // since it is the one control in the table that acts as someone else.
+//
+// It stays at the table's right edge while the other columns scroll beneath it
+// on a narrow screen (the owner's call), so its ground is opaque: the tint
+// mixed into the band it sits on, the page or a banded row's card, rather than
+// laid over transparent.
 .user-list__impersonate {
+  position: sticky;
+  right: 0;
+  z-index: 1;
   border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, transparent);
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
   color: $secondary;
+}
+
+.user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
+  background-color: color-mix(in srgb, $secondary 6%, $surface-card);
 }
 
 // Its heading's hairline red too, where every other column's is the muted
@@ -202,11 +230,10 @@
   border-bottom-color: $secondary;
 }
 
-// The creation cell: the Yes or No, then the control that changes it, which
-// wraps below on a narrow column.
+// The creation cell: the Yes or No, then the control that changes it, on one
+// line.
 .user-list__creation {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: space(2) space(3);
 }
@@ -219,4 +246,98 @@
 // `.user-list`: the confirmation is a modal, which need not render inside it.
 .notice.user-list__warning {
   margin-block: space(5);
+}
+
+// The confirmation's Reason field, given the warning's step of room above and
+// 2rem below, so it reads apart from the question and stands clear of
+// the buttons (the owner's call). Compounded with `.field` for the same
+// reason as the warning.
+.field.user-list__note {
+  margin-block: space(5) space(6);
+}
+
+// The role cell: the role and the primary admin's crown on the left, the
+// control that changes it on the right, centred on one line (the owner's
+// call).
+.user-list__role {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+.user-list__role-name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// The crown and its tip, the tip placed against this wrapper.
+.user-list__primary {
+  position: relative;
+  display: inline-flex;
+}
+
+// 1.5rem: WCAG 2.2's 24px minimum target around a 1rem glyph, as InfoTip's
+// button. The muted ink, so it reads as a fact about the row, not a control.
+.user-list__primary-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('pill');
+  background-color: transparent;
+  color: $text-muted;
+  cursor: help;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The primary admin's Revoke and the tip saying why it cannot be used, the
+// tip placed against this wrapper.
+.user-list__locked {
+  position: relative;
+  display: inline-flex;
+}
+
+// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
+// InfoTip's, above the mark or button from its left edge, no wider than 18rem
+// so it stays on a phone. Not `.user-list__tip`, the marks' and logos'
+// centred tip, which takes no pointer: these stay open while hovered.
+.user-list__control-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - #{space(6)}));
+  margin-bottom: space(1);
+  // Its cell keeps to one line; the reason wraps within the bubble.
+  white-space: normal;
+
+  @include tip-bubble;
+}
+
+// The locked Revoke's, placed against the viewport by its script rather than
+// the cell, so the table's scrolling frame cannot clip it. Its side margin is
+// the gutter the script keeps between it and the screen's edge.
+.user-list__control-tip--fixed {
+  position: fixed;
+  bottom: auto;
+  margin-inline: space(4);
 }

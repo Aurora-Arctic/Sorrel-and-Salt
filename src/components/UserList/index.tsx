@@ -6,6 +6,8 @@ import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInP
 import { CheckIcon, CrossIcon } from './icons';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
+import PrimaryAdminMark from './primary-admin-mark';
+import RoleControl from './role-control';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
@@ -112,20 +114,32 @@ const UserRow = ({
         {user.email}
       </span>
     </td>
-    {/* An admin's role in bold, on the owner's call: the rows to notice. */}
-    <td>{user.role === 'admin' ? <strong>{ROLE_LABELS.admin}</strong> : ROLE_LABELS[user.role]}</td>
-    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
+    {/* An admin's role in bold, on the owner's call: the rows to notice. On
+        the right, the control that changes it (MB.59), as Coven Creation holds
+        its own: one column rather than a second saying the same thing. The
+        primary admin is marked by a crown with a tip, and its Revoke's tip
+        says why it cannot be used. */}
     <td>
-      <span className="user-list__providers">
-        {user.providers.map((id) => (
-          <ProviderLogo key={id} id={id} />
-        ))}
-      </span>
-    </td>
-    <td>
-      <time dateTime={user.createdAt.toISOString()}>
-        {user.createdAt.toISOString().slice(0, 10)}
-      </time>
+      <div className="user-list__role">
+        <span className="user-list__role-name">
+          {user.role === 'admin' ? (
+            <strong>{ROLE_LABELS.admin}</strong>
+          ) : (
+            <span>{ROLE_LABELS[user.role]}</span>
+          )}
+          {user.primaryAdmin && <PrimaryAdminMark />}
+        </span>
+        {/* Keyed by the action, so the refresh after a change mounts a fresh
+            control for the other one rather than keeping this one's busy state. */}
+        <RoleControl
+          key={user.role}
+          userId={user.id}
+          name={user.name}
+          emailVerified={user.emailVerified}
+          primaryAdmin={user.primaryAdmin}
+          action={user.role === 'admin' ? 'revoke' : 'grant'}
+        />
+      </div>
     </td>
     {/* Whether they may, and beside it the control that changes it (M5.8);
         none on an admin's row, whom the users CHECK holds to the flag (MB.177). */}
@@ -144,6 +158,19 @@ const UserRow = ({
           />
         )}
       </div>
+    </td>
+    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
+    <td>
+      <span className="user-list__providers">
+        {user.providers.map((id) => (
+          <ProviderLogo key={id} id={id} />
+        ))}
+      </span>
+    </td>
+    <td>
+      <time dateTime={user.createdAt.toISOString()}>
+        {user.createdAt.toISOString().slice(0, 10)}
+      </time>
     </td>
     {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
         as acting as someone else is the table's one dangerous control. */}
@@ -175,9 +202,9 @@ const UserList = ({
               <th scope="col">Name</th>
               <th scope="col">Email</th>
               <th scope="col">Role</th>
+              <th scope="col">Coven Creation</th>
               <th scope="col">Sign-In Methods</th>
               <th scope="col">Signed Up</th>
-              <th scope="col">Coven Creation</th>
               {canImpersonate && (
                 <th scope="col" className="user-list__impersonate">
                   Impersonate

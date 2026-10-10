@@ -22,15 +22,17 @@ import {
   grantWorkspaceCreation,
   listPrivilegeChanges,
   revokeWorkspaceCreation,
+  setUserRole,
   usersForAdmin,
 } from '@/modules/identity';
 import { A, E, asUser } from '../support/as-user';
 
 // Stories 58 and 59 through Better Auth's real endpoints, with MSW standing in
 // for the provider and the transport mocked (claude-docs/auth/admin-bootstrap.md, "First-party
-// verification" and "The email page"). Story 61, the privilege ledger, reads
-// it through the identity service MB.199 built and MB.200's page calls.
-// Stories 60 and 62 are MB.58–MB.63 and MB.69–MB.70's, and have no test yet.
+// verification" and "The email page"). Story 60 through the identity
+// service (MB.59, MB.63). Story 61, the privilege ledger, reads it through the
+// identity service MB.199 built and MB.200's page calls. Story 62 is MB.70's,
+// and has no test yet.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
 vi.mock('@/lib/mail', () => ({ send }));
@@ -143,6 +145,97 @@ describe('Story 59: Set or change the email the site knows me by, prefilled from
 
     expect(await userRow(OWNER)).toBeUndefined();
     expect(await userRow(NEW)).toMatchObject({ id, email_verified: true });
+  });
+});
+
+describe('Story 60: As an admin, make an existing user an admin and revoke it again, and be refused when the target is the primary admin or the last admin; as the primary admin, pause both for every other admin while I deal with one that has gone rogue.', () => {
+  const ROLE_DOMAIN = '@acceptance-admin-role.test';
+  const PRIMARY = `primary${ROLE_DOMAIN}`;
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  /** A live, verified user on this story's domain, an admin declared as a `psql` fix declares one. */
+  async function insertUser(local: string, role: 'user' | 'admin'): Promise<string> {
+    const [row] = await sql.begin(async (tx) => {
+      await tx`select set_config('app.privilege_route', 'manual', true)`;
+      return tx`
+        insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+        values (gen_random_uuid(), 'Fixture Person', ${`${local}${ROLE_DOMAIN}`}, true, ${role}, ${role === 'admin'},
+          ${E.id}, ${E.id})
+        returning id
+      `;
+    });
+    return row.id as string;
+  }
+
+  async function roleOf(id: string): Promise<string> {
+    const [row] = await sql`select role::text from users where id = ${id}`;
+    return row.role as string;
+  }
+
+  beforeEach(async () => {
+    await sql`truncate user_privilege_changes`;
+    await sql`delete from users where email like ${`%${ROLE_DOMAIN}`}`;
+    // E as the seed made it, put back as a `psql` fix would.
+    await sql.begin(async (tx) => {
+      await tx`select set_config('app.privilege_route', 'manual', true)`;
+      await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
+    });
+    await sql`truncate user_privilege_changes`;
+  });
+
+  it('makes a user an admin and revokes it again, each recorded in the ledger as the admin’s act', async () => {
+    const admin = await insertUser('admin', 'admin');
+    const user = await insertUser('user', 'user');
+    const session = { userId: admin, role: 'admin' as const };
+
+    await setUserRole(session, user, 'admin', 'Curates the deities');
+    expect(await roleOf(user)).toBe('admin');
+    await setUserRole(session, user, 'user');
+    expect(await roleOf(user)).toBe('user');
+
+    const ledger = await sql`
+      select privilege::text, change::text, via::text, created_by from user_privilege_changes
+      where user_id = ${user} order by created_at, privilege
+    `;
+    expect(ledger).toEqual([
+      { privilege: 'admin', change: 'grant', via: 'admin', created_by: admin },
+      { privilege: 'create_workspace', change: 'grant', via: 'admin', created_by: admin },
+      { privilege: 'admin', change: 'revoke', via: 'admin', created_by: admin },
+    ]);
+  });
+
+  it('refuses revoking the primary admin, whom another admin could otherwise revoke', async () => {
+    const admin = await insertUser('admin', 'admin');
+    const primary = await insertUser('primary', 'admin');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
+
+    await expect(setUserRole({ userId: admin, role: 'admin' }, primary, 'user')).rejects.toThrow(
+      "This is the primary admin and can't be removed.",
+    );
+    expect(await roleOf(primary)).toBe('admin');
+
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `someone-else${ROLE_DOMAIN}`);
+    await setUserRole({ userId: admin, role: 'admin' }, primary, 'user');
+    expect(await roleOf(primary)).toBe('user');
+  });
+
+  it('refuses revoking the last admin, with no primary admin in place', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `nobody${ROLE_DOMAIN}`);
+    // The seed's admin, E, is the other live admin; with it revoked, one is left.
+    const admin = await insertUser('admin', 'admin');
+    await setUserRole({ userId: admin, role: 'admin' }, E.id, 'user');
+    const [{ count }] = await sql`
+      select count(*)::int as count from users where role = 'admin' and deleted_at is null
+    `;
+    expect(count).toBe(1);
+
+    await expect(setUserRole({ userId: admin, role: 'admin' }, admin, 'user')).rejects.toThrow(
+      'the last admin',
+    );
+    expect(await roleOf(admin)).toBe('admin');
   });
 });
 

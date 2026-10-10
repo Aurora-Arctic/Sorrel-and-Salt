@@ -9,7 +9,7 @@ import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
 import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
-import { listUsers, providersOf } from '@/modules/identity';
+import { isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -42,7 +42,8 @@ const readUsers = cache(
       const linked = providers[index];
       // An admin's batch answers every slot; a refusal here is the guard's bug.
       if (!linked || linked instanceof Error) throw linked ?? new Error('No providers read');
-      return { ...node, providers: linked };
+      // Read from ADMIN_BOOTSTRAP_EMAIL now, so the label follows the variable (MB.59).
+      return { ...node, providers: linked, primaryAdmin: isPrimaryAdmin(node) };
     });
     return { users, pageInfo: page.pageInfo };
   },

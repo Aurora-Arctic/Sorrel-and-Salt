@@ -450,6 +450,18 @@ describe('session lifetimes', () => {
       freshAge: DAY,
     });
   });
+
+  // MB.59: a revoked admin's next request reads `role` off the users row, so
+  // `/admin` and every admin mutation close to them at once. A cookie cache
+  // would answer from the cookie until its TTL ran out, keeping a revoked
+  // admin an admin for that long (claude-docs/auth/admin-users.md).
+  it('keeps the session cookie cache off, so every request reads the role afresh', async () => {
+    vi.resetModules();
+    const { auth } = await import('@/lib/auth');
+
+    const { options } = (await auth.$context) as { options: BetterAuthOptions };
+    expect(options.session?.cookieCache?.enabled).not.toBe(true);
+  });
 });
 
 // The browser remembers its own last provider, and nothing about an address

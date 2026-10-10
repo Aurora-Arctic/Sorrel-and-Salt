@@ -24,12 +24,14 @@ async function liveUser(userId: string): Promise<UserRow> {
 
 /**
  * Writes the flag as an admin's act, answering the row. The ledger row is the
- * trigger's, written in the same transaction.
+ * trigger's, written in the same transaction, carrying `note`, the
+ * confirmation's optional reason, a blank one as none.
  */
 async function setFlag(
   session: Session,
   userId: string,
   canCreateWorkspace: boolean,
+  note: string | undefined,
 ): Promise<UserRow> {
   return withAudit(
     session,
@@ -40,29 +42,34 @@ async function setFlag(
       if (!written) throw new NotFound('No such user');
       return written;
     },
-    { via: 'admin' },
+    { via: 'admin', note: note?.trim() || undefined },
   );
 }
 
 /**
  * Lets a live user who lacks it create a workspace, stamped as the approving
- * admin and recorded as a `grant`, and answers the row as written.
+ * admin and recorded as a `grant` with `note`, the confirmation's optional
+ * reason, and answers the row as written.
  *
  * @throws {Forbidden} the session's role is not `admin`, or the user may
  * already create one — a second approval would record a change that never
  * happened.
  * @throws {NotFound} no live user has this id.
  */
-export async function grantWorkspaceCreation(session: Session, userId: string): Promise<UserRow> {
+export async function grantWorkspaceCreation(
+  session: Session,
+  userId: string,
+  note?: string,
+): Promise<UserRow> {
   assertSiteAdmin(session, REFUSAL);
   const user = await liveUser(userId);
   if (user.canCreateWorkspace) throw new Forbidden(`${user.name} may already create a coven`);
-  return setFlag(session, userId, true);
+  return setFlag(session, userId, true, note);
 }
 
 /**
  * Stops a live user creating workspaces, stamped as the admin and recorded as
- * a `revoke`, and answers the row as written. The workspaces they already
+ * a `revoke` with `note`, and answers the row as written. The workspaces they already
  * created stay theirs: the flag governs creating, not keeping.
  *
  * @throws {Forbidden} the session's role is not `admin`; the user cannot
@@ -70,7 +77,11 @@ export async function grantWorkspaceCreation(session: Session, userId: string): 
  * the flag (MB.177), so revoking their admin role is the route.
  * @throws {NotFound} no live user has this id.
  */
-export async function revokeWorkspaceCreation(session: Session, userId: string): Promise<UserRow> {
+export async function revokeWorkspaceCreation(
+  session: Session,
+  userId: string,
+  note?: string,
+): Promise<UserRow> {
   assertSiteAdmin(session, REFUSAL);
   const user = await liveUser(userId);
   if (!user.canCreateWorkspace) {
@@ -81,5 +92,5 @@ export async function revokeWorkspaceCreation(session: Session, userId: string):
       `${user.name} is an admin, and every admin may create a coven. Revoke their admin role first.`,
     );
   }
-  return setFlag(session, userId, false);
+  return setFlag(session, userId, false, note);
 }

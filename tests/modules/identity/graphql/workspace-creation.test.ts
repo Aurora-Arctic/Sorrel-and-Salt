@@ -75,6 +75,36 @@ describe('Mutation.grantWorkspaceCreation', () => {
     });
   });
 
+  // The note travels; the actor does not: it is the session's, whatever the
+  // request carries. An undeclared variable is dropped, and an argument the
+  // field does not take fails validation before anything runs.
+  it('keeps the note on the ledger row, its actor the session’s and never the request’s', async () => {
+    const withNote = `
+      mutation ($userId: ID!, $note: String) {
+        grantWorkspaceCreation(userId: $userId, note: $note) { id }
+      }
+    `;
+    const smuggled = await run(
+      asUser(E),
+      `
+      mutation { grantWorkspaceCreation(userId: "${PENDING}", createdBy: "${A.id}") { id } }
+    `,
+    );
+    expect(smuggled.errors?.[0]?.message).toMatch(/Unknown argument "createdBy"/);
+    expect(await sql`select 1 from user_privilege_changes`).toHaveLength(0);
+
+    const result = await run(asUser(E), withNote, {
+      userId: PENDING,
+      note: 'Runs the Tuesday circle',
+      createdBy: A.id,
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(
+      await sql`select via::text, note, created_by from user_privilege_changes where user_id = ${PENDING}`,
+    ).toEqual([{ via: 'admin', note: 'Runs the Tuesday circle', created_by: E.id }]);
+  });
+
   it('answers an unknown id as NOT_FOUND', async () => {
     const result = await run(asUser(E), GRANT, { userId: NOWHERE });
 

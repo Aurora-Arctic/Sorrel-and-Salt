@@ -1,5 +1,6 @@
 import 'server-only';
 import { withAudit } from '../../../db/repository';
+import { sameAddress } from '../../../lib/primary-admin';
 import { users } from '../schema/users';
 import type { Session } from '../../../lib/session';
 import type { PrimaryAdminOutcome, SignInProfile } from '../types';
@@ -17,10 +18,6 @@ import type { PrimaryAdminOutcome, SignInProfile } from '../types';
  * purpose rather than by omission.
  */
 const VOUCHING_PROVIDERS: ReadonlySet<string> = new Set(['google', 'discord']);
-
-function sameAddress(a: string, b: string): boolean {
-  return a.toLowerCase() === b.toLowerCase();
-}
 
 /**
  * Promotes the signed-in user to admin when their account is the address
