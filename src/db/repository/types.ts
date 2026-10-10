@@ -61,14 +61,6 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
-// And for the two ledgers, MB.58's `admin_role_changes` and MB.193's
-// `workspace_creation_changes`: each is append-only by the repository rather
-// than by grant, since `sorrel` owns its tables and a REVOKE would not bind
-// it. A `change` column marks one, as `visibility` marks `spells`, and
-// `NotAppendOnly` takes it off every update and delete below, leaving it the
-// insert and the finders.
-export type NotAppendOnly = { change?: never };
-
 // And for a table written only through its own named calls: the schema file
 // marks it `namedWrites` (MB.198), and every generic method below, unscoped,
 // workspace-scoped and compendium-tier, takes `Generic` and so refuses it.
@@ -229,7 +221,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly & Generic>(
+  update<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -239,7 +231,7 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & Generic & Identified>(
+  updateById<TTable extends PgTable & Unscoped & Generic & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
@@ -268,7 +260,7 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Generic>(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & Generic>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -291,9 +283,7 @@ export interface AuditWriter {
    * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
    * nothing without a statement.
    */
-  softDeleteByIds<
-    TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Generic & Identified,
-  >(
+  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Generic & Identified>(
     table: TTable,
     ids: readonly string[],
   ): Promise<TTable['$inferSelect'][]>;
@@ -426,7 +416,7 @@ export interface AuditWriter {
    * matching nothing deletes nothing without a statement, and a match naming
    * no column is refused rather than emptying the table.
    */
-  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly & Generic>(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & Generic>(
     table: TTable,
     match: ColumnMatch<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
