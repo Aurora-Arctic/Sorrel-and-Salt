@@ -10,6 +10,7 @@ import {
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { namedWrites } from '@/db/table-marks';
 import { A, asUser } from '../../support/as-user';
 import {
   herbs,
@@ -18,6 +19,8 @@ import {
   pairs,
   session,
   sql,
+  switches,
+  tiers,
   tinctures,
   useProbeTables,
 } from '../../support/db/probe-tables';
@@ -585,6 +588,106 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
     expect(intoAWorkspaceOnlyTable).toBeInstanceOf(Function);
     expect(intoAnUnscopedTable).toBeInstanceOf(Function);
     expect(withoutTheProof).toBeInstanceOf(Function);
+  });
+});
+
+// MB.198: a table marked `namedWrites` is reached only through its own named
+// writer methods, and the mark is the whole refusal: no column name is read
+// (claude-docs/db/write-path.md, "Table marks"). No body runs: each
+// `@ts-expect-error` fails `npm run typecheck` the moment a generic method
+// stops demanding `Generic`, which a runtime assertion cannot see.
+describe('a table marked namedWrites, refused by every generic writer method', () => {
+  const admin = assertSiteAdmin({ ...session, role: 'admin' });
+  const id = session.userId;
+  const where = eq(herbs.id, id);
+
+  // Why each refusal below is the mark's: `switches` is `herbs`' shape and
+  // `tiers` is `tinctures`', and every call below compiles against those
+  // unmarked. `switches` carries `deleted_at`, which refuses the hard delete
+  // too, so that one is also asserted against `pairs` marked, the shape
+  // `delete` otherwise takes.
+  it('takes every call below against the same shapes unmarked', () => {
+    const unmarked = [
+      (write: AuditWriter) => write.insert(herbs, { name: 'Testwort' }),
+      (write: AuditWriter) => write.update(herbs, { name: 'Testwort' }, where),
+      (write: AuditWriter) => write.updateById(herbs, id, { name: 'Testwort' }),
+      (write: AuditWriter) => write.softDelete(herbs, where),
+      (write: AuditWriter) => write.softDeleteByIds(herbs, [id]),
+      (write: AuditWriter) => write.delete(pairs, { herbId: id }),
+      (write: AuditWriter, inW: Membership) =>
+        write.insertInWorkspace(inW, tinctures, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        write.updateInWorkspace(inW, tinctures, { name: 'Testwort' }, where),
+      (write: AuditWriter, inW: Membership) =>
+        write.updateByIdInWorkspace(inW, tinctures, id, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) => write.softDeleteInWorkspace(inW, tinctures, where),
+      (write: AuditWriter, inW: Membership) => write.softDeleteByIdInWorkspace(inW, tinctures, id),
+      (write: AuditWriter) => write.insertInCompendium(admin, tinctures, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        write.updateByIdInCompendium(admin, tinctures, id, { name: 'Testwort' }),
+      (write: AuditWriter) => write.softDeleteByIdInCompendium(admin, tinctures, id),
+    ];
+
+    expect(unmarked).toHaveLength(14);
+  });
+
+  it('refuses the unscoped marked table on every unscoped method', () => {
+    const writes = [
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic insert.
+        write.insert(switches, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic update.
+        write.update(switches, { name: 'Testwort' }, where),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.updateById(switches, id, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no soft delete.
+        write.softDelete(switches, where),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: nor by ids.
+        write.softDeleteByIds(switches, [id]),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark, and `deleted_at` beside it: no hard delete.
+        write.delete(switches, { id }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark alone, on a shape `delete` otherwise takes.
+        write.delete(namedWrites(pairs), { herbId: id }),
+    ];
+
+    expect(writes).toHaveLength(7);
+  });
+
+  it('refuses the two-tier marked table on every workspace-scoped and compendium-tier method', () => {
+    const writes = [
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no generic insert into a workspace.
+        write.insertInWorkspace(inW, tiers, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no generic update in one.
+        write.updateInWorkspace(inW, tiers, { name: 'Testwort' }, where),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.updateByIdInWorkspace(inW, tiers, id, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no soft delete in one.
+        write.softDeleteInWorkspace(inW, tiers, where),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.softDeleteByIdInWorkspace(inW, tiers, id),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic insert into the compendium tier.
+        write.insertInCompendium(admin, tiers, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no update there.
+        write.updateByIdInCompendium(admin, tiers, id, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no soft delete there.
+        write.softDeleteByIdInCompendium(admin, tiers, id),
+    ];
+
+    expect(writes).toHaveLength(8);
   });
 });
 
