@@ -335,6 +335,8 @@ _Story:_ As a site admin, I want a category or a category group with a blank des
 
 Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`), the drift MB.207 found when it put the vocabulary indexes through one builder: six vocabulary tables carry a blank-description CHECK and `categories` and `category_groups` do not, though `description` is `notNull` on both and the zod input refuses a blank. One migration adds the two CHECKs under the siblings' naming, additive DDL with no sidecar; the builder's flag goes; a `db` test asserts each constraint by name. Its own task after MB.207 because it changes the database and MB.207 must not: a table task, then a behaviour task.
 
+_As built:_ The migration is `0060_category-description-checks`, the two `ADD CONSTRAINT … CHECK (btrim(description) <> '')` statements alone; no live row can fail it, since the seed writes none and both admin inputs trim and refuse a blank. The tests extend `categories-schema.test.ts`, reading each CHECK by name from `information_schema` and refusing `''` and `'   '` with `23514`. DESIGN.md §5's `categories` entry now says the description is non-empty on both tables, since `db/categories.md` had called its absence a difference in the specification.
+
 _Acceptance criteria:_
 
 - Both constraints exist by name in `information_schema`, asserted

@@ -113,18 +113,20 @@ the reversible direction: dropping a `NOT NULL` later is a widening, where
 adding one is destructive DDL needing a PR acknowledgement (rule 10, and the
 [destructive-DDL check](expand-contract.md)).
 
-**The two form tables go one step further than NOT NULL on `description`**, in
-`ingredient_form_groups_description_not_blank` and
-`ingredient_forms_description_not_blank`: §5 asks for a description that is
-required _and non-empty_, and `NOT NULL` alone accepts `''` and `'   '` — a
-curated value that curates nothing, when the column exists so that a curated
-value explains itself (§5). It is a CHECK rather
+**Every vocabulary table goes one step further than NOT NULL on
+`description`**, in `<prefix>_description_not_blank`: §5 asks for a
+description that is required _and non-empty_, and `NOT NULL` alone accepts
+`''` and `'   '` — a curated value that curates nothing, when the column
+exists so that a curated value explains itself (§5). It is a CHECK rather
 than input validation, unlike M5.6b's contrast floor, because "say
-something" needs no ratio in its error message. The two category tables carry
-no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
-shipped NOT NULL alone and this is a difference in the specification, not a
-gap in M4.2. `vocabularyIndexes` takes `descriptionCheck: false` for the two
-until MB.214 adds their CHECKs and removes the option.
+something" needs no ratio in its error message. The two category tables
+shipped without it, since §5 first asked for non-empty only on the form
+vocabulary, while their admin inputs refused a blank from the start; MB.214
+added `categories_description_not_blank` and
+`category_groups_description_not_blank` in migration
+`0060_category-description-checks`, so the database holds all eight to one
+rule however a row reaches them, and `vocabularyIndexes` builds the CHECK
+unconditionally.
 
 ## Category writes (M5.6)
 

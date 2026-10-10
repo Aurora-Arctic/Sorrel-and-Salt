@@ -421,6 +421,13 @@
       "when": 1791656370341,
       "tag": "0059_drop-old-invitation-tables",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1791671397085,
+      "tag": "0060_category-description-checks",
+      "breakpoints": true
     }
   ]
 }

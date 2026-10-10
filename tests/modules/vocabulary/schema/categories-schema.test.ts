@@ -165,6 +165,21 @@ beforeEach(async () => {
   await sql`truncate categories, category_groups cascade`;
 });
 
+// Read by name from the catalogue, so the refusal below is known to be this
+// CHECK and not another (MB.214).
+async function descriptionCheck(table: string): Promise<string | undefined> {
+  const [row] = await sql`
+    select cc.check_clause
+    from information_schema.table_constraints tc
+    join information_schema.check_constraints cc
+      on cc.constraint_schema = tc.constraint_schema and cc.constraint_name = tc.constraint_name
+    where tc.table_name = ${table}
+      and tc.constraint_type = 'CHECK'
+      and tc.constraint_name = ${`${table}_description_not_blank`}
+  `;
+  return row?.check_clause as string | undefined;
+}
+
 describe('category_groups table', () => {
   it('is global: no workspace_id column to scope by, under any spelling', async () => {
     const columns = await catalogue.columnNames('category_groups');
@@ -207,6 +222,21 @@ describe('category_groups table', () => {
 
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe(column);
+    }
+  });
+
+  it('carries the blank-description CHECK by name, as the other vocabularies do', async () => {
+    expect(await descriptionCheck('category_groups')).toContain('btrim');
+  });
+
+  // NOT NULL alone accepts '' and '   ', which the admin form already refuses.
+  it('rejects a blank description', async () => {
+    for (const blank of ['', '   ']) {
+      const error = await failureOf(insertGroup({ description: blank }));
+
+      // 23514 is check_violation.
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('category_groups_description_not_blank');
     }
   });
 });
@@ -286,6 +316,21 @@ describe('categories table', () => {
 
       expect(error.code).toBe('23502');
       expect(error.column_name).toBe(column);
+    }
+  });
+
+  it('carries the blank-description CHECK by name, as the other vocabularies do', async () => {
+    expect(await descriptionCheck('categories')).toContain('btrim');
+  });
+
+  it('rejects a blank description', async () => {
+    const group = await insertGroup();
+
+    for (const blank of ['', '   ']) {
+      const error = await failureOf(insertCategory(group, { description: blank }));
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('categories_description_not_blank');
     }
   });
 });
