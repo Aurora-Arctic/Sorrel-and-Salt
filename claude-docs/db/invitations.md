@@ -7,7 +7,7 @@ grants admin, as a null workspace is a compendium entry.
 `0057_two-tier-invitations.sql` is the migration. It replaced M7.1's
 `workspace_invitations` (`0012_cultured_ben_grimm.sql`) and MB.69's
 `admin_invitations` (`0046_admin-invitations.sql`), copying both; MB.202
-undeclared the two and MB.203 drops them. Why one table, why it is
+undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
 `coven`'s, and what was rejected:
 [`mb.201-two-tier-invitations.md`](../design-decisions/mb.201-two-tier-invitations.md).
 

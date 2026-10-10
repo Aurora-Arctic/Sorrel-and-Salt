@@ -4,7 +4,7 @@ Better Auth ships an organization plugin — organizations, members,
 invitations, a last-owner guard, a creation gate — and it is **not
 configured here**, deliberately. Workspaces, membership and invitations are
 the hand-built `workspaces`, `workspace_members` and
-`workspace_invitations` tables behind services, written through
+`invitations` tables behind services, written through
 `withAudit`, read under the `Membership` proof (DESIGN.md §5, §8). MB.30
 ran the plugin against a real database before M4.1 made `workspaces` a
 foreign-key target, and found the mismatch structural rather than

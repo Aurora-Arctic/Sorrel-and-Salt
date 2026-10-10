@@ -3772,15 +3772,15 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the two retired invitation tables dropped once no deploy reads them, so that the schema holds one.
 
-As MB.197, for MB.202's tables. **It merges into `staging` only after a release carrying MB.202 has reached production.** `db:generate` emits the drops; MB.201's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row written during the rollout. It may share a release with MB.197, as its own PR. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts` and out of the partial-index sweep, where MB.202 left them for the catalogue sweeps, and MB.201's copy test becomes this migration's sweep test.
+As MB.197, for MB.202's tables. **It is not gated on a production release: production was not live, on the owner's call, 2026-10-10**, so the release carrying MB.202 may carry this drop too, and production's deploy, which declares both tables, loses its reads of them for that rollout only (amended 2026-10-10: the entry first waited for a release carrying MB.202 to reach production). `db:generate` emits the drops, and no enum: `workspace_role` stays, held by `workspace_members` and `invitations`; MB.201's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row written during the rollout. It may share a release with MB.197, as its own PR. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts` and out of the partial-index sweep, where MB.202 left them for the catalogue sweeps, and MB.201's copy test becomes this migration's sweep test.
 
 _Acceptance criteria:_
 
 - The migration sweeps both tables into `invitations`, then drops both
 - A row written to either old table after MB.201's copy lands in `invitations` with its id, asserted by re-running the sweep against such a row
-- Both tables leave `AUDITED_TABLES` and the partial-index sweep, MB.201's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations names either table
+- Both tables leave `AUDITED_TABLES` and the partial-index sweep, MB.201's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations and that sweep test, which restores the tables in its clone to write the rows it sweeps, names either table (amended 2026-10-10: the sweep test was not excepted)
 - `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
-- The PR body names the release that carried MB.202 to production
+- The PR body says the drop is not gated on a production release, production not being live, on the owner's call (amended 2026-10-10: it first named the release that carried MB.202 to production)
 
 **MB.204 — The provisional-account sweep skips an account holding a privilege change** · 1h
 
