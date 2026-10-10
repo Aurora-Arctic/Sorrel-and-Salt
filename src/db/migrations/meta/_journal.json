@@ -400,6 +400,13 @@
       "when": 1791652565434,
       "tag": "0056_privilege-changes-record-themselves",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1791654495745,
+      "tag": "0057_two-tier-invitations",
+      "breakpoints": true
     }
   ]
 }
