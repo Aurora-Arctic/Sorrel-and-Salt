@@ -38,7 +38,8 @@ export const SOURCED = {
 /** A sourced entity's property on `referenceLinks`: `ingredientId`, `deityId`, … */
 export type SourcedKey = keyof typeof SOURCED;
 
-const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
+/** The registry's keys, in its order. */
+export const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
 
 /** One nullable foreign key per sourced table, under the registry's own keys. */
 function sourcedColumns() {

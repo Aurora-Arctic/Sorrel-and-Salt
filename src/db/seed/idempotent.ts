@@ -1,4 +1,5 @@
-import type { PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
+import { getTableColumns, inArray, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit, publishActor } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
@@ -84,6 +85,112 @@ export async function insertMissing<TTable extends PgTable, W, K>(
       (item) => applyAudit('insert', toRow(item), BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
     ),
   );
+}
+
+/**
+ * `insertMissing` keyed on `columns`, the key built once and read off both
+ * sides: the table's rows and each `wanted`, which names its values under
+ * the same properties. A part is compared as written, or through `fold`
+ * where the unique index folds it — a name's `lower()` — and null and absent
+ * are one empty part, as a link's unset keys are. A one-column key reads only
+ * the wanted values; a wider one reads the table, narrowed by `where` if the
+ * site scopes it. `deleted_at` is ignored unless `where` reads it, so a
+ * retired row is not resurrected on the next run.
+ */
+export async function insertMissingBy<
+  TTable extends PgTable,
+  K extends keyof TTable['$inferSelect'] & string,
+  W extends { [Column in K]?: unknown },
+>(
+  tx: SeedTransaction,
+  table: TTable,
+  wanted: readonly W[],
+  {
+    columns,
+    fold = {},
+    where,
+    toRow,
+  }: {
+    columns: readonly K[];
+    fold?: { [Column in K]?: (value: string) => string };
+    where?: SQL;
+    toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
+  },
+): Promise<void> {
+  const tableColumns: Record<string, AnyPgColumn> = getTableColumns(table);
+  const keyOf = (row: { [Column in K]?: unknown }) =>
+    columns
+      .map((column) => {
+        const value = row[column];
+        if (value === null || value === undefined) return '';
+        return fold[column]?.(String(value)) ?? String(value);
+      })
+      .join('|');
+  const [only] = columns;
+  const scope =
+    columns.length === 1
+      ? inArray(
+          tableColumns[only],
+          wanted.map((item) => item[only]),
+        )
+      : where;
+
+  await insertMissing(tx, table, wanted, {
+    existing: async (tx) => {
+      if (wanted.length === 0) return [];
+      // The cast `selectFrom` makes: `.from()` is typed against one table, not a generic.
+      const rows: { [Column in K]?: unknown }[] = await tx
+        .select(Object.fromEntries(columns.map((column) => [column, tableColumns[column]])))
+        .from(table as never)
+        .where(scope);
+      return rows.map(keyOf);
+    },
+    keyOf,
+    toRow,
+  });
+}
+
+/**
+ * Inserts each `wanted` whose key `present` lacks, and returns `present` with
+ * each inserted row's id under its key: `insertMissing` for the two callers
+ * that link the rows they insert. `present` is the caller's own read, as
+ * `existing` is `insertMissing`'s, since each decides what present means — a
+ * compendium identity, or a seed key whose soft-deleted row answers null —
+ * and `keyOfRow` reads the key back off an inserted row.
+ */
+export async function insertMissingReturningIds<
+  TTable extends PgTable,
+  W,
+  M extends Map<string, string | null>,
+>(
+  tx: SeedTransaction,
+  table: TTable,
+  wanted: readonly W[],
+  present: M,
+  {
+    keyOf,
+    keyOfRow,
+    toRow,
+  }: {
+    keyOf: (item: W) => string;
+    keyOfRow: (row: TTable['$inferSelect']) => string;
+    toRow: (item: W) => Omit<PgInsertValue<TTable>, InsertStamps>;
+  },
+): Promise<M> {
+  const missing = wanted.filter((item) => !present.has(keyOf(item)));
+  if (missing.length === 0) return present;
+
+  const inserted = (await tx
+    .insert(table)
+    .values(
+      missing.map(
+        (item) => applyAudit('insert', toRow(item), BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
+      ),
+    )
+    .returning()) as (TTable['$inferSelect'] & { id: string })[];
+
+  for (const row of inserted) present.set(keyOfRow(row), row.id);
+  return present;
 }
 
 /**

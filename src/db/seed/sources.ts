@@ -1,19 +1,21 @@
 import { isNotNull, isNull } from 'drizzle-orm';
-import { BOOTSTRAP_SESSION } from './bootstrap-admin';
-import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import {
+  beginSeedTransaction,
+  insertMissingBy,
+  insertMissingReturningIds,
+  requireFrom,
+} from './idempotent';
 import { DEITIES } from './deities';
-import { applyAudit } from '../audit';
 import { citationText } from '../../lib/citation';
 import { slugify } from '../../lib/slugify';
 import { references } from '../../modules/ingredients/schema/references';
-import { referenceLinks } from '../../modules/ingredients/schema/reference-links';
+import { referenceLinks, SOURCED_KEYS } from '../../modules/ingredients/schema/reference-links';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type {
   SeedDatabase,
   SeedSource,
   SeedSourceLink,
-  SeedSourceLinkKey,
   SeedTransaction,
   SourceTargetTable,
 } from './types';
@@ -4558,9 +4560,9 @@ export async function seedVocabularySources(tx: SeedTransaction): Promise<void> 
     return referenceId ? linksOf(source, referenceId, targets) : [];
   });
 
-  await insertMissing(tx, referenceLinks, wanted, {
-    existing: async (tx) => (await tx.select().from(referenceLinks)).map(linkKey),
-    keyOf: linkKey,
+  // A link's identity: its reference and the one row it supports.
+  await insertMissingBy(tx, referenceLinks, wanted, {
+    columns: ['referenceId', ...SOURCED_KEYS],
     toRow: (link) => link,
   });
 }
@@ -4586,25 +4588,15 @@ async function insertMissingReferences(tx: SeedTransaction): Promise<Map<string,
     }
   }
 
-  const missing = SOURCES.filter((source) => !ids.has(citationText(source.reference)));
-  if (missing.length > 0) {
-    const inserted = await tx
-      .insert(references)
-      .values(
-        missing.map(({ reference }) =>
-          applyAudit(
-            'insert',
-            { ...reference, workspaceId: null, seedKey: citationText(reference) },
-            BOOTSTRAP_SESSION,
-          ),
-        ),
-      )
-      .returning({ id: references.id, seedKey: references.seedKey });
-
-    for (const row of inserted) ids.set(row.seedKey as string, row.id);
-  }
-
-  return ids;
+  return insertMissingReturningIds(tx, references, SOURCES, ids, {
+    keyOf: (source) => citationText(source.reference),
+    keyOfRow: (row) => row.seedKey as string,
+    toRow: ({ reference }) => ({
+      ...reference,
+      workspaceId: null,
+      seedKey: citationText(reference),
+    }),
+  });
 }
 
 /** A vocabulary's seeded rows by `seed_key`: the id, or `null` when soft-deleted. */
@@ -4663,15 +4655,4 @@ function linksOf(
   for (const name of signs) add('zodiacSignId', target('zodiacSigns', name));
 
   return links;
-}
-
-/** A link's identity: its reference and the one row it supports. */
-function linkKey(link: SeedSourceLinkKey): string {
-  return [
-    link.referenceId,
-    link.deityTraditionId ?? '',
-    link.deityId ?? '',
-    link.planetId ?? '',
-    link.zodiacSignId ?? '',
-  ].join('|');
 }
