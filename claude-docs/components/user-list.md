@@ -46,7 +46,7 @@ read beside it.
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Six columns, in the owner's order**: Name, Email, Role, Sign-In Methods,
-  Signed Up and Can Create a Coven, each heading in title case (DESIGN.md §9). The Email
+  Signed Up and Coven Creation, each heading in title case (DESIGN.md §9). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin
   granting admin judges a person by (MB.59). A yes-or-no is a mark, on the
@@ -86,7 +86,7 @@ read beside it.
   Its
   button is `.btn--destructive`, on the owner's call: it is the one control
   that acts as someone else.
-- **Can create a coven holds its control** (M5.8,
+- **Coven Creation holds its control** (M5.8,
   [`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
   creation"), from `creation-control.tsx`, beside the mark it changes: one
   column rather than a second saying the same thing, on the owner's review,

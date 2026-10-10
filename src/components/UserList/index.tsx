@@ -168,7 +168,7 @@ const UserList = ({
               <th scope="col">Role</th>
               <th scope="col">Sign-In Methods</th>
               <th scope="col">Signed Up</th>
-              <th scope="col">Can Create a Coven</th>
+              <th scope="col">Coven Creation</th>
               {canImpersonate && (
                 <th scope="col" className="user-list__impersonate">
                   Impersonate

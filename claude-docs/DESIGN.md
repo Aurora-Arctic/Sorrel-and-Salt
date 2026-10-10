@@ -1190,7 +1190,7 @@ The same shape covers spell `visibility`: the finders that reach a `private` one
 
 Workspace ingredients and stock are **one page**, not two. A filter chip distinguishes local entries from compendium entries; a separate page would be a distinction without a difference.
 
-**Button labels are title case** — "Sign In", "Send Confirmation", "Continue with Google" (a short preposition stays lower, as title case has it). A label that reads as a sentence is a hint the control is doing too much. **Headings are title case too** — a page heading, a dialog title and a table's column heading: "Sign In", "Add Category", "Category Groups", "Sign-In Methods", "Can Create a Coven" — so a button and the dialog it opens read alike, on the owner's call.
+**Button labels are title case** — "Sign In", "Send Confirmation", "Continue with Google" (a short preposition stays lower, as title case has it). A label that reads as a sentence is a hint the control is doing too much. **Headings are title case too** — a page heading, a dialog title and a table's column heading: "Sign In", "Add Category", "Category Groups", "Sign-In Methods", "Coven Creation" — so a button and the dialog it opens read alike, on the owner's call.
 
 ### Components
 

@@ -74,7 +74,7 @@ describe('UserList', () => {
       'Role',
       'Sign-In Methods',
       'Signed Up',
-      'Can Create a Coven',
+      'Coven Creation',
     ]);
   });
 
