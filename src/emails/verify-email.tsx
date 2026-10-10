@@ -35,7 +35,7 @@ export function VerifyEmail({
           ? 'If that was you, click the button below within one hour, in the same browser where you are signed in to Sorrel & Salt.'
           : 'If that was you, open the link below within one hour, in the same browser where you are signed in to Sorrel & Salt.'}
       </Paragraph>
-      <Action href={url} label="Confirm my email" part={part} />
+      <Action href={url} label="Confirm My Email" part={part} />
       <Paragraph muted>If it wasn&apos;t you, you can ignore this email.</Paragraph>
     </EmailLayout>
   );

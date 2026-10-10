@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { builder, createBuilder } from '@/graphql/builder';
 import { createLoaders } from '@/graphql/loaders';
-import { noSender } from '../support/email-verification';
+import { noInvitationSender, noSender } from '../support/email-verification';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import type { Context } from '@/graphql/types';
@@ -11,7 +11,12 @@ import type { Context } from '@/graphql/types';
 const AUDIT_FIELDS = ['createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy'];
 
 function context(session: Context['session']): Context {
-  return { session, loaders: createLoaders(session), emailVerification: noSender };
+  return {
+    session,
+    loaders: createLoaders(session),
+    emailVerification: noSender,
+    invitations: noInvitationSender,
+  };
 }
 
 describe('the Pothos schema', () => {

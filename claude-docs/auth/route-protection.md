@@ -63,8 +63,8 @@ answer.
   request header (`RETURN_PATH_HEADER`). The proxy sets that header on every
   request it passes, overwriting any value the client sent, and the read still
   goes through `safeReturnPath`. The proxy forwards it on public pages too, so
-  `/invite/[token]` can send a signed-out visitor to `/sign-in` and back when M7
-  makes acceptance require a sign-in. `/` is public but personalised (MB.57): it
+  `/invite/[token]` can send a signed-out visitor to `/sign-in` and back, since
+  accepting requires a sign-in (MB.70). `/` is public but personalised (MB.57): it
   reads the session with `getSession()` to offer a signed-in visitor the landing
   rather than sign-in, and `requireSession()` would redirect the signed-out
   visitors it exists for. `requireSession()` has a second redirect (MB.54): a

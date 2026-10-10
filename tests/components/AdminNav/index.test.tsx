@@ -19,15 +19,15 @@ describe('AdminNav', () => {
     expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
       ['Compendium', '/admin/compendium'],
       ['Categories', '/admin/categories'],
-      ['Category groups', '/admin/category-groups'],
+      ['Category Groups', '/admin/category-groups'],
       ['Forms', '/admin/forms'],
-      ['Form groups', '/admin/form-groups'],
+      ['Form Groups', '/admin/form-groups'],
       ['Planets', '/admin/planets'],
-      ['Zodiac signs', '/admin/zodiac-signs'],
+      ['Zodiac Signs', '/admin/zodiac-signs'],
       ['Deities', '/admin/deities'],
-      ['Deity traditions', '/admin/deity-traditions'],
+      ['Deity Traditions', '/admin/deity-traditions'],
       ['Users', '/admin/users'],
-      ['Privilege changes', '/admin/privilege-changes'],
+      ['Privilege Changes', '/admin/privilege-changes'],
     ]);
   });
 });

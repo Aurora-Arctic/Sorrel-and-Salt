@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
+import AdminInvitations from '../../../components/AdminInvitations';
 import UserList, { PauseControl } from '../../../components/UserList';
 import { userListHref } from '../../../components/UserList/href';
 import type { UserListEntry } from '../../../components/UserList/types';
@@ -9,9 +10,11 @@ import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
 import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
+import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../../lib/primary-admin';
 import {
   adminRoleChangePauseState,
   isPrimaryAdmin,
+  listPendingAdminInvitations,
   listUsers,
   providersOf,
 } from '@/modules/identity';
@@ -54,6 +57,17 @@ const readUsers = cache(
   },
 );
 
+// The pending admin invitations, as the section lists them: no token or hash
+// leaves the page.
+const readInvitations = cache(async (session: Session) =>
+  (await listPendingAdminInvitations(session)).map(({ id, email, note, expiresAt }) => ({
+    id,
+    email,
+    note,
+    expiresAt,
+  })),
+);
+
 // Everyone with an account, for an admin to act on without being sent an id
 // (MB.52). A read of who has an account confers no workspace access, and the
 // page offers no control over one (claude-docs/auth/admin-users.md, "The user
@@ -71,10 +85,12 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
-  const [{ users, pageInfo }, adminChanges] = await Promise.all([
+  const [{ users, pageInfo }, adminChanges, invitations] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
     // The pause on admin changes and whether this admin may flip it (MB.63).
     adminRoleChangePauseState(session),
+    // The pending admin invitations, newest first (MB.70).
+    readInvitations(session),
   ]);
 
   return (
@@ -103,6 +119,14 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           pageInfo.hasNextPage && pageInfo.endCursor
             ? userListHref({ query, awaitingApproval, role }, { after: pageInfo.endCursor })
             : undefined
+        }
+      />
+      {/* Locked, with the pause as the reason, for an admin the pause binds:
+          everyone but the primary admin (MB.63). */}
+      <AdminInvitations
+        invitations={invitations}
+        locked={
+          adminChanges.paused && !adminChanges.canToggle ? ADMIN_CHANGES_PAUSED_REFUSAL : undefined
         }
       />
     </main>

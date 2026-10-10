@@ -150,4 +150,8 @@ M7.3, M7.6), and `identity`'s `createAdminInvitation` /
 paused (MB.70). One accept service in `identity`, `acceptInvitation(session,
 token)`, adds the membership and sets `canCreateWorkspace` on a workspace
 row, and grants admin on a site row; one route, `/invite/[token]`, lands in
-the workspace or on `/admin` by tier (M7.5, MB.70).
+the workspace or on `/admin` by tier (M7.5, MB.70). The accept reads
+MB.62's open pause under the site-tier invitation itself, since the invitee
+holds no `SiteAdmin` proof: `findOpenAdminRoleChangePause` takes either. How
+MB.70 built the site tier's half is
+[`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".

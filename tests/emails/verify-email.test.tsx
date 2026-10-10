@@ -51,7 +51,7 @@ describe('verifyEmailMessage', () => {
     expect(text).not.toMatch(/button|copy this link/i);
 
     expect(html).toContain('click the button below within one hour');
-    expect(html).toMatch(/class="ss-button"[^>]*>[^<]*<span[^>]*>.*Confirm my email/s);
+    expect(html).toMatch(/class="ss-button"[^>]*>[^<]*<span[^>]*>.*Confirm My Email/s);
     expect(html).toContain('Or copy this link into your browser:');
     expect(html).not.toContain('open the link below');
   });

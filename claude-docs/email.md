@@ -146,12 +146,13 @@ render shows the previous fix's failure, not this one's result.
 
 ## What is sent
 
-| Template                                           | Sent by                                                                             | Carries                                                                                                                                                       |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                             |
-| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail` | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up |
+| Template                                           | Sent by                                                                               | Carries                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                      | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                                                         |
+| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail`   | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up                             |
+| `src/emails/admin-invitation.tsx`                  | `src/lib/invitation-mail.ts`'s `siteInvitation`, from `createAdminInvitation` (MB.70) | The `/invite/[token]` link, the only place its token exists, to the invited address: who invited it, that the link lasts seven days, and to sign in with an account that uses the address |
 
 The verification flow itself is
 [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"
-and "The email page". M7.3's invitation and MB.70's admin invitation add their
-templates here.
+and "The email page". M7.3's invitation adds its template here; MB.70's admin invitation is
+[`auth/admin-users.md`](auth/admin-users.md), "Inviting an admin".

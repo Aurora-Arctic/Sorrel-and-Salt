@@ -89,7 +89,7 @@ describe('the /account page', () => {
     expect(within(section('Name')).getByRole('textbox', { name: 'Name' })).toHaveValue(
       'Ada Fixture',
     );
-    expect(within(section('Email')).getByRole('textbox', { name: 'Email address' })).toHaveValue(
+    expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       'ada@example.test',
     );
   });
@@ -97,7 +97,7 @@ describe('the /account page', () => {
   it('never shows a placeholder address', async () => {
     await renderPage('discord-1@pending.invalid');
 
-    expect(within(section('Email')).getByRole('textbox', { name: 'Email address' })).toHaveValue(
+    expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       '',
     );
   });

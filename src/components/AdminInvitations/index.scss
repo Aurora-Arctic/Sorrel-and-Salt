@@ -1,0 +1,67 @@
+@use '../../scss/variables' as *;
+
+// Layout only, until the admin area's design review (MB.115). The table is the
+// `.data-table` primitive, and the locked controls and the confirmation take
+// the user list's own classes, since they are its components.
+
+.admin-invitations {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  margin-top: space(7);
+}
+
+// The heading and Invite Admin on one line, as a page's heading and its
+// primary action are.
+.admin-invitations__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
+
+  h2 {
+    margin: 0;
+  }
+}
+
+// The address's asterisk, hard against its label in the error red, as the
+// vocabulary forms mark a required field. Hidden from the field's name: the
+// input's `aria-required` says it instead.
+.admin-invitations__required {
+  color: $secondary;
+}
+
+.admin-invitations__empty {
+  margin: 0;
+}
+
+// No cell wraps, heading or body: the table scrolls inside its frame, as the
+// user list's does (the owner's call, during MB.59).
+.admin-invitations .data-table {
+  th,
+  td {
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  // A confirmation opens from its cell: its question wraps as prose again.
+  .modal-dialog {
+    white-space: normal;
+  }
+}
+
+.admin-invitations__none {
+  color: $text-muted;
+}
+
+// The Reason field, given the user list's confirmation spacing: a step of room
+// above and 2rem below (the owner's call). Compounded with `.field`, whose
+// primitive is `body .field` in the app.
+.field.admin-invitations__note {
+  margin-block: space(5) space(6);
+}
+
+.notice.admin-invitations__sent {
+  margin: 0;
+}

@@ -168,7 +168,7 @@ const EmailForm = ({
       <form className="form" onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label className="field__label" htmlFor={inputId}>
-            Email address
+            Email Address
           </label>
           <input
             id={inputId}

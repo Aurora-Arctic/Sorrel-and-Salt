@@ -264,6 +264,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
   resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),
+  // A malformed address, so an admin past the scope is refused by the service
+  // before anything is written or mailed.
+  createAdminInvitation: write(
+    'mutation { createAdminInvitation(email: "not-an-address") { id } }',
+  ),
+  revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
+  acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort" }) { id } }`,
   ),
@@ -377,6 +384,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // MB.63: the primary admin's pause on those changes.
   pauseAdminRoleChanges: { governs: 'admin role' },
   resumeAdminRoleChanges: { governs: 'admin role' },
+  // MB.70: inviting an address to become an admin, and withdrawing it.
+  createAdminInvitation: { governs: 'admin role' },
+  revokeAdminInvitation: { governs: 'admin role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -406,6 +416,8 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
 /** Writes any signed-in session's scope admits, the service deciding who may. */
 const OPEN_WRITES = [
   'setEmail',
+  // The invited address is what admits, which the service checks (MB.70).
+  'acceptInvitation',
   'setName',
   'createWorkspaceIngredient',
   'updateIngredient',

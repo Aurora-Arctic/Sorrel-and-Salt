@@ -86,13 +86,13 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
   for (const [name, href] of [
     ['Compendium', '/admin/compendium'],
     ['Categories', '/admin/categories'],
-    ['Category groups', '/admin/category-groups'],
+    ['Category Groups', '/admin/category-groups'],
     ['Forms', '/admin/forms'],
-    ['Form groups', '/admin/form-groups'],
+    ['Form Groups', '/admin/form-groups'],
     ['Planets', '/admin/planets'],
-    ['Zodiac signs', '/admin/zodiac-signs'],
+    ['Zodiac Signs', '/admin/zodiac-signs'],
     ['Deities', '/admin/deities'],
-    ['Deity traditions', '/admin/deity-traditions'],
+    ['Deity Traditions', '/admin/deity-traditions'],
   ]) {
     await expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
   }

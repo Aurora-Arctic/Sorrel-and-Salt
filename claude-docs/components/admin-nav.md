@@ -7,15 +7,15 @@
 | ----------------- | -------------------------- | -------- |
 | Compendium        | `/admin/compendium`        | M5.5     |
 | Categories        | `/admin/categories`        | M5.6     |
-| Category groups   | `/admin/category-groups`   | M5.6b    |
+| Category Groups   | `/admin/category-groups`   | M5.6b    |
 | Forms             | `/admin/forms`             | M5.6a    |
-| Form groups       | `/admin/form-groups`       | M5.6b    |
+| Form Groups       | `/admin/form-groups`       | M5.6b    |
 | Planets           | `/admin/planets`           | MB.95    |
-| Zodiac signs      | `/admin/zodiac-signs`      | MB.95    |
+| Zodiac Signs      | `/admin/zodiac-signs`      | MB.95    |
 | Deities           | `/admin/deities`           | MB.132   |
-| Deity traditions  | `/admin/deity-traditions`  | MB.132   |
+| Deity Traditions  | `/admin/deity-traditions`  | MB.132   |
 | Users             | `/admin/users`             | MB.52    |
-| Privilege changes | `/admin/privilege-changes` | MB.200   |
+| Privilege Changes | `/admin/privilege-changes` | MB.200   |
 
 It takes no props. `src/app/admin/layout.tsx` renders it above the page, after
 the guard has passed, so it appears for admins only
@@ -30,8 +30,8 @@ only too.
   (MB.52) did: the user list is no curated resource, but it is where an admin
   acts on a person. So did the privilege ledger (MB.200), after Users, since
   it is the history of what was done to them there. A vocabulary's group page follows the vocabulary it
-  organises, Category groups after Categories, Form groups after Forms and
-  Deity traditions after Deities (M5.6b, MB.132;
+  organises, Category Groups after Categories, Form Groups after Forms and
+  Deity Traditions after Deities (M5.6b, MB.132;
   [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).
 - **`<Link>`, now that every route exists.** `typedRoutes` refuses an `href`
   for a route the build does not contain, so the list was plain anchors until

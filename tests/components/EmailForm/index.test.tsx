@@ -18,7 +18,7 @@ function renderForm(ui: ReactNode) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 }
 
-const emailField = () => screen.getByRole('textbox', { name: 'Email address' });
+const emailField = () => screen.getByRole('textbox', { name: 'Email Address' });
 const submit = () => screen.getByRole('button', { name: 'Send Confirmation' });
 
 /** Answers `SetEmail` with the row as it is, recording the variables it was sent. */

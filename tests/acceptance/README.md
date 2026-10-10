@@ -15,7 +15,7 @@ Files arrive with each wave's scaffold task, deliberately red:
 | `04-modals.test.tsx`         | 28–34   | M9.1                |
 | `06-grimoire.test.ts`        | 47–57   | M10.1               |
 | `07-admin.test.ts`           | 17–18   | M5.1                |
-| `08-email-and-admin.test.ts` | 58–61   | MB.61 / MB.58       |
+| `08-email-and-admin.test.ts` | 58–62   | MB.61 / MB.58       |
 
 Story 19 is covered by the workspace-isolation suite (M6.6),
 `tests/db/workspace-isolation.test.ts`: the per-entity sweep of a coven's

@@ -19,9 +19,11 @@ const listUsers = vi.fn();
 const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
+const listPendingAdminInvitations = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   isPrimaryAdmin,
+  listPendingAdminInvitations,
   listUsers,
   providersOf,
 }));
@@ -66,6 +68,8 @@ beforeEach(() => {
   isPrimaryAdmin.mockReturnValue(false);
   adminRoleChangePauseState.mockReset();
   adminRoleChangePauseState.mockResolvedValue({ paused: false, canToggle: false });
+  listPendingAdminInvitations.mockReset();
+  listPendingAdminInvitations.mockResolvedValue([]);
 });
 
 describe('the /admin/users page', () => {
@@ -238,5 +242,56 @@ describe('the /admin/users page, impersonation', () => {
     await renderPage();
 
     expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('the /admin/users page, admin invitations', () => {
+  const PENDING = {
+    id: 'i1',
+    email: 'invited@users.test',
+    note: 'Curates the resins',
+    expiresAt: new Date('2026-10-17T20:05:00Z'),
+    tokenHash: 'a-hash-that-must-not-render',
+  };
+
+  it('lists the pending invitations with what an admin acts on, and never the hash', async () => {
+    listPendingAdminInvitations.mockResolvedValue([PENDING]);
+
+    await renderPage();
+
+    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN);
+    const section = screen.getByRole('region', { name: 'Admin Invitations' });
+    expect(within(section).getByText('invited@users.test')).toBeInTheDocument();
+    expect(within(section).getByText('Curates the resins')).toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(PENDING.tokenHash);
+    expect(within(section).getByRole('button', { name: 'Invite Admin' })).not.toHaveAttribute(
+      'aria-disabled',
+    );
+  });
+
+  it('locks Invite and Revoke while paused, for an admin who is not the primary one', async () => {
+    listPendingAdminInvitations.mockResolvedValue([PENDING]);
+    adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: false });
+
+    await renderPage();
+
+    const section = screen.getByRole('region', { name: 'Admin Invitations' });
+    expect(within(section).getByRole('button', { name: 'Invite Admin' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    expect(
+      within(section).getByRole('button', { name: 'Revoke the invitation to invited@users.test' }),
+    ).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('leaves both usable to the primary admin while paused', async () => {
+    adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: true });
+
+    await renderPage();
+
+    expect(screen.getByRole('button', { name: 'Invite Admin' })).not.toHaveAttribute(
+      'aria-disabled',
+    );
   });
 });

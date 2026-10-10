@@ -1,0 +1,30 @@
+@use '../../scss/variables' as *;
+
+// The page-level frame, like `.email-page`: no AppShell exists yet to center
+// a page, and the panel is a heading, a sentence or two and one button.
+.invitation-page {
+  // Or the viewport-high frame plus its own padding overflows by the padding.
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // Less the top inset, or a page a full screen high scrolls by it.
+  min-height: calc(100dvh - #{$top-inset});
+  padding: space(6) space(4);
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+.invitation-acceptance {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  width: 100%;
+  max-width: 28rem;
+}
+
+.invitation-acceptance__heading,
+.invitation-acceptance__text,
+.invitation-acceptance__actions {
+  margin: 0;
+}

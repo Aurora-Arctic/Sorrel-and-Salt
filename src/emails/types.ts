@@ -24,3 +24,11 @@ export interface VerifyEmailProps {
   origin?: string;
   part: Part;
 }
+
+export interface AdminInvitationProps {
+  /** The `/invite/[token]` link, carrying the token no response or row holds. */
+  url: string;
+  /** Where the images and fonts are served from: the link's own origin unless a preview says otherwise. */
+  origin?: string;
+  part: Part;
+}
