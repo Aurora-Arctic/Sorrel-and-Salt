@@ -5,9 +5,10 @@ import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 // Category groups: global, admin-curated. A table rather than an enum so an
 // admin can add a ninth without DDL (MB.35). Two colours because one hex cannot
 // clear 4.5:1 on both grounds; stored as hexes because a runtime group has no
-// build-time Sass token; no CHECK — the service validates, where it can name
-// the ratio missed. No order column: groups list alphabetically
-// (claude-docs/db/categories.md, "Categories, and the two group vocabularies").
+// build-time Sass token; no CHECK on the contrast — the service validates,
+// where it can name the ratio missed. No order column: groups list
+// alphabetically (claude-docs/db/categories.md, "Categories, and the two
+// group vocabularies").
 // The slug is unique alone because two groups may both display "Protection".
 export const categoryGroups = pgTable(
   'category_groups',
@@ -17,8 +18,7 @@ export const categoryGroups = pgTable(
     colorLight: text('color_light').notNull(),
     ...auditColumns,
   },
-  (table) =>
-    vocabularyIndexes('category_groups', table, { trigram: false, descriptionCheck: false }),
+  (table) => vocabularyIndexes('category_groups', table, { trigram: false }),
 );
 
 // Categories: global, admin-curated, and carrying no `workspaceId` — one
@@ -36,5 +36,5 @@ export const categories = pgTable(
       .references(() => categoryGroups.id),
     ...auditColumns,
   },
-  (table) => vocabularyIndexes('categories', table, { trigram: false, descriptionCheck: false }),
+  (table) => vocabularyIndexes('categories', table, { trigram: false }),
 );

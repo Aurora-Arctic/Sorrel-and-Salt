@@ -71,21 +71,16 @@ export function vocabularyColumns() {
  * the trigram index it matches a name and a description alike through, by `%`
  * and `<%` under per-transaction thresholds — never a `similarity()`
  * comparison (claude-docs/db/member-autofill.md, "The member's autofill").
- *
- * `descriptionCheck: false` is `categories` and `category_groups`, which have
- * never carried the CHECK; MB.214 adds it to both and removes the option.
  */
 export function vocabularyIndexes(
   prefix: string,
   table: VocabularyTable,
-  { trigram, descriptionCheck = true }: { trigram: boolean; descriptionCheck?: boolean },
+  { trigram }: { trigram: boolean },
 ) {
   return [
     seedKeyUnique(`${prefix}_seed_key_unique`, table),
     liveUnique(`${prefix}_slug_unique`, table, table.slug),
-    ...(descriptionCheck
-      ? [check(`${prefix}_description_not_blank`, sql`btrim(description) <> ''`)]
-      : []),
+    check(`${prefix}_description_not_blank`, sql`btrim(description) <> ''`),
     ...(trigram
       ? [
           index(`${prefix}_trgm`).using(
