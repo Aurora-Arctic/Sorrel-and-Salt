@@ -24,9 +24,9 @@ export const userPrivilegeRoute = pgEnum('user_privilege_route', [
 // `users`, since the next update to a user's row overwrites its `updated_by`.
 // `created_by` is the actor and `created_at` when. Append-only by the
 // database, not by the writer's types: the migration's `forbid_rewrite`
-// trigger refuses every update and delete from any client. It replaces MB.58's
-// `admin_role_changes` and MB.193's `workspace_creation_changes`, and is a
-// privilege's account, not §13's edit history
+// trigger refuses every update and delete from any client. It replaces the
+// two one-privilege ledgers MB.58 and MB.193 built, and is a privilege's
+// account, not §13's edit history
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 export const userPrivilegeChanges = pgTable('user_privilege_changes', {
   id: uuid('id')
