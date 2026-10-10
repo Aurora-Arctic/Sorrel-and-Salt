@@ -2,24 +2,16 @@ import 'server-only';
 import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
-  addCategories,
-  addFolkNames,
-  addReferenceLinks,
-  addSubstitutes,
-  columnsOf,
   heldDeities,
-  replaceCategories,
-  replaceDeities,
-  replaceFolkNames,
-  replaceReferenceLinks,
-  replaceSubstitutes,
+  ingredientColumns,
   resolvePicks,
+  softDeleteIngredient,
+  writeChildren,
 } from './ingredient-rows';
 import { assertMembership } from '@/modules/coven';
 import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
@@ -54,20 +46,25 @@ export async function createWorkspaceIngredient(
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.insertInWorkspace(membership, ingredients, {
-      ...columnsOf(fields),
-      slug,
-    });
-    await addFolkNames(write, row.id, folkNames ?? []);
-    await addSubstitutes(write, [membership], row.id, substitutes ?? []);
-    await replaceDeities(write, row.id, picks.deities, []);
-    await addReferenceLinks(write, [membership], row.id, references ?? []);
-    await addCategories(write, row.id, fields.categoryIds ?? []);
+    const [row] = await write.insertInWorkspace(membership, ingredients, columns);
+    await writeChildren(
+      write,
+      [membership],
+      row.id,
+      {
+        folkNames,
+        substitutes,
+        references,
+        categoryIds: fields.categoryIds,
+        deities: picks.deities,
+      },
+      'add',
+    );
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, columns.slug));
 }
 
 /**
@@ -106,21 +103,27 @@ export async function updateWorkspaceIngredient(
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
-      ...columnsOf(fields),
-      slug,
-    });
+    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
     if (!row) throw new NotFound('No such ingredient in this coven');
-    await replaceFolkNames(write, [membership], id, folkNames ?? []);
-    await replaceSubstitutes(write, [membership], id, substitutes ?? []);
-    await replaceDeities(write, id, picks.deities, held);
-    await replaceReferenceLinks(write, [membership], id, references ?? []);
-    await replaceCategories(write, [membership], id, fields.categoryIds ?? []);
+    await writeChildren(
+      write,
+      [membership],
+      id,
+      {
+        folkNames,
+        substitutes,
+        references,
+        categoryIds: fields.categoryIds,
+        deities: picks.deities,
+        heldDeities: held,
+      },
+      'replace',
+    );
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, columns.slug));
 }
 
 /**
@@ -139,13 +142,9 @@ export async function deleteWorkspaceIngredient(
   id: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['delete'] });
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIdInWorkspace(membership, ingredients, id);
-    if (!row) throw new NotFound('No such ingredient in this coven');
-  });
+  await softDeleteIngredient(session, id, 'No such ingredient in this coven', (write) =>
+    write.softDeleteByIdInWorkspace(membership, ingredients, id),
+  );
 }
 
 /**

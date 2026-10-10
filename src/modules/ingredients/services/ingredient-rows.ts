@@ -7,8 +7,12 @@ import {
   findManyReferences,
   findOneIngredient,
   findReferencesOf,
+  withAudit,
 } from '../../../db/repository';
-import { ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError } from '../../../lib/errors';
+import type { Session } from '../../../lib/session';
+import { ingredientSlug } from '../../../lib/slugify';
+import { RowId } from '../../../lib/validation';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientDeities } from '../schema/ingredient-deities';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
@@ -18,20 +22,30 @@ import type { Membership } from '@/modules/coven';
 import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
-import type { DeityRecord, IngredientFields, PickedDeity, Tier } from '../types';
+import type {
+  DeityRecord,
+  IngredientChildren,
+  IngredientFields,
+  PickedDeity,
+  Tier,
+} from '../types';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
 // What an ingredient write does the same way in either tier: the parsed
 // input as columns, the picks it records checked against the vocabularies,
-// and the folk names, substitutes, deities, references and categories written
-// beside the row. Internal to the module — the two services import it, and the index
-// does not.
+// the folk names, substitutes, deities, references and categories written
+// beside the row, and the soft delete. Internal to the module — the two
+// services import it, and the index does not. A tier is told by
+// `memberships`, as the repository's two-tier finders take it: none for a
+// compendium entry, the proof's coven for a coven's.
 
 /**
  * The parsed input as columns, every optional one written — `null` where the
- * input has nothing — so an update replaces the row rather than merging into it.
+ * input has nothing — so an update replaces the row rather than merging into
+ * it; and the slug, derived from the label, the form and the formal name
+ * (M4.3) rather than sent beside them.
  */
-export function columnsOf(fields: IngredientFields) {
+export function ingredientColumns(fields: IngredientFields) {
   return {
     name: fields.name,
     canonicalName: fields.canonicalName ?? null,
@@ -44,7 +58,74 @@ export function columnsOf(fields: IngredientFields) {
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
+    slug: ingredientSlug(fields.name, fields.form, fields.canonicalName),
   };
+}
+
+/**
+ * Writes an ingredient's child rows beside it, in its `withAudit`: its folk
+ * names, substitutes, deities, references and categories, in that order.
+ * `'add'` is a new row's, which holds nothing yet, so nothing is read first;
+ * `'replace'` brings each list to exactly the input's, as each `replace…`
+ * below says. The one child write both tiers' create and update make, so the
+ * compendium's and a coven's cannot write different children, and a sixth
+ * child table is one line in each branch.
+ *
+ * @throws {ValidationError} a substitute link or a reference the tier rule
+ * forbids, pathed to its entry.
+ */
+export async function writeChildren(
+  write: AuditWriter,
+  memberships: readonly Membership[],
+  ingredientId: string,
+  children: IngredientChildren,
+  mode: 'add' | 'replace',
+): Promise<void> {
+  const folkNames = children.folkNames ?? [];
+  const substitutes = children.substitutes ?? [];
+  const references = children.references ?? [];
+  const categoryIds = children.categoryIds ?? [];
+
+  if (mode === 'add') {
+    await addFolkNames(write, ingredientId, folkNames);
+    await addSubstitutes(write, memberships, ingredientId, substitutes);
+    await replaceDeities(write, ingredientId, children.deities, []);
+    await addReferenceLinks(write, memberships, ingredientId, references);
+    await addCategories(write, ingredientId, categoryIds);
+    return;
+  }
+  await replaceFolkNames(write, memberships, ingredientId, folkNames);
+  await replaceSubstitutes(write, memberships, ingredientId, substitutes);
+  await replaceDeities(write, ingredientId, children.deities, children.heldDeities ?? []);
+  await replaceReferenceLinks(write, memberships, ingredientId, references);
+  await replaceCategories(write, memberships, ingredientId, categoryIds);
+}
+
+/**
+ * Soft-deletes one ingredient through `remove`, its tier's writer, stamping
+ * who deleted it. Its children stay, so a spell holding it still reaches them
+ * (claude-docs/db/spell-visibility.md, "What a spell holds").
+ *
+ * @throws {NotFound} `missing`, when `remove` finds no live row — and before
+ * the write when `id` is not a uuid, which names nothing and would be a
+ * driver error at the comparison.
+ */
+export async function softDeleteIngredient(
+  session: Session,
+  id: string,
+  missing: string,
+  remove: (write: AuditWriter) => Promise<readonly unknown[]>,
+): Promise<void> {
+  if (!RowId.safeParse(id).success) throw new NotFound(missing);
+  await withAudit(session, async (write) => {
+    const [row] = await remove(write);
+    if (!row) throw new NotFound(missing);
+  });
+}
+
+/** The tier's own wording of a refusal: none in `memberships` is a compendium write. */
+function inTierWords(memberships: readonly Membership[], words: Record<Tier, string>): string {
+  return memberships.length === 0 ? words.compendium : words.coven;
 }
 
 /**
@@ -185,7 +266,7 @@ export async function resolvePicks(
  * tombstone and re-add. A kept pick takes its curated row's spelling now, if
  * it was renamed since. A list that changes nothing writes nothing.
  */
-export async function replaceDeities(
+async function replaceDeities(
   write: AuditWriter,
   ingredientId: string,
   deities: readonly PickedDeity[],
@@ -229,7 +310,7 @@ export async function replaceDeities(
   }
 }
 
-export async function addCategories(
+async function addCategories(
   write: AuditWriter,
   ingredientId: string,
   categoryIds: readonly string[],
@@ -250,7 +331,7 @@ export async function addCategories(
  * the tier the parent is read in, as `findManyOfIngredients` takes it: none
  * for a compendium entry.
  */
-export async function replaceCategories(
+async function replaceCategories(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -273,11 +354,7 @@ export async function replaceCategories(
   );
 }
 
-export async function addFolkNames(
-  write: AuditWriter,
-  ingredientId: string,
-  names: readonly string[],
-) {
+async function addFolkNames(write: AuditWriter, ingredientId: string, names: readonly string[]) {
   for (const name of names) await write.insert(ingredientFolkNames, { ingredientId, name });
 }
 
@@ -288,7 +365,7 @@ export async function addFolkNames(
  * parent is read in, as `findManyOfIngredients` takes it: none for a
  * compendium entry.
  */
-export async function replaceFolkNames(
+async function replaceFolkNames(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -316,7 +393,7 @@ export async function replaceFolkNames(
  *
  * @throws {ValidationError} a link the tier rule forbids, pathed to its entry.
  */
-export async function addSubstitutes(
+async function addSubstitutes(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -337,7 +414,7 @@ export async function addSubstitutes(
  *
  * @throws {ValidationError} a new link the tier rule forbids, pathed to its entry.
  */
-export async function replaceSubstitutes(
+async function replaceSubstitutes(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -393,10 +470,11 @@ async function refuseUnlinkable(
   entries: readonly SubstituteEntry[],
   kept: ReadonlySet<string>,
 ): Promise<void> {
-  const unlinkable =
-    memberships.length === 0
-      ? 'No compendium entry to link — a compendium entry’s substitute links only the compendium'
-      : 'No ingredient to link — choose one from the compendium or this coven';
+  const unlinkable = inTierWords(memberships, {
+    compendium:
+      'No compendium entry to link — a compendium entry’s substitute links only the compendium',
+    coven: 'No ingredient to link — choose one from the compendium or this coven',
+  });
   const checks = entries.map(async (entry, index): Promise<ValidationIssue | undefined> => {
     if (entry.ingredientId === null || kept.has(keyOf(entry.ingredientId, null))) return undefined;
     const path = ['substitutes', index];
@@ -417,7 +495,7 @@ async function refuseUnlinkable(
  *
  * @throws {ValidationError} a reference the tier rule forbids, pathed to its entry.
  */
-export async function addReferenceLinks(
+async function addReferenceLinks(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -438,7 +516,7 @@ export async function addReferenceLinks(
  *
  * @throws {ValidationError} a new reference the tier rule forbids, pathed to its entry.
  */
-export async function replaceReferenceLinks(
+async function replaceReferenceLinks(
   write: AuditWriter,
   memberships: readonly Membership[],
   ingredientId: string,
@@ -497,10 +575,11 @@ async function refuseUncitable(
     unchecked.map((entry) => entry.referenceId),
   );
   const citable = new Set(found.map((reference) => reference.id));
-  const message =
-    memberships.length === 0
-      ? 'No compendium source to cite — a compendium entry cites only the compendium’s sources'
-      : 'No source to cite — choose one from the compendium or this coven';
+  const message = inTierWords(memberships, {
+    compendium:
+      'No compendium source to cite — a compendium entry cites only the compendium’s sources',
+    coven: 'No source to cite — choose one from the compendium or this coven',
+  });
 
   const issues = entries.flatMap((entry, index): ValidationIssue[] =>
     held.has(entry.referenceId) || citable.has(entry.referenceId)

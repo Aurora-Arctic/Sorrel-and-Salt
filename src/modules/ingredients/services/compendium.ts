@@ -12,7 +12,6 @@ import {
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { inUtc } from '../../../lib/utc';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -21,18 +20,11 @@ import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
-  addCategories,
-  addFolkNames,
-  addReferenceLinks,
-  addSubstitutes,
-  columnsOf,
   heldDeities,
-  replaceCategories,
-  replaceDeities,
-  replaceFolkNames,
-  replaceReferenceLinks,
-  replaceSubstitutes,
+  ingredientColumns,
   resolvePicks,
+  softDeleteIngredient,
+  writeChildren,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -153,21 +145,27 @@ export async function createCompendiumEntry(
   const curated = await inCuratedValues(input, parsed, deities ?? [], []);
   const { fields } = curated;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
+  const { slug } = columns;
   const at = new Date();
   await refuseEndingARedirect(slug, at, input.endRedirect);
 
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.insertInCompendium(admin, ingredients, {
-      ...columnsOf(fields),
-      slug,
-    });
-    await addFolkNames(write, row.id, folkNames ?? []);
-    await addSubstitutes(write, [], row.id, substitutes ?? []);
-    await replaceDeities(write, row.id, curated.deities, []);
-    await addReferenceLinks(write, [], row.id, references ?? []);
-    await addCategories(write, row.id, fields.categoryIds ?? []);
+    const [row] = await write.insertInCompendium(admin, ingredients, columns);
+    await writeChildren(
+      write,
+      [],
+      row.id,
+      {
+        folkNames,
+        substitutes,
+        references,
+        categoryIds: fields.categoryIds,
+        deities: curated.deities,
+      },
+      'add',
+    );
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
   expireCompendium();
@@ -214,17 +212,15 @@ export async function updateCompendiumEntry(
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
+  const { slug } = columns;
   const at = new Date();
   const moves = slug !== current.slug;
   if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
 
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, {
-      ...columnsOf(fields),
-      slug,
-    });
+    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, columns);
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
       await write.insertInCompendium(admin, retiredIngredientSlugs, {
@@ -233,11 +229,20 @@ export async function updateCompendiumEntry(
         retiredAt: at,
       });
     }
-    await replaceFolkNames(write, [], id, folkNames ?? []);
-    await replaceSubstitutes(write, [], id, substitutes ?? []);
-    await replaceDeities(write, id, curated.deities, held);
-    await replaceReferenceLinks(write, [], id, references ?? []);
-    await replaceCategories(write, [], id, fields.categoryIds ?? []);
+    await writeChildren(
+      write,
+      [],
+      id,
+      {
+        folkNames,
+        substitutes,
+        references,
+        categoryIds: fields.categoryIds,
+        deities: curated.deities,
+        heldDeities: held,
+      },
+      'replace',
+    );
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
   expireCompendium();
@@ -360,12 +365,9 @@ async function refuseEndingARedirect(
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
   const admin = assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIdInCompendium(admin, ingredients, id);
-    if (!row) throw new NotFound('No such compendium entry');
-  });
+  await softDeleteIngredient(session, id, 'No such compendium entry', (write) =>
+    write.softDeleteByIdInCompendium(admin, ingredients, id),
+  );
   expireCompendium();
 }
 
