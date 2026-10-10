@@ -32,7 +32,7 @@ test('the email page redirects a signed-out visitor to /sign-in, keeping its pat
 test('invite acceptance stays reachable signed out', async ({ page }) => {
   const response = await page.goto('/invite/some-token');
 
-  // No page there yet, so a 404 — from the route itself, not a redirect away.
-  expect(response?.status()).toBe(404);
+  // The page itself, asking for a sign-in, rather than a redirect away (MB.70).
+  expect(response?.status()).toBe(200);
   expect(new URL(page.url()).pathname).toBe('/invite/some-token');
 });
