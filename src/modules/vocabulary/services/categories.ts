@@ -6,6 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -24,6 +25,11 @@ import type { CategoryFilter, CategoryRow } from '../types';
 // category; it is refused only while a live compendium entry is filed under
 // it (claude-docs/db/categories.md, "Category writes").
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
+const cachedCount = cachedCompendiumRead('category-count', findCategoryCount);
+
 /**
  * One page of the live categories under `filter`, by group then name, each under a live
  * group: the `categories` query, and the admin page's list. A blank query is
@@ -34,7 +40,7 @@ export async function listCategories(
   page: PageRequest,
 ): Promise<PageEntry<CategoryRow>[]> {
   const read = readable(filter);
-  return read ? findCategoryPage(read, page) : [];
+  return read ? cachedPage(read, page) : [];
 }
 
 /**
@@ -47,7 +53,7 @@ export async function countCategories(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const read = readable(filter);
-  return read ? findCategoryCount(read, start) : { totalCount: 0, countBefore: null };
+  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /**

@@ -9,6 +9,7 @@ import {
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
@@ -60,6 +61,11 @@ import type { DeityEntry } from '../validation/types';
 // entry's name and redirect from the old one for a window
 // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
+// The list and its count, held in the data cache under the `compendium` tag
+// and keyed by the parsed filter (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('compendium-page', findCompendiumPage);
+const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount);
+
 /**
  * One page of the compendium under `filter`, best match first on a search,
  * each entry carrying its score. Parsed here because the browser is not the
@@ -74,7 +80,7 @@ export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  return findCompendiumPage(parseInput(CompendiumFilter, filter), page);
+  return cachedPage(parseInput(CompendiumFilter, filter), page);
 }
 
 /**
@@ -88,7 +94,7 @@ export async function countCompendium(
   filter: CompendiumFilterInput,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findCompendiumCount(parseInput(CompendiumFilter, filter), start);
+  return cachedCount(parseInput(CompendiumFilter, filter), start);
 }
 
 /**

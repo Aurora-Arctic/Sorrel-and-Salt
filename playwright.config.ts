@@ -1,7 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
-import { CONFIGURED_PROVIDERS_DATABASE, e2eDatabaseUrl, slotDatabase } from './tests/e2e/database';
+import {
+  COMPENDIUM_CACHE_DATABASE,
+  CONFIGURED_PROVIDERS_DATABASE,
+  e2eDatabaseUrl,
+  slotDatabase,
+} from './tests/e2e/database';
 import { PRIMARY_ADMIN_EMAIL } from './tests/e2e/session';
 import {
+  COMPENDIUM_CACHE_PORT,
   CONFIGURED_PROVIDERS_PORT,
   E2E_SLOTS,
   browserUrl,
@@ -33,7 +39,12 @@ const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
 
-const serverEnv = (port: number, database: string, providers: Record<string, string>) => ({
+const serverEnv = (
+  port: number,
+  database: string,
+  providers: Record<string, string>,
+  { dataCache = false } = {},
+) => ({
   PORT: String(port),
   DATABASE_URL: e2eDatabaseUrl(database),
   // Out of `next dev`'s way — see next.config.ts.
@@ -44,6 +55,10 @@ const serverEnv = (port: number, database: string, providers: Record<string, str
   // CI's placeholder, here too, so a developer's own address in `.env.local`
   // never names the primary admin a spec signs in as (MB.59).
   ADMIN_BOOTSTRAP_EMAIL: PRIMARY_ADMIN_EMAIL,
+  // And held in no memory either, but on the compendium-cache server: a slot's
+  // database is reseeded under its server, which a cache would not follow
+  // (claude-docs/db/compendium-cache.md, "In tests").
+  ...(!dataCache && { NEXT_DATA_CACHE: 'off' }),
   ...providers,
 });
 
@@ -71,6 +86,21 @@ const configuredProvidersServer = {
 };
 
 const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
+
+// One more, whose data cache holds (M8.6): the one place a spec sees a read
+// answered from the cache rather than Postgres. Its database is its own and
+// never reseeded, since a reseed would leave the cache behind it.
+const compendiumCacheServer = {
+  command: 'npm run start',
+  url: serverUrl(COMPENDIUM_CACHE_PORT),
+  reuseExistingServer: !process.env.CI,
+  timeout: 60_000,
+  env: serverEnv(COMPENDIUM_CACHE_PORT, COMPENDIUM_CACHE_DATABASE, UNCONFIGURED_PROVIDERS, {
+    dataCache: true,
+  }),
+};
+
+const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 
 // Every output under .reports/ with the rest of the generated files. The
 // reporter list lives here rather than on CI's command line because a CLI
@@ -103,11 +133,11 @@ export default defineConfig({
     reducedMotion: 'reduce',
   },
   // Production build, against the e2e databases rather than the dev one.
-  webServer: [...slotServers, configuredProvidersServer],
+  webServer: [...slotServers, configuredProvidersServer, compendiumCacheServer],
   projects: [
     {
       name: 'chromium',
-      testIgnore: CONFIGURED_PROVIDERS_SPEC,
+      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC],
       use: { ...devices['Desktop Chrome'] },
     },
     {
@@ -116,6 +146,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: browserUrl(CONFIGURED_PROVIDERS_PORT),
+      },
+    },
+    {
+      name: 'chromium-compendium-cache',
+      testMatch: COMPENDIUM_CACHE_SPEC,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: browserUrl(COMPENDIUM_CACHE_PORT),
       },
     },
   ],

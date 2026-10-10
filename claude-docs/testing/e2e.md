@@ -51,7 +51,7 @@ reads OAuth credentials per request and its two provider states cannot share
 a process. Every slot's server runs with each provider variable set to `''` —
 blank rather than absent, because Next never lets `.env.local` override a
 variable already set, so a developer's real credentials cannot leak into it.
-The last `webServer` entry runs `npm run start` on **8100** with placeholder
+Its `webServer` entry, after the slots', runs `npm run start` on **8100** with placeholder
 credentials for all four, against `sorrel_e2e_providers`, which no spec
 reseeds. 8100 is fixed above every slot's port, and the 99-slot cap keeps it
 there, so no slot can reach that server, or attach to it under a local
@@ -67,11 +67,21 @@ bundle. Placeholder ids are useless to a real authorization endpoint, so
 nothing may click a provider button against 8100; the spec aborts and fails
 on any request to `/api/auth/sign-in/`.
 
+**The compendium-cache server is the last** (M8.6): `npm run start` on
+**8101** against `sorrel_e2e_cache`, which no spec reseeds, and the one
+server whose data cache holds. Every other sets `NEXT_DATA_CACHE=off`,
+because its database is reseeded under it and a cache would not follow. A
+third project, `chromium-compendium-cache`, runs
+`tests/e2e/compendium-cache.spec.ts` alone against it, and `chromium`
+ignores that spec too
+([`db/compendium-cache.md`](../db/compendium-cache.md), "In tests").
+
 - **`tests/e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).
   `seedE2eTemplate()` builds `sorrel_e2e_template` — `sorrel_template`
   cloned, migrated and `standard`-seeded, ~1 s — and `cloneE2eDatabases()`
-  clones every slot's `sorrel_e2e_<slot>` and `sorrel_e2e_providers` from it,
+  clones every slot's `sorrel_e2e_<slot>`, `sorrel_e2e_providers` and
+  `sorrel_e2e_cache` from it,
   tens of milliseconds each. `e2eDatabaseUrl(database)` swaps
   `DATABASE_URL`'s pathname to that database, by default the calling worker's
   slot's; the config passes each server its own as `webServer.env.DATABASE_URL`,
@@ -143,13 +153,18 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   shares — and can't corrupt — the production build e2e is serving from.
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
   `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
-  server keeps its data cache — the compendium read's `unstable_cache`
+  server keeps whatever data cache it has — the compendium read's `unstable_cache`
   (CLAUDE.md rule 6) — in its own memory. The servers share one `.next-e2e`
   build, and a cache flushed to disk there would hand one slot's compendium
   to another. It also stops runtime ISR writes and the image optimiser's disk
   cache, and it is off on Vercel anyway
   ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
   "The data cache is per server too").
+- **`next.config.ts`'s `cacheMaxMemorySize`** is 0 when `NEXT_DATA_CACHE`
+  is `'off'`, which every e2e server but the compendium-cache server sets,
+  so with nothing flushed to disk either, their data cache holds nothing and
+  every `unstable_cache` read reaches the slot's database, reseeded or not
+  ([`db/compendium-cache.md`](../db/compendium-cache.md), "In tests").
 - **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the
   local `postgres` Docker service exactly as Vitest's does.
@@ -157,7 +172,7 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   the `devcontainer` compose service alone. When it is present,
   `playwright.config.ts` passes it as `connectOptions.wsEndpoint`, and every
   `baseURL` becomes `http://devcontainer:<port>` — the slot's server's port,
-  or 8100 for the configured-providers project (`tests/e2e/slots.ts`'s
+  8100 for the configured-providers project or 8101 for the compendium-cache one (`tests/e2e/slots.ts`'s
   `browserUrl`) — since a remote browser cannot resolve the runner's
   `localhost`. It reaches those ports inside the compose network;
   `devcontainer.json` forwards 8001 alone, for opening slot 0's server from

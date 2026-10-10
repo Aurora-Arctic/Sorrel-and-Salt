@@ -6,6 +6,7 @@ import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-pro
 
 const require = createRequire(import.meta.url);
 const serverOnlyStub = require.resolve('next/dist/compiled/server-only/empty.js');
+const nextCacheStub = fileURLToPath(new URL('./tests/support/next-cache.ts', import.meta.url));
 
 // The `db` project's trees: the database layer's tests and the modules'.
 const DB_INCLUDE = ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'];
@@ -77,11 +78,17 @@ export default defineConfig({
   // reaching one fails `next build`. Next resolves it itself and the package is
   // not installed, so a test gets Next's own empty stub: a test is not a client
   // bundle.
+  //
+  // `next/cache` gets tests/support/next-cache.ts: Next's `unstable_cache` and
+  // `revalidateTag` throw outside a request, so a test reads past the data
+  // cache to Postgres and a write's `revalidateTag` is recorded rather than
+  // run (claude-docs/db/compendium-cache.md, "In tests").
   resolve: {
     tsconfigPaths: true,
     alias: [
       { find: /^graphql$/, replacement: require.resolve('graphql') },
       { find: /^server-only$/, replacement: serverOnlyStub },
+      { find: /^next\/cache$/, replacement: nextCacheStub },
     ],
   },
   test: {

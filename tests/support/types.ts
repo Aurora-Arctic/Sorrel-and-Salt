@@ -174,3 +174,16 @@ export interface GroupedValueListSubject {
   /** Part of a name, as the filter's query. */
   query: string;
 }
+
+/** An entry of tests/support/next-data-cache.ts: the stored JSON and its tags. */
+export interface CachedEntry {
+  body: string;
+  tags: readonly string[];
+}
+
+/** What an `unstable_cache` read was declared with, as the fake data cache keeps it. */
+export interface CachedDeclaration {
+  keyParts: readonly string[];
+  tags: readonly string[];
+  revalidate: number | false | undefined;
+}
