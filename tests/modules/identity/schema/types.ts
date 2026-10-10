@@ -14,3 +14,19 @@ export interface PauseRow {
   ended_by: string | null;
   ended: boolean;
 }
+
+/** One `user_privilege_changes` row as the ledger tests read it, enums and timestamps cast to text. */
+export interface PrivilegeChangeRow {
+  id: string;
+  user_id: string;
+  privilege: string;
+  change: string;
+  via: string;
+  note: string | null;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
+}
