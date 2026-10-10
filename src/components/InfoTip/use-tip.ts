@@ -6,7 +6,7 @@ import type { Tip } from './types';
 // A tip's open state as WCAG 1.4.13 asks it to behave: shown on hover, focus
 // or a tap, kept open while the pointer is over it, and closed on Escape,
 // blur, or the pointer leaving. InfoTip's, and every other tip's beside a
-// control (claude-docs/components/info-tip.md, "useTip").
+// control (claude-docs/components/info-tip.md, "Behaviour").
 
 // Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;
