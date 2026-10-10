@@ -175,7 +175,7 @@ const CreationControl = ({
             <>
               <p>{copy.question(name)}</p>
               {warns && (
-                <p id={warningId} className="notice notice--warn">
+                <p id={warningId} className="notice notice--warn user-list__warning">
                   {UNVERIFIED_WARNING}
                 </p>
               )}
