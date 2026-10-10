@@ -67,13 +67,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
-| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `held-entries.ts`, `suggestions.ts` |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                     |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                  |
+| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                                                              |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                                                           |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -128,6 +128,44 @@ A module offers three things to the rest of the tree, and nothing else:
 
 `services/`, `graphql/`, `loaders/` and `types.ts` are internal. A deep import
 of any of them from outside the module is a boundary violation, whatever the importer.
+
+## Shared steps inside a module
+
+A step several services of one module repeat lives once in a service file
+the index does not re-export, and each service calls it between its own
+checks (MB.210, on the owner's call for shared steps over a descriptor
+factory): every exported service keeps its function, its JSDoc, and its own
+`assertSiteAdmin(` and `expireCompendium()`, which
+`tests/guards/compendium-expiry.test.ts` reads it for.
+
+- **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
+  each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
+  `refuseSlugCollision`, `liveRow` for an id that may name nothing,
+  `parseUnderLiveParent` for a row filed under a group, and a group's
+  `moveTarget`, `updateGroup` and `deleteGroup`, built on
+  `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`
+  it moves — their column, their slug rule, and the walk that reads them.
+- **`vocabulary/services/curated-lists.ts`** — `readableFilter` and
+  `cachedFilteredList`, the list and count of a vocabulary filtered by a
+  group. Each service still spells its own two cache keys, where
+  `tests/guards/compendium-cache.test.ts` reads them.
+- **`vocabulary/services/held-entries.ts`** — `refuseWhileHeld`, a delete
+  refused while live compendium entries hold the row; `describeEntry`, the
+  one way a refusal names an entry, its label unquoted; and
+  `redirectRefusal`, a write ending other entries' redirects. The index
+  re-exports the last two for the compendium's service.
+- **`identity/services/admin-changes.ts`** — `liveUser`,
+  `adminDeclaration`, and `isSiteAdmin` and `refuseBatch` for a batch
+  answered slot by slot; `admin-role-pause.ts`'s `assertAdminChangesOpen`
+  is the site-role check and the pause in one call.
+
+What no module owns is in `src/lib/`: `allPages` in `pagination.ts`, every
+walk over a finder's pages; `plural`, `joinAnd` and `addressTaken` in
+`text.ts`, the English a refusal is phrased in; `inIdOrder` in
+`in-id-order.ts`, a batch answered in its ids' order. `coven` exports
+`readersOf` for every read of the compendium and, optionally, one coven.
+`tests/guards/curated-write-steps.test.ts` fails a service that writes its
+own slug-collision refusal, move target, `describeEntry` or page walk.
 
 ## The boundary
 

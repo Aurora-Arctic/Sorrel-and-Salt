@@ -115,10 +115,14 @@ catches the write's failure and reads the index off it with
   equal to another entry's formal name, where a message beside the empty
   formal-name field would point at a box the admin never filled in. The
   message names the holder by its label, formal name and form:
-  `Already in the compendium as "Mugwort" (Artemisia vulgaris, herb)`.
+  `Already in the compendium as Mugwort (Artemisia vulgaris, herb)`.
 - `ingredients_compendium_slug_unique` lands on `name`, as the coven's does,
-  naming the address and the entry holding it: `"Testwort" (root) already has
+  naming the address and the entry holding it: `Testwort (root) already has
 the address "testwort-root" — change the name, form or formal name`.
+
+Both name the entry through the vocabulary's `describeEntry`, its label
+unquoted as every vocabulary refusal names one, so a list of entries reads as
+one sentence (MB.210).
 
 The holder is read after the write has rolled back, by
 `findCompendiumEntryByIdentity({ name, canonicalName, form })`: the live

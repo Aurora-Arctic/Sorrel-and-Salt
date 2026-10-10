@@ -211,7 +211,7 @@ describe('createCompendiumIngredient', () => {
       fieldErrors: [
         {
           path: ['canonicalName'],
-          message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
+          message: 'Already in the compendium as Testwort (Fixtura testalis, herb)',
         },
       ],
     });
@@ -356,7 +356,7 @@ describe('updateCompendiumIngredient', () => {
     });
 
     const REDIRECT_REFUSAL =
-      /^"testdirt-earth" redirects to "Testsoil" \(earth\) until \d{1,2} \w+ \d{4}, 00:00 UTC — confirm to end that redirect$/;
+      /^"testdirt-earth" redirects to Testsoil \(earth\) until \d{1,2} \w+ \d{4}, 00:00 UTC — confirm to end that redirect$/;
 
     it('refuses a rename into it as VALIDATION on `endRedirect`, then takes it when resent confirmed', async () => {
       const id = await seed({ name: 'Testclay', nomenclature: 'none', form: 'earth' });
