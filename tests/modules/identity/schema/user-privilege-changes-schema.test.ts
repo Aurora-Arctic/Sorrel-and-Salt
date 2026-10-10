@@ -61,8 +61,9 @@ describe('user_privilege_changes schema', () => {
     expect(byName.note.notNull).toBe(false);
   });
 
-  // Read by MB.199's page, which adds `(user_id, created_at desc)` if the
-  // keyset helper's plan wants it.
+  // Read newest first by MB.199, whose plan wants none: a few rows a user,
+  // and a key on `created_at` negated that no plain index could order
+  // (claude-docs/auth/admin-users.md, "The privilege ledger").
   it('declares no index', () => {
     expect(byIndexName).toEqual({});
   });

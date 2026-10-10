@@ -93,9 +93,10 @@ matches only the session's user holding the invited address, verified
 ([`invitations.md`](invitations.md), "Written and read by tier").
 
 The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
-(MB.52), are not among them: they span no workspace either, but they take the
-`SiteAdmin` proof instead ([`auth/admin-users.md`](../auth/admin-users.md),
-"The user list").
+(MB.52), and the privilege ledger's, `findPrivilegeChangePage` (MB.199), are
+not among them: they span no workspace either, but they take the `SiteAdmin`
+proof instead ([`auth/admin-users.md`](../auth/admin-users.md), "The user
+list" and "The privilege ledger").
 
 `tests/guards/soft-delete-finder-guard.test.ts` pins the repository's export
 list (once, since MB.184), so a fifth exception is a decision rather than an

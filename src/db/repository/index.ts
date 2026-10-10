@@ -61,7 +61,12 @@ export {
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
-export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
+export {
+  findPrivilegeChangePage,
+  findProvidersOfUsers,
+  findUserByEmail,
+  findUserPage,
+} from './users';
 export {
   findInvitationByToken,
   findPendingInvitationsInWorkspace,
@@ -92,6 +97,7 @@ export type {
   InvitationRow,
   JoinedRow,
   LinkedProvider,
+  PrivilegeChangeFilter,
   ReferenceLinkRow,
   ReferenceRow,
   SimilarityScore,

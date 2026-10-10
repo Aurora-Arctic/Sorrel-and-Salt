@@ -449,6 +449,37 @@ input PlanetInput {
   name: String!
 }
 
+type PrivilegeChange {
+  """Who made the change; null if no live account holds the id."""
+  actor: User
+  audit: AuditInfo!
+  change: PrivilegeChangeKind!
+  id: ID!
+
+  """Why, where the one who made the change gave a reason."""
+  note: String
+  privilege: UserPrivilege!
+
+  """Whose privilege changed; null if no live account holds the id."""
+  subject: User
+  via: PrivilegeRoute!
+}
+
+enum PrivilegeChangeKind {
+  grant
+  revoke
+}
+
+"""
+How a change came about: the primary admin's bootstrap, an admin's act, an invitation accepted, or a declared manual fix.
+"""
+enum PrivilegeRoute {
+  admin
+  bootstrap
+  invitation
+  manual
+}
+
 type Query {
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
@@ -489,6 +520,11 @@ type Query {
   """
   planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
+
+  """
+  Every change to who is an admin and who may create a coven, newest first.
+  """
+  privilegeChanges(after: String, before: String, first: Int, last: Int, privilege: UserPrivilege, userId: ID): QueryPrivilegeChangesConnection!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
@@ -674,6 +710,16 @@ type QueryPossibleDuplicatesConnectionEdge {
   score: Float!
 }
 
+type QueryPrivilegeChangesConnection {
+  edges: [QueryPrivilegeChangesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryPrivilegeChangesConnectionEdge {
+  cursor: String!
+  node: PrivilegeChange!
+}
+
 type QueryReferenceSuggestionsConnection {
   edges: [QueryReferenceSuggestionsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -840,6 +886,14 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
+}
+
+"""
+A privilege on `users`: `admin` is the site role, `create_workspace` the flag.
+"""
+enum UserPrivilege {
+  admin
+  create_workspace
 }
 
 enum UserRole {

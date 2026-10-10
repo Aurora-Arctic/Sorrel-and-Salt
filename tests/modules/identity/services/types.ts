@@ -50,3 +50,10 @@ export interface RoleRow {
   can_create_workspace: boolean;
   updated_by: string;
 }
+
+/** One ledger row as the privilege-change tests seed and read it back, in the service's order. */
+export interface LedgerRow {
+  id: string;
+  user_id: string;
+  privilege: string;
+}
