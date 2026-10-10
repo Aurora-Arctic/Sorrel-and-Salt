@@ -173,9 +173,9 @@
   `set_updated_at` trigger; the demotion of the seed's bootstrap user, which a
   database seeded before MB.58 holds as an admin and the seed never rewrites;
   and the backfill, one `bootstrap` row for every live admin, stamped as that
-  admin. The ledger is superseded by `user_privilege_changes` (`0055`), and its
-  schema test, which re-ran both data statements, went with its schema in
-  MB.196. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
+  admin. The ledger is superseded by `user_privilege_changes` (`0055`) and
+  dropped by `0058`, and its schema test, which re-ran both data statements,
+  went with its schema in MB.196. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
   "What the audit trail records".
 - **`0044_admin-role-change-pauses.sql`** (MB.62) creates
   `admin_role_change_pauses`, its pair CHECK and its one-open index, with the
@@ -213,6 +213,18 @@
   `users`, one after insert and one after an update of `role` or
   `can_create_workspace`, since an insert trigger's `WHEN` may not name `OLD`.
   [`write-path.md`](write-path.md) documents the route and note they read.
+- **`0058_drop-old-privilege-ledgers.sql`** (MB.197) is the contract of
+  MB.196's switch: it drops `admin_role_changes` and
+  `workspace_creation_changes` and their two enums, after running `0055`'s
+  copy once more with `ON CONFLICT ("id") DO NOTHING`, for any row the deploy
+  before MB.196 wrote after it. Made while MB.203's drop of the two old
+  invitation tables was pending, it is a drop made while another is pending:
+  the invitation drops `generate` also emitted are left out, and those tables
+  kept in `0058_snapshot.json`. Its sidecar acknowledges the four drops and
+  says why production is not its gate: production is not live, the owner's
+  call. `user-privilege-changes-schema.test.ts` restores both tables in its
+  clone from `0043` and `0054` to re-run the copy and the sweep. See
+  ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

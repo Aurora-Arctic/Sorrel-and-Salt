@@ -3685,15 +3685,15 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the two retired privilege ledgers dropped once no deploy reads them, so that the schema holds one ledger and not three.
 
-The contract step's second half. **It merges into `staging` only after a release carrying MB.196 has reached production**, never in the same release: production's deploy declares `admin_role_changes`, and a release runs every pending migration before it promotes (`db/expand-contract.md`, MB.137's worked case). `db:generate` emits the two drops and their enums; MB.194's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row the pre-switch deploy wrote during the rollout. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, where MB.196 left them for the catalogue sweeps, and MB.194's copy test in `user-privilege-changes-schema.test.ts` becomes this migration's sweep test.
+The contract step's second half. **It is not gated on a production release: production was not live, on the owner's call, 2026-10-10.** Production's deploy declares `admin_role_changes`, and a release runs every pending migration before it promotes (`db/expand-contract.md`, MB.137's worked case), so the release carrying MB.196 carries this drop too and that deploy's ledger reads fail for its rollout, which costs nothing while no member uses production, as MB.168 argued (amended 2026-10-10: the entry first waited for a release carrying MB.196 to reach production). `db:generate` emits the two drops and their enums; MB.194's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row the pre-switch deploy wrote during the rollout. The last names in the tests go with the tables: both come out of `AUDITED_TABLES` in `tests/support/db/table-metadata.ts`, where MB.196 left them for the catalogue sweeps, and MB.194's copy test in `user-privilege-changes-schema.test.ts` becomes this migration's sweep test.
 
 _Acceptance criteria:_
 
 - The migration sweeps both tables into `user_privilege_changes`, then drops both tables and both enums
 - A row written to either old table after MB.194's copy lands in the new one with its id, asserted by re-running the sweep against such a row
-- Both tables leave `AUDITED_TABLES`, MB.194's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations names either table
+- Both tables leave `AUDITED_TABLES`, MB.194's copy test is replaced by that sweep test, and afterwards no file under `src/` or `tests/` but the migrations and that sweep test, which restores the tables in its clone to write the rows it sweeps, names either table (amended 2026-10-10: the sweep test was not excepted)
 - `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
-- The PR body names the release that carried MB.196 to production
+- The PR body says the drop is not gated on a production release, production not being live, on the owner's call (amended 2026-10-10: it first named the release that carried MB.196 to production)
 
 **MB.198 — One table mark replaces the state-ledger markers** · 2h
 
