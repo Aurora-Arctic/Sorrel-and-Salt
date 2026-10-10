@@ -25,6 +25,13 @@
   }
 }
 
+// The address's asterisk, hard against its label in the error red, as the
+// vocabulary forms mark a required field. Hidden from the field's name: the
+// input's `aria-required` says it instead.
+.admin-invitations__required {
+  color: $secondary;
+}
+
 .admin-invitations__empty {
   margin: 0;
 }

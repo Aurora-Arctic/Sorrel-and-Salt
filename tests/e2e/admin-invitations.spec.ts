@@ -52,7 +52,7 @@ test('an admin invites an address with a reason, mailed the link and listed as p
   const dialog = page.getByRole('dialog', { name: 'Invite an Admin' });
   const send = dialog.getByRole('button', { name: 'Send Invitation' });
   await expect(send).toBeDisabled();
-  await dialog.getByLabel('Email address').fill(invited);
+  await dialog.getByLabel('Email Address').fill(invited);
   await dialog.getByLabel('Reason').fill('Curates the resins');
   await assertNoAccessibilityViolations(page);
   await send.click();
@@ -80,7 +80,7 @@ test('an admin revokes a pending invitation after confirming, and its link says 
   const section = page.getByRole('region', { name: 'Admin Invitations' });
   await section.getByRole('button', { name: 'Invite Admin' }).click();
   const dialog = page.getByRole('dialog', { name: 'Invite an Admin' });
-  await dialog.getByLabel('Email address').fill(invited);
+  await dialog.getByLabel('Email Address').fill(invited);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   const path = await mailedInvitePath(invited);
 

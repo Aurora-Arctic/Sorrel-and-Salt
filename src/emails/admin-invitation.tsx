@@ -15,8 +15,7 @@ export function AdminInvitation({ url, origin = new URL(url).origin, part }: Adm
   return (
     <EmailLayout preview={SUBJECT} heading="You Are Invited" origin={origin}>
       <Paragraph>
-        An admin of Sorrel &amp; Salt has invited this email address to become an admin. Admins look
-        after the compendium and the lists it draws on.
+        An admin of Sorrel &amp; Salt has invited this email address to become an admin.
       </Paragraph>
       <Paragraph>
         {part === 'html'

@@ -26,7 +26,7 @@ test('shows all three sections, with no accessibility violations', async ({ page
     'Sign-In Methods',
   ]);
   await expect(main.getByRole('textbox', { name: 'Name' })).toHaveValue('Fixture Person');
-  await expect(main.getByRole('textbox', { name: 'Email address' })).toHaveValue(
+  await expect(main.getByRole('textbox', { name: 'Email Address' })).toHaveValue(
     'one-method@account-page.test',
   );
   // No way across to the email page; the nav's Email link stays on this one.

@@ -85,7 +85,7 @@ describe('AdminInvitations', () => {
 
     openInvite();
     expect(send()).toBeDisabled();
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email address' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
     });
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
@@ -99,6 +99,17 @@ describe('AdminInvitations', () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
+  it('marks the address required with an asterisk, and the reason optional', () => {
+    render(<AdminInvitations invitations={[]} />);
+
+    openInvite();
+    const email = within(dialog()).getByRole('textbox', { name: 'Email Address' });
+    expect(email).toBeRequired();
+    // The asterisk is for the eye: the name stays the label alone.
+    expect(within(dialog()).getByText('*')).toHaveAttribute('aria-hidden', 'true');
+    expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
+  });
+
   it('says a refused address beside the field and keeps the form open', async () => {
     mockGraphQLError('CreateAdminInvitation', {
       code: 'VALIDATION',
@@ -107,12 +118,12 @@ describe('AdminInvitations', () => {
     render(<AdminInvitations invitations={[]} />);
 
     openInvite();
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email address' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: 'admin@example.test' },
     });
     fireEvent.click(send());
 
-    const field = within(dialog()).getByRole('textbox', { name: 'Email address' });
+    const field = within(dialog()).getByRole('textbox', { name: 'Email Address' });
     await waitFor(() =>
       expect(field).toHaveAccessibleDescription(
         expect.stringContaining('That address belongs to an admin already'),

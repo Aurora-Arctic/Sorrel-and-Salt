@@ -15,13 +15,15 @@ describe('adminInvitationMessage', () => {
     expect(message.text).not.toMatch(/<[a-z]/i);
   });
 
-  it('says what an admin does, how long the link lasts, and that an unexpected mail can be ignored', async () => {
+  it('says who invited them to what, how long the link lasts, and that an unexpected mail can be ignored', async () => {
     const { text } = await adminInvitationMessage({
       to: 'someone@admin-invitation.test',
       url: URL,
     });
 
-    expect(text).toContain('invited this email address to become an admin');
+    expect(text).toContain('invited this email address to become an admin.');
+    // What an admin does is not the mail's to say (the owner's call).
+    expect(text).not.toMatch(/Admins look after/);
     expect(text).toContain('open the link below within seven days');
     expect(text).toMatch(/sign in with an account that uses this email address/);
     expect(text).toMatch(/weren.t expecting this.*ignore this email/is);

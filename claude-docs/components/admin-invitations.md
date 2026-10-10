@@ -20,8 +20,9 @@ admin is held by the pause, and hands both down. The rules are
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. The component imports the user list's stylesheet for their classes,
   so it stands on its own in the workshop.
-- **Invite Admin** (`invite-form.tsx`) opens a modal with the address and an
-  optional **Reason**, spaced as the user list's confirmation spaces its own.
+- **Invite Admin** (`invite-form.tsx`) opens a modal with the **Email Address**,
+  required and marked with the vocabulary forms' red asterisk, and an optional
+  **Reason**, spaced as the user list's confirmation spaces its own.
   **Send Invitation** stays disabled until there is an address, and shows a
   spinner while sending; Cancel is quiet. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent

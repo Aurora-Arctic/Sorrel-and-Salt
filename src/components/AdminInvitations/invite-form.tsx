@@ -109,13 +109,17 @@ const InviteForm = (): ReactElement => {
               )}
               <div className="field">
                 <label className="field__label" htmlFor={emailId}>
-                  Email address
+                  Email Address
+                  <span className="admin-invitations__required" aria-hidden="true">
+                    *
+                  </span>
                 </label>
                 <input
                   id={emailId}
                   className="input"
                   type="email"
                   autoComplete="off"
+                  aria-required
                   aria-invalid={failure.field ? true : undefined}
                   aria-describedby={failure.field ? emailErrorId : undefined}
                   value={email}
