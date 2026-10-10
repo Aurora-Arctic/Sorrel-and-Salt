@@ -3,6 +3,7 @@ import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
@@ -618,6 +619,14 @@ export interface UserFilter {
   awaitingApproval?: boolean;
   /** Only the users holding this site role (M5.8, on the owner's review). */
   role?: (typeof users.$inferSelect)['role'];
+}
+
+/** What the privilege ledger is narrowed by (MB.199). Each part is optional, and absent means no filter. */
+export interface PrivilegeChangeFilter {
+  /** Only the changes to this user's privileges. */
+  userId?: string;
+  /** Only the changes to this privilege. */
+  privilege?: (typeof userPrivilegeChanges.$inferSelect)['privilege'];
 }
 
 /** What the admin category list is narrowed by (MB.178). Each part is optional, and absent means no filter. */

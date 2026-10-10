@@ -1,5 +1,5 @@
 import { membershipsByUser } from '@/modules/coven';
-import { providersByUser } from '@/modules/identity';
+import { providersByUser, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
   deitiesByIngredient,
@@ -22,6 +22,7 @@ import type { Built, LoaderFactory } from './types';
 const LOADERS = {
   membershipsByUser,
   providersByUser,
+  usersByIdForAdmin,
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,

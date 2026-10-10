@@ -91,6 +91,16 @@ service, `listUsers`, refuses anyone but a site admin, and the query carries
 no scope of its own: it is a read, which M5.7's mutation sweep does not reach
 ([`auth/admin-users.md`](../auth/admin-users.md), "The user list").
 
+`privilegeChanges(userId: ID, privilege: UserPrivilege)` is the privilege
+ledger (MB.199), a paged connection of `PrivilegeChange`, newest first: `id`,
+`privilege`, `change` (`PrivilegeChangeKind`), `via` (`PrivilegeRoute`), the
+nullable `note`, `audit`, and `subject` and `actor` as the ordinary `User`,
+nullable where no live account holds the id. The two share the
+`usersByIdForAdmin` loader, so a page reads its users once. The query carries
+the `admin` scope, the first paged connection to, and its service,
+`listPrivilegeChanges`, refuses anyone but a site admin again
+([`auth/admin-users.md`](../auth/admin-users.md), "The privilege ledger").
+
 `setEmail(email: String!, next: String): User!` is the schema's first
 mutation (MB.54), registered by `identity` on the `Mutation` root that
 `src/graphql/schema/index.ts` declares beside `Query`. Signed-in only, by
@@ -113,7 +123,7 @@ creation").
 Their GraphQL files hold the transport's half (MB.180, MB.186;
 ["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
 says what that half is), and a signed-out caller at `me`, `users`,
-`setEmail` and the two creation writes is `tests/db/graphql-query-scopes.test.ts`'s.
+`setEmail`, the two creation writes and `privilegeChanges` is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
 `memberships` through the request's loader. `users.test.ts` holds the default
 page, the cursor and the filters reaching `listUsers`, the nodes being `me`'s
@@ -124,6 +134,9 @@ holds the four private fields' `self`-or-`admin` scope, below.
 every refusal's rule is `services/email.test.ts`'s.
 `workspace-creation.test.ts` holds, per write, an admin's answer and one
 refusal per error code; who is refused is `services/workspace-creation.test.ts`'s.
+`privilege-changes.test.ts` holds every field, the filters reaching the
+service, one user read per page, and the scope's own refusal; the order and
+who the service refuses are `services/privilege-changes.test.ts`'s.
 
 ### `planetSuggestions` and `zodiacSuggestions`
 
@@ -152,9 +165,8 @@ type CorrespondenceSuggestion {
 - **Two refusals, one type.** Signed out, the resolver refuses with
   `Forbidden` before the service is reached. Signed in, `assertMembership`
   refuses a workspace the caller does not belong to with the same
-  `Forbidden`, a site admin included. The field carries no scope, because
-  `pagedConnection` takes none and the resolver's null check is the same
-  early refusal.
+  `Forbidden`, a site admin included. The field carries no scope, because the
+  resolver's null check is the same early refusal.
 - **A null `workspaceId` reads the compendium alone** (M5.5): the curated
   rows, then the values in use in the compendium, under no proof, so no
   membership is asked and any signed-in caller is answered. It is the admin's

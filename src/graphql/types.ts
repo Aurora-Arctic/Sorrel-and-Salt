@@ -5,6 +5,7 @@ import type {
   ObjectFieldsShape,
   ObjectRef,
 } from '@pothos/core';
+import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
 import type { EmailVerificationSender } from '@/modules/identity';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
@@ -68,6 +69,11 @@ export interface PagedConnectionOptions<
   description?: string;
   /** The field's own arguments, beside the four the connection adds. */
   args?: Args;
+  /**
+   * The field's scope (M5.7), checked before `resolve` is asked: the second
+   * check in front of a service that refuses again.
+   */
+  authScopes?: FieldAuthScopes<Types, ParentShape, InputShapeFromFields<Args>>;
   /**
    * One page from a keyset finder. It receives a decoded, clamped
    * `PageRequest` and never the client's `first`/`after`, so it cannot skip
