@@ -1,6 +1,6 @@
 import type { Story } from '@ladle/react';
 import type { PropsWithChildren } from 'react';
-import UserList from '.';
+import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter
@@ -42,7 +42,8 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
-    providers: ['google'],
+    // Facebook among them, so its mark shows (MB.63).
+    providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,
   },
@@ -139,10 +140,15 @@ export const AdminRoles: Story = () => (
   </Frame>
 );
 
-// MB.63: the switch on admin changes, paused. To the primary admin its Resume
-// works; to any other admin it is in view but unusable, the reason beside it.
+// MB.63: the page's header with the switch beside the heading, as
+// /admin/users draws it. Paused, to the primary admin: the warning and a
+// usable Resume, and every row's control usable, since the pause exempts it.
 export const AdminChangesPaused: Story = () => (
   <Frame>
+    <div className="page-header">
+      <h1>Users</h1>
+      <PauseControl paused canToggle />
+    </div>
     <UserList
       users={USERS}
       query=""
@@ -152,13 +158,20 @@ export const AdminChangesPaused: Story = () => (
   </Frame>
 );
 
+// Paused, to another admin: the warning, Resume locked with its reason in a
+// tip, and every Grant, Revoke, Approve and coven-creation Revoke locked with
+// the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
   <Frame>
+    <div className="page-header">
+      <h1>Users</h1>
+      <PauseControl paused canToggle={false} />
+    </div>
     <UserList
       users={USERS}
       query=""
       awaitingApproval={false}
-      adminChanges={{ paused: false, canToggle: false }}
+      adminChanges={{ paused: true, canToggle: false }}
     />
   </Frame>
 );

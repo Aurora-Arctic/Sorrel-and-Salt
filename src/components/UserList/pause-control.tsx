@@ -2,15 +2,17 @@
 
 import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
-// The primary admin's switch on admin grants and revokes (MB.63), above the
-// list: a warning while changes are paused, and the control that flips it. Every admin sees
-// both; only the primary admin can use the control, whose reason the others
-// are told beside it, and again when they try. The service is the guard
+// The primary admin's switch on admin grants and revokes (MB.63), beside the
+// page's heading: a warning while changes are paused, and the control that
+// flips it. Every admin sees both; only the primary admin can use the
+// control, whose reason the others see in a tip, and again when they try. The
+// service is the guard
 // (claude-docs/components/user-list.md).
 
 const PauseAdminRoleChangesDocument = graphql(`
@@ -28,12 +30,13 @@ const ResumeAdminRoleChangesDocument = graphql(`
 const STATES = {
   paused: {
     state:
-      'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
+      // Short, on the owner's call: who may still act is the switch's tip.
+      'Admin changes are paused.',
     label: 'Resume Admin Changes',
     busy: 'Resuming',
-    // Plain and full size: the way back takes nothing away, and the control
-    // keeps its size as it flips.
-    buttonClass: 'btn',
+    // Red and full size like Pause, on the owner's call, so the control
+    // keeps its look as it flips.
+    buttonClass: 'btn btn--destructive',
     send: () => graphqlRequest(ResumeAdminRoleChangesDocument),
   },
   open: {
@@ -54,12 +57,9 @@ const GENERIC_ERROR = "That didn't work. Please try again.";
 
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const router = useRouter();
-  const reasonId = useId();
   const copy = STATES[paused ? 'paused' : 'open'];
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<string>();
-  // Each try by an admin who cannot mounts the reason afresh, as an alert.
-  const [attempts, setAttempts] = useState(0);
 
   async function toggle() {
     setSending(true);
@@ -95,27 +95,9 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {sending ? copy.busy : copy.label}
         </button>
       ) : (
-        <>
-          {/* `aria-disabled`, not `disabled`: it keeps its place in the tab
-              order, and a click says why rather than doing nothing. */}
-          <button
-            className={copy.buttonClass}
-            type="button"
-            aria-disabled="true"
-            aria-describedby={reasonId}
-            onClick={() => setAttempts((count) => count + 1)}
-          >
-            {copy.label}
-          </button>
-          <p
-            key={attempts}
-            id={reasonId}
-            className="user-list__pause-reason"
-            role={attempts ? 'alert' : undefined}
-          >
-            {NOT_PRIMARY}
-          </p>
-        </>
+        // In view but unusable, its reason in a tip, as the primary admin's
+        // Revoke is (on the owner's call): the notice is the page's one sentence.
+        <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
       )}
       {failure && (
         <p className="notice notice--error" role="alert">

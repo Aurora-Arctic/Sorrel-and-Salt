@@ -94,7 +94,7 @@ An admin grants or revokes admin from a user's row through `setUserRole`, declar
 
 ### Pausing admin changes (MB.63)
 
-The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole` refuses every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
+The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole`, and coven creation's approve and revoke, refuse every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
 
 ### Inviting an admin (MB.70)
 

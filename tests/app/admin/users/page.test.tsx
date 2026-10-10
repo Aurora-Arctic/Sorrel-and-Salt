@@ -128,7 +128,12 @@ describe('the /admin/users page', () => {
 
     expect(adminRoleChangePauseState).toHaveBeenCalledWith(ADMIN);
     expect(screen.getByText(/^Admin changes are paused/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+    // Beside the heading, in its `.page-header` (the owner's call).
+    const header = screen.getByRole('heading', { level: 1, name: 'Users' }).parentElement;
+    expect(header).toHaveClass('page-header');
+    expect(
+      within(header as HTMLElement).getByRole('button', { name: 'Resume Admin Changes' }),
+    ).toBeEnabled();
   });
 
   it('turns the search parameters into the filter', async () => {

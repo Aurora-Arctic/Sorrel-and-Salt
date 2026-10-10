@@ -10,7 +10,8 @@ import { Forbidden, NotFound } from '../../../lib/errors';
 import { sameAddress } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { isPrimaryAdmin, writeAdminGrant } from './user-role';
+import { isPrimaryAdmin } from './primary-admin';
+import { writeAdminGrant } from './user-role';
 import type { InvitationCheck, InvitationRefusal, InvitationStanding } from '../types';
 
 // The one accept service for both tiers of `invitations` (MB.202), built by

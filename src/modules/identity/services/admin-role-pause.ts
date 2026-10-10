@@ -1,9 +1,10 @@
 import 'server-only';
 import { findOpenAdminRoleChangePause, withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
+import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
 import { assertSiteAdmin, type SiteAdmin } from './site-admin';
-import { actsAsPrimaryAdmin } from './user-role';
+import { actsAsPrimaryAdmin } from './primary-admin';
 import type { AdminRoleChangePauseState } from '../types';
 
 // MB.63: the primary admin's switch on admin grants and revokes, so a rogue
@@ -15,6 +16,21 @@ import type { AdminRoleChangePauseState } from '../types';
 
 const REFUSAL = 'Only a site admin may see or change whether admin changes are paused';
 const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin changes';
+
+/**
+ * Refuses an admin change while the primary admin has paused them, unless the
+ * caller is the primary admin, whom the pause exempts so it can clean up
+ * without resuming first: the one guard the role service and coven
+ * creation's approve and revoke both call (MB.63; the latter amended
+ * 2026-10-10, on the owner's call).
+ *
+ * @throws {Forbidden} a pause is open and the caller is another admin.
+ */
+export async function assertChangesOpen(session: Session, admin: SiteAdmin): Promise<void> {
+  if (!(await findOpenAdminRoleChangePause(admin))) return;
+  if (await actsAsPrimaryAdmin(session)) return;
+  throw new Forbidden(ADMIN_CHANGES_PAUSED_REFUSAL);
+}
 
 /** The site-role check, then the primary admin's: who may flip the switch. */
 async function assertPrimaryAdmin(session: Session): Promise<SiteAdmin> {

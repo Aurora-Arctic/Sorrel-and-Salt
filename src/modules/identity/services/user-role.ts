@@ -1,10 +1,12 @@
 import 'server-only';
-import { findOneById, findOpenAdminRoleChangePause, withAudit } from '../../../db/repository';
+import { findOneById, withAudit } from '../../../db/repository';
 import type { AuditWriter, PrivilegeDeclaration } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import { PRIMARY_ADMIN_REFUSAL, primaryAdminEmail, sameAddress } from '../../../lib/primary-admin';
+import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
+import { assertChangesOpen } from './admin-role-pause';
+import { isPrimaryAdmin } from './primary-admin';
 import { assertSiteAdmin, type SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
@@ -17,49 +19,6 @@ import type { UserRow } from '../types';
 // "Granting and revoking admin".
 
 const REFUSAL = 'Only a site admin may change who is an admin';
-
-/**
- * Whether `user` is the primary admin: a live admin whose email matches
- * ADMIN_BOOTSTRAP_EMAIL as it reads now. Nobody is while it is unset.
- */
-export function isPrimaryAdmin(user: Pick<UserRow, 'email' | 'role' | 'deletedAt'>): boolean {
-  const email = primaryAdminEmail();
-  return (
-    email !== undefined &&
-    user.role === 'admin' &&
-    user.deletedAt === null &&
-    sameAddress(user.email, email)
-  );
-}
-
-/**
- * What a grant or revoke refused by MB.63's pause says: that changes are
- * paused, and naming nobody, neither who paused them nor why.
- */
-const PAUSED_REFUSAL =
-  'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
-
-/** Whether the session's user is the primary admin, read off their own live row. */
-export async function actsAsPrimaryAdmin(session: Session): Promise<boolean> {
-  const self = await findOneById(users, session.userId);
-  return self !== undefined && isPrimaryAdmin(self);
-}
-
-/**
- * Refuses a role change while the primary admin has paused them (MB.63),
- * unless the caller is the primary admin, whom the pause exempts so it can
- * clean up without resuming first. `refusal` is what the refusal says, for
- * an admin invitation's create and revoke (MB.70).
- */
-export async function assertChangesOpen(
-  session: Session,
-  admin: SiteAdmin,
-  refusal = PAUSED_REFUSAL,
-): Promise<void> {
-  if (!(await findOpenAdminRoleChangePause(admin))) return;
-  if (await actsAsPrimaryAdmin(session)) return;
-  throw new Forbidden(refusal);
-}
 
 /** The live user, or `NotFound`: a soft-deleted one reads as no one. */
 async function liveUser(userId: string): Promise<UserRow> {

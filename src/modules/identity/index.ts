@@ -8,6 +8,7 @@ export * from './services/email';
 export * from './services/invitation-acceptance';
 export * from './services/name';
 export * from './services/privilege-changes';
+export * from './services/primary-admin';
 export * from './services/profile';
 export * from './services/provisional-accounts';
 export * from './services/site-admin';

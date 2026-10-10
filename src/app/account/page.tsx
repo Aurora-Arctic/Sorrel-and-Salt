@@ -3,6 +3,7 @@ import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/id
 import EmailForm from '../../components/EmailForm';
 import NameForm from '../../components/NameForm';
 import SignInMethods from '../../components/SignInMethods';
+import SignOutButton from '../../components/SignOutButton';
 import { linkedAccounts, requireSession } from '../../lib/request-session';
 import { linkErrorMessage, postSignInLanding } from '../../lib/sign-in';
 // Server-only — see social-providers-config.ts's own header. Only the
@@ -28,7 +29,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   return (
     <main className="account-page">
-      <h1 className="account-page__heading">Your Account</h1>
+      {/* Sign Out beside the heading, as the admin pages put their primary
+          action (on the owner's call). */}
+      <div className="page-header account-page__heading">
+        <h1>Your Account</h1>
+        <SignOutButton />
+      </div>
       <nav className="account-page__nav" aria-label="On this page">
         <ul>
           <li>

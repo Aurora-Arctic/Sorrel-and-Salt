@@ -253,19 +253,25 @@ the good ones while it is dealt with, and back on. The argument is
   click is not an error. Nothing in v1 lists the rows.
 - **While paused, `setUserRole` refuses every other admin.** It reads the
   open pause first, and refuses a grant or a revoke from any admin but the
-  primary one with "Admin changes are paused, so no one can be made an admin
-  or stop being one until they are resumed.", naming nobody. Nothing
+  primary one with "Admin changes are paused by the primary admin.", naming a role and no person. Nothing
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good admins is the same attack from the
   other side.
+- **Coven creation pauses too** (amended 2026-10-10, on the owner's call):
+  `grantWorkspaceCreation` and `revokeWorkspaceCreation` call the same
+  `assertChangesOpen` guard, exported from `admin-role-pause.ts`, so another
+  admin's approve or revoke is refused with the same `Forbidden` and writes no
+  ledger row while a pause is open.
 - **The primary admin is exempt**, so it can clean up without resuming first:
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`** every admin sees the control above the list, and a
-  warning saying changes are paused while they are. The control is usable by
-  the primary admin alone, in view but `aria-disabled` for any other, with the
-  reason beside it
+- **On `/admin/users`** every admin sees the control beside the page's
+  heading, and a warning saying changes are paused while they are. The
+  control is usable by the primary admin alone, in view but `aria-disabled`
+  for any other, with the reason in a tip; while paused, such an admin's
+  Grant and Revoke, and coven creation's Approve and Revoke, are locked the
+  same way
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
 
@@ -276,6 +282,9 @@ allowed while the variable names no one; each non-admin fixture user; a grant
 and a revoke by another admin refused while paused, writing no ledger row,
 and the same calls succeeding once resumed; and the primary admin's grant and
 revoke recorded while paused.
+`tests/modules/identity/services/workspace-creation.test.ts` covers another
+admin's approve and revoke refused while paused with no ledger row, the same
+calls succeeding once resumed, and the primary admin's recorded as usual.
 `tests/modules/identity/graphql/admin-role-pause.test.ts` is the transport's
 half, the stamps the session's whatever the request carries, and
 `tests/e2e/admin.spec.ts` pauses, refuses another admin's grant, and resumes
@@ -315,9 +324,8 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   not refused: either link works, and the other then says it has been
   accepted, or the admin withdraws it.
 - **Paused with the rest (MB.63).** While admin changes are paused, inviting
-  and withdrawing are refused for every admin but the primary one, with
-  "Admin changes are paused, so admin invitations can't be sent or withdrawn
-  until they are resumed.", naming nobody.
+  and withdrawing are refused for every admin but the primary one, by the
+  shared `assertChangesOpen` and in its words, naming nobody.
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
   (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
   entry describes, built here with the site tier's branch; M7.5 adds the

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { invitationSender } from '@/lib/invitation-mail';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { ADMIN_CHANGES_PAUSED_REFUSAL as PAUSED_REFUSAL } from '@/lib/primary-admin';
 import type { Message } from '@/lib/types';
 import {
   createAdminInvitation,
@@ -39,9 +40,6 @@ const PRIMARY = '00000000-0000-0000-0000-0000000000b1';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
 const ORIGIN = 'http://localhost:8000';
-
-const PAUSED_REFUSAL =
-  "Admin changes are paused, so admin invitations can't be sent or withdrawn until they are resumed.";
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 

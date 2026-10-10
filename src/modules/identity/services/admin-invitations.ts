@@ -6,7 +6,7 @@ import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { normaliseEmail, validateEmailAddress } from './email';
 import { assertSiteAdmin } from './site-admin';
-import { assertChangesOpen } from './user-role';
+import { assertChangesOpen } from './admin-role-pause';
 import type { InvitationSender } from '../types';
 
 // MB.70: an admin invites an address to become an admin, M2.9's option B on
@@ -16,10 +16,6 @@ import type { InvitationSender } from '../types';
 // (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
-
-/** What MB.63's pause says to an admin who is not the primary one, naming nobody. */
-const PAUSED_REFUSAL =
-  "Admin changes are paused, so admin invitations can't be sent or withdrawn until they are resumed.";
 
 /**
  * 32 bytes from the CSPRNG, base64url: unguessable, and safe in a path. Never
@@ -49,7 +45,7 @@ export async function createAdminInvitation(
   sender: InvitationSender,
 ): Promise<InvitationRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  await assertChangesOpen(session, admin, PAUSED_REFUSAL);
+  await assertChangesOpen(session, admin);
   const email = normaliseEmail(input);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
@@ -77,7 +73,7 @@ export async function createAdminInvitation(
  */
 export async function revokeAdminInvitation(session: Session, id: string): Promise<InvitationRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  await assertChangesOpen(session, admin, PAUSED_REFUSAL);
+  await assertChangesOpen(session, admin);
   const [row] = await withAudit(session, (write) => write.revokeInvitation(admin, id));
   if (!row) throw new NotFound('No pending admin invitation has this id');
   return row;
