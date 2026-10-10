@@ -1,37 +1,23 @@
 import 'server-only';
 import {
   findIngredientFormValues,
-  findOneById,
   findOneBySlug,
   findPage,
   findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
-import { MAX_PAGE_SIZE } from '../../../lib/pagination';
+import { NotFound } from '../../../lib/errors';
+import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { formSlug, slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
-import { refusal, refuseCollidingMoves } from './group-moves';
-import type {
-  GroupMove,
-  IngredientFormGroupRow,
-  IngredientFormValueRow,
-  MovedRows,
-} from '../types';
-
-/** The forms a group's rename or delete moves, re-slugged under its name. */
-const FORMS: MovedRows = {
-  table: ingredientForms,
-  slugIndex: 'ingredient_forms_slug_unique',
-  noun: 'form',
-};
+import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import type { CuratedGroup, IngredientFormGroupRow } from '../types';
 
 // The ingredient form groups: their reads, public reference data like every
 // curated vocabulary (MB.80), and their writes, the site admin's alone
@@ -42,6 +28,21 @@ const FORMS: MovedRows = {
 // orphaned, and no ingredient is rewritten: an ingredient holds a form's name,
 // not its slug (claude-docs/design-decisions/m5.6b-admin-groups.md).
 
+/** The form groups, and the forms under them, which a rename or delete re-slugs under the group's name. */
+const GROUPS: CuratedGroup<typeof ingredientFormGroups> = {
+  table: ingredientFormGroups,
+  slugIndex: 'ingredient_form_groups_slug_unique',
+  noun: 'group',
+  members: {
+    table: ingredientForms,
+    slugIndex: 'ingredient_forms_slug_unique',
+    noun: 'form',
+    nouns: 'forms',
+    parentColumn: 'groupId',
+    slugOf: formSlug,
+    under: (groupId) => allPages((page) => findIngredientFormValues({ groupId }, page)),
+  },
+};
 /** One page of the live form groups, alphabetical by name (MB.35): a form's group is picked from these. */
 export function listIngredientFormGroups(
   page: PageRequest,
@@ -87,7 +88,7 @@ export async function createIngredientFormGroup(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(ingredientFormGroups, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(GROUPS, error, slug));
   expireCompendium();
   return written;
 }
@@ -114,30 +115,7 @@ export async function updateIngredientFormGroup(
 ): Promise<IngredientFormGroupRow> {
   assertSiteAdmin(session);
   const fields = parseInput(IngredientFormGroupInput, input);
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such group');
-  const current = await findOneById(ingredientFormGroups, id);
-  if (!current) throw new NotFound('No such group');
-  const slug = slugify(fields.name);
-  const moves = current.name === fields.name ? [] : await formsMoved(id, fields.name);
-  const refuse = refusal(
-    FORMS,
-    ['name'],
-    (form) => `Renaming the group would move "${form.name}" to`,
-  );
-  await refuseCollidingMoves(FORMS, moves, refuse);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.updateById(ingredientFormGroups, id, { ...fields, slug });
-    if (!row) throw new NotFound('No such group');
-    for (const { row: form, slug: moved } of moves) {
-      await write.updateById(ingredientForms, form.id, { slug: moved });
-    }
-    return row;
-  }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(FORMS, moves, refuse, error);
-    return refuseCollision(error, slug);
-  });
+  const written = await updateGroup(session, GROUPS, id, fields);
   expireCompendium();
   return written;
 }
@@ -162,96 +140,6 @@ export async function deleteIngredientFormGroup(
   moveTo?: string,
 ): Promise<void> {
   assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such group');
-  const group = await findOneById(ingredientFormGroups, id);
-  if (!group) throw new NotFound('No such group');
-  const forms = await formsUnder(id);
-  let moves: GroupMove[] = [];
-  if (forms.length > 0) {
-    const target = await moveTarget(id, moveTo, forms.length);
-    moves = forms.map((form) => ({ row: form, slug: formSlug(form.name, target.name) }));
-  }
-  const refuse = refusal(FORMS, ['moveTo'], (form) => `Moving "${form.name}" would give it`);
-  await refuseCollidingMoves(FORMS, moves, refuse);
-
-  await withAudit(session, async (write) => {
-    for (const { row: form, slug } of moves) {
-      await write.updateById(ingredientForms, form.id, { groupId: moveTo, slug });
-    }
-    const [row] = await write.softDeleteByIds(ingredientFormGroups, [id]);
-    if (!row) throw new NotFound('No such group');
-  }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(FORMS, moves, refuse, error);
-    throw error;
-  });
+  await deleteGroup(session, GROUPS, id, moveTo);
   expireCompendium();
-}
-
-/**
- * Every live form under the group, walked a page at a time through the forms'
- * own reader, so "live" means what the list means by it.
- */
-async function formsUnder(groupId: string) {
-  const rows: IngredientFormValueRow[] = [];
-  let after: Cursor | undefined;
-  for (;;) {
-    const page = await findIngredientFormValues(
-      { groupId },
-      { after, limit: MAX_PAGE_SIZE, inverted: false },
-    );
-    rows.push(...page.map(({ node }) => node));
-    if (page.length < MAX_PAGE_SIZE) return rows;
-    after = page[page.length - 1].cursor;
-  }
-}
-
-/** The group's live forms, each beside the slug `groupName` gives it. */
-async function formsMoved(groupId: string, groupName: string): Promise<GroupMove[]> {
-  const forms = await formsUnder(groupId);
-  return forms.map((form) => ({ row: form, slug: formSlug(form.name, groupName) }));
-}
-
-/**
- * The live group a delete's `count` forms move to, or the refusal on `moveTo`
- * when none is named, or it names the group itself or no other live group.
- */
-async function moveTarget(
-  id: string,
-  moveTo: string | undefined,
-  count: number,
-): Promise<IngredientFormGroupRow> {
-  const them = `${count} ${count === 1 ? 'form' : 'forms'}`;
-  if (moveTo === undefined) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose a group to move its ${them} to` },
-    ]);
-  }
-  const target =
-    moveTo !== id && RowId.safeParse(moveTo).success
-      ? await findOneById(ingredientFormGroups, moveTo)
-      : undefined;
-  if (!target) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose another live group to move its ${them} to` },
-    ]);
-  }
-  return target;
-}
-
-/**
- * A write that broke the group slug index, as a `ValidationError` on `name` —
- * the slug is derived and has no field of its own (MB.43) — naming the group
- * holding the address; any other error unchanged.
- */
-async function refuseCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'ingredient_form_groups_slug_unique') {
-    const holder = await findOneBySlug(ingredientFormGroups, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another group'} already has the address "${slug}" — choose another name`,
-      },
-    ]);
-  }
-  throw error;
 }

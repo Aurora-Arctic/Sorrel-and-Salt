@@ -641,7 +641,7 @@ describe('a deleted entry', () => {
       issues: [
         {
           path: ['canonicalName'],
-          message: 'Already in the compendium as "Fixture Leaf" (Fixtura testalis, Herb)',
+          message: 'Already in the compendium as Fixture Leaf (Fixtura testalis, Herb)',
         },
       ],
     });
@@ -670,7 +670,7 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['canonicalName'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
+        message: 'Already in the compendium as Testwort (Fixtura testalis, herb)',
       },
     ]);
     expect(await countIngredients()).toBe(1);
@@ -688,7 +688,7 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
+        message: 'Already in the compendium as Testwort (Fixtura testalis, herb)',
       },
     ]);
   });
@@ -703,7 +703,7 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['canonicalName'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, root)',
+        message: 'Already in the compendium as Testwort (Fixtura testalis, root)',
       },
     ]);
     expect(await rowOf(id)).toEqual(before);
@@ -737,7 +737,7 @@ describe('a collision with another compendium entry', () => {
       {
         path: ['name'],
         message:
-          '"Testwort" (root) already has the address "testwort-root" — change the name, form or formal name',
+          'Testwort (root) already has the address "testwort-root" — change the name, form or formal name',
       },
     ]);
   });
@@ -858,7 +858,7 @@ describe('the slug', () => {
         {
           path: ['endRedirect'],
           message:
-            '"testdirt-earth" redirects to "Testsoil" (Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
+            '"testdirt-earth" redirects to Testsoil (Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
         },
       ]);
       expect(await countIngredients()).toBe(1);
@@ -922,7 +922,7 @@ describe('the slug', () => {
       {
         path: ['name'],
         message:
-          '"Testwort" (root) already has the address "testwort-root" — change the name, form or formal name',
+          'Testwort (root) already has the address "testwort-root" — change the name, form or formal name',
       },
     ]);
     expect(await retirements()).toEqual([]);

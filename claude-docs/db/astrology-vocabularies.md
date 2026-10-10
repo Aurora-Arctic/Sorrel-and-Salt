@@ -102,7 +102,7 @@ these writes keep them so after the write.
 - **A delete is refused while a live compendium entry's list holds the
   value**: `Forbidden`, naming the first three entries and how many more,
   through the compendium's own filter (`IngredientFilter.planet` or
-  `zodiacSign`) and the shared `heldBy`. A coven's ingredient never blocks
+  `zodiacSign`) and the shared `refuseWhileHeld`. A coven's ingredient never blocks
   it; its value moves into that coven's in-use bucket.
 - **A rename carries the new name onto every live compendium entry holding
   the old, in the same transaction**, through `write.carryAstrologyRename`:

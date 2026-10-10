@@ -2,22 +2,22 @@ import 'server-only';
 import {
   findCategoryCount,
   findCategoryPage,
-  findOneById,
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
+import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
-import { heldBy } from './held-entries';
-import type { CategoryFilter, CategoryRow } from '../types';
+import { cachedFilteredList } from './curated-lists';
+import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
+import { refuseWhileHeld } from './held-entries';
+import type { CategoryFilter, CategoryRow, CuratedVocabulary } from '../types';
 
 // The category vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6).
@@ -29,18 +29,25 @@ import type { CategoryFilter, CategoryRow } from '../types';
 // (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
 const cachedCount = cachedCompendiumRead('category-count', findCategoryCount);
+const list = cachedFilteredList(cachedPage, cachedCount, 'groupId');
+
+/** A category's slug is its name alone, so a collision is cured by renaming it. */
+const CATEGORIES: CuratedVocabulary<typeof categories> = {
+  table: categories,
+  slugIndex: 'categories_slug_unique',
+  noun: 'category',
+};
 
 /**
  * One page of the live categories under `filter`, by group then name, each under a live
  * group: the `categories` query, and the admin page's list. A blank query is
  * no query, and a group id that is not a uuid names no group, so lists nothing.
  */
-export async function listCategories(
+export function listCategories(
   filter: CategoryFilter,
   page: PageRequest,
 ): Promise<PageEntry<CategoryRow>[]> {
-  const read = readable(filter);
-  return read ? cachedPage(read, page) : [];
+  return list.list(filter, page);
 }
 
 /**
@@ -48,12 +55,11 @@ export async function listCategories(
  * come before `start` — a page's first row, none on an empty page: "Page X
  * of Y".
  */
-export async function countCategories(
+export function countCategories(
   filter: CategoryFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  const read = readable(filter);
-  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
+  return list.count(filter, start);
 }
 
 /**
@@ -83,7 +89,7 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(categories, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(CATEGORIES, error, slug));
   expireCompendium();
   return written;
 }
@@ -104,15 +110,14 @@ export async function updateCategory(
 ): Promise<CategoryRow> {
   assertSiteAdmin(session);
   const fields = await parseCategory(input);
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such category');
+  await liveRow(CATEGORIES, id);
   const slug = slugify(fields.name);
 
   const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(categories, id, { ...fields, slug });
     if (!row) throw new NotFound('No such category');
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(CATEGORIES, error, slug));
   expireCompendium();
   return written;
 }
@@ -132,10 +137,15 @@ export async function updateCategory(
  */
 export async function deleteCategory(session: Session, id: string): Promise<void> {
   assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such category');
-  const category = await findOneById(categories, id);
-  if (!category) throw new NotFound('No such category');
-  await refuseWhileFiled(category);
+  const category = await liveRow(CATEGORIES, id);
+  await refuseWhileHeld(
+    { categoryIds: [category.id] },
+    {
+      name: category.name,
+      holding: 'is filed on',
+      remedy: (count) => `Take it off ${plural(count, 'it', 'them')} first.`,
+    },
+  );
 
   await withAudit(session, async (write) => {
     const [row] = await write.softDeleteByIds(categories, [id]);
@@ -144,54 +154,12 @@ export async function deleteCategory(session: Session, id: string): Promise<void
   expireCompendium();
 }
 
-/**
- * The filter as the repository reads it, its query trimmed and a blank one
- * dropped; `undefined` for a group id that is not a uuid, which names nothing
- * and would be a driver error at the comparison.
- */
-function readable({ query, groupId }: CategoryFilter): CategoryFilter | undefined {
-  if (groupId !== undefined && !RowId.safeParse(groupId).success) return undefined;
-  return { query: query?.trim() || undefined, groupId };
-}
-
 /** The input parsed, its group checked live: a foreign key admits a retired one. */
 async function parseCategory(input: CategoryInput): Promise<CategoryInput> {
-  const fields = parseInput(CategoryInput, input);
-  const group = await findOneById(categoryGroups, fields.groupId);
-  if (!group) throw new ValidationError([{ path: ['groupId'], message: 'Choose a group' }]);
+  const { fields } = await parseUnderLiveParent(CategoryInput, input, {
+    table: categoryGroups,
+    column: 'groupId',
+    refusal: 'Choose a group',
+  });
   return fields;
-}
-
-/**
- * The refusal of a delete while live compendium entries are filed under the
- * category: the first few by name, each told apart from a namesake, and how
- * many more, read through the compendium's own category filter.
- */
-async function refuseWhileFiled(category: CategoryRow): Promise<void> {
-  const held = await heldBy({ categoryIds: [category.id] });
-  if (!held) return;
-  const { totalCount, list } = held;
-  const entries = totalCount === 1 ? 'entry' : 'entries';
-  const them = totalCount === 1 ? 'it' : 'them';
-  throw new Forbidden(
-    `"${category.name}" is filed on ${totalCount} compendium ${entries} — ${list}. Take it off ${them} first.`,
-  );
-}
-
-/**
- * A write that broke the slug index, as a `ValidationError` on `name` — the
- * slug is derived and has no field of its own (MB.43) — naming the category
- * holding the address; any other error unchanged.
- */
-async function refuseCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'categories_slug_unique') {
-    const holder = await findOneBySlug(categories, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another category'} already has the address "${slug}" — choose another name`,
-      },
-    ]);
-  }
-  throw error;
 }

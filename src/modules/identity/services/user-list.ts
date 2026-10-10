@@ -1,6 +1,7 @@
 import 'server-only';
 import { findProvidersOfUsers, findUserPage } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
+import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -38,7 +39,7 @@ export async function providersOf(
   session: Session,
   userIds: readonly string[],
 ): Promise<(string[] | Forbidden)[]> {
-  if (session.role !== 'admin') return userIds.map(() => new Forbidden(REFUSAL));
+  if (!isSiteAdmin(session)) return refuseBatch(userIds, REFUSAL);
   const linked = await findProvidersOfUsers(assertSiteAdmin(session, REFUSAL), [
     ...new Set(userIds),
   ]);

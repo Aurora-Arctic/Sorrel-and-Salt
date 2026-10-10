@@ -32,6 +32,21 @@ export async function assertChangesOpen(session: Session, admin: SiteAdmin): Pro
   throw new Forbidden(ADMIN_CHANGES_PAUSED_REFUSAL);
 }
 
+/**
+ * The site-role check, in `reason`'s words, then the pause's: the one guard
+ * every admin change opens with — a user's role, coven creation's approval
+ * and its revoke, an admin invitation and its withdrawal — answering the
+ * proof the change writes under.
+ *
+ * @throws {Forbidden} the session's role is not `admin`, or a pause is open
+ * and the caller is another admin.
+ */
+export async function assertAdminChangesOpen(session: Session, reason: string): Promise<SiteAdmin> {
+  const admin = assertSiteAdmin(session, reason);
+  await assertChangesOpen(session, admin);
+  return admin;
+}
+
 /** The site-role check, then the primary admin's: who may flip the switch. */
 async function assertPrimaryAdmin(session: Session): Promise<SiteAdmin> {
   const admin = assertSiteAdmin(session, REFUSAL);

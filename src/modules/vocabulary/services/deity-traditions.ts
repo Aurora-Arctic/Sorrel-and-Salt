@@ -1,25 +1,23 @@
 import 'server-only';
 import {
   findDeityPage,
-  findOneById,
   findOneBySlug,
   findPage,
   findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
-import { MAX_PAGE_SIZE } from '../../../lib/pagination';
+import { NotFound } from '../../../lib/errors';
+import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { deitySlug, slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityTraditionInput } from '../validation/deity-tradition';
-import { refusal, refuseCollidingMoves } from './group-moves';
-import type { DeityRow, DeityTraditionRow, GroupMove, MovedRows } from '../types';
+import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import type { CuratedGroup, DeityTraditionRow } from '../types';
 
 // The deity traditions: their reads, public reference data like every curated
 // vocabulary (MB.80), and their writes, the site admin's alone (MB.132), in
@@ -31,9 +29,21 @@ import type { DeityRow, DeityTraditionRow, GroupMove, MovedRows } from '../types
 // ingredient is rewritten: a link holds a deity's name and id, not its slug
 // (claude-docs/design-decisions/mb.132-admin-deities.md).
 
-/** The deities a tradition's rename or delete moves, re-slugged under its name. */
-const DEITIES: MovedRows = { table: deities, slugIndex: 'deities_slug_unique', noun: 'deity' };
-
+/** The traditions, and the deities under them, which a rename or delete re-slugs under the tradition's name. */
+const TRADITIONS: CuratedGroup<typeof deityTraditions> = {
+  table: deityTraditions,
+  slugIndex: 'deity_traditions_slug_unique',
+  noun: 'tradition',
+  members: {
+    table: deities,
+    slugIndex: 'deities_slug_unique',
+    noun: 'deity',
+    nouns: 'deities',
+    parentColumn: 'traditionId',
+    slugOf: deitySlug,
+    under: (traditionId) => allPages((page) => findDeityPage({ traditionId }, page)),
+  },
+};
 /** One page of the live traditions, alphabetical by name (MB.35): a deity's tradition is picked from these. */
 export function listDeityTraditions(page: PageRequest): Promise<PageEntry<DeityTraditionRow>[]> {
   return findPage(deityTraditions, [deityTraditions.name], page);
@@ -77,7 +87,7 @@ export async function createDeityTradition(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deityTraditions, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(TRADITIONS, error, slug));
   expireCompendium();
   return written;
 }
@@ -105,27 +115,7 @@ export async function updateDeityTradition(
 ): Promise<DeityTraditionRow> {
   assertSiteAdmin(session);
   const fields = parseInput(DeityTraditionInput, input);
-  const current = await liveTradition(id);
-  const slug = slugify(fields.name);
-  const moves = current.name === fields.name ? [] : movedUnder(await deitiesUnder(id), fields.name);
-  const refuse = refusal(
-    DEITIES,
-    ['name'],
-    (deity) => `Renaming the tradition would move "${deity.name}" to`,
-  );
-  await refuseCollidingMoves(DEITIES, moves, refuse);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.updateById(deityTraditions, id, { ...fields, slug });
-    if (!row) throw new NotFound('No such tradition');
-    for (const { row: deity, slug: moved } of moves) {
-      await write.updateById(deities, deity.id, { slug: moved });
-    }
-    return row;
-  }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(DEITIES, moves, refuse, error);
-    return refuseCollision(error, slug);
-  });
+  const written = await updateGroup(session, TRADITIONS, id, fields);
   expireCompendium();
   return written;
 }
@@ -151,103 +141,6 @@ export async function deleteDeityTradition(
   moveTo?: string,
 ): Promise<void> {
   assertSiteAdmin(session);
-  await liveTradition(id);
-  const under = await deitiesUnder(id);
-  const target = under.length > 0 ? await moveTarget(id, moveTo, under.length) : undefined;
-  const moves = target ? movedUnder(under, target.name) : [];
-  const refuse = refusal(DEITIES, ['moveTo'], (deity) => `Moving "${deity.name}" would give it`);
-  await refuseCollidingMoves(DEITIES, moves, refuse);
-
-  await withAudit(session, async (write) => {
-    for (const { row: deity, slug } of moves) {
-      await write.updateById(deities, deity.id, { traditionId: target?.id, slug });
-    }
-    const [row] = await write.softDeleteByIds(deityTraditions, [id]);
-    if (!row) throw new NotFound('No such tradition');
-  }).catch(async (error: unknown) => {
-    await refuseCollidingMoves(DEITIES, moves, refuse, error);
-    throw error;
-  });
+  await deleteGroup(session, TRADITIONS, id, moveTo);
   expireCompendium();
-}
-
-/**
- * The live tradition `id` names.
- *
- * @throws {NotFound} none does — an id that is not a uuid included, which
- * names nothing and would be a driver error at the comparison.
- */
-async function liveTradition(id: string): Promise<DeityTraditionRow> {
-  const row = RowId.safeParse(id).success ? await findOneById(deityTraditions, id) : undefined;
-  if (!row) throw new NotFound('No such tradition');
-  return row;
-}
-
-/**
- * Every live deity under the tradition, walked a page at a time through the
- * deities' own reader, so "live" means what the list means by it.
- */
-async function deitiesUnder(traditionId: string): Promise<DeityRow[]> {
-  const rows: DeityRow[] = [];
-  let after: Cursor | undefined;
-  for (;;) {
-    const page = await findDeityPage(
-      { traditionId },
-      { after, limit: MAX_PAGE_SIZE, inverted: false },
-    );
-    rows.push(...page.map(({ node }) => node));
-    if (page.length < MAX_PAGE_SIZE) return rows;
-    after = page[page.length - 1].cursor;
-  }
-}
-
-/** The deities, each beside the slug `traditionName` gives it. */
-function movedUnder(rows: readonly DeityRow[], traditionName: string): GroupMove[] {
-  return rows.map((deity) => ({ row: deity, slug: deitySlug(deity.name, traditionName) }));
-}
-
-/**
- * The live tradition a delete's `count` deities move to, or the refusal on
- * `moveTo` when none is named, or it names the tradition itself or no other
- * live tradition.
- */
-async function moveTarget(
-  id: string,
-  moveTo: string | undefined,
-  count: number,
-): Promise<DeityTraditionRow> {
-  const them = `${count} ${count === 1 ? 'deity' : 'deities'}`;
-  if (moveTo === undefined) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose a tradition to move its ${them} to` },
-    ]);
-  }
-  const target =
-    moveTo !== id && RowId.safeParse(moveTo).success
-      ? await findOneById(deityTraditions, moveTo)
-      : undefined;
-  if (!target) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose another live tradition to move its ${them} to` },
-    ]);
-  }
-  return target;
-}
-
-/**
- * A write that broke the tradition slug index, as a `ValidationError` on
- * `name` — the slug is derived and has no field of its own (MB.43) — naming
- * the tradition holding the address; any other error unchanged.
- */
-async function refuseCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'deity_traditions_slug_unique') {
-    const holder = await findOneBySlug(deityTraditions, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another tradition'} already has the address "${slug}" — choose another name`,
-      },
-    ]);
-  }
-  throw error;
 }

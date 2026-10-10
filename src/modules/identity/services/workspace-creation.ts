@@ -1,10 +1,10 @@
 import 'server-only';
-import { findOneById, withAudit } from '../../../db/repository';
+import { withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
-import { assertChangesOpen } from './admin-role-pause';
-import { assertSiteAdmin } from './site-admin';
+import { adminDeclaration, liveUser } from './admin-changes';
+import { assertAdminChangesOpen } from './admin-role-pause';
 import type { UserRow } from '../types';
 
 // M5.8's approval route and its undoing: an admin lets someone with no
@@ -15,13 +15,6 @@ import type { UserRow } from '../types';
 // update (MB.195): claude-docs/auth/admin-users.md, "Approving workspace creation".
 
 const REFUSAL = 'Only a site admin may change who can create a coven';
-
-/** The live user, or `NotFound`: a soft-deleted one reads as no one. */
-async function liveUser(userId: string): Promise<UserRow> {
-  const user = await findOneById(users, userId);
-  if (!user) throw new NotFound('No such user');
-  return user;
-}
 
 /**
  * Writes the flag as an admin's act, answering the row. The ledger row is the
@@ -43,7 +36,7 @@ async function setFlag(
       if (!written) throw new NotFound('No such user');
       return written;
     },
-    { via: 'admin', note: note?.trim() || undefined },
+    adminDeclaration(note),
   );
 }
 
@@ -63,7 +56,7 @@ export async function grantWorkspaceCreation(
   userId: string,
   note?: string,
 ): Promise<UserRow> {
-  await assertChangesOpen(session, assertSiteAdmin(session, REFUSAL));
+  await assertAdminChangesOpen(session, REFUSAL);
   const user = await liveUser(userId);
   if (user.canCreateWorkspace) throw new Forbidden(`${user.name} may already create a coven`);
   return setFlag(session, userId, true, note);
@@ -85,7 +78,7 @@ export async function revokeWorkspaceCreation(
   userId: string,
   note?: string,
 ): Promise<UserRow> {
-  await assertChangesOpen(session, assertSiteAdmin(session, REFUSAL));
+  await assertAdminChangesOpen(session, REFUSAL);
   const user = await liveUser(userId);
   if (!user.canCreateWorkspace) {
     throw new Forbidden(`${user.name} cannot create a coven, so there is nothing to revoke`);

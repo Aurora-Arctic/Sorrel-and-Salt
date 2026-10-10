@@ -213,7 +213,7 @@ keep it one after the write.
 - **A delete is refused while a live compendium entry picks the form**, by
   `form_id`: `Forbidden`, naming the first three entries and how many more,
   through the compendium's own filter on the pick (`IngredientFilter.formId`)
-  and the shared `heldBy` the category delete now uses too. A same-named form
+  and the shared `refuseWhileHeld` every vocabulary delete uses. A same-named form
   no entry picked deletes. A coven's pick never blocks it.
 - **A rename carries the new name onto every live compendium entry picking
   the form, in the same transaction**, through `write.carryFormRename`: each

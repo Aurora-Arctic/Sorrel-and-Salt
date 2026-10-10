@@ -1,24 +1,23 @@
 import 'server-only';
 import {
   findCategoryPage,
-  findOneById,
   findOneBySlug,
   findPage,
   findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
-import { NotFound, ValidationError } from '../../../lib/errors';
-import { MAX_PAGE_SIZE } from '../../../lib/pagination';
+import { NotFound } from '../../../lib/errors';
+import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
+import { parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryGroupInput } from '../validation/category-group';
-import type { CategoryGroupRow, CategoryRow } from '../types';
+import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
+import type { CategoryGroupRow, CuratedGroup } from '../types';
 
 // The category groups: their reads, public reference data like every curated
 // vocabulary (MB.80), and their writes, the site admin's alone (M5.6b). Each
@@ -27,6 +26,24 @@ import type { CategoryGroupRow, CategoryRow } from '../types';
 // somewhere to go — the admin names a group and they move there in the same
 // write — since a category under a deleted group is read by nothing yet still
 // holds its address (claude-docs/design-decisions/m5.6b-admin-groups.md).
+
+/**
+ * The groups, and the categories filed under them, which a delete moves and a
+ * rename leaves alone: a category's slug is its own name alone.
+ */
+const GROUPS: CuratedGroup<typeof categoryGroups> = {
+  table: categoryGroups,
+  slugIndex: 'category_groups_slug_unique',
+  noun: 'group',
+  members: {
+    table: categories,
+    slugIndex: 'categories_slug_unique',
+    noun: 'category',
+    nouns: 'categories',
+    parentColumn: 'groupId',
+    under: (groupId) => allPages((page) => findCategoryPage({ groupId }, page)),
+  },
+};
 
 /** One page of the live category groups, alphabetical by name (MB.35): the group a category is filed under is picked from these. */
 export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
@@ -71,7 +88,7 @@ export async function createCategoryGroup(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(categoryGroups, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(GROUPS, error, slug));
   expireCompendium();
   return written;
 }
@@ -93,15 +110,7 @@ export async function updateCategoryGroup(
 ): Promise<CategoryGroupRow> {
   assertSiteAdmin(session);
   const fields = parseInput(CategoryGroupInput, input);
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such group');
-  const slug = slugify(fields.name);
-
-  const written = await withAudit(session, async (write) => {
-    const [row] = await write.updateById(categoryGroups, id, { ...fields, slug });
-    if (!row) throw new NotFound('No such group');
-    return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  const written = await updateGroup(session, GROUPS, id, fields);
   expireCompendium();
   return written;
 }
@@ -127,81 +136,6 @@ export async function deleteCategoryGroup(
   moveTo?: string,
 ): Promise<void> {
   assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such group');
-  const group = await findOneById(categoryGroups, id);
-  if (!group) throw new NotFound('No such group');
-  const members = await categoriesUnder(id);
-  if (members.length > 0) await refuseWithoutTarget(id, moveTo, members.length);
-
-  await withAudit(session, async (write) => {
-    for (const category of members) {
-      await write.updateById(categories, category.id, { groupId: moveTo });
-    }
-    const [row] = await write.softDeleteByIds(categoryGroups, [id]);
-    if (!row) throw new NotFound('No such group');
-  });
+  await deleteGroup(session, GROUPS, id, moveTo);
   expireCompendium();
-}
-
-/**
- * Every live category filed under the group, walked a page at a time through
- * the categories' own reader, so "live" means what the list means by it.
- */
-async function categoriesUnder(groupId: string): Promise<CategoryRow[]> {
-  const rows: CategoryRow[] = [];
-  let after: Cursor | undefined;
-  for (;;) {
-    const page = await findCategoryPage(
-      { groupId },
-      { after, limit: MAX_PAGE_SIZE, inverted: false },
-    );
-    rows.push(...page.map(({ node }) => node));
-    if (page.length < MAX_PAGE_SIZE) return rows;
-    after = page[page.length - 1].cursor;
-  }
-}
-
-/**
- * Refuses a delete whose `count` live categories have nowhere to go: no
- * `moveTo`, or one naming the group itself or no other live group. On
- * `moveTo`, beside the picker that names it.
- */
-async function refuseWithoutTarget(
-  id: string,
-  moveTo: string | undefined,
-  count: number,
-): Promise<void> {
-  const them = `${count} ${count === 1 ? 'category' : 'categories'}`;
-  if (moveTo === undefined) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose a group to move its ${them} to` },
-    ]);
-  }
-  const target =
-    moveTo !== id && RowId.safeParse(moveTo).success
-      ? await findOneById(categoryGroups, moveTo)
-      : undefined;
-  if (!target) {
-    throw new ValidationError([
-      { path: ['moveTo'], message: `Choose another live group to move its ${them} to` },
-    ]);
-  }
-}
-
-/**
- * A write that broke the slug index, as a `ValidationError` on `name` — the
- * slug is derived and has no field of its own (MB.43) — naming the group
- * holding the address; any other error unchanged.
- */
-async function refuseCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'category_groups_slug_unique') {
-    const holder = await findOneBySlug(categoryGroups, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another group'} already has the address "${slug}" — choose another name`,
-      },
-    ]);
-  }
-  throw error;
 }

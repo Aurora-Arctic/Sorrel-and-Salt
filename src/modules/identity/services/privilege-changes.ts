@@ -9,7 +9,9 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
+import { inIdOrder } from '../../../lib/in-id-order';
 import { users } from '../schema/users';
+import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { PrivilegeChangeFilter, PrivilegeChangeRow, UserRow } from '../types';
 
@@ -84,7 +86,7 @@ export async function usersForAdmin(
   session: Session,
   userIds: readonly string[],
 ): Promise<(UserRow | null | Forbidden)[]> {
-  if (session.role !== 'admin') return userIds.map(() => new Forbidden(REFUSAL));
+  if (!isSiteAdmin(session)) return refuseBatch(userIds, REFUSAL);
   const rows = await findManyByIds(users, [...new Set(userIds)]);
-  return userIds.map((id) => rows.find((row) => row.id === id) ?? null);
+  return inIdOrder(userIds, rows, () => null);
 }

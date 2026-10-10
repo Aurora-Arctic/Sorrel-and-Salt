@@ -2,6 +2,7 @@ import 'server-only';
 import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
@@ -176,7 +177,11 @@ function refuseCollision(error: unknown, fields: IngredientFields, slug: string)
     case 'ingredients_workspace_slug_unique':
       refuse(
         'name',
-        `Another ingredient in this coven already has the address "${slug}" — change the name, form or formal name`,
+        addressTaken(
+          'Another ingredient in this coven',
+          slug,
+          'change the name, form or formal name',
+        ),
       );
   }
   throw error;

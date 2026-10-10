@@ -1,6 +1,7 @@
 import 'server-only';
 import { findManyByIds } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
+import { inIdOrder } from '../../../lib/in-id-order';
 import { categoryGroups } from '../schema/categories';
 import { deityTraditions } from '../schema/deities';
 import { ingredientFormGroups } from '../schema/ingredient-forms';
@@ -42,6 +43,5 @@ async function groupsOf<
   TTable extends typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions,
 >(table: TTable, ids: readonly string[]): Promise<(TTable['$inferSelect'] | NotFound)[]> {
   const rows = await findManyByIds(table, [...new Set(ids)]);
-  const byId = new Map(rows.map((row) => [row.id, row]));
-  return ids.map((id) => byId.get(id) ?? new NotFound('No such group'));
+  return inIdOrder(ids, rows, () => new NotFound('No such group'));
 }

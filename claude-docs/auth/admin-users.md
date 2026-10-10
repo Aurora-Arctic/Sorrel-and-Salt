@@ -258,8 +258,9 @@ the good ones while it is dealt with, and back on. The argument is
   well as grants, since removing the good admins is the same attack from the
   other side.
 - **Coven creation pauses too** (amended 2026-10-10, on the owner's call):
-  `grantWorkspaceCreation` and `revokeWorkspaceCreation` call the same
-  `assertChangesOpen` guard, exported from `admin-role-pause.ts`, so another
+  `grantWorkspaceCreation` and `revokeWorkspaceCreation` open with the same
+  `assertAdminChangesOpen` guard, exported from `admin-role-pause.ts` — the
+  site-role check, then `assertChangesOpen` — so another
   admin's approve or revoke is refused with the same `Forbidden` and writes no
   ledger row while a pause is open.
 - **The primary admin is exempt**, so it can clean up without resuming first:
@@ -325,7 +326,7 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   accepted, or the admin withdraws it.
 - **Paused with the rest (MB.63).** While admin changes are paused, inviting
   and withdrawing are refused for every admin but the primary one, by the
-  shared `assertChangesOpen` and in its words, naming nobody.
+  shared `assertAdminChangesOpen` and in its words, naming nobody.
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
   (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
   entry describes, built here with the site tier's branch; M7.5 adds the

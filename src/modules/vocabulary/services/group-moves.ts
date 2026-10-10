@@ -7,8 +7,9 @@ import type { GroupMove, MovedRows } from '../types';
 // What a group's rename or delete does to the rows filed under it when their
 // slug carries the group's name: a form's (M5.6a) and a deity's (MB.132). Each
 // row moves to the slug its name and the group's new name give it, and a move
-// onto another live row's address is refused, naming both. The form groups'
-// writes and the deity traditions' share it; internal to the module.
+// onto another live row's address is refused, naming both. `curated-writes.ts`'s
+// `updateGroup` and `deleteGroup` call it for every group; internal to the
+// module.
 
 /**
  * How a write refuses a moved row's collision: on which field, and the words

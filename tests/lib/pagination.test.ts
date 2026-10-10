@@ -3,6 +3,7 @@ import { InvalidCursor } from '@/lib/errors';
 import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
+  allPages,
   decodeCursor,
   encodeCursor,
   pageSize,
@@ -245,5 +246,37 @@ describe('resolveNumberedPage', () => {
 
     expect(counted).toBeUndefined();
     expect(page.position).toEqual({ page: 1, pages: 1 });
+  });
+});
+
+describe('allPages', () => {
+  it('walks a finder a full page at a time, each page after the last row read, until a short one', async () => {
+    const total = MAX_PAGE_SIZE * 2 + 3;
+    const requests: PageRequest[] = [];
+    const read = async (request: PageRequest) => {
+      requests.push(request);
+      const from = request.after ? Number(request.after.key[0].slice(1)) + 1 : 0;
+      return rows(Math.min(MAX_PAGE_SIZE, total - from), from);
+    };
+
+    const all = await allPages(read);
+
+    expect(all.map(({ n }) => n)).toEqual(Array.from({ length: total }, (_, n) => n));
+    expect(requests.map(({ after, limit, inverted }) => [after?.key[0], limit, inverted])).toEqual([
+      [undefined, MAX_PAGE_SIZE, false],
+      [`k${String(MAX_PAGE_SIZE - 1).padStart(3, '0')}`, MAX_PAGE_SIZE, false],
+      [`k${String(MAX_PAGE_SIZE * 2 - 1).padStart(3, '0')}`, MAX_PAGE_SIZE, false],
+    ]);
+  });
+
+  it('reads once when the first page is short, an empty one included', async () => {
+    let reads = 0;
+    const all = await allPages(async () => {
+      reads += 1;
+      return rows(0);
+    });
+
+    expect(all).toEqual([]);
+    expect(reads).toBe(1);
   });
 });

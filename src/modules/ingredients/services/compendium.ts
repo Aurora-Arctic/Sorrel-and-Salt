@@ -10,10 +10,10 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { inUtc } from '../../../lib/utc';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
@@ -27,9 +27,15 @@ import {
   splitChildren,
   writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { readersOf } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
-import { type CuratedField, curatedSpellings, foldVocabularyValue } from '@/modules/vocabulary';
+import {
+  type CuratedField,
+  curatedSpellings,
+  describeEntry,
+  foldVocabularyValue,
+  redirectRefusal,
+} from '@/modules/vocabulary';
 import type {
   Cursor,
   PageCount,
@@ -105,11 +111,7 @@ export async function getIngredient(
   id: string,
   workspaceId?: string | null,
 ): Promise<IngredientRow> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    if (!session) throw new Forbidden();
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
 
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
@@ -334,14 +336,8 @@ async function refuseEndingARedirect(
   excluding?: string,
 ): Promise<void> {
   if (confirmed === true) return;
-  const redirect = await findCompendiumSlugRedirect(slug, at, excluding);
-  if (!redirect) return;
-  throw new ValidationError([
-    {
-      path: ['endRedirect'],
-      message: `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)} — confirm to end that redirect`,
-    },
-  ]);
+  const refused = await redirectRefusal([{ slug, entryId: excluding }], at);
+  if (refused) throw refused;
 }
 
 /**
@@ -395,15 +391,13 @@ async function refuseCollision(
       const holder = await findCompendiumEntryBySlug(slug);
       refuse(
         'name',
-        `${holder ? describeEntry(holder) : 'Another compendium entry'} already has the address "${slug}" — change the name, form or formal name`,
+        addressTaken(
+          holder ? describeEntry(holder) : 'Another compendium entry',
+          slug,
+          'change the name, form or formal name',
+        ),
       );
     }
   }
   throw error;
-}
-
-/** An entry as a person tells it apart: its label, then its formal name and form. */
-function describeEntry(entry: IngredientRow): string {
-  const identity = [entry.canonicalName, entry.form].filter(Boolean).join(', ');
-  return identity ? `"${entry.name}" (${identity})` : `"${entry.name}"`;
 }
