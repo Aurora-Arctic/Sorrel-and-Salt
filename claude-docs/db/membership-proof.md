@@ -83,14 +83,14 @@ service's decision — `setEmail` refuses an address a verified row holds and le
 a provisional one be claimed over, and the `/verify-email` gate refuses one any
 other live row holds (`auth/admin-bootstrap.md`, "The email page").
 
-`findAdminInvitationByToken(token)` is the fourth (MB.69), for a different
-reason: no workspace is involved, but the one asking is an invitee who is not
-yet an admin, so there is no `SiteAdmin` proof to hold either. What admits is
-holding the token, which the read hashes itself, so a hash out of a dumped row
-finds nothing. It answers the live invitation the token names, whatever its
-state; the accept beside it matches only the session's user holding the
-invited address, verified
-([`invitations.md`](invitations.md), "Admin invitations").
+`findInvitationByToken(token)` is the fourth (MB.69, both tiers since
+MB.202), for a different reason: the one asking is an invitee who is not yet
+a member of the workspace nor an admin, so there is no proof of either kind
+to hold. What admits is holding the token, which the read hashes itself, so a
+hash out of a dumped row finds nothing. It answers the live invitation the
+token names, on either tier and whatever its state; the accept beside it
+matches only the session's user holding the invited address, verified
+([`invitations.md`](invitations.md), "Written and read by tier").
 
 The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
 (MB.52), are not among them: they span no workspace either, but they take the

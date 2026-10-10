@@ -9,8 +9,8 @@ import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-d
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
-import { adminInvitationWrites } from './admin-invitations';
 import { adminRoleChangePauseWrites } from './admin-roles';
+import { invitationWrites } from './invitations';
 import { existsIn } from './select';
 import type { Membership } from '@/modules/coven';
 import type {
@@ -158,7 +158,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         ),
       ),
     ...adminRoleChangePauseWrites(context),
-    ...adminInvitationWrites(context),
+    ...invitationWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);
       return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);

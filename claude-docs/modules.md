@@ -67,8 +67,8 @@ a service lands in the module that owns the table it writes.
 
 | Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                         |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `admin_invitations` (until MB.203), `sessions`, `accounts`, `verifications`, `rate_limits`                                                             | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
-| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201), `workspace_invitations` (until MB.203)                                                                                                         | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
+| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `held-entries.ts`, `suggestions.ts` |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                     |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                  |
@@ -99,8 +99,8 @@ tier reaches it as admin curation reaches `ingredients`: `identity`'s
 site-tier service calls the repository's named writes and finders under the
 `SiteAdmin` proof, and imports nothing of `coven`'s
 ([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
-The two tables it replaces, `workspace_invitations` and `admin_invitations`,
-stay declared until MB.202 and are dropped by MB.203.
+The two tables it replaced, `workspace_invitations` and `admin_invitations`,
+are undeclared since MB.202 and dropped by MB.203.
 
 ## The public surface
 
@@ -243,6 +243,11 @@ reads the compendium and the proofs' workspaces in a single statement. A later
 task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
 `TIER_SEAM` in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
+
+One entry is not the compendium's: `onSiteTier` (MB.202), `invitations`'
+site tier, `workspace_id IS NULL` spelled for that table alone so that no
+invitation read calls `inCompendium`. It is listed because the guard reads
+the spelling, and the extraction task leaves it behind.
 
 ## Where types live
 

@@ -92,6 +92,9 @@ const TIER_SEAM: string[] = [
   'citesNothing',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',
+  // Not the compendium: the site tier of `invitations`, the same `workspace_id IS NULL` spelled
+  // for that table alone, listed because the guard reads the spelling (MB.202).
+  'onSiteTier',
 ];
 
 /**

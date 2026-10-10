@@ -28,6 +28,8 @@ export const AUDIT_COLUMNS: readonly string[] = [
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
 // So are the two ledgers MB.194 superseded, which no schema declares since
 // MB.196 but which the database holds until MB.197 drops them.
+// `admin_invitations` and `workspace_invitations` are undeclared since MB.202
+// and stay in the catalogue, and so here, until MB.203 drops them.
 export const AUDITED_TABLES = [
   'admin_invitations',
   'admin_role_change_pauses',

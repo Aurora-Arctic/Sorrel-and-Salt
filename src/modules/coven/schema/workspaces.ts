@@ -13,8 +13,8 @@ import { auditColumns } from '../../identity/schema/users';
 
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
 // own permission statements (../services/access-control.ts), so the order here
-// is documentation. `owner` is not invitable — workspace_invitations carries
-// the CHECK.
+// is documentation. `owner` is not invitable — `invitations` carries the
+// CHECK (MB.201).
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // No `kind` column and no automatic workspace: every workspace takes members

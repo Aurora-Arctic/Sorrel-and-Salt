@@ -503,6 +503,8 @@ mutations M7.5 and M7.6 always needed and the sketch never named.
 
 ## The admin invitation (story 62)
 
+**Superseded in part by MB.201 and MB.202 (2026-10-10):** `admin_invitations` and `workspace_invitations` became one two-tier `invitations` table, an admin invitation being its site tier, a null workspace and role. One accept service and one route, `/invite/[token]`, serve both tiers, landing by tier, so there is no `/admin-invite/[token]`; MB.70 keeps the pause, the note and its pending list on `/admin/users` ([`mb.201-two-tier-invitations.md`](mb.201-two-tier-invitations.md); [`db/invitations.md`](../db/invitations.md)).
+
 M2.9's option B, now buildable, as a table task and a behaviour task.
 `admin_invitations` (MB.69) is shaped like `workspace_invitations`: only the
 token's hash is stored, and it expires in seven days. `createAdminInvitation`
