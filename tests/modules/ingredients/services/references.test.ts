@@ -84,10 +84,20 @@ describe('createReference', () => {
     expect(row).toEqual({ title: 'A Herbal of Fixture Covens', edition: '2nd ed.' });
   });
 
-  // The same input the admin's write above saves: the proof is what refuses,
-  // checked before the input is read.
-  it('refuses a compendium reference to anyone but a site admin, before reading the input', async () => {
-    await expect(createReference(asUser(A), null, BOOK)).rejects.toThrow(Forbidden);
+  // The same input the admin's write above saves: the proof is what refuses.
+  it.each([
+    ['the coven’s owner', A],
+    ['a member', B],
+    ['a viewer', C],
+    ['a member of another coven', D],
+  ])('refuses a compendium reference to %s, writing nothing', async (_who, user) => {
+    expect(asUser(user).role).toBe('user');
+
+    await expect(createReference(asUser(user), null, BOOK)).rejects.toThrow(Forbidden);
+    expect(await sql`select id from "references"`).toHaveLength(0);
+  });
+
+  it('refuses a compendium reference to a non-admin before reading the input', async () => {
     await expect(createReference(asUser(B), null, { kind: 'book' } as never)).rejects.toThrow(
       Forbidden,
     );
@@ -159,6 +169,21 @@ describe('updateReference', () => {
     ).rejects.toThrow(NotFound);
     await expect(
       updateReference(asUser(B), null, id, { ...BOOK, title: 'Hijacked' }),
+    ).rejects.toThrow(Forbidden);
+    expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
+  });
+
+  // The precondition is the admin's own replace, above, of the same row shape.
+  it.each([
+    ['the coven’s owner', A],
+    ['a viewer', C],
+    ['a member of another coven', D],
+  ])('refuses %s a compendium reference by direct id, leaving it as it was', async (_who, user) => {
+    const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
+    expect(await rowOf(id)).toMatchObject({ workspace_id: null });
+
+    await expect(
+      updateReference(asUser(user), null, id, { ...BOOK, title: 'Hijacked' }),
     ).rejects.toThrow(Forbidden);
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });
