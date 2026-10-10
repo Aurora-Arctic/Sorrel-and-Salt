@@ -256,6 +256,7 @@ const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
+  setName: write('mutation { setName(name: "Fixture") { id } }'),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
   revokeWorkspaceCreation: write(
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
@@ -405,6 +406,7 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
 /** Writes any signed-in session's scope admits, the service deciding who may. */
 const OPEN_WRITES = [
   'setEmail',
+  'setName',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',

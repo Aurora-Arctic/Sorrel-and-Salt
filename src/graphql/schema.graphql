@@ -371,6 +371,7 @@ type Mutation {
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!
   setEmail(email: String!, next: String): User!
+  setName(name: String!): User!
 
   """
   Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.

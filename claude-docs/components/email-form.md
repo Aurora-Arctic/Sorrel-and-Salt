@@ -6,6 +6,13 @@ component `src/app/account/email/page.tsx` reads the session, `getMe`, and
 `?next=`/`?error=`, and hands the results down as props; this component does
 the rendering and the `setEmail` mutation.
 
+It is also the account page's Email section (MB.88), with `embedded` set:
+the same field, mutation, cooldown and field errors, with no `<h1>` of its own,
+since the section's `<h2>` "Email" heads it, and never the confirmed view, which
+stays the email page's. A change link asked for there lands on the email
+page's confirmed view, as any other does
+([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The account page").
+
 ## The props contract
 
 | Prop          | Meaning                                                                                                                                                                                                                                                 |
@@ -16,6 +23,7 @@ the rendering and the `setEmail` mutation.
 | `waitSeconds` | Seconds the server will refuse another mail for as of this render (`verificationWaitSeconds` of the row's `verification_sent_at`), so the countdown starts where it stands.                                                                             |
 | `next`        | Where the account was going, if anywhere — already run through `safeReturnPath()` (`src/lib/sign-in.ts`), the same guard `/sign-in` uses. Continue goes there, and every `setEmail` sends it, so the link it mails lands back here carrying it (below). |
 | `landing`     | Where Continue goes with no `next`: `postSignInLanding()` of the session's role — `/admin` for an admin, `/coven` for anyone else (MB.113). The page reads the role; the component never guesses one.                                                   |
+| `embedded`    | The account page's Email section: no heading of its own and no confirmed view, whatever `confirmed` says.                                                                                                                                               |
 | `error`       | A readable sentence for a failed verification link, from `verifyErrorMessage()` (`src/lib/account-email.ts`) — never a raw `?error=` code. Shown as an alert on mount.                                                                                  |
 
 Outside the confirmed view the field is always editable, whatever `verified`
@@ -121,8 +129,8 @@ component's own stylesheet is the page frame and the column's layout.
 `Prefilled` (unverified, the sign-up mail just sent, so counting down),
 `ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
 change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
-sentence).
-Every story renders inside the page's own `<main className="email-page">`, so the
+sentence), and `Embedded`, inside the account page's frame and section.
+Every other story renders inside the page's own `<main className="email-page">`, so the
 workshop shows what `/account/email` shows and nothing is styled for the
 workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider
@@ -137,7 +145,7 @@ the network only on submit.
 `mockGraphQLMutation` for the row and `mockGraphQLError` for a refusal, so the
 error body is the route's own mapping rather than a hand-written one. Covers:
 the prefilled and empty field; the confirmed view and the verified return
-visit; the status lines; the submit disabled for
+visit; the embedded use, with no heading and no confirmed view; the status lines; the submit disabled for
 an unchanged verified address (case and whitespace included) and enabled once
 edited, or when unverified; the typed value sent as typed and named, normalised,
 in the status, with `next` beside it, or none; a `VALIDATION` field error beside the

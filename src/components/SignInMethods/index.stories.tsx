@@ -15,10 +15,13 @@ const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', '
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
 const MICROSOFT: LinkedAccount = { id: 'a-microsoft', providerId: 'microsoft' };
 
-// Inside the page's own frame, so the workshop shows what the page shows.
+// Inside the account page's frame and section, so the workshop shows what the
+// page shows (MB.88).
 const Page = (props: SignInMethodsProps) => (
   <main className="account-page">
-    <SignInMethods {...props} />
+    <section className="account-page__section">
+      <SignInMethods {...props} />
+    </section>
   </main>
 );
 

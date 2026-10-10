@@ -1,7 +1,8 @@
 @use '../../scss/variables' as *;
 
-// The page-level frame, like `.email-page`: no AppShell exists yet to center
-// a page. A column, so the list and the way to the email page stack.
+// The account page's frame, like `.email-page`: no AppShell exists yet to
+// center a page. A column, so its heading and its three sections stack
+// (MB.88). Tokens only until the page's design review (MB.117).
 .account-page {
   // Or the viewport-high frame plus its own padding overflows by the padding
   // and the page scrolls by 4rem with nothing to scroll to.
@@ -10,7 +11,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: space(6);
   // Less the top inset, or a page a full screen high scrolls by it.
   min-height: calc(100dvh - #{$top-inset});
   padding: 2rem 1rem;
@@ -18,10 +19,57 @@
   margin-inline: auto;
 }
 
-.account-page__nav {
+.account-page__heading {
   margin: 0;
   width: 100%;
   max-width: 28rem;
+}
+
+// The links to each section, beneath the page's heading: a wrapping row.
+.account-page__nav {
+  width: 100%;
+  max-width: 28rem;
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(2) space(5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+// A section a nav link lands on stops clear of the top inset rather than
+// under it.
+.account-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  width: 100%;
+  max-width: 28rem;
+  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+}
+
+// The line between two sections: a hairline in the muted ink, as every
+// hairline here is, the page's gap above and below it.
+.account-page__rule {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid $text-muted;
+}
+
+.account-page__section-heading {
+  margin: 0;
+}
+
+// A line beneath a section's heading saying what it is for, as Sign-In
+// Methods' intro does, in the muted ink.
+.account-page__intro {
+  margin: 0;
+  color: $text-muted;
 }
 
 .sign-in-methods {

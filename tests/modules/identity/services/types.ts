@@ -65,3 +65,11 @@ export interface PauseRow {
   ended_by: string | null;
   ended: boolean;
 }
+
+/** A user's name and its stamps, as the name tests read them. */
+export interface NamedUserRow {
+  id: string;
+  name: string;
+  updated_by: string;
+  updated_at: Date;
+}

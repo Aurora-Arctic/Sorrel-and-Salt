@@ -294,10 +294,17 @@ describe('the update hook stamps other Better Auth writes', () => {
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: id });
   });
 
-  it("stamps /update-user with the session's user", async () => {
+  // The name is `setName`'s, through `withAudit` (MB.88): Better Auth's own
+  // write of it, and of `image`, is refused before the endpoint runs.
+  it('refuses /update-user, leaving the row unchanged', async () => {
     const response = await signIn('google', { sub: 'g-5', email: OWNER, verified: true });
     await restamp(OWNER);
-    const { id } = (await userRow(OWNER))!;
+    const before = (await userRow(OWNER))!;
+    // Why it could have written: the session is the row's own and live.
+    const session = await auth.api.getSession({
+      headers: new Headers({ cookie: cookieHeader(response) }),
+    });
+    expect(session?.user.id).toBe(before.id);
 
     const update = await auth.handler(
       new Request(`${ORIGIN}/api/auth/update-user`, {
@@ -307,12 +314,19 @@ describe('the update hook stamps other Better Auth writes', () => {
           origin: ORIGIN,
           cookie: cookieHeader(response),
         },
-        body: JSON.stringify({ name: 'Renamed Person' }),
+        body: JSON.stringify({ name: 'Renamed Person', image: 'https://example.test/me.png' }),
       }),
     );
 
-    expect(update.status, await update.clone().text()).toBe(200);
-    expect((await userRow(OWNER))?.updated_by).toBe(id);
+    expect(update.status).toBe(404);
+    const [row] =
+      await sql`select name, image, updated_by, updated_at from users where id = ${before.id}`;
+    expect(row).toMatchObject({
+      image: null,
+      updated_by: before.updated_by,
+      updated_at: before.updated_at,
+    });
+    expect(row.name).not.toBe('Renamed Person');
   });
 });
 
