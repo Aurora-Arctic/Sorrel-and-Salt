@@ -72,8 +72,17 @@ test('sends an unverified account to the email page instead', async ({ page }) =
     emailVerified: false,
   });
 
-  await page.goto('/account');
+  // The redirect is read rather than followed: the session rides as an extra
+  // request header (tests/e2e/session.ts), which the browser does not carry
+  // onto a redirect it follows, so the followed request would arrive signed out.
+  const redirected = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/account',
+  );
+  await page.goto('/account').catch(() => {});
+  const response = await redirected;
+  expect(response.status()).toBe(307);
+  expect(response.headers().location).toBe('/account/email?next=%2Faccount');
 
-  await expect(page).toHaveURL(/\/account\/email\?next=%2Faccount$/);
+  await page.goto('/account/email?next=%2Faccount');
   await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
 });
