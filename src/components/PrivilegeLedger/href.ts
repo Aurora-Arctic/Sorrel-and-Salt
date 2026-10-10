@@ -6,12 +6,11 @@ import type { PrivilegeLedgerFilter } from './types';
 const PATH = '/admin/privilege-changes';
 
 export function privilegeLedgerHref(
-  { query, userId, privilege }: PrivilegeLedgerFilter,
+  { query, privilege }: PrivilegeLedgerFilter,
   cursor: Record<string, string> = {},
 ): string {
   const params = new URLSearchParams({
     ...(query && { query }),
-    ...(userId && { user: userId }),
     ...(privilege && { privilege }),
     ...cursor,
   }).toString();

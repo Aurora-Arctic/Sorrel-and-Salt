@@ -168,16 +168,17 @@ first, for the admin who suspects misuse (story 61).
   live user, null where none is live, and refuses every slot to anyone else.
   It is the admin's whole row, not MB.10's display-name `usersById`.
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
-  ledger, filtered by user (`?user=<id>`, the history icon before each name on
-  `/admin/users` row) and by privilege (`?privilege=admin|create_workspace`, a dropdown).
+  ledger, filtered by part of the subject's name or email (`?query=`, which
+  the permissions history icon before each name on `/admin/users` opens with
+  that user's address) and by privilege (`?privilege=admin|create_workspace`,
+  a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
   are acted on; an accepted invitation is already in the ledger as its
   `invitation` row. A server component under `requireAdminSession()`, it
   calls the service through `cache()`, numbered by `resolveNumberedPage`
   with `countPrivilegeChanges` as every admin list is (MB.132), and reads the
   users a page names in one `usersForAdmin` call. A hand-edited privilege is
-  no filter; a user that is not an id is no filter either, and the page says
-  so; a cursor from another list reads the first page
+  no filter, and a cursor from another list reads the first page
   ([`components/privilege-ledger.md`](../components/privilege-ledger.md)).
 - **A row links its people to their `/admin/users` rows**, the list filtered
   to their address, except the seed's bootstrap user, which the list leaves

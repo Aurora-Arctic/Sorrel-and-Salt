@@ -97,7 +97,7 @@ const UserRow = ({
         every row: an admin's changes are the ones most worth reading. */}
     <td>
       <span className="user-list__name">
-        <HistoryLink userId={user.id} name={user.name} />
+        <HistoryLink email={user.email} name={user.name} />
         {user.name}
       </span>
     </td>

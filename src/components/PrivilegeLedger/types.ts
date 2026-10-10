@@ -35,8 +35,6 @@ export interface PrivilegeLedgerEntry {
 export interface PrivilegeLedgerFilter {
   /** Part of the subject's name or email, as asked; absent or blank for none. */
   query?: string;
-  /** The subject the ledger is narrowed to, by id. */
-  userId?: string;
   privilege?: LedgerPrivilege;
 }
 
@@ -50,8 +48,6 @@ export interface PrivilegeLedgerProps {
   changes: readonly PrivilegeLedgerEntry[];
   /** The filter the page shows. */
   filter: PrivilegeLedgerFilter;
-  /** The name of the user the ledger is narrowed to; "this account" when none is live. */
-  subjectName?: string;
   /** The page before this one, absent on the first. */
   previousHref?: string;
   /** The page after this one, absent on the last. */

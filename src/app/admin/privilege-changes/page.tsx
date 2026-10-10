@@ -13,7 +13,6 @@ import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
 import type { Session } from '../../../lib/session';
-import { RowId } from '../../../lib/validation';
 import {
   countPrivilegeChanges,
   listPrivilegeChanges,
@@ -32,7 +31,7 @@ const PRIVILEGES: readonly LedgerPrivilege[] = ['admin', 'create_workspace'];
 /** One page of the ledger and its count, the first page again for a cursor that names no row of it. */
 async function readLedgerPage(
   session: Session,
-  filter: { query?: string; userId?: string; privilege?: LedgerPrivilege },
+  filter: { query?: string; privilege?: LedgerPrivilege },
   after: string | undefined,
   before: string | undefined,
 ) {
@@ -60,18 +59,12 @@ const readLedger = cache(
   async (
     session: Session,
     query: string | undefined,
-    userId: string | undefined,
     privilege: LedgerPrivilege | undefined,
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const page = await readLedgerPage(session, { query, userId, privilege }, after, before);
-    const ids = [
-      ...new Set([
-        ...(userId ? [userId] : []),
-        ...page.edges.flatMap(({ node }) => [node.userId, node.createdBy]),
-      ]),
-    ];
+    const page = await readLedgerPage(session, { query, privilege }, after, before);
+    const ids = [...new Set(page.edges.flatMap(({ node }) => [node.userId, node.createdBy]))];
     const read = await usersForAdmin(session, ids);
     const people = new Map<string, LedgerPerson | null>(
       ids.map((id, index) => {
@@ -101,7 +94,6 @@ const readLedger = cache(
     }));
     return {
       changes,
-      subjectName: userId ? people.get(userId)?.name : undefined,
       pageInfo: page.pageInfo,
       position: page.position,
     };
@@ -110,7 +102,8 @@ const readLedger = cache(
 
 // The privilege ledger (MB.200): every change to who is an admin and who may
 // create a coven, newest first, for the admin who suspects misuse. One page,
-// filtered by user and by privilege, rather than a page per privilege
+// filtered by the subject's name or email and by privilege, rather than a
+// page per privilege
 // (claude-docs/auth/admin-users.md, "The privilege ledger").
 export default async function AdminPrivilegeChangesPage({
   searchParams,
@@ -118,37 +111,27 @@ export default async function AdminPrivilegeChangesPage({
   const session = await requireAdminSession();
   const params: PrivilegeChangesSearchParams = await searchParams;
   const query = single(params.query)?.trim() || undefined;
-  // A hand-edited user is no filter, said so, rather than an error.
-  const userParam = single(params.user);
-  const userId = userParam && RowId.safeParse(userParam).success ? userParam : undefined;
   // Either privilege, or none: a hand-edited value is no filter.
   const privilegeParam = single(params.privilege);
   const privilege = PRIVILEGES.find((value) => value === privilegeParam);
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
-  const { changes, subjectName, pageInfo, position } = await readLedger(
+  const { changes, pageInfo, position } = await readLedger(
     session,
     query,
-    userId,
     privilege,
     after,
     before,
   );
-  const filter = { query, userId, privilege };
+  const filter = { query, privilege };
 
   return (
     <main>
       <h1>Privilege Changes</h1>
-      {userParam && !userId && (
-        <p className="notice notice--error" role="alert">
-          No user has that id, so every user’s changes are shown.
-        </p>
-      )}
       <PrivilegeLedger
         changes={changes}
         filter={filter}
-        subjectName={subjectName}
         position={position}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor

@@ -8,8 +8,6 @@ import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
 // so the page owns the read and this owns what an admin sees of it
 // (claude-docs/components/privilege-ledger.md).
 
-const SUBJECT = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
-
 const GRANT: PrivilegeLedgerEntry = {
   id: 'c1',
   at: new Date('2026-03-04T05:06:07Z'),
@@ -110,18 +108,12 @@ describe('PrivilegeLedger', () => {
     });
     const filterButton = () => screen.getByRole('button', { name: 'Filter' });
 
-    it('is a GET form to the page: the search, the privilege select, and the user kept', () => {
-      render(
-        <PrivilegeLedger
-          changes={[GRANT]}
-          filter={{ query: 'ada', userId: SUBJECT, privilege: 'admin' }}
-        />,
-      );
+    it('is a GET form to the page: the search and the privilege select', () => {
+      render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
 
       const form = screen.getByRole('form', { name: 'Filter privilege changes' });
       expect(form).toHaveAttribute('method', 'get');
       expect(form).toHaveAttribute('action', '/admin/privilege-changes');
-      expect(form.querySelector('input[type="hidden"][name="user"]')).toHaveValue(SUBJECT);
       const query = screen.getByRole('searchbox', { name: 'Name or Email' });
       expect(query).toHaveAttribute('name', 'query');
       expect(query).toHaveValue('ada');
@@ -139,19 +131,16 @@ describe('PrivilegeLedger', () => {
       ]);
     });
 
-    it('carries no user when the ledger is not narrowed to one', () => {
+    it('starts empty when the ledger is not filtered', () => {
       render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
 
-      const form = screen.getByRole('form', { name: 'Filter privilege changes' });
-      expect(form.querySelector('input[name="user"]')).toBeNull();
+      expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('');
       expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('');
     });
 
     it('offers Filter only for a new privilege, and opens it from the first page', () => {
       vi.stubGlobal('location', { ...window.location, assign });
-      render(
-        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
-      );
+      render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
       const privilege = screen.getByRole('combobox', { name: 'Privilege' });
       expect(filterButton()).toBeDisabled();
 
@@ -163,14 +152,12 @@ describe('PrivilegeLedger', () => {
       fireEvent.change(privilege, { target: { value: '' } });
       fireEvent.click(filterButton());
 
-      expect(assign).toHaveBeenCalledWith(privilegeLedgerHref({ userId: SUBJECT }));
+      expect(assign).toHaveBeenCalledWith(privilegeLedgerHref({ query: 'ada' }));
     });
 
-    it('offers Filter for a new query, trimmed, keeping the user and the privilege', () => {
+    it('offers Filter for a new query, trimmed, keeping the privilege', () => {
       vi.stubGlobal('location', { ...window.location, assign });
-      render(
-        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
-      );
+      render(<PrivilegeLedger changes={[GRANT]} filter={{ privilege: 'admin' }} />);
       const query = screen.getByRole('searchbox', { name: 'Name or Email' });
 
       fireEvent.change(query, { target: { value: '   ' } });
@@ -179,7 +166,7 @@ describe('PrivilegeLedger', () => {
       fireEvent.click(filterButton());
 
       expect(assign).toHaveBeenCalledWith(
-        privilegeLedgerHref({ query: 'Ada', userId: SUBJECT, privilege: 'admin' }),
+        privilegeLedgerHref({ query: 'Ada', privilege: 'admin' }),
       );
     });
 
@@ -193,47 +180,15 @@ describe('PrivilegeLedger', () => {
     });
   });
 
-  it('says whose changes it shows, and links back to every user', () => {
-    render(
-      <PrivilegeLedger
-        changes={[GRANT]}
-        filter={{ userId: SUBJECT, privilege: 'admin' }}
-        subjectName="Ada Fixturewort"
-      />,
-    );
-
-    expect(screen.getByText(/Changes to Ada Fixturewort only\./)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Show Every User' })).toHaveAttribute(
-      'href',
-      privilegeLedgerHref({ privilege: 'admin' }),
-    );
-  });
-
-  it('shows no user line when the ledger is not narrowed to one', () => {
-    render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
-
-    expect(screen.queryByRole('link', { name: 'Show Every User' })).toBeNull();
-  });
-
   it.each([
-    [{}, undefined, 'No privilege has changed yet.'],
-    [{ privilege: 'admin' }, undefined, 'No changes to who is an admin.'],
-    [{ privilege: 'create_workspace' }, undefined, 'No changes to who may create a coven.'],
-    [{ userId: SUBJECT }, 'Ada Fixturewort', 'No changes to Ada Fixturewort’s privileges.'],
-    [
-      { userId: SUBJECT, privilege: 'create_workspace' },
-      'Ada Fixturewort',
-      'No changes to whether Ada Fixturewort may create a coven.',
-    ],
-    [{ userId: SUBJECT }, undefined, 'No changes to this account’s privileges.'],
-    [{ query: 'ada' }, undefined, 'No changes to the privileges of anyone matching “ada”.'],
-    [
-      { query: 'ada', privilege: 'admin' },
-      undefined,
-      'No changes to whether anyone matching “ada” is an admin.',
-    ],
-  ] as const)('says plainly when there is nothing to show: %o', (filter, name, text) => {
-    render(<PrivilegeLedger changes={[]} filter={filter} subjectName={name} />);
+    [{}, 'No permission changes yet.'],
+    [{ query: 'ada@users.test' }, 'No permission changes for “ada@users.test”.'],
+    [{ privilege: 'admin' }, 'No admin changes yet.'],
+    [{ privilege: 'create_workspace' }, 'No coven creation changes yet.'],
+    [{ query: 'ada', privilege: 'admin' }, 'No admin changes for “ada”.'],
+    [{ query: 'ada', privilege: 'create_workspace' }, 'No coven creation changes for “ada”.'],
+  ] as const)('says plainly when there is nothing to show: %o', (filter, text) => {
+    render(<PrivilegeLedger changes={[]} filter={filter} />);
 
     expect(screen.queryByRole('table')).toBeNull();
     expect(screen.getByText(text)).toBeInTheDocument();
@@ -261,11 +216,8 @@ describe('PrivilegeLedger', () => {
 describe('privilegeLedgerHref', () => {
   it('writes the filter and the cursor, and nothing for none', () => {
     expect(privilegeLedgerHref({})).toBe('/admin/privilege-changes');
-    expect(privilegeLedgerHref({ userId: SUBJECT, privilege: 'admin' }, { before: 'b' })).toBe(
-      `/admin/privilege-changes?user=${SUBJECT}&privilege=admin&before=b`,
-    );
-    expect(privilegeLedgerHref({ query: 'a b', userId: SUBJECT })).toBe(
-      `/admin/privilege-changes?query=a+b&user=${SUBJECT}`,
+    expect(privilegeLedgerHref({ query: 'a b', privilege: 'admin' }, { before: 'b' })).toBe(
+      '/admin/privilege-changes?query=a+b&privilege=admin&before=b',
     );
   });
 });

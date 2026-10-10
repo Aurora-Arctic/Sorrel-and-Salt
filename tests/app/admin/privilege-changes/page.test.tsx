@@ -133,22 +133,13 @@ describe('the /admin/privilege-changes page', () => {
     expect(within(third).getByText('Deleted account')).toBeInTheDocument();
   });
 
-  it('turns ?user and ?privilege into the filter, and names the user', async () => {
-    await renderPage({ user: ADA.id, privilege: 'create_workspace' });
-
-    const filter = { userId: ADA.id, privilege: 'create_workspace' };
-    expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual(filter);
-    expect(countPrivilegeChanges.mock.calls[0]?.[1]).toEqual(filter);
-    expect(usersForAdmin.mock.calls[0]?.[1]?.[0]).toBe(ADA.id);
-    expect(screen.getByText(/Changes to Ada Fixturewort only\./)).toBeInTheDocument();
-  });
-
-  it('turns ?query into the filter, trimmed, and shows it in the search', async () => {
+  it('turns ?query and ?privilege into the filter, the query trimmed and shown in the search', async () => {
     await renderPage({ query: '  ada ', privilege: 'admin' });
 
     expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
     expect(countPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('ada');
+    expect(screen.getByLabelText('Privilege')).toHaveValue('admin');
   });
 
   it('reads a blank query as none', async () => {
@@ -161,9 +152,9 @@ describe('the /admin/privilege-changes page', () => {
     listPrivilegeChanges.mockResolvedValue([]);
     countPrivilegeChanges.mockResolvedValue({ totalCount: 0, countBefore: null });
 
-    await renderPage({ user: ADA.id });
+    await renderPage({ query: 'ada@ledger.test', privilege: 'admin' });
 
-    expect(screen.getByText('No changes to Ada Fixturewort’s privileges.')).toBeInTheDocument();
+    expect(screen.getByText('No admin changes for “ada@ledger.test”.')).toBeInTheDocument();
   });
 
   // Only a hand-edited address carries one, so it filters nothing rather than erring.
@@ -174,18 +165,6 @@ describe('the /admin/privilege-changes page', () => {
       userId: undefined,
       privilege: undefined,
     });
-  });
-
-  it('reads a user that is not an id as no user, and says so', async () => {
-    await renderPage({ user: 'not-an-id' });
-
-    expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({
-      userId: undefined,
-      privilege: undefined,
-    });
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'No user has that id, so every user’s changes are shown.',
-    );
   });
 
   it('reads on after a cursor, and back before one', async () => {
@@ -229,11 +208,11 @@ describe('the /admin/privilege-changes page', () => {
     );
     countPrivilegeChanges.mockResolvedValue({ totalCount: 30, countBefore: 0 });
 
-    await renderPage({ user: ADA.id, privilege: 'admin' });
+    await renderPage({ query: 'ada', privilege: 'admin' });
 
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
-      `/admin/privilege-changes?user=${ADA.id}&privilege=admin&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+      `/admin/privilege-changes?query=ada&privilege=admin&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
     );
     expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 1 of 2');

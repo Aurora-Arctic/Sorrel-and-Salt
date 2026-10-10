@@ -42,7 +42,8 @@ export type UserListFilterValue = UserListFilterProps;
 
 /** A row's link to its user's privilege history (MB.200). */
 export interface HistoryLinkProps {
-  userId: string;
+  /** The user's address, which the ledger's search is opened with. */
+  email: string;
   /** The user's name, completing the link's accessible name. */
   name: string;
 }

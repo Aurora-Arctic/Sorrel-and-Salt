@@ -74,8 +74,8 @@ read beside it.
   `AdminNav`.
 - **A history icon leads each name** (MB.200, on the owner's call: an
   icon rather than a column), on every row, an admin's included: a link to
-  `/admin/privilege-changes?user=<id>`, the privilege ledger narrowed to that
-  user, built by `PrivilegeLedger`'s `privilegeLedgerHref`
+  `/admin/privilege-changes?query=<email>`, the privilege ledger searched for
+  that user's address, lower-cased as every address is held, built by `PrivilegeLedger`'s `privilegeLedgerHref`
   ([`privilege-ledger.md`](privilege-ledger.md)). It is `history-link.tsx`,
   a client file, and `icons.tsx`'s `HistoryIcon`, a clock with a
   counter-clockwise arrow in `currentColor`, `aria-hidden`. The link is

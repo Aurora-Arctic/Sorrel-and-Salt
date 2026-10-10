@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import Pager from '../Pager';
 import LedgerFilterForm from './filter';
-import { privilegeLedgerHref } from './href';
 import type {
   LedgerPerson,
   LedgerPrivilege,
@@ -31,28 +30,16 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   manual: 'Manual fix',
 };
 
-/** What a privilege grants, as the empty state says it. */
-const WHO_HOLDS: Record<LedgerPrivilege, string> = {
-  admin: 'is an admin',
-  create_workspace: 'may create a coven',
+/** A privilege as the empty state names its changes. */
+const WHAT_CHANGED: Record<LedgerPrivilege, string> = {
+  admin: 'admin',
+  create_workspace: 'coven creation',
 };
 
-/**
- * The empty state, in plain words for the filter shown. Whom it is about: the
- * user the ledger is narrowed to by id, else anyone the query matches.
- */
-function nothingToShow(
-  { userId, privilege, query }: PrivilegeLedgerFilter,
-  subjectName: string | undefined,
-): string {
-  const named = userId ? (subjectName ?? 'this account') : undefined;
-  const matching = !named && query ? `anyone matching “${query}”` : undefined;
-  const whom = named ?? matching;
-  if (whom && privilege) return `No changes to whether ${whom} ${WHO_HOLDS[privilege]}.`;
-  if (named) return `No changes to ${named}’s privileges.`;
-  if (matching) return `No changes to the privileges of ${matching}.`;
-  if (privilege) return `No changes to who ${WHO_HOLDS[privilege]}.`;
-  return 'No privilege has changed yet.';
+/** The empty state, in plain words for the filter shown. */
+function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
+  const what = privilege ? `${WHAT_CHANGED[privilege]} changes` : 'permission changes';
+  return query ? `No ${what} for “${query}”.` : `No ${what} yet.`;
 }
 
 /** A time to the minute, in UTC and saying so, since the server renders it. */
@@ -87,23 +74,12 @@ const ChangeRow = ({ change }: { change: PrivilegeLedgerEntry }): ReactElement =
 const PrivilegeLedger = ({
   changes,
   filter,
-  subjectName,
   previousHref,
   nextHref,
   position,
 }: PrivilegeLedgerProps): ReactElement => (
   <div className="privilege-ledger">
-    <div className="privilege-ledger__filter">
-      <LedgerFilterForm filter={filter} />
-      {filter.userId && (
-        <p>
-          Changes to {subjectName ?? 'this account'} only.{' '}
-          <a href={privilegeLedgerHref({ query: filter.query, privilege: filter.privilege })}>
-            Show Every User
-          </a>
-        </p>
-      )}
-    </div>
+    <LedgerFilterForm filter={filter} />
 
     {changes.length ? (
       <div className="data-table-frame">
@@ -127,7 +103,7 @@ const PrivilegeLedger = ({
         </table>
       </div>
     ) : (
-      <p>{nothingToShow(filter, subjectName)}</p>
+      <p>{nothingToShow(filter)}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} position={position} />

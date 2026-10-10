@@ -122,7 +122,7 @@ describe('UserList', () => {
       vi.useRealTimers();
     });
 
-    it('leads every name, to the ledger narrowed to that user', () => {
+    it('leads every name, to the ledger searched for that user’s address', () => {
       render(<UserList {...props()} />);
 
       for (const user of props().users) {
@@ -130,9 +130,21 @@ describe('UserList', () => {
         const link = within(row).getByRole('link', {
           name: `Permissions history for ${user.name}`,
         });
-        expect(link).toHaveAttribute('href', `/admin/privilege-changes?user=${user.id}`);
+        expect(link).toHaveAttribute(
+          'href',
+          `/admin/privilege-changes?query=${encodeURIComponent(user.email)}`,
+        );
         expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
       }
+    });
+
+    // Every address is held lower-cased; the link does not rely on that.
+    it('searches for the address lower-cased', () => {
+      render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
+
+      expect(
+        screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' }),
+      ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
     });
 
     it('says Permissions History in a tip on hover, kept while the pointer is on it', () => {

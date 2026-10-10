@@ -7,8 +7,7 @@ import type { LedgerPrivilege, PrivilegeLedgerFilterProps } from './types';
 // The filter, a GET form to the page itself, as the user list's is (MB.52,
 // MB.53): part of the subject's name or email, and a native privilege
 // `<select>`, so before hydration the form submits natively, "All" as
-// `privilege=`, which the page reads as no privilege, and the user the
-// ledger is narrowed to rides along as a hidden `user`. Filter is offered
+// `privilege=`, which the page reads as no privilege. Filter is offered
 // only when the form differs from the filter the page shows, and opens the
 // new filter from the first page as a full load, as the pager's plain
 // anchors do.
@@ -24,7 +23,6 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
     window.location.assign(
       privilegeLedgerHref({
         query: draftQuery.trim(),
-        userId: filter.userId,
         privilege: draft || undefined,
       }),
     );
@@ -39,7 +37,6 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
         aria-label="Filter privilege changes"
         onSubmit={apply}
       >
-        {filter.userId && <input type="hidden" name="user" value={filter.userId} />}
         <div className="field">
           <label className="field__label" htmlFor="privilege-ledger-query">
             Name or Email

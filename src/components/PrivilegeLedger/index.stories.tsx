@@ -77,17 +77,24 @@ export const Everything: Story = () => (
 export const OneUser: Story = () => (
   <PrivilegeLedger
     changes={CHANGES.filter((change) => change.subject === ADA)}
-    filter={{ userId: 'ada', privilege: 'admin' }}
-    subjectName="Ada Fixturewort"
+    filter={{ query: 'ada@users.test' }}
+  />
+);
+
+export const OneUserAdminOnly: Story = () => (
+  <PrivilegeLedger
+    changes={CHANGES.filter((change) => change.subject === ADA && change.privilege === 'admin')}
+    filter={{ query: 'ada@users.test', privilege: 'admin' }}
   />
 );
 
 export const Empty: Story = () => <PrivilegeLedger changes={[]} filter={{}} />;
 
-export const EmptyForOneUser: Story = () => (
+// A search no row in this file matches, so the empty state is true of the
+// other stories' rows as well.
+export const EmptyForASearch: Story = () => (
   <PrivilegeLedger
     changes={[]}
-    filter={{ userId: 'ada', privilege: 'create_workspace' }}
-    subjectName="Ada Fixturewort"
+    filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
   />
 );
