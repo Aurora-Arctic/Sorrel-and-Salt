@@ -71,6 +71,7 @@ const EXPORTED_FUNCTIONS = [
   'findPageInWorkspace',
   'findPendingInvitationsInWorkspace',
   'findPendingSiteInvitations',
+  'findPrivilegeChangePage',
   'findProvidersOfUsers',
   'findReferenceSuggestions',
   'findReferencesOfIngredients',
@@ -249,10 +250,11 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     for (const finder of finders) {
       const body = functionBody(finder);
       // Either it filters itself, or it delegates to something that does: a
-      // sibling finder, or `readableSpells`, which carries the filter for the
-      // three spell finders along with the visibility rule.
+      // sibling finder, `findPage` and its kin included, or `readableSpells`,
+      // which carries the filter for the three spell finders along with the
+      // visibility rule.
       expect(
-        /notSoftDeleted\(|findMany\w*\(|readableSpells\(/.test(body),
+        /notSoftDeleted\(|find(?:Many|Page)\w*\(|readableSpells\(/.test(body),
         `${finder} reaches the database without notSoftDeleted(...)`,
       ).toBe(true);
     }

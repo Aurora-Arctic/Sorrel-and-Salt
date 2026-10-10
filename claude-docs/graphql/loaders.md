@@ -16,6 +16,8 @@ merely absent:
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
   `providersByUser` (`identity`, for `User.providers`, MB.52),
+  `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
+  `.actor`, MB.199),
   `categoriesByIngredient`, `folkNamesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient` and `referencesByIngredient`
   (`ingredients`, for `Ingredient.categories`, `Ingredient.folkNames`,
@@ -24,7 +26,7 @@ merely absent:
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `Ingredient.formChoice`;
   the last two MB.167's); M6.11
-  `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById` follow. A test that builds a context
+  `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById`, the members' display name, follow. A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
@@ -39,9 +41,9 @@ merely absent:
   that is missing or retired is a `NotFound` in its own slot.
   `ingredientFormsById` is keyed by id too, but answers null for a form no
   longer curated, since a retired pick reads as no pick rather than an error.
-- **A null session is not always a refusal.** `membershipsByUser` and
-  `providersByUser` refuse every key signed out, and `providersByUser` every
-  key to a non-admin. The ingredient loaders answer a compendium entry for
+- **A null session is not always a refusal.** `membershipsByUser`,
+  `providersByUser` and `usersByIdForAdmin` refuse every key signed out, and
+  the last two every key to a non-admin. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public

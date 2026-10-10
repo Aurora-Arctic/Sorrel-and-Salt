@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
@@ -16,8 +16,8 @@ import { users } from '@/modules/identity/schema/users';
 // MB.201: one invitations table in two tiers, the shape `ingredients` has. A
 // row naming a workspace and a role invites into that coven; a row with
 // neither is a site-tier invitation, which grants admin, as a null workspace
-// is a compendium entry. The table task: the old two tables stay until MB.203,
-// and MB.202's named writes are the first to reach this one
+// is a compendium entry. The table task: the old two tables stayed until
+// MB.203 dropped them, and MB.202's named writes are the first to reach this one
 // (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
 
 // DESIGN.md §5's column list, transcribed.
@@ -424,97 +424,186 @@ describe('invitations table', () => {
   });
 });
 
-// The migration's copy of both old tables, re-run here from its own SQL:
-// with ids and stamps, so MB.203's final sweep can skip what is already
-// copied. Production holds no row in either; staging may.
-describe('the copy of workspace_invitations and admin_invitations', () => {
+// MB.203: the drop migration sweeps both old tables once more, with
+// `ON CONFLICT (id) DO NOTHING`, for any row the deploy before MB.202 wrote
+// after 0057's copy, then drops both. The template no longer holds them, so
+// this file's clone takes them back from the migrations that made them (0012,
+// 0046) — the template is re-cloned before every file, and no other sees them
+// — and re-runs both migrations' own SQL. Production holds no row in either;
+// staging may.
+describe('the sweep of workspace_invitations and admin_invitations before the drop', () => {
+  // What marks the copy and the drop among the shipped migrations.
+  const COPY_MIGRATION = 'INSERT INTO "invitations"';
+  const DROP_MIGRATION = 'DROP TABLE "workspace_invitations"';
+  const OLD_TABLES = ['workspace_invitations', 'admin_invitations'];
+
   const WORKSPACE_ROW = '11111111-1111-4111-8111-111111111111';
   const ADMIN_ROW = '22222222-2222-4222-8222-222222222222';
+  const LATER_WORKSPACE_ROW = '33333333-3333-4333-8333-333333333333';
+  const LATER_ADMIN_ROW = '44444444-4444-4444-8444-444444444444';
+  const HASH_C = 'c'.repeat(64);
+  const HASH_D = 'd'.repeat(64);
   const CREATED = new Date('2026-09-01T10:00:00Z');
   const UPDATED = new Date('2026-09-02T10:00:00Z');
   const EXPIRES = new Date('2026-09-08T10:00:00Z');
 
-  beforeEach(async () => {
-    await sql`truncate invitations, workspace_invitations, admin_invitations`;
-  });
-
   // The `set_updated_at` trigger fires on update only, so the stamps the rows
   // are inserted with are the stamps they keep.
-  async function seedOldTables() {
+  async function writeWorkspaceRow(id: string, tokenHash: string) {
     await sql`
       insert into workspace_invitations
         (id, workspace_id, email, role, token_hash, expires_at, accepted_at, accepted_by,
          created_at, created_by, updated_at, updated_by)
-      values (${WORKSPACE_ROW}, ${COVEN}, 'rowan@example.com', 'viewer', ${HASH_A}, ${EXPIRES},
+      values (${id}, ${COVEN}, 'rowan@example.com', 'viewer', ${tokenHash}, ${EXPIRES},
               ${UPDATED}, ${INVITEE}, ${CREATED}, ${OWNER}, ${UPDATED}, ${INVITEE})
     `;
+  }
+
+  async function writeAdminRow(id: string, tokenHash: string) {
     await sql`
       insert into admin_invitations
         (id, email, token_hash, expires_at, revoked_at, note,
          created_at, created_by, updated_at, updated_by, deleted_at, deleted_by)
-      values (${ADMIN_ROW}, 'ash@example.com', ${HASH_B}, ${EXPIRES}, ${UPDATED},
+      values (${id}, 'ash@example.com', ${tokenHash}, ${EXPIRES}, ${UPDATED},
               'Takes over the vocabularies', ${CREATED}, ${ADMIN}, ${UPDATED}, ${ADMIN},
               ${UPDATED}, ${ADMIN})
     `;
   }
 
-  async function runCopy() {
-    const copy = statementsOfMigrationContaining('INSERT INTO "invitations"').filter((statement) =>
-      /^insert\b/i.test(statement),
-    );
-    expect(copy).toHaveLength(1);
-    await sql.unsafe(copy[0]);
-  }
-
-  it('lands a row of each with its id, stamps, tier and note', async () => {
-    await seedOldTables();
-
-    await runCopy();
-
-    const rows = await sql`select * from invitations order by id`;
-    expect(rows).toEqual([
-      {
-        id: WORKSPACE_ROW,
-        workspace_id: COVEN,
-        email: 'rowan@example.com',
-        role: 'viewer',
-        token_hash: HASH_A,
-        expires_at: EXPIRES,
-        accepted_at: UPDATED,
-        accepted_by: INVITEE,
-        revoked_at: null,
-        note: null,
-        created_at: CREATED,
-        created_by: OWNER,
-        updated_at: UPDATED,
-        updated_by: INVITEE,
-        deleted_at: null,
-        deleted_by: null,
-      },
-      {
-        id: ADMIN_ROW,
-        workspace_id: null,
-        email: 'ash@example.com',
-        role: null,
-        token_hash: HASH_B,
-        expires_at: EXPIRES,
-        accepted_at: null,
-        accepted_by: null,
-        revoked_at: UPDATED,
-        note: 'Takes over the vocabularies',
-        created_at: CREATED,
-        created_by: ADMIN,
-        updated_at: UPDATED,
-        updated_by: ADMIN,
-        deleted_at: UPDATED,
-        deleted_by: ADMIN,
-      },
-    ]);
+  const workspaceTier = (id: string, tokenHash: string) => ({
+    id,
+    workspace_id: COVEN,
+    email: 'rowan@example.com',
+    role: 'viewer',
+    token_hash: tokenHash,
+    expires_at: EXPIRES,
+    accepted_at: UPDATED,
+    accepted_by: INVITEE,
+    revoked_at: null,
+    note: null,
+    created_at: CREATED,
+    created_by: OWNER,
+    updated_at: UPDATED,
+    updated_by: INVITEE,
+    deleted_at: null,
+    deleted_by: null,
   });
 
-  it('copies nothing from two empty tables', async () => {
-    await runCopy();
+  const siteTier = (id: string, tokenHash: string) => ({
+    id,
+    workspace_id: null,
+    email: 'ash@example.com',
+    role: null,
+    token_hash: tokenHash,
+    expires_at: EXPIRES,
+    accepted_at: null,
+    accepted_by: null,
+    revoked_at: UPDATED,
+    note: 'Takes over the vocabularies',
+    created_at: CREATED,
+    created_by: ADMIN,
+    updated_at: UPDATED,
+    updated_by: ADMIN,
+    deleted_at: UPDATED,
+    deleted_by: ADMIN,
+  });
 
-    expect(await sql`select id from invitations`).toEqual([]);
+  /** The one `INSERT` of the first migration containing `marker`, run here. */
+  async function runInsertOf(marker: string) {
+    const statements = statementsOfMigrationContaining(marker).filter((statement) =>
+      /^insert\b/i.test(statement),
+    );
+    // One statement copies both.
+    expect(statements).toHaveLength(1);
+    await sql.unsafe(statements[0]);
+  }
+
+  const firstCopy = () => runInsertOf(COPY_MIGRATION);
+  const sweep = () => runInsertOf(DROP_MIGRATION);
+
+  // `workspace_role` stays: `workspace_members.role` and `invitations.role` hold it.
+  it('drops both old tables from the catalogue, and keeps the role enum', async () => {
+    for (const table of OLD_TABLES) {
+      const [{ relation }] = await sql<{ relation: string | null }[]>`
+        select to_regclass(${table})::text as relation
+      `;
+      expect(relation).toBeNull();
+    }
+    const holders = await sql<{ table_name: string }[]>`
+      select table_name from information_schema.columns
+      where table_schema = 'public' and udt_name = 'workspace_role'
+      order by table_name
+    `;
+    expect(holders.map((row) => row.table_name)).toEqual(['invitations', 'workspace_members']);
+  });
+
+  it('sweeps, then drops the two tables, and does nothing else', () => {
+    const statements = statementsOfMigrationContaining(DROP_MIGRATION);
+
+    expect(statements).toHaveLength(3);
+    expect(statements[0]).toMatch(/^insert into "invitations"/i);
+    expect(statements[0]).toMatch(/on conflict \("id"\) do nothing;?$/i);
+    expect(statements.slice(1).sort()).toEqual(
+      [
+        'DROP TABLE "admin_invitations" CASCADE;',
+        'DROP TABLE "workspace_invitations" CASCADE;',
+      ].sort(),
+    );
+  });
+
+  describe('against the old tables, restored', () => {
+    beforeAll(async () => {
+      for (const table of OLD_TABLES) {
+        const made = statementsOfMigrationContaining(`CREATE TABLE "${table}"`).filter(
+          (statement) => statement.startsWith(`CREATE TABLE "${table}"`),
+        );
+        expect(made).toHaveLength(1);
+        await sql.unsafe(made[0]);
+      }
+    });
+
+    beforeEach(async () => {
+      await sql`truncate invitations, workspace_invitations, admin_invitations`;
+    });
+
+    it('lands a row written to either old table after the first copy with its id, stamps, tier and note, and keeps the copied rows once', async () => {
+      // Before 0057: one row of each, which its copy takes.
+      await writeWorkspaceRow(WORKSPACE_ROW, HASH_A);
+      await writeAdminRow(ADMIN_ROW, HASH_B);
+      await firstCopy();
+      expect((await sql`select id from invitations order by id`).map((row) => row.id)).toEqual([
+        WORKSPACE_ROW,
+        ADMIN_ROW,
+      ]);
+
+      // Mid-rollout: the outgoing deploy writes one more of each.
+      await writeWorkspaceRow(LATER_WORKSPACE_ROW, HASH_C);
+      await writeAdminRow(LATER_ADMIN_ROW, HASH_D);
+
+      await sweep();
+
+      expect(await sql`select * from invitations order by id`).toEqual([
+        workspaceTier(WORKSPACE_ROW, HASH_A),
+        siteTier(ADMIN_ROW, HASH_B),
+        workspaceTier(LATER_WORKSPACE_ROW, HASH_C),
+        siteTier(LATER_ADMIN_ROW, HASH_D),
+      ]);
+    });
+
+    it('leaves a row already in invitations as it is, rather than refusing the migration', async () => {
+      await writeAdminRow(ADMIN_ROW, HASH_B);
+      await firstCopy();
+      const before = await sql`select * from invitations order by id`;
+
+      await sweep();
+
+      expect(await sql`select * from invitations order by id`).toEqual(before);
+    });
+
+    it('copies nothing from two empty tables', async () => {
+      await sweep();
+
+      expect(await sql`select id from invitations`).toEqual([]);
+    });
   });
 });

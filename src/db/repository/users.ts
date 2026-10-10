@@ -1,13 +1,14 @@
-import { and, eq, inArray, ne, or, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
+import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { PageEntry, PageRequest } from '../../lib/types';
-import { findMany } from './finders';
+import { findMany, findPage } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
 import { pageBounds, selectFrom } from './select';
-import type { LinkedProvider, UserFilter } from './types';
+import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
 
 /**
  * The live row holding this address, or `undefined`. Compared lower-cased,
@@ -68,6 +69,37 @@ export async function findProvidersOfUsers(
     and(notSoftDeleted(accounts), inArray(accounts.userId, [...userIds])),
   );
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
+}
+
+/**
+ * The ledger's order, newest first: a page's key is ascending, so a
+ * descending part is written negated (`types.ts`, `SortPart`), and as
+ * `numeric`, which keeps the microseconds a `Date` would drop from a cursor.
+ * Rows of one instant, a role grant and the flag it sets, follow by id.
+ */
+const LEDGER_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${userPrivilegeChanges.createdAt})`, type: 'numeric' },
+];
+
+/**
+ * One page of the privilege ledger under `filter`, newest first (MB.199):
+ * `/admin/privilege-changes`. Under the `SiteAdmin` proof, as the user list
+ * is, since who holds which privilege is an admin's business alone.
+ */
+export function findPrivilegeChangePage(
+  _admin: SiteAdmin,
+  filter: PrivilegeChangeFilter,
+  page: PageRequest,
+): Promise<PageEntry<typeof userPrivilegeChanges.$inferSelect>[]> {
+  return findPage(userPrivilegeChanges, LEDGER_ORDER, page, and(...privilegeChangeArms(filter)));
+}
+
+/** The ledger filter's arms, each `undefined` when its part is absent. */
+function privilegeChangeArms({ userId, privilege }: PrivilegeChangeFilter): (SQL | undefined)[] {
+  return [
+    userId ? eq(userPrivilegeChanges.userId, userId) : undefined,
+    privilege ? eq(userPrivilegeChanges.privilege, privilege) : undefined,
+  ];
 }
 
 /** The filter's arms, each `undefined` when its part is absent. */
