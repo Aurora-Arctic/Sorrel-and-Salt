@@ -109,7 +109,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   every other is the muted ink. It is sticky at the table's right edge, so on
   a narrow screen the other columns scroll beneath it (on the owner's call,
   during MB.59): its tint is therefore mixed into the ground it sits on, the
-  page or a banded row's card, rather than laid over transparent. The table's
+  page or a banded row's card, rather than laid over transparent. Every tip
+  in the table sits one layer above it (`$tip-layer`, the column's
+  `$sticky-column-layer` plus one): a tip reaches into its own row, whose
+  Impersonate cell comes later in the DOM, and at the same layer the cell
+  painted over the tip's corner (fixed in MB.63's PR;
+  `tests/components/UserList/layers.test.ts`). The table's
   borders are separate rather than the primitive's collapsed ones, so each
   rule belongs to its cell and the headings' hairline scrolls beneath the red
   one rather than being drawn across it. No cell wraps: the table scrolls
