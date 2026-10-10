@@ -121,11 +121,12 @@ on any request to `/api/auth/sign-in/`.
   throws on the unset URL rather than reporting that no mail arrived.
 - **A signed-in browser without a provider** (MB.71). No spec can finish a
   real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
-providers, role)` writes what a Discord sign-in would leave into the calling
-  worker's slot database, the one its server reads: a verified user stamped as
+providers, role, { emailVerified })` writes what a Discord sign-in would leave into the calling
+  worker's slot database, the one its server reads: a user stamped as
   its own creator, holding the site role given
-  (`user` unless the spec asks for `admin`), one `accounts` row per provider
-  named, and a session. It then hands the browser the session cookie Better
+  (`user` unless the spec asks for `admin`), verified unless the spec passes
+  `emailVerified: false` (MB.205, for an admin approving an unverified
+  account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
   Auth would have set. The value is the token, a dot, and its base64
   HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
   `signCookieValue` does it. The runner and the served build share that
