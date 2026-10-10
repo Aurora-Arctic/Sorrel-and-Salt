@@ -124,7 +124,8 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
   await expect(admin.getByRole('cell')).toHaveText([
-    'Fixture Person',
+    // The permissions history icon's tip, then the name (MB.200).
+    'Permissions HistoryFixture Person',
     // The verified mark's word, for the reader and in its tip, before the address.
     /an-admin@admin-users\.test$/,
     'Admin',
