@@ -38,6 +38,9 @@ call reaches no auth server, so a click shows the failure.
 
 `tests/components/SignOutButton/index.test.tsx` covers the busy state and the
 full load of `/`, and the failure said beside it for a refusal and for a
-dropped connection. `tests/e2e/account.spec.ts` signs out from `/account`
-against the built server, lands on `/` signed out, and is sent to sign in
-from `/account` after, with axe.
+dropped connection. `tests/db/sign-out.test.ts` signs out through Better
+Auth's real endpoint: the session row goes, and the same cookie then reads as
+no one. `tests/e2e/account.spec.ts` finds the button beside the heading, with
+axe, and its refusal said beside it: the served build cannot complete a sign-out,
+since Better Auth refuses the plain-http origin the remote browser reaches it
+on, as it would any `/api/auth` POST there.

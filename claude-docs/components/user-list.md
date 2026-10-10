@@ -228,7 +228,8 @@ primitive's rule, since its rows mix text with logo circles, marks and
 buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
-a wrapping row of the mark and the control, and the role cell a wrapping row
+the mark on the left and the control on the right, centred on one line, as
+the role cell is (MB.63, on the owner's call), and the role cell a wrapping row
 of the role, with the primary admin's crown in `$text-muted` beside it, on the
 left and the control on the right, centred on one line (MB.59, on the owner's
 call). Both of the role cell's tips, the crown's and the locked Revoke's, are

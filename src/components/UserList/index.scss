@@ -236,11 +236,13 @@
   border-bottom-color: $secondary;
 }
 
-// The creation cell: the Yes or No, then the control that changes it, on one
-// line.
+// The creation cell: the Yes or No on the left, the control that changes it
+// on the right, centred on one line, as the role cell holds its own (the
+// owner's call).
 .user-list__creation {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: space(2) space(3);
 }
 
