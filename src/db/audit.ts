@@ -37,9 +37,11 @@ export function deletionColumnsReferencing(usersId: UsersIdReference) {
 
 // The six names a payload is stripped of, read off the factories rather than
 // listed beside them, so a column added to either is stripped too. The
-// builders are thrown away unspread, so the reference is never resolved, and
-// `Function.prototype` stands in for it rather than a thunk no line calls.
-const unresolved = Function.prototype as UsersIdReference;
+// builders are thrown away: none is spread into a table, so the reference
+// is never resolved.
+const unresolved: UsersIdReference = () => {
+  throw new Error('An audit field name list resolves no foreign key');
+};
 const AUDIT_FIELD_NAMES = Object.keys({
   ...auditStampColumnsReferencing(unresolved),
   ...deletionColumnsReferencing(unresolved),
