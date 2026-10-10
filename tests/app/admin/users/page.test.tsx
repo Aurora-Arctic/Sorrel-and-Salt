@@ -99,11 +99,11 @@ describe('the /admin/users page', () => {
 
     const row = screen.getByRole('row', { name: /Listed Fixture 01/ });
     expect(within(row).getByText('Google', { selector: '.visually-hidden' })).toBeInTheDocument();
-    // None linked is an empty cell, the fourth.
+    // None linked is an empty cell, the fifth, after Coven Creation.
     const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
       'cell',
     );
-    expect(none[3]).toHaveTextContent(/^$/);
+    expect(none[4]).toHaveTextContent(/^$/);
   });
 
   // MB.59: whether a row is the primary admin's is the identity service's

@@ -353,4 +353,11 @@
   .user-list__pause-state {
     margin: 0;
   }
+
+  // Why another admin cannot use the switch, beside it in the muted ink.
+  .user-list__pause-reason {
+    margin: 0;
+    color: $text-muted;
+    font-size: 0.875em;
+  }
 }

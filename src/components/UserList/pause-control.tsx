@@ -100,7 +100,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           <p
             key={attempts}
             id={reasonId}
-            className="user-list__reason"
+            className="user-list__pause-reason"
             role={attempts ? 'alert' : undefined}
           >
             {NOT_PRIMARY}
