@@ -8,6 +8,7 @@ import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
 // MB.52's two reads behind `/admin/users`: the list itself and the providers
@@ -29,11 +30,16 @@ const DELETED = '00000000-0000-0000-0000-0000000000a2';
 const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
 
 beforeAll(async () => {
-  await sql`
-    insert into users (id, name, email, email_verified, can_create_workspace, created_by, updated_by)
-    values (${PENDING}, 'Pending Fixturewort', 'pending@users.test', false, false, ${PENDING}, ${PENDING}),
-           (${WILDCARD}, 'Percent 100% Fixture', 'percent@users.test', true, true, ${WILDCARD}, ${WILDCARD})
-  `;
+  // The wildcard account is inserted holding the creation flag, a privilege
+  // change the trigger on `users` asks a route for (MB.195).
+  await asManualFix(
+    sql,
+    (tx) => tx`
+      insert into users (id, name, email, email_verified, can_create_workspace, created_by, updated_by)
+      values (${PENDING}, 'Pending Fixturewort', 'pending@users.test', false, false, ${PENDING}, ${PENDING}),
+             (${WILDCARD}, 'Percent 100% Fixture', 'percent@users.test', true, true, ${WILDCARD}, ${WILDCARD})
+    `,
+  );
   await sql`
     insert into users (id, name, email, created_by, updated_by, deleted_at, deleted_by)
     values (${DELETED}, 'Lapsed Fixturewort', 'lapsed@users.test', ${DELETED}, ${DELETED}, now(), ${DELETED})

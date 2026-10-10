@@ -116,7 +116,9 @@ the database itself:
 
 ```sql
 select set_config('app.current_user_id', $1, true),
-       set_config('app.impersonated_by', $2, true)
+       set_config('app.impersonated_by', $2, true),
+       set_config('app.privilege_route', $3, true),
+       set_config('app.privilege_note', $4, true)
 ```
 
 **`app.impersonated_by` rides beside it** (MB.53): the admin acting as the
@@ -126,15 +128,36 @@ The stamps still name the user acted as, since impersonation reproduces what
 that user would do ([`auth/impersonation.md`](../auth/impersonation.md)). It
 is set on every transaction, empty included, so a reader never sees the
 placeholder an earlier transaction left on a pooled connection. One statement
-holds both, so it costs no second round trip. It has no reader either, for
-the same reasons as the user id.
+holds all four, so it costs no second round trip. It has no reader yet, for
+the same reasons as the user id once had none.
 
-**Nothing reads this back, and that is expected.** It is published for two
-readers that do not exist yet: the v2 history trigger's `changed_by`
-(DESIGN.md §13), and the RLS policies MB.29 deferred to the public launch
-(DESIGN.md §8), each of which it leaves one migration away (§5). So do not
-remove it on the grounds that it is unused, and do not describe it as
-protecting anything today.
+**`app.privilege_route` and `app.privilege_note` ride beside them too**
+(MB.195), from `withAudit`'s optional third argument,
+`{ via, note }` (`PrivilegeDeclaration` in `src/db/types.ts`, `via` typed as
+`user_privilege_route`'s values so it cannot be misspelt). A write that changes
+`users.role` or `users.can_create_workspace` declares how the change came
+about, `bootstrap`, `admin`, `invitation` or `manual`, and may give a
+reason. The trigger on `users`, `record_privilege_change()`, reads both and
+writes one `user_privilege_changes` row per changed column, with the route as
+`via` and the note as `note`, an empty note stored as none. **An empty route
+refuses the change**: `a privilege change must declare its route`. Both are
+published on every transaction, empty when nothing is declared, as
+`app.impersonated_by` is, so a write that declared nothing never inherits a
+route; a write that changes no privilege never reaches the trigger, whatever
+it declared. Outside `withAudit`, the seed declares `bootstrap` around its
+fixture users' insert (`declaringBootstrapPrivileges`, `src/db/seed/idempotent.ts`)
+and a `psql` fix declares `manual` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)).
+Why a declared route rather than a default:
+[`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
+
+**The user id has one reader, and two more are expected.** The privilege
+trigger reads it as the ledger row's actor, falling back to the row's own
+`updated_by` where no transaction published one (MB.195). It is also
+published for two readers that do not exist yet: the v2 history trigger's
+`changed_by` (DESIGN.md §13), and the RLS policies MB.29 deferred to the
+public launch (DESIGN.md §8), each of which it leaves one migration away
+(§5). So do not remove it, and do not describe it as protecting anything
+beyond the ledger's stamp today.
 
 **The second authorization layer is not here.** It is CLAUDE.md rule 5's
 branded `Membership` — the value `assertMembership` returns, which every

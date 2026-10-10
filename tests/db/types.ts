@@ -108,3 +108,15 @@ export interface PartialUniqueIndex {
   table: string;
   columns: string[];
 }
+
+/** One `user_privilege_changes` row as the trigger tests read it, the enums cast to text. */
+export interface PrivilegeLedgerRow {
+  user_id: string;
+  privilege: string;
+  change: string;
+  via: string;
+  note: string | null;
+  created_at: Date;
+  created_by: string;
+  updated_by: string;
+}

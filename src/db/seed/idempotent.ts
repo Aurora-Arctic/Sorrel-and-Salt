@@ -32,6 +32,30 @@ export async function beginSeedTransaction<T>(
 }
 
 /**
+ * Runs `body` with the privilege route `bootstrap` declared and `actor`
+ * published as the acting user, then hands the transaction back to the
+ * bootstrap user with no route. The seed writes no ledger row itself: the
+ * trigger on `users` records each privilege a seeded user is inserted holding,
+ * and refuses one inserted undeclared, stamping the row as the published
+ * actor (MB.195). Not a `finally`: a failed body has aborted the
+ * transaction, and a further statement would only bury its error.
+ */
+export async function declaringBootstrapPrivileges<T>(
+  tx: SeedTransaction,
+  actor: string,
+  body: () => Promise<T>,
+): Promise<T> {
+  await tx.execute(
+    sql`select set_config('app.current_user_id', ${actor}, true), set_config('app.privilege_route', 'bootstrap', true)`,
+  );
+  const result = await body();
+  await tx.execute(
+    sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true), set_config('app.privilege_route', '', true)`,
+  );
+  return result;
+}
+
+/**
  * Inserts every `wanted` whose key `existing` did not return, stamped by the
  * bootstrap user, and touches nothing already present. `existing` is the
  * caller's own query: each site scopes it (by id list, by tier, by workspace)

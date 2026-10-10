@@ -1,7 +1,7 @@
 import { and, eq, getTableColumns, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
-import type { AuditSession } from '../types';
+import type { AuditSession, PrivilegeDeclaration } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
@@ -196,28 +196,36 @@ function matching<TTable extends PgTable>(
 /**
  * The only write path: one transaction, the acting user published as
  * `app.current_user_id`, every stamp from `session` — never a request body —
- * and a rollback if `fn` throws.
+ * and a rollback if `fn` throws. A write that changes a privilege column on
+ * `users` declares how in `privilege`, or the trigger recording it refuses
+ * the change (MB.195).
  */
 export async function withAudit<T>(
   session: AuditSession,
   fn: (write: AuditWriter) => Promise<T>,
+  privilege?: PrivilegeDeclaration,
 ): Promise<T> {
   if (!session?.userId) {
     throw new Error('withAudit requires a session with an acting user id');
   }
 
   return db.transaction(async (tx) => {
-    // Nothing reads the GUC in v1; it is what makes the v2 history trigger and
-    // deferred RLS one migration. **Do not remove it as unused.** `set_config(…,
+    // The privilege trigger on `users` reads the GUC as the ledger row's actor
+    // (MB.195), and it is what makes the v2 history trigger and deferred RLS
+    // one migration. **Do not remove it.** `set_config(…,
     // true)` is `SET LOCAL` with a bind parameter: discarded at COMMIT or
     // ROLLBACK, never riding a pooled connection into the next request
     // (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
     // `app.impersonated_by` beside it, for the same reason and with no reader
-    // either: the admin acting as `userId` (MB.53), or empty — always set, so a
+    // yet: the admin acting as `userId` (MB.53), or empty — always set, so a
     // reader never sees the placeholder an earlier transaction left on the
-    // connection. One statement, so it costs no second round trip.
+    // connection. `app.privilege_route` and `app.privilege_note` are read: the
+    // trigger on `users` records each privilege change with them, and refuses
+    // one whose route is empty, so a write that forgot to declare fails rather
+    // than recording a guess (MB.195; claude-docs/db/write-path.md). One
+    // statement, so it costs no second round trip.
     await tx.execute(
-      sql`select set_config('app.current_user_id', ${session.userId}, true), set_config('app.impersonated_by', ${session.impersonatedBy ?? ''}, true)`,
+      sql`select set_config('app.current_user_id', ${session.userId}, true), set_config('app.impersonated_by', ${session.impersonatedBy ?? ''}, true), set_config('app.privilege_route', ${privilege?.via ?? ''}, true), set_config('app.privilege_note', ${privilege?.note ?? ''}, true)`,
     );
     return fn(writerFor(tx, session));
   });

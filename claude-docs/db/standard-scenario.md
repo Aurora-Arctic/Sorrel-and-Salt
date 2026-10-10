@@ -33,12 +33,16 @@ and holds the flag by being an admin: E is seeded `true`, since MB.177's CHECK
 refuses an admin without the flag and M6.7's gate reads the flag alone
 ([`mb.177-admins-hold-workspace-creation.md`](../design-decisions/mb.177-admins-hold-workspace-creation.md)).
 
-**E has one `bootstrap` row in `admin_role_changes`**, stamped as E, as MB.58's
-migration writes one for every admin a database already holds: the template is
-migrated before it is seeded, so the migration finds no admin and the seed
-writes the row instead. Every seeded admin then has its one ledger row, as a
-deployed database's do ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md),
-"What the audit trail records").
+**The cast's privileges are in `user_privilege_changes` from the start.** The
+seed writes no ledger row itself: the trigger on `users` records each
+privilege a fixture user is inserted holding, by the route the seed declares
+around the insert, `bootstrap` (`declaringBootstrapPrivileges`). A–D are
+inserted as the seed's own user, so each has one `create_workspace` grant
+stamped as it; E is inserted alone with itself published as the acting user,
+so its `admin` and `create_workspace` grants are stamped as E, as a primary
+admin's promotion is stamped as that admin. A second run inserts no user, so
+the trigger records nothing more (MB.195;
+[`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 
 ### The compendium is awkward on purpose
 

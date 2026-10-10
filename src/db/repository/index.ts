@@ -65,6 +65,7 @@ export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
 export { findAdminInvitationByToken } from './admin-invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
+export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
   AdminInvitationRow,
   AdminInvitationValues,

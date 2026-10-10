@@ -84,8 +84,9 @@ goes, the service session carries them as `impersonatedBy`.
 publishes it as `app.impersonated_by` beside `app.current_user_id`, from the
 session and never a request body, in the same transaction-local
 `set_config(..., true)` ([`db/write-path.md`](../db/write-path.md)). Like
-`app.current_user_id` it has no reader in v1. It is empty on every write that
-is not an impersonation.
+`app.privilege_route` it is published on every write, and unlike
+`app.current_user_id`, which the privilege trigger reads (MB.195), it has no
+reader in v1. It is empty on every write that is not an impersonation.
 
 ### Not a third access path
 

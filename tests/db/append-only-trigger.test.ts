@@ -64,3 +64,61 @@ describe('the forbid_rewrite trigger', () => {
     expect(count).toBe(1);
   });
 });
+
+// MB.195: what fills the ledger. Two triggers on `users`, one function: an
+// insert trigger's WHEN may not name OLD, so the insert and the update each
+// carry their own, and each fires after its row, so the ledger's foreign key
+// finds the user.
+describe('the record_privilege_change trigger', () => {
+  it('attaches to users alone, after each inserted row and each update of a privilege column', async () => {
+    const rows = await sql<
+      {
+        relname: string;
+        tgname: string;
+        timing: string;
+        level: string;
+        events: string;
+        columns: string[];
+      }[]
+    >`
+      select c.relname, t.tgname,
+             case when (t.tgtype & 2) <> 0 then 'before' else 'after' end as timing,
+             case when (t.tgtype & 1) <> 0 then 'row' else 'statement' end as level,
+             concat_ws(
+               ',',
+               case when (t.tgtype & 4) <> 0 then 'insert' end,
+               case when (t.tgtype & 8) <> 0 then 'delete' end,
+               case when (t.tgtype & 16) <> 0 then 'update' end
+             ) as events,
+             array(
+               select a.attname::text from unnest(t.tgattr::int2[]) as k(attnum)
+               join pg_attribute a on a.attrelid = t.tgrelid and a.attnum = k.attnum
+               order by a.attname
+             ) as columns
+      from pg_trigger t
+      join pg_class c on c.oid = t.tgrelid
+      join pg_proc p on p.oid = t.tgfoid
+      where not t.tgisinternal and p.proname = 'record_privilege_change'
+      order by t.tgname
+    `;
+
+    expect(rows).toEqual([
+      {
+        relname: 'users',
+        tgname: 'record_privilege_change_on_insert',
+        timing: 'after',
+        level: 'row',
+        events: 'insert',
+        columns: [],
+      },
+      {
+        relname: 'users',
+        tgname: 'record_privilege_change_on_update',
+        timing: 'after',
+        level: 'row',
+        events: 'update',
+        columns: ['can_create_workspace', 'role'],
+      },
+    ]);
+  });
+});

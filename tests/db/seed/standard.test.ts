@@ -78,6 +78,46 @@ describe('the cast: five fixture users, A–E', () => {
   });
 });
 
+// MB.195: the seed writes no ledger row itself. The trigger on `users`
+// records each privilege the cast is inserted holding, by the route the seed
+// declares, `bootstrap`: E's two stamped as E, as a primary admin's promotion
+// is stamped as that admin, and A–D's creation grants as the seed's own user.
+describe('the privilege ledger the cast starts with', () => {
+  it('holds E’s two bootstrap grants stamped as E, and A–D’s creation grants stamped as the seed', async () => {
+    const rows = await sql<
+      {
+        user_id: string;
+        privilege: string;
+        change: string;
+        via: string;
+        created_by: string;
+        updated_by: string;
+      }[]
+    >`
+      select user_id, privilege::text, change::text, via::text, created_by, updated_by
+      from user_privilege_changes
+      order by user_id, privilege
+    `;
+
+    const seeded = (id: string, privilege: string, by: string) => ({
+      user_id: id,
+      privilege,
+      change: 'grant',
+      via: 'bootstrap',
+      created_by: by,
+      updated_by: by,
+    });
+    expect(rows).toEqual([
+      seeded(FIXTURE_USERS.A.id, 'create_workspace', BOOTSTRAP_USER_ID),
+      seeded(FIXTURE_USERS.B.id, 'create_workspace', BOOTSTRAP_USER_ID),
+      seeded(FIXTURE_USERS.C.id, 'create_workspace', BOOTSTRAP_USER_ID),
+      seeded(FIXTURE_USERS.D.id, 'create_workspace', BOOTSTRAP_USER_ID),
+      seeded(FIXTURE_USERS.E.id, 'admin', FIXTURE_USERS.E.id),
+      seeded(FIXTURE_USERS.E.id, 'create_workspace', FIXTURE_USERS.E.id),
+    ]);
+  });
+});
+
 describe('the workspaces: W, X, and nothing shared', () => {
   it('seats A as owner, B as member and C as viewer in W', async () => {
     const inW = (await allMembers()).filter((m) => m.workspace_id === WORKSPACE_W_ID);
@@ -204,6 +244,18 @@ describe('the compendium', () => {
 describe('re-running the scenario', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
+  });
+
+  // Nothing is inserted twice, so the trigger has nothing to record twice.
+  it('adds no privilege ledger row on a second run', async () => {
+    // Precondition: the truncated clone really starts empty, so the rows are this run's.
+    expect(await countOf('user_privilege_changes')).toBe(0);
+    await seedStandard(db);
+    expect(await countOf('user_privilege_changes')).toBe(6);
+
+    await seedStandard(db);
+
+    expect(await countOf('user_privilege_changes')).toBe(6);
   });
 
   // A database seeded before MB.162 holds the forms lower-cased. Keyed on the

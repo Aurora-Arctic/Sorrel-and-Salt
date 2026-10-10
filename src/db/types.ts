@@ -1,5 +1,6 @@
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type postgres from 'postgres';
+import type { userPrivilegeRoute } from '../modules/identity/schema/user-privilege-changes';
 
 /** A thunk to `users.id`, resolved when the foreign key is read rather than when the columns are built. */
 export type UsersIdReference = () => AnyPgColumn;
@@ -14,6 +15,19 @@ export interface AuditSession {
    * user would see and do.
    */
   impersonatedBy?: string;
+}
+
+/** How a privilege change came about, as `user_privilege_changes.via` records it. */
+export type PrivilegeRoute = (typeof userPrivilegeRoute.enumValues)[number];
+
+/**
+ * What a write changing `users.role` or `users.can_create_workspace` declares
+ * to `withAudit` (MB.195): the route, without which the trigger on `users`
+ * refuses the change, and an optional reason the ledger row keeps.
+ */
+export interface PrivilegeDeclaration {
+  via: PrivilegeRoute;
+  note?: string;
 }
 
 export type AuditFields = {

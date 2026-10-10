@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { statementsOfMigrationContaining } from '../../../support/db/migrations';
+import { asManualFix } from '../../../support/db/privileges';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { findMany, withAudit, type AuditWriter } from '@/db/repository';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
@@ -13,9 +14,10 @@ import type { LedgerRow } from './types';
 
 // MB.58: M2.9's ledger of who is an admin, one row per change to `users.role`,
 // because the next update to a user's row overwrites its `updated_by`. The
-// table task: MB.59's service is the first to write it, past the migration's
-// backfill and the standard seed (claude-docs/design-decisions/m2.9-granting-admin.md,
-// "What the audit trail records").
+// table task. Superseded by `user_privilege_changes` (MB.194), which the
+// trigger on `users` fills (MB.195): nothing but its migration's backfill and
+// this file writes it now, and MB.196 removes it
+// (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 const USER_FK = 'admin_role_changes_user_id_users_id_fk';
 
@@ -104,18 +106,6 @@ describe('admin_role_changes table', () => {
   });
 });
 
-describe('the seeded ledger', () => {
-  // The standard seed writes fixture E's row as the migration would have,
-  // had E existed when it ran, so every seeded admin has its one row.
-  it('holds one bootstrap row for fixture E, stamped as E, idempotently', async () => {
-    const rows = (await everyChange()).filter((row) => row.user_id === ADMIN);
-
-    expect(rows).toEqual([
-      { user_id: ADMIN, change: 'bootstrap', note: null, created_by: ADMIN, updated_by: ADMIN },
-    ]);
-  });
-});
-
 // Every admin a database already holds gets one `bootstrap` row, stamped as
 // itself, so the ledger has no gap at its start. The migration's own SQL
 // re-runs here against the seeded template, the ledger emptied first as a
@@ -127,7 +117,11 @@ describe('the backfill', () => {
     );
     // The bootstrap user's demotion, then the backfill itself.
     expect(statements).toHaveLength(2);
-    for (const statement of statements) await sql.unsafe(statement);
+    // The demotion is a privilege change, which MB.195's trigger, younger
+    // than this migration, asks a route of.
+    await asManualFix(sql, async (tx) => {
+      for (const statement of statements) await tx.unsafe(statement);
+    });
   }
 
   async function liveAdmins(): Promise<string[]> {
@@ -154,11 +148,14 @@ describe('the backfill', () => {
 
   it('writes nothing for a user, or for an admin since soft-deleted', async () => {
     const deletedAdmin = '00000000-0000-0000-0000-0000000000fe';
-    await sql`
-      insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
-      values (${deletedAdmin}, 'Lapsed Admin', 'lapsed@example.test', 'admin', true,
-              ${deletedAdmin}, ${deletedAdmin}, now(), ${deletedAdmin})
-    `;
+    await asManualFix(
+      sql,
+      (tx) => tx`
+        insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
+        values (${deletedAdmin}, 'Lapsed Admin', 'lapsed@example.test', 'admin', true,
+                ${deletedAdmin}, ${deletedAdmin}, now(), ${deletedAdmin})
+      `,
+    );
 
     await backfill();
 
@@ -172,10 +169,13 @@ describe('the backfill', () => {
   // and the seed's insert skips a row it finds, so the migration demotes it,
   // before the backfill, so that it gets no ledger row either.
   it('demotes a bootstrap user seeded as an admin, and writes it no row', async () => {
-    await sql`
-      update users set role = 'admin', can_create_workspace = true, name = 'Bootstrap Admin'
-      where id = ${BOOTSTRAP_USER_ID}
-    `;
+    await asManualFix(
+      sql,
+      (tx) => tx`
+        update users set role = 'admin', can_create_workspace = true, name = 'Bootstrap Admin'
+        where id = ${BOOTSTRAP_USER_ID}
+      `,
+    );
 
     await backfill();
 

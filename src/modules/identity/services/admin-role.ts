@@ -71,11 +71,13 @@ export async function promotePrimaryAdminAtVerification(
   return 'promoted';
 }
 
-// The one role write, which granting and revoking will share. A grant sets the
-// creation flag in the same write, since the users CHECK refuses an admin
-// without it (MB.177).
+// The primary admin's role write. A grant sets the creation flag in the same
+// write, since the users CHECK refuses an admin without it (MB.177), and the
+// trigger on `users` records both, by the route declared here (MB.195).
 async function grantAdmin(session: Session): Promise<void> {
-  await withAudit(session, (write) =>
-    write.updateById(users, session.userId, { role: 'admin', canCreateWorkspace: true }),
+  await withAudit(
+    session,
+    (write) => write.updateById(users, session.userId, { role: 'admin', canCreateWorkspace: true }),
+    { via: 'bootstrap' },
   );
 }
