@@ -44,8 +44,8 @@ retired deity is filtered as any finder filters it, and only the row is kept.
 The rows come back unordered, and the caller sorts by `position`.
 
 **A save brings the deity rows to the list sent, through `replaceDeities`**
-(MB.167), in `services/ingredient-rows.ts`, which both services call in the
-ingredient's `withAudit` transaction, after `resolvePicks` has checked the
+(MB.167), in `services/ingredient-rows.ts`, which `writeChildren` calls in the
+ingredient's `withAudit` transaction (MB.211), after `resolvePicks` has checked the
 picks against the vocabularies. A pick is matched to its row by the deity it
 links, a typed name by its text, so an entry still listed keeps its row: the
 dropped rows are soft-deleted first, so a name re-added in another case clears

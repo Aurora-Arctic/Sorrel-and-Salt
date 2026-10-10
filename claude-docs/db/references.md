@@ -127,9 +127,9 @@ and a coven's does not, since no cached read holds a coven's reference (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 **An ingredient's links are written in its own save.** Both tiers' create and
-update call `addReferenceLinks` and `replaceReferenceLinks` in
-`services/ingredient-rows.ts`, inside the ingredient's `withAudit`, as they
-call the substitutes' writes. The list is brought to what was sent: a link is
+update reach `addReferenceLinks` and `replaceReferenceLinks` in
+`services/ingredient-rows.ts` through `writeChildren`, inside the ingredient's
+`withAudit`, as they reach the substitutes' writes (MB.211). The list is brought to what was sent: a link is
 matched by its reference, so one still listed keeps its row and takes the
 locator sent, one dropped is soft-deleted, a new one is inserted, and a list
 that changes nothing writes nothing. Only the links the ingredient shows are

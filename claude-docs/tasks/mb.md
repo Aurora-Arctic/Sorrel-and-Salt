@@ -303,6 +303,8 @@ _Acceptance criteria:_
 - Service and GraphQL tests unchanged and green
 - `claude-docs/db/compendium-writes.md` and `workspace-ingredients.md` say what a sixth child table costs
 
+_As built:_ the two switches are `{ tier, whole }`, since the tier also words `formId`'s description; `SubstituteInput` and `IngredientDeityInput` moved into `ingredient-input.ts` beside the fields that use them. `ingredient-rows.ts` also gained `splitChildren`, so a service passes the parse's child lists on unnamed, and `softDeleteIngredient`, the two deletes' body; the child writers it calls are no longer exported. The loaders are one record that `clearIngredientChildren` walks, and `tests/guards/ingredient-child-loaders.test.ts` asserts it covers every loader the file defines and that neither mutation clears one by hand.
+
 **MB.212 — GraphQL transport: the resolver plumbing and the curated-vocabulary writes once** · 2.5h
 
 _Story:_ As a developer, I want a resolver to hold only what the transport adds, so that the session narrowing, the null-to-undefined mapping and a curated vocabulary's three writes are written once and not in every file.

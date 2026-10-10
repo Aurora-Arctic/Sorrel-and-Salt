@@ -527,6 +527,11 @@ signatures DESIGN.md §7's sketch gives them.
   "What the check asks"), and an ingredient
   id that is not one answers `NOT_FOUND`: the same answers a real id the
   caller cannot reach gets, never a masked driver error.
+- **The four ingredient input types spread one field set**,
+  `ingredientInputFields(t, { tier, whole })` in `graphql/ingredient-input.ts`
+  (MB.211): `whole` makes every field non-null, and the compendium tier
+  requires `nomenclature` on a create too. The field descriptions vary with
+  the two switches, so the SDL is the one the four declared by hand.
 - **`IngredientInput` is the create's.** Only `name` is required, so story
   29's one-field stub is `{ name }`. With no formal name, a `nomenclature`
   left out or sent as `null` becomes `none`.
@@ -593,7 +598,8 @@ signatures DESIGN.md §7's sketch gives them.
   client reconciles its cache from the answer without a refetch.
   `updateIngredient` first clears the entry from `categoriesByIngredient`,
   `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`
-  and `referencesByIngredient`. Root mutation fields run in turn within one
+  and `referencesByIngredient`, through `clearIngredientChildren`, which
+  clears every loader `loaders/ingredient-children.ts` defines (MB.211). Root mutation fields run in turn within one
   request, so an earlier field may already have loaded the categories, folk
   names, substitutes, deities or references this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first

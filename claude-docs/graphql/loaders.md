@@ -33,7 +33,11 @@ merely absent:
   ([`modules.md`](../modules.md)).
 - **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
   third type parameter names what it returns. The five ingredient loaders are
-  keyed by the parent row's `{ id, workspaceId }` and cached by `id`. The
+  keyed by the parent row's `{ id, workspaceId }` and cached by `id`. They are
+  one record in `loaders/ingredient-children.ts`, each exported by name for
+  `LOADERS`, and `clearIngredientChildren(loaders, row)` clears a row from
+  every one in it, so an ingredient write clears a loader added there without
+  naming it (MB.211). The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope
   ([`db/ingredient-children.md`](../db/ingredient-children.md),
