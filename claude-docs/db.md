@@ -221,6 +221,10 @@ The four services that create, update, delete and read a coven's own ingredients
 
 The compendium's reads take no session: one keyset page under an optional filter with its accent-folded word-similarity search, the count that numbers those pages, one entry by id, and the curated form values. [`db/compendium-read.md`](db/compendium-read.md)
 
+## The compendium cache (M8.6)
+
+The compendium's list and count and the curated vocabularies' are held in Next's data cache under the one `compendium` tag, through one wrapper in `src/lib/`, keyed by their arguments and stored as superjson; every compendium-tier admin write expires the tag with `{ expire: 0 }`, held to it by a guard over the `ingredients` and `vocabulary` services; Vitest aliases the cache to a pass-through, and only one e2e server keeps it. [`db/compendium-cache.md`](db/compendium-cache.md)
+
 ## Compendium writes (M5.2)
 
 The three services that create, update and delete a compendium entry, each behind `assertSiteAdmin` before its input is parsed, and the collision error naming the entry that holds the identity, read by `findCompendiumEntryByIdentity`. [`db/compendium-writes.md`](db/compendium-writes.md)

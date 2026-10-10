@@ -6,6 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -57,6 +58,20 @@ const VOCABULARY = {
   },
 } as const satisfies Record<CuratedField, unknown>;
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md). Keyed by the field's name rather than
+// handed its table, since the arguments are the cache key.
+const cachedPage = cachedCompendiumRead(
+  'astrology-page',
+  (field: CuratedField, filter: AstrologyValueFilter, page: PageRequest) =>
+    findAstrologyValues(VOCABULARY[field].table, filter, page),
+);
+const cachedCount = cachedCompendiumRead(
+  'astrology-count',
+  (field: CuratedField, filter: AstrologyValueFilter, start: Cursor | undefined) =>
+    findAstrologyValueCount(VOCABULARY[field].table, filter, start),
+);
+
 /**
  * One page of `field`'s vocabulary under `filter`, alphabetical by name, for
  * `planets`, `zodiacSigns` and the admin pages' lists: a public read (MB.80),
@@ -67,7 +82,7 @@ export function listAstrologyValues(
   filter: AstrologyValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<AstrologyValueRow>[]> {
-  return findAstrologyValues(VOCABULARY[field].table, readable(filter), page);
+  return cachedPage(field, readable(filter), page);
 }
 
 /**
@@ -79,7 +94,7 @@ export function countAstrologyValues(
   filter: AstrologyValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findAstrologyValueCount(VOCABULARY[field].table, readable(filter), start);
+  return cachedCount(field, readable(filter), start);
 }
 
 /**
@@ -115,10 +130,12 @@ export async function createAstrologyValue(
   const fields = parseInput(vocabulary.input, input);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(vocabulary.table, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(field, error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -148,7 +165,7 @@ export async function updateAstrologyValue(
   const current = await liveRow(field, id);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(vocabulary.table, id, { ...fields, slug });
     if (!row) throw new NotFound(`No such ${vocabulary.noun}`);
     if (current.name !== fields.name) {
@@ -156,6 +173,8 @@ export async function updateAstrologyValue(
     }
     return row;
   }).catch((error: unknown) => refuseCollision(field, error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -184,6 +203,7 @@ export async function deleteAstrologyValue(
     const [deleted] = await write.softDeleteByIds(vocabulary.table, [id]);
     if (!deleted) throw new NotFound(`No such ${vocabulary.noun}`);
   });
+  expireCompendium();
 }
 
 /** The filter as the repository reads it, its query trimmed and a blank one dropped. */

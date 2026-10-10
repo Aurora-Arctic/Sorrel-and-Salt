@@ -11,6 +11,13 @@ import type { SlotEnv } from './types';
 const FIRST_SLOT_PORT = 8001;
 /** Above every slot's port, so no slot can reach — or locally reuse — it. */
 export const CONFIGURED_PROVIDERS_PORT = 8100;
+/**
+ * The one server that keeps its data cache (M8.6): the slots' servers turn it
+ * off, since a slot's reseed would leave it answering what the last spec file
+ * wrote (claude-docs/db/compendium-cache.md, "In tests"). Above the
+ * configured-providers server's, for the same reason that one is above the slots'.
+ */
+export const COMPENDIUM_CACHE_PORT = 8101;
 export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**

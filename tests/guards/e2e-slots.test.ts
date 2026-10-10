@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import config from '../../playwright.config';
 import {
+  COMPENDIUM_CACHE_PORT,
   CONFIGURED_PROVIDERS_PORT,
   E2E_SLOTS,
   MAX_SLOTS,
@@ -57,8 +58,8 @@ describe('MB.112: the worker count', () => {
     const stubbedServers = [stubbed.webServer ?? []].flat();
 
     expect(stubbed.workers).toBe(3);
-    // Three slots and the configured-providers server.
-    expect(stubbedServers).toHaveLength(4);
+    // Three slots, the configured-providers server and the compendium-cache server.
+    expect(stubbedServers).toHaveLength(5);
   });
 });
 
@@ -83,8 +84,8 @@ describe('MB.112: every slot has its own server and database', () => {
 
   // Precondition: an empty or single-entry list would pass every
   // uniqueness assertion below without anything having been kept apart.
-  it('declares the slot servers and the configured-providers server', () => {
-    expect(servers).toHaveLength(E2E_SLOTS + 1);
+  it('declares the slot servers, the configured-providers server and the compendium-cache server', () => {
+    expect(servers).toHaveLength(E2E_SLOTS + 2);
   });
 
   it.each(slots)('serves slot %i on its own port, from its own database', (slot) => {
@@ -111,9 +112,9 @@ describe('MB.112: every slot has its own server and database', () => {
   });
 
   it('runs the configured-providers spec against a server and database of its own', () => {
-    const server = servers[servers.length - 1];
+    const server = servers.find((entry) => portOf(entry.url) === CONFIGURED_PROVIDERS_PORT)!;
 
-    expect(portOf(server.url)).toBe(CONFIGURED_PROVIDERS_PORT);
+    expect(server).toBeDefined();
     expect(portOf(project('chromium-configured-providers')?.use?.baseURL)).toBe(
       CONFIGURED_PROVIDERS_PORT,
     );
@@ -137,9 +138,36 @@ describe('MB.112: every e2e server keeps its data cache in its own memory', () =
 
   it("leaves Next's default everywhere else", async () => {
     vi.stubEnv('NEXT_ISR_FLUSH_TO_DISK', undefined);
+    vi.stubEnv('NEXT_DATA_CACHE', undefined);
     const { default: other } = (await import(fromRoot('next.config.ts'))) as {
       default: NextConfig;
     };
     expect(other.experimental?.isrFlushToDisk).toBe(true);
+    expect(other.cacheMaxMemorySize).toBeUndefined();
+  });
+});
+
+describe('M8.6: one e2e server keeps a data cache, and only one', () => {
+  const cacheServer = servers.find((server) => portOf(server.url) === COMPENDIUM_CACHE_PORT);
+
+  // A slot's database is reseeded under its server between spec files, which
+  // a cache held across the reseed would not follow.
+  it('turns the data cache off on every slot server and the providers server', () => {
+    const others = servers.filter((server) => server !== cacheServer);
+    expect(others).toHaveLength(E2E_SLOTS + 1);
+    for (const server of others) expect(server.env?.NEXT_DATA_CACHE).toBe('off');
+  });
+
+  it('runs the compendium-cache spec against a server that keeps it, on a database of its own', () => {
+    expect(cacheServer).toBeDefined();
+    expect(cacheServer?.env?.NEXT_DATA_CACHE).toBeUndefined();
+    expect(databaseOf(cacheServer!)).toBe('sorrel_e2e_cache');
+    expect(portOf(project('chromium-compendium-cache')?.use?.baseURL)).toBe(COMPENDIUM_CACHE_PORT);
+  });
+
+  it('is what next.config.ts turns the switch into', async () => {
+    vi.stubEnv('NEXT_DATA_CACHE', 'off');
+    const { default: e2e } = (await import(fromRoot('next.config.ts'))) as { default: NextConfig };
+    expect(e2e.cacheMaxMemorySize).toBe(0);
   });
 });

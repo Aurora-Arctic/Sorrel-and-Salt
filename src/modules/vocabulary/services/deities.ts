@@ -6,6 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { deitySlug } from '../../../lib/slugify';
@@ -28,6 +29,11 @@ import type { DeityFilter, DeityRow } from '../types';
 // holds a deity and is never rewritten: what it picked stays, and an admin
 // writes nothing of a coven's (M6.6).
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('deity-page', findDeityPage);
+const cachedCount = cachedCompendiumRead('deity-count', findDeityCount);
+
 /**
  * One page of the curated deities under `filter`, each under its tradition,
  * for the admin page's list: a public read (MB.80), so no session, and the
@@ -41,7 +47,7 @@ export async function listDeities(
   page: PageRequest,
 ): Promise<PageEntry<DeityRow>[]> {
   const read = readable(filter);
-  return read ? findDeityPage(read, page) : [];
+  return read ? cachedPage(read, page) : [];
 }
 
 /**
@@ -53,7 +59,7 @@ export async function countDeities(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const read = readable(filter);
-  return read ? findDeityCount(read, start) : { totalCount: 0, countBefore: null };
+  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /**
@@ -80,10 +86,12 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
   const { fields, traditionName } = await parseDeity(input);
   const slug = deitySlug(fields.name, traditionName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deities, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -111,12 +119,14 @@ export async function updateDeity(
   const current = await liveDeity(id);
   const slug = deitySlug(fields.name, traditionName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(deities, id, { ...fields, slug });
     if (!row) throw new NotFound('No such deity');
     if (current.name !== fields.name) await write.carryDeityRename(admin, id, fields.name);
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -141,6 +151,7 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
     const [row] = await write.softDeleteByIds(deities, [id]);
     if (!row) throw new NotFound('No such deity');
   });
+  expireCompendium();
 }
 
 /**

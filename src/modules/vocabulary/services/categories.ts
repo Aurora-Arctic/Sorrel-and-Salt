@@ -6,6 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -24,6 +25,11 @@ import type { CategoryFilter, CategoryRow } from '../types';
 // category; it is refused only while a live compendium entry is filed under
 // it (claude-docs/db/categories.md, "Category writes").
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
+const cachedCount = cachedCompendiumRead('category-count', findCategoryCount);
+
 /**
  * One page of the live categories under `filter`, by group then name, each under a live
  * group: the `categories` query, and the admin page's list. A blank query is
@@ -34,7 +40,7 @@ export async function listCategories(
   page: PageRequest,
 ): Promise<PageEntry<CategoryRow>[]> {
   const read = readable(filter);
-  return read ? findCategoryPage(read, page) : [];
+  return read ? cachedPage(read, page) : [];
 }
 
 /**
@@ -47,7 +53,7 @@ export async function countCategories(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const read = readable(filter);
-  return read ? findCategoryCount(read, start) : { totalCount: 0, countBefore: null };
+  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /**
@@ -74,10 +80,12 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
   const fields = await parseCategory(input);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(categories, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -100,11 +108,13 @@ export async function updateCategory(
   if (!RowId.safeParse(id).success) throw new NotFound('No such category');
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(categories, id, { ...fields, slug });
     if (!row) throw new NotFound('No such category');
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -131,6 +141,7 @@ export async function deleteCategory(session: Session, id: string): Promise<void
     const [row] = await write.softDeleteByIds(categories, [id]);
     if (!row) throw new NotFound('No such category');
   });
+  expireCompendium();
 }
 
 /**

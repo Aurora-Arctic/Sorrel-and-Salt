@@ -11,6 +11,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
@@ -33,6 +34,11 @@ import type { FormRewrite, IngredientFormValueFilter, IngredientFormValueRow } f
 // ingredient never holds a form and is never rewritten: what it picked stays,
 // and an admin writes nothing of a coven's (M6.6).
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('ingredient-form-page', findIngredientFormValues);
+const cachedCount = cachedCompendiumRead('ingredient-form-count', findIngredientFormValueCount);
+
 /**
  * One page of the curated form vocabulary under `filter`, for
  * `ingredientFormValues` and the admin page's list: a public read (MB.80), so
@@ -45,7 +51,7 @@ export async function listIngredientFormValues(
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormValueRow>[]> {
   const read = readable(filter);
-  return read ? findIngredientFormValues(read, page) : [];
+  return read ? cachedPage(read, page) : [];
 }
 
 /**
@@ -58,7 +64,7 @@ export async function countIngredientFormValues(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const read = readable(filter);
-  return read ? findIngredientFormValueCount(read, start) : { totalCount: 0, countBefore: null };
+  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /**
@@ -88,10 +94,12 @@ export async function createIngredientFormValue(
   const { fields, groupName } = await parseForm(input);
   const slug = formSlug(fields.name, groupName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(ingredientForms, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseFormCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -137,7 +145,7 @@ export async function updateIngredientFormValue(
   await refuseCollidingRewrites(rename, rewrites);
   if (endRedirect !== true) await refuseEndingRedirects(rewrites, at);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientForms, id, { ...fields, slug });
     if (!row) throw new NotFound('No such form');
     if (rewrites.length > 0) {
@@ -159,6 +167,8 @@ export async function updateIngredientFormValue(
     await refuseCollidingRewrites(rename, rewrites, error);
     return refuseFormCollision(error, slug);
   });
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -185,6 +195,7 @@ export async function deleteIngredientFormValue(session: Session, id: string): P
     const [row] = await write.softDeleteByIds(ingredientForms, [id]);
     if (!row) throw new NotFound('No such form');
   });
+  expireCompendium();
 }
 
 /**

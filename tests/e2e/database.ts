@@ -8,6 +8,8 @@ import { E2E_SLOTS, currentSlot } from './slots';
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 /** The configured-providers server's, which no spec reseeds. */
 export const CONFIGURED_PROVIDERS_DATABASE = 'sorrel_e2e_providers';
+/** The compendium-cache server's, which no spec reseeds: its cache would not follow. */
+export const COMPENDIUM_CACHE_DATABASE = 'sorrel_e2e_cache';
 
 export function slotDatabase(slot: number): string {
   return `sorrel_e2e_${slot}`;
@@ -23,10 +25,10 @@ export async function seedE2eTemplate(): Promise<void> {
   await seedTemplate(E2E_TEMPLATE);
 }
 
-/** Once per run, after the template: every slot's database and the providers server's. */
+/** Once per run, after the template: every slot's database, the providers server's and the cache server's. */
 export async function cloneE2eDatabases(): Promise<void> {
   const slots = Array.from({ length: E2E_SLOTS }, (_, slot) => slotDatabase(slot));
-  for (const database of [...slots, CONFIGURED_PROVIDERS_DATABASE]) {
+  for (const database of [...slots, CONFIGURED_PROVIDERS_DATABASE, COMPENDIUM_CACHE_DATABASE]) {
     await cloneDatabase(database, E2E_TEMPLATE);
   }
 }
