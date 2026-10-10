@@ -197,6 +197,16 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.191 | The coverage provider chosen by measurement, istanbul against v8                               | Wave 8  | —                      |
 | MB.192 | A reseed of standard puts a deleted deity pick back at the end of its list                     | Wave 8  | —                      |
 | MB.193 | The workspace creation ledger (schema)                                                         | Wave 8  | M5.8                   |
+| MB.194 | `user_privilege_changes`, the one privilege ledger (schema)                                    | Wave 8  | MB.195                 |
+| MB.195 | Privilege changes record themselves, with their route                                          | Wave 8  | MB.59                  |
+| MB.196 | Nothing declares the two old privilege ledgers                                                 | Wave 8  | MB.197                 |
+| MB.197 | Drop `admin_role_changes` and `workspace_creation_changes`                                     | Wave 8  | —                      |
+| MB.198 | One table mark replaces the state-ledger markers                                               | Wave 8  | MB.201                 |
+| MB.199 | Read the privilege ledger                                                                      | Wave 8  | MB.200                 |
+| MB.200 | The privilege ledger page                                                                      | Wave 8  | —                      |
+| MB.201 | `invitations`, one two-tier table (schema)                                                     | Wave 8  | MB.202                 |
+| MB.202 | Invitations are written and read by tier                                                       | Wave 8  | MB.70, M7.2            |
+| MB.203 | Drop `workspace_invitations` and `admin_invitations`                                           | Wave 8  | —                      |
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3611,3 +3621,153 @@ _Acceptance criteria:_
 - The schema test asserts the columns, the enum values and the foreign key
 - The repository offers an insert and a read for the table and nothing that updates or deletes it, asserted at the type level
 - No row exists after migration, asserted against the seeded template
+
+**MB.194 — `user_privilege_changes`, the one privilege ledger (schema)** · 2h
+
+_Story:_ As a site admin, I want every change to a user's privileges kept in one ledger the database will not let anyone rewrite, so that a third privilege is not a third table and a record of misuse cannot be edited away.
+
+Minted after M5.8 on the owner's call, to stop privilege ledgers multiplying ([`design-decisions/mb.194-plan.md`](../design-decisions/mb.194-plan.md)). MB.58's `admin_role_changes` and MB.193's `workspace_creation_changes` share one shape, one row per change to a column on `users`, and a third privilege would have been a third table, migration, schema test and doc entry. This is the expand step: one table both fold into, append-only by a trigger rather than by the writer's types, holding a copy of both. MB.195 makes `users` fill it; MB.196 and MB.197 retire the two it replaces. It is not §13's edit history: it records two columns of one table, as a privilege's account.
+
+`user_privilege_changes`: `id`, `userId` → `users.id`, `privilege` (`admin` | `create_workspace`), `change` (`grant` | `revoke`), `via` (`bootstrap` | `admin` | `invitation` | `manual`), `note` (nullable text), plus the full `...auditColumns` spread. `created_by` is the actor and `created_at` when. Each enum is a pgEnum because each set is closed; a future flag on `users` is a value in `user_privilege`, not a table. The migration also creates `forbid_rewrite()`, a trigger function that raises on any update or delete, attached `BEFORE UPDATE OR DELETE`, so append-only holds against `psql` and the seed as well as the repository. It copies both old ledgers with their ids and stamps, so MB.197's final sweep can skip what is already there: `admin_role_changes`' `bootstrap`, `grant` and `revoke` become `admin` rows with that change and `via` `bootstrap`, `admin` and `admin`; `workspace_creation_changes`' `grant` and `revoke` become `create_workspace` rows `via` `admin`, its `invitation` a grant `via` `invitation`, and its `admin` a grant `via` `admin`.
+
+_Acceptance criteria:_
+
+- The migration creates the table, its three enums, `forbid_rewrite()` and its trigger, and the `set_updated_at` line, so `updated-at-trigger.test.ts` stays green without an edit
+- The migration only adds, so the destructive-DDL check passes with no sidecar
+- The schema test asserts the columns, the enum values, the foreign key and that no index is declared
+- An update and a delete through the raw client are each refused by `forbid_rewrite()`, and an insert succeeds, so it is the trigger that refuses
+- A catalogue-introspection test lists the append-only tables and asserts each carries `forbid_rewrite`, failing a table added to the list without it
+- The copy, re-run against a row of each old table and each `change`, lands each with its id, stamps and mapped privilege, change and route
+- No row exists after migration on a fresh database, asserted against the seeded template
+- `design-decisions/mb.194-privilege-ledger-by-trigger.md` records the model, why a trigger, why the route is declared, and what was rejected; DESIGN.md §5 and `modules.md` carry the table, and §5's two old entries say they are superseded
+
+**MB.195 — Privilege changes record themselves, with their route** · 3h
+
+_Story:_ As a site admin, I want every change to who is an admin or who may create a coven recorded by the database, with how it came about and an optional reason, so that no code path, script or `psql` session can change a privilege without leaving a row.
+
+MB.194's behaviour half. A trigger on `users`, `record_privilege_change()`, `AFTER INSERT OR UPDATE`, with a `WHEN` clause on `role` and `can_create_workspace`, writes one `user_privilege_changes` row for each watched column that changed. `created_by` is `app.current_user_id`, or the row's own `updated_by` where no transaction published one. `via` and `note` come from two new transaction-local settings, `app.privilege_route` and `app.privilege_note`, which `withAudit(session, fn, { via, note })` publishes in the one `set_config` statement it already runs. **A change that declares no route is refused**, so a service that forgets it fails its own test, and a `psql` fix must say `manual` first. Better Auth's own writes never touch either column, so the `WHEN` clause keeps them off this path.
+
+Every writer that changes a privilege declares its route in the same PR, since the trigger refuses those that do not: M5.8's approval and revoke (`admin`), dropping its own insert into `workspace_creation_changes`; the primary admin's promotion at sign-in and at verification (`bootstrap`); and the `standard` seed's fixture E, inserted with both settings so the trigger writes its two `bootstrap` rows stamped as E, replacing `insertMissingAdminBootstrap`. MB.59, M7.5 and MB.70 are corrected here to declare a route and write no ledger row of their own, MB.59's confirmation gaining an optional reason that becomes `note`, and MB.59 hands story 61 to MB.199 and MB.200.
+
+_Acceptance criteria:_
+
+- Granting and revoking the flag through M5.8's service writes one row each, `via` `admin`, stamped with the acting admin; the same write with no route declared is refused, so it is the trigger that records
+- Making a user admin who lacks the flag writes two rows at one instant, one per privilege, both `via` the declared route
+- A refused grant or revoke writes no row, because no column changed
+- A `psql`-style update without `app.privilege_route` is refused with a message saying a route must be declared, and with it set to `manual` writes a `manual` row stamped with the row's `updated_by`
+- The primary admin's promotion writes `bootstrap` rows; a reseed of `standard` gives fixture E its two `bootstrap` rows stamped as E and adds none on a second run
+- Better Auth's sign-in and profile writes to `users` write no row
+- `app.privilege_route` and `app.privilege_note` are transaction-local, so the next transaction on a pooled connection sees neither, asserted as `app.current_user_id` is
+- The catalogue test asserts `users` carries `record_privilege_change`
+- `db/write-path.md` documents the two settings, `auth/admin-bootstrap.md` the `manual` route for a `psql` fix, and MB.59, M7.5, MB.70, MB.63, MB.58 and MB.193's entries are corrected and synced
+
+**MB.196 — Nothing declares the two old privilege ledgers** · 1.5h
+
+_Story:_ As a developer, I want the code to stop naming the two privilege ledgers MB.194 replaced, so that a later migration can drop them without breaking the deploy that reads them.
+
+The contract step's first half (`db/expand-contract.md`; CLAUDE.md rule 10). After MB.195, nothing writes `admin_role_changes` or `workspace_creation_changes`; this removes their schema files, their schema tests, their rows in `table-metadata.ts`, and `NotAppendOnly` from the writer's signatures, which leaves it marking no table. **`db:generate` is not run here**: it would emit the drops, which are MB.197's.
+
+_Acceptance criteria:_
+
+- No file under `src/` or `tests/` names either table or its enum, asserted by a search in the PR body
+- `NotAppendOnly` is gone from `src/db/repository/types.ts` and every signature that carried it
+- No migration is added, and the destructive-DDL check passes with no sidecar
+- DESIGN.md §5 and §14, `modules.md`, `db/standard-scenario.md` and `db/migrations-and-scripts.md` name only `user_privilege_changes`, and the M2.9 and M5.8 records carry a dated pointer to MB.194
+
+**MB.197 — Drop `admin_role_changes` and `workspace_creation_changes`** · 1h
+
+_Story:_ As a developer, I want the two retired privilege ledgers dropped once no deploy reads them, so that the schema holds one ledger and not three.
+
+The contract step's second half. **It merges into `staging` only after a release carrying MB.196 has reached production**, never in the same release: production's deploy declares `admin_role_changes`, and a release runs every pending migration before it promotes (`db/expand-contract.md`, MB.137's worked case). `db:generate` emits the two drops and their enums; MB.194's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row the pre-switch deploy wrote during the rollout.
+
+_Acceptance criteria:_
+
+- The migration sweeps both tables into `user_privilege_changes`, then drops both tables and both enums
+- A row written to either old table after MB.194's copy lands in the new one with its id, asserted by re-running the sweep against such a row
+- `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
+- The PR body names the release that carried MB.196 to production
+
+**MB.198 — One table mark replaces the state-ledger markers** · 2h
+
+_Story:_ As a developer, I want a table written only through named calls to say so once, in its schema file, so that a new such table does not add a marker to every generic writer method and an unrelated table sharing a column name is not refused by accident.
+
+Minted with MB.194 ([`design-decisions/mb.194-plan.md`](../design-decisions/mb.194-plan.md)). `NotPauseLedger` (`{ endedAt?: never }`) and `NotInvitation` (`{ tokenHash?: never }`) each key a refusal on a column that happens to be unique to one table, and each was added to six signatures in `src/db/repository/types.ts`. They become one mark, `NamedWrites = { readonly $writes: 'named' }`, applied in the schema file by a one-line cast helper, `namedWrites(table)`, in a new runtime file `src/db/table-marks.ts`, with every generic writer method, unscoped, proof-scoped and compendium-tier, taking `Generic = { $writes?: never }`. `$writes` is a phantom key beside Drizzle's `$inferSelect`, so no column can collide with it and drizzle-kit sees the same object. The pause and admin-invitation tables take the mark. Their named writes move beside their finders, into `admin-roles.ts` and `admin-invitations.ts`, spread into the writer by `writerFor`, so a later named table touches its own repository file rather than `write.ts`. A sweep over code, so it lands as a mechanism and its guard, before MB.63 and MB.70 build on the named writes.
+
+_Acceptance criteria:_
+
+- `NotPauseLedger` and `NotInvitation` are gone, and the two tables are refused by every generic writer method through the mark alone
+- Two probe tables, one unscoped and one with a nullable `workspaceId`, carry the mark; `write.test.ts` asserts with `@ts-expect-error` that every generic method refuses each, so typecheck fails if one stops
+- The writer still offers exactly twenty-three methods, and the named writes' existing tests pass unchanged from their new files
+- `db/write-path.md` gains a "Table marks" section; `db/finder-convention.md`, `db/repository-files.md`, `db/invitations.md` and the MB.62 record name the mark instead of the markers
+
+**MB.199 — Read the privilege ledger** · 2h
+
+_Story 61 — As an admin, I want to see every change to who is an admin and who may create a coven, with who made it, how, when and why, so that misuse comes to light._
+
+The read under MB.200's page. `listPrivilegeChanges(session, { userId, privilege }, page)` in `src/modules/identity/services/privilege-changes.ts`, under `assertSiteAdmin`, newest first by `(created_at, id)` through `findPage` (rule 8), each filter optional. GraphQL `privilegeChanges(userId, privilege, first, after)` as `t.pagedConnection`, with enum types for privilege, change and route, the nullable note, and the subject and actor resolved through the per-request user loader (rule 9). It carries M5.7's Pothos admin scope beside the service check. An index on `(user_id, created_at desc)` is added here if the keyset read's plan wants one.
+
+_Acceptance criteria:_
+
+- An admin reads every change, newest first, and each filter narrows it; a page boundary neither repeats nor drops a row
+- A non-admin is refused with `Forbidden` at the service and at the schema independently; the test asserts fixture E reads the same rows, so it is the role that refuses
+- Subject and actor resolve in one batched query per page, asserted by query count
+- `npm run codegen` output and the SDL snapshot are committed, and `tests/guards/pagination.test.ts` stays green
+
+**MB.200 — The privilege ledger page** · 3h
+
+_Story 61 — As an admin, I want to see every change to who is an admin and who may create a coven, with who made it, how, when and why, so that misuse comes to light._
+
+`/admin/privilege-changes`, one page over MB.199's read: one ledger, filtered by user (`?user=`, linked from each row of `/admin/users`) and by privilege (`?privilege=`), not a page per privilege and not a feed merged with the pause or invitations, which stay where they are acted on. A server component calling the service through `cache()`, numbered through `src/lib/pagination.ts`'s helper as every admin page is (MB.132), with a `PrivilegeLedger` component (its directory, story and doc) listing when, subject, privilege, change, route, actor and the note where there is one. `AdminNav` gains it after Users, and `UserList` rows gain a History link.
+
+_Acceptance criteria:_
+
+- An admin sees every change, newest first, paged, and the filters narrow it; each row names the subject and actor, linking to their `/admin/users` row, and shows the note only where one was given
+- The page states plainly when there is nothing to show, overall and for a filter
+- A user row's History link opens the page filtered to that user
+- A signed-in non-admin gets the styled not-authorised page, as every `/admin` page does
+- The Playwright spec covers the page, the filters and the link, with `@axe-core/playwright` clean, run against the e2e container
+- Component tests use role and label queries only, and story 61's acceptance test passes
+
+**MB.201 — `invitations`, one two-tier table (schema)** · 2h
+
+_Story:_ As a developer, I want workspace and admin invitations in one table, so that the token, the expiry, the accept and the revoke are built once rather than twice.
+
+Minted with MB.194 on the owner's call ([`design-decisions/mb.194-plan.md`](../design-decisions/mb.194-plan.md), "The invitations"). M7.1's `workspace_invitations` and MB.69's `admin_invitations` have the same nine columns, and nothing writes or reads either yet, while M7.2 to M7.7 and MB.70 are about to build a token path, an accept, a revoke, a pending list and an acceptance page on each. One table in `ingredients`' two-tier shape: `workspaceId` and `role` nullable and paired by a CHECK, so a null workspace is a site-tier invitation, which grants admin, as a null workspace is a compendium entry. M2.9's objections to reusing the workspace table, that it was scoped and its CHECK refused admin, are both answered by the nullable pair. Born with MB.198's mark, since the table authorises a membership or a grant.
+
+`invitations`, in `src/modules/coven/schema/invitations.ts`: `id`, `workspaceId` (nullable → `workspaces.id`), `email`, `role` (nullable `workspace_role`), `tokenHash`, `expiresAt` (default seven days), `acceptedAt`, `acceptedBy`, `revokedAt`, `note` (nullable), plus `...auditColumns`. CHECK `invitations_tier`: `(workspace_id is null) = (role is null)`. CHECK `invitations_role_invitable`: `role is null or role in ('viewer', 'member')`, the allowed set as today. The unique index on `token_hash` is partial, as both tables' are. The migration copies both tables with their ids and stamps.
+
+_Acceptance criteria:_
+
+- The migration creates the table, its CHECKs, its index and its `set_updated_at` line, and only adds, so the destructive-DDL check passes with no sidecar
+- A workspace without a role, and a role without a workspace, are each refused; `owner` is refused; a null pair is accepted
+- The only column whose name mentions a token is the hash, asserted as a property of the table
+- The copy lands a row of each old table with its id, stamps, tier and note
+- The table carries MB.198's mark, so every generic writer method refuses it
+- `design-decisions/mb.201-two-tier-invitations.md` records the model, why now, and the three things a reader must know: what a null workspace means, why the table is `coven`'s, and that policy stays in two services while the mechanics exist once; DESIGN.md §5 and `modules.md` carry it
+
+**MB.202 — Invitations are written and read by tier** · 2.5h
+
+_Story:_ As a developer, I want one set of named invitation writes and finders, each scoped by the proof it is handed, so that the workspace and admin invitation tasks build on the same mechanics.
+
+MB.201's code half. MB.69's `insertAdminInvitation`, `acceptAdminInvitation`, `revokeAdminInvitation` and `findAdminInvitationByToken` become `insertInvitation`, `acceptInvitation`, `revokeInvitation` and `findInvitationByToken`, in `src/db/repository/invitations.ts`, each overloaded on the proof: a `Membership` fills the workspace from the proof and requires a role, a `SiteAdmin` writes the null pair, and each revoke reaches only its own tier. `findPendingInvitationsInWorkspace(membership)` and `findPendingSiteInvitations(admin)` are added for M7.6's and MB.70's pending lists. The two old schema files go, and **`db:generate` is not run here**. M7.1 to M7.7, MB.69 and MB.70 are corrected to build on the one table, one accept service and one `/invite/[token]` route that branches by tier.
+
+_Acceptance criteria:_
+
+- An owner's invitation carries its workspace and role, an admin's the null pair, and the token's hash is the only one stored
+- A workspace revoke cannot reach a site-tier row by id, nor a site revoke a workspace row, each asserted by direct id against a row the other tier can revoke
+- Accepting matches only a pending row whose address the session holds verified, on either tier, and a second accept matches nothing
+- The writer still offers exactly twenty-three methods
+- No file under `src/` names either old table, and no migration is added
+- `db/invitations.md` describes one table; DESIGN.md §5, §7 and §14, `modules.md` and the MB.61 and M2.9 records are corrected; M7.1 to M7.7, MB.69 and MB.70's entries are corrected and synced
+
+**MB.203 — Drop `workspace_invitations` and `admin_invitations`** · 1h
+
+_Story:_ As a developer, I want the two retired invitation tables dropped once no deploy reads them, so that the schema holds one.
+
+As MB.197, for MB.202's tables. **It merges into `staging` only after a release carrying MB.202 has reached production.** `db:generate` emits the drops; MB.201's copy, prepended with `ON CONFLICT (id) DO NOTHING`, sweeps any row written during the rollout. It may share a release with MB.197, as its own PR.
+
+_Acceptance criteria:_
+
+- The migration sweeps both tables into `invitations`, then drops both
+- `src/db/migrations/<tag>.ack.md` acknowledges the destructive DDL with its reason, and the destructive-DDL check passes with it
+- The PR body names the release that carried MB.202 to production
