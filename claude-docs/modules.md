@@ -67,8 +67,8 @@ a service lands in the module that owns the table it writes.
 
 | Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                         |
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `admin_role_changes`, `admin_role_change_pauses`, `admin_invitations`, `workspace_creation_changes`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                  | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                                                                                            | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
+| `identity`    | `users`, `admin_role_changes`, `admin_role_change_pauses`, `admin_invitations` (until MB.203), `workspace_creation_changes`, `sessions`, `accounts`, `verifications`, `rate_limits`                                   | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201), `workspace_invitations` (until MB.203)                                                                                                         | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
 | `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `held-entries.ts`, `suggestions.ts` |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                     |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                  |
@@ -90,6 +90,17 @@ vocabulary row's references are read from `ingredients`, as `User.memberships`
 is added from `coven`, and the compendium-tier rows belong to the tier seam's
 extraction unit
 ([`design-decisions/mb.151-references.md`](design-decisions/mb.151-references.md)).
+
+**`invitations` is `coven`'s, both tiers** (MB.201). A row with a null
+workspace and role is a site-tier invitation, which grants admin. The table
+sits with the workspace it mostly names because its foreign key needs
+`workspaces`, and `coven` imports `identity`, never the reverse. The admin
+tier reaches it as admin curation reaches `ingredients`: `identity`'s
+site-tier service calls the repository's named writes and finders under the
+`SiteAdmin` proof, and imports nothing of `coven`'s
+([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
+The two tables it replaces, `workspace_invitations` and `admin_invitations`,
+stay declared until MB.202 and are dropped by MB.203.
 
 ## The public surface
 
@@ -124,9 +135,10 @@ Three import conventions, each chosen for a reason the alternative lacks:
   alias. This is the first use of the `@/` alias inside `src/`; the alias is
   what lets one lint glob name every cross-module import.
 - **The drizzle-kit-reachable graph uses relative paths.** A schema file
-  reaches another schema file, `schema/units.ts` or `src/db/audit.ts` by a
-  relative path — `../../identity/schema/users` — because drizzle-kit loads
-  the schema glob with its own loader, which may not honour tsconfig paths.
+  reaches another schema file, `schema/units.ts`, `src/db/audit.ts` or
+  `src/db/table-marks.ts` by a relative path — `../../identity/schema/users`
+  — because drizzle-kit loads the schema glob with its own loader, which may
+  not honour tsconfig paths.
 - **Intra-module imports are relative.** A service reaches its own schema as
   `../schema/spells`, never through its own index, which would be a cycle.
 
