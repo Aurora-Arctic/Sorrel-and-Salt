@@ -47,15 +47,19 @@ merely absent:
   longer curated, since a retired pick reads as no pick rather than an error.
 - **A null session is not always a refusal.** `membershipsByUser`,
   `providersByUser` and `usersByIdForAdmin` refuse every key signed out, and
-  the last two every key to a non-admin. The ingredient loaders answer a compendium entry for
+  the last two every key to a non-admin: each is `defineSignedInLoader(batch)`,
+  which answers `Forbidden` in every slot without a session and hands `batch`
+  a `Session` otherwise, so the three services never see a null (MB.212). The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public
-  reference data. A refusal is
+  reference data: each is `definePublicLoader(batch)`, whose `batch` takes the
+  keys alone, as their services take no session. The ingredient loaders take
+  `Session | null` themselves, so they stay `defineLoader`'s. A refusal is
   per key, never per batch.
 - **Only `define-loader.ts` may import `dataloader` at runtime.**
   `.oxlintrc.json` bans the import everywhere else. Its `src/modules/*/services/**`,
-  `src/db/**` and access-boundary overrides restate the ban, because an
+  `src/db/**`, access-boundary and module-resolver overrides restate the ban, because an
   override replaces the top-level rule rather than merging with it. `import type` stays legal.
   `define-loader.ts` is exempt by a named `oxlint-disable-next-line`, and
   `tests/guards/lint-loader-boundary.test.ts` pins that exemption set to that

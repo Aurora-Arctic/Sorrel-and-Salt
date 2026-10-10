@@ -246,6 +246,70 @@
       }
     },
     {
+      "files": ["src/modules/*/graphql/**/*.ts", "src/modules/*/loaders/**/*.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "allowTypeImports": true,
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+              },
+              {
+                "group": [
+                  "**/social-providers-config",
+                  "**/social-providers-config.ts",
+                  "./social-providers-config",
+                  "./social-providers-config.ts"
+                ],
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": ["**/db", "**/db/*", "**/db/**"],
+                "allowTypeImports": true,
+                "message": "Resolvers, pages and components reach the database only through a service (CLAUDE.md rule 1) — import from a module's `@/modules/<name>` index, where the authorization check lives, and nothing below it. `import type` is allowed, which is how a resolver names a row type (claude-docs/graphql.md, \"The access boundary\")."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**",
+                  "@/modules/*/types"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["**/lib/errors", "**/lib/errors.ts"],
+                "importNames": ["Forbidden"],
+                "message": "A resolver narrows the session with sessionOf(context) from src/graphql/context-helpers.ts, never `if (!session) throw new Forbidden()` inline (MB.212): the narrowing is written once, and refusing is the service's (CLAUDE.md rule 1), so a module's resolver has no Forbidden to throw. A loader over a signed-in service is defineSignedInLoader, which answers the refusal itself."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": [
         "src/db/**/*.ts",
         "src/modules/*/schema/**/*.ts",

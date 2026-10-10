@@ -61,7 +61,7 @@ describe('MB.184: one lint run for every lint guard', () => {
   const linted = inject('lintedFiles');
 
   it('was pointed at every probe set, and drew a diagnostic from each', () => {
-    expect(PROBE_SETS.length).toBe(4);
+    expect(PROBE_SETS.length).toBe(5);
     expect(linted).toEqual(LINTED_FILES);
     for (const set of PROBE_SETS) {
       const probes = [...set.probes.keys()];

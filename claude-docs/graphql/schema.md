@@ -51,6 +51,36 @@ stays under `src/graphql/schema/` ([`modules.md`](../modules.md)).
   `/api/auth/ok`: it answers without a session or the database, which is what
   the route's tests and the e2e spec probe the endpoint with.
 
+### Resolver helpers
+
+A resolver holds only what the transport adds to the service it calls, and
+the transport's share is written once, in `src/graphql/context-helpers.ts`
+(MB.212). None of it decides who may: that is the service's (CLAUDE.md
+rule 1).
+
+- **`sessionOf(context)`** is the session, non-null, or `Forbidden` for a
+  signed-out caller: the refusal a field scope gives, so the transport maps
+  one shape. It narrows the type for a service that takes a `Session`; a
+  scoped field has refused a null session already, and the service checks
+  again. `.oxlintrc.json` holds a module's resolvers and loaders to it: oxlint
+  has no `no-restricted-syntax` to refuse `if (!session) throw new
+Forbidden()` itself, so its `src/modules/*/graphql/**` and
+  `src/modules/*/loaders/**` override refuses a runtime import of
+  `Forbidden`, which the statement cannot be written without and which
+  neither directory has another use for. `tests/guards/lint-resolver-session.test.ts`
+  probes it, and that the override restated the transport's other bans.
+- **`definedArgs(args)`** makes each null absent: GraphQL sends null for an
+  optional argument or input field, and a service's filter or input takes
+  `undefined`. A list passes the fields it names, `definedArgs({ query,
+groupId })`, never a connection's whole `args`, which also carry `first`
+  and the cursors. A lone scalar keeps its `?? undefined` in place.
+- **`suggestionConnection(name, type, suggest)`** registers a picker's
+  suggestion field — `planetSuggestions`, `zodiacSuggestions`,
+  `formSuggestions`, `deitySuggestions`, `commonNameSuggestions` and
+  `referenceSuggestions` — as one connection taking an optional
+  `workspaceId` and `query`, an absent `query` sent as a blank one.
+  `ingredientSuggestions`, whose `workspaceId` is required, is written out.
+
 ### `me`, `User` and the first module types
 
 `me: User!` is the signed-in user, read through `getMe(session)` in the
@@ -170,7 +200,7 @@ type CorrespondenceSuggestion {
   ([`db/member-autofill.md`](../db/member-autofill.md), "The member's autofill").
 - **`query` is optional.** Blank or absent, the field lists the whole
   vocabulary and every in-use value, still a page at a time.
-- **Two refusals, one type.** Signed out, the resolver refuses with
+- **Two refusals, one type.** Signed out, the resolver's `sessionOf` refuses with
   `Forbidden` before the service is reached. Signed in, `assertMembership`
   refuses a workspace the caller does not belong to with the same
   `Forbidden`, a site admin included. The field carries no scope, because the
@@ -690,7 +720,9 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 - **`Reference` is declared over the row** and never exposes `workspaceId`;
   the tier is `isGlobal`, as on `Ingredient`. Its fields are §5's, its
   `kind` the enum `ReferenceKind` with the database's values, `web_page`
-  included, and its two days `LocalDate`s. `citation` is the one renderer's
+  included, and its two days `LocalDate`s. The type's text fields and the
+  input's are built from `REFERENCE_TEXT_FIELDS` (MB.209, MB.212), the one
+  list of them, so a field added to `CitationFields` reaches the wire too. `citation` is the one renderer's
   output joined plain, `renderCitation` in `src/lib/citation.ts`, so a chip,
   a sort and a screen reader read one string; a surface that shows italics
   calls the renderer for its parts.
@@ -729,6 +761,36 @@ the read, the search's compendium-only mode, and one refusal per error code at
 each field — `FORBIDDEN` and `VALIDATION` on both writes, `NOT_FOUND` on the
 update. The tier rule, the order and who else is refused are
 `services/references.test.ts`'s and `services/ingredient-references.test.ts`'s.
+
+### Curated vocabularies: one factory for the seven
+
+Every admin-curated vocabulary — categories and their groups, forms and
+their groups, deities and their traditions, planets and signs — is the same
+type, input and three writes, so `vocabulary/graphql/curated.ts`'s
+`curatedVocabularyWrites` registers them, on the precedent of the loop the
+astrology file held over its two (MB.212). Given an unimplemented
+`objectRef`, it implements the type as `id`, `name`, `slug` and
+`description`; registers `<Type>Input` with `name` and `description`,
+both required, and no slug, which follows the name; and registers
+`create<Type>`, `update<Type>` and `delete<Type>`, each under the `admin`
+scope, the delete answering the id. It answers the implemented ref. What a
+vocabulary adds is told to it:
+
+- **`parent`**, for a value filed under another — a category's `group`, a
+  form's `group`, a deity's `tradition`: the field, read through its loader,
+  and the id column, which is also the input's required `ID`.
+- **`fields` and `input`**, the type's and the input's own: a category
+  group's two colours, a form's `endRedirect`.
+- **`services`**, the three exported writes, each calling `assertSiteAdmin`
+  itself; the input reaches them through `definedArgs`.
+- **`moveTo`**, present for a group whose delete moves its rows first: the
+  delete takes an optional `moveTo`, and the list names the loaders the move
+  leaves stale. **`clears`** names those an update or a delete leaves stale.
+- **`descriptions`**, the update's and the delete's, passed through, so the
+  SDL is what each file declared by hand; the create carries none.
+
+Each vocabulary's list query stays in its own file, since the filters
+differ. The SDL snapshot is the proof the factory moved nothing.
 
 ### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
 
