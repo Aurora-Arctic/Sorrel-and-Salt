@@ -7,7 +7,7 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
-import { pageBounds, selectFrom } from './select';
+import { existsIn, pageBounds, selectFrom } from './select';
 import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
 
 /**
@@ -113,18 +113,32 @@ export function findPrivilegeChangeCount(
 }
 
 /** The ledger filter's arms, each `undefined` when its part is absent. */
-function privilegeChangeArms({ userId, privilege }: PrivilegeChangeFilter): (SQL | undefined)[] {
+function privilegeChangeArms({
+  userId,
+  privilege,
+  query,
+}: PrivilegeChangeFilter): (SQL | undefined)[] {
   return [
     userId ? eq(userPrivilegeChanges.userId, userId) : undefined,
     privilege ? eq(userPrivilegeChanges.privilege, privilege) : undefined,
+    // The subject's live row, matched as the user list matches one, in SQL:
+    // a semi-join, so a row is never fetched to be filtered out.
+    query
+      ? existsIn(users, and(eq(users.id, userPrivilegeChanges.userId), nameOrEmailHolds(query)))
+      : undefined,
   ];
 }
 
 /** The filter's arms, each `undefined` when its part is absent. */
 function userArms({ query, awaitingApproval, role }: UserFilter): (SQL | undefined)[] {
   return [
-    query ? or(containsText(users.name, query), containsText(users.email, query)) : undefined,
+    query ? nameOrEmailHolds(query) : undefined,
     awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
     role ? eq(users.role, role) : undefined,
   ];
+}
+
+/** A user's name or address holds `query`: the user list's match, and the ledger's by subject. */
+function nameOrEmailHolds(query: string): SQL | undefined {
+  return or(containsText(users.name, query), containsText(users.email, query));
 }

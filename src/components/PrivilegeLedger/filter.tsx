@@ -4,22 +4,29 @@ import { type FormEvent, type ReactElement, useState } from 'react';
 import { privilegeLedgerHref } from './href';
 import type { LedgerPrivilege, PrivilegeLedgerFilterProps } from './types';
 
-// The privilege filter, a GET form to the page itself, as the user list's
-// role filter is (MB.52, MB.53): a native `<select>`, so before hydration the
-// form submits natively, "All" as `privilege=`, which the page reads as no
-// privilege, and the user the ledger is narrowed to rides along as a hidden
-// `user`. Filter is offered only when the select differs from the filter the
-// page shows, and opens the new filter from the first page as a full load,
-// as the pager's plain anchors do.
+// The filter, a GET form to the page itself, as the user list's is (MB.52,
+// MB.53): part of the subject's name or email, and a native privilege
+// `<select>`, so before hydration the form submits natively, "All" as
+// `privilege=`, which the page reads as no privilege, and the user the
+// ledger is narrowed to rides along as a hidden `user`. Filter is offered
+// only when the form differs from the filter the page shows, and opens the
+// new filter from the first page as a full load, as the pager's plain
+// anchors do.
 const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactElement => {
+  const query = filter.query ?? '';
+  const [draftQuery, setDraftQuery] = useState(query);
   const [draft, setDraft] = useState<LedgerPrivilege | ''>(filter.privilege ?? '');
-  const changed = draft !== (filter.privilege ?? '');
+  const changed = draftQuery.trim() !== query || draft !== (filter.privilege ?? '');
 
   function apply(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!changed) return;
     window.location.assign(
-      privilegeLedgerHref({ userId: filter.userId, privilege: draft || undefined }),
+      privilegeLedgerHref({
+        query: draftQuery.trim(),
+        userId: filter.userId,
+        privilege: draft || undefined,
+      }),
     );
   }
 
@@ -33,6 +40,19 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
         onSubmit={apply}
       >
         {filter.userId && <input type="hidden" name="user" value={filter.userId} />}
+        <div className="field">
+          <label className="field__label" htmlFor="privilege-ledger-query">
+            Name or Email
+          </label>
+          <input
+            id="privilege-ledger-query"
+            className="input"
+            type="search"
+            name="query"
+            value={draftQuery}
+            onChange={(event) => setDraftQuery(event.target.value)}
+          />
+        </div>
         <div className="field">
           <label className="field__label" htmlFor="privilege-ledger-privilege">
             Privilege

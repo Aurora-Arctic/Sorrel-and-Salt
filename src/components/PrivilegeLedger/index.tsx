@@ -1,12 +1,13 @@
 import type { ReactElement } from 'react';
 import Pager from '../Pager';
-import PrivilegeLedgerFilter from './filter';
+import LedgerFilterForm from './filter';
 import { privilegeLedgerHref } from './href';
 import type {
   LedgerPerson,
   LedgerPrivilege,
   LedgerRoute,
   PrivilegeLedgerEntry,
+  PrivilegeLedgerFilter,
   PrivilegeLedgerProps,
 } from './types';
 import './index.scss';
@@ -36,10 +37,20 @@ const WHO_HOLDS: Record<LedgerPrivilege, string> = {
   create_workspace: 'may create a coven',
 };
 
-/** The empty state, in plain words for the filter shown. */
-function nothingToShow(privilege: LedgerPrivilege | undefined, subject: string | undefined) {
-  if (subject && privilege) return `No changes to whether ${subject} ${WHO_HOLDS[privilege]}.`;
-  if (subject) return `No changes to ${subject}’s privileges.`;
+/**
+ * The empty state, in plain words for the filter shown. Whom it is about: the
+ * user the ledger is narrowed to by id, else anyone the query matches.
+ */
+function nothingToShow(
+  { userId, privilege, query }: PrivilegeLedgerFilter,
+  subjectName: string | undefined,
+): string {
+  const named = userId ? (subjectName ?? 'this account') : undefined;
+  const matching = !named && query ? `anyone matching “${query}”` : undefined;
+  const whom = named ?? matching;
+  if (whom && privilege) return `No changes to whether ${whom} ${WHO_HOLDS[privilege]}.`;
+  if (named) return `No changes to ${named}’s privileges.`;
+  if (matching) return `No changes to the privileges of ${matching}.`;
   if (privilege) return `No changes to who ${WHO_HOLDS[privilege]}.`;
   return 'No privilege has changed yet.';
 }
@@ -83,11 +94,13 @@ const PrivilegeLedger = ({
 }: PrivilegeLedgerProps): ReactElement => (
   <div className="privilege-ledger">
     <div className="privilege-ledger__filter">
-      <PrivilegeLedgerFilter filter={filter} />
+      <LedgerFilterForm filter={filter} />
       {filter.userId && (
         <p>
           Changes to {subjectName ?? 'this account'} only.{' '}
-          <a href={privilegeLedgerHref({ privilege: filter.privilege })}>Show Every User</a>
+          <a href={privilegeLedgerHref({ query: filter.query, privilege: filter.privilege })}>
+            Show Every User
+          </a>
         </p>
       )}
     </div>
@@ -114,12 +127,7 @@ const PrivilegeLedger = ({
         </table>
       </div>
     ) : (
-      <p>
-        {nothingToShow(
-          filter.privilege,
-          filter.userId ? (subjectName ?? 'this account') : undefined,
-        )}
-      </p>
+      <p>{nothingToShow(filter, subjectName)}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} position={position} />

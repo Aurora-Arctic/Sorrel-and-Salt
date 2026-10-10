@@ -519,7 +519,17 @@ type Query {
   """
   Every change to who is an admin and who may create a coven, newest first.
   """
-  privilegeChanges(after: String, before: String, first: Int, last: Int, privilege: UserPrivilege, userId: ID): QueryPrivilegeChangesConnection!
+  privilegeChanges(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    privilege: UserPrivilege
+
+    """Part of the subject's name or email, case-insensitively."""
+    query: String
+    userId: ID
+  ): QueryPrivilegeChangesConnection!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 

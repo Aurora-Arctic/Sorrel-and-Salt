@@ -54,9 +54,14 @@ export async function countPrivilegeChanges(
   return findPrivilegeChangeCount(admin, parsedFilter(filter), start);
 }
 
-/** The filter as the repository takes it, its subject checked to be an id. */
-function parsedFilter({ userId, privilege }: PrivilegeChangeFilter): PrivilegeChangeFilter {
-  return { userId: userId === undefined ? undefined : parseInput(RowId, userId), privilege };
+/** The filter as the repository takes it, its subject checked to be an id and a blank query no query. */
+function parsedFilter({ userId, privilege, query }: PrivilegeChangeFilter): PrivilegeChangeFilter {
+  const trimmed = query?.trim();
+  return {
+    userId: userId === undefined ? undefined : parseInput(RowId, userId),
+    privilege,
+    query: trimmed || undefined,
+  };
 }
 
 /**

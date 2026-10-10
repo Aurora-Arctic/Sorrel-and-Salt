@@ -143,6 +143,20 @@ describe('the /admin/privilege-changes page', () => {
     expect(screen.getByText(/Changes to Ada Fixturewort only\./)).toBeInTheDocument();
   });
 
+  it('turns ?query into the filter, trimmed, and shows it in the search', async () => {
+    await renderPage({ query: '  ada ', privilege: 'admin' });
+
+    expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
+    expect(countPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
+    expect(screen.getByLabelText('Name or Email')).toHaveValue('ada');
+  });
+
+  it('reads a blank query as none', async () => {
+    await renderPage({ query: '  ' });
+
+    expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({});
+  });
+
   it('says plainly when the filter matches nothing', async () => {
     listPrivilegeChanges.mockResolvedValue([]);
     countPrivilegeChanges.mockResolvedValue({ totalCount: 0, countBefore: null });

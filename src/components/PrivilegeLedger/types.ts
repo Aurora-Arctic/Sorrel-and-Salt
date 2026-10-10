@@ -33,6 +33,8 @@ export interface PrivilegeLedgerEntry {
 
 /** The ledger's filter as the address carries it: what `privilegeLedgerHref` writes. */
 export interface PrivilegeLedgerFilter {
+  /** Part of the subject's name or email, as asked; absent or blank for none. */
+  query?: string;
   /** The subject the ledger is narrowed to, by id. */
   userId?: string;
   privilege?: LedgerPrivilege;

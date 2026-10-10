@@ -102,7 +102,7 @@ describe('PrivilegeLedger', () => {
     );
   });
 
-  describe('the privilege filter', () => {
+  describe('the filter', () => {
     const assign = vi.fn();
     afterEach(() => {
       assign.mockReset();
@@ -110,15 +110,21 @@ describe('PrivilegeLedger', () => {
     });
     const filterButton = () => screen.getByRole('button', { name: 'Filter' });
 
-    it('is a GET form to the page, its privilege a native select keeping the user', () => {
+    it('is a GET form to the page: the search, the privilege select, and the user kept', () => {
       render(
-        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
+        <PrivilegeLedger
+          changes={[GRANT]}
+          filter={{ query: 'ada', userId: SUBJECT, privilege: 'admin' }}
+        />,
       );
 
       const form = screen.getByRole('form', { name: 'Filter privilege changes' });
       expect(form).toHaveAttribute('method', 'get');
       expect(form).toHaveAttribute('action', '/admin/privilege-changes');
       expect(form.querySelector('input[type="hidden"][name="user"]')).toHaveValue(SUBJECT);
+      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
+      expect(query).toHaveAttribute('name', 'query');
+      expect(query).toHaveValue('ada');
       const privilege = screen.getByRole('combobox', { name: 'Privilege' });
       expect(privilege).toHaveAttribute('name', 'privilege');
       expect(privilege).toHaveValue('admin');
@@ -158,6 +164,23 @@ describe('PrivilegeLedger', () => {
       fireEvent.click(filterButton());
 
       expect(assign).toHaveBeenCalledWith(privilegeLedgerHref({ userId: SUBJECT }));
+    });
+
+    it('offers Filter for a new query, trimmed, keeping the user and the privilege', () => {
+      vi.stubGlobal('location', { ...window.location, assign });
+      render(
+        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
+      );
+      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
+
+      fireEvent.change(query, { target: { value: '   ' } });
+      expect(filterButton()).toBeDisabled();
+      fireEvent.change(query, { target: { value: ' Ada ' } });
+      fireEvent.click(filterButton());
+
+      expect(assign).toHaveBeenCalledWith(
+        privilegeLedgerHref({ query: 'Ada', userId: SUBJECT, privilege: 'admin' }),
+      );
     });
 
     it('sends nothing when nothing changed', () => {
@@ -203,6 +226,12 @@ describe('PrivilegeLedger', () => {
       'No changes to whether Ada Fixturewort may create a coven.',
     ],
     [{ userId: SUBJECT }, undefined, 'No changes to this account’s privileges.'],
+    [{ query: 'ada' }, undefined, 'No changes to the privileges of anyone matching “ada”.'],
+    [
+      { query: 'ada', privilege: 'admin' },
+      undefined,
+      'No changes to whether anyone matching “ada” is an admin.',
+    ],
   ] as const)('says plainly when there is nothing to show: %o', (filter, name, text) => {
     render(<PrivilegeLedger changes={[]} filter={filter} subjectName={name} />);
 
@@ -234,6 +263,9 @@ describe('privilegeLedgerHref', () => {
     expect(privilegeLedgerHref({})).toBe('/admin/privilege-changes');
     expect(privilegeLedgerHref({ userId: SUBJECT, privilege: 'admin' }, { before: 'b' })).toBe(
       `/admin/privilege-changes?user=${SUBJECT}&privilege=admin&before=b`,
+    );
+    expect(privilegeLedgerHref({ query: 'a b', userId: SUBJECT })).toBe(
+      `/admin/privilege-changes?query=a+b&user=${SUBJECT}`,
     );
   });
 });

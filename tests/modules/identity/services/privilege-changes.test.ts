@@ -177,6 +177,38 @@ describe('listPrivilegeChanges', () => {
     );
   });
 
+  // The user list's match, on the subject: A's name and B's address, each
+  // case-insensitively, and a wildcard read literally.
+  it('narrows by part of the subject’s name or email', async () => {
+    const [a] = await sql<{ name: string }[]>`select name from users where id = ${A.id}`;
+    const [b] = await sql<{ email: string }[]>`select email from users where id = ${B.id}`;
+    const ledger = await newestFirst();
+
+    expect(await ids({ query: a.name.slice(3).toUpperCase() })).toEqual(
+      ledger.filter((row) => row.user_id === A.id).map((row) => row.id),
+    );
+    expect(await ids({ query: `  ${b.email}  ` })).toEqual(
+      ledger.filter((row) => row.user_id === B.id).map((row) => row.id),
+    );
+    expect(await ids({ query: '%' })).toEqual([]);
+  });
+
+  it('narrows by query and privilege together', async () => {
+    const [b] = await sql<{ email: string }[]>`select email from users where id = ${B.id}`;
+    const expected = (await newestFirst()).filter(
+      (row) => row.user_id === B.id && row.privilege === 'admin',
+    );
+    expect(expected).toHaveLength(2);
+
+    expect(await ids({ query: b.email, privilege: 'admin' })).toEqual(
+      expected.map((row) => row.id),
+    );
+  });
+
+  it('reads a blank query as none', async () => {
+    expect(await ids({ query: '   ' })).toEqual((await newestFirst()).map((row) => row.id));
+  });
+
   it('answers a subject with no changes an empty page', async () => {
     expect(await ids({ userId: E.id })).toEqual([]);
   });
@@ -196,6 +228,28 @@ describe('listPrivilegeChanges', () => {
     }
 
     expect(seen).toEqual(expected);
+  });
+
+  it('walks a queried ledger one row at a time, neither repeating nor dropping a row', async () => {
+    const [b] = await sql<{ email: string }[]>`select email from users where id = ${B.id}`;
+    const expected = (await newestFirst())
+      .filter((row) => row.user_id === B.id)
+      .map((row) => row.id);
+    const seen: string[] = [];
+    let after: string | undefined;
+    for (let pages = 0; pages < LEDGER.length; pages += 1) {
+      const page = await resolvePage({ first: 1, after }, (request) =>
+        listPrivilegeChanges(asUser(E), { query: b.email }, request),
+      );
+      seen.push(...page.edges.map((edge) => edge.node.id));
+      if (!page.pageInfo.hasNextPage) break;
+      after = page.pageInfo.endCursor ?? undefined;
+    }
+
+    expect(seen).toEqual(expected);
+    expect((await countPrivilegeChanges(asUser(E), { query: b.email }, undefined)).totalCount).toBe(
+      expected.length,
+    );
   });
 
   it('walks back from the end the same way', async () => {

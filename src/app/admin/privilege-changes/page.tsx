@@ -32,7 +32,7 @@ const PRIVILEGES: readonly LedgerPrivilege[] = ['admin', 'create_workspace'];
 /** One page of the ledger and its count, the first page again for a cursor that names no row of it. */
 async function readLedgerPage(
   session: Session,
-  filter: { userId?: string; privilege?: LedgerPrivilege },
+  filter: { query?: string; userId?: string; privilege?: LedgerPrivilege },
   after: string | undefined,
   before: string | undefined,
 ) {
@@ -59,12 +59,13 @@ async function readLedgerPage(
 const readLedger = cache(
   async (
     session: Session,
+    query: string | undefined,
     userId: string | undefined,
     privilege: LedgerPrivilege | undefined,
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const page = await readLedgerPage(session, { userId, privilege }, after, before);
+    const page = await readLedgerPage(session, { query, userId, privilege }, after, before);
     const ids = [
       ...new Set([
         ...(userId ? [userId] : []),
@@ -116,6 +117,7 @@ export default async function AdminPrivilegeChangesPage({
 }: AdminPrivilegeChangesPageProps) {
   const session = await requireAdminSession();
   const params: PrivilegeChangesSearchParams = await searchParams;
+  const query = single(params.query)?.trim() || undefined;
   // A hand-edited user is no filter, said so, rather than an error.
   const userParam = single(params.user);
   const userId = userParam && RowId.safeParse(userParam).success ? userParam : undefined;
@@ -127,12 +129,13 @@ export default async function AdminPrivilegeChangesPage({
 
   const { changes, subjectName, pageInfo, position } = await readLedger(
     session,
+    query,
     userId,
     privilege,
     after,
     before,
   );
-  const filter = { userId, privilege };
+  const filter = { query, userId, privilege };
 
   return (
     <main>
