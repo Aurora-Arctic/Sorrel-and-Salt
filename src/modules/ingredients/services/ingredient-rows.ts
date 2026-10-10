@@ -29,6 +29,7 @@ import type {
   PickedDeity,
   Tier,
 } from '../types';
+import type { LocalIngredientInput } from '../validation/ingredient';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 
 // What an ingredient write does the same way in either tier: the parsed
@@ -63,13 +64,24 @@ export function ingredientColumns(fields: IngredientFields) {
 }
 
 /**
+ * The parsed input split into the row's fields, the deities `resolvePicks`
+ * checks, and the child lists written as sent, so a service passes those on
+ * to `writeChildren` without naming them. Either tier's parse.
+ */
+export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
+  const { folkNames, substitutes, references, deities, ...fields } = parsed;
+  return { fields, lists: { folkNames, substitutes, references }, deities: deities ?? [] };
+}
+
+/**
  * Writes an ingredient's child rows beside it, in its `withAudit`: its folk
  * names, substitutes, deities, references and categories, in that order.
  * `'add'` is a new row's, which holds nothing yet, so nothing is read first;
  * `'replace'` brings each list to exactly the input's, as each `replace…`
  * below says. The one child write both tiers' create and update make, so the
- * compendium's and a coven's cannot write different children, and a sixth
- * child table is one line in each branch.
+ * compendium's and a coven's cannot write different children: a sixth child
+ * table is its writers here, a line in each branch, and its list in
+ * `splitChildren` and `IngredientChildren`, and neither service is edited.
  *
  * @throws {ValidationError} a substitute link or a reference the tier rule
  * forbids, pathed to its entry.

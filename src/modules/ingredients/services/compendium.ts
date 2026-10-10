@@ -24,6 +24,7 @@ import {
   ingredientColumns,
   resolvePicks,
   softDeleteIngredient,
+  splitChildren,
   writeChildren,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -138,11 +139,12 @@ export async function createCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    CompendiumIngredientInput,
-    input,
-  );
-  const curated = await inCuratedValues(input, parsed, deities ?? [], []);
+  const {
+    fields: parsed,
+    lists,
+    deities,
+  } = splitChildren(parseInput(CompendiumIngredientInput, input));
+  const curated = await inCuratedValues(input, parsed, deities, []);
   const { fields } = curated;
 
   const columns = ingredientColumns(fields);
@@ -157,13 +159,7 @@ export async function createCompendiumEntry(
       write,
       [],
       row.id,
-      {
-        folkNames,
-        substitutes,
-        references,
-        categoryIds: fields.categoryIds,
-        deities: curated.deities,
-      },
+      { ...lists, categoryIds: fields.categoryIds, deities: curated.deities },
       'add',
     );
     return row;
@@ -200,14 +196,15 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    CompendiumIngredientInput,
-    input,
-  );
+  const {
+    fields: parsed,
+    lists,
+    deities,
+  } = splitChildren(parseInput(CompendiumIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
   const held = await heldDeities([], id);
-  const curated = await inCuratedValues(input, parsed, deities ?? [], held);
+  const curated = await inCuratedValues(input, parsed, deities, held);
   const { fields } = curated;
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
@@ -233,14 +230,7 @@ export async function updateCompendiumEntry(
       write,
       [],
       id,
-      {
-        folkNames,
-        substitutes,
-        references,
-        categoryIds: fields.categoryIds,
-        deities: curated.deities,
-        heldDeities: held,
-      },
+      { ...lists, categoryIds: fields.categoryIds, deities: curated.deities, heldDeities: held },
       'replace',
     );
     return row;

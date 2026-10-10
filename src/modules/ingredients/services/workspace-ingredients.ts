@@ -11,6 +11,7 @@ import {
   ingredientColumns,
   resolvePicks,
   softDeleteIngredient,
+  splitChildren,
   writeChildren,
 } from './ingredient-rows';
 import { assertMembership } from '@/modules/coven';
@@ -38,11 +39,8 @@ export async function createWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    LocalIngredientInput,
-    input,
-  );
-  const picks = await resolvePicks('coven', parsed, deities ?? [], []);
+  const { fields: parsed, lists, deities } = splitChildren(parseInput(LocalIngredientInput, input));
+  const picks = await resolvePicks('coven', parsed, deities, []);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
@@ -54,13 +52,7 @@ export async function createWorkspaceIngredient(
       write,
       [membership],
       row.id,
-      {
-        folkNames,
-        substitutes,
-        references,
-        categoryIds: fields.categoryIds,
-        deities: picks.deities,
-      },
+      { ...lists, categoryIds: fields.categoryIds, deities: picks.deities },
       'add',
     );
     return row;
@@ -92,14 +84,11 @@ export async function updateWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    LocalIngredientInput,
-    input,
-  );
+  const { fields: parsed, lists, deities } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const held = await heldDeities([membership], id);
-  const picks = await resolvePicks('coven', parsed, deities ?? [], held);
+  const picks = await resolvePicks('coven', parsed, deities, held);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
@@ -112,14 +101,7 @@ export async function updateWorkspaceIngredient(
       write,
       [membership],
       id,
-      {
-        folkNames,
-        substitutes,
-        references,
-        categoryIds: fields.categoryIds,
-        deities: picks.deities,
-        heldDeities: held,
-      },
+      { ...lists, categoryIds: fields.categoryIds, deities: picks.deities, heldDeities: held },
       'replace',
     );
     return row;
