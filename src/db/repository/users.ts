@@ -7,7 +7,7 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
-import { existsIn, pageBounds, selectFrom } from './select';
+import { existsIn, selectFrom } from './select';
 import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
 
 /**
@@ -38,16 +38,11 @@ export function findUserPage(
   filter: UserFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof users.$inferSelect>[]> {
-  const keyset = { sort: [users.name], id: users.id, request: page };
-  return selectFrom(
+  return findPage(
     users,
-    and(
-      notSoftDeleted(users),
-      ne(users.id, BOOTSTRAP_USER_ID),
-      ...userArms(filter),
-      pageBounds(keyset),
-    ),
-    keyset,
+    [users.name],
+    page,
+    and(ne(users.id, BOOTSTRAP_USER_ID), ...userArms(filter)),
   );
 }
 

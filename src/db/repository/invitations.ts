@@ -3,7 +3,7 @@ import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -68,12 +68,11 @@ function heldVerifiedBySession(session: AuditSession) {
  * is taken here, so a dumped row's hash finds nothing. Expired, revoked and
  * accepted rows come back alike, so the service can tell the three apart.
  */
-export async function findInvitationByToken(token: string): Promise<InvitationRow | undefined> {
-  const [row] = await selectFrom(
+export function findInvitationByToken(token: string): Promise<InvitationRow | undefined> {
+  return selectOne(
     invitations,
     and(notSoftDeleted(invitations), eq(invitations.tokenHash, hashToken(token))),
   );
-  return row;
 }
 
 /**

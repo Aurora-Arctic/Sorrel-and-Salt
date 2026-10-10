@@ -2,13 +2,15 @@ import { and, eq, inArray, type SQL } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { notSoftDeleted, readableInTiers, scopedTo } from './predicates';
 import { pageBounds, selectFrom } from './select';
 import type {
   Identified,
+  Keyset,
   NotIngredientScoped,
   NotSpellScoped,
   NotVisibilityScoped,
+  PageOrder,
   Slugged,
   SortPart,
   Unscoped,
@@ -37,11 +39,10 @@ export async function findOne<
  * The live row with this id, or `undefined`. The read-side twin of
  * `write.updateById`: a service cannot build `eq(table.id, id)` itself (MB.33).
  */
-export async function findOneById<
+export function findOneById<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
 >(table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
-  const [row] = await findMany(table, eq(table.id, id));
-  return row;
+  return findOne(table, eq(table.id, id));
 }
 
 /**
@@ -49,11 +50,10 @@ export async function findOneById<
  * opens a row by, for a table no proof scopes. Every slug index is partial on
  * `deleted_at IS NULL`, so at most one live row answers.
  */
-export async function findOneBySlug<
+export function findOneBySlug<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Slugged,
 >(table: TTable, slug: string): Promise<TTable['$inferSelect'] | undefined> {
-  const [row] = await findMany(table, eq(table.slug, slug));
-  return row;
+  return findOne(table, eq(table.slug, slug));
 }
 
 /** The live rows among these ids, in no particular order — a loader's batch read. */
@@ -87,67 +87,132 @@ export async function findOneInWorkspace<
  * `findOneById`, for the same reason: a service cannot build the `where`
  * `findOneInWorkspace` wants (MB.33).
  */
-export async function findOneByIdInWorkspace<
+export function findOneByIdInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
 >(membership: Membership, table: TTable, id: string): Promise<TTable['$inferSelect'] | undefined> {
-  const [row] = await findManyInWorkspace(membership, table, eq(table.id, id));
-  return row;
+  return findOneInWorkspace(membership, table, eq(table.id, id));
 }
 
 /**
  * One page of non-soft-deleted rows in `(...sort, id)` order, each part
  * ascending, each row with the cursor it was found at: CLAUDE.md rule 8's
- * keyset half. `page` comes from
- * `resolvePage` in `src/lib/pagination.ts`, already clamped to the maximum.
+ * keyset half. `order` is the sort, or a `ListOrder` with the join, the
+ * threshold and the carried values reading it takes; the id is always the
+ * table's. `page` comes from `resolvePage` in `src/lib/pagination.ts`,
+ * already clamped to the maximum.
  */
 export function findPage<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
+  Carried extends object,
 >(
   table: TTable,
-  sort: readonly SortPart[],
+  order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect']>[]> {
-  const keyset = { sort, id: table.id, request: page };
-  return selectFrom(table, and(notSoftDeleted(table), where, pageBounds(keyset)), keyset);
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  return readPage(table, notSoftDeleted(table), order, page, where);
 }
 
 /**
- * How many live rows `findPage` pages under the same `sort` and `where`, and
+ * How many live rows `findPage` pages under the same `order` and `where`, and
  * how many come before `start` — a page's first row, none on an empty page —
- * in its order: "Page X of Y" for a list read through it, as each vocabulary's
- * own count finder answers its list. One statement, over the page's own key.
+ * in its order: "Page X of Y" for a list read through it. One statement, over
+ * the page's own key, join and threshold.
  */
 export function findPageCount<
   TTable extends PgTable & Unscoped & NotSpellScoped & NotIngredientScoped & Identified,
->(
-  table: TTable,
-  sort: readonly SortPart[],
-  start: Cursor | undefined,
-  where?: SQL,
-): Promise<PageCount> {
-  return selectFrom(table, and(notSoftDeleted(table), where), {
-    count: { sort, id: table.id },
-    start,
-  });
+>(table: TTable, order: PageOrder, start: Cursor | undefined, where?: SQL): Promise<PageCount> {
+  return readCount(table, notSoftDeleted(table), order, start, where);
 }
 
 /** The same, inside the workspace the proof names. */
 export function findPageInWorkspace<
   TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+  Carried extends object,
 >(
   membership: Membership,
   table: TTable,
-  sort: readonly SortPart[],
+  order: PageOrder<Carried>,
   page: PageRequest,
   where?: SQL,
-): Promise<PageEntry<TTable['$inferSelect']>[]> {
-  const keyset = { sort, id: table.id, request: page };
-  return selectFrom(
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  return readPage(
     table,
-    and(scopedTo(membership, table), notSoftDeleted(table), where, pageBounds(keyset)),
-    keyset,
+    and(scopedTo(membership, table), notSoftDeleted(table)),
+    order,
+    page,
+    where,
   );
+}
+
+/**
+ * The same, across the tiers `memberships` may read: the compendium, and each
+ * coven one of them proves. No proofs pages the compendium alone. Inside the
+ * folder only: a two-tier list is the repository's to build, so its finders
+ * call this and a service calls them.
+ */
+export function findPageInTiers<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+  Carried extends object,
+>(
+  memberships: readonly Membership[],
+  table: TTable,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  return readPage(table, readableInTiers(memberships, table), order, page, where);
+}
+
+/** `findPageCount` for `findPageInTiers`: the same rows, counted. */
+export function findPageCountInTiers<
+  TTable extends PgTable & WorkspaceScoped & NotVisibilityScoped & Identified,
+>(
+  memberships: readonly Membership[],
+  table: TTable,
+  order: PageOrder,
+  start: Cursor | undefined,
+  where?: SQL,
+): Promise<PageCount> {
+  return readCount(table, readableInTiers(memberships, table), order, start, where);
+}
+
+/** A page of `table` under its finder's `scope` and the caller's `where`, cut at the page's bounds. */
+function readPage<TTable extends PgTable & Identified, Carried extends object>(
+  table: TTable,
+  scope: SQL | undefined,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where: SQL | undefined,
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  const keyset: Keyset<Carried> = { ...keyOf(table, order), request: page };
+  return selectFrom(table, and(scope, where, pageBounds(keyset)), keyset);
+}
+
+/** The rows `readPage` pages under the same scope, `where` and order, counted. */
+function readCount(
+  table: PgTable & Identified,
+  scope: SQL | undefined,
+  order: PageOrder,
+  start: Cursor | undefined,
+  where: SQL | undefined,
+): Promise<PageCount> {
+  return selectFrom(table, and(scope, where), { count: keyOf(table, order), start });
+}
+
+/** `order` keyed on the table's own id, so a page and its count key alike. */
+function keyOf<Carried extends object>(
+  table: Identified,
+  order: PageOrder<Carried>,
+): Omit<Keyset<Carried>, 'request'> {
+  return isSortAlone(order) ? { sort: order, id: table.id } : { ...order, id: table.id };
+}
+
+/** A sort alone, rather than a `ListOrder`. `Array.isArray` narrows no readonly array. */
+function isSortAlone<Carried extends object>(
+  order: PageOrder<Carried>,
+): order is readonly SortPart[] {
+  return Array.isArray(order);
 }
 
 /**

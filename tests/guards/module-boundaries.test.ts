@@ -54,6 +54,15 @@ const REPOSITORY = 'src/db/repository';
 const TIER_SEAM: string[] = [
   // The tier's one predicate, `workspace_id IS NULL`; a finder crosses the seam by calling it.
   'inCompendium',
+  // The compendium or the proofs' covens, the one spelling of both tiers read together (MB.206).
+  'inTiers',
+  // The same, live: a two-tier table read directly (MB.206).
+  'readableInTiers',
+  // A child's parent ingredient, live and in those tiers: how a table without a workspace_id reads both (MB.206).
+  'readableIngredientParent',
+  // A page of a two-tier table, and its count, under `readableInTiers` (MB.206).
+  'findPageInTiers',
+  'findPageCountInTiers',
   // Story 16's warning: a near-miss in the compendium or this workspace, in one ranked list.
   'findSimilarIngredients',
   // A planet, sign or form autofill's in-use bucket, and a form's claimants: the compendium and this workspace.
@@ -101,10 +110,13 @@ const TIER_SEAM: string[] = [
  * A compendium-tier read: the repository's `inCompendium` predicate, or the
  * `workspace_id IS NULL` it stands for in either of Drizzle's spellings, so a
  * finder that writes the column out by hand is caught as surely as one that
- * calls the helper. `deleted_at IS NULL` is every finder's business and must
+ * calls the helper — or, by name, one of the builders that read both tiers
+ * through it (MB.206), each listed itself, so a finder calling one is caught
+ * as surely as one calling `inCompendium`. `deleted_at IS NULL` is every finder's business and must
  * not match; the column name is what keeps it out.
  */
-const TIER_READ = /\binCompendium\(|workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
+const TIER_READ =
+  /\binCompendium\(|\binTiers\(|readableInTiers\(|readableIngredientParent\(|findPage(?:Count)?InTiers\(|workspace_?[iI]d[^\n]*\bis null\b|isNull\([^)]*workspaceId/;
 
 /** The lint guards' throwaway probe directories, which land under `src/`. */
 const isProbe = (path: string) => /(^|\/)__lint-probe[^/]*__(\/|$)/.test(path);
@@ -302,6 +314,11 @@ describe('the tier seam in the repository (claude-docs/modules.md)', () => {
     );
     expect(TIER_READ.test('where ${sql`workspace_id is null`}')).toBe(true);
     expect(TIER_READ.test('or(isNull(ingredients.workspaceId), eq(...))')).toBe(true);
+    expect(TIER_READ.test('and(inTiers([membership], ingredients), where)')).toBe(true);
+    expect(TIER_READ.test('and(readableInTiers(memberships, references), where)')).toBe(true);
+    expect(TIER_READ.test('readableIngredientParent(memberships, table.ingredientId)')).toBe(true);
+    expect(TIER_READ.test('findPageInTiers([], ingredients, order, page)')).toBe(true);
+    expect(TIER_READ.test('findPageCountInTiers([], ingredients, order, start)')).toBe(true);
     expect(TIER_READ.test('and(scopedTo(m, t), sql`deleted_at is null`)')).toBe(false);
     expect(TIER_READ.test('isNull(table.deletedAt)')).toBe(false);
     expect(TIER_READ.test('and(notSoftDeleted(table), where)')).toBe(false);

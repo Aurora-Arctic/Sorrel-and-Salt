@@ -146,17 +146,11 @@ export async function selectFrom(
   }
 
   if (order && 'orderBy' in order) {
-    // `set_config(…, true)` is `SET LOCAL` with a bind parameter: it ends
-    // with the transaction, so it cannot ride a pooled connection onward.
-    return db.transaction(async (tx) => {
-      await tx.execute(
-        sql`select set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true),
-          set_config('pg_trgm.word_similarity_threshold', ${String(WORD_SIMILARITY_THRESHOLD)}, true)`,
-      );
-      return build(tx)
+    return readUnder({ similarity: SIMILARITY_THRESHOLD, word: WORD_SIMILARITY_THRESHOLD }, (tx) =>
+      build(tx)
         .orderBy(...order.orderBy)
-        .limit(order.limit);
-    });
+        .limit(order.limit),
+    );
   }
 
   if (tally) {
@@ -189,6 +183,18 @@ export async function selectFrom(
     cursor: { key, id: String(row.id) },
     node: row,
   }));
+}
+
+/**
+ * The first row `selectFrom` reads under `where`, or `undefined`: a finder's
+ * one-row read, for a `where` that names one row or an index that allows one.
+ */
+export async function selectOne<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+): Promise<TTable['$inferSelect'] | undefined> {
+  const [row] = await selectFrom(table, where);
+  return row;
 }
 
 /**
@@ -231,13 +237,33 @@ function readKeyed<T>(
   { wordMatch, similarityMatch }: KeyOrder,
   run: (executor: Executor) => Promise<T>,
 ): Promise<T> {
+  return readUnder(
+    {
+      similarity: similarityMatch ? SIMILARITY_THRESHOLD : undefined,
+      word: wordMatch ? SEARCH_WORD_SIMILARITY_THRESHOLD : undefined,
+    },
+    run,
+  );
+}
+
+/**
+ * Runs a read under these pg_trgm thresholds, each left at the server's when
+ * absent: in a transaction that sets them with `set_config(…, true)`, which is
+ * `SET LOCAL` with a bind parameter, so a setting ends with the transaction
+ * and cannot ride a pooled connection onward. With neither, on `db` and in no
+ * transaction.
+ */
+function readUnder<T>(
+  thresholds: { similarity?: number; word?: number },
+  run: (executor: Executor) => PromiseLike<T>,
+): Promise<T> {
   const settings = [
-    similarityMatch &&
-      sql`set_config('pg_trgm.similarity_threshold', ${String(SIMILARITY_THRESHOLD)}, true)`,
-    wordMatch &&
-      sql`set_config('pg_trgm.word_similarity_threshold', ${String(SEARCH_WORD_SIMILARITY_THRESHOLD)}, true)`,
+    thresholds.similarity !== undefined &&
+      sql`set_config('pg_trgm.similarity_threshold', ${String(thresholds.similarity)}, true)`,
+    thresholds.word !== undefined &&
+      sql`set_config('pg_trgm.word_similarity_threshold', ${String(thresholds.word)}, true)`,
   ].filter((setting): setting is SQL => Boolean(setting));
-  if (settings.length === 0) return run(db);
+  if (settings.length === 0) return Promise.resolve(run(db));
   return db.transaction(async (tx) => {
     await tx.execute(sql`select ${sql.join(settings, sql`, `)}`);
     return run(tx);

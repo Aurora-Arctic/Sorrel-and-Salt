@@ -12,6 +12,7 @@ import type { referenceLinks } from '../../modules/ingredients/schema/reference-
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import type { categories } from '../../modules/vocabulary/schema/categories';
 import type { deities } from '../../modules/vocabulary/schema/deities';
 import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
@@ -127,6 +128,15 @@ export interface Keyset<Carried extends object = {}> extends KeyOrder {
 }
 
 /**
+ * A list's key as a page finder takes it, which keys on the table's own `id`:
+ * the sort, with what reading it joins, carries and is read under.
+ */
+export type ListOrder<Carried extends object = {}> = Omit<Keyset<Carried>, 'id' | 'request'>;
+
+/** What `findPage` and its kin order by: a sort alone, or a `ListOrder`. */
+export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListOrder<Carried>;
+
+/**
  * How `selectFrom` counts a keyset list rather than paging it: every row the
  * `where` holds, and how many come before `start` in `count`'s order. The
  * `where` is a page's without its bounds, and the read takes the key's join
@@ -136,6 +146,14 @@ export interface KeysetCount {
   count: KeyOrder;
   /** A page's first row. None on an empty page, whose `countBefore` is null. */
   start: Cursor | undefined;
+}
+
+/** A search's accent-folded word match, as `foldedWordMatch` builds it for one query. */
+export interface WordMatch {
+  /** The query is word-similar (`<%`) to `text`. */
+  matches: (text: AnyPgColumn) => SQL;
+  /** How word-similar, for a best-match order. */
+  similarity: (text: AnyPgColumn) => SQL<number>;
 }
 
 /**
@@ -522,6 +540,9 @@ export interface IngredientIdentity {
   canonicalName?: string | null;
   form?: string | null;
 }
+
+/** A vocabulary an admin list pages, the four that file their rows under a group or none. */
+export type ListedVocabulary = SuggestingVocabulary | typeof categories;
 
 /** A vocabulary a member's autofill suggests from. */
 export type SuggestingVocabulary =

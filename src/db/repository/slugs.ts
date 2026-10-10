@@ -3,7 +3,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { findOneIngredient } from './ingredients';
 import { inCompendium, notSoftDeleted } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { existsIn, selectFrom, selectOne } from './select';
 import type { IngredientRow, SlugRedirect } from './types';
 
 // A compendium entry's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the
@@ -12,12 +12,11 @@ import type { IngredientRow, SlugRedirect } from './types';
 // database's, so a window is exact wherever it is read from.
 
 /** The live compendium entry at `slug`, or `undefined`. */
-export async function findCompendiumEntryBySlug(slug: string): Promise<IngredientRow | undefined> {
-  const [row] = await selectFrom(
+export function findCompendiumEntryBySlug(slug: string): Promise<IngredientRow | undefined> {
+  return selectOne(
     ingredients,
     and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.slug, slug)),
   );
-  return row;
 }
 
 /**
