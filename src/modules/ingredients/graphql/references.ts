@@ -102,6 +102,14 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
   }),
 });
 
+/**
+ * The tier the `workspaceId` argument names, as a scope: a null one writes the
+ * compendium's, which only a site admin's scope admits (M5.7), and a coven's
+ * admits anyone signed in, the membership check deciding who may.
+ */
+const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
+  workspaceId == null ? { admin: true } : { signedIn: true };
+
 builder.mutationField('createReference', (t) =>
   t.field({
     type: ReferenceRef,
@@ -110,7 +118,7 @@ builder.mutationField('createReference', (t) =>
       workspaceId: t.arg.id({ required: false }),
       input: t.arg({ type: ReferenceInput, required: true }),
     },
-    authScopes: { signedIn: true },
+    authScopes: tierScope,
     resolve: (_root, { workspaceId, input }, { session }) => {
       if (!session) throw new Forbidden();
       return createReference(session, workspaceId, input);
@@ -127,7 +135,7 @@ builder.mutationField('updateReference', (t) =>
       id: t.arg.id({ required: true }),
       input: t.arg({ type: ReferenceInput, required: true }),
     },
-    authScopes: { signedIn: true },
+    authScopes: tierScope,
     resolve: async (_root, { workspaceId, id, input }, { session, loaders }) => {
       if (!session) throw new Forbidden();
       const row = await updateReference(session, workspaceId, id, input);

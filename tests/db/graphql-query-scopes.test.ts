@@ -3,8 +3,11 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
+import { Forbidden } from '@/lib/errors';
+import { assertSiteAdmin } from '@/modules/identity';
+import { A, B, C, D, E, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
-import type { ScopeProbe } from './types';
+import type { AdminWrite, ScopeProbe } from './types';
 
 // MB.80's line, drawn field by field: the compendium is the one public
 // surface, so its queries answer a null session and every other query
@@ -330,4 +333,116 @@ describe('a null session at every Mutation field', () => {
   });
 
   it.each(Object.entries(MUTATION_PROBES))('%s: %o', expectOutcome);
+});
+
+// M5.7's second check, field by field: every admin write carries the `admin`
+// scope, which refuses a signed-in user before the service is asked. The
+// service refuses them too, and its refusal is the gate (CLAUDE.md rule 1),
+// so a code alone cannot say which check spoke: the scope answers
+// `Forbidden`'s default message and `assertSiteAdmin` one of its own, and the
+// message is how this sweep knows the field refused on its own. Every write
+// is named as an admin write or one any session may reach, so a write added
+// later says which it is, and an admin write says what it governs.
+const SCOPE_REFUSAL = new Forbidden().message;
+
+const ADMIN_WRITES: Record<string, AdminWrite> = {
+  createCompendiumIngredient: { governs: 'compendium' },
+  updateCompendiumIngredient: { governs: 'compendium' },
+  deleteCompendiumIngredient: { governs: 'compendium' },
+  // A null `workspaceId` is the compendium's tier (MB.153); a coven's is the
+  // member's, below.
+  createReference: {
+    governs: 'references',
+    probe: write(`mutation { createReference(input: ${REFERENCE}) { id } }`),
+  },
+  updateReference: {
+    governs: 'references',
+    probe: write(
+      `mutation { updateReference(workspaceId: null, id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
+    ),
+  },
+  // M5.8: who may create a coven, granted and revoked by an admin.
+  grantWorkspaceCreation: { governs: 'workspace creation' },
+  revokeWorkspaceCreation: { governs: 'workspace creation' },
+  createCategory: { governs: 'categories' },
+  updateCategory: { governs: 'categories' },
+  deleteCategory: { governs: 'categories' },
+  createCategoryGroup: { governs: 'category groups' },
+  updateCategoryGroup: { governs: 'category groups' },
+  deleteCategoryGroup: { governs: 'category groups' },
+  createIngredientFormValue: { governs: 'forms' },
+  updateIngredientFormValue: { governs: 'forms' },
+  deleteIngredientFormValue: { governs: 'forms' },
+  createIngredientFormGroup: { governs: 'form groups' },
+  updateIngredientFormGroup: { governs: 'form groups' },
+  deleteIngredientFormGroup: { governs: 'form groups' },
+  createPlanet: { governs: 'planets' },
+  updatePlanet: { governs: 'planets' },
+  deletePlanet: { governs: 'planets' },
+  createZodiacSign: { governs: 'zodiac signs' },
+  updateZodiacSign: { governs: 'zodiac signs' },
+  deleteZodiacSign: { governs: 'zodiac signs' },
+  createDeity: { governs: 'deities' },
+  updateDeity: { governs: 'deities' },
+  deleteDeity: { governs: 'deities' },
+  createDeityTradition: { governs: 'deity traditions' },
+  updateDeityTradition: { governs: 'deity traditions' },
+  deleteDeityTradition: { governs: 'deity traditions' },
+};
+
+/** Writes any signed-in session's scope admits, the service deciding who may. */
+const OPEN_WRITES = [
+  'setEmail',
+  'createWorkspaceIngredient',
+  'updateIngredient',
+  'deleteIngredient',
+  'createReference',
+  'updateReference',
+];
+
+const adminProbe = (field: string): ScopeProbe =>
+  ADMIN_WRITES[field].probe ?? MUTATION_PROBES[field];
+
+const NON_ADMINS = [A, B, C, D];
+
+describe('a signed-in non-admin at every admin write', () => {
+  it('is classified for every Mutation field the schema has', () => {
+    const fields = fieldsOf(schema.getMutationType());
+
+    expect(fields.length).toBeGreaterThan(0);
+    expect(fields).toEqual([...new Set([...Object.keys(ADMIN_WRITES), ...OPEN_WRITES])].sort());
+  });
+
+  it('would hear the service in other words than the scope', () => {
+    // Why a default message is the scope's alone: the service's refusal is
+    // worded, and each resolver's own `Forbidden` is for a null session.
+    expect(() => assertSiteAdmin(asUser(B))).toThrow(Forbidden);
+    expect(() => assertSiteAdmin(asUser(B))).not.toThrow(SCOPE_REFUSAL);
+  });
+
+  it.each(Object.keys(ADMIN_WRITES))('%s admits a site admin past the scope', async (field) => {
+    const probe = adminProbe(field);
+    const result = await run(asUser(E), probe.source, probe.variables);
+
+    expect(result.errors?.map((error) => error.extensions?.code) ?? []).not.toContain('FORBIDDEN');
+  });
+
+  it.each(
+    Object.keys(ADMIN_WRITES).flatMap((field) =>
+      NON_ADMINS.map((user) => [field, user.name, user] as const),
+    ),
+  )('%s refuses %s at the scope', async (field, _name, user) => {
+    expect(asUser(user).role).toBe('user');
+
+    const probe = adminProbe(field);
+    const result = await run(asUser(user), probe.source, probe.variables);
+
+    expect(result.data).toBeNull();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors?.[0]).toMatchObject({
+      path: [field],
+      message: SCOPE_REFUSAL,
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
 });
