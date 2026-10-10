@@ -3,7 +3,7 @@ import { VocabularyPage } from '../vocabulary-page';
 import type { AdminVocabularyPageProps } from '../types';
 
 export const metadata: Metadata = {
-  title: 'Zodiac signs — Admin — Sorrel & Salt',
+  title: 'Zodiac Signs — Admin — Sorrel & Salt',
 };
 
 // The curated zodiac signs (MB.95), in the page shape the planets share.

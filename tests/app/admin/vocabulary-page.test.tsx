@@ -76,7 +76,7 @@ const PAGES = [
     vocabulary: 'zodiacSigns',
     Page: AdminZodiacSignsPage,
     path: '/admin/zodiac-signs',
-    title: 'Zodiac signs',
+    title: 'Zodiac Signs',
     noun: 'sign',
     label: 'Sign',
   },

@@ -143,9 +143,12 @@
 // size, and faded in and out over 500ms, the owner's pace, rising 2px as it
 // opens. `.is-open` shows it; closed, it takes no pointer once the fade ends.
 // No position or width: InfoTip's and a list entry's tooltip sit differently.
+// `tip-bubble-open` is the open state alone, for a bubble opened another way.
 // claude-docs/components/info-tip.md, "Styling".
+$tip-fade: 500ms;
+
 @mixin tip-bubble {
-  $fade: 500ms;
+  $fade: $tip-fade;
 
   padding: space(1) space(2);
   border: 1px solid badge-token('low-stock', 'border');
@@ -164,21 +167,27 @@
     visibility 0s linear $fade;
 
   &.is-open {
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    transition:
-      opacity $fade $theme-transition-easing,
-      transform $fade $theme-transition-easing,
-      visibility 0s;
+    @include tip-bubble-open;
   }
 
   @include reduced-motion {
     transition: none;
+  }
+}
 
-    &.is-open {
-      transition: none;
-    }
+// A tip bubble's open state, apart so a bubble opened by something other
+// than `.is-open` — a hover on its mark, say — opens the same way.
+@mixin tip-bubble-open {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity $tip-fade $theme-transition-easing,
+    transform $tip-fade $theme-transition-easing,
+    visibility 0s;
+
+  @include reduced-motion {
+    transition: none;
   }
 }
 

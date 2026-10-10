@@ -10,7 +10,7 @@ import { configuredProviders } from '../../lib/social-providers-config';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Sign-in methods — Sorrel & Salt',
+  title: 'Sign-In Methods — Sorrel & Salt',
 };
 
 // Where a second provider is added (claude-docs/auth/admin-bootstrap.md, "Linking a second

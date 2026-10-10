@@ -29,4 +29,5 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 ## Copy
 
 - **Button labels are title case** — "Sign In", "Send Confirmation", "Send Again in 59s"; a short preposition stays lower, as title case has it ("Continue with Google"). This holds for every button, submit and `.btn` anchor (DESIGN.md §9); a component touched with a sentence-case label is fixed in that PR.
+- **Headings are title case too** — every `h1`–`h6`, dialog title and table column heading: "Sign In", "Add Category", "Sign-In Methods" (DESIGN.md §9), and a page's tab title with its heading.
 - **The three nouns are fixed**: compendium, ingredients, grimoire — never "catalog" (`CLAUDE.md`'s Vocabulary). Only a URL says _coven_.

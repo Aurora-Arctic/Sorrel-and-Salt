@@ -12,6 +12,9 @@ import type { PageRequest } from '@/lib/types';
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
+// The rows' Approval controls hold the router, which only a mounted app provides.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
 const listUsers = vi.fn();
 const providersOf = vi.fn();
 vi.mock('@/modules/identity', () => ({ listUsers, providersOf }));
@@ -83,10 +86,12 @@ describe('the /admin/users page', () => {
     await renderPage();
 
     const row = screen.getByRole('row', { name: /Listed Fixture 01/ });
-    expect(within(row).getByText('Google')).toBeInTheDocument();
-    expect(
-      within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getByText('None'),
-    ).toBeInTheDocument();
+    expect(within(row).getByText('Google', { selector: '.visually-hidden' })).toBeInTheDocument();
+    // None linked is an empty cell, the fourth.
+    const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
+      'cell',
+    );
+    expect(none[3]).toHaveTextContent(/^$/);
   });
 
   it('turns the search parameters into the filter', async () => {
@@ -94,8 +99,8 @@ describe('the /admin/users page', () => {
     await renderPage({ query: 'fixture', awaiting: '' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
-    expect(screen.getByLabelText('Name or email')).toHaveValue('fixture');
-    expect(screen.getByLabelText('Awaiting approval only')).toBeChecked();
+    expect(screen.getByLabelText('Name or Email')).toHaveValue('fixture');
+    expect(screen.getByLabelText('Needs Approval')).toBeChecked();
   });
 
   // A flag by presence: a native submit's `awaiting=` and an older link's
@@ -129,15 +134,30 @@ describe('the /admin/users page', () => {
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
   });
 
+  it('reads ?role as the role filter', async () => {
+    await renderPage({ role: 'admin' });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false, role: 'admin' });
+    expect(screen.getByLabelText('Role')).toHaveValue('admin');
+  });
+
+  // Only a hand-edited address carries one, so it filters nothing rather than erring.
+  it('reads a role it does not know as no role', async () => {
+    await renderPage({ role: 'wizard' });
+
+    expect(listUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false });
+    expect(screen.getByLabelText('Role')).toHaveValue('');
+  });
+
   it('links the next page, keeping the filter, when there is one', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
 
-    await renderPage({ query: 'listed', awaiting: '' });
+    await renderPage({ query: 'listed', awaiting: '', role: 'user' });
 
     const next = screen.getByRole('link', { name: 'Next' });
     const href = next.getAttribute('href') as string;
     expect(href).toBe(
-      `/admin/users?query=listed&awaiting&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+      `/admin/users?query=listed&awaiting&role=user&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
     );
     expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute('aria-disabled', 'true');
   });

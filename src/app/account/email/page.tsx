@@ -8,7 +8,7 @@ import { postSignInLanding, safeReturnPath } from '../../../lib/sign-in';
 import type { EmailPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your email — Sorrel & Salt',
+  title: 'Your Email — Sorrel & Salt',
 };
 
 // No AppShell exists yet; `.email-page` centers the form on its own.

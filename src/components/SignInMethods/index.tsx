@@ -55,7 +55,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
 
   return (
     <div className="sign-in-methods">
-      <h1 className="sign-in-methods__heading">Sign-in methods</h1>
+      <h1 className="sign-in-methods__heading">Sign-In Methods</h1>
       <p className="sign-in-methods__intro">Any of these signs you in to this account.</p>
       {alert && (
         <p className="notice notice--error" role="alert">

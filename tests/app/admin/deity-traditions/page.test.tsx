@@ -92,7 +92,7 @@ describe('the /admin/deity-traditions page', () => {
   it('lists the first page of 25, each tradition by its name, and no modal', async () => {
     await renderPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Deity traditions' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Deity Traditions' })).toBeInTheDocument();
     expect(listDeityTraditions).toHaveBeenCalledWith({ limit: 26, inverted: false });
     expect(screen.getByRole('cell', { name: 'Fixtural' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Fixtural' })).toHaveAttribute(
@@ -132,7 +132,7 @@ describe('the /admin/deity-traditions page', () => {
   it('puts Add Tradition on the line of the heading, linking the empty modal over this page', async () => {
     await renderPage();
 
-    const heading = screen.getByRole('heading', { level: 1, name: 'Deity traditions' });
+    const heading = screen.getByRole('heading', { level: 1, name: 'Deity Traditions' });
     const add = screen.getByRole('link', { name: 'Add Tradition' });
     expect(add.parentElement).toBe(heading.parentElement);
     expect(add).toHaveAttribute('href', '/admin/deity-traditions?new');

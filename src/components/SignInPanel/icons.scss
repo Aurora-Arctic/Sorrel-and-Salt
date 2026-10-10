@@ -1,0 +1,20 @@
+// The marks' own styles, imported by icons.tsx rather than the panel's
+// stylesheet, so a mark shown anywhere — the admin user list, say — brings its
+// backing with it. Colours are the brand's, as hex literals (icons.tsx).
+
+// A small backing circle behind Facebook's mark, whose own path is the
+// circle's outline merged with the "f" as a hole in it (icons.tsx) — filled
+// white, the "f" is only visible where this chip's own blue shows through.
+.sign-in-panel__icon-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sign-in-panel__icon-chip--facebook {
+  background-color: #0866ff;
+}

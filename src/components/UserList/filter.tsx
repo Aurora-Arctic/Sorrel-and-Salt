@@ -2,6 +2,7 @@
 
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { userListHref } from './href';
+import type { UserRole } from '../../lib/session';
 import type { UserListFilterProps } from './types';
 
 // The filter, a GET form to the page itself (MB.52). Filter is offered only
@@ -9,15 +10,25 @@ import type { UserListFilterProps } from './types';
 // word), and opens the new filter as a full load from the first page, as the
 // pager's plain anchors do. Before hydration the form submits natively, its
 // checkbox as `awaiting=`, which the page reads the same as the bare flag.
-const UserListFilter = ({ query, awaitingApproval }: UserListFilterProps): ReactElement => {
+// The role is a native `<select>`, so it submits before hydration too, its
+// "All roles" as `role=`, which the page reads as no role.
+const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftAwaiting, setDraftAwaiting] = useState(awaitingApproval);
-  const changed = draftQuery.trim() !== query || draftAwaiting !== awaitingApproval;
+  const [draftRole, setDraftRole] = useState<UserRole | ''>(role ?? '');
+  const changed =
+    draftQuery.trim() !== query || draftAwaiting !== awaitingApproval || draftRole !== (role ?? '');
 
   function filter(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!changed) return;
-    window.location.assign(userListHref(draftQuery.trim(), draftAwaiting));
+    window.location.assign(
+      userListHref({
+        query: draftQuery.trim(),
+        awaitingApproval: draftAwaiting,
+        role: draftRole || undefined,
+      }),
+    );
   }
 
   return (
@@ -31,7 +42,7 @@ const UserListFilter = ({ query, awaitingApproval }: UserListFilterProps): React
       >
         <div className="field">
           <label className="field__label" htmlFor="user-list-query">
-            Name or email
+            Name or Email
           </label>
           <input
             id="user-list-query"
@@ -42,6 +53,22 @@ const UserListFilter = ({ query, awaitingApproval }: UserListFilterProps): React
             onChange={(event) => setDraftQuery(event.target.value)}
           />
         </div>
+        <div className="field">
+          <label className="field__label" htmlFor="user-list-role">
+            Role
+          </label>
+          <select
+            id="user-list-role"
+            className="select"
+            name="role"
+            value={draftRole}
+            onChange={(event) => setDraftRole(event.target.value as UserRole | '')}
+          >
+            <option value="">All roles</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
+          </select>
+        </div>
         <label className="checkbox">
           <input
             type="checkbox"
@@ -50,7 +77,7 @@ const UserListFilter = ({ query, awaitingApproval }: UserListFilterProps): React
             checked={draftAwaiting}
             onChange={(event) => setDraftAwaiting(event.target.checked)}
           />
-          Awaiting approval only
+          Needs Approval
         </label>
         {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
         <button className="btn btn--solid" type="submit" disabled={!changed}>

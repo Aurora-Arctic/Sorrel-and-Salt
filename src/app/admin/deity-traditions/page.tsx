@@ -87,7 +87,7 @@ export default async function AdminDeityTraditionsPage({
       {/* The page's one primary action on its heading's line, as every admin
           vocabulary page has it. */}
       <div className="page-header">
-        <h1>Deity traditions</h1>
+        <h1>Deity Traditions</h1>
         <Link className="btn btn--solid" href={groupsHref('tradition', here, 'new')}>
           Add Tradition
         </Link>

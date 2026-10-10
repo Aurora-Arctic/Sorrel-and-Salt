@@ -20,6 +20,8 @@ export interface UserListProps {
   query: string;
   /** Whether the list is narrowed to the users awaiting approval. */
   awaitingApproval: boolean;
+  /** The role the list is narrowed to, absent for every role. */
+  role?: UserRole;
   /** The page before this one, absent on the first. */
   previousHref?: string;
   /** The page after this one, absent on the last. */
@@ -32,10 +34,27 @@ export interface UserListProps {
 export interface UserListFilterProps {
   query: string;
   awaitingApproval: boolean;
+  role?: UserRole;
 }
+
+/** The filter as the address carries it: what `userListHref` writes. */
+export type UserListFilterValue = UserListFilterProps;
 
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */
   name: string;
+}
+
+/** What a row's creation control does: approve a user awaiting it, or revoke it (M5.8). */
+export type CreationAction = 'approve' | 'revoke';
+
+/** Where a creation control is: offering its action, asking to confirm, or waiting on the answer. */
+export type CreationStep = 'idle' | 'confirming' | 'sending';
+
+export interface CreationControlProps {
+  userId: string;
+  /** The user's name, completing the button's accessible name and the question. */
+  name: string;
+  action: CreationAction;
 }

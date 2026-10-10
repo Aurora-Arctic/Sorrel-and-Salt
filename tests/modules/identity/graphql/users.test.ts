@@ -44,8 +44,8 @@ const usersAs = (session: Session | null, source: string, variables = {}) =>
   run(session, source, variables);
 
 const PAGE_OF_USERS = `
-  query ($query: String, $awaitingApproval: Boolean, $after: String) {
-    users(query: $query, awaitingApproval: $awaitingApproval, after: $after) {
+  query ($query: String, $awaitingApproval: Boolean, $role: UserRole, $after: String) {
+    users(query: $query, awaitingApproval: $awaitingApproval, role: $role, after: $after) {
       edges {
         cursor
         node { id name email role canCreateWorkspace emailVerified providers audit { createdAt } }
@@ -89,6 +89,15 @@ describe('Query.users', () => {
     const seen = [...first.users.edges, ...rest.users.edges].map((edge) => edge.node.id);
     expect(new Set(seen).size).toBe(seen.length);
     expect(rest.users.pageInfo.hasNextPage).toBe(false);
+  });
+
+  it('passes the role to the service', async () => {
+    const result = await usersAs(asUser(E), PAGE_OF_USERS, { role: 'admin' });
+
+    const { users } = result.data as unknown as UsersQueryResult;
+    // The cast's admin, among thirty listed users who are not.
+    expect(users.edges.map((edge) => edge.node.id)).toContain(E.id);
+    expect(users.edges.every((edge) => edge.node.role === 'admin')).toBe(true);
   });
 
   it('passes the filters to the service', async () => {

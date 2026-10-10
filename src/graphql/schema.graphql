@@ -352,6 +352,14 @@ type Mutation {
   A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
   """
   deleteZodiacSign(id: ID!): ID!
+
+  """Lets a user with no invitation create a coven. Refused once they may."""
+  grantWorkspaceCreation(userId: ID!): User!
+
+  """
+  Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
+  """
+  revokeWorkspaceCreation(userId: ID!): User!
   setEmail(email: String!, next: String): User!
 
   """Replaces the category; the slug follows the name."""
@@ -477,7 +485,7 @@ type Query {
   planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
+  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
   The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.

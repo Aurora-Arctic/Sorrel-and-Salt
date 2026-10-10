@@ -7,7 +7,7 @@ import { impersonationEnabled } from '../../../lib/impersonation';
 import { DEFAULT_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import type { Session } from '../../../lib/session';
+import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
 import { listUsers, providersOf } from '@/modules/identity';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
@@ -24,6 +24,7 @@ const readUsers = cache(
     session: Session,
     query: string,
     awaitingApproval: boolean,
+    role: UserRole | undefined,
     after: string | undefined,
     before: string | undefined,
   ) => {
@@ -31,7 +32,7 @@ const readUsers = cache(
       ? { last: DEFAULT_PAGE_SIZE, before }
       : { first: DEFAULT_PAGE_SIZE, after };
     const page = await resolvePage(args, (request) =>
-      listUsers(session, { query: query || undefined, awaitingApproval }, request),
+      listUsers(session, { query: query || undefined, awaitingApproval, role }, request),
     );
     const providers = await providersOf(
       session,
@@ -58,10 +59,20 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   // A flag by presence: `?awaiting`, a native submit's `awaiting=`, or an
   // older link's `awaiting=1`.
   const awaitingApproval = params.awaiting !== undefined;
+  // Either role, or none: a hand-edited value is no filter rather than an error.
+  const roleParam = single(params.role);
+  const role = roleParam === 'admin' || roleParam === 'user' ? roleParam : undefined;
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
-  const { users, pageInfo } = await readUsers(session, query, awaitingApproval, after, before);
+  const { users, pageInfo } = await readUsers(
+    session,
+    query,
+    awaitingApproval,
+    role,
+    after,
+    before,
+  );
 
   return (
     <main>
@@ -70,15 +81,16 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         users={users}
         query={query}
         awaitingApproval={awaitingApproval}
+        role={role}
         canImpersonate={impersonationEnabled()}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor
-            ? userListHref(query, awaitingApproval, { before: pageInfo.startCursor })
+            ? userListHref({ query, awaitingApproval, role }, { before: pageInfo.startCursor })
             : undefined
         }
         nextHref={
           pageInfo.hasNextPage && pageInfo.endCursor
-            ? userListHref(query, awaitingApproval, { after: pageInfo.endCursor })
+            ? userListHref({ query, awaitingApproval, role }, { after: pageInfo.endCursor })
             : undefined
         }
       />

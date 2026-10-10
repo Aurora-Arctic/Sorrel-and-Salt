@@ -337,7 +337,10 @@
 
     // The muted ink, as every hairline here is (the footer's, a specimen's):
     // the body ink would draw a rule heavier than the text it heads.
+    // On the cell's bottom, on the owner's call, so a heading that wraps
+    // keeps its last line on the hairline, level with its neighbours.
     thead th {
+      vertical-align: bottom;
       border-bottom: 1px solid $text-muted;
     }
 

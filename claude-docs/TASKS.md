@@ -102,7 +102,7 @@ The `## M… —` sections that followed the execution order moved to [`tasks/`]
 | [`tasks/m2.md`](tasks/m2.md)   | M2 — Auth and users · _9 tasks · 15 hours_                                                     |
 | [`tasks/m3.md`](tasks/m3.md)   | M3 — GraphQL foundation · _10 tasks · 17 hours_                                                |
 | [`tasks/m4.md`](tasks/m4.md)   | M4 — Compendium data layer · _13 tasks · 21.5 hours_                                           |
-| [`tasks/m5.md`](tasks/m5.md)   | M5 — Admin curation tool · _13 tasks · 32.5 hours_                                             |
+| [`tasks/m5.md`](tasks/m5.md)   | M5 — Admin curation tool · _13 tasks · 34.5 hours_                                             |
 | [`tasks/m6.md`](tasks/m6.md)   | M6 — Workspaces and membership · _16 live tasks · 29 hours · 2 retired (M6.4, M6.5)_           |
 | [`tasks/m7.md`](tasks/m7.md)   | M7 — Invitations · _7 tasks · 12 hours_                                                        |
 | [`tasks/m8.md`](tasks/m8.md)   | M8 — Compendium browsing and local ingredients · _20 live tasks · 40 hours · 1 retired (M8.4)_ |

@@ -20,12 +20,12 @@ const REFUSAL = 'Only a site admin may list users';
  */
 export async function listUsers(
   session: Session,
-  { query, awaitingApproval }: UserFilter,
+  { query, awaitingApproval, role }: UserFilter,
   page: PageRequest,
 ): Promise<PageEntry<UserRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const trimmed = query?.trim();
-  return findUserPage(admin, { query: trimmed || undefined, awaitingApproval }, page);
+  return findUserPage(admin, { query: trimmed || undefined, awaitingApproval, role }, page);
 }
 
 /**

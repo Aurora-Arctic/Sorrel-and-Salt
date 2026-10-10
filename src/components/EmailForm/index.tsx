@@ -124,7 +124,7 @@ const EmailForm = ({
   if (confirmed) {
     return (
       <div className="email-form">
-        <h1 className="email-form__heading">Your email</h1>
+        <h1 className="email-form__heading">Your Email</h1>
         <p className="email-form__status">{VERIFIED_STATUS}</p>
         <p className="email-form__address">{email}</p>
         <p className="email-form__continue">
@@ -144,7 +144,7 @@ const EmailForm = ({
 
   return (
     <div className="email-form">
-      <h1 className="email-form__heading">Your email</h1>
+      <h1 className="email-form__heading">Your Email</h1>
       <p className="lede email-form__status">{statusLine(email, verified)}</p>
       {alert && (
         <p className="notice notice--error" role="alert">

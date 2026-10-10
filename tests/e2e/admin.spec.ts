@@ -35,7 +35,7 @@ test('a signed-in non-admin is refused at /admin with a 403 page that says why',
   expect(await response?.text()).not.toContain('/admin/compendium');
 
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(main.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(main.getByText(/does not have admin rights/)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
@@ -95,7 +95,7 @@ test('a signed-in non-admin is refused at /admin/users with the 403 page', async
 
   expect(response?.status()).toBe(403);
   expect(await response?.text()).not.toContain('not-an-admin@admin-users.test');
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
 });
 
 test('an admin lists the users at /admin/users, filtered, with their sign-in methods', async ({
@@ -111,26 +111,81 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(
     page.getByRole('navigation', { name: 'Admin' }).getByRole('link', { name: 'Users' }),
   ).toHaveAttribute('href', '/admin/users');
-  await expect(page.getByRole('search').getByLabel('Name or email')).toHaveValue(
+  await expect(page.getByRole('search').getByLabel('Name or Email')).toHaveValue(
     'admin-users.test',
   );
 
   // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await expect(rows).toHaveCount(2);
-  // Anchored on the name before it: not-an-admin's address ends the same way.
-  const admin = page.getByRole('row', { name: /Fixture Person an-admin@admin-users\.test/ });
+  // Anchored on the name and the verified mark's word before it:
+  // not-an-admin's address ends the same way.
+  const admin = page.getByRole('row', {
+    name: /Fixture Person Verified an-admin@admin-users\.test/,
+  });
   await expect(admin.getByRole('cell')).toHaveText([
     'Fixture Person',
-    'an-admin@admin-users.test',
+    // The verified mark's word, for the reader and in its tip, before the address.
+    /an-admin@admin-users\.test$/,
     'Admin',
-    // Every admin may create a workspace, and the users CHECK says so (MB.177).
-    'Yes',
+    // Each logo's name, for the reader and in its tip.
+    'DiscordDiscordGoogleGoogle',
     /^\d{4}-\d{2}-\d{2}$/,
-    'Discord, Google',
+    // A mark alone: every admin may create a workspace, and the users CHECK
+    // says so (MB.177), so the cell offers no control.
     'Yes',
   ]);
+  // The mark says what it marks on hover, in a tip bubble (the owner's review).
+  const email = admin.getByRole('cell').nth(1);
+  const tip = email.locator('.user-list__tip');
+  await expect(tip).toBeHidden();
+  await email.locator('.user-list__mark').hover();
+  await expect(tip).toBeVisible();
+  await expect(tip).toHaveText('Verified');
+  // So does each sign-in logo, its provider's name.
+  const discord = admin.getByRole('cell').nth(3).locator('.user-list__provider--discord');
+  await discord.hover();
+  await expect(discord.locator('.user-list__tip')).toBeVisible();
+  await expect(discord.locator('.user-list__tip')).toHaveText('Discord');
   await assertNoAccessibilityViolations(page);
+});
+
+// M5.8: an admin approves a user with no invitation from their row, behind a
+// modal naming them, and then revokes it, the row saying so each time.
+test('an admin approves a user awaiting approval at /admin/users, then revokes it', async ({
+  page,
+}) => {
+  // Signed in once to make the account, then the page signs in as the admin.
+  await signInAs(page, 'awaiting@admin-approval.test');
+  await signInAs(page, 'an-admin@admin-approval.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+
+  await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
+  const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+  await expect(approving).toContainText('Let Fixture Person create covens?');
+  await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
+  await assertNoAccessibilityViolations(page);
+
+  await approving.getByRole('button', { name: 'Approve' }).click();
+  await expect(approving).toHaveCount(0);
+
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+
+  // And revoked again, behind its own modal.
+  await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();
+  const revoking = page.getByRole('dialog', { name: 'Revoke Coven Creation' });
+  await expect(revoking).toContainText(
+    'Stop Fixture Person from creating covens? Covens they own stay theirs.',
+  );
+  await revoking.getByRole('button', { name: 'Revoke' }).click();
+  await expect(revoking).toHaveCount(0);
+
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({
@@ -141,7 +196,7 @@ test('a signed-in non-admin is refused at /admin/categories with the 403 page', 
   const response = await page.goto('/admin/categories?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -256,7 +311,7 @@ test('a signed-in non-admin is refused at /admin/forms with the 403 page', async
   const response = await page.goto('/admin/forms?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -386,7 +441,7 @@ test('a signed-in non-admin is refused at /admin/planets and /admin/zodiac-signs
     const response = await page.goto(path);
 
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });
@@ -442,7 +497,7 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await signInAs(page, 'filter-admin@admin-astrology.test', ['discord'], 'admin');
   const response = await page.goto('/admin/zodiac-signs');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Zodiac signs — Admin — Sorrel & Salt');
+  await expect(page).toHaveTitle('Zodiac Signs — Admin — Sorrel & Salt');
   const search = page.getByRole('search');
   const filter = search.getByRole('button', { name: 'Filter' });
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
@@ -492,7 +547,7 @@ test('a signed-in non-admin is refused at both group pages with the 403 page', a
   for (const path of ['/admin/category-groups?new', '/admin/form-groups?new']) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });
@@ -603,7 +658,7 @@ test('a signed-in non-admin is refused at both deity pages with the 403 page', a
   for (const path of ['/admin/deities?new', '/admin/deity-traditions?new']) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });
