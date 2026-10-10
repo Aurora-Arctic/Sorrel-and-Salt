@@ -134,3 +134,45 @@ half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
 signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
 and approves an unverified one through the warning.
+
+## The privilege ledger (MB.199)
+
+Every change to who is an admin and who may create a coven is a row of
+`user_privilege_changes`, which the database writes and nothing in the
+application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read:
+the whole ledger, newest first, for the admin who suspects misuse (story 61).
+
+- **One service, two transports.** `listPrivilegeChanges`
+  (`src/modules/identity/services/privilege-changes.ts`) is a site admin's
+  alone, asserted by direct call. GraphQL's `privilegeChanges` query ends at
+  it and carries the `admin` scope as the second check, so a non-admin is
+  refused before the service is asked
+  ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
+- **Newest first, a page at a time.** `findPrivilegeChangePage`
+  (`src/db/repository/users.ts`) reads through `findPage` under the
+  `SiteAdmin` proof, keyed on `created_at` negated, since a page's key is
+  ascending, and read as `numeric` so a cursor keeps the microseconds; rows of
+  one instant, a role grant and the flag it sets, follow by id.
+- **Narrowed by subject, by privilege, or both.** Each part is optional. A
+  subject that is not an id is a `ValidationError`, not a read: the keyset
+  read takes any data exception for a bad cursor.
+- **Subject and actor in one read per page.** `PrivilegeChange.subject` and
+  `.actor` (the row's `created_by`) both load through `usersByIdForAdmin`,
+  whose service, `usersForAdmin(session, userIds)`, answers a site admin each
+  live user, null where none is live, and refuses every slot to anyone else.
+  It is the admin's whole row, not MB.10's display-name `usersById`.
+- **No index beyond the key.** The plan does not want one: the ledger holds a
+  row per privilege an admin, an invitation or the bootstrap changes, a few
+  rows a user, and the planner seq-scans it whole. At ten thousand rows an
+  index on `(user_id, created_at desc)` serves only the subject's filter, as
+  a bitmap scan; it cannot serve the order, which is on the negated
+  expression, and every page still sorts.
+
+**Tests.** `tests/modules/identity/services/privilege-changes.test.ts` covers
+the order, each filter and both together, a walk two rows at a time each way
+across shared instants and a microsecond pair, the malformed subject, and each
+non-admin fixture user refused by direct call with E proven to read the same
+rows. `tests/modules/identity/graphql/privilege-changes.test.ts` holds the
+transport's half: every field, the filters reaching the service, subject and
+actor in one user read per page by query count, and the scope's own refusal.
+A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.

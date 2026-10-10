@@ -1,8 +1,12 @@
+import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
 
-export type { UserFilter } from '../../db/repository';
+export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
 export type UserRow = typeof users.$inferSelect;
+
+/** One row of the privilege ledger (MB.194). */
+export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 
 /** What the provider said at this callback — never the stored row, which a later feature may set. */
 export interface SignInProfile {

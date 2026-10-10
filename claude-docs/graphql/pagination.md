@@ -43,7 +43,8 @@ each keep to their own rules:
   resolved from what the finder carried on its entry — `resolvePage` copies
   everything an entry holds but its cursor onto the edge. The compendium's
   `score` is the one so far. `count` adds `totalCount` and `countBefore` to
-  the connection (below).
+  the connection (below), and `authScopes` is the field's scope, as on any
+  field (`privilegeChanges`'s `admin`, MB.199).
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
   query, and `findPageCount` counts a `findPage` list
   (claude-docs/db/keyset-pages.md, "Keyset pages").
