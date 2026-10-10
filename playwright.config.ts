@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { CONFIGURED_PROVIDERS_DATABASE, e2eDatabaseUrl, slotDatabase } from './tests/e2e/database';
+import { PRIMARY_ADMIN_EMAIL } from './tests/e2e/session';
 import {
   CONFIGURED_PROVIDERS_PORT,
   E2E_SLOTS,
@@ -40,6 +41,9 @@ const serverEnv = (port: number, database: string, providers: Record<string, str
   // Every server serves that one build directory, so a data cache flushed to
   // it would hand one slot's cached reads to another slot's server.
   NEXT_ISR_FLUSH_TO_DISK: 'false',
+  // CI's placeholder, here too, so a developer's own address in `.env.local`
+  // never names the primary admin a spec signs in as (MB.59).
+  ADMIN_BOOTSTRAP_EMAIL: PRIMARY_ADMIN_EMAIL,
   ...providers,
 });
 

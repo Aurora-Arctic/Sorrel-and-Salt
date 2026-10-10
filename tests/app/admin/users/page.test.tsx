@@ -17,7 +17,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const listUsers = vi.fn();
 const providersOf = vi.fn();
-vi.mock('@/modules/identity', () => ({ listUsers, providersOf }));
+const isPrimaryAdmin = vi.fn();
+vi.mock('@/modules/identity', () => ({ isPrimaryAdmin, listUsers, providersOf }));
 
 const { default: AdminUsersPage } = await import('@/app/admin/users/page');
 
@@ -55,6 +56,8 @@ beforeEach(() => {
   providersOf.mockImplementation(async (_session, ids: string[]) =>
     ids.map((_, index) => (index === 0 ? ['google'] : [])),
   );
+  isPrimaryAdmin.mockReset();
+  isPrimaryAdmin.mockReturnValue(false);
 });
 
 describe('the /admin/users page', () => {
@@ -92,6 +95,20 @@ describe('the /admin/users page', () => {
       'cell',
     );
     expect(none[3]).toHaveTextContent(/^$/);
+  });
+
+  // MB.59: whether a row is the primary admin's is the identity service's
+  // answer, asked of each row as the page reads it.
+  it('labels the row the service says is the primary admin, and no other', async () => {
+    isPrimaryAdmin.mockImplementation((node: { id: string }) => node.id === user(2).id);
+
+    await renderPage();
+
+    expect(isPrimaryAdmin).toHaveBeenCalledTimes(2);
+    const primary = screen.getByRole('row', { name: /Listed Fixture 02/ });
+    expect(within(primary).getByText('Primary Admin')).toBeInTheDocument();
+    const other = screen.getByRole('row', { name: /Listed Fixture 01/ });
+    expect(within(other).queryByText('Primary Admin')).not.toBeInTheDocument();
   });
 
   it('turns the search parameters into the filter', async () => {

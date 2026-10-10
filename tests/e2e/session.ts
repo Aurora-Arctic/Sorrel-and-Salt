@@ -13,6 +13,14 @@ import { e2eDatabaseUrl } from './database';
 // so Better Auth names the cookie with the `__Secure-` prefix.
 const SESSION_COOKIE = '__Secure-better-auth.session_token';
 
+/**
+ * The address every e2e server is given as ADMIN_BOOTSTRAP_EMAIL, CI's own
+ * placeholder on the reserved `.invalid` domain: set by playwright.config.ts
+ * rather than left to a developer's `.env.local`, so a spec can sign in as
+ * the primary admin (MB.59) the same way locally as on CI.
+ */
+export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
+
 /** better-call's `signCookieValue`: `<value>.<base64 HMAC-SHA256>`, percent-encoded. */
 function signed(value: string, secret: string): string {
   const signature = createHmac('sha256', secret).update(value).digest('base64');

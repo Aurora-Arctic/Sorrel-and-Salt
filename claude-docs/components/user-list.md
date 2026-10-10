@@ -21,7 +21,8 @@ the hrefs of the pages either side
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
-read beside it.
+read beside it, and `primaryAdmin`, which the page asks of the identity
+service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 
 ## Contracts
 
@@ -108,19 +109,47 @@ read beside it.
   fresh one, without the modal, rather than keeping the busy state. A refusal
   closes the modal, puts the service's message in the row as an alert, and
   offers the action again. The service is the guard.
-- **Approving an unverified address warns first** (MB.205). When the row's
-  `emailVerified` is false, the Approve modal says, under its question, in a
-  `.notice--warn`: "This email address has not been verified, so nobody has
-  proved who holds it. Approving keeps the account rather than letting it
-  lapse." An approval vouches for whoever holds the address, and the vouching
+- **Approving or granting to an unverified address warns first** (MB.205,
+  MB.59). When the row's `emailVerified` is false, the Approve modal says,
+  under its question, in a `.notice--warn`: "This email address has not been
+  verified, so nobody has proved who holds it. Approving keeps the account
+  rather than letting it lapse." Grant's says the same with "Granting": the
+  one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
+  ledger row keeps the account from the sweep as an approval's does. An approval vouches for whoever holds the address, and the vouching
   keeps the account from MB.67's sweep of lapsed unverified accounts (MB.204).
   It is a warning, not a refusal: the modal's Approve still approves, since
   M2.9 leaves confirming who someone is to the admin. The modal's Approve is
   `aria-describedby` the warning, so a screen reader reads it as the focus
-  lands there on opening. A verified user's Approve, and every Revoke, carries
+  lands there on opening. A verified user's Approve or Grant, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
-- **MB.59's grant control sits on these rows too.** It does not exist yet, and
-  adds its own column in its own PR.
+- **The Role cell holds the role's control** (MB.59,
+  [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
+  admin"), from `role-control.tsx`, beside the role it changes: one column
+  rather than a second saying the same thing, as Coven Creation holds its
+  own. A user's row has Grant, quiet, named "Grant admin to <name>"; an
+  admin's has Revoke, red, named "Revoke admin from <name>". Each asks first
+  in a `Modal` titled "Grant Admin" or "Revoke Admin", the name in bold:
+  "Make <name> an admin? Admins curate the compendium and its lists, and can
+  grant and revoke admin. They will also be able to create covens.", or "Stop
+  <name> being an admin? They keep their covens, and everything they wrote
+  stays as it is." Under the question is an optional Reason field, its hint
+  saying it is optional and kept with the change; a blank reason is sent as
+  none, and the service stores what is sent as the ledger row's note. The
+  modal, its focus, Cancel, the busy confirm and a refusal in the row behave
+  as the creation control's: both are `confirmed-action.tsx`'s
+  `ConfirmedAction`, each control only its words and its write. Grant warns
+  on an unverified address as Approve does, in its own verb (below).
+- **The primary admin's row is labelled "Primary Admin"**, a small outlined
+  tag beside the role, and its Revoke stays in view but is `aria-disabled`
+  rather than `disabled`, so it keeps its place in the tab order and a click
+  still lands. Beside it, in the muted ink, is the reason, the service's own
+  refusal in the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`,
+  one string for both): "This is the primary admin and can't be removed.
+  Changing who the primary admin is takes a change to the site's
+  configuration." It names no variable; how to change it is the docs'. The
+  button is described by it, and activating it opens nothing and sends
+  nothing but mounts the reason afresh as an alert, so a screen reader hears
+  it each time, rather than doing nothing.
 
 ## Styling
 
@@ -129,7 +158,10 @@ primitive's rule, since its rows mix text with logo circles, marks and
 buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
-a wrapping row of the mark and the control, and the confirmation is the
+a wrapping row of the mark and the control, and the role cell a wrapping row
+of the role, the primary admin's tag and the control, the tag outlined in
+`$text-muted` and the primary admin's reason taking the cell's full width
+below, in the muted ink at a smaller size (MB.59), and the confirmation is the
 `Modal`'s own layout, its buttons in `.modal__actions`, all built on the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
 `.data-table` primitive, filling the layout's width and scrolling inside its
@@ -139,11 +171,15 @@ are banded and its header carries a hairline, as every admin list's does, and it
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
-`Default`, `Filtered`, `NoMatch`, `WithImpersonation` and `UnverifiedApproval`,
+`Default`, `Filtered`, `NoMatch`, `WithImpersonation`, `UnverifiedApproval`
+and `AdminRoles`,
 inside the admin layout's frame; the list holds an admin, a user awaiting
 approval and an approved user, so each control shows. `UnverifiedApproval`
 holds two users awaiting approval, one unverified and one verified, so the
-first's Approve opens the warning (MB.205) and the second's does not. In the workshop neither Impersonate nor Approve or Revoke reaches a
+first's Approve opens the warning (MB.205) and the second's does not.
+`AdminRoles` holds the primary admin, its Revoke unusable with the reason
+beside it, a second admin whose Revoke opens its modal, and users whose Grant
+opens theirs, Bo's with the warning (MB.59). In the workshop neither Impersonate nor Approve or Revoke reaches a
 server, so a click shows the refusal.
 Render-only, no test ids, no snapshots.
 
@@ -160,8 +196,15 @@ approval, Revoke on approved ones and nothing on an admin's, each modal
 and its focus, Cancel sending nothing, each call and its busy state until the
 refresh, and the refusal; and the unverified warning: in Approve's modal and
 describing its Approve for an unverified user, which still approves, and
-absent for a verified one and from Revoke. `tests/e2e/admin.spec.ts` approves
-and revokes a user against the built server, and approves an unverified one
-through the warning, with axe over each open modal.
+absent for a verified one and from Revoke; and the role cell (MB.59): Grant
+on a user's row and Revoke on an admin's, each modal, the reason sent
+trimmed or not at all, Cancel sending nothing, Grant's warning for an
+unverified user, the refusal in the row, the fresh control after the
+refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
+by the reason and stating it as an alert each time it is tried, sending
+nothing. `tests/e2e/admin.spec.ts` approves
+and revokes a user against the built server, approves an unverified one
+through the warning, grants admin with a reason and revokes it, and tries
+the primary admin's Revoke, with axe over each open modal.
 `tests/app/admin/users/page.test.tsx` covers what the page hands it, the
-impersonation gate included, and `awaiting` read by its presence.
+impersonation gate and the primary admin's flag included, and `awaiting` read by its presence.

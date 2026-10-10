@@ -149,3 +149,32 @@
 .notice.user-list__warning {
   margin-block: space(5);
 }
+
+// The role cell: the role, the primary admin's label, then the control that
+// changes it, wrapping below on a narrow column as the creation cell does.
+.user-list__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(3);
+}
+
+// The primary admin's label: a small outlined tag, the muted ink, so it reads
+// as a fact about the row rather than another control.
+.user-list__badge {
+  padding: 0 space(2);
+  border: 1px solid $text-muted;
+  border-radius: 999px;
+  color: $text-muted;
+  font-size: 0.875em;
+  white-space: nowrap;
+}
+
+// Why the primary admin's Revoke cannot be used, beside it, in the muted ink
+// and at the cell's width rather than the reading measure.
+.user-list__reason {
+  flex-basis: 100%;
+  margin: 0;
+  color: $text-muted;
+  font-size: 0.875em;
+}

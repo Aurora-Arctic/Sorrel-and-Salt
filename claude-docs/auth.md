@@ -56,9 +56,9 @@ In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#provisional-accounts-mb67
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-email-page-mb54).
 
-### Granting a second admin — decided, not built (M2.9)
+### Granting a second admin (M2.9, MB.59)
 
-In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin--decided-not-built-m29).
+In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin-m29-mb59).
 
 ### The self-created user
 

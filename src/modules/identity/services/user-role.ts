@@ -2,7 +2,7 @@ import 'server-only';
 import { findOneById, withAudit } from '../../../db/repository';
 import type { AuditWriter, PrivilegeDeclaration } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import { primaryAdminEmail, sameAddress } from '../../../lib/primary-admin';
+import { PRIMARY_ADMIN_REFUSAL, primaryAdminEmail, sameAddress } from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
 import { assertSiteAdmin, type SiteAdmin } from './site-admin';
@@ -17,13 +17,6 @@ import type { UserRow } from '../types';
 // "Granting and revoking admin".
 
 const REFUSAL = 'Only a site admin may change who is an admin';
-
-/**
- * The primary admin's refusal, the same words its row shows: plain language
- * that names no variable, since how to change it is the docs', not the page's.
- */
-export const PRIMARY_ADMIN_REFUSAL =
-  "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
 
 /**
  * Whether `user` is the primary admin: a live admin whose email matches

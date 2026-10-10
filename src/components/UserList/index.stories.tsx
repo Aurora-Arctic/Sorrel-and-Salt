@@ -19,6 +19,7 @@ const USERS: readonly UserListEntry[] = [
     createdAt: new Date('2026-03-04T05:06:07Z'),
     providers: ['discord', 'google'],
     emailVerified: true,
+    primaryAdmin: false,
   },
   {
     id: 'u-bo',
@@ -29,6 +30,7 @@ const USERS: readonly UserListEntry[] = [
     createdAt: new Date('2026-05-06T07:08:09Z'),
     providers: ['microsoft'],
     emailVerified: false,
+    primaryAdmin: false,
   },
   // Approved, so the row offers Revoke rather than Approve (M5.8).
   {
@@ -40,6 +42,7 @@ const USERS: readonly UserListEntry[] = [
     createdAt: new Date('2026-06-07T08:09:10Z'),
     providers: ['google'],
     emailVerified: true,
+    primaryAdmin: false,
   },
 ];
 
@@ -98,10 +101,38 @@ export const UnverifiedApproval: Story = () => (
           createdAt: new Date('2026-07-08T09:10:11Z'),
           providers: ['discord'],
           emailVerified: true,
+          primaryAdmin: false,
         },
       ]}
       query=""
       awaitingApproval
+    />
+  </Frame>
+);
+
+// MB.59: the primary admin, labelled, its Revoke in view but unusable with the
+// reason beside it; a second admin's Revoke and each user's Grant open their
+// confirmations, Grant warning on Bo's unverified address.
+export const AdminRoles: Story = () => (
+  <Frame>
+    <UserList
+      users={[
+        { ...(USERS[0] as UserListEntry), primaryAdmin: true },
+        {
+          id: 'u-eve',
+          name: 'Eve Fixturewort',
+          email: 'eve@users.test',
+          role: 'admin',
+          canCreateWorkspace: true,
+          createdAt: new Date('2026-08-09T10:11:12Z'),
+          providers: ['google'],
+          emailVerified: true,
+          primaryAdmin: false,
+        },
+        ...USERS.slice(1),
+      ]}
+      query=""
+      awaitingApproval={false}
     />
   </Frame>
 );

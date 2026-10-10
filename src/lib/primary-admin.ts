@@ -24,3 +24,11 @@ export function primaryAdminEmail(): string | undefined {
 export function sameAddress(a: string, b: string): boolean {
   return a.toLowerCase() === b.toLowerCase();
 }
+
+/**
+ * Why the primary admin cannot be revoked, in plain words that name no
+ * variable: the service's refusal and the words its row shows, one string so
+ * the two cannot drift. How to change who it is lives in the docs, not the page.
+ */
+export const PRIMARY_ADMIN_REFUSAL =
+  "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
