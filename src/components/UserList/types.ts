@@ -20,6 +20,8 @@ export interface UserListProps {
   query: string;
   /** Whether the list is narrowed to the users awaiting approval. */
   awaitingApproval: boolean;
+  /** The role the list is narrowed to, absent for every role. */
+  role?: UserRole;
   /** The page before this one, absent on the first. */
   previousHref?: string;
   /** The page after this one, absent on the last. */
@@ -32,7 +34,11 @@ export interface UserListProps {
 export interface UserListFilterProps {
   query: string;
   awaitingApproval: boolean;
+  role?: UserRole;
 }
+
+/** The filter as the address carries it: what `userListHref` writes. */
+export type UserListFilterValue = UserListFilterProps;
 
 export interface ImpersonateButtonProps {
   userId: string;

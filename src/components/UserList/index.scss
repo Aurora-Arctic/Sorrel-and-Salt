@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // Layout only, until the admin area's design review (MB.115). The table and
 // the pager are primitives (`.data-table`, `.pager`).
@@ -16,15 +17,112 @@
   gap: space(3) space(5);
 }
 
-// Approve's confirmation, in its cell: the question above its two buttons.
-.user-list__confirm {
-  display: flex;
-  flex-direction: column;
+// A yes-or-no column's mark: green for yes, red for no, the colours the
+// accent and the error notices already carry.
+.user-list__mark {
+  display: inline-flex;
+
+  svg {
+    width: 1.25em;
+    height: 1.25em;
+  }
+}
+
+.user-list__mark--yes {
+  color: $accent;
+}
+
+.user-list__mark--no {
+  color: $secondary;
+}
+
+// A mark or a logo that says what it is in a tip bubble on hover, the form
+// tips' look, centred above it. The bubble takes no pointer, so it never
+// blocks the row it overlaps.
+.user-list__hint {
+  position: relative;
+}
+
+.user-list__tip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  z-index: 1;
+  width: max-content;
+  margin-bottom: space(1);
+  translate: -50% 0;
+  pointer-events: none;
+
+  @include tip-bubble;
+}
+
+.user-list__hint:hover .user-list__tip {
+  @include tip-bubble-open;
+}
+
+// The linked providers' logos in a wrapping row.
+.user-list__providers {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  vertical-align: middle;
+}
+
+// Each logo on a small circle of its brand's own ground, as the sign-in
+// buttons give it one: the marks are drawn for those grounds, Discord's white
+// for its blurple. The colours are the brand's, as hex literals
+// (SignInPanel/icons.tsx). Facebook's mark brings its own blue circle.
+.user-list__provider {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+
+  > svg {
+    width: 0.875rem;
+    height: auto;
+  }
+}
+
+.user-list__provider--google,
+.user-list__provider--microsoft {
+  border: 1px solid #dadce0;
+  background-color: #ffffff;
+}
+
+.user-list__provider--discord {
+  background-color: #5865f2;
+}
+
+// Email and its verified mark, side by side.
+.user-list__email {
+  display: inline-flex;
+  align-items: center;
   gap: space(2);
 }
 
-.user-list__actions {
+// The Impersonate column, heading and cells: a red rule down its left, a
+// faded red tint and red text,
+// since it is the one control in the table that acts as someone else.
+.user-list__impersonate {
+  border-left: 1px solid $secondary;
+  background-color: color-mix(in srgb, $secondary 6%, transparent);
+  color: $secondary;
+}
+
+// Its heading's hairline red too, where every other column's is the muted
+// ink; scoped past the primitive's own `thead th` rule.
+.user-list .data-table thead th.user-list__impersonate {
+  border-bottom-color: $secondary;
+}
+
+// The creation cell: the Yes or No, then the control that changes it, which
+// wraps below on a narrow column.
+.user-list__creation {
   display: flex;
   flex-wrap: wrap;
-  gap: space(2);
+  align-items: center;
+  gap: space(2) space(3);
 }

@@ -31,7 +31,7 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
       {/* The visible label opens the accessible name, so a voice command
           saying what it sees still reaches it. */}
       <button
-        className="btn"
+        className="btn btn--small btn--destructive"
         type="button"
         aria-label={`Impersonate ${name}`}
         disabled={pending}

@@ -8,6 +8,7 @@ export interface AdminUsersPageProps {
 export interface UsersSearchParams {
   query?: string | string[];
   awaiting?: string | string[];
+  role?: string | string[];
   after?: string | string[];
   before?: string | string[];
 }

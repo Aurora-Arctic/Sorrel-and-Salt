@@ -111,32 +111,47 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(
     page.getByRole('navigation', { name: 'Admin' }).getByRole('link', { name: 'Users' }),
   ).toHaveAttribute('href', '/admin/users');
-  await expect(page.getByRole('search').getByLabel('Name or email')).toHaveValue(
+  await expect(page.getByRole('search').getByLabel('Name or Email')).toHaveValue(
     'admin-users.test',
   );
 
   // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await expect(rows).toHaveCount(2);
-  // Anchored on the name before it: not-an-admin's address ends the same way.
-  const admin = page.getByRole('row', { name: /Fixture Person an-admin@admin-users\.test/ });
+  // Anchored on the name and the verified mark's word before it:
+  // not-an-admin's address ends the same way.
+  const admin = page.getByRole('row', {
+    name: /Fixture Person Verified an-admin@admin-users\.test/,
+  });
   await expect(admin.getByRole('cell')).toHaveText([
     'Fixture Person',
-    'an-admin@admin-users.test',
+    // The verified mark's word, for the reader and in its tip, before the address.
+    /an-admin@admin-users\.test$/,
     'Admin',
-    // Every admin may create a workspace, and the users CHECK says so (MB.177).
-    'Yes',
+    // Each logo's name, for the reader and in its tip.
+    'DiscordDiscordGoogleGoogle',
     /^\d{4}-\d{2}-\d{2}$/,
-    'Discord, Google',
+    // A mark alone: every admin may create a workspace, and the users CHECK
+    // says so (MB.177), so the cell offers no control.
     'Yes',
-    // Nothing to approve: an admin may already create one.
-    '',
   ]);
+  // The mark says what it marks on hover, in a tip bubble (the owner's review).
+  const email = admin.getByRole('cell').nth(1);
+  const tip = email.locator('.user-list__tip');
+  await expect(tip).toBeHidden();
+  await email.locator('.user-list__mark').hover();
+  await expect(tip).toBeVisible();
+  await expect(tip).toHaveText('Verified');
+  // So does each sign-in logo, its provider's name.
+  const discord = admin.getByRole('cell').nth(3).locator('.user-list__provider--discord');
+  await discord.hover();
+  await expect(discord.locator('.user-list__tip')).toBeVisible();
+  await expect(discord.locator('.user-list__tip')).toHaveText('Discord');
   await assertNoAccessibilityViolations(page);
 });
 
 // M5.8: an admin approves a user with no invitation from their row, behind a
-// confirmation naming them, and then revokes it, the row saying so each time.
+// modal naming them, and then revokes it, the row saying so each time.
 test('an admin approves a user awaiting approval at /admin/users, then revokes it', async ({
   page,
 }) => {
@@ -147,25 +162,29 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
-  await expect(row.getByRole('cell').nth(3)).toHaveText('No');
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
-  await expect(row.getByText('Let Fixture Person create covens?')).toBeVisible();
-  await expect(row.getByRole('button', { name: 'Confirm' })).toBeFocused();
+  const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+  await expect(approving).toContainText('Let Fixture Person create covens?');
+  await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
   await assertNoAccessibilityViolations(page);
 
-  await row.getByRole('button', { name: 'Confirm' }).click();
+  await approving.getByRole('button', { name: 'Approve' }).click();
+  await expect(approving).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
 
-  // And revoked again, behind its own confirmation.
+  // And revoked again, behind its own modal.
   await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();
-  await expect(
-    row.getByText('Stop Fixture Person creating covens? Covens they own stay theirs.'),
-  ).toBeVisible();
-  await row.getByRole('button', { name: 'Confirm' }).click();
+  const revoking = page.getByRole('dialog', { name: 'Revoke Coven Creation' });
+  await expect(revoking).toContainText(
+    'Stop Fixture Person from creating covens? Covens they own stay theirs.',
+  );
+  await revoking.getByRole('button', { name: 'Revoke' }).click();
+  await expect(revoking).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(3)).toHaveText('No');
+  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
   await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
 });
 
