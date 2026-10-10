@@ -1295,7 +1295,7 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 58. Prove I own my email address, whichever provider I signed in with, so the site can trust it.
 59. Set or change the email the site knows me by, prefilled from my provider, and have it take effect only once I have proved it is mine.
 60. As an admin, make an existing user an admin and revoke it again, and be refused when the target is the primary admin or the last admin; as the primary admin, pause both for every other admin while I deal with one that has gone rogue.
-61. As an admin, see who made each admin, who removed one, and when.
+61. As an admin, see every change to who is an admin and who may create a coven, with who made it, how, when and why, so that misuse comes to light.
 62. As an admin, invite someone by email to become an admin, accepted only by an account that has proved it owns that address.
 
 ### Public compendium (MB.80)
