@@ -70,6 +70,22 @@ export function FacebookIcon(): ReactElement {
   );
 }
 
+// The same Meta asset filled Facebook's own blue, with no chip, for a list
+// rather than a button (/admin/users' Sign-In Methods, MB.63): the path's
+// "f" is a hole, so it shows whatever ground the row has, in either theme,
+// where FacebookIcon's white fill needs the blue chip behind it.
+export function FacebookMark(): ReactElement {
+  return (
+    <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
+      <path
+        fill="#0866ff"
+        fillRule="nonzero"
+        d="M500,250c0,-138.071 -111.929,-250 -250,-250c-138.071,0 -250,111.929 -250,250c0,117.245 80.715,215.622 189.606,242.638l0,-166.242l-51.552,0l0,-76.396l51.552,0l0,-32.919c0,-85.092 38.508,-124.532 122.048,-124.532c15.838,0 43.167,3.105 54.347,6.211l0,69.254c-5.901,-0.621 -16.149,-0.932 -28.882,-0.932c-40.993,0 -56.832,15.528 -56.832,55.9l0,27.018l81.659,0l-14.028,76.396l-67.631,0l0,171.773c123.786,-14.951 219.713,-120.351 219.713,-248.169"
+      />
+    </svg>
+  );
+}
+
 // Microsoft's four-colour square mark, as published for "Sign in with
 // Microsoft" buttons (Microsoft identity platform branding guidelines). No
 // chip: it sits directly on the button's own white ground.

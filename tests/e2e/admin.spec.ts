@@ -394,19 +394,22 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
   await assertNoAccessibilityViolations(page);
 
-  // The other admin's grant is refused, in words that name nobody.
+  // The other admin's Grant is locked, in words that name nobody; tried from
+  // the keyboard, it says why and opens nothing. The service refuses the same.
+  const PAUSED_REASON =
+    'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
   await signInAgainAs(page, other);
   await page.goto(list);
   await expect(status).toBeVisible();
   const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
-  await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
-  await page
-    .getByRole('dialog', { name: 'Grant Admin' })
-    .getByRole('button', { name: 'Grant' })
-    .click();
-  await expect(row.getByRole('alert')).toHaveText(
-    'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.',
-  );
+  const grant = row.getByRole('button', { name: 'Grant admin to Fixture Person' });
+  await expect(grant).toHaveAttribute('aria-disabled', 'true');
+  await expect(grant).toHaveAccessibleDescription(PAUSED_REASON);
+  await grant.focus();
+  await page.keyboard.press('Enter');
+  await expect(row.getByRole('alert')).toHaveText(PAUSED_REASON);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
 
   // And the primary admin resumes.

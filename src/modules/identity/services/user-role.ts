@@ -2,7 +2,12 @@ import 'server-only';
 import { findOneById, findOpenAdminRoleChangePause, withAudit } from '../../../db/repository';
 import type { AuditWriter, PrivilegeDeclaration } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import { PRIMARY_ADMIN_REFUSAL, primaryAdminEmail, sameAddress } from '../../../lib/primary-admin';
+import {
+  ADMIN_CHANGES_PAUSED_REFUSAL,
+  PRIMARY_ADMIN_REFUSAL,
+  primaryAdminEmail,
+  sameAddress,
+} from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
 import { assertSiteAdmin, type SiteAdmin } from './site-admin';
@@ -32,13 +37,6 @@ export function isPrimaryAdmin(user: Pick<UserRow, 'email' | 'role' | 'deletedAt
   );
 }
 
-/**
- * What a grant or revoke refused by MB.63's pause says: that changes are
- * paused, and naming nobody, neither who paused them nor why.
- */
-const PAUSED_REFUSAL =
-  'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
-
 /** Whether the session's user is the primary admin, read off their own live row. */
 export async function actsAsPrimaryAdmin(session: Session): Promise<boolean> {
   const self = await findOneById(users, session.userId);
@@ -53,7 +51,7 @@ export async function actsAsPrimaryAdmin(session: Session): Promise<boolean> {
 async function assertChangesOpen(session: Session, admin: SiteAdmin): Promise<void> {
   if (!(await findOpenAdminRoleChangePause(admin))) return;
   if (await actsAsPrimaryAdmin(session)) return;
-  throw new Forbidden(PAUSED_REFUSAL);
+  throw new Forbidden(ADMIN_CHANGES_PAUSED_REFUSAL);
 }
 
 /** The live user, or `NotFound`: a soft-deleted one reads as no one. */

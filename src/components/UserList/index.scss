@@ -100,7 +100,8 @@
 // Each logo on a small circle of its brand's own ground, as the sign-in
 // buttons give it one: the marks are drawn for those grounds, Discord's white
 // for its blurple. The colours are the brand's, as hex literals
-// (SignInPanel/icons.tsx). Facebook's mark brings its own blue circle.
+// (SignInPanel/icons.tsx). Facebook's mark is its own blue circle, the "f"
+// a hole the row's band shows through, so it fills the circle's whole box.
 .user-list__provider {
   display: inline-flex;
   align-items: center;
@@ -123,6 +124,11 @@
 
 .user-list__provider--discord {
   background-color: #5865f2;
+}
+
+.user-list__provider--facebook > svg {
+  width: 100%;
+  height: 100%;
 }
 
 // The history link, then the name, side by side.
@@ -342,25 +348,16 @@
   margin-inline: space(4);
 }
 
-// The pause on admin changes, above the filter: the warning while paused on
-// its own line, then the control (MB.63).
+// The pause on admin changes, beside the page's heading as its `.page-header`
+// child: the warning while paused and the button on one line (MB.63).
 .user-list__pause {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: space(2) space(3);
+  gap: space(3);
 
   // Compounded with `.notice`, whose primitive is `body .notice` in the app,
   // as `.notice.user-list__warning` is: a lone class loses to it there.
   .notice.user-list__pause-state {
-    flex-basis: 100%;
     margin: 0;
-  }
-
-  // Why another admin cannot use the switch, beside it in the muted ink.
-  .user-list__pause-reason {
-    margin: 0;
-    color: $text-muted;
-    font-size: 0.875em;
   }
 }

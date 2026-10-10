@@ -67,8 +67,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the sign-in page's own mark (`SignInPanel/icons.tsx`)
   on a small circle of its brand's ground, white for Google and Microsoft,
-  blurple for Discord, Facebook's its own blue, the colours hex literals as the
-  panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
+  blurple for Discord. Facebook's is `FacebookMark`, Meta's circle filled its
+  own blue with no chip, the "f" a hole the row's band shows through in
+  either theme, on the owner's call (MB.63); the panel's `FacebookIcon`, white
+  over a blue chip, suits its blue button instead. The colours are hex literals
+  as the panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
   in the same tip bubble on hover as the email's mark (`.user-list__hint`). A
   provider the roster no longer has keeps its id as text, so an account linked
   by one since removed still says so; an account with none has an empty cell.
@@ -168,26 +171,41 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   as the creation control's: both are `confirmed-action.tsx`'s
   `ConfirmedAction`, each control only its words and its write. Grant warns
   on an unverified address as Approve does, in its own verb (below).
-- **The switch on admin changes sits above the filter** (MB.63,
+- **The switch on admin changes sits beside the page's heading** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
-  from `pause-control.tsx`, when the page passes `adminChanges`. While
+  from `pause-control.tsx`, exported beside the list as `PauseControl`: the
+  page draws it as the second child of its `.page-header`, as the other admin
+  pages put their primary action beside their heading, and keys it by the
+  state so the refresh after a flip mounts a fresh one (all on the owner's
+  call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
+  which the primitive wraps beneath the heading on a narrow screen. While
   changes are on it shows the button alone; while paused it first says so in
-  a `.notice--warn`, on its own line: "Admin changes are paused: only the
-  primary admin can make someone an admin or stop them being one." (both on
-  the owner's call). The notice is a plain paragraph, compounded as
-  `.notice.user-list__pause-state` past the `body .notice` primitive. Then
-  Pause Admin Changes, full size and `.btn--destructive`, big and red on the
-  owner's call since it stops every other admin, or Resume Admin Changes, a
-  plain full-size `.btn`, so the control keeps its size as it flips. For
-  the primary admin (`canToggle`) it sends the mutation at once, with no
-  modal, since pausing takes nothing away and resuming is the way back, and
-  stays busy, spinner and "Pausing" or "Resuming", until `router.refresh()`
-  re-reads the page; a refusal says why beside it. For any other admin it is
-  in view but `aria-disabled`, described by "Only the primary admin can pause
-  or resume admin changes." beside it, which each try mounts afresh as an
-  alert, as the primary admin's Revoke does. The rows' controls stay as they
-  are while paused: the service refuses another admin's grant or revoke, and
-  the row says why.
+  a `.notice--warn`: "Admin changes are paused: only the primary admin can
+  make someone an admin or stop them being one." The notice is a plain
+  paragraph, compounded as `.notice.user-list__pause-state` past the
+  `body .notice` primitive, and is the page's one sentence about the pause.
+  Then Pause Admin Changes or Resume Admin Changes, both full size and
+  `.btn--destructive`, big and red on the owner's call, so the control keeps
+  its look as it flips. For the primary admin (`canToggle`) it sends the
+  mutation at once, with no modal, since pausing takes nothing away and
+  resuming is the way back, and stays busy, spinner and "Pausing" or
+  "Resuming", until `router.refresh()` re-reads the page; a refusal says why
+  beside it. For any other admin it is `locked-control.tsx`'s
+  `LockedControl`, as the primary admin's Revoke is: in view,
+  `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
+  resume admin changes.", that describes it and that each try mounts afresh as
+  an alert.
+- **While paused, an admin the pause binds cannot use Grant or Revoke**
+  (MB.63, on the owner's call). The page passes the pause it already read,
+  and every row's control, for a viewer who is not the primary admin
+  (`canToggle`), is locked as the primary admin's Revoke is: in view,
+  `aria-disabled`, described by the service's own refusal in a tip,
+  `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
+  both): "Admin changes are paused, so no one can be made an admin or stop
+  being one until they are resumed." Activating it opens nothing, sends
+  nothing and mounts the reason afresh as an alert. The primary admin's
+  controls stay usable, since the pause exempts it, and its own Revoke keeps
+  its own reason. The service still refuses: the lock only reflects it.
 - **The primary admin's row is marked by a crown** beside the role
   (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
   saying so, as InfoTip's ⓘ is a button with its tip, and through the same
@@ -261,11 +279,14 @@ trimmed or not at all, Cancel sending nothing, Grant's warning for an
 unverified user, the refusal in the row, the fresh control after the
 refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
 by the reason and stating it as an alert each time it is tried, sending
-nothing; and the switch on admin changes (MB.63): absent without a state,
-no sentence while on and the warning while paused, Pause big and red
-and Resume plain, both busy until the refresh, the fresh
-switch after it, a refusal
-beside it, and another admin's unusable switch stating why. `tests/e2e/admin.spec.ts` approves
+nothing; and the switch on admin changes (MB.63): none inside the list, no sentence
+while on and the warning while paused, Pause and Resume big and red, busy
+until the refresh, a refusal beside it, and another admin's locked switch,
+its reason a tip and an alert when tried; and while paused, every Grant and
+Revoke locked for another admin with the pause's reason, none for the
+primary admin or while changes are on, and the primary admin's Revoke kept on
+its own reason. `tests/app/admin/users/page.test.tsx` finds the switch in
+the heading's `.page-header`. `tests/e2e/admin.spec.ts` approves
 and revokes a user against the built server, approves an unverified one
 through the warning, grants admin with a reason and revokes it, and tries
 the primary admin's Revoke, with axe over each open modal.
