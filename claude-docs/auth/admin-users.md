@@ -367,9 +367,10 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/admin/users`** every admin sees Invite Admin above the list, and the
-  pending invitations beneath it, each with its address, its reason, when it
-  expires and Revoke ([`components/admin-invitations.md`](../components/admin-invitations.md)).
+- **On `/admin/users`** every admin sees, beneath the list, an Admin
+  Invitations section: Invite Admin, and the pending invitations, each with
+  its address, its reason, when it expires and Revoke
+  ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
   but the primary one, with the pause as the reason.
 
