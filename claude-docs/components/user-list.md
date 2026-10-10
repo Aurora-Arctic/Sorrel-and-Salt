@@ -170,10 +170,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   on an unverified address as Approve does, in its own verb (below).
 - **The switch on admin changes sits above the filter** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
-  from `pause-control.tsx`, when the page passes `adminChanges`. It states
-  the state in words: "Admin changes are on: any admin can make someone an
-  admin or stop them being one." or "Admin changes are paused: only the
-  primary admin can make someone an admin or stop them being one.", then
+  from `pause-control.tsx`, when the page passes `adminChanges`. While
+  changes are on it shows the button alone; while paused it first says so in
+  a `.notice--warn`, on its own line: "Admin changes are paused: only the
+  primary admin can make someone an admin or stop them being one." (both on
+  the owner's call). The notice is a plain paragraph, compounded as
+  `.notice.user-list__pause-state` past the `body .notice` primitive. Then
   Pause Admin Changes, full size and `.btn--destructive`, big and red on the
   owner's call since it stops every other admin, or Resume Admin Changes, a
   plain full-size `.btn`, so the control keeps its size as it flips. For
@@ -260,7 +262,8 @@ unverified user, the refusal in the row, the fresh control after the
 refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
 by the reason and stating it as an alert each time it is tried, sending
 nothing; and the switch on admin changes (MB.63): absent without a state,
-each state in words, Pause and Resume busy until the refresh, the fresh
+no sentence while on and the warning while paused, Pause big and red
+and Resume plain, both busy until the refresh, the fresh
 switch after it, a refusal
 beside it, and another admin's unusable switch stating why. `tests/e2e/admin.spec.ts` approves
 and revokes a user against the built server, approves an unverified one

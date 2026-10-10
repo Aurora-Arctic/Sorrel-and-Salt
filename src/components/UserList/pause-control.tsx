@@ -8,7 +8,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import type { PauseControlProps } from './types';
 
 // The primary admin's switch on admin grants and revokes (MB.63), above the
-// list: the state in words, and the control that flips it. Every admin sees
+// list: a warning while changes are paused, and the control that flips it. Every admin sees
 // both; only the primary admin can use the control, whose reason the others
 // are told beside it, and again when they try. The service is the guard
 // (claude-docs/components/user-list.md).
@@ -37,7 +37,8 @@ const STATES = {
     send: () => graphqlRequest(ResumeAdminRoleChangesDocument),
   },
   open: {
-    state: 'Admin changes are on: any admin can make someone an admin or stop them being one.',
+    // No sentence while changes are on, on the owner's call: only the button.
+    state: undefined,
     label: 'Pause Admin Changes',
     busy: 'Pausing',
     // Big and red, on the owner's call: it stops every other admin.
@@ -77,7 +78,11 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
 
   return (
     <div className="user-list__pause">
-      <p className="user-list__pause-state">{copy.state}</p>
+      {/* The page's statement that changes are paused, as a warning, on the
+          owner's call. A plain paragraph, read in the page's order: the switch
+          is remounted by the refresh after a flip, which a live region would
+          not announce either. */}
+      {copy.state && <p className="notice notice--warn user-list__pause-state">{copy.state}</p>}
       {canToggle ? (
         <button
           className={copy.buttonClass}

@@ -373,12 +373,12 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
     'admin',
   );
   const list = '/admin/users?query=paused-grantee%40admin-role.test';
-  const status = page.getByRole('main').getByText(/^Admin changes are (on|paused):/);
-  const PAUSED = /^Admin changes are paused:/;
+  // A warning while paused, and no sentence while on (the owner's call).
+  const status = page.getByRole('main').getByText(/^Admin changes are paused:/);
 
   // Another admin sees the switch, unusable, and why.
   await page.goto(list);
-  await expect(status).toHaveText(/^Admin changes are on/);
+  await expect(status).toHaveCount(0);
   const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
   await expect(unusable).toHaveAttribute('aria-disabled', 'true');
   await expect(unusable).toHaveAccessibleDescription(
@@ -389,14 +389,15 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await signInAgainAs(page, primary);
   await page.goto(list);
   await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
-  await expect(status).toHaveText(PAUSED);
+  await expect(status).toBeVisible();
+  await expect(status).toHaveClass(/notice--warn/);
   await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
   await assertNoAccessibilityViolations(page);
 
   // The other admin's grant is refused, in words that name nobody.
   await signInAgainAs(page, other);
   await page.goto(list);
-  await expect(status).toHaveText(PAUSED);
+  await expect(status).toBeVisible();
   const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
   await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
   await page
@@ -412,7 +413,8 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await signInAgainAs(page, primary);
   await page.goto(list);
   await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
-  await expect(status).toHaveText(/^Admin changes are on/);
+  await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+  await expect(status).toHaveCount(0);
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({

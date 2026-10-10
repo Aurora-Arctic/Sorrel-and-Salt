@@ -982,11 +982,8 @@ describe('UserList admin changes switch', () => {
     });
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: true } })} />);
 
-    expect(
-      screen.getByText(
-        'Admin changes are on: any admin can make someone an admin or stop them being one.',
-      ),
-    ).toBeInTheDocument();
+    // No sentence while changes are on, on the owner's call: only the button.
+    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause).not.toHaveAttribute('aria-disabled');
     // Big and red, on the owner's call.
@@ -1023,11 +1020,12 @@ describe('UserList admin changes switch', () => {
     });
     render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
 
+    // A warning notice, on the owner's call.
     expect(
       screen.getByText(
         'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
       ),
-    ).toBeInTheDocument();
+    ).toHaveClass('notice', 'notice--warn', 'user-list__pause-state');
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
     // Full size, so the control keeps its size as it flips, and not red.
     expect(resume).toHaveClass('btn');
@@ -1062,7 +1060,7 @@ describe('UserList admin changes switch', () => {
     });
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
 
-    expect(screen.getByText(/^Admin changes are on/)).toBeInTheDocument();
+    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause).toBeEnabled();
     expect(pause).toHaveAttribute('aria-disabled', 'true');

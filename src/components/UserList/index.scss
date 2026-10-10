@@ -342,15 +342,18 @@
   margin-inline: space(4);
 }
 
-// The pause on admin changes, above the filter: the state in words, then the
-// control, wrapping below on a narrow page (MB.63).
+// The pause on admin changes, above the filter: the warning while paused on
+// its own line, then the control (MB.63).
 .user-list__pause {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: space(2) space(3);
 
-  .user-list__pause-state {
+  // Compounded with `.notice`, whose primitive is `body .notice` in the app,
+  // as `.notice.user-list__warning` is: a lone class loses to it there.
+  .notice.user-list__pause-state {
+    flex-basis: 100%;
     margin: 0;
   }
 

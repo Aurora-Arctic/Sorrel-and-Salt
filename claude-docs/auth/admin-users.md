@@ -261,9 +261,10 @@ the good ones while it is dealt with, and back on. The argument is
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`** every admin sees the state in words above the list,
-  and the control beside it: usable by the primary admin alone, in view but
-  `aria-disabled` for any other, with the reason beside it
+- **On `/admin/users`** every admin sees the control above the list, and a
+  warning saying changes are paused while they are. The control is usable by
+  the primary admin alone, in view but `aria-disabled` for any other, with the
+  reason beside it
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
 
