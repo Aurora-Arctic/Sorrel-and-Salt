@@ -4,8 +4,10 @@ import UserListFilter from './filter';
 import CreationControl from './creation-control';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
+import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PauseControl from './pause-control';
+import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
@@ -94,7 +96,14 @@ const UserRow = ({
   canImpersonate: boolean;
 }): ReactElement => (
   <tr>
-    <td>{user.name}</td>
+    {/* The way into their privilege history (MB.200), then the name, on
+        every row: an admin's changes are the ones most worth reading. */}
+    <td>
+      <span className="user-list__name">
+        <HistoryLink email={user.email} name={user.name} />
+        {user.name}
+      </span>
+    </td>
     {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
     <td>
       <span className="user-list__email">
@@ -106,18 +115,21 @@ const UserRow = ({
         {user.email}
       </span>
     </td>
-    {/* An admin's role in bold, on the owner's call: the rows to notice. Beside
-        it the control that changes it (MB.59), as Coven Creation holds its own:
-        one column rather than a second saying the same thing. The primary
-        admin is labelled, and its Revoke says why it cannot be used. */}
+    {/* An admin's role in bold, on the owner's call: the rows to notice. On
+        the right, the control that changes it (MB.59), as Coven Creation holds
+        its own: one column rather than a second saying the same thing. The
+        primary admin is marked by a crown with a tip, and its Revoke's tip
+        says why it cannot be used. */}
     <td>
       <div className="user-list__role">
-        {user.role === 'admin' ? (
-          <strong>{ROLE_LABELS.admin}</strong>
-        ) : (
-          <span>{ROLE_LABELS[user.role]}</span>
-        )}
-        {user.primaryAdmin && <span className="user-list__badge">Primary Admin</span>}
+        <span className="user-list__role-name">
+          {user.role === 'admin' ? (
+            <strong>{ROLE_LABELS.admin}</strong>
+          ) : (
+            <span>{ROLE_LABELS[user.role]}</span>
+          )}
+          {user.primaryAdmin && <PrimaryAdminMark />}
+        </span>
         {/* Keyed by the action, so the refresh after a change mounts a fresh
             control for the other one rather than keeping this one's busy state. */}
         <RoleControl
@@ -129,19 +141,6 @@ const UserRow = ({
           action={user.role === 'admin' ? 'revoke' : 'grant'}
         />
       </div>
-    </td>
-    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
-    <td>
-      <span className="user-list__providers">
-        {user.providers.map((id) => (
-          <ProviderLogo key={id} id={id} />
-        ))}
-      </span>
-    </td>
-    <td>
-      <time dateTime={user.createdAt.toISOString()}>
-        {user.createdAt.toISOString().slice(0, 10)}
-      </time>
     </td>
     {/* Whether they may, and beside it the control that changes it (M5.8);
         none on an admin's row, whom the users CHECK holds to the flag (MB.177). */}
@@ -160,6 +159,19 @@ const UserRow = ({
           />
         )}
       </div>
+    </td>
+    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
+    <td>
+      <span className="user-list__providers">
+        {user.providers.map((id) => (
+          <ProviderLogo key={id} id={id} />
+        ))}
+      </span>
+    </td>
+    <td>
+      <time dateTime={user.createdAt.toISOString()}>
+        {user.createdAt.toISOString().slice(0, 10)}
+      </time>
     </td>
     {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
         as acting as someone else is the table's one dangerous control. */}
@@ -195,9 +207,9 @@ const UserList = ({
               <th scope="col">Name</th>
               <th scope="col">Email</th>
               <th scope="col">Role</th>
+              <th scope="col">Coven Creation</th>
               <th scope="col">Sign-In Methods</th>
               <th scope="col">Signed Up</th>
-              <th scope="col">Coven Creation</th>
               {canImpersonate && (
                 <th scope="col" className="user-list__impersonate">
                   Impersonate

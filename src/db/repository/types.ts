@@ -646,6 +646,12 @@ export interface PrivilegeChangeFilter {
   userId?: string;
   /** Only the changes to this privilege. */
   privilege?: (typeof userPrivilegeChanges.$inferSelect)['privilege'];
+  /**
+   * Only the changes to a live user whose name or email holds this,
+   * case-insensitively, its `%` and `_` read literally, as the user list's
+   * `query` matches.
+   */
+  query?: string;
 }
 
 /** What the admin category list is narrowed by (MB.178). Each part is optional, and absent means no filter. */

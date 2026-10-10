@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import UserList from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -74,9 +74,9 @@ describe('UserList', () => {
       'Name',
       'Email',
       'Role',
+      'Coven Creation',
       'Sign-In Methods',
       'Signed Up',
-      'Coven Creation',
     ]);
   });
 
@@ -84,26 +84,27 @@ describe('UserList', () => {
     render(<UserList {...props()} />);
 
     expect(cellsOf('Ada Fixturewort')).toEqual([
-      'Ada Fixturewort',
+      // The history link's tip, then the name.
+      'Permissions HistoryAda Fixturewort',
       // The verified mark's word, for the reader and in its tip, then the address.
       'VerifiedVerifiedada@users.test',
       // The role, then the control that changes it, in one cell (MB.59).
       'AdminRevoke',
+      // The mark alone, no control: an admin holds the flag.
+      'Yes',
       // Each logo's name, for the reader and in its tip.
       'DiscordDiscordGoogleGoogle',
       '2026-03-04',
-      // The mark alone, no control: an admin holds the flag.
-      'Yes',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
-      'Bo Fixturewort',
+      'Permissions HistoryBo Fixturewort',
       'UnverifiedUnverifiedbo@users.test',
       'UserGrant',
+      // The mark, then the control that changes it, in one cell.
+      'NoApprove',
       // No sign-in method is an empty cell.
       '',
       '2026-05-06',
-      // The mark, then the control that changes it, in one cell.
-      'NoApprove',
     ]);
     // An admin's role in bold, a user's not.
     expect(
@@ -112,6 +113,74 @@ describe('UserList', () => {
     expect(
       within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('User').tagName,
     ).toBe('SPAN');
+  });
+
+  // MB.200: each row opens the privilege ledger narrowed to its user, an
+  // admin's included, from an icon before the name.
+  describe('the history link', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('leads every name, to the ledger searched for that user’s address', () => {
+      render(<UserList {...props()} />);
+
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', {
+          name: `Permissions history for ${user.name}`,
+        });
+        expect(link).toHaveAttribute(
+          'href',
+          `/admin/privilege-changes?query=${encodeURIComponent(user.email)}`,
+        );
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
+
+    // Every address is held lower-cased; the link does not rely on that.
+    it('searches for the address lower-cased', () => {
+      render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
+
+      expect(
+        screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' }),
+      ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+    });
+
+    it('says Permissions History in a tip on hover, kept while the pointer is on it', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.mouseEnter(link);
+      const tip = screen.getByRole('tooltip');
+      expect(tip).toHaveTextContent('Permissions History');
+      fireEvent.mouseLeave(link);
+      fireEvent.mouseEnter(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      fireEvent.mouseLeave(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('says it on focus too, until blur or Escape', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Bo Fixturewort' });
+
+      fireEvent.focus(link);
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Permissions History');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.focus(link);
+      fireEvent.blur(link);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 
   // The owner's call: a green check or a red cross, the word kept for a
@@ -136,11 +205,11 @@ describe('UserList', () => {
         .parentElement,
     ).toHaveClass('user-list__mark--yes');
     // The creation flag's, whose heading already asks the question: no tooltip.
-    const no = within(bo[5] as HTMLElement).getByText('No');
+    const no = within(bo[3] as HTMLElement).getByText('No');
     expect(no).toHaveClass('visually-hidden');
     expect(no.parentElement).toHaveClass('user-list__mark--no');
     expect(no.parentElement?.querySelector('.user-list__tip')).toBeNull();
-    expect(within(ada[5] as HTMLElement).getByText('Yes').parentElement).toHaveClass(
+    expect(within(ada[3] as HTMLElement).getByText('Yes').parentElement).toHaveClass(
       'user-list__mark--yes',
     );
   });
@@ -159,7 +228,7 @@ describe('UserList', () => {
 
     const methods = within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getAllByRole(
       'cell',
-    )[3] as HTMLElement;
+    )[4] as HTMLElement;
     const logos = [...methods.querySelectorAll('.user-list__provider')];
     expect(logos.map((logo) => logo.className)).toEqual([
       'user-list__hint user-list__provider user-list__provider--discord',
@@ -180,7 +249,7 @@ describe('UserList', () => {
   it('names a provider outside the roster by its id rather than dropping it', () => {
     render(<UserList {...props({ users: [{ ...BO, providers: ['github'] }] })} />);
 
-    expect(cellsOf('Bo Fixturewort')[3]).toBe('github');
+    expect(cellsOf('Bo Fixturewort')[4]).toBe('github');
   });
 
   it('says so when no user matches', () => {
@@ -401,7 +470,7 @@ describe('UserList approval', () => {
       'btn--quiet',
     );
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
-    expect(within(ada).getAllByRole('cell')[5]).toHaveTextContent(/^Yes$/);
+    expect(within(ada).getAllByRole('cell')[3]).toHaveTextContent(/^Yes$/);
     expect(
       within(ada).queryByRole('button', { name: /Approve|Revoke approval/ }),
     ).not.toBeInTheDocument();
@@ -526,7 +595,9 @@ describe('UserList approval', () => {
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
     const approving = dialog('Approve Coven Creation');
     const reason = within(approving).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(/^Optional\./);
+    expect(reason).toHaveAccessibleDescription(
+      'Kept with the change in the record of who changed what.',
+    );
     // Below the warning, which keeps its own spacing class.
     const warning = within(approving).getByText(UNVERIFIED_WARNING);
     expect(warning).toHaveClass('notice', 'user-list__warning');
@@ -691,7 +762,9 @@ describe('UserList admin role', () => {
     expect(confirm).toHaveClass('btn--solid');
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(/^Optional\./);
+    expect(reason).toHaveAccessibleDescription(
+      'Kept with the change in the record of who changed what.',
+    );
     fireEvent.change(reason, { target: { value: '  Curates the planets  ' } });
     fireEvent.click(confirm);
 
@@ -795,7 +868,7 @@ describe('UserList admin role', () => {
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('labels the primary admin, whose Revoke is in view but aria-disabled, the reason beside it', () => {
+  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, the reason in a tip', () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('SetUserRole', (variables) => {
       calls.push(variables);
@@ -804,19 +877,36 @@ describe('UserList admin role', () => {
     render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }, BO] })} />);
     const primary = row('Ada Fixturewort');
 
-    expect(within(primary).getByText('Primary Admin')).toBeInTheDocument();
+    // The crown is named, and its tip opens on focus and closes on Escape.
+    const crown = within(primary).getByRole('button', { name: 'Primary Admin' });
+    const crownTip = within(primary).getByText('Primary Admin');
+    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.focus(crown);
+    expect(crownTip).toHaveAttribute('aria-hidden', 'false');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
+
     const revoke = within(primary).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
     });
-    // In view and reachable, not `disabled`, and described by the reason.
+    // In view and reachable, not `disabled`, and described by the reason,
+    // which is in a tip, closed until the button is hovered or focused.
     expect(revoke).toBeVisible();
     expect(revoke).toBeEnabled();
     expect(revoke).toHaveAttribute('aria-disabled', 'true');
     expect(revoke).toHaveAccessibleDescription(PRIMARY_REASON);
-    expect(within(primary).getByText(PRIMARY_REASON)).toBeInTheDocument();
+    const reason = within(primary).getByText(PRIMARY_REASON);
+    expect(reason).toHaveAttribute('role', 'tooltip');
+    expect(reason).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.focus(revoke);
+    expect(reason).toHaveAttribute('aria-hidden', 'false');
+    fireEvent.blur(revoke);
+    expect(reason).toHaveAttribute('aria-hidden', 'true');
     expect(within(primary).queryByRole('alert')).not.toBeInTheDocument();
-    // Only the primary admin's row says it.
-    expect(within(row('Bo Fixturewort')).queryByText('Primary Admin')).not.toBeInTheDocument();
+    // Only the primary admin's row is marked.
+    expect(
+      within(row('Bo Fixturewort')).queryByRole('button', { name: 'Primary Admin' }),
+    ).not.toBeInTheDocument();
   });
 
   it('states the reason when the primary admin’s Revoke is tried, opening nothing and sending nothing', () => {
@@ -833,7 +923,9 @@ describe('UserList admin role', () => {
 
     fireEvent.click(revoke);
 
+    // The tip opens, as an alert.
     expect(within(primary).getByRole('alert')).toHaveTextContent(PRIMARY_REASON);
+    expect(within(primary).getByRole('alert')).toHaveAttribute('aria-hidden', 'false');
     expect(within(primary).getAllByText(PRIMARY_REASON)).toHaveLength(1);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     // A second try says it again, as a fresh alert.

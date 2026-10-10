@@ -36,6 +36,12 @@ It follows WCAG 1.4.13, content on hover or focus:
   on the document, since a tip opened by hover has no focus to listen from,
   and it closes the tip without moving the focus.
 
+**`useTip`** (`use-tip.ts`) holds that behaviour, the open state, the
+handlers and the Escape listener, so another tip beside a control behaves the
+same without being an ⓘ: `UserList`'s history link, the primary admin's
+crown and its locked Revoke use it too ([`user-list.md`](user-list.md),
+MB.200, MB.59).
+
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its
 description, and the button reads it as its own. A screen reader user never

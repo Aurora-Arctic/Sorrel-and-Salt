@@ -47,8 +47,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Six columns, in the owner's order**: Name, Email, Role, Sign-In Methods,
-  Signed Up and Coven Creation, each heading in title case (DESIGN.md §9). The Email
+- **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
+  Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
+  The two columns with a control, Role and Coven Creation, sit together, and
+  the two facts read rather than changed follow them (reordered during MB.59,
+  on the owner's call). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin
   granting admin judges a person by (MB.59). A yes-or-no is a mark, on the
@@ -74,6 +77,22 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   Prev and Next, an end with no page disabled, and nothing at all on a list of
   one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
+- **A history icon leads each name** (MB.200, on the owner's call: an
+  icon rather than a column), on every row, an admin's included: a link to
+  `/admin/privilege-changes?query=<email>`, the privilege ledger searched for
+  that user's address, lower-cased as every address is held, built by `PrivilegeLedger`'s `privilegeLedgerHref`
+  ([`privilege-ledger.md`](privilege-ledger.md)). It is `history-link.tsx`,
+  a client file, and `icons.tsx`'s `HistoryIcon`, a clock with a
+  counter-clockwise arrow in `currentColor`, `aria-hidden`. The link is
+  named "Permissions history for <name>", and a tip reading Permissions
+  History shows above it on
+  hover, focus or a tap, stays while the pointer is on it, and closes on
+  Escape, blur or the pointer leaving: InfoTip's behaviour, through the same
+  `useTip` ([`info-tip.md`](info-tip.md)), the tip `role="tooltip"` and
+  `aria-hidden` while closed. The icon is 1.5rem, WCAG 2.2's 24px minimum, in
+  the muted ink, and its hit area reaches `$control-height`, WCAG 2.5.5's
+  44px, through a pseudo-element, so the row is no taller for it; its focus
+  ring is the `focus-ring` mixin's.
 - **Impersonate is a seventh column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
@@ -84,7 +103,14 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   The endpoint is the guard: the button only puts it where an admin looks.
   The column, heading and cells, has a red rule down its left. The column is
   tinted a faded red with red text, and its heading's hairline is red where
-  every other is the muted ink.
+  every other is the muted ink. It is sticky at the table's right edge, so on
+  a narrow screen the other columns scroll beneath it (on the owner's call,
+  during MB.59): its tint is therefore mixed into the ground it sits on, the
+  page or a banded row's card, rather than laid over transparent. The table's
+  borders are separate rather than the primitive's collapsed ones, so each
+  rule belongs to its cell and the headings' hairline scrolls beneath the red
+  one rather than being drawn across it. No cell wraps: the table scrolls
+  instead, and only a tip's text wraps, within its bubble.
   Its
   button is `.btn--destructive`, on the owner's call: it is the one control
   that acts as someone else.
@@ -158,17 +184,21 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   alert, as the primary admin's Revoke does. The rows' controls stay as they
   are while paused: the service refuses another admin's grant or revoke, and
   the row says why.
-- **The primary admin's row is labelled "Primary Admin"**, a small outlined
-  tag beside the role, and its Revoke stays in view but is `aria-disabled`
-  rather than `disabled`, so it keeps its place in the tab order and a click
-  still lands. Beside it, in the muted ink, is the reason, the service's own
-  refusal in the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`,
-  one string for both): "This is the primary admin and can't be removed.
-  Changing who the primary admin is takes a change to the site's
-  configuration." It names no variable; how to change it is the docs'. The
-  button is described by it, and activating it opens nothing and sends
-  nothing but mounts the reason afresh as an alert, so a screen reader hears
-  it each time, rather than doing nothing.
+- **The primary admin's row is marked by a crown** beside the role
+  (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
+  saying so, as InfoTip's ⓘ is a button with its tip, and through the same
+  `useTip`: opened by hover, focus or a tap, kept open while the pointer is on
+  it, closed on Escape (on the owner's call, in place of an outlined tag). Its
+  Revoke stays in view but is `aria-disabled` rather than `disabled`, so it
+  keeps its place in the tab order and a click still lands. The reason is in a
+  tip on the button, opening as the crown's does: the service's own refusal in
+  the same words (`PRIMARY_ADMIN_REFUSAL`, `src/lib/primary-admin.ts`, one
+  string for both), "This is the primary admin and can't be removed. Changing
+  who the primary admin is takes a change to the site's configuration." It
+  names no variable; how to change it is the docs'. The button is described by
+  it, and activating it opens nothing and sends nothing but opens the tip and
+  mounts it afresh as an alert, so a screen reader hears it each time, rather
+  than doing nothing.
 
 ## Styling
 
@@ -178,9 +208,11 @@ buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
 a wrapping row of the mark and the control, and the role cell a wrapping row
-of the role, the primary admin's tag and the control, the tag outlined in
-`$text-muted` and the primary admin's reason taking the cell's full width
-below, in the muted ink at a smaller size (MB.59), and the confirmation is the
+of the role, with the primary admin's crown in `$text-muted` beside it, on the
+left and the control on the right, centred on one line (MB.59, on the owner's
+call). Both of the role cell's tips, the crown's and the locked Revoke's, are
+the `tip-bubble` mixin's, above their mark from its left edge, as InfoTip's.
+The confirmation is the
 `Modal`'s own layout, its buttons in `.modal__actions`, all built on the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
 `.data-table` primitive, filling the layout's width and scrolling inside its
@@ -192,7 +224,8 @@ are banded and its header carries a hairline, as every admin list's does, and it
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
 `Default`, `Filtered`, `NoMatch`, `WithImpersonation`, `UnverifiedApproval`,
 `AdminRoles`, `AdminChangesPaused` and `AdminChangesNotPrimary`,
-inside the admin layout's frame; the list holds an admin, a user awaiting
+inside the admin layout's frame, each name led by its permissions history
+icon, whose tip shows on hover or focus; the list holds an admin, a user awaiting
 approval and an approved user, so each control shows. `UnverifiedApproval`
 holds two users awaiting approval, one unverified and one verified, so the
 first's Approve opens the warning (MB.205) and the second's does not.
@@ -211,7 +244,8 @@ disabled and enabled states, the bare `awaiting` it opens, the Role select
 and the `role` it opens, the column headers, each
 row's cells, the `<time>`, a provider outside the roster, the empty list, the
 form's action, method, names and kept values, the pager's links, and the
-Impersonate column: absent when off, on non-admin rows only, the call and
+history link before every name, its tip on hover, focus, Escape and blur,
+the Impersonate column: absent when off, on non-admin rows only, the call and
 the landing, and the refusal; the yes-or-no marks and their words; and the creation cell: Approve on rows awaiting
 approval, Revoke on approved ones and nothing on an admin's, each modal
 and its focus, Cancel sending nothing, each call and its busy state until the

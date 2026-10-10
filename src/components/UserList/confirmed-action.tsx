@@ -109,12 +109,12 @@ const ConfirmedAction = ({
                 </p>
               )}
               {withNote && (
-                <div className="field">
+                <div className="field user-list__note">
                   <label className="field__label" htmlFor={noteId}>
                     Reason
                   </label>
                   <p id={noteHintId} className="field__hint">
-                    Optional. Kept with the change in the record of who changed what.
+                    Kept with the change in the record of who changed what.
                   </p>
                   <input
                     id={noteId}
