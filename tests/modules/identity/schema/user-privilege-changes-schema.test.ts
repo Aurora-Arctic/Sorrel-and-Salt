@@ -1,16 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { refusalOf } from '../../../support/db/privileges';
 import { statementsOfMigrationContaining } from '../../../support/db/migrations';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { withAudit, type AuditWriter } from '@/db/repository';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { userPrivilegeChanges } from '@/modules/identity/schema/user-privilege-changes';
 import { users } from '@/modules/identity/schema/users';
 import type { PrivilegeChangeRow } from './types';
 
 // MB.194: the one privilege ledger, one row per change to a privilege column
-// on `users`, which MB.58's `admin_role_changes` and MB.193's
-// `workspace_creation_changes` fold into. The table task: append-only by
+// on `users`, which the two one-privilege ledgers MB.58 and MB.193 built
+// fold into. The table task: append-only by
 // `forbid_rewrite()`, holding a copy of both; MB.195's trigger on `users` is
 // the first to write it (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
@@ -185,6 +187,27 @@ describe('forbid_rewrite', () => {
     expect(refused.message).toMatch(/user_privilege_changes is append-only/);
 
     expect((await everyChange()).map((row) => row.id)).toEqual([id]);
+  });
+
+  // MB.196: the writer's types no longer mark the ledger, since the database
+  // refuses for every client. The repository's own generic writes compile
+  // against it, and each is refused at run time, the row left as it was.
+  // `write.delete` stays refused at compile time, the table carrying `deleted_at`.
+  it('refuses the repository’s updates and deletes too', async () => {
+    const asAdmin = { userId: ADMIN };
+    const writes: ((write: AuditWriter) => Promise<unknown>)[] = [
+      (write) => write.updateById(userPrivilegeChanges, id, { note: 'rewritten' }),
+      (write) => write.softDeleteByIds(userPrivilegeChanges, [id]),
+    ];
+
+    for (const fn of writes) {
+      expect(await refusalOf(withAudit(asAdmin, fn))).toMatch(
+        /user_privilege_changes is append-only/,
+      );
+    }
+    expect(await everyChange()).toEqual([
+      expect.objectContaining({ id, note: null, deleted_at: null }),
+    ]);
   });
 });
 

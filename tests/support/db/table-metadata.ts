@@ -26,6 +26,8 @@ export const AUDIT_COLUMNS: readonly string[] = [
 
 // Transcribed so a catalogue sweep cannot pass on two empty sets. The two
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
+// So are the two ledgers MB.194 superseded, which no schema declares since
+// MB.196 but which the database holds until MB.197 drops them.
 export const AUDITED_TABLES = [
   'admin_invitations',
   'admin_role_change_pauses',

@@ -59,14 +59,6 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
-// And for the two ledgers, MB.58's `admin_role_changes` and MB.193's
-// `workspace_creation_changes`: each is append-only by the repository rather
-// than by grant, since `sorrel` owns its tables and a REVOKE would not bind
-// it. A `change` column marks one, as `visibility` marks `spells`, and
-// `NotAppendOnly` takes it off every update and delete below, leaving it the
-// insert and the finders.
-export type NotAppendOnly = { change?: never };
-
 // And for the pause ledger (MB.62): `admin_role_change_pauses` is opened and
 // ended by the writer's two named calls alone, so a pause cannot be inserted
 // already ended, reopened or deleted, and its ended pair comes from the
@@ -208,7 +200,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation>(
+  update<TTable extends PgTable & Unscoped & NotPauseLedger & NotInvitation>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -218,9 +210,7 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<
-    TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation & Identified,
-  >(
+  updateById<TTable extends PgTable & Unscoped & NotPauseLedger & NotInvitation & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
@@ -249,14 +239,7 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotPauseLedger & NotInvitation>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
@@ -278,13 +261,7 @@ export interface AuditWriter {
    * nothing without a statement.
    */
   softDeleteByIds<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation &
-      Identified,
+    TTable extends PgTable & SoftDeletable & Unscoped & NotPauseLedger & NotInvitation & Identified,
   >(
     table: TTable,
     ids: readonly string[],
@@ -416,14 +393,7 @@ export interface AuditWriter {
    * matching nothing deletes nothing without a statement, and a match naming
    * no column is refused rather than emptying the table.
    */
-  delete<
-    TTable extends PgTable &
-      HardDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & NotPauseLedger & NotInvitation>(
     table: TTable,
     match: ColumnMatch<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
