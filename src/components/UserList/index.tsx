@@ -4,9 +4,9 @@ import UserListFilter from './filter';
 import CreationControl from './creation-control';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
+import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import Pager from '../Pager';
-import { privilegeLedgerHref } from '../PrivilegeLedger/href';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -93,7 +93,14 @@ const UserRow = ({
   canImpersonate: boolean;
 }): ReactElement => (
   <tr>
-    <td>{user.name}</td>
+    {/* The way into their privilege history (MB.200), then the name, on
+        every row: an admin's changes are the ones most worth reading. */}
+    <td>
+      <span className="user-list__name">
+        <HistoryLink userId={user.id} name={user.name} />
+        {user.name}
+      </span>
+    </td>
     {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
     <td>
       <span className="user-list__email">
@@ -138,13 +145,6 @@ const UserRow = ({
         )}
       </div>
     </td>
-    {/* The privilege ledger narrowed to this user (MB.200), on every row:
-        an admin's changes are the ones most worth reading. */}
-    <td>
-      <a href={privilegeLedgerHref({ userId: user.id })}>
-        History <span className="visually-hidden">of {user.name}’s privileges</span>
-      </a>
-    </td>
     {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
         as acting as someone else is the table's one dangerous control. */}
     {canImpersonate && (
@@ -178,7 +178,6 @@ const UserList = ({
               <th scope="col">Sign-In Methods</th>
               <th scope="col">Signed Up</th>
               <th scope="col">Coven Creation</th>
-              <th scope="col">History</th>
               {canImpersonate && (
                 <th scope="col" className="user-list__impersonate">
                   Impersonate

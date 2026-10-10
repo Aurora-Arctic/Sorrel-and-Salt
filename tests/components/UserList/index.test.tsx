@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import UserList from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -75,7 +75,6 @@ describe('UserList', () => {
       'Sign-In Methods',
       'Signed Up',
       'Coven Creation',
-      'History',
     ]);
   });
 
@@ -83,7 +82,8 @@ describe('UserList', () => {
     render(<UserList {...props()} />);
 
     expect(cellsOf('Ada Fixturewort')).toEqual([
-      'Ada Fixturewort',
+      // The history link's tip, then the name.
+      'Permissions HistoryAda Fixturewort',
       // The verified mark's word, for the reader and in its tip, then the address.
       'VerifiedVerifiedada@users.test',
       'Admin',
@@ -92,10 +92,9 @@ describe('UserList', () => {
       '2026-03-04',
       // The mark alone, no control: an admin holds the flag.
       'Yes',
-      'History of Ada Fixturewort’s privileges',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
-      'Bo Fixturewort',
+      'Permissions HistoryBo Fixturewort',
       'UnverifiedUnverifiedbo@users.test',
       'User',
       // No sign-in method is an empty cell.
@@ -103,7 +102,6 @@ describe('UserList', () => {
       '2026-05-06',
       // The mark, then the control that changes it, in one cell.
       'NoApprove',
-      'History of Bo Fixturewort’s privileges',
     ]);
     // An admin's role in bold, a user's not.
     expect(
@@ -115,17 +113,59 @@ describe('UserList', () => {
   });
 
   // MB.200: each row opens the privilege ledger narrowed to its user, an
-  // admin's included.
-  it('links every row to its user’s privilege history', () => {
-    render(<UserList {...props()} />);
+  // admin's included, from an icon before the name.
+  describe('the history link', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    for (const name of ['Ada Fixturewort', 'Bo Fixturewort']) {
-      const row = screen.getByRole('row', { name: new RegExp(name) });
-      const id = props().users.find((user) => user.name === name)?.id;
-      expect(
-        within(row).getByRole('link', { name: `History of ${name}’s privileges` }),
-      ).toHaveAttribute('href', `/admin/privilege-changes?user=${id}`);
-    }
+    it('leads every name, to the ledger narrowed to that user', () => {
+      render(<UserList {...props()} />);
+
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', {
+          name: `Permissions history for ${user.name}`,
+        });
+        expect(link).toHaveAttribute('href', `/admin/privilege-changes?user=${user.id}`);
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
+
+    it('says Permissions History in a tip on hover, kept while the pointer is on it', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.mouseEnter(link);
+      const tip = screen.getByRole('tooltip');
+      expect(tip).toHaveTextContent('Permissions History');
+      fireEvent.mouseLeave(link);
+      fireEvent.mouseEnter(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      fireEvent.mouseLeave(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('says it on focus too, until blur or Escape', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Bo Fixturewort' });
+
+      fireEvent.focus(link);
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Permissions History');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.focus(link);
+      fireEvent.blur(link);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 
   // The owner's call: a green check or a red cross, the word kept for a

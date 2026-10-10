@@ -38,7 +38,7 @@ id.
   the dropdown matches the filter shown, as the user list's is (MB.53), and a
   submit opens the new filter from the first page as a full load, the user
   kept. `href.ts`'s `privilegeLedgerHref` builds every address here, the
-  submit's, the pager's and each `UserList` row's History link included:
+  submit's, the pager's and each `UserList` row's history link included:
   `?user=<id>` and `?privilege=admin|create_workspace`.
 - **Narrowed to one user, it says so**: "Changes to <name> only.", with a
   Show Every User link that keeps the privilege.

@@ -163,7 +163,7 @@ first, for the admin who suspects misuse (story 61).
   live user, null where none is live, and refuses every slot to anyone else.
   It is the admin's whole row, not MB.10's display-name `usersById`.
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
-  ledger, filtered by user (`?user=<id>`, the History link on each
+  ledger, filtered by user (`?user=<id>`, the history icon before each name on
   `/admin/users` row) and by privilege (`?privilege=admin|create_workspace`, a dropdown).
   It is not merged with the pause or the invitations, which stay where they
   are acted on; an accepted invitation is already in the ledger as its
@@ -195,4 +195,4 @@ A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
 half is `tests/app/admin/privilege-changes/page.test.tsx`, story 61's
 acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
-the History link against the built server, with axe.
+the history icon link against the built server, with axe.
