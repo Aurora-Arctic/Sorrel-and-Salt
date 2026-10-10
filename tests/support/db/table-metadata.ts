@@ -26,15 +26,11 @@ export const AUDIT_COLUMNS: readonly string[] = [
 
 // Transcribed so a catalogue sweep cannot pass on two empty sets. The two
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
-// So are the two ledgers MB.194 superseded, which no schema declares since
-// MB.196 but which the database holds until MB.197 drops them.
 // `admin_invitations` and `workspace_invitations` are undeclared since MB.202
 // and stay in the catalogue, and so here, until MB.203 drops them.
 export const AUDITED_TABLES = [
   'admin_invitations',
   'admin_role_change_pauses',
-  // Undeclared since MB.196, but in the catalogue until MB.197 drops it.
-  'admin_role_changes',
   'categories',
   'category_groups',
   'deities',
@@ -57,8 +53,6 @@ export const AUDITED_TABLES = [
   'spells',
   'user_privilege_changes',
   'users',
-  // Undeclared since MB.196, but in the catalogue until MB.197 drops it.
-  'workspace_creation_changes',
   'workspace_invitations',
   'workspace_members',
   'workspaces',
