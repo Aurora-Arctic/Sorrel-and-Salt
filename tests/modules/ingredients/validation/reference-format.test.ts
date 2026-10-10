@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   FORMAT_OF,
+  REFERENCE_TEXT_FIELDS,
   addressProblem,
   chicagoEdition,
   dashNumbers,
@@ -176,5 +177,32 @@ describe('latestDay', () => {
   it('is the day after today, in UTC', () => {
     expect(latestDay(new Date('2026-10-07T23:30:00Z'))).toBe('2026-10-08');
     expect(latestDay(new Date('2026-12-31T00:00:00Z'))).toBe('2027-01-01');
+  });
+});
+
+// The one list of the reference's text fields, which MB.212 builds the
+// GraphQL types from (MB.209): every field `CitationFields` has but the kind,
+// in its order.
+describe('REFERENCE_TEXT_FIELDS', () => {
+  it('lists every text field once, in the order CitationFields declares them', () => {
+    expect(REFERENCE_TEXT_FIELDS).toEqual([
+      'title',
+      'authors',
+      'container',
+      'contributors',
+      'edition',
+      'volume',
+      'issue',
+      'series',
+      'place',
+      'publisher',
+      'published',
+      'pages',
+      'host',
+      'url',
+      'modified',
+      'accessed',
+      'note',
+    ]);
   });
 });

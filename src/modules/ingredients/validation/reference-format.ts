@@ -1,3 +1,4 @@
+import { ISO_DAY, QUOTE_PAIRS } from '../../../lib/citation';
 import type { FieldFormat, ReferenceTextField } from './types';
 
 // How a reference's fields are tidied, and the shapes the schema's extra
@@ -13,16 +14,13 @@ import type { FieldFormat, ReferenceTextField } from './types';
 /** Trimmed, every run of whitespace — a newline, a tab — one space. */
 export const tidy: FieldFormat = (text) => text.replace(/\s+/g, ' ').trim();
 
-/** The quotation marks that pair, by the opening one. */
-const QUOTES: Record<string, string> = { '"': '"', '“': '”', "'": "'", '‘': '’', '«': '»' };
-
 /**
  * A title less the quotation marks wrapping the whole of it: the citation
  * quotes a chapter's or an article's title itself, so typed marks would print
  * twice. Marks inside it, a title within a title, stay.
  */
 export const unquote: FieldFormat = (text) => {
-  const close = QUOTES[text.charAt(0)];
+  const close = QUOTE_PAIRS[text.charAt(0)];
   return close !== undefined && text.length > 1 && text.endsWith(close)
     ? text.slice(1, -1).trim()
     : text;
@@ -32,8 +30,6 @@ export const unquote: FieldFormat = (text) => {
 const DASHES = '[-‐‑‒—―]';
 const DIGIT_RANGE = new RegExp(`(\\d)\\s*${DASHES}\\s*(?=\\d)`, 'g');
 const NUMERAL_RANGE = new RegExp(`\\b([ivxlcdm]+)\\s*${DASHES}\\s*(?=[ivxlcdm]+\\b)`, 'gi');
-/** A day written as a date, which is not a range: the date input's own value. */
-export const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
  * Each range between numbers set with an en dash, as Chicago prints it:
@@ -102,20 +98,23 @@ const title: FieldFormat = (text) => unquote(tidy(text));
 const numbers: FieldFormat = (text) => dashNumbers(tidy(text));
 const trimmed: FieldFormat = (text) => text.trim();
 
-/** Each field's format, by what it holds. */
+/**
+ * Each field's format, by what it holds, in the order `CitationFields`
+ * declares them, which is the order the form and the schema take them in.
+ */
 export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   title,
-  container: title,
   authors: tidy,
+  container: title,
   contributors: tidy,
   edition: (text) => chicagoEdition(tidy(text)),
   volume: numbers,
   issue: numbers,
-  pages: numbers,
   series: tidy,
   place: tidy,
   publisher: tidy,
   published: (text) => dashRanges(tidy(text)),
+  pages: numbers,
   host: tidy,
   url: (text) => withScheme(text.trim()),
   // The date input's own value, which needs no more.
@@ -123,6 +122,13 @@ export const FORMAT_OF: Record<ReferenceTextField, FieldFormat> = {
   accessed: trimmed,
   note: tidy,
 };
+
+/**
+ * A reference's text fields, every one but the kind: the one list of them,
+ * read off `FORMAT_OF`, whose type holds it to `CitationFields`, so a field
+ * added there and not formatted here fails the type check.
+ */
+export const REFERENCE_TEXT_FIELDS = Object.keys(FORMAT_OF) as readonly ReferenceTextField[];
 
 /**
  * What is wrong with an address, or undefined when it is a full http(s) one

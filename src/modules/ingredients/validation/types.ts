@@ -1,3 +1,4 @@
+import type { CitationFields } from '../../../lib/types';
 import type { INGREDIENT_ELEMENTS, NomenclatureKind } from '../schema/ingredient-enums';
 
 // Apart from the module's types.ts, which reaches the schema tables: a form
@@ -93,24 +94,7 @@ export interface Parsed {
 }
 
 /** A reference's text fields, every one but the kind: what `FORMAT_OF` formats (MB.154). */
-export type ReferenceTextField =
-  | 'title'
-  | 'authors'
-  | 'container'
-  | 'contributors'
-  | 'edition'
-  | 'volume'
-  | 'issue'
-  | 'series'
-  | 'place'
-  | 'publisher'
-  | 'published'
-  | 'pages'
-  | 'host'
-  | 'url'
-  | 'modified'
-  | 'accessed'
-  | 'note';
+export type ReferenceTextField = Exclude<keyof CitationFields, 'kind'>;
 
 /** How one text field is tidied, the same on the form as it is left and in the schema. */
 export type FieldFormat = (text: string) => string;

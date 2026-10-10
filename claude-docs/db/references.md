@@ -71,7 +71,8 @@ the read ANDs the same rule. A compendium reference is written only under the
 `SiteAdmin` proof and a coven's only under its `Membership`, whoever links it.
 
 **Alphabetical by the rendered citation, sorted in the service.** The key is
-the plain citation, less a leading quotation mark and an initial _A_, _An_ or
+the plain citation, less a leading quotation mark (any the formatter
+pairs, `QUOTE_PAIRS` in `src/lib/citation.ts`) and an initial _A_, _An_ or
 _The_, compared case- and accent-insensitively. The citation exists only in
 TypeScript, so nothing stores an order and the service sorts, as
 `folkNamesOf` does. `referenceSuggestions` cannot match it — rule 7 filters

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalText } from '../../../lib/validation';
+import { CalendarDay, optionalText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../schema/quantities';
 import { UNITS } from '../schema/units';
 
@@ -26,8 +26,7 @@ export const StockInput = z.object({
   unit: z.enum(UNITS, { error: 'Choose a unit from the list' }).nullish(),
   lowStockThreshold: amount('Low-stock threshold'),
   source: optionalText(),
-  // A calendar date, as the `date` column holds it — no time of day.
-  acquiredDate: z.iso.date({ error: 'Enter a date as YYYY-MM-DD' }).nullish(),
+  acquiredDate: CalendarDay.nullish(),
 });
 
 export type StockInput = z.output<typeof StockInput>;

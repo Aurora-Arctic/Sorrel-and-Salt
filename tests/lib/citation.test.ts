@@ -435,4 +435,8 @@ describe('byCitation', () => {
       '"Zest."',
     ]);
   });
+  // The marks the reference formatter pairs (QUOTE_PAIRS), guillemets included.
+  it('ignores a leading guillemet, as the formatter takes one off a title', () => {
+    expect(sorted(['«Zest.»', 'Mockleaf.'])).toEqual(['Mockleaf.', '«Zest.»']);
+  });
 });

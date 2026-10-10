@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { ValidationError } from '@/lib/errors';
 import {
+  CalendarDay,
   curatedValueInput,
   optionalText,
   parseInput,
@@ -123,6 +124,17 @@ describe('requiredRowId', () => {
     for (const input of [undefined, 'greek']) {
       expect(Id.safeParse(input).error?.issues).toEqual([
         expect.objectContaining({ message: 'Choose one' }),
+      ]);
+    }
+  });
+});
+
+describe('CalendarDay', () => {
+  it('takes a day as YYYY-MM-DD, and refuses anything else with the one message', () => {
+    expect(CalendarDay.parse('2026-10-06')).toBe('2026-10-06');
+    for (const input of ['06/10/2026', '2026-13-01', '2026-10-06T12:00']) {
+      expect(CalendarDay.safeParse(input).error?.issues).toEqual([
+        expect.objectContaining({ message: 'Give the day as YYYY-MM-DD' }),
       ]);
     }
   });

@@ -20,6 +20,9 @@ export const RowId = z.guid();
  */
 export const requiredRowId = (message: string) => z.guid({ error: message });
 
+/** A calendar day, `YYYY-MM-DD`, as a `date` column holds it: no time of day. */
+export const CalendarDay = z.iso.date({ error: 'Give the day as YYYY-MM-DD' });
+
 /** Required text: trimmed, and blank is refused — as missing, not as a value. */
 export const requiredText = (message: string) =>
   z.string({ error: message }).trim().min(1, { error: message });

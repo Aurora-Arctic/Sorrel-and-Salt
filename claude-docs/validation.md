@@ -36,8 +36,10 @@ can't go in `schema/` either: that folder is drizzle-kit's glob and holds the
 tables. So a validation file imports `zod` and dependency-free files, and
 nothing else. Those files are `schema/units.ts`, `schema/ingredient-enums.ts`
 and `schema/quantities.ts`, which the tables are built from too, so a closed
-set or a column's shape is written down once, and `src/lib/contrast.ts`, the
-contrast arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
+set or a column's shape is written down once, and these in `src/lib/`: `validation.ts`, the shared
+shapes below; `citation.ts`, for the day pattern and the quotation marks the
+reference formatter shares with the renderer; and `contrast.ts` and
+`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
 walks every validation file's imports, however indirect, and fails any that
 reach a package other than `zod`. A table file fails it, because it imports
 `drizzle-orm`, and the guard proves itself against one.
@@ -233,7 +235,9 @@ which Postgres would otherwise refuse with a raw overflow. The ceiling is
 computed from `schema/quantities.ts`, the same
 precision and scale the two columns are built from, so the two cannot drift. `unit` is validated against `UNITS` from `schema/units.ts`, never
 a second list. `unitDimension` is not input: the service derives it with
-`dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`.
+`dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`, through
+`CalendarDay` in `src/lib/validation.ts`, so it is refused as a reference's
+days are, with "Give the day as YYYY-MM-DD".
 
 ## References
 
@@ -242,9 +246,14 @@ form submits it and the service parses it, mirroring the CHECKs MB.152 put on
 `references` with a message on the field each is about, so no refusal surfaces
 as a constraint name (DESIGN.md §5, "References"). `kind` is one of
 `REFERENCE_KINDS`; `title` is required and non-blank; every other text field
-is trimmed and blank as absent, as the table's non-blank CHECKs need. `url`
+is tidied by its `FORMAT_OF` entry and blank as absent, as the table's
+non-blank CHECKs need. The text fields are one list, `REFERENCE_TEXT_FIELDS`,
+read off `FORMAT_OF` in `reference-format.ts`, whose type is every
+`CitationFields` key but `kind`, so a field the renderer gains and the
+formatter lacks fails the type check; the schema is built from the list, with
+`title`, `url` and the two days overriding it (MB.209). `url`
 is an absolute http(s) address a browser can follow, and `modified` and
-`accessed` are calendar days, `YYYY-MM-DD`. Per `kind`: a chapter, an
+`accessed` are calendar days, `YYYY-MM-DD` (`CalendarDay`). Per `kind`: a chapter, an
 article and an entry each need their `container`, named as the kind names it
 — "Name the journal this article is in"; a web page needs its `url` and its
 `accessed` day; any other kind's `accessed` needs a `url`. One rule is the

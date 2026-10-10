@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { ISO_DAY } from '../../../lib/citation';
+import { CalendarDay, optionalText } from '../../../lib/validation';
 import { REFERENCE_KINDS } from '../schema/ingredient-enums';
 import {
   FORMAT_OF,
-  ISO_DAY,
+  REFERENCE_TEXT_FIELDS,
   addressProblem,
   holdsYear,
   isNumberList,
@@ -23,26 +25,26 @@ import type { ReferenceTextField } from './types';
  * A text field as Chicago prints it: formatted as the form formats it when
  * left, and a blank an absence, as the table's CHECKs require.
  */
-const optionalText = (field: ReferenceTextField) =>
-  z
-    .string()
-    .nullish()
-    .transform((value) => {
-      if (value == null) return value;
-      const formatted = FORMAT_OF[field](value);
-      return formatted === '' ? null : formatted;
-    });
+const textField = (field: ReferenceTextField) => optionalText(FORMAT_OF[field]);
+
+/**
+ * Every text field as `textField` takes it, from the one list of them; the
+ * fields that take more are overridden below.
+ */
+const TEXT_FIELDS = Object.fromEntries(
+  REFERENCE_TEXT_FIELDS.map((field) => [field, textField(field)]),
+) as Record<ReferenceTextField, ReturnType<typeof textField>>;
 
 /** A full day, `YYYY-MM-DD`, or absent: `modified` and `accessed` are `date`s. */
 const optionalDay = (field: 'modified' | 'accessed') =>
-  optionalText(field).pipe(z.iso.date({ error: 'Give the day as YYYY-MM-DD' }).nullish());
+  textField(field).pipe(CalendarDay.nullish());
 
 /**
  * Absolute http(s), as `references_url_absolute` holds it, and an address a
  * browser can follow to a named site; one typed without its scheme is taken
  * as https first.
  */
-const url = optionalText('url').superRefine((value, ctx) => {
+const url = textField('url').superRefine((value, ctx) => {
   const problem = value == null ? undefined : addressProblem(value);
   if (problem) ctx.addIssue({ code: 'custom', message: problem });
 });
@@ -56,27 +58,18 @@ const CONTAINER_OF = {
 
 export const ReferenceInput = z
   .object({
+    // Kind first, and each override keeping its place in the list: Zod reports
+    // issues in the order of the shape's keys.
     kind: z.enum(REFERENCE_KINDS, { error: 'Choose what kind of source this is' }),
+    ...TEXT_FIELDS,
+    // Required, where every other text field is optional.
     title: z
       .string({ error: 'Give the source its title' })
       .transform(FORMAT_OF.title)
       .pipe(z.string().min(1, { error: 'Give the source its title' })),
-    authors: optionalText('authors'),
-    container: optionalText('container'),
-    contributors: optionalText('contributors'),
-    edition: optionalText('edition'),
-    volume: optionalText('volume'),
-    issue: optionalText('issue'),
-    series: optionalText('series'),
-    place: optionalText('place'),
-    publisher: optionalText('publisher'),
-    published: optionalText('published'),
-    pages: optionalText('pages'),
-    host: optionalText('host'),
     url,
     modified: optionalDay('modified'),
     accessed: optionalDay('accessed'),
-    note: optionalText('note'),
   })
   .superRefine((value, ctx) => {
     const refuse = (field: string, message: string) =>
