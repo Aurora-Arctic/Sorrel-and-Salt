@@ -483,6 +483,11 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   sections, each under its own `<h2>`: Name (`NameForm`), Email
   (`EmailForm`, embedded) and Sign-In Methods (`SignInMethods`, whose
   heading is the section's). It carries no link to `/account/email`.
+  Between the heading and the first section, a nav labelled "On this page"
+  links to each section by its prefixed id (`#account-name`,
+  `#account-email`, `#account-sign-in-methods`), and a hairline `<hr>`
+  rules each section from the next (on the owner's call). A section a link
+  lands on stops clear of the top inset.
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,

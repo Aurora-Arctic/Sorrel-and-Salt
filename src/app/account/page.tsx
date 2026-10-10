@@ -16,7 +16,9 @@ export const metadata: Metadata = {
 };
 
 // The one account page (MB.88): the name the site shows, the address it
-// writes to, and the ways in, each a section under its own heading. A link
+// writes to, and the ways in, each a section under its own heading, ruled
+// apart and reached from a nav beneath the page's heading (the owner's
+// call). The ids are prefixed so no form's own id can meet them. A link
 // to add a provider lands back here, with `?error=` when it failed
 // (claude-docs/auth/admin-bootstrap.md, "The account page"). An unverified
 // account never reaches it: `requireSession()` sends it to the email page.
@@ -27,13 +29,35 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   return (
     <main className="account-page">
       <h1 className="account-page__heading">Your Account</h1>
-      <section className="account-page__section" aria-labelledby="account-name-heading">
+      <nav className="account-page__nav" aria-label="On this page">
+        <ul>
+          <li>
+            <a href="#account-name">Name</a>
+          </li>
+          <li>
+            <a href="#account-email">Email</a>
+          </li>
+          <li>
+            <a href="#account-sign-in-methods">Sign-In Methods</a>
+          </li>
+        </ul>
+      </nav>
+      <section
+        id="account-name"
+        className="account-page__section"
+        aria-labelledby="account-name-heading"
+      >
         <h2 id="account-name-heading" className="account-page__section-heading">
           Name
         </h2>
         <NameForm name={me.name} />
       </section>
-      <section className="account-page__section" aria-labelledby="account-email-heading">
+      <hr className="account-page__rule" />
+      <section
+        id="account-email"
+        className="account-page__section"
+        aria-labelledby="account-email-heading"
+      >
         <h2 id="account-email-heading" className="account-page__section-heading">
           Email
         </h2>
@@ -47,7 +71,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
         />
       </section>
-      <section className="account-page__section">
+      <hr className="account-page__rule" />
+      <section id="account-sign-in-methods" className="account-page__section">
         <SignInMethods
           linked={linked}
           configured={configuredProviders()}

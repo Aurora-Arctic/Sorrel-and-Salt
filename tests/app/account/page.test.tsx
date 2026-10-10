@@ -58,6 +58,24 @@ describe('the /account page', () => {
     ).toEqual(['Name', 'Email', 'Sign-In Methods']);
   });
 
+  it('leads with a nav to each section, in order, and rules a line between them', async () => {
+    await renderPage();
+
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const links = within(nav).getAllByRole('link');
+    expect(links.map((link) => link.textContent)).toEqual(['Name', 'Email', 'Sign-In Methods']);
+    // Each link lands on the section headed by its own words.
+    for (const link of links) {
+      const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
+      expect(target?.tagName).toBe('SECTION');
+      expect(within(target as HTMLElement).getByRole('heading', { level: 2 })).toHaveTextContent(
+        link.textContent ?? '',
+      );
+    }
+    // A rule between each pair of sections, none before the first or after the last.
+    expect(screen.getAllByRole('separator')).toHaveLength(2);
+  });
+
   it('prefills the name and the address in their sections', async () => {
     await renderPage();
 

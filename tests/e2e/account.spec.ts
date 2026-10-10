@@ -29,7 +29,8 @@ test('shows all three sections, with no accessibility violations', async ({ page
   await expect(main.getByRole('textbox', { name: 'Email address' })).toHaveValue(
     'one-method@account-page.test',
   );
-  await expect(main.getByRole('link', { name: /email/i })).toHaveCount(0);
+  // No way across to the email page; the nav's Email link stays on this one.
+  await expect(main.locator('a[href^="/account/email"]')).toHaveCount(0);
   await expect(main.getByRole('button', { name: /^Add/ })).toHaveCount(3);
   await expect(main.getByRole('button', { name: 'Add Microsoft' })).toHaveAttribute(
     'aria-disabled',
@@ -37,6 +38,13 @@ test('shows all three sections, with no accessibility violations', async ({ page
   );
   await expect(main.getByRole('button', { name: /^Remove/ })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
+
+  // The nav beneath the heading jumps to a section.
+  const nav = main.getByRole('navigation', { name: 'On this page' });
+  await expect(nav.getByRole('link')).toHaveText(['Name', 'Email', 'Sign-In Methods']);
+  await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
+  await expect(page).toHaveURL(/#account-sign-in-methods$/);
+  await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();
 });
 
 // Two linked, so Remove shows, and a failed link's alert: the page's other markup.
