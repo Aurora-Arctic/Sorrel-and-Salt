@@ -56,11 +56,14 @@ created, and only when that sign-in's provider vouches for the address
   is a declared dependency at `better-auth`'s own version, so npm dedupes
   the two to one copy.
 - The hook builds an ordinary `Session` from the row it holds and calls
-  `promotePrimaryAdmin`, which writes `role: 'admin'` through `withAudit`
-  with `write.updateById(users, …)`, stamped as the user. By the callback
-  the user is authenticated, so this is no identity bootstrap (CLAUDE.md
-  rule 3). MB.59's grant and revoke will share this role write and add the
-  ledger row.
+  `promotePrimaryAdmin`, which writes `role: 'admin'` and the creation flag
+  through `withAudit` with `write.updateById(users, …)`, stamped as the user
+  and declared `{ via: 'bootstrap' }`. By the callback the user is
+  authenticated, so this is no identity bootstrap (CLAUDE.md rule 3). The
+  trigger on `users` records both grants in `user_privilege_changes`, by that
+  route and stamped as the user; the promotion writes no ledger row itself
+  (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
+  revoke will make the same kind of write, declared `admin`.
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and
@@ -457,12 +460,33 @@ the tests [`tests.md`](tests.md).
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md);
-none of it is built yet. Until MB.58 and MB.59 land, a second admin is an
-`UPDATE` in `psql`, setting `can_create_workspace` with `role`: MB.177's CHECK
-refuses an admin without the flag. The tasks that build it:
+none of it is built yet. Until MB.59 lands, a second admin is an `UPDATE`
+in `psql`, setting `can_create_workspace` with `role`, since MB.177's CHECK
+refuses an admin without the flag, and declaring itself first, since the
+trigger on `users` refuses a privilege change that names no route (MB.195):
 
-- **MB.58 and MB.59**: the `admin_role_changes` ledger, and granting and
-  revoking any other admin from `/admin/users`. The primary admin can be
+```sql
+begin;
+select set_config('app.privilege_route', 'manual', true);
+-- optional: why, kept on the ledger row as its note
+select set_config('app.privilege_note', 'Second admin while MB.59 is unbuilt', true);
+update users set role = 'admin', can_create_workspace = true, updated_by = '<your user id>'
+where id = '<their user id>';
+commit;
+```
+
+Both settings are transaction-local, so they go in the same transaction as
+the `UPDATE`; outside one, `psql` commits each statement alone and the route
+is gone before the update runs. The trigger writes a `manual` row per changed
+privilege, stamped with the row's `updated_by`, so setting it to your own id
+is what names you as the actor. The route is refused rather than defaulted so
+that no write, a hand-run one included, changes a privilege without saying how
+([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
+The same holds for any hand fix to either column, a revoke included. The tasks
+that build it:
+
+- **MB.58 and MB.59**: the ledger, `user_privilege_changes` since MB.194,
+  and granting and revoking any other admin from `/admin/users`. The primary admin can be
   neither revoked nor deleted, and a revoke that would leave zero admins is
   refused (the record's "The primary admin" and "Revoking").
 - **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
