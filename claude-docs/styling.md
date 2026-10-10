@@ -471,8 +471,10 @@ a narrow screen rather than squeezing the heading.
 **The admin tables are banded**: every even body row on `$surface-card`, the
 surface a modal wears, so a wide row stays readable across. Each cell is
 inset `space(3)` on both sides so no text meets a band's edge, and aligned on
-the baseline so a row's small button reads on its text's line. A 1px
-`$text-muted` hairline runs under the header row. The rules are the
+the baseline so a row's small button reads on its text's line. A heading sits
+on its cell's bottom instead, on the owner's call, so one that wraps keeps its
+last line level with its neighbours', on the 1px `$text-muted` hairline under
+the header row. The rules are the
 `.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
 table sideways rather than widening the page: the category list and UserList
 each carried them until the forms' list made a third (M5.6a), and
