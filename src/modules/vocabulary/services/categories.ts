@@ -31,6 +31,7 @@ const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
 const cachedCount = cachedCompendiumRead('category-count', findCategoryCount);
 const list = cachedFilteredList(cachedPage, cachedCount, 'groupId');
 
+/** A category's slug is its name alone, so a collision is cured by renaming it. */
 const CATEGORIES: CuratedVocabulary<typeof categories> = {
   table: categories,
   slugIndex: 'categories_slug_unique',

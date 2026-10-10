@@ -146,7 +146,8 @@ export async function updateGroup<TTable extends GroupTable>(
   await refuseCollidingMoves(members, moves, refuse);
 
   return withAudit(session, async (write) => {
-    // The one table the group descriptor names, written whole as the service parsed it.
+    // Widened to the three group tables: the writer cannot type a write to a
+    // table still generic, so the row is narrowed back to `group`'s on return.
     const [row] = await write.updateById(group.table as GroupTable, id, { ...fields, slug });
     if (!row) throw new NotFound(`No such ${group.noun}`);
     for (const { row: member, slug: moved } of moves) {
