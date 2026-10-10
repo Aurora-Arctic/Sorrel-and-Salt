@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   CHIP_GROUNDS,
+  HEX_COLOR,
   MIN_CHIP_CONTRAST,
+  channels,
   chipContrast,
   contrastRatio,
   formatRatio,
@@ -12,6 +14,21 @@ import { fromRoot } from '../support/paths';
 
 // The contrast floor a category group's colours are held to on write (M5.6b),
 // each against the harder of its own theme's two surfaces (MB.36).
+
+describe('HEX_COLOR', () => {
+  it('takes a whole #rrggbb hex in either case, and nothing shorter or longer', () => {
+    expect(['#4e8bc2', '#4E8BC2'].every((hex) => HEX_COLOR.test(hex))).toBe(true);
+    expect(['#4e8', '4e8bc2', '#4e8bc2ff', '#4e8bcg'].some((hex) => HEX_COLOR.test(hex))).toBe(
+      false,
+    );
+  });
+});
+
+describe('channels', () => {
+  it('reads a hex as its red, green and blue, each 0 to 1', () => {
+    expect(channels('#ff0080')).toEqual([1, 0, 128 / 255]);
+  });
+});
 
 describe('relativeLuminance', () => {
   it('reads black as 0 and white as 1', () => {
