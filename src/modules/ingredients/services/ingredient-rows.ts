@@ -6,7 +6,7 @@ import {
   findManyOfIngredients,
   findManyReferences,
   findOneIngredient,
-  findReferencesOfIngredients,
+  findReferencesOf,
 } from '../../../db/repository';
 import { ValidationError } from '../../../lib/errors';
 import { ingredientCategories } from '../schema/ingredient-categories';
@@ -444,7 +444,7 @@ export async function replaceReferenceLinks(
   ingredientId: string,
   entries: readonly ReferenceLinkEntry[],
 ) {
-  const current = await findReferencesOfIngredients(memberships, [ingredientId]);
+  const current = await findReferencesOf(memberships, 'ingredientId', [ingredientId]);
   await bringReferencesTo(
     write,
     memberships,

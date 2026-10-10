@@ -282,7 +282,7 @@ function compendiumList(filter: IngredientFilter): {
             ),
           )
         : undefined,
-      filter.withoutReferences ? citesNothing() : undefined,
+      filter.withoutReferences ? citesNothing('ingredientId') : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
     order: match

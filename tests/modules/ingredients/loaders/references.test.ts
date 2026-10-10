@@ -16,7 +16,7 @@ import { makeIngredient } from '../../../support/fixtures';
 // the repository, wrapped so the test counts calls without changing what they
 // answer; a role lookup is `assertMembership`'s one query.
 const repository = vi.hoisted(() => ({
-  findReferencesOfIngredients: vi.fn(),
+  findReferencesOf: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -85,7 +85,7 @@ describe('the referencesByIngredient loader', () => {
         `Zeta ${String(i).padStart(2, '0')}`,
       ]),
     );
-    expect(countOf()).toEqual({ findReferencesOfIngredients: 1, findWorkspaceRole: 1 });
+    expect(countOf()).toEqual({ findReferencesOf: 1, findWorkspaceRole: 1 });
   });
 
   it('answers [] for an ingredient citing nothing', async () => {

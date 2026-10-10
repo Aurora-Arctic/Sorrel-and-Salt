@@ -40,11 +40,7 @@ export {
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
 } from './ingredients';
-export {
-  findManyReferences,
-  findReferenceSuggestions,
-  findReferencesOfIngredients,
-} from './references';
+export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
   findAstrologyValues,
