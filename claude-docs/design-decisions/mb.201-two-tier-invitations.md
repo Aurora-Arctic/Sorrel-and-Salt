@@ -104,7 +104,7 @@ Copied from [`mb.194-plan.md`](mb.194-plan.md), which is not maintained after it
 
 ## Migration
 
-`0055_two-tier-invitations.sql`, by `npm run db:generate`, then
+`0057_two-tier-invitations.sql`, by `npm run db:generate`, then
 hand-appended as `0046_admin-invitations.sql` was. Additive only, so the
 destructive-DDL check passes with no sidecar. The hand-written part, kept
 here verbatim so the migration can be regenerated under another number on a

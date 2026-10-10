@@ -1,16 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { users } from '@/modules/identity/schema/users';
 import { grantWorkspaceCreation, revokeWorkspaceCreation } from '@/modules/identity';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { asManualFix, refusalOf } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
 
 // M5.8: an admin approves someone who has no invitation, or revokes the
-// approval, by writing `canCreateWorkspace` on their row and a row in
-// MB.193's ledger (claude-docs/auth/admin-users.md, "Approving workspace
-// creation"). Refused at the service by direct call, so a non-admin is turned
+// approval, by writing `canCreateWorkspace` on their row, declared `via:
+// 'admin'` so the trigger on `users` records it in the privilege ledger
+// (MB.195; claude-docs/auth/admin-users.md, "Approving workspace creation"). Refused at the service by direct call, so a non-admin is turned
 // away whatever the page or the schema shows.
 
 let sql: postgres.Sql;
@@ -25,8 +28,12 @@ const DELETED = '00000000-0000-0000-0000-0000000000b2';
 const NOWHERE = '00000000-0000-0000-0000-0000000000b9';
 
 beforeEach(async () => {
-  await sql`truncate workspace_creation_changes`;
-  await sql`update users set can_create_workspace = true where id = ${A.id}`;
+  // A's flag is put back as a `psql` fix would, declaring itself; then the
+  // ledger is emptied, before the users its rows name are deleted.
+  await asManualFix(sql, async (tx) => {
+    await tx`update users set can_create_workspace = true where id = ${A.id}`;
+  });
+  await sql`truncate user_privilege_changes`;
   await sql`delete from users where id in (${PENDING}, ${DELETED})`;
   await sql`
     insert into users (id, name, email, can_create_workspace, created_by, updated_by)
@@ -38,11 +45,12 @@ beforeEach(async () => {
   `;
 });
 
-/** The ledger, oldest first, `change` cast to text. */
+/** The ledger's creation rows, oldest first, the enums cast to text. */
 async function changes(): Promise<CreationChangeRow[]> {
   return sql<CreationChangeRow[]>`
-    select user_id, change::text, created_by, updated_by
-    from workspace_creation_changes
+    select user_id, change::text, via::text, created_by, updated_by
+    from user_privilege_changes
+    where privilege = 'create_workspace'
     order by created_at, id
   `;
 }
@@ -69,14 +77,26 @@ describe('grantWorkspaceCreation', () => {
   });
 
   // The row's stamps go with its next update; the ledger's row does not.
-  it('records the approval in the ledger, naming the user and the admin', async () => {
+  it('records the approval in the ledger as an admin’s act, naming the user and the admin', async () => {
     expect(await changes()).toEqual([]);
 
     await grantWorkspaceCreation(asUser(E), PENDING);
 
     expect(await changes()).toEqual([
-      { user_id: PENDING, change: 'grant', created_by: E.id, updated_by: E.id },
+      { user_id: PENDING, change: 'grant', via: 'admin', created_by: E.id, updated_by: E.id },
     ]);
+  });
+
+  // The service writes no ledger row: the same write without its declaration
+  // is refused by the trigger, so the row above is the trigger's.
+  it('is recorded by the trigger, which refuses the same write undeclared', async () => {
+    const undeclared = withAudit(asUser(E), (write) =>
+      write.updateById(users, PENDING, { canCreateWorkspace: true }),
+    );
+
+    expect(await refusalOf(undeclared)).toBe('a privilege change must declare its route');
+    expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
+    expect(await changes()).toEqual([]);
   });
 
   // The guard is the only thing between these callers and the write: E's
@@ -139,10 +159,15 @@ describe('revokeWorkspaceCreation', () => {
     expect(user).toMatchObject({ id: PENDING, canCreateWorkspace: false });
     expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false, updated_by: E.id });
     expect(
-      (await changes()).map(({ user_id, change, created_by }) => [user_id, change, created_by]),
+      (await changes()).map(({ user_id, change, via, created_by }) => [
+        user_id,
+        change,
+        via,
+        created_by,
+      ]),
     ).toEqual([
-      [PENDING, 'grant', E.id],
-      [PENDING, 'revoke', E.id],
+      [PENDING, 'grant', 'admin', E.id],
+      [PENDING, 'revoke', 'admin', E.id],
     ]);
   });
 
@@ -210,7 +235,10 @@ describe('revokeWorkspaceCreation', () => {
   });
 
   it('answers a soft-deleted or unknown user as NotFound, writing nothing', async () => {
-    await sql`update users set can_create_workspace = true where id = ${DELETED}`;
+    await asManualFix(sql, async (tx) => {
+      await tx`update users set can_create_workspace = true where id = ${DELETED}`;
+    });
+    await sql`truncate user_privilege_changes`;
 
     await expect(revokeWorkspaceCreation(asUser(E), DELETED)).rejects.toThrow(NotFound);
     await expect(revokeWorkspaceCreation(asUser(E), NOWHERE)).rejects.toThrow(NotFound);

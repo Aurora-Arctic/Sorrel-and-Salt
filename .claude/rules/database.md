@@ -23,7 +23,7 @@ Above services the ban is wider (M3.9): `src/graphql/**`, `src/app/**` and `src/
 
 ## Rule 3 — all writes go through `withAudit(session, fn)`
 
-The actor's GUC goes out as `select set_config('app.current_user_id', $1, true)`, never a literal `SET LOCAL`, and goes out although nothing in v1 reads it; DESIGN.md §5, "Audit columns — on every table, and the join-table exception", says why each.
+The actor's GUC goes out as `select set_config('app.current_user_id', $1, true)`, never a literal `SET LOCAL`, and goes out although only the privilege trigger reads it in v1 (MB.195), beside the privilege route and note a write changing `users.role` or `users.can_create_workspace` declares, without which that trigger refuses it; DESIGN.md §5, "Audit columns — on every table, and the join-table exception", says why each.
 
 **The audit columns.** Every table spreads the six-column `...auditColumns` but `ingredient_categories` and `spell_categories`, which spread the four-column `...auditStampColumns` (rule 4 below); DESIGN.md §5 defines the six as the four plus the delete pair. The factories are `src/db/audit.ts`'s, and the instances every table spreads are built beside `users` in `src/modules/identity/schema/users.ts`, imported from there (MB.86).
 

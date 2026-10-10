@@ -2,12 +2,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { withAudit } from '@/db/repository';
+import { users } from '@/modules/identity/schema/users';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
   type SignInProfile,
 } from '@/modules/identity';
 import { asUser } from '../../../support/as-user';
+import { asManualFix, refusalOf } from '../../../support/db/privileges';
 import {
   expectSignedIn,
   landingOf,
@@ -39,6 +42,9 @@ afterAll(async () => {
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // The ledger first: its rows name the users deleted below, and only a
+  // truncate empties it.
+  await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like '%@primary-admin.test'`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
@@ -69,13 +75,38 @@ async function userRow(email: string) {
 
 // An admin holds the creation flag, which the users CHECK requires (MB.177);
 // a user starts without it, so a promotion setting it is what the tests see.
+// An admin inserted by hand is a privilege change, declared as a `psql` fix
+// declares one (MB.195), and the ledger is emptied after so a test reads only
+// what it did.
 async function insertUser(email: string, role: 'user' | 'admin' = 'user'): Promise<string> {
-  const [row] = await sql`
-    insert into users (name, email, role, can_create_workspace, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-    returning id
+  let id = '';
+  await asManualFix(sql, async (tx) => {
+    const [row] = await tx`
+      insert into users (name, email, role, can_create_workspace, created_by, updated_by)
+      values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      returning id
+    `;
+    id = row.id as string;
+  });
+  await sql`truncate user_privilege_changes`;
+  return id;
+}
+
+/** The ledger's rows for `id`, one per privilege, the enums cast to text. */
+async function ledgerOf(id: string) {
+  return sql<{ privilege: string; change: string; via: string; created_by: string }[]>`
+    select privilege::text, change::text, via::text, created_by
+    from user_privilege_changes where user_id = ${id}
+    order by privilege
   `;
-  return row.id as string;
+}
+
+/** What the primary admin's promotion records: both grants, by `bootstrap`, as the user. */
+function promotedBy(id: string) {
+  return [
+    { privilege: 'admin', change: 'grant', via: 'bootstrap', created_by: id },
+    { privilege: 'create_workspace', change: 'grant', via: 'bootstrap', created_by: id },
+  ];
 }
 
 const verifiedGoogle: SignInProfile = { providerId: 'google', email: PRIMARY, emailVerified: true };
@@ -100,6 +131,35 @@ describe('promotePrimaryAdmin', () => {
     // as the user, which is withAudit taking identity from the session.
     expect(row?.created_by).toBe(BOOTSTRAP_USER_ID);
     expect(row?.updated_by).toBe(id);
+  });
+
+  // MB.195: the promotion writes no ledger row; the trigger on `users` records
+  // both grants by the route it declares.
+  it('is recorded as two bootstrap grants, stamped as the user', async () => {
+    const id = await insertUser(PRIMARY);
+    expect(await ledgerOf(id)).toEqual([]);
+
+    await promotePrimaryAdmin(asUser({ id, role: 'user' }), {
+      accountEmail: PRIMARY,
+      profile: verifiedGoogle,
+      primaryAdminEmail: PRIMARY,
+    });
+
+    expect(await ledgerOf(id)).toEqual(promotedBy(id));
+  });
+
+  // The same write the promotion makes, undeclared: so the rows above are
+  // the trigger's, written because the route was declared.
+  it('makes a write the trigger refuses without its route', async () => {
+    const id = await insertUser(PRIMARY);
+
+    const undeclared = withAudit(asUser({ id, role: 'user' }), (write) =>
+      write.updateById(users, id, { role: 'admin', canCreateWorkspace: true }),
+    );
+
+    expect(await refusalOf(undeclared)).toBe('a privilege change must declare its route');
+    expect((await userRow(PRIMARY))?.role).toBe('user');
+    expect(await ledgerOf(id)).toEqual([]);
   });
 
   it('matches the variable case-insensitively', async () => {
@@ -261,6 +321,9 @@ describe('Promotion at sign-in', () => {
     expect(row?.role).toBe('admin');
     expect(row?.can_create_workspace).toBe(true);
     expect(row?.updated_by).toBe(row?.id);
+    // Better Auth's sign-up held neither privilege; the promotion is the
+    // ledger's only entry.
+    expect(await ledgerOf(row!.id)).toEqual(promotedBy(row!.id));
   });
 
   it('promotes a new account signing up through verified Discord', async () => {
@@ -293,6 +356,9 @@ describe('Promotion at sign-in', () => {
 
       const row = await userRow(PRIMARY);
       expect(row?.role).toBe('user');
+      // Better Auth's sign-up and sign-in wrote the row, and none of it is a
+      // privilege change, so the trigger recorded nothing and asked no route.
+      expect(await ledgerOf(row!.id)).toEqual([]);
       // The reason is logged against the user id, never the address.
       const logged = warn.mock.calls.flat().join(' ');
       expect(logged).toContain(row?.id);
@@ -370,6 +436,7 @@ describe('promotePrimaryAdminAtVerification', () => {
     expect(row?.can_create_workspace).toBe(true);
     expect(row?.created_by).toBe(BOOTSTRAP_USER_ID);
     expect(row?.updated_by).toBe(id);
+    expect(await ledgerOf(id)).toEqual(promotedBy(id));
   });
 
   it('never promotes an address the variable does not name', async () => {

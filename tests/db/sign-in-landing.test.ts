@@ -10,6 +10,7 @@ import {
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
+import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
 // Where the callback lands a sign-in (MB.113): a return path wins, `/coven`
@@ -57,6 +58,9 @@ afterAll(() => {
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // The ledger first: a promotion's rows name the users deleted below, and
+  // only a truncate empties it.
+  await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
@@ -83,11 +87,15 @@ async function roleOf(email: string): Promise<string | undefined> {
 
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: 'user' | 'admin'): Promise<void> {
-  await sql`
-    insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
-            ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-  `;
+  // An admin inserted by hand declares itself, as a `psql` fix must (MB.195).
+  await asManualFix(
+    sql,
+    (tx) => tx`
+      insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
+      values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
+              ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `,
+  );
 }
 
 /** The link in the one verification mail sent so far. */
@@ -126,7 +134,11 @@ describe('a sign-in with no return path', () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
     // An admin holds the creation flag, which the users CHECK requires (MB.177).
-    await sql`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`;
+    await asManualFix(
+      sql,
+      (tx) =>
+        tx`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`,
+    );
     // The preconditions: an admin, and still unverified — Microsoft never vouches.
     const [row] =
       await sql`select role::text as role, email_verified from users where email = ${ADMIN}`;

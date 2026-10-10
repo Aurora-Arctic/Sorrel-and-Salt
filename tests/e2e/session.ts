@@ -40,6 +40,10 @@ export async function signInAs(
   const token = randomBytes(24).toString('base64url');
   try {
     await sql.begin(async (tx) => {
+      // Made by hand, so it declares the route a `psql` fix declares: the
+      // privilege trigger refuses an undeclared change to `role` or
+      // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
+      await tx`select set_config('app.privilege_route', 'manual', true)`;
       // Stamped as its own creator, as the sign-up hook stamps one.
       await tx`
         insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)

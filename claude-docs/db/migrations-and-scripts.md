@@ -168,13 +168,14 @@
   is safe on production: v0.5.0 shipped MB.140 first.
   `ingredient-substitutes-schema.test.ts` adds the column back in its clone
   to re-run both fills. See ["Expand/contract"](expand-contract.md).
-- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of
-  `admin_role_changes` and its enum, with three statements added by hand: the
-  table's `set_updated_at` trigger; the demotion of the seed's bootstrap user,
-  which a database seeded before MB.58 holds as an admin and the seed never
-  rewrites; and the backfill, one `bootstrap` row for every live admin,
-  stamped as that admin. Both data statements re-run in
-  `admin-role-changes-schema.test.ts`. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
+- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of MB.58's
+  admin ledger and its enum, with three statements added by hand: the table's
+  `set_updated_at` trigger; the demotion of the seed's bootstrap user, which a
+  database seeded before MB.58 holds as an admin and the seed never rewrites;
+  and the backfill, one `bootstrap` row for every live admin, stamped as that
+  admin. The ledger is superseded by `user_privilege_changes` (`0055`), and its
+  schema test, which re-ran both data statements, went with its schema in
+  MB.196. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
   "What the audit trail records".
 - **`0044_admin-role-change-pauses.sql`** (MB.62) creates
   `admin_role_change_pauses`, its pair CHECK and its one-open index, with the
@@ -199,6 +200,19 @@
   carrying MB.167 carries this too, and v0.5.0's reads fail only for that
   rollout. `ingredient-deities-schema.test.ts` adds the column back in its
   clone to re-run both fills. See ["Expand/contract"](expand-contract.md).
+- **`0055_user-privilege-changes.sql`** (MB.194) is a plain `generate` of
+  `user_privilege_changes` and its three enums, with four statements added by
+  hand: the table's `set_updated_at` trigger; `forbid_rewrite()`, one function
+  for every append-only ledger, and its `BEFORE UPDATE OR DELETE` trigger on
+  this one, which `tests/db/append-only-trigger.test.ts` sweeps for; and the
+  copy of the two one-privilege ledgers it replaced, with their ids and stamps,
+  re-run in `user-privilege-changes-schema.test.ts`. See
+  [MB.194's record](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
+- **`0056_privilege-changes-record-themselves.sql`** (MB.195) is a
+  `generate --custom`: `record_privilege_change()` and its two triggers on
+  `users`, one after insert and one after an update of `role` or
+  `can_create_workspace`, since an insert trigger's `WHEN` may not name `OLD`.
+  [`write-path.md`](write-path.md) documents the route and note they read.
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

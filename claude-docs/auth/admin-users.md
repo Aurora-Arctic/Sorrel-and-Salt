@@ -102,10 +102,12 @@ created, and their ownership of it
   ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes"). The page has
   no path of its own: the row's control sends the mutation.
 - **Each change is a ledger row, in the same transaction.** The flag is an
-  `updateById` on the user's row through `withAudit`, and beside it a
-  `grant` or `revoke` row in MB.193's `workspace_creation_changes`, stamped
-  as the admin from the session, never the request. The row's own
-  `updated_by` goes with its next update; the ledger's row does not.
+  `updateById` on the user's row through `withAudit`, declared
+  `{ via: 'admin' }`, and the trigger on `users` writes a `create_workspace`
+  `grant` or `revoke` row in `user_privilege_changes` beside it, stamped as
+  the admin from the session, never the request (MB.195). The service writes
+  no ledger row itself. The row's own `updated_by` goes with its next update;
+  the ledger's row does not.
 - **A change that changes nothing is refused, not repeated.** Approving a user
   who may already create a workspace, or revoking one who cannot, is refused
   with a `Forbidden` naming them, and writes no ledger row: it would record a

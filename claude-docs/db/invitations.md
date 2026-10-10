@@ -4,7 +4,7 @@
 tiers as `ingredients` is: a row naming a workspace and a role invites into
 that coven, and a row with neither is a **site-tier** invitation, which
 grants admin, as a null workspace is a compendium entry.
-`0055_two-tier-invitations.sql` is the migration. It replaced M7.1's
+`0057_two-tier-invitations.sql` is the migration. It replaced M7.1's
 `workspace_invitations` (`0012_cultured_ben_grimm.sql`) and MB.69's
 `admin_invitations` (`0046_admin-invitations.sql`), copying both; MB.202
 undeclared the two and MB.203 drops them. Why one table, why it is
@@ -16,7 +16,8 @@ undeclared the two and MB.203 drops them. Why one table, why it is
   `revokedAt`, `note` (nullable), + the full six-column audit spread.
   `email` is text and **not** a foreign key: an invitee may have no account
   yet, which is the point of inviting them. `note` says why the person is
-  being invited; either tier may carry one, and the workspace tier's UI need
+  being invited, optional as a privilege change's `note` is in
+  `user_privilege_changes`; either tier may carry one, and the workspace tier's UI need
   not offer it.
 - **`invitations_tier`**, `(workspace_id is null) = (role is null)`: a row is
   in one tier, a workspace and the role it is invited to, or neither.
