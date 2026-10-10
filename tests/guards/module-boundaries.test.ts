@@ -91,13 +91,13 @@ const TIER_SEAM: string[] = [
   'findSubstitutesIncludingSoftDeleted',
   // An ingredient's deities, and the curated deity each picked: the compendium and the proofs' covens (MB.167).
   'findDeitiesOfIngredients',
-  // An ingredient's references, each where its readers may look: the compendium and the proofs' covens (MB.153).
-  'findReferencesOfIngredients',
+  // A sourced row's references, each where its readers may look: the compendium and the proofs' covens (MB.153, MB.208).
+  'findReferencesOf',
   // What a row written under the proofs may cite: the compendium's references and the proofs' covens' (MB.153).
   'findManyReferences',
   // The reference picker's search: the compendium's sources and this workspace's (MB.153).
   'findReferenceSuggestions',
-  // The admin's to-do filter: an entry citing no compendium reference (MB.153).
+  // The admin's to-do filter: a sourced row citing no compendium reference (MB.153, MB.208).
   'citesNothing',
   // `withAudit`'s writer: the compendium tier's by-id writes, under the SiteAdmin proof (M5.2).
   'writerFor',

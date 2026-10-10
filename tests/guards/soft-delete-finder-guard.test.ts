@@ -75,7 +75,7 @@ const EXPORTED_FUNCTIONS = [
   'findPrivilegeChangePage',
   'findProvidersOfUsers',
   'findReferenceSuggestions',
-  'findReferencesOfIngredients',
+  'findReferencesOf',
   'findSimilarIngredients',
   'findSubstitutesIncludingSoftDeleted',
   'findUserByEmail',
@@ -145,7 +145,7 @@ const SCOPED_FINDERS = [
   'findPageInWorkspace',
   'findPendingInvitationsInWorkspace',
   'findReferenceSuggestions',
-  'findReferencesOfIngredients',
+  'findReferencesOf',
   'findSimilarIngredients',
   'findVocabularySuggestions',
 ];
@@ -436,7 +436,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
   // the parent is live and in a tier the proofs read, and the reference must
   // be the compendium's or the parent's coven's (MB.153).
   it('filters a reference link and the reference it cites, each by its own tombstone', () => {
-    const body = functionBody('findReferencesOfIngredients');
+    const body = functionBody('findReferencesOf');
 
     expect(body).toMatch(/notSoftDeleted\(referenceLinks\)/);
     expect(body).toMatch(/notSoftDeleted\(references\)/);

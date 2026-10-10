@@ -116,8 +116,8 @@ suggestion has neither, and a deity's has the first alone, below:
 its group, and for the same reason: `deities` is unique on the slug alone,
 and a reader choosing among 216 chooses by tradition, "Hecate (Greek)"
 ([`deity-vocabulary.md`](deity-vocabulary.md)). The finder treats the two
-alike: `groupingOf` names each two-tier vocabulary's group table and the key
-filing a row under it, and tiers 0 and 1 join through it, so **a deity is
+alike: `groupingOf` finds each two-tier vocabulary's group table and the key
+filing a row under it in `TWO_TIER` (`src/db/vocabularies.ts`, MB.208), and tiers 0 and 1 join through it, so **a deity is
 curated only while its tradition is live too**, both `deleted_at`s filtered
 in all three tiers, and a dead tradition's name is never returned. **It
 carries no claimants.** A form's claimants show which entries already share

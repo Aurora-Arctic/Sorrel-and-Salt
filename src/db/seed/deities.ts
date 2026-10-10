@@ -1,7 +1,7 @@
 import { beginSeedTransaction } from './idempotent';
-import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import { deitySlug } from '../../lib/slugify';
-import { reslugItems, seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { TWO_TIER } from '../vocabularies';
 import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } from './types';
 
 // MB.127's deity vocabulary: thirty-five traditions and the deities filed
@@ -1505,19 +1505,11 @@ export async function seedDeities(db: SeedDatabase): Promise<void> {
  */
 export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {
-    groupTable: deityTraditions,
-    itemTable: deities,
+    vocabulary: TWO_TIER.deities,
     groups: DEITY_TRADITIONS,
     items: DEITIES,
     groupOf: (deity) => deity.tradition,
-    toItemRow: (row, traditionId) => ({ ...row, traditionId }),
     itemNoun: 'Deity',
-    slugOf: (deity, traditionName) => deitySlug(deity.name, traditionName),
-  });
-  await reslugItems(tx, {
-    itemTable: deities,
-    groupTable: deityTraditions,
-    groupKey: deities.traditionId,
     slugOf: deitySlug,
   });
 }

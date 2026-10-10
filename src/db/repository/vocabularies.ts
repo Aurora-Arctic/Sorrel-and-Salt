@@ -10,16 +10,13 @@ import {
   or,
   sql,
 } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
-import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
-import {
-  ingredientFormGroups,
-  ingredientForms,
-} from '../../modules/vocabulary/schema/ingredient-forms';
+import { categories } from '../../modules/vocabulary/schema/categories';
+import { deities } from '../../modules/vocabulary/schema/deities';
+import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
+import { TWO_TIER, type PickedTable, type TwoTierPair } from '../vocabularies';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPage, findPageCount } from './finders';
@@ -37,7 +34,6 @@ import type {
   InUseSource,
   ListedVocabulary,
   ListOrder,
-  SortColumn,
   SuggestingVocabulary,
   VocabularySuggestion,
 } from './types';
@@ -170,7 +166,7 @@ function vocabularyArms(
   return and(
     inLiveGroup(vocabulary),
     query ? containsText(vocabulary.name, query) : undefined,
-    grouping && groupId ? eq(grouping.key, groupId) : undefined,
+    grouping && groupId ? eq(grouping.column, groupId) : undefined,
   );
 }
 
@@ -186,24 +182,20 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
  * it, with the join that reads the group's name — for its name alone, since
  * the row's own filter already holds the group live.
  */
-function groupedOrder(
-  name: SortColumn,
-  groups: typeof categoryGroups | typeof deityTraditions,
-  key: AnyPgColumn,
-): ListOrder {
+function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   const grouped = sql.identifier('grouped');
   return {
-    sort: [{ expression: sql`${grouped}.name`, type: 'text' }, name],
+    sort: [{ expression: sql`${grouped}.name`, type: 'text' }, items.name],
     join: {
       source: sql`(select ${groups.id}, ${groups.name} from ${groups}) as ${grouped}`,
-      on: eq(sql`${grouped}.id`, key),
+      on: eq(sql`${grouped}.id`, column),
     },
   };
 }
 
 /** The categories by group, then name; the deities by tradition, then name. */
-const CATEGORY_ORDER = groupedOrder(categories.name, categoryGroups, categories.groupId);
-const DEITY_ORDER = groupedOrder(deities.name, deityTraditions, deities.traditionId);
+const CATEGORY_ORDER = groupedOrder(TWO_TIER.categories);
+const DEITY_ORDER = groupedOrder(TWO_TIER.deities);
 
 /**
  * The live rows of `vocabulary` whose lower-cased name is one of `folds` —
@@ -230,7 +222,7 @@ export function findCuratedRowsByName(
  * pick whose row or group is retired reads as no pick (MB.167). Global
  * reference data, so no proof.
  */
-export function findCuratedRowsByIds<TVocabulary extends typeof ingredientForms | typeof deities>(
+export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   vocabulary: TVocabulary,
   ids: readonly string[],
 ): Promise<TVocabulary['$inferSelect'][]> {
@@ -255,7 +247,7 @@ export function curated(vocabulary: SuggestingVocabulary): SQL | undefined {
  */
 export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
   const grouping = groupingOf(vocabulary);
-  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.key));
+  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.column));
 }
 
 /**
@@ -300,22 +292,11 @@ function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper }
 }
 
 /**
- * The table a two-tier vocabulary's rows are filed under, and the key that
- * files them: a form or a category under its group, a deity under its
- * tradition. A flat vocabulary has none.
+ * The pair `vocabulary` is the items of in `TWO_TIER` — the table its rows are
+ * filed under, and the column that files them — or none for a flat vocabulary.
  */
-function groupingOf(vocabulary: ListedVocabulary):
-  | {
-      groups: typeof ingredientFormGroups | typeof categoryGroups | typeof deityTraditions;
-      key: AnyPgColumn;
-    }
-  | undefined {
-  if (vocabulary === ingredientForms) {
-    return { groups: ingredientFormGroups, key: ingredientForms.groupId };
-  }
-  if (vocabulary === categories) return { groups: categoryGroups, key: categories.groupId };
-  if (vocabulary === deities) return { groups: deityTraditions, key: deities.traditionId };
-  return undefined;
+function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
+  return Object.values(TWO_TIER).find((pair) => pair.items === vocabulary);
 }
 
 /**
@@ -368,7 +349,7 @@ export async function findVocabularySuggestions(
   // Only a form names its claimants: a form is half an ingredient's identity.
   const claimed = vocabulary === ingredientForms;
   const curatedRows = grouping
-    ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.key}`
+    ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.column}`
     : vocabulary;
   const live = and(notSoftDeleted(vocabulary), grouping && notSoftDeleted(grouping.groups));
   // Two same-named rows tie on the fold, so the group orders the pair.

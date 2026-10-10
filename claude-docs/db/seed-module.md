@@ -14,8 +14,9 @@ task because `scripts/` is outside `tsconfig.json`'s `include`, so
 — the one write path beside `src/lib/auth.ts`'s sign-up hook that does not,
 and for the same reason: it is an identity bootstrap with no session to hand
 over. What `withAudit` guarantees is kept rather than re-argued: one
-transaction, `app.current_user_id` published first in the same
-parameterised `set_config` form (M1.19), every stamp produced by the shared
+transaction, the actor published first by the same `publishActor` — all
+four settings, `app.current_user_id` the bootstrap user's and the other
+three empty (M1.19, MB.208) — every stamp produced by the shared
 `applyAudit`. The seed cannot hold any other handle — `src/db/seed/` is not
 among the six files allowed to import `connection.ts` — which is what makes
 the handle honest. The reasoning, and the alternatives it rules out, are in
@@ -30,42 +31,56 @@ So a seed module, the repository and drizzle-kit — which globs
 — all see a fully built `users` whichever import comes first.
 
 **Two helper modules carry what every seed repeats** (MB.51).
-`src/db/seed/idempotent.ts` exports three functions. `beginSeedTransaction(db,
-body)` opens the one transaction, publishes the GUC in `withAudit`'s
-parameterised `set_config` form, inserts the bootstrap user and then runs
+`src/db/seed/idempotent.ts` carries the moves. `beginSeedTransaction(db,
+body)` opens the one transaction, publishes the actor through
+`withAudit`'s own `publishActor`, inserts the bootstrap user and then runs
 `body(tx)`; every entry point — `seedMinimal`, `seedStandard`, `seedDemo`,
 `seedCategories`, `seedForms` — is that call. `insertMissing(tx, table, wanted,
 { existing, keyOf, toRow })` inserts each `wanted` whose key `existing` did not
 return, stamped by the bootstrap user through `applyAudit`, and updates
-nothing. `requireFrom(map, key, describe)` is a `Map` lookup that throws
+nothing; the vocabularies call it with `presentKeys`, whose present is a seed
+key or a live slug. Every other site calls `insertMissingBy(tx, table, wanted,
+{ columns, fold?, where?, toRow })` (MB.208), which builds the key once and
+reads it off both sides: the table's rows under `columns`, and each `wanted`
+under the same property names, a part compared through `fold` where the
+unique index folds it (a folk name's `lower()`) and null and absent one empty
+part. A one-column key reads only the wanted values — the fixture ids, the
+demo's spells and jars — and a wider one the table, narrowed by `where` where
+the site scopes it: W's ingredients by `workspace_id`, `standard`'s deity
+picks by `deleted_at` when it restores them. Each ignores `deleted_at` unless
+its `where` reads it, which is where that choice can be read.
+`insertMissingReturningIds(tx, table, wanted, present, { keyOf, keyOfRow,
+toRow })` is the same insert for the two callers that link what they insert —
+`standard`'s compendium entries and the sources seed's references — and
+returns `present` with each inserted row's id under its key; `present` is the
+caller's own read, since each decides what present means.
+`requireFrom(map, key, describe)` is a `Map` lookup that throws
 `describe()`'s message rather than handing `undefined` to a NOT NULL column.
-`existing` is the caller's own query on purpose: each site scopes it — fixture
-ids by `inArray`, W's ingredients by `workspace_id`, the compendium by
-`workspace_id IS NULL`, folk names case-folded — and each ignores `deleted_at`
-where that choice can be read, rather than the helper deciding it once for
-every table. The one insert that needs its rows back, `standard`'s compendium
-entries, stays hand-written around `.returning()`.
+`insertSeedUser(tx, user)`, in `bootstrap-admin.ts`, inserts a user by fixed
+id as the bootstrap user, the bootstrap user itself and `minimal`'s alike.
 `src/db/seed/two-tier-vocabulary.ts` exports `seedTwoTierVocabulary(tx, {
-groupTable, itemTable, groups, items, groupOf, toItemRow, itemNoun })` —
-groups, then the items filed under them, each by seed key — which
-`seedCategoryVocabulary`, `seedFormVocabulary` and `seedDeityVocabulary`
-call with their own tables and literals. The literals (`CATEGORY_GROUPS`,
+vocabulary, groups, items, groupOf, itemNoun, slugOf? })` — groups, then the
+items filed under them, each by seed key — which `seedCategoryVocabulary`,
+`seedFormVocabulary` and `seedDeityVocabulary` call with their own
+`TWO_TIER` entry and literals. The literals (`CATEGORY_GROUPS`,
 `CATEGORIES`, `FORM_GROUPS`, `FORMS`, `DEITY_TRADITIONS`, `DEITIES`) stay
 in `categories.ts`, `forms.ts` and `deities.ts`, where the tests comparing
 them against their documents import them from — bar `CATEGORY_GROUPS`, in
 `category-groups.ts` beside them so the workshop can import it without the
-seed (MB.36). Each caller also says how an
-item names its group and keys it, since deities differ (MB.129): `groupOf`
-reads the group's name off an item (`category.group`, `deity.tradition`),
-and `toItemRow` sets the found id under the table's own column
-(`{ ...row, groupId }`, `{ ...row, traditionId }`). The item table is
-therefore a generic, so each call's row is checked against its own table; the
-group tables stay a union, since the columns the seed writes are common to
-all three.
+seed (MB.36). The tables, and the item's key to its group, are the
+vocabulary's entry in `TWO_TIER` (`src/db/vocabularies.ts`, MB.208), the one
+list the repository's `groupingOf` reads too, so the seed writes the found id
+under `groupId` or a deity's `traditionId` without each caller saying so.
+Each caller says only how an item names its group, since deities differ
+(MB.129): `groupOf` reads the group's name off an item (`category.group`,
+`deity.tradition`). A form's and a deity's slug carries its group's name
+(M5.6a, MB.132), so those two pass `slugOf(name, groupName)`, and with it
+given the same call re-derives every live item's slug and writes it where it
+differs — the backfill `reslugItems` was a second call for until MB.208.
 `src/db/seed/flat-vocabulary.ts` exports `seedFlatVocabulary(tx, table,
 items)`, the one-tier counterpart for a vocabulary with no group — each item
 by seed key, the same rules — which `seedAstrologyVocabularies` calls once
-for `planets` and once for `zodiac_signs`.
+for `planets` and once for `zodiac_signs`, the two tables `FLAT` lists.
 
 **Seed keys (MB.171).** Every table the reference data writes — the eight
 vocabularies and `references` — carries `seed_key`, the identity the seed

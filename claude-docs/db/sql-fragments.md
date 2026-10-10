@@ -22,8 +22,10 @@ one of these carries a one-clause comment saying which it is:
 compare under; `trigramMatch` is an autofill's `(text % query or query <%
 text)`; and `foldedWordMatch` is a search's accent-folded `<%` and
 `word_similarity`, the spelling migration 0027's expression indexes answer.
-`set_config` is written once too, in `select.ts`'s `readUnder`, which both a
-similarity read and a keyset read run under. A finder calls the helper rather
+`set_config` is written once per purpose too: the trigram thresholds in
+`select.ts`'s `readUnder`, which both a similarity read and a keyset read run
+under, and the actor's four settings in `src/db/audit.ts`'s `publishActor`,
+which `withAudit` and the seed share (MB.208). A finder calls the helper rather
 than writing the fragment again, so a change to how a value is folded or
 matched is one edit.
 

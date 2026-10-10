@@ -1,8 +1,9 @@
 import { isNull } from 'drizzle-orm';
 import { beginSeedTransaction } from './idempotent';
-import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
+import { categories } from '../../modules/vocabulary/schema/categories';
 import { CATEGORY_GROUPS } from './category-groups';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { TWO_TIER } from '../vocabularies';
 import type { SeedCategory, SeedDatabase, SeedTransaction } from './types';
 
 // DESIGN.md §6's vocabulary: eight groups and every category, a starting set
@@ -359,12 +360,10 @@ export async function seedCategories(db: SeedDatabase): Promise<void> {
  */
 export async function seedCategoryVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {
-    groupTable: categoryGroups,
-    itemTable: categories,
+    vocabulary: TWO_TIER.categories,
     groups: CATEGORY_GROUPS,
     items: CATEGORIES,
     groupOf: (category) => category.group,
-    toItemRow: (row, groupId) => ({ ...row, groupId }),
     itemNoun: 'Category',
   });
 }

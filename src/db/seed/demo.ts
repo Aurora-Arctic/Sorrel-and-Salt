@@ -1,5 +1,5 @@
-import { eq, inArray, isNull } from 'drizzle-orm';
-import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import { eq, isNull } from 'drizzle-orm';
+import { beginSeedTransaction, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
@@ -215,19 +215,11 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
 // nothing already present.
 
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({
-            name: ingredients.name,
-            canonicalName: ingredients.canonicalName,
-            form: ingredients.form,
-          })
-          .from(ingredients)
-          .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
-      ).map(identityOf),
-    keyOf: identityOf,
+  // `identityOf`'s parts, the form folded as it folds one.
+  await insertMissingBy(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
+    columns: ['name', 'canonicalName', 'form'],
+    fold: { form: (form) => form.trim().toLowerCase() },
+    where: eq(ingredients.workspaceId, WORKSPACE_W_ID),
     toRow: (entry) => ({
       ...entry,
       workspaceId: WORKSPACE_W_ID,
@@ -237,20 +229,8 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
 }
 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, spells, DEMO_SPELLS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: spells.id })
-          .from(spells)
-          .where(
-            inArray(
-              spells.id,
-              DEMO_SPELLS.map((spell) => spell.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (spell) => spell.id,
+  await insertMissingBy(tx, spells, DEMO_SPELLS, {
+    columns: ['id'],
     toRow: ({ categories: _categories, layers: _layers, ...spell }) => ({
       ...spell,
       workspaceId: WORKSPACE_W_ID,
@@ -329,12 +309,8 @@ async function insertMissingLayers(
 
   // Keyed by the jar, not the layer, so a stocked jar keeps every layer out —
   // a removed layer's tombstone included, since the jar has been edited.
-  await insertMissing(tx, spellIngredients, wanted, {
-    existing: async (tx) =>
-      (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
-        (row) => row.spellId,
-      ),
-    keyOf: ({ spellId }) => spellId,
+  await insertMissingBy(tx, spellIngredients, wanted, {
+    columns: ['spellId'],
     toRow: ({ spellId, layer, index }) => ({
       spellId,
       ...layerIdentity(layer.ingredient, ingredientIds),
@@ -362,14 +338,8 @@ async function insertMissingSpellCategories(
     })),
   );
 
-  await insertMissing(tx, spellCategories, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
-          .from(spellCategories)
-      ).map((row) => `${row.spellId}|${row.categoryId}`),
-    keyOf: (assignment) => `${assignment.spellId}|${assignment.categoryId}`,
+  await insertMissingBy(tx, spellCategories, wanted, {
+    columns: ['spellId', 'categoryId'],
     toRow: (assignment) => assignment,
   });
 }

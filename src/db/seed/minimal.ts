@@ -1,6 +1,4 @@
-import { users } from '../../modules/identity/schema/users';
-import { applyAudit } from '../audit';
-import { BOOTSTRAP_SESSION } from './bootstrap-admin';
+import { insertSeedUser } from './bootstrap-admin';
 import { beginSeedTransaction } from './idempotent';
 import type { SeedDatabase, SeedUser } from './types';
 
@@ -18,12 +16,7 @@ const USER: SeedUser = {
   role: 'user',
 };
 
+/** Idempotent by fixed id, not by truncating: a re-run is a no-op. */
 export async function seedMinimal(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, async (tx) => {
-    // Idempotent by fixed id, not by truncating: a re-run is a no-op.
-    await tx
-      .insert(users)
-      .values(applyAudit('insert', USER, BOOTSTRAP_SESSION))
-      .onConflictDoNothing({ target: users.id });
-  });
+  await beginSeedTransaction(db, (tx) => insertSeedUser(tx, USER));
 }

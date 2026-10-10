@@ -1,4 +1,4 @@
-import { inArray, isNull, max } from 'drizzle-orm';
+import { isNull, max } from 'drizzle-orm';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -8,7 +8,6 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
-import { applyAudit } from '../audit';
 import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
@@ -18,9 +17,11 @@ import { seedFormVocabulary } from './forms';
 import {
   beginSeedTransaction,
   declaringBootstrapPrivileges,
-  insertMissing,
+  insertMissingBy,
+  insertMissingReturningIds,
   requireFrom,
 } from './idempotent';
+import type { PickedTable } from '../vocabularies';
 import type {
   FixtureUser,
   SeedDatabase,
@@ -436,7 +437,7 @@ export async function seedStandardContent(
  */
 async function pickedIdByName(
   tx: SeedTransaction,
-  table: typeof ingredientForms | typeof deities,
+  table: PickedTable,
 ): Promise<Map<string, string>> {
   const rows = await tx
     .select({ id: table.id, name: table.name })
@@ -452,6 +453,9 @@ async function pickedIdByName(
   for (const fold of shared) ids.delete(fold);
   return ids;
 }
+
+/** A name as the unique indexes on `lower(name)` compare it. */
+const lowerCase = (name: string) => name.toLowerCase();
 
 function pickOf(ids: Map<string, string>, name: string, what: string): string {
   return requireFrom(
@@ -484,52 +488,19 @@ async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {
-  await insertMissing(tx, users, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: users.id })
-          .from(users)
-          .where(
-            inArray(
-              users.id,
-              wanted.map((user) => user.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (user) => user.id,
-    toRow: (user) => user,
-  });
+  await insertMissingBy(tx, users, wanted, { columns: ['id'], toRow: (user) => user });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, workspaces, FIXTURE_WORKSPACES, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: workspaces.id })
-          .from(workspaces)
-          .where(
-            inArray(
-              workspaces.id,
-              FIXTURE_WORKSPACES.map((workspace) => workspace.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (workspace) => workspace.id,
+  await insertMissingBy(tx, workspaces, FIXTURE_WORKSPACES, {
+    columns: ['id'],
     toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
   });
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, workspaceMembers, MEMBERSHIPS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
-          .from(workspaceMembers)
-      ).map((row) => `${row.workspaceId}|${row.userId}`),
-    keyOf: (membership) => `${membership.workspaceId}|${membership.userId}`,
+  await insertMissingBy(tx, workspaceMembers, MEMBERSHIPS, {
+    columns: ['workspaceId', 'userId'],
     toRow: (membership) => membership,
   });
 }
@@ -551,9 +522,8 @@ export function identityOf(entry: {
 }
 
 /**
- * Inserts what is missing and returns every seeded entry's id, by identity.
- * Not `insertMissing`: the one caller that needs the inserted rows back, and
- * `.returning()` for one caller is not worth a second helper.
+ * Inserts what is missing and returns every seeded entry's id, by identity,
+ * over the compendium tier's rows, deleted or not.
  */
 async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string, string>> {
   const existing = await tx
@@ -565,39 +535,23 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
     })
     .from(ingredients)
     .where(isNull(ingredients.workspaceId));
+  const formIds = await pickedIdByName(tx, ingredientForms);
 
-  const ids = new Map(existing.map((row) => [identityOf(row), row.id]));
-  const missing = COMPENDIUM_INGREDIENTS.filter((entry) => !ids.has(identityOf(entry)));
-
-  if (missing.length > 0) {
-    const formIds = await pickedIdByName(tx, ingredientForms);
-    const inserted = await tx
-      .insert(ingredients)
-      .values(
-        missing.map(
-          ({ folkNames: _folkNames, categories: _categories, deities: _deities, ...entry }) =>
-            applyAudit(
-              'insert',
-              {
-                ...entry,
-                formId: entry.form ? pickOf(formIds, entry.form, 'form') : null,
-                slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
-              },
-              BOOTSTRAP_SESSION,
-            ),
-        ),
-      )
-      .returning({
-        id: ingredients.id,
-        name: ingredients.name,
-        canonicalName: ingredients.canonicalName,
-        form: ingredients.form,
-      });
-
-    for (const row of inserted) ids.set(identityOf(row), row.id);
-  }
-
-  return ids;
+  return insertMissingReturningIds(
+    tx,
+    ingredients,
+    COMPENDIUM_INGREDIENTS,
+    new Map(existing.map((row) => [identityOf(row), row.id])),
+    {
+      keyOf: identityOf,
+      keyOfRow: identityOf,
+      toRow: ({ folkNames: _folkNames, categories: _categories, deities: _deities, ...entry }) => ({
+        ...entry,
+        formId: entry.form ? pickOf(formIds, entry.form, 'form') : null,
+        slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+      }),
+    },
+  );
 }
 
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
@@ -620,17 +574,9 @@ async function insertMissingFolkNames(
   );
 
   // Case-folded because the unique index is on `lower(name)`.
-  await insertMissing(tx, ingredientFolkNames, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({
-            ingredientId: ingredientFolkNames.ingredientId,
-            name: ingredientFolkNames.name,
-          })
-          .from(ingredientFolkNames)
-      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-    keyOf: (folkName) => `${folkName.ingredientId}|${folkName.name.toLowerCase()}`,
+  await insertMissingBy(tx, ingredientFolkNames, wanted, {
+    columns: ['ingredientId', 'name'],
+    fold: { name: lowerCase },
     toRow: (folkName) => folkName,
   });
 }
@@ -670,15 +616,10 @@ async function insertMissingDeities(
     return position;
   };
 
-  await insertMissing(tx, ingredientDeities, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ ingredientId: ingredientDeities.ingredientId, name: ingredientDeities.name })
-          .from(ingredientDeities)
-          .where(restoreDeleted ? isNull(ingredientDeities.deletedAt) : undefined)
-      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-    keyOf: (deity) => `${deity.ingredientId}|${deity.name.toLowerCase()}`,
+  await insertMissingBy(tx, ingredientDeities, wanted, {
+    columns: ['ingredientId', 'name'],
+    fold: { name: lowerCase },
+    where: restoreDeleted ? isNull(ingredientDeities.deletedAt) : undefined,
     // Called once per missing pick, in the literal's order.
     toRow: (deity) => ({ ...deity, position: placed(deity.ingredientId) }),
   });
@@ -715,17 +656,8 @@ async function insertMissingCategoryAssignments(
 
   // Hard-deleted (MB.34): the four-column stamp set, so `applyAudit` stamps
   // fewer columns.
-  await insertMissing(tx, ingredientCategories, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({
-            ingredientId: ingredientCategories.ingredientId,
-            categoryId: ingredientCategories.categoryId,
-          })
-          .from(ingredientCategories)
-      ).map((row) => `${row.ingredientId}|${row.categoryId}`),
-    keyOf: (assignment) => `${assignment.ingredientId}|${assignment.categoryId}`,
+  await insertMissingBy(tx, ingredientCategories, wanted, {
+    columns: ['ingredientId', 'categoryId'],
     toRow: (assignment) => assignment,
   });
 }

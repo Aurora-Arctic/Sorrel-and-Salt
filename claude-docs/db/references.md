@@ -56,8 +56,11 @@ to its column and the table it keys into, and the five foreign keys, the five
 partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
 A sixth sourced table is one entry there, and the migration `db:generate`
 writes from it drops and re-adds `reference_links_one_row`, which takes an
-`.ack.md` sidecar ([destructive DDL](expand-contract.md)). What reads and
-writes the new links is still code of its own.
+`.ack.md` sidecar ([destructive DDL](expand-contract.md)). The repository
+reads the links of any of them through the registry (MB.208):
+`findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
+column and its table from `SOURCED`. What writes the new links is still code
+of its own.
 
 **One link per reference per row, and the index serves the read.** Each
 partial unique index leads on its sourced id, so a read of one ingredient's
@@ -130,7 +133,7 @@ call the substitutes' writes. The list is brought to what was sent: a link is
 matched by its reference, so one still listed keeps its row and takes the
 locator sent, one dropped is soft-deleted, a new one is inserted, and a list
 that changes nothing writes nothing. Only the links the ingredient shows are
-compared, read through `findReferencesOfIngredients`, so a link to a
+compared, read through `findReferencesOf(memberships, 'ingredientId', …)`, so a link to a
 soft-deleted reference — which the form never sees, and so never sends back
 — is left in place. A new link is held to the tier rule by one read,
 `findManyReferences(memberships, ids)`: a live reference in the compendium
@@ -138,11 +141,16 @@ or, for a coven's ingredient, its coven. Anything else is a `ValidationError`
 at `['references', i]`, the same for an id naming another coven's reference
 as for one naming nothing, since that coven's contents are private.
 
-**The read is one statement for a page.** `findReferencesOfIngredients`
-left-joins each live link's live reference, takes only a row that joined
-one, and reads the parent through `existsIn` as `findManyOfIngredients`
-does, with the tier rule ANDed inside: the reference is the compendium's or
-the parent's own coven's. `referencesOf` renders each citation and files the
+**The read is one statement for a page.** `findReferencesOf(memberships,
+key, ids)` left-joins each live link's live reference, takes only a row that
+joined one, and reads the parent through `existsIn`. An ingredient is read
+as `findManyOfIngredients` reads one, with the tier rule ANDed inside: the
+reference is the compendium's or the parent's own coven's. Every other
+sourced table is global reference data, so its row need only be live, and
+its reference is the compendium's, the one tier every reader shares. The key
+rather than a column: the registry maps it to the parent's table, which the
+finder needs, and a `SourcedKey` cannot name a column that is not a sourced
+link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`.
 
@@ -157,7 +165,7 @@ scan is the search's whole cost at that size. An index is a later task's,
 measured, if the table outgrows it.
 
 **The admin's to-do list** is `compendium(withoutReferences: true)`, whose
-arm `citesNothing()` keeps an entry with no live link to a live compendium
+arm `citesNothing('ingredientId')` keeps an entry with no live link to a live compendium
 reference — the entries whose bibliography reads empty, so one whose only
 link was unlinked, or cites a retracted source, is listed.
 

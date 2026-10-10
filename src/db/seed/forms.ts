@@ -1,10 +1,7 @@
 import { beginSeedTransaction } from './idempotent';
-import {
-  ingredientFormGroups,
-  ingredientForms,
-} from '../../modules/vocabulary/schema/ingredient-forms';
 import { formSlug } from '../../lib/slugify';
-import { reslugItems, seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { seedTwoTierVocabulary } from './two-tier-vocabulary';
+import { TWO_TIER } from '../vocabularies';
 import type {
   SeedDatabase,
   SeedIngredientForm,
@@ -360,19 +357,11 @@ export async function seedForms(db: SeedDatabase): Promise<void> {
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {
-    groupTable: ingredientFormGroups,
-    itemTable: ingredientForms,
+    vocabulary: TWO_TIER.forms,
     groups: FORM_GROUPS,
     items: FORMS,
     groupOf: (form) => form.group,
-    toItemRow: (row, groupId) => ({ ...row, groupId }),
     itemNoun: 'Form',
-    slugOf: (form, groupName) => formSlug(form.name, groupName),
-  });
-  await reslugItems(tx, {
-    itemTable: ingredientForms,
-    groupTable: ingredientFormGroups,
-    groupKey: ingredientForms.groupId,
     slugOf: formSlug,
   });
 }

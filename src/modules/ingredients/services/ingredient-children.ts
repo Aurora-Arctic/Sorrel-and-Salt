@@ -3,7 +3,7 @@ import {
   findDeitiesOfIngredients,
   findManyByIds,
   findManyOfIngredients,
-  findReferencesOfIngredients,
+  findReferencesOf,
   findSubstitutesIncludingSoftDeleted,
 } from '../../../db/repository';
 import { byCitation, citationText } from '../../../lib/citation';
@@ -111,7 +111,7 @@ export async function referencesOf(
   refs: readonly IngredientKey[],
 ): Promise<(CitedReference[] | Forbidden)[]> {
   const { memberships, ids, answer } = await admit(session, refs);
-  const rows = await findReferencesOfIngredients(memberships, ids);
+  const rows = await findReferencesOf(memberships, 'ingredientId', ids);
   const cited = rows.map(({ link, reference }) => ({
     ingredientId: link.ingredientId,
     citation: citationText(reference),

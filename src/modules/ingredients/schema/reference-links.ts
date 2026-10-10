@@ -18,10 +18,11 @@ import { idColumn } from '../../../db/schema-parts';
 // A sixth sourced table is one entry in `SOURCED`: its column, its partial
 // unique and the widened CHECK are built from the list. The migration
 // `db:generate` then writes drops and re-adds `reference_links_one_row`, and
-// that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). Reading and
-// writing the new links is still code of its own: the repository's finder
-// and `citesNothing` name `ingredientId`, and the ingredient services and
-// the sources seed write the links they own.
+// that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's
+// `findReferencesOf` and `citesNothing` take a key of the registry and read
+// its table, so reading the new links costs nothing more; writing them is
+// still code of its own, as the ingredient services and the sources seed
+// each write the links they own.
 
 /**
  * The tables a reference can support, each by the property and column that
@@ -38,7 +39,8 @@ export const SOURCED = {
 /** A sourced entity's property on `referenceLinks`: `ingredientId`, `deityId`, … */
 export type SourcedKey = keyof typeof SOURCED;
 
-const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
+/** The registry's keys, in its order. */
+export const SOURCED_KEYS = Object.keys(SOURCED) as SourcedKey[];
 
 /** One nullable foreign key per sourced table, under the registry's own keys. */
 function sourcedColumns() {

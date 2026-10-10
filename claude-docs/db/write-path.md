@@ -121,7 +121,10 @@ fails too.
 ### `app.current_user_id`, published per transaction (M1.19)
 
 Before it calls `fn`, `withAudit` publishes the session's acting user to
-the database itself:
+the database itself, through `publishActor(executor, { userId,
+impersonatedBy?, route?, note? })` in `src/db/audit.ts` — client-free, since
+it runs on the transaction it is handed, which is how the seed's transaction
+publishes the same four (MB.208):
 
 ```sql
 select set_config('app.current_user_id', $1, true),
@@ -153,9 +156,11 @@ refuses the change**: `a privilege change must declare its route`. Both are
 published on every transaction, empty when nothing is declared, as
 `app.impersonated_by` is, so a write that declared nothing never inherits a
 route; a write that changes no privilege never reaches the trigger, whatever
-it declared. Outside `withAudit`, the seed declares `bootstrap` around its
-fixture users' insert (`declaringBootstrapPrivileges`, `src/db/seed/idempotent.ts`)
-and a `psql` fix declares `manual` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)).
+it declared. Outside `withAudit`, the seed publishes all four through the
+same `publishActor` — the bootstrap user, every other setting empty, so a
+seed run inherits nothing a pooled connection held (MB.208) — and declares
+`bootstrap` around its fixture users' insert (`declaringBootstrapPrivileges`,
+`src/db/seed/idempotent.ts`); a `psql` fix declares `manual` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)).
 Why a declared route rather than a default:
 [`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
 

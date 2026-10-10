@@ -1,6 +1,6 @@
 import { and, eq, getTableColumns, inArray, lte, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { applyAudit } from '../audit';
+import { applyAudit, publishActor } from '../audit';
 import type { AuditSession, PrivilegeDeclaration } from '../types';
 // The choke point the rule exists to protect — enforced by lint as of M1.17.
 // oxlint-disable-next-line no-restricted-imports
@@ -210,23 +210,19 @@ export async function withAudit<T>(
   }
 
   return db.transaction(async (tx) => {
-    // The privilege trigger on `users` reads the GUC as the ledger row's actor
-    // (MB.195), and it is what makes the v2 history trigger and deferred RLS
-    // one migration. **Do not remove it.** `set_config(…,
-    // true)` is `SET LOCAL` with a bind parameter: discarded at COMMIT or
-    // ROLLBACK, never riding a pooled connection into the next request
-    // (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
-    // `app.impersonated_by` beside it, for the same reason and with no reader
-    // yet: the admin acting as `userId` (MB.53), or empty — always set, so a
-    // reader never sees the placeholder an earlier transaction left on the
-    // connection. `app.privilege_route` and `app.privilege_note` are read: the
-    // trigger on `users` records each privilege change with them, and refuses
-    // one whose route is empty, so a write that forgot to declare fails rather
-    // than recording a guess (MB.195; claude-docs/db/write-path.md). One
-    // statement, so it costs no second round trip.
-    await tx.execute(
-      sql`select set_config('app.current_user_id', ${session.userId}, true), set_config('app.impersonated_by', ${session.impersonatedBy ?? ''}, true), set_config('app.privilege_route', ${privilege?.via ?? ''}, true), set_config('app.privilege_note', ${privilege?.note ?? ''}, true)`,
-    );
+    // The privilege trigger on `users` reads `app.current_user_id` as the
+    // ledger row's actor and refuses a privilege change whose
+    // `app.privilege_route` is empty (MB.195), and the GUC is what makes the v2
+    // history trigger and deferred RLS one migration. **Do not remove it.**
+    // `app.impersonated_by` has no reader yet: the admin acting as `userId`
+    // (MB.53). Why each, and why `set_config(…, true)`:
+    // claude-docs/db/write-path.md, "app.current_user_id, published per transaction".
+    await publishActor(tx, {
+      userId: session.userId,
+      impersonatedBy: session.impersonatedBy,
+      route: privilege?.via,
+      note: privilege?.note,
+    });
     return fn(writerFor(tx, session));
   });
 }
