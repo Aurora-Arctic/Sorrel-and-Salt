@@ -21,11 +21,18 @@ export const CHIP_GROUNDS: Record<'dark' | 'light', string> = {
 /** WCAG's AA floor for normal text, which a chip's label is. */
 export const MIN_CHIP_CONTRAST = 4.5;
 
+/** A whole `#rrggbb` hex, either case: the one form a group colour is written in. */
+export const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+/** A `#rrggbb` hex's red, green and blue, each 0 to 1. */
+export const channels = (hex: string): number[] =>
+  [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+
 /** A `#rrggbb` hex's relative luminance, 0 for black to 1 for white. */
 export function relativeLuminance(hex: string): number {
-  const [r, g, b] = [1, 3, 5]
-    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
-    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const [r, g, b] = channels(hex).map((v) =>
+    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+  );
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 

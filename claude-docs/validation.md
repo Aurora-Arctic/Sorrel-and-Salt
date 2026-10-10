@@ -36,8 +36,10 @@ can't go in `schema/` either: that folder is drizzle-kit's glob and holds the
 tables. So a validation file imports `zod` and dependency-free files, and
 nothing else. Those files are `schema/units.ts`, `schema/ingredient-enums.ts`
 and `schema/quantities.ts`, which the tables are built from too, so a closed
-set or a column's shape is written down once, and `src/lib/contrast.ts`, the
-contrast arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
+set or a column's shape is written down once, and these in `src/lib/`: `validation.ts`, the shared
+shapes below; `citation.ts`, for the day pattern and the quotation marks the
+reference formatter shares with the renderer; and `contrast.ts` and
+`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
 walks every validation file's imports, however indirect, and fails any that
 reach a package other than `zod`. A table file fails it, because it imports
 `drizzle-orm`, and the guard proves itself against one.
@@ -62,6 +64,27 @@ compare with a `uuid` column, since anything else is a driver error there.
 `assertMembership` checks every `workspaceId` with it
 ([`db/membership-proof.md`](db/membership-proof.md#what-the-check-asks),
 "What the check asks").
+`requiredRowId(message)` is the same id as a form field takes it, missing
+and malformed refused alike with the message saying what to choose: a
+category's or a form's `groupId`, a deity's `traditionId`. It is
+`RowId`'s shape rather than `z.uuid()`'s, which refuses the seed's
+hand-written ids and so refused a parent the service would have found
+(MB.209).
+
+The text shapes every module shares are there too (MB.209), so a message or
+a rule changes in one place:
+
+- **`requiredText(message)`**: trimmed, and blank or missing refused with
+  the one message, since a blank is missing rather than a wrong value.
+- **`optionalText(format?)`**: trimmed, or tidied by `format` (a
+  reference field's, below), and a blank taken as `null`, the absence a
+  column's non-blank CHECK accepts. A filter has no column, and wants no
+  value as `undefined`, so `CompendiumFilter` maps `null` itself rather
+  than the helper hiding a second meaning of absent.
+- **`curatedValueInput(noun)`**: an admin-curated value's `name` and
+  `description`, each `requiredText` saying the noun — "Give the sign a
+  name", "Describe the tradition". Every vocabulary's schema is built on it
+  (below).
 
 ## The two ingredient variants
 
@@ -124,7 +147,7 @@ Rules both variants enforce:
   other rows (["The workspace ingredient mutations"](graphql/schema.md)).
 - **Deities, each a pick or a name** (DESIGN.md §5, `ingredient_deities`;
   MB.167). An entry is `{ deityId }` or `{ name }`, held to exactly one as a
-  substitute's is: both, neither, or a blank entry is refused at the entry
+  substitute's is, by the same rule (`linkOrNameRules`, each in its own nouns): both, neither, or a blank entry is refused at the entry
   rather than dropped, and so is a `deityId` that is not a uuid. The same
   deity picked twice, or the same name typed twice in any case, is refused at
   the repeat, the two partial unique indexes' keys; links to two same-named
@@ -212,7 +235,9 @@ which Postgres would otherwise refuse with a raw overflow. The ceiling is
 computed from `schema/quantities.ts`, the same
 precision and scale the two columns are built from, so the two cannot drift. `unit` is validated against `UNITS` from `schema/units.ts`, never
 a second list. `unitDimension` is not input: the service derives it with
-`dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`.
+`dimensionOf`. `acquiredDate` is a calendar date, `YYYY-MM-DD`, through
+`CalendarDay` in `src/lib/validation.ts`, so it is refused as a reference's
+days are, with "Give the day as YYYY-MM-DD".
 
 ## References
 
@@ -221,9 +246,14 @@ form submits it and the service parses it, mirroring the CHECKs MB.152 put on
 `references` with a message on the field each is about, so no refusal surfaces
 as a constraint name (DESIGN.md §5, "References"). `kind` is one of
 `REFERENCE_KINDS`; `title` is required and non-blank; every other text field
-is trimmed and blank as absent, as the table's non-blank CHECKs need. `url`
+is tidied by its `FORMAT_OF` entry and blank as absent, as the table's
+non-blank CHECKs need. The text fields are one list, `REFERENCE_TEXT_FIELDS`,
+read off `FORMAT_OF` in `reference-format.ts`, whose type is every
+`CitationFields` key but `kind`, so a field the renderer gains and the
+formatter lacks fails the type check; the schema is built from the list, with
+`title`, `url` and the two days overriding it (MB.209). `url`
 is an absolute http(s) address a browser can follow, and `modified` and
-`accessed` are calendar days, `YYYY-MM-DD`. Per `kind`: a chapter, an
+`accessed` are calendar days, `YYYY-MM-DD` (`CalendarDay`). Per `kind`: a chapter, an
 article and an entry each need their `container`, named as the kind names it
 — "Name the journal this article is in"; a web page needs its `url` and its
 `accessed` day; any other kind's `accessed` needs a `url`. One rule is the
@@ -233,15 +263,17 @@ refused at `url` and `accessed` both.
 
 ## Categories
 
-`CategoryInput` takes a trimmed, non-blank `name` and `description`, and a
-`groupId` uuid. It takes no slug, which is derived from the name and dropped if
-sent. `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
+Every curated vocabulary's schema is `curatedValueInput` with its own noun,
+extended where the vocabulary has more: a trimmed, non-blank `name` and
+`description`, and no slug, which is derived from the name and dropped if
+sent. `CategoryInput` adds a `groupId` as `requiredRowId` takes it,
+refused with "Choose a group", and `DeityInput` a `traditionId`, refused
+with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
 optional `endRedirect`, the admin's confirmation that a rename may take an
 address another entry's redirect still runs from (MB.82).
 
-`IngredientFormGroupInput` (M5.6b) takes a trimmed, non-blank `name` and
-`description`, refused with "Give the group a name" and "Describe the group",
-and no slug. `CategoryGroupInput` extends it with `colorDark` and
+`IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
+the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `colorDark` and
 `colorLight`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
 refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
 held to 4.5:1 against its own theme's harder surface, the dark card or the
@@ -254,6 +286,6 @@ the request; it reads nothing but the hex, so it stays client-safe. The pair is 
 
 The planet and zodiac vocabularies (MB.95) share one shape:
 `vocabulary/validation/astrology-value.ts` builds `PlanetInput` and
-`ZodiacSignInput` from one factory, a trimmed, non-blank `name` and
-`description`, each saying its own noun — "Give the sign a name". No slug.
+`ZodiacSignInput` as the shape alone, each saying its own noun — "Give the
+sign a name".
 The spell (MB.8) adds its own schema when it lands.

@@ -7,6 +7,28 @@ import type { CitationFields, CitationPart } from './types';
 // rules per kind, and why italics are marks in three fields rather than a
 // Markdown library, are claude-docs/db/references.md, "The renderer".
 
+/**
+ * A day as a date input and a `date` column write it, `YYYY-MM-DD`, its year,
+ * month and day captured. Here rather than in the reference formatter because
+ * this file prints the day and lib is what both may import.
+ */
+export const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * The quotation marks that pair, by the opening one: what the formatter takes
+ * off a typed title's ends, and what a citation is filed less of.
+ */
+export const QUOTE_PAIRS: Readonly<Record<string, string>> = {
+  '"': '"',
+  '“': '”',
+  "'": "'",
+  '‘': '’',
+  '«': '»',
+};
+
+/** Any run of opening marks at the start: an opening mark is a citation's first only as typed. */
+const LEADING_QUOTES = new RegExp(`^[${Object.keys(QUOTE_PAIRS).join('')}]+`);
+
 const MONTHS = [
   'January',
   'February',
@@ -53,7 +75,7 @@ export function byCitation(a: string, b: string): number {
 }
 
 function sortKey(citation: string): string {
-  return citation.replace(/^["“‘']+/, '').replace(/^(?:A|An|The)\s+/i, '');
+  return citation.replace(LEADING_QUOTES, '').replace(/^(?:A|An|The)\s+/i, '');
 }
 
 /** Each kind's sentences, in Chicago's order (claude-docs/db/references.md, "The renderer"). */
@@ -195,7 +217,7 @@ function closed(runs: CitationPart[]): CitationPart[] {
 
 /** A date as Chicago prints it: `2026-10-06` → `October 6, 2026`. */
 function day(iso: string): string {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  const match = ISO_DAY.exec(iso);
   const month = match ? MONTHS[Number(match[2]) - 1] : undefined;
   if (!match || !month) return iso;
   return `${month} ${Number(match[3])}, ${match[1]}`;

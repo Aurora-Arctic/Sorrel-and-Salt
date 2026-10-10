@@ -271,6 +271,8 @@ _Acceptance criteria:_
 - No validation file declares its own required-text helper, day regex or hex regex
 - `REFERENCE_TEXT_FIELDS` is the one list of the reference's text fields
 
+_As built:_ the three parent ids take `requiredRowId(message)`, `RowId`'s `z.guid()` with the field's message, since a bare `RowId` would have lost "Choose a group" and "Choose a tradition"; and the regression test is the schemas', a fixture-shaped id parsing as `groupId` or `traditionId`, since the service's live-row refusal says the same "Choose a group" and so cannot tell the two apart. `optionalText(format?)` takes the reference formatter's tidying as its argument and keeps blank as `null`; `CompendiumFilter` maps `null` to `undefined` itself, so the filter's other meaning of absent stays at its call site. The reference title stays its own required field, since it is formatted before the blank check rather than trimmed. The one date message is "Give the day as YYYY-MM-DD", in `CalendarDay`, which `StockInput`'s `acquiredDate` now speaks too. Filing a citation less its leading quotation mark now strips a guillemet as well, since the set is the formatter's.
+
 **MB.210 — Vocabulary and identity services: the curated write steps once** · 3h
 
 _Story:_ As a developer, I want each curated vocabulary's service to say what is its own — the deity's slug under its tradition, the form's rename carried onto entries, the group's colours — and nothing else twice, so that a change to how a slug collision or a move is refused is one edit across the seven.
