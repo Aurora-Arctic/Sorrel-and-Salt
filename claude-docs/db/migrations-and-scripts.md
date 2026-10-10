@@ -189,7 +189,8 @@
   its partial unique index on `token_hash`, with the `set_updated_at` trigger
   added by hand (["Admin invitations"](invitations.md)). Made while MB.168's
   drop was still pending, it leaves that drop out and keeps the column in
-  `0046_snapshot.json`, as 0044 does.
+  `0046_snapshot.json`, as 0044 does. `0057` copies the table into
+  `invitations`, and `0059` drops it.
 - **`0048_drop-deities-list.sql`** (MB.168) is the contract of MB.167's
   switch, a plain `generate` as 0039 was: it emitted the
   `DROP COLUMN "deities"` alone. Before the drop it copies across, as
@@ -225,6 +226,16 @@
   call. `user-privilege-changes-schema.test.ts` restores both tables in its
   clone from `0043` and `0054` to re-run the copy and the sweep. See
   ["Expand/contract"](expand-contract.md).
+- **`0059_drop-old-invitation-tables.sql`** (MB.203) is the contract of
+  MB.202's switch, a plain `generate` once nothing else was pending: it
+  drops `workspace_invitations` and `admin_invitations`, and no enum, since
+  `workspace_members` and `invitations` hold `workspace_role`. Before the
+  drops it runs `0057`'s copy once more with `ON CONFLICT ("id") DO NOTHING`,
+  for any row the deploy before MB.202 wrote after it. Its sidecar
+  acknowledges both drops and says why production is not its gate:
+  production is not live, the owner's call. `invitations-schema.test.ts`
+  restores both tables in its clone from `0012` and `0046` to re-run the copy
+  and the sweep. See ["Expand/contract"](expand-contract.md).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

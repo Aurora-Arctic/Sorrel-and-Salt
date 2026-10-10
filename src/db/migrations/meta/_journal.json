@@ -414,6 +414,13 @@
       "when": 1791655904437,
       "tag": "0058_drop-old-privilege-ledgers",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1791656370341,
+      "tag": "0059_drop-old-invitation-tables",
+      "breakpoints": true
     }
   ]
 }
