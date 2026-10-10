@@ -3,6 +3,7 @@
 // internal to the module.
 export * from './services/admin-role';
 export * from './services/email';
+export * from './services/name';
 export * from './services/privilege-changes';
 export * from './services/profile';
 export * from './services/provisional-accounts';

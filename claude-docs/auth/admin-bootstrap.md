@@ -228,16 +228,16 @@ day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
-**The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
-unverified account never reaches it, though Better Auth itself would link
-to an unverified row. The page reads `linkedAccounts()`
-(`src/lib/request-session.ts`, Better Auth's `listUserAccounts` with the
-request headers) and renders `SignInMethods`
+**The page.** The Sign-In Methods section of the account page
+(["The account page"](#the-account-page-mb88) below), which calls
+`requireSession()`, so an unverified account never reaches it, though
+Better Auth itself would link to an unverified row. The page reads
+`linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
+`listUserAccounts` with the request headers) and renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
-and an unlink refusal through `unlinkErrorMessage`. The page and the email
-page link to each other; the email page offers the way only to a verified
-account.
+and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
+account page, `/account`, with its `?error=` when it failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
 ("Provisional accounts" below). At a sign-in, `unable_to_link_account`
@@ -456,8 +456,9 @@ the tests [`tests.md`](tests.md).
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
   address, since the row's is unchanged until the link is followed. Below
-  the form, a verified account gets a link to `/account` ("Linking a second
-  provider" above).
+  the form, a verified account gets a link to the account page, reading
+  "Your account" (["The account page"](#the-account-page-mb88) below), where
+  the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
   `/account/email?next=<its own path>` from every page but that one
@@ -467,6 +468,52 @@ the tests [`tests.md`](tests.md).
   gated the same way — the context reads the session and the services
   refuse what a provisional account may not do, which is everything but
   `me` and `setEmail`.
+
+### The account page (MB.88)
+
+`/account` is the one account page: the name the site shows, the address it
+writes to, and the ways in, changed in one place. Stories 1 and 59; the
+component docs are [`components/name-form.md`](../components/name-form.md),
+[`components/email-form.md`](../components/email-form.md) and
+[`components/sign-in-methods.md`](../components/sign-in-methods.md).
+
+- **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
+  unverified account is sent to the email page instead, and reads `getMe`
+  and `linkedAccounts()`. Under its `<h1>` "Your Account" are three
+  sections, each under its own `<h2>`: Name (`NameForm`), Email
+  (`EmailForm`, embedded) and Sign-In Methods (`SignInMethods`, whose
+  heading is the section's). It carries no link to `/account/email`.
+- **The email page stays, for the flows that are not a visit to the
+  account.** Every unverified sign-in lands there, it is the only page a
+  provisional account can reach, a mailed link lands on its confirmed view,
+  and a link opened from the wrong browser is explained there. Its link
+  across, offered to a verified account, reads "Your account".
+- **The Email section is EmailForm, not a second form.** The same field,
+  `setEmail` mutation, one-a-minute cooldown and field errors, with
+  `embedded` set: no page heading, which the section gives, and never the
+  confirmed view, which stays the email page's. A change link it asks for
+  lands on the email page's confirmed view, as any other does.
+- **The name changes through GraphQL**, as the address does (CLAUDE.md
+  rule 1): `setName(name: String!): User!`, over `setName` in
+  `src/modules/identity/services/name.ts`. It writes the session's own row
+  through `withAudit`, so it takes no id and names no other user's. It
+  trims the name, and refuses a blank or over-long one
+  (`NAME_MAX_LENGTH`, 100) as a `VALIDATION` error on `name`, which MB.43
+  maps to the field. A provisional account is `FORBIDDEN`, as it is from
+  every service but `me` and `setEmail`, and before the input is read.
+- **Better Auth's `/update-user` is disabled.** It writes `name` and `image`
+  outside `withAudit`, so `src/lib/auth.ts` lists it in `disabledPaths`,
+  and Better Auth's router answers it 404 before the endpoint or any hook
+  runs. That leaves the name one write path, the audited one.
+  `overrideUserInfoOnSignIn` is off, Better Auth's default, which no
+  provider in `socialProviders()` changes, so a later sign-in never puts the
+  provider's name back.
+- **Tests.** The service is `tests/modules/identity/services/name.test.ts`
+  (the row renamed and stamped, another user's left alone, the refusals) and
+  its mutation `tests/modules/identity/graphql/set-name.test.ts`. The refused
+  endpoint is `tests/db/email-verification.test.ts`, the page
+  `tests/app/account/page.test.tsx`, and the browser, an axe scan of all
+  three sections included, `tests/e2e/account.spec.ts`.
 
 ### Granting a second admin — decided, not built (M2.9)
 

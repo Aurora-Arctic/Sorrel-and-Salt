@@ -3,6 +3,7 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { Forbidden } from '../../../lib/errors';
 import { userRole } from '../schema/users';
 import { setEmail } from '../services/email';
+import { setName } from '../services/name';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
 import { grantWorkspaceCreation, revokeWorkspaceCreation } from '../services/workspace-creation';
@@ -60,6 +61,20 @@ builder.mutationField('setEmail', (t) =>
     resolve: (_root, { email, next }, { session, emailVerification }) => {
       if (!session) throw new Forbidden();
       return setEmail(session, email, emailVerification, next ?? undefined);
+    },
+  }),
+);
+
+// The account page's Name section (MB.88): the session's own row, renamed
+// through the audited write; a refusal is `VALIDATION` on `name`.
+builder.mutationField('setName', (t) =>
+  t.field({
+    type: UserRef,
+    args: { name: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { name }, { session }) => {
+      if (!session) throw new Forbidden();
+      return setName(session, name);
     },
   }),
 );

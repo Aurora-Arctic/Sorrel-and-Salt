@@ -1,7 +1,8 @@
 @use '../../scss/variables' as *;
 
-// The page-level frame, like `.email-page`: no AppShell exists yet to center
-// a page. A column, so the list and the way to the email page stack.
+// The account page's frame, like `.email-page`: no AppShell exists yet to
+// center a page. A column, so its heading and its three sections stack
+// (MB.88). Tokens only until the page's design review (MB.117).
 .account-page {
   // Or the viewport-high frame plus its own padding overflows by the padding
   // and the page scrolls by 4rem with nothing to scroll to.
@@ -10,7 +11,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: space(6);
   // Less the top inset, or a page a full screen high scrolls by it.
   min-height: calc(100dvh - #{$top-inset});
   padding: 2rem 1rem;
@@ -18,10 +19,22 @@
   margin-inline: auto;
 }
 
-.account-page__nav {
+.account-page__heading {
   margin: 0;
   width: 100%;
   max-width: 28rem;
+}
+
+.account-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  width: 100%;
+  max-width: 28rem;
+}
+
+.account-page__section-heading {
+  margin: 0;
 }
 
 .sign-in-methods {

@@ -12,6 +12,8 @@ export interface EmailFormProps {
   error?: string;
   /** Seconds the server will refuse another mail for as of this render, so the countdown starts where it stands. */
   waitSeconds?: number;
+  /** Inside the account page's Email section (MB.88): no page heading, which the section gives, and never the confirmed view, which stays the email page's. */
+  embedded?: boolean;
 }
 
 export interface Failure {

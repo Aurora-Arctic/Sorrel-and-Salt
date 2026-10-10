@@ -361,6 +361,7 @@ type Mutation {
   """
   revokeWorkspaceCreation(userId: ID!): User!
   setEmail(email: String!, next: String): User!
+  setName(name: String!): User!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!

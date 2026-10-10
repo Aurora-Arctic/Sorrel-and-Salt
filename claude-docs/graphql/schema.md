@@ -112,6 +112,13 @@ changes only once the mailed link is followed
 another verified account or a second mail inside the minute included, is a
 `VALIDATION` error on the `email` field.
 
+`setName(name: String!): User!` is the account page's Name section (MB.88):
+signed-in only, by scope, and `setName` in the identity module renames the
+session's own row, trimmed, through `withAudit`. A blank or over-long name
+is a `VALIDATION` error on `name`, and a provisional account is
+`FORBIDDEN` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
+account page").
+
 `grantWorkspaceCreation(userId: ID!): User!` and
 `revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
 undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's
@@ -123,7 +130,7 @@ creation").
 Their GraphQL files hold the transport's half (MB.180, MB.186;
 ["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
 says what that half is), and a signed-out caller at `me`, `users`,
-`setEmail`, the two creation writes and `privilegeChanges` is `tests/db/graphql-query-scopes.test.ts`'s.
+`setEmail`, `setName`, the two creation writes and `privilegeChanges` is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
 `memberships` through the request's loader. `users.test.ts` holds the default
 page, the cursor and the filters reaching `listUsers`, the nodes being `me`'s
