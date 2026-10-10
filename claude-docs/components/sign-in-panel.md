@@ -45,9 +45,12 @@ white/black-adaptive ground with the multicolour "G" for Google, Discord's
 `#5865F2` blurple, Facebook's `#1877F2` blue, Microsoft's four-colour square
 mark (`icons.tsx`) — because a "Continue with X" button is recognized by its
 brand's own convention, and re-skinning it in the app's palette would make it
-harder to recognize, not more on-brand. That is the one place in the app that
-intentionally sets colours as hex literals instead of `$accent`/`$secondary`
-tokens. Every colour rule is written `.sign-in-panel__button--<id>.btn`
+harder to recognize, not more on-brand. That and the admin user list's logos,
+which borrow these marks on the same grounds ([`user-list.md`](user-list.md)),
+are the places in the app that intentionally set colours as hex literals
+instead of `$accent`/`$secondary` tokens. Facebook's backing chip is styled in
+`icons.scss`, which `icons.tsx` imports itself, so the mark brings its circle
+wherever it is shown. Every colour rule is written `.sign-in-panel__button--<id>.btn`
 rather than the single class alone: `.btn` and this component's own
 stylesheet are two separate compiled CSS files, and nothing guarantees which
 one a bundler emits first, so a same-specificity single-class rule could lose

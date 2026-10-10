@@ -107,23 +107,6 @@
   border-color: transparent;
 }
 
-// A small backing circle behind Facebook's mark, whose own path is the
-// circle's outline merged with the "f" as a hole in it (icons.tsx) — filled
-// white, the "f" is only visible where this chip's own blue shows through.
-.sign-in-panel__icon-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.sign-in-panel__icon-chip--facebook {
-  background-color: #0866ff;
-}
-
 // Each brand's own published colour (see icons.tsx's header for why these
 // are hex literals rather than $accent/$secondary tokens, and for each
 // icon's own source). Compounded with `.btn` — same reason as the two rules

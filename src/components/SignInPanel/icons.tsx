@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import './icons.scss';
 
 // Each provider's own brand mark, sourced from that provider's own published
 // assets rather than approximated from memory —
