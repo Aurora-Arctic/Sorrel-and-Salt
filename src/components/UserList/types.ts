@@ -43,6 +43,14 @@ export interface UserListFilterProps {
 /** The filter as the address carries it: what `userListHref` writes. */
 export type UserListFilterValue = UserListFilterProps;
 
+/** A row's link to its user's privilege history (MB.200). */
+export interface HistoryLinkProps {
+  /** The user's address, which the ledger's search is opened with. */
+  email: string;
+  /** The user's name, completing the link's accessible name. */
+  name: string;
+}
+
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */

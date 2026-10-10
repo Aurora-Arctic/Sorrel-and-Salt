@@ -57,8 +57,8 @@ beforeAll(async () => {
 });
 
 const PAGE_OF_CHANGES = `
-  query ($userId: ID, $privilege: UserPrivilege) {
-    privilegeChanges(userId: $userId, privilege: $privilege) {
+  query ($userId: ID, $privilege: UserPrivilege, $query: String) {
+    privilegeChanges(userId: $userId, privilege: $privilege, query: $query) {
       edges {
         node {
           id privilege change via note
@@ -102,6 +102,16 @@ describe('Query.privilegeChanges', () => {
     );
     expect(named.size).toBe(SUBJECTS.length + ACTORS.length - 1);
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes the query to the service', async () => {
+    const result = await run<PrivilegeChangesResult>(asUser(E), PAGE_OF_CHANGES, {
+      query: C.email,
+    });
+
+    const nodes = result.data?.privilegeChanges.edges.map((edge) => edge.node) ?? [];
+    expect(nodes.length).toBeGreaterThan(0);
+    expect(nodes.every((node) => node.subject?.id === C.id)).toBe(true);
   });
 
   it('passes both filters to the service', async () => {

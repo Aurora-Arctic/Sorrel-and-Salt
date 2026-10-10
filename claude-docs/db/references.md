@@ -107,11 +107,10 @@ their coven the id names nothing in the coven's tier, and without one the
 admin check refuses. An update replaces the row — a field left out is
 cleared — and reaches every row citing it. The `ingredient` statements stand
 for a reference's, since a coven's reference exists to be cited by its
-ingredients and the roles that write one write the other. Revalidating the
-`compendium` tag on a compendium-tier write is M8.7's, with every admin
-mutation, the owner's call in MB.153: nothing is cached under the tag yet,
-and Next 16's `revalidateTag` throws outside a request, so the service would
-have been the first caller every test had to mock it for.
+ingredients and the roles that write one write the other. A
+compendium-tier write expires the `compendium` tag once it has committed,
+and a coven's does not, since no cached read holds a coven's reference (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 **An ingredient's links are written in its own save.** Both tiers' create and
 update call `addReferenceLinks` and `replaceReferenceLinks` in

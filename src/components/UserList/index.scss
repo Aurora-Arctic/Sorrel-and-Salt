@@ -109,6 +109,77 @@
   background-color: #5865f2;
 }
 
+// The history link, then the name, side by side.
+.user-list__name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// The history link's tip is placed against this.
+.user-list__history {
+  position: relative;
+  display: inline-flex;
+}
+
+// A 1.5rem icon, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
+// is. Its hit area reaches `$control-height`, WCAG 2.5.5's 44px, through a
+// pseudo-element, so the row is no taller for it. Compounded with
+// `.user-list`: the typography's `body a` colours would outrank a lone
+// class in the app, though not in the workshop.
+.user-list .user-list__history-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: radius('pill');
+  color: $text-muted;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: $control-height;
+    height: $control-height;
+    translate: -50% -50%;
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Above the icon from its left edge, rather than centred as the marks' tips
+// are: the icon starts the row's first cell, and a centred tip would run past
+// the table's scrolling frame, which clips it.
+.user-list__history-tip {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  width: max-content;
+  margin-bottom: space(1);
+
+  @include tip-bubble;
+
+  &.is-open {
+    @include tip-bubble-open;
+  }
+}
+
 // Email and its verified mark, side by side.
 .user-list__email {
   display: inline-flex;

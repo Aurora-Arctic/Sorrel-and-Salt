@@ -223,7 +223,7 @@ The compendium's reads take no session: one keyset page under an optional filter
 
 ## The compendium cache (M8.6)
 
-The compendium's list and count and the curated vocabularies' are held in Next's data cache under the one `compendium` tag, through one wrapper in `src/lib/`, keyed by their arguments and stored as superjson; Vitest aliases the cache to a pass-through, and only one e2e server keeps it. [`db/compendium-cache.md`](db/compendium-cache.md)
+The compendium's list and count and the curated vocabularies' are held in Next's data cache under the one `compendium` tag, through one wrapper in `src/lib/`, keyed by their arguments and stored as superjson; every compendium-tier admin write expires the tag with `{ expire: 0 }`, held to it by a guard over the `ingredients` and `vocabulary` services; Vitest aliases the cache to a pass-through, and only one e2e server keeps it. [`db/compendium-cache.md`](db/compendium-cache.md)
 
 ## Compendium writes (M5.2)
 

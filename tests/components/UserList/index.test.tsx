@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import UserList from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -84,7 +84,8 @@ describe('UserList', () => {
     render(<UserList {...props()} />);
 
     expect(cellsOf('Ada Fixturewort')).toEqual([
-      'Ada Fixturewort',
+      // The history link's tip, then the name.
+      'Permissions HistoryAda Fixturewort',
       // The verified mark's word, for the reader and in its tip, then the address.
       'VerifiedVerifiedada@users.test',
       // The role, then the control that changes it, in one cell (MB.59).
@@ -96,7 +97,7 @@ describe('UserList', () => {
       'Yes',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
-      'Bo Fixturewort',
+      'Permissions HistoryBo Fixturewort',
       'UnverifiedUnverifiedbo@users.test',
       'UserGrant',
       // No sign-in method is an empty cell.
@@ -112,6 +113,74 @@ describe('UserList', () => {
     expect(
       within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('User').tagName,
     ).toBe('SPAN');
+  });
+
+  // MB.200: each row opens the privilege ledger narrowed to its user, an
+  // admin's included, from an icon before the name.
+  describe('the history link', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('leads every name, to the ledger searched for that user’s address', () => {
+      render(<UserList {...props()} />);
+
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', {
+          name: `Permissions history for ${user.name}`,
+        });
+        expect(link).toHaveAttribute(
+          'href',
+          `/admin/privilege-changes?query=${encodeURIComponent(user.email)}`,
+        );
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
+
+    // Every address is held lower-cased; the link does not rely on that.
+    it('searches for the address lower-cased', () => {
+      render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
+
+      expect(
+        screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' }),
+      ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+    });
+
+    it('says Permissions History in a tip on hover, kept while the pointer is on it', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.mouseEnter(link);
+      const tip = screen.getByRole('tooltip');
+      expect(tip).toHaveTextContent('Permissions History');
+      fireEvent.mouseLeave(link);
+      fireEvent.mouseEnter(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+      fireEvent.mouseLeave(tip);
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
+
+    it('says it on focus too, until blur or Escape', () => {
+      render(<UserList {...props()} />);
+      const link = screen.getByRole('link', { name: 'Permissions history for Bo Fixturewort' });
+
+      fireEvent.focus(link);
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Permissions History');
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+
+      fireEvent.focus(link);
+      fireEvent.blur(link);
+      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    });
   });
 
   // The owner's call: a green check or a red cross, the word kept for a

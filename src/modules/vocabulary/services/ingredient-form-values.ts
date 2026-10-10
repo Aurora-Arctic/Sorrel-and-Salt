@@ -11,7 +11,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
-import { cachedCompendiumRead } from '../../../lib/compendium-cache';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
@@ -94,10 +94,12 @@ export async function createIngredientFormValue(
   const { fields, groupName } = await parseForm(input);
   const slug = formSlug(fields.name, groupName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(ingredientForms, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseFormCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -143,7 +145,7 @@ export async function updateIngredientFormValue(
   await refuseCollidingRewrites(rename, rewrites);
   if (endRedirect !== true) await refuseEndingRedirects(rewrites, at);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientForms, id, { ...fields, slug });
     if (!row) throw new NotFound('No such form');
     if (rewrites.length > 0) {
@@ -165,6 +167,8 @@ export async function updateIngredientFormValue(
     await refuseCollidingRewrites(rename, rewrites, error);
     return refuseFormCollision(error, slug);
   });
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -191,6 +195,7 @@ export async function deleteIngredientFormValue(session: Session, id: string): P
     const [row] = await write.softDeleteByIds(ingredientForms, [id]);
     if (!row) throw new NotFound('No such form');
   });
+  expireCompendium();
 }
 
 /**

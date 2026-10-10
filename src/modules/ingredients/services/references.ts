@@ -5,6 +5,7 @@ import {
   findReferenceSuggestions,
   withAudit,
 } from '../../../db/repository';
+import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -64,10 +65,12 @@ export async function createReference(
   if (workspaceId == null) {
     const admin = assertSiteAdmin(session);
     const values = parseInput(ReferenceInput, input);
-    return withAudit(session, async (write) => {
+    const written = await withAudit(session, async (write) => {
       const [row] = await write.insertInCompendium(admin, references, values);
       return row;
     });
+    expireCompendium();
+    return written;
   }
 
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
@@ -104,7 +107,7 @@ export async function updateReference(
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such source');
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] =
       'admin' in proof
         ? await write.updateByIdInCompendium(proof.admin, references, id, values)
@@ -112,6 +115,9 @@ export async function updateReference(
     if (!row) throw new NotFound('No such source');
     return row;
   });
+  // A coven's reference is in no cached read.
+  if ('admin' in proof) expireCompendium();
+  return written;
 }
 
 /**
