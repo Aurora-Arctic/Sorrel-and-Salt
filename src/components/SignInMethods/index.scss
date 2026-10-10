@@ -65,6 +65,13 @@
   margin: 0;
 }
 
+// A line beneath a section's heading saying what it is for, as Sign-In
+// Methods' intro does, in the muted ink.
+.account-page__intro {
+  margin: 0;
+  color: $text-muted;
+}
+
 .sign-in-methods {
   display: flex;
   flex-direction: column;

@@ -480,7 +480,8 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 - **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`
   and `linkedAccounts()`. Under its `<h1>` "Your Account" are three
-  sections, each under its own `<h2>`: Name (`NameForm`), Email
+  sections, each under its own `<h2>`: Name ("Change your name." beneath its
+  heading, then `NameForm`), Email
   (`EmailForm`, embedded) and Sign-In Methods (`SignInMethods`, whose
   heading is the section's). It carries no link to `/account/email`.
   Between the heading and the first section, a nav labelled "On this page"

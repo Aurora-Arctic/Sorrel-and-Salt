@@ -50,6 +50,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         <h2 id="account-name-heading" className="account-page__section-heading">
           Name
         </h2>
+        <p className="account-page__intro">Change your name.</p>
         <NameForm name={me.name} />
       </section>
       <hr className="account-page__rule" />

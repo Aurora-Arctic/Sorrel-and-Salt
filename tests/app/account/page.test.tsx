@@ -76,6 +76,13 @@ describe('the /account page', () => {
     expect(screen.getAllByRole('separator')).toHaveLength(2);
   });
 
+  it('says what the Name section is for beneath its heading', async () => {
+    await renderPage();
+
+    const heading = within(section('Name')).getByRole('heading', { level: 2, name: 'Name' });
+    expect(heading.nextElementSibling).toHaveTextContent(/^Change your name\.$/);
+  });
+
   it('prefills the name and the address in their sections', async () => {
     await renderPage();
 
