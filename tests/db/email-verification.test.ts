@@ -50,6 +50,9 @@ beforeAll(async () => {
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // The ledger first: a promotion's rows name the users deleted below, and
+  // only a truncate empties it.
+  await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;

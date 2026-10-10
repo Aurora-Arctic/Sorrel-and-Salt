@@ -5,6 +5,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { ORIGIN, cookieHeader } from '../support/oauth';
 import { A, B, E } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
+import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
 
 // MB.53, through Better Auth's real endpoints with the plugin registered: an
@@ -95,7 +96,10 @@ describe('impersonating a user', () => {
     expect((await impersonate(asE, target)).status).toBe(200);
 
     // An admin holds the creation flag, which the users CHECK requires (MB.177).
-    await sql`update users set role = 'admin', can_create_workspace = true where id = ${target}`;
+    await asManualFix(
+      sql,
+      (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${target}`,
+    );
 
     expect((await impersonate(asE, target)).status).toBe(403);
   });

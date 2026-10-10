@@ -1,7 +1,6 @@
-import { eq, inArray, isNull, max } from 'drizzle-orm';
+import { inArray, isNull, max } from 'drizzle-orm';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
-import { adminRoleChanges } from '../../modules/identity/schema/admin-role-changes';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -16,7 +15,12 @@ import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
 import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
-import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import {
+  beginSeedTransaction,
+  declaringBootstrapPrivileges,
+  insertMissing,
+  requireFrom,
+} from './idempotent';
 import type {
   FixtureUser,
   SeedDatabase,
@@ -415,7 +419,6 @@ export async function seedStandardContent(
   await seedVocabularySources(tx);
 
   await insertMissingUsers(tx);
-  await insertMissingAdminBootstrap(tx);
   await insertMissingWorkspaces(tx);
   await insertMissingMemberships(tx);
 
@@ -462,9 +465,25 @@ function pickOf(ids: Map<string, string>, name: string, what: string): string {
 // ignoring `deleted_at` so a soft-deleted entry is not quietly restored, and
 // updates nothing already present.
 
+// The cast holds its privileges from its first insert, so the trigger on
+// `users` records them, by the seed's route, `bootstrap` (MB.195). A–D's
+// creation grants are stamped as the seed's own user, which inserts them. E
+// is inserted alone and as itself, so its two grants are stamped as E, as a
+// primary admin's promotion is stamped as that admin; its `users` row is
+// still the seed's, as every seeded row is.
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
-  const wanted = Object.values(FIXTURE_USERS);
+  const { E, ...cast } = FIXTURE_USERS;
 
+  await declaringBootstrapPrivileges(tx, BOOTSTRAP_SESSION.userId, () =>
+    insertMissingFixtureUsers(tx, Object.values(cast)),
+  );
+  await declaringBootstrapPrivileges(tx, E.id, () => insertMissingFixtureUsers(tx, [E]));
+}
+
+async function insertMissingFixtureUsers(
+  tx: SeedTransaction,
+  wanted: readonly FixtureUser[],
+): Promise<void> {
   await insertMissing(tx, users, wanted, {
     existing: async (tx) =>
       (
@@ -481,25 +500,6 @@ async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
     keyOf: (user) => user.id,
     toRow: (user) => user,
   });
-}
-
-// Fixture E's ledger row, as MB.58's migration writes one for every admin a
-// database already holds: one `bootstrap` row, stamped as E. Not
-// `insertMissing`, which stamps as the bootstrap user.
-async function insertMissingAdminBootstrap(tx: SeedTransaction): Promise<void> {
-  const admin = FIXTURE_USERS.E.id;
-  const [present] = await tx
-    .select({ id: adminRoleChanges.id })
-    .from(adminRoleChanges)
-    .where(eq(adminRoleChanges.userId, admin))
-    .limit(1);
-  if (present) return;
-
-  await tx
-    .insert(adminRoleChanges)
-    .values(
-      applyAudit('insert', { userId: admin, change: 'bootstrap' as const }, { userId: admin }),
-    );
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {

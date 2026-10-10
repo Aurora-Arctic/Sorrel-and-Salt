@@ -393,6 +393,13 @@
       "when": 1791652103945,
       "tag": "0055_user-privilege-changes",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1791652565434,
+      "tag": "0056_privilege-changes-record-themselves",
+      "breakpoints": true
     }
   ]
 }

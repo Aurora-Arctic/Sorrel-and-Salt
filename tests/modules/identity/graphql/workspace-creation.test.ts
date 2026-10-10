@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
+import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
 import type { GrantedUserResult, RevokedUserResult } from './types';
 
@@ -25,7 +26,7 @@ const NOWHERE = '00000000-0000-0000-0000-0000000000c9';
 
 beforeEach(async () => {
   // The ledger references the user each test writes it for.
-  await sql`truncate workspace_creation_changes`;
+  await sql`truncate user_privilege_changes`;
   await sql`delete from users where id = ${PENDING}`;
   await sql`
     insert into users (id, name, email, can_create_workspace, created_by, updated_by)
@@ -89,7 +90,10 @@ const REVOKE = `
 
 describe('Mutation.revokeWorkspaceCreation', () => {
   beforeEach(async () => {
-    await sql`update users set can_create_workspace = true where id = ${PENDING}`;
+    await asManualFix(
+      sql,
+      (tx) => tx`update users set can_create_workspace = true where id = ${PENDING}`,
+    );
   });
 
   it('answers an admin the user, no longer able to create a coven', async () => {

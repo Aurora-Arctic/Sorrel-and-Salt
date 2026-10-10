@@ -123,17 +123,24 @@ describe('user_privilege_changes table', () => {
     expect(nobody.code).toBe('23503');
   });
 
-  // Nothing writes it but the copy, and on a fresh database the copy finds
-  // nothing to copy: the seed's ledger rows land in the old tables after the
-  // migration has run. Those rows are counted first, so the empty table is
-  // the copy's doing rather than an empty template's.
-  it('holds no row after migration, though the seeded template holds old ledger rows', async () => {
-    const [{ old }] = await sql<{ old: number }[]>`
-      select count(*)::int as old from admin_role_changes
-    `;
-    expect(old).toBeGreaterThan(0);
+  // On a fresh database the migration's copy finds nothing to copy, so every
+  // row the seeded template holds is one the trigger on `users` wrote as the
+  // seed inserted the cast (MB.195), each a `bootstrap` grant; the two old
+  // ledgers it would have copied are empty.
+  it('holds no copied row on a fresh database, only the seeded cast’s bootstrap grants', async () => {
+    const rows = await everyChange();
+    const cast = Object.values(FIXTURE_USERS).map((user) => user.id);
 
-    expect(await everyChange()).toEqual([]);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(cast).toContain(row.user_id);
+      expect({ change: row.change, via: row.via }).toEqual({ change: 'grant', via: 'bootstrap' });
+    }
+    const [{ old }] = await sql<{ old: number }[]>`
+      select (select count(*) from admin_role_changes)::int
+           + (select count(*) from workspace_creation_changes)::int as old
+    `;
+    expect(old).toBe(0);
   });
 });
 

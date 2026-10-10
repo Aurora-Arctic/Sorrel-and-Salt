@@ -25,10 +25,11 @@ export interface CreationFlagRow {
   updated_at: Date;
 }
 
-/** One `workspace_creation_changes` row as the ledger tests read it, `change` cast to text. */
+/** One `create_workspace` row of `user_privilege_changes` as the ledger tests read it, the enums cast to text. */
 export interface CreationChangeRow {
   user_id: string;
   change: string;
+  via: string;
   created_by: string;
   updated_by: string;
 }
