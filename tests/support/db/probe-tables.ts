@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach } from 'vitest';
 import postgres from 'postgres';
 import { sql as dsql } from 'drizzle-orm';
 import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { namedWrites } from '@/db/table-marks';
 import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 
 // The repository's own tests run against scratch tables rather than real ones:
@@ -70,6 +71,27 @@ export const tinctures = pgTable('repository_probe_tinctures', {
   name: text('name').notNull(),
   ...auditColumns,
 });
+
+// The two marked shapes (MB.198): `herbs` and `tinctures` again, each
+// written only through named calls, so every generic writer method refuses
+// it. Declared and never created: what they test is the type, and a refusal
+// they exist to show is a compile error rather than a statement.
+export const switches = namedWrites(
+  pgTable('repository_probe_switches', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    ...auditColumns,
+  }),
+);
+
+export const tiers = namedWrites(
+  pgTable('repository_probe_tiers', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id'),
+    name: text('name').notNull(),
+    ...auditColumns,
+  }),
+);
 
 /** Acting users with no `users` row: the probe tables carry no FK to one. */
 export const session = { userId: '11111111-1111-1111-1111-111111111111' };
