@@ -207,6 +207,58 @@ describe('app.current_user_id (M1.19)', () => {
     for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
   });
 
+  it('publishes a declared route and note as app.privilege_route and app.privilege_note (MB.195)', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Yarrow' }), {
+      via: 'admin',
+      note: 'Keeps the herb garden',
+    });
+
+    expect(row.privilegeRoute).toBe('admin');
+    expect(row.privilegeNote).toBe('Keeps the herb garden');
+    expect(row.actingUser).toBe(session.userId);
+  });
+
+  it('publishes both empty when nothing is declared, so none inherits a pooled value (MB.195)', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Woad' }), {
+      via: 'manual',
+      note: 'Fixed by hand',
+    });
+
+    const rows = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        withAudit(session, (write) => write.insert(herbs, { name: `Undeclared ${index}` })),
+      ),
+    );
+
+    for (const [row] of rows) {
+      expect(row.privilegeRoute).toBe('');
+      expect(row.privilegeNote).toBe('');
+    }
+  });
+
+  it('publishes an empty note when a route is declared without one (MB.195)', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Madder' }), {
+      via: 'bootstrap',
+    });
+
+    expect(row.privilegeRoute).toBe('bootstrap');
+    expect(row.privilegeNote).toBe('');
+  });
+
+  it('leaves the route and note unset on a connection outside any withAudit transaction (MB.195)', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Agrimony' }), {
+      via: 'admin',
+      note: 'Transaction-local',
+    });
+
+    const [settings] = await sql`
+      select current_setting('app.privilege_route', true) as route,
+             current_setting('app.privilege_note', true) as note
+    `;
+    expect(settings.route ?? null).toBeNull();
+    expect(settings.note ?? null).toBeNull();
+  });
+
   it('never opens a transaction at all when there is no acting user', async () => {
     await expect(
       withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Hemlock' })),
