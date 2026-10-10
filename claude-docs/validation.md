@@ -145,7 +145,7 @@ Rules both variants enforce:
   other rows (["The workspace ingredient mutations"](graphql/schema.md)).
 - **Deities, each a pick or a name** (DESIGN.md §5, `ingredient_deities`;
   MB.167). An entry is `{ deityId }` or `{ name }`, held to exactly one as a
-  substitute's is: both, neither, or a blank entry is refused at the entry
+  substitute's is, by the same rule (`linkOrNameRules`, each in its own nouns): both, neither, or a blank entry is refused at the entry
   rather than dropped, and so is a `deityId` that is not a uuid. The same
   deity picked twice, or the same name typed twice in any case, is refused at
   the repeat, the two partial unique indexes' keys; links to two same-named

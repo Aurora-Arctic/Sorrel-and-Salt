@@ -10,6 +10,9 @@ import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
   DeityFields,
+  LinkOrName,
+  LinkOrNameFields,
+  LinkOrNameMessages,
   Lists,
   Parsed,
   ReferenceLinkEntry,
@@ -68,7 +71,7 @@ const elementList = z
 /**
  * A substitute links an ingredient or names one (DESIGN.md §5,
  * `ingredient_substitutes`): either half trimmed, and blank as absent, so
- * `substituteRules` decides between them. A blank entry is refused rather
+ * `linkOrNameRules` decides between them. A blank entry is refused rather
  * than dropped, so a service's refusal, made after the parse, still counts
  * the entries the caller sent.
  */
@@ -94,10 +97,23 @@ const referenceLink = z.object({
   locator: optionalText(formatLocator),
 });
 
+/** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[] | null | undefined,
+): LinkOrName<IdKey>[] | undefined {
+  // A computed key widens to a string index, so the shape is asserted back.
+  return entries?.map((entry) => {
+    const id = entry[idKey];
+    return (
+      id ? { [idKey]: id, name: null } : { [idKey]: null, name: entry.name ?? '' }
+    ) as LinkOrName<IdKey>;
+  });
+}
+
 /**
- * Each substitute and deity as the one half it carries, once
- * `substituteRules` and `deityRules` have held it to one, and each reference
- * as its id and locator, once `referenceRules` has held it to an id.
+ * Each substitute and deity as the one half it carries, and each reference as
+ * its id and locator, once `referenceRules` has held it to an id.
  */
 function asEntries<
   T extends {
@@ -114,12 +130,8 @@ function asEntries<
 } {
   return {
     ...value,
-    substitutes: value.substitutes?.map(({ ingredientId, name }): SubstituteEntry =>
-      ingredientId ? { ingredientId, name: null } : { ingredientId: null, name: name ?? '' },
-    ),
-    deities: value.deities?.map(({ deityId, name }): DeityEntry =>
-      deityId ? { deityId, name: null } : { deityId: null, name: name ?? '' },
-    ),
+    substitutes: asLinkOrName('ingredientId', value.substitutes),
+    deities: asLinkOrName('deityId', value.deities),
     references: value.references?.map(({ referenceId, locator }): ReferenceLinkEntry => ({
       referenceId,
       locator: locator ?? null,
@@ -184,23 +196,19 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
-  // Case-folded to match the lower(name) unique index on folk names.
-  const seen = new Set<string>();
-  let nameRepeated = false;
-  (value.folkNames ?? []).forEach((folkName, index) => {
-    if (folkName === '') return;
-    const key = folkName.toLowerCase();
-    if (key === value.name.toLowerCase()) nameRepeated = true;
-    else if (seen.has(key)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['folkNames', index],
-        message: 'This folk name is already listed',
-      });
-    }
-    seen.add(key);
-  });
-  if (nameRepeated) {
+  // Case-folded to match the lower(name) unique index on folk names. A folk
+  // name that is the name is refused once, at the name, rather than as a repeat.
+  const folkNames = value.folkNames ?? [];
+  const nameKey = value.name.toLowerCase();
+  for (const index of repeatsOf(folkNames)) {
+    if (folkNames[index].toLowerCase() === nameKey) continue;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['folkNames', index],
+      message: 'This folk name is already listed',
+    });
+  }
+  if (folkNames.some((folkName) => folkName !== '' && folkName.toLowerCase() === nameKey)) {
     ctx.addIssue({
       code: 'custom',
       path: ['name'],
@@ -234,81 +242,88 @@ function formRules({ form, formId }: Parsed, ctx: z.RefinementCtx) {
 }
 
 /**
+ * Where each entry repeats an earlier one but for case, the fold the
+ * lower(name) unique indexes make: its position in the list as sent, blanks
+ * skipped but counted, so a refusal lands at the row the form sent it in.
+ */
+function repeatsOf(entries: readonly string[]): number[] {
+  const seen = new Set<string>();
+  return entries.flatMap((entry, index) => {
+    if (entry === '') return [];
+    const key = entry.toLowerCase();
+    if (seen.has(key)) return [index];
+    seen.add(key);
+    return [];
+  });
+}
+
+/**
  * Each entry of an ordered list once, folded as folk names are: a repeat but
- * for case and spacing is refused at the repeat, at the row the form sent it
- * in, blanks counted (MB.167).
+ * for case and spacing is refused at the repeat (MB.167).
  */
 function refuseRepeats(field: string, entries: readonly string[], ctx: z.RefinementCtx) {
-  const seen = new Set<string>();
-  entries.forEach((entry, index) => {
-    if (entry === '') return;
-    const key = entry.toLowerCase();
-    if (seen.has(key)) {
-      ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
-    }
-    seen.add(key);
-  });
+  for (const index of repeatsOf(entries)) {
+    ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
+  }
 }
 
 /**
- * Each deity is exactly one of a link and a name, and listed once: the same
- * deity linked twice, or the same name typed twice in any case — the two
- * partial unique indexes' keys — is refused at the repeat. Links to two
- * deities sharing a name are two deities, and a typed name equal to a linked
- * one's is text beside a link, so neither is a repeat (MB.165).
+ * Each entry of `field` is exactly one of a link, by `idKey`, and a name,
+ * and listed once: the same row linked twice, or the same name typed twice in
+ * any case — each table's two partial unique indexes' keys — is refused at
+ * the repeat. Two links to rows sharing a name are two rows, and a name equal
+ * to a linked row's is text beside a link, so neither is a repeat. A link is
+ * compared as sent, as the index compares it.
  */
-function deityRules(entries: DeityFields[], ctx: z.RefinementCtx) {
-  const refuse = (index: number, message: string) =>
-    ctx.addIssue({ code: 'custom', path: ['deities', index], message });
-  const links = new Set<string>();
-  const names = new Set<string>();
+function linkOrNameRules<IdKey extends string>(
+  field: string,
+  idKey: IdKey,
+  messages: LinkOrNameMessages,
+) {
+  return (entries: readonly LinkOrNameFields<IdKey>[], ctx: z.RefinementCtx) => {
+    const refuse = (index: number, message: string) =>
+      ctx.addIssue({ code: 'custom', path: [field, index], message });
+    // Only an entry with no link is a name, so the rest count as blanks.
+    const namesRepeated = new Set(
+      repeatsOf(entries.map((entry) => (entry[idKey] ? '' : (entry.name ?? '')))),
+    );
+    const links = new Set<string>();
 
-  entries.forEach(({ deityId, name }, index) => {
-    if (deityId && name) {
-      refuse(index, 'A deity is picked or typed, not both');
-    } else if (deityId) {
-      if (!RowId.safeParse(deityId).success) refuse(index, 'No such deity to pick');
-      else if (links.has(deityId)) refuse(index, 'This deity is already listed');
-      links.add(deityId);
-    } else if (name) {
-      const key = name.toLowerCase();
-      if (names.has(key)) refuse(index, 'This deity is already listed');
-      names.add(key);
-    } else {
-      refuse(index, 'Name the deity, or pick one');
-    }
-  });
+    entries.forEach((entry, index) => {
+      const link = entry[idKey];
+      if (link && entry.name) {
+        refuse(index, messages.both);
+      } else if (link) {
+        // Not a uuid names nothing, and would be a driver error at the comparison.
+        if (!RowId.safeParse(link).success) refuse(index, messages.noSuchLink);
+        else if (links.has(link)) refuse(index, messages.linkRepeated);
+        links.add(link);
+      } else if (entry.name) {
+        if (namesRepeated.has(index)) refuse(index, messages.nameRepeated);
+      } else {
+        refuse(index, messages.neither);
+      }
+    });
+  };
 }
 
-/**
- * Each substitute is exactly one of a link and a name, and listed once: the
- * same ingredient twice, or the same name in any case — the two partial
- * unique indexes' keys — is refused at the repeat. A name equal to a linked
- * ingredient's label is not a repeat, since one is text and the other a link.
- */
-function substituteRules(entries: SubstituteFields[], ctx: z.RefinementCtx) {
-  const refuse = (index: number, message: string) =>
-    ctx.addIssue({ code: 'custom', path: ['substitutes', index], message });
-  const links = new Set<string>();
-  const names = new Set<string>();
+/** A deity picked from the curated list, or typed (MB.165). */
+const deityRules = linkOrNameRules('deities', 'deityId', {
+  both: 'A deity is picked or typed, not both',
+  neither: 'Name the deity, or pick one',
+  noSuchLink: 'No such deity to pick',
+  linkRepeated: 'This deity is already listed',
+  nameRepeated: 'This deity is already listed',
+});
 
-  entries.forEach(({ ingredientId, name }, index) => {
-    if (ingredientId && name) {
-      refuse(index, 'A substitute links an ingredient or names one, not both');
-    } else if (ingredientId) {
-      // Not a uuid names nothing, and would be a driver error at the comparison.
-      if (!RowId.safeParse(ingredientId).success) refuse(index, 'No such ingredient to link');
-      else if (links.has(ingredientId)) refuse(index, 'This ingredient is already listed');
-      links.add(ingredientId);
-    } else if (name) {
-      const key = name.toLowerCase();
-      if (names.has(key)) refuse(index, 'This substitute is already listed');
-      names.add(key);
-    } else {
-      refuse(index, 'Name the substitute, or choose an ingredient');
-    }
-  });
-}
+/** A substitute linking an ingredient, or naming one that is not entered. */
+const substituteRules = linkOrNameRules('substitutes', 'ingredientId', {
+  both: 'A substitute links an ingredient or names one, not both',
+  neither: 'Name the substitute, or choose an ingredient',
+  noSuchLink: 'No such ingredient to link',
+  linkRepeated: 'This ingredient is already listed',
+  nameRepeated: 'This substitute is already listed',
+});
 
 /**
  * Each reference names one by its id, and is listed once whatever its locator:
