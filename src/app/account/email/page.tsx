@@ -36,7 +36,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
       {/* An unverified account reaches no other page, so it is offered none. */}
       {me.emailVerified && (
         <p className="email-page__nav">
-          <Link href="/account">Sign-in methods</Link>
+          <Link href="/account">Your account</Link>
         </p>
       )}
     </main>

@@ -1,0 +1,11 @@
+@use '../../scss/variables' as *;
+
+// A column inside its account-page section; the field, the notices and the
+// button are the form primitives' (_primitives.scss). Tokens only until the
+// account page's design review (MB.117).
+.name-form {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  width: 100%;
+}

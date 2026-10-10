@@ -56,6 +56,10 @@ In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#provisional-accounts-mb67
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-email-page-mb54).
 
+### The account page (MB.88)
+
+In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-account-page-mb88).
+
 ### Granting a second admin (M2.9, MB.59)
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin-m29-mb59).

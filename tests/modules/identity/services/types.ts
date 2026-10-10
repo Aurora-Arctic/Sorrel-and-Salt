@@ -57,3 +57,11 @@ export interface LedgerRow {
   user_id: string;
   privilege: string;
 }
+
+/** A user's name and its stamps, as the name tests read them. */
+export interface NamedUserRow {
+  id: string;
+  name: string;
+  updated_by: string;
+  updated_at: Date;
+}

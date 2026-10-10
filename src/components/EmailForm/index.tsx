@@ -8,7 +8,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import type { EmailFormProps, Failure } from './types';
 import './index.scss';
 
-// The `/account/email` page's one form: show the account's address and its
+// The `/account/email` page's one form, and the account page's Email section
+// (`embedded`, MB.88): show the account's address and its
 // verification state, and take a new one. Every submit sends mail rather than
 // writing the row — the address changes only when the mailed link is followed
 // — so the success message names what was typed, not what came back.
@@ -67,6 +68,7 @@ const EmailForm = ({
   landing,
   error,
   waitSeconds = 0,
+  embedded = false,
 }: EmailFormProps): ReactElement => {
   const inputId = useId();
   const fieldErrorId = useId();
@@ -121,10 +123,14 @@ const EmailForm = ({
     mutation.mutate(value);
   };
 
-  if (confirmed) {
+  // Embedded, the section heads the form and the page has no confirmed view:
+  // a followed link lands on the email page, never the account page.
+  const heading = embedded ? null : <h1 className="email-form__heading">Your Email</h1>;
+
+  if (confirmed && !embedded) {
     return (
       <div className="email-form">
-        <h1 className="email-form__heading">Your Email</h1>
+        {heading}
         <p className="email-form__status">{VERIFIED_STATUS}</p>
         <p className="email-form__address">{email}</p>
         <p className="email-form__continue">
@@ -144,7 +150,7 @@ const EmailForm = ({
 
   return (
     <div className="email-form">
-      <h1 className="email-form__heading">Your Email</h1>
+      {heading}
       <p className="lede email-form__status">{statusLine(email, verified)}</p>
       {alert && (
         <p className="notice notice--error" role="alert">

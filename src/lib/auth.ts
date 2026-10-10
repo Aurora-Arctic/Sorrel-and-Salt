@@ -401,6 +401,11 @@ export const auth = betterAuth({
       allowDifferentEmails: true,
     },
   },
+  // `/update-user` writes `name` and `image` outside `withAudit`; the name
+  // is `setName`'s, the audited write (MB.88). Refused at the router, before
+  // the endpoint or any hook runs, with a 404 (claude-docs/auth/admin-bootstrap.md,
+  // "The account page").
+  disabledPaths: ['/update-user'],
   user: {
     // Off, pinned by test: on, a user could move the primary admin's address
     // to another account. An email changes through MB.54's verified flow.
