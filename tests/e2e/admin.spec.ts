@@ -147,12 +147,12 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     /an-admin@admin-users\.test$/,
     // The role, then the control that changes it (MB.59).
     'AdminRevoke',
-    // Each logo's name, for the reader and in its tip.
-    'DiscordDiscordGoogleGoogle',
-    /^\d{4}-\d{2}-\d{2}$/,
     // A mark alone: every admin may create a workspace, and the users CHECK
     // says so (MB.177), so the cell offers no control.
     'Yes',
+    // Each logo's name, for the reader and in its tip.
+    'DiscordDiscordGoogleGoogle',
+    /^\d{4}-\d{2}-\d{2}$/,
   ]);
   // The mark says what it marks on hover, in a tip bubble (the owner's review).
   const email = admin.getByRole('cell').nth(1);
@@ -162,7 +162,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText('Verified');
   // So does each sign-in logo, its provider's name.
-  const discord = admin.getByRole('cell').nth(3).locator('.user-list__provider--discord');
+  const discord = admin.getByRole('cell').nth(4).locator('.user-list__provider--discord');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
   await expect(discord.locator('.user-list__tip')).toHaveText('Discord');
@@ -181,7 +181,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
@@ -196,7 +196,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   await approving.getByRole('button', { name: 'Approve' }).click();
   await expect(approving).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
   expect(await privilegeChanges(userId)).toEqual([
     {
       privilege: 'create_workspace',
@@ -215,7 +215,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   await revoking.getByRole('button', { name: 'Revoke' }).click();
   await expect(revoking).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
   await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
 });
 
@@ -235,7 +235,7 @@ test('an admin approves an unverified user at /admin/users through the warning',
   const row = page.getByRole('row', { name: /unverified@admin-approval\.test/ });
   // The precondition: the address is unverified and the user awaits approval.
   await expect(row.getByRole('cell').nth(1)).toHaveText(/^Unverified/);
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
@@ -251,7 +251,7 @@ test('an admin approves an unverified user at /admin/users through the warning',
   await approve.click();
   await expect(approving).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
   await expect(
     row.getByRole('button', { name: 'Revoke approval for Fixture Person' }),
   ).toBeVisible();
@@ -269,7 +269,7 @@ test('an admin grants admin to a user at /admin/users with a reason, then revoke
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /grantee@admin-role\.test/ });
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^No/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
   const granting = page.getByRole('dialog', { name: 'Grant Admin' });
@@ -285,7 +285,7 @@ test('an admin grants admin to a user at /admin/users with a reason, then revoke
 
   // An admin now, who may create a coven, so the creation cell holds the mark alone.
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
-  await expect(row.getByRole('cell').nth(5)).toHaveText('Yes');
+  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
   expect(await privilegeChanges(userId)).toEqual([
     { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the planets' },
     { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Curates the planets' },
@@ -299,7 +299,7 @@ test('an admin grants admin to a user at /admin/users with a reason, then revoke
   await expect(revoking).toHaveCount(0);
 
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
   await expect(row.getByRole('button', { name: 'Grant admin to Fixture Person' })).toBeVisible();
 });
 

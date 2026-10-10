@@ -46,8 +46,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Six columns, in the owner's order**: Name, Email, Role, Sign-In Methods,
-  Signed Up and Coven Creation, each heading in title case (DESIGN.md §9). The Email
+- **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
+  Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
+  The two columns with a control, Role and Coven Creation, sit together, and
+  the two facts read rather than changed follow them (reordered during MB.59,
+  on the owner's call). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin
   granting admin judges a person by (MB.59). A yes-or-no is a mark, on the
@@ -99,7 +102,14 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   The endpoint is the guard: the button only puts it where an admin looks.
   The column, heading and cells, has a red rule down its left. The column is
   tinted a faded red with red text, and its heading's hairline is red where
-  every other is the muted ink.
+  every other is the muted ink. It is sticky at the table's right edge, so on
+  a narrow screen the other columns scroll beneath it (on the owner's call,
+  during MB.59): its tint is therefore mixed into the ground it sits on, the
+  page or a banded row's card, rather than laid over transparent. The table's
+  borders are separate rather than the primitive's collapsed ones, so each
+  rule belongs to its cell and the headings' hairline scrolls beneath the red
+  one rather than being drawn across it. No cell wraps: the table scrolls
+  instead, and only a tip's text wraps, within its bubble.
   Its
   button is `.btn--destructive`, on the owner's call: it is the one control
   that acts as someone else.

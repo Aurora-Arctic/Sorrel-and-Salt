@@ -62,7 +62,7 @@ const PrimaryAdminRevoke = ({ name }: { name: string }): ReactElement => {
         key={attempts}
         id={reasonId}
         role={attempts ? 'alert' : 'tooltip'}
-        className={open ? 'user-list__tip is-open' : 'user-list__tip'}
+        className={open ? 'user-list__control-tip is-open' : 'user-list__control-tip'}
         aria-hidden={!open}
       >
         {PRIMARY_ADMIN_REFUSAL}

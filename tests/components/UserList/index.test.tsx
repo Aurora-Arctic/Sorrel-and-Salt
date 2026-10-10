@@ -74,9 +74,9 @@ describe('UserList', () => {
       'Name',
       'Email',
       'Role',
+      'Coven Creation',
       'Sign-In Methods',
       'Signed Up',
-      'Coven Creation',
     ]);
   });
 
@@ -90,21 +90,21 @@ describe('UserList', () => {
       'VerifiedVerifiedada@users.test',
       // The role, then the control that changes it, in one cell (MB.59).
       'AdminRevoke',
+      // The mark alone, no control: an admin holds the flag.
+      'Yes',
       // Each logo's name, for the reader and in its tip.
       'DiscordDiscordGoogleGoogle',
       '2026-03-04',
-      // The mark alone, no control: an admin holds the flag.
-      'Yes',
     ]);
     expect(cellsOf('Bo Fixturewort')).toEqual([
       'Permissions HistoryBo Fixturewort',
       'UnverifiedUnverifiedbo@users.test',
       'UserGrant',
+      // The mark, then the control that changes it, in one cell.
+      'NoApprove',
       // No sign-in method is an empty cell.
       '',
       '2026-05-06',
-      // The mark, then the control that changes it, in one cell.
-      'NoApprove',
     ]);
     // An admin's role in bold, a user's not.
     expect(
@@ -205,11 +205,11 @@ describe('UserList', () => {
         .parentElement,
     ).toHaveClass('user-list__mark--yes');
     // The creation flag's, whose heading already asks the question: no tooltip.
-    const no = within(bo[5] as HTMLElement).getByText('No');
+    const no = within(bo[3] as HTMLElement).getByText('No');
     expect(no).toHaveClass('visually-hidden');
     expect(no.parentElement).toHaveClass('user-list__mark--no');
     expect(no.parentElement?.querySelector('.user-list__tip')).toBeNull();
-    expect(within(ada[5] as HTMLElement).getByText('Yes').parentElement).toHaveClass(
+    expect(within(ada[3] as HTMLElement).getByText('Yes').parentElement).toHaveClass(
       'user-list__mark--yes',
     );
   });
@@ -228,7 +228,7 @@ describe('UserList', () => {
 
     const methods = within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getAllByRole(
       'cell',
-    )[3] as HTMLElement;
+    )[4] as HTMLElement;
     const logos = [...methods.querySelectorAll('.user-list__provider')];
     expect(logos.map((logo) => logo.className)).toEqual([
       'user-list__hint user-list__provider user-list__provider--discord',
@@ -249,7 +249,7 @@ describe('UserList', () => {
   it('names a provider outside the roster by its id rather than dropping it', () => {
     render(<UserList {...props({ users: [{ ...BO, providers: ['github'] }] })} />);
 
-    expect(cellsOf('Bo Fixturewort')[3]).toBe('github');
+    expect(cellsOf('Bo Fixturewort')[4]).toBe('github');
   });
 
   it('says so when no user matches', () => {
@@ -470,7 +470,7 @@ describe('UserList approval', () => {
       'btn--quiet',
     );
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
-    expect(within(ada).getAllByRole('cell')[5]).toHaveTextContent(/^Yes$/);
+    expect(within(ada).getAllByRole('cell')[3]).toHaveTextContent(/^Yes$/);
     expect(
       within(ada).queryByRole('button', { name: /Approve|Revoke approval/ }),
     ).not.toBeInTheDocument();

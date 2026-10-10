@@ -31,7 +31,7 @@ const PrimaryAdminMark = (): ReactElement => {
       </button>
       <span
         role="tooltip"
-        className={open ? 'user-list__tip is-open' : 'user-list__tip'}
+        className={open ? 'user-list__control-tip is-open' : 'user-list__control-tip'}
         aria-hidden={!open}
       >
         Primary Admin

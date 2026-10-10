@@ -13,14 +13,25 @@
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
 // buttons, whose boxes put their baselines at different heights, so on the
-// baseline a row's contents sat unevenly (the owner's review). The signup
-// date stays on one line rather than breaking at its hyphens.
+// baseline a row's contents sat unevenly (the owner's review).
 .user-list .data-table td {
   vertical-align: middle;
 }
 
-.user-list .data-table time {
-  white-space: nowrap;
+// No cell wraps, heading or body, since the table scrolls inside its frame
+// (the owner's call, during MB.59): a row stays one line however narrow the
+// screen. Separate borders, not the primitive's collapsed ones, so each rule
+// belongs to its own cell: a collapsed rule belongs to the table's grid, and
+// the headings' muted hairline was drawn across the sticky Impersonate
+// heading's red one as the columns scrolled beneath it.
+.user-list .data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th,
+  td {
+    white-space: nowrap;
+  }
 }
 
 .user-list__search {
@@ -73,10 +84,9 @@
   @include tip-bubble-open;
 }
 
-// The linked providers' logos in a wrapping row.
+// The linked providers' logos in a row.
 .user-list__providers {
   display: inline-flex;
-  flex-wrap: wrap;
   gap: space(1);
   vertical-align: middle;
 }
@@ -190,10 +200,22 @@
 // The Impersonate column, heading and cells: a red rule down its left, a
 // faded red tint and red text,
 // since it is the one control in the table that acts as someone else.
+//
+// It stays at the table's right edge while the other columns scroll beneath it
+// on a narrow screen (the owner's call), so its ground is opaque: the tint
+// mixed into the band it sits on, the page or a banded row's card, rather than
+// laid over transparent.
 .user-list__impersonate {
+  position: sticky;
+  right: 0;
+  z-index: 1;
   border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, transparent);
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
   color: $secondary;
+}
+
+.user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
+  background-color: color-mix(in srgb, $secondary 6%, $surface-card);
 }
 
 // Its heading's hairline red too, where every other column's is the muted
@@ -202,11 +224,10 @@
   border-bottom-color: $secondary;
 }
 
-// The creation cell: the Yes or No, then the control that changes it, which
-// wraps below on a narrow column.
+// The creation cell: the Yes or No, then the control that changes it, on one
+// line.
 .user-list__creation {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: space(2) space(3);
 }
@@ -222,11 +243,10 @@
 }
 
 // The role cell: the role and the primary admin's crown on the left, the
-// control that changes it on the right, centred on one line, and wrapping
-// below on a narrow column as the creation cell does (the owner's call).
+// control that changes it on the right, centred on one line (the owner's
+// call).
 .user-list__role {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: space(2) space(3);
@@ -283,8 +303,9 @@
 
 // Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
 // InfoTip's, above the mark or button from its left edge, no wider than 18rem
-// so it stays on a phone.
-.user-list__tip {
+// so it stays on a phone. Not `.user-list__tip`, the marks' and logos'
+// centred tip, which takes no pointer: these stay open while hovered.
+.user-list__control-tip {
   position: absolute;
   bottom: 100%;
   left: 0;
@@ -292,6 +313,8 @@
   width: max-content;
   max-width: min(18rem, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
+  // Its cell keeps to one line; the reason wraps within the bubble.
+  white-space: normal;
 
   @include tip-bubble;
 }
