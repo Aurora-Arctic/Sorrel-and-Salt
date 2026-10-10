@@ -31,6 +31,8 @@ export interface UserListProps {
   nextHref?: string;
   /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
   canImpersonate?: boolean;
+  /** The pause on admin changes and whether this admin may flip it (MB.63); no switch when absent. */
+  adminChanges?: PauseControlProps;
 }
 
 /** The filter the page shows, which the form starts from and compares against. */
@@ -102,4 +104,11 @@ export interface CreationControlProps {
   /** Whether the user's address is verified; Approve warns when it is not (MB.205). */
   emailVerified: boolean;
   action: CreationAction;
+}
+
+/** The pause on admin grants and revokes, as the page read it (MB.63). */
+export interface PauseControlProps {
+  paused: boolean;
+  /** Whether the viewing admin is the primary admin, the only one who may flip it. */
+  canToggle: boolean;
 }

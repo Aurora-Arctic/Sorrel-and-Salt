@@ -50,6 +50,8 @@ type Documents = {
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
+    "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
+    "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": typeof types.ResumeAdminRoleChangesDocument,
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
@@ -95,6 +97,8 @@ const documents: Documents = {
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
+    "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
+    "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": types.ResumeAdminRoleChangesDocument,
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": types.SetUserRoleDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
@@ -262,6 +266,14 @@ export function graphql(source: "\n  mutation GrantWorkspaceCreation($userId: ID
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n"): (typeof documents)["\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n"): (typeof documents)["\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

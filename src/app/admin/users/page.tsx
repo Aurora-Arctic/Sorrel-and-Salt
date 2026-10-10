@@ -9,7 +9,12 @@ import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
 import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
-import { isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
+import {
+  adminRoleChangePauseState,
+  isPrimaryAdmin,
+  listUsers,
+  providersOf,
+} from '@/modules/identity';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -66,14 +71,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
-  const { users, pageInfo } = await readUsers(
-    session,
-    query,
-    awaitingApproval,
-    role,
-    after,
-    before,
-  );
+  const [{ users, pageInfo }, adminChanges] = await Promise.all([
+    readUsers(session, query, awaitingApproval, role, after, before),
+    // The pause on admin changes and whether this admin may flip it (MB.63).
+    adminRoleChangePauseState(session),
+  ]);
 
   return (
     <main>
@@ -84,6 +86,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         awaitingApproval={awaitingApproval}
         role={role}
         canImpersonate={impersonationEnabled()}
+        adminChanges={adminChanges}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor
             ? userListHref({ query, awaitingApproval, role }, { before: pageInfo.startCursor })

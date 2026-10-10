@@ -2,6 +2,7 @@
 // `@/modules/identity/schema/*`; `services/*`, `graphql/*` and `types.ts` are
 // internal to the module.
 export * from './services/admin-role';
+export * from './services/admin-role-pause';
 export * from './services/email';
 export * from './services/privilege-changes';
 export * from './services/profile';
@@ -16,6 +17,7 @@ export * from './graphql/privilege-changes';
 export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id-for-admin';
 export type {
+  AdminRoleChangePauseState,
   EmailVerificationSender,
   PrimaryAdminOutcome,
   PrivilegeChangeFilter,

@@ -146,7 +146,9 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   forces https. It rides as an extra request header, not in the cookie jar,
   since a browser never sends a `Secure` cookie to the plain-http
   `devcontainer:<port>` a remote browser uses. Give each call a fresh address:
-  the email index is unique.
+  the email index is unique. To switch back to a user already made,
+  `signInAgainAs(page, userId)` gives the browser a new session for it
+  (MB.63).
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never

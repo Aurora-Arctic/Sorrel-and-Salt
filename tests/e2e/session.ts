@@ -81,3 +81,31 @@ export async function signInAs(
   await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${signed(token, secret)}` });
   return { userId };
 }
+
+/**
+ * Makes `page` a browser signed in again to a user `signInAs` already made,
+ * on a new session, so a spec can switch back to one: the email index is
+ * unique, so `signInAs` cannot make the same address twice (MB.63).
+ */
+export async function signInAgainAs(
+  page: Page,
+  userId: string,
+  { database }: { database?: string } = {},
+): Promise<void> {
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret)
+    throw new Error('BETTER_AUTH_SECRET must be set for the runner and the server alike');
+
+  const sql = postgres(e2eDatabaseUrl(database), { onnotice: () => {} });
+  const token = randomBytes(24).toString('base64url');
+  try {
+    await sql`
+      insert into sessions (token, user_id, expires_at, updated_at)
+      values (${token}, ${userId}, now() + interval '1 day', now())
+    `;
+  } finally {
+    await sql.end();
+  }
+
+  await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${signed(token, secret)}` });
+}

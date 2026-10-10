@@ -136,3 +136,27 @@ export const AdminRoles: Story = () => (
     />
   </Frame>
 );
+
+// MB.63: the switch on admin changes, paused. To the primary admin its Resume
+// works; to any other admin it is in view but unusable, the reason beside it.
+export const AdminChangesPaused: Story = () => (
+  <Frame>
+    <UserList
+      users={USERS}
+      query=""
+      awaitingApproval={false}
+      adminChanges={{ paused: true, canToggle: true }}
+    />
+  </Frame>
+);
+
+export const AdminChangesNotPrimary: Story = () => (
+  <Frame>
+    <UserList
+      users={USERS}
+      query=""
+      awaitingApproval={false}
+      adminChanges={{ paused: false, canToggle: false }}
+    />
+  </Frame>
+);

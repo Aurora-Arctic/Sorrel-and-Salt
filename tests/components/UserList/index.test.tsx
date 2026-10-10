@@ -866,3 +866,100 @@ describe('UserList admin role', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+// MB.63: the primary admin's switch on admin changes, its state in words; to
+// any other admin the control is in view but unusable, saying why.
+describe('UserList admin changes switch', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
+
+  it('offers no switch where the page passes no state', () => {
+    render(<UserList {...props()} />);
+
+    expect(screen.queryByRole('button', { name: /Admin Changes/ })).not.toBeInTheDocument();
+  });
+
+  it('lets the primary admin pause, stating that changes are on, busy until the page is read again', async () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<UserList {...props({ adminChanges: { paused: false, canToggle: true } })} />);
+
+    expect(
+      screen.getByText(
+        'Admin changes are on: any admin can make someone an admin or stop them being one.',
+      ),
+    ).toBeInTheDocument();
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(pause);
+
+    const busy = screen.getByRole('button', { name: 'Pausing' });
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('lets the primary admin resume, stating that changes are paused', async () => {
+    let calls = 0;
+    mockGraphQLMutation('ResumeAdminRoleChanges', () => {
+      calls += 1;
+      return { resumeAdminRoleChanges: false };
+    });
+    render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
+
+    expect(
+      screen.getByText(
+        'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
+      ),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Resume Admin Changes' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('says why beside the switch when the service refuses, and offers it again', async () => {
+    mockGraphQLError('PauseAdminRoleChanges', {
+      code: 'FORBIDDEN',
+      message: 'Only the primary admin may pause or resume admin changes',
+    });
+    render(<UserList {...props({ adminChanges: { paused: false, canToggle: true } })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Only the primary admin may pause or resume admin changes',
+    );
+    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('shows another admin the state and the switch, aria-disabled, stating why when tried and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
+
+    expect(screen.getByText(/^Admin changes are on/)).toBeInTheDocument();
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause).toBeEnabled();
+    expect(pause).toHaveAttribute('aria-disabled', 'true');
+    expect(pause).toHaveAccessibleDescription(NOT_PRIMARY);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(pause);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(NOT_PRIMARY);
+    expect(screen.getAllByText(NOT_PRIMARY)).toHaveLength(1);
+    expect(calls).toBe(0);
+  });
+});

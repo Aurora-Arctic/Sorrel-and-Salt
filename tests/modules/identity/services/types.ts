@@ -57,3 +57,11 @@ export interface LedgerRow {
   user_id: string;
   privilege: string;
 }
+
+/** One `admin_role_change_pauses` row as the pause tests read it. */
+export interface PauseRow {
+  created_by: string;
+  updated_by: string;
+  ended_by: string | null;
+  ended: boolean;
+}

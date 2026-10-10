@@ -1,5 +1,5 @@
 import type { GraphQLObjectType } from 'graphql';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
@@ -261,6 +261,8 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
   ),
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
+  pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
+  resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort" }) { id } }`,
   ),
@@ -371,6 +373,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   revokeWorkspaceCreation: { governs: 'workspace creation' },
   // MB.59: who is an admin, granted and revoked by an admin.
   setUserRole: { governs: 'admin role' },
+  // MB.63: the primary admin's pause on those changes.
+  pauseAdminRoleChanges: { governs: 'admin role' },
+  resumeAdminRoleChanges: { governs: 'admin role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -413,6 +418,16 @@ const adminProbe = (field: string): ScopeProbe =>
 const NON_ADMINS = [A, B, C, D];
 
 describe('a signed-in non-admin at every admin write', () => {
+  // E as the primary admin, so the pause's two writes, which the service
+  // allows the primary admin alone (MB.63), admit the admin past the scope.
+  beforeEach(() => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('is classified for every Mutation field the schema has', () => {
     const fields = fieldsOf(schema.getMutationType());
 

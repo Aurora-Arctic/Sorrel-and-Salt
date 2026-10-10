@@ -16,7 +16,7 @@ import {
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
-import { setUserRole } from '@/modules/identity';
+import { pauseAdminRoleChanges, resumeAdminRoleChanges, setUserRole } from '@/modules/identity';
 import { E } from '../support/as-user';
 
 // Stories 58 and 59 through Better Auth's real endpoints, with MSW standing in
@@ -166,14 +166,18 @@ describe('Story 60: As an admin, make an existing user an admin and revoke it ag
   }
 
   beforeEach(async () => {
-    await sql`truncate user_privilege_changes`;
-    await sql`delete from users where email like ${`%${ROLE_DOMAIN}`}`;
-    // E as the seed made it, put back as a `psql` fix would.
+    // E as the seed made it, put back as a `psql` fix would, its own stamp
+    // first, so the users an earlier test made can go.
     await sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;
-      await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
+      await tx`
+        update users set role = 'admin', can_create_workspace = true, updated_by = ${E.id}
+        where id = ${E.id}
+      `;
     });
     await sql`truncate user_privilege_changes`;
+    await sql`truncate admin_role_change_pauses`;
+    await sql`delete from users where email like ${`%${ROLE_DOMAIN}`}`;
   });
 
   it('makes a user an admin and revokes it again, each recorded in the ledger as the admin’s act', async () => {
@@ -226,5 +230,27 @@ describe('Story 60: As an admin, make an existing user an admin and revoke it ag
       'the last admin',
     );
     expect(await roleOf(admin)).toBe('admin');
+  });
+
+  it('lets the primary admin pause grants and revokes for every other admin, itself exempt, and resume them', async () => {
+    const admin = await insertUser('admin', 'admin');
+    const primary = await insertUser('primary', 'admin');
+    const user = await insertUser('user', 'user');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
+    const asAdmin = { userId: admin, role: 'admin' as const };
+    const asPrimary = { userId: primary, role: 'admin' as const };
+
+    await expect(pauseAdminRoleChanges(asAdmin)).rejects.toThrow('Only the primary admin');
+    await pauseAdminRoleChanges(asPrimary);
+
+    await expect(setUserRole(asAdmin, user, 'admin')).rejects.toThrow('Admin changes are paused');
+    await expect(setUserRole(asAdmin, E.id, 'user')).rejects.toThrow('Admin changes are paused');
+    expect(await roleOf(user)).toBe('user');
+    await setUserRole(asPrimary, user, 'admin');
+    expect(await roleOf(user)).toBe('admin');
+
+    await resumeAdminRoleChanges(asPrimary);
+    await setUserRole(asAdmin, user, 'user');
+    expect(await roleOf(user)).toBe('user');
   });
 });

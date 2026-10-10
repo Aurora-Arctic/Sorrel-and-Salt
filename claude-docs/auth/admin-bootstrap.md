@@ -509,7 +509,7 @@ tasks that build the rest:
   primary admin can be neither revoked nor deleted, and a revoke that would
   leave zero admins is refused (the record's "The primary admin" and
   "Revoking").
-- **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
+- **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
   the primary admin pauses granting and revoking for every other admin (the
   record's "Granting"; MB.62 built the table,
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).

@@ -37,3 +37,10 @@ export interface EmailVerificationSender {
    */
   requestChange(current: string, address: string, next?: string): Promise<void>;
 }
+
+/** Whether admin changes are paused (MB.63), and whether the asking admin may switch that. */
+export interface AdminRoleChangePauseState {
+  paused: boolean;
+  /** Only the primary admin may pause or resume. */
+  canToggle: boolean;
+}

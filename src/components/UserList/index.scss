@@ -178,3 +178,16 @@
   color: $text-muted;
   font-size: 0.875em;
 }
+
+// The pause on admin changes, above the filter: the state in words, then the
+// control, wrapping below on a narrow page (MB.63).
+.user-list__pause {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(3);
+
+  .user-list__pause-state {
+    margin: 0;
+  }
+}

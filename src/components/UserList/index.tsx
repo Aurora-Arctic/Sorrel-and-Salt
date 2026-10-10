@@ -5,6 +5,7 @@ import CreationControl from './creation-control';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
 import ImpersonateButton from './impersonate-button';
+import PauseControl from './pause-control';
 import RoleControl from './role-control';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
@@ -178,8 +179,10 @@ const UserList = ({
   previousHref,
   nextHref,
   canImpersonate = false,
+  adminChanges,
 }: UserListProps): ReactElement => (
   <div className="user-list">
+    {adminChanges && <PauseControl {...adminChanges} />}
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
 
     {users.length ? (
