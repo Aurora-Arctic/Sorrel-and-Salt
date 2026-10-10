@@ -209,6 +209,132 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.203 | Drop `workspace_invitations` and `admin_invitations`                                           | Wave 8  | —                      |
 | MB.204 | The provisional-account sweep skips an account holding a privilege change                      | Wave 8  | —                      |
 | MB.205 | Warn before approving an unverified account for coven creation                                 | Wave 8  | —                      |
+| MB.206 | Repository: the two-tier read scope and the page pair, written once                            | Wave 8  | MB.210                 |
+| MB.207 | Schema: the vocabulary columns, indexes and the sourced-entity registry from one place         | Wave 8  | MB.214, MB.208         |
+| MB.208 | Seed: one key reader, one actor publisher, one two-tier registry                               | Wave 8  | —                      |
+| MB.209 | Validation: one `requiredText`, one `RowId`, one link-or-name rule                             | Wave 8  | MB.212, MB.115         |
+| MB.210 | Vocabulary and identity services: the curated write steps once                                 | Wave 8  | MB.211                 |
+| MB.211 | Ingredient writes: the child sequence and the input fields once                                | Wave 8  | MB.212                 |
+| MB.212 | GraphQL transport: the resolver plumbing and the curated-vocabulary writes once                | Wave 8  | —                      |
+| MB.213 | Auth, sign-in and mail: the provider roster once, the gates once                               | Wave 8  | —                      |
+| MB.214 | Categories and category groups refuse a blank description                                      | Wave 8  | —                      |
+
+**MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
+
+_Story:_ As a developer, I want the repository to say "readable in the caller's tiers" and "one page and its count" once each, so that a change to how a tier is read, or how a page is cut, is one edit and not twelve.
+
+Minted on 2026-10-10 from the backend DRY review the owner asked for ([`design-decisions/mb.206-plan.md`](../design-decisions/mb.206-plan.md)), the first of nine (MB.206 to MB.214) and the mechanism the rest adopt. The two-tier read scope — the compendium's rows or a membership's — is written out twelve times across `ingredients.ts`, `references.ts`, `common-names.ts` and `vocabularies.ts`, the "readable parent ingredient" `existsIn` four times, the "live and under a live group" predicate six times, the text fold and the trigram match twice each, and the page-and-count pair six times beside the `findPage` that already does it, which `users.ts` could call today. `predicates.ts` gains `readableInTiers`, `readableIngredientParent`, `curated`, `fold`, `trigramMatch` and `foldedWordMatch`; `select.ts` gains `selectOne`, `selectByIds` and `trgmSettings`; `findPage` and `findPageCount` take a key order and an optional `where`, with `groupedOrder` for the sorts that join a group's name and `vocabularyArms` for the filters, `findPageInCompendium` for the compendium tier and `selectInCompendium` for its one-row reads. The soft-delete finder guard's regex and exact-text pins widen to the new names in the same PR, so the guard goes on seeing the filter through them, and `index.ts`'s pinned export list grows by what services need. `IngredientRow` replaces the inline row type. No SQL changes: the EXPLAIN-plan tests hold their row counts, and the repository and service tests are the proof.
+
+_Acceptance criteria:_
+
+- No exported finder spells the two-tier scope or the page-and-count pair by hand, asserted by the soft-delete finder guard
+- The two EXPLAIN-plan tests hold their row counts, and the repository and service tests are unchanged and green
+- The guard pins each new predicate by name, and `index.ts`'s export list is pinned as before
+- `claude-docs/db/sql-fragments.md` and `workspace-ingredients.md` name the predicates
+
+**MB.207 — Schema: the vocabulary columns, indexes and the sourced-entity registry from one place** · 2h
+
+_Story:_ As a developer, I want a curated vocabulary's table to declare its shared columns and indexes by one builder, and the sourced entities to be listed once, so that a new vocabulary or a new sourced table cannot drift from its siblings.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`). The eight vocabulary tables each spell the uuid id column, the slug and seed-key partial uniques, the description CHECK and the trigram index by hand, and the review found the drift that invites: `categories` and `category_groups` lack the blank-description CHECK the other six carry (MB.214). `src/db/schema-parts.ts`, client-free beside `audit.ts`, gains `idColumn`, `liveUnique`, `vocabularyColumns` and `vocabularyIndexes`, producing the same names and the same DDL, which `db:generate` writing no migration proves; the builder takes a flag for the two tables without the CHECK until MB.214 adds it. `spell_ingredients.quantity` takes the precision `quantities.ts` says is "written down once". The audit column names, listed by hand in four places, derive from the factories' keys. `reference_links` lists its five sourced entities once, as a registry its FK columns, partial uniques and `num_nonnulls` CHECK are built from, and MB.208 puts the repository's finder and `citesNothing`, hard-wired to the ingredient column today, onto it, so sourcing a deity or a planet is a row in the registry and not a copy of each. The repository half is MB.208's rather than this task's because MB.206, built beside this one, rewrites the same finder.
+
+_Acceptance criteria:_
+
+- `npm run db:generate` on the branch writes no migration: the DDL is byte-identical, index and constraint names included
+- The catalogue sweeps and `tests/db/audit-columns.test.ts` are green unchanged
+- One place lists the sourced entities, and `reference-links.ts`'s header says truthfully what a sixth costs
+- `spell_ingredients.quantity` reads its precision from `quantities.ts`
+
+**MB.208 — Seed: one key reader, one actor publisher, one two-tier registry** · 2h
+
+_Story:_ As a developer, I want the seed to build each idempotent insert's key once, publish the actor the way `withAudit` does, and read the two-tier pairs from the same list the repository reads, so that a seed file is data and not a second copy of the mechanism.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`). Eight `insertMissing` call sites write the same composite key twice, once for the live rows and once for the wanted rows, and two "one caller is not worth a helper" copies return ids; `insertMissingBy` and `insertMissingReturningIds` in `idempotent.ts` take them. `withAudit` publishes four session settings and says every write does, but the seed publishes two: `publishActor` in `src/db/audit.ts` serves both, and the seed then publishes all four, a behaviour change named in the PR. The two-tier pairs are declared in about eight places across the repository and the seed, and each seed file names the item's group key twice per call; `src/db/vocabularies.ts`, tables and types only, lists `TWO_TIER` and `FLAT` once, `groupingOf` and the unions derive from it, and `reslugItems` folds into `seedTwoTierVocabulary` so `forms.ts` and `deities.ts` call once. `findReferencesOf(memberships, column, ids)` over MB.207's registry replaces `findReferencesOfIngredients`, and `citesNothing` takes the column, both on MB.206's predicates. The seed's hand-written row types become `Pick`s of the table's insert type, so a renamed column fails there as it already does for users and ingredients.
+
+_Acceptance criteria:_
+
+- `tests/db/seed/**` and `seeded-template.test.ts` are green unchanged
+- The seed's transaction publishes the four session settings `withAudit` publishes, asserted
+- One module lists the two-tier pairs, and the seed and the repository both read it
+- No seed file builds an `insertMissing` key twice
+
+**MB.209 — Validation: one `requiredText`, one `RowId`, one link-or-name rule** · 1.5h
+
+_Story:_ As a developer, I want the shared validation shapes — a required text, an optional text, a row id, a link-or-name entry — written once, so that a message or a rule changes in one place and no schema disagrees with its service.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`). A bug first, regression test first: `category.ts`, `deity.ts` and `ingredient-form-value.ts` take their parent id with `z.uuid()`, while every service checks `RowId`, which is `z.guid()` precisely because a hand-written fixture id fails `z.uuid()`; the three take `RowId`. `src/lib/validation.ts` gains `requiredText` and `optionalText`, written four times today, and `curatedValueInput(noun)` for the six name-and-description pairs, on `astrology-value.ts`'s factory. The substitute and deity entries' "a link or a name, exactly one, listed once" rules are one `linkOrNameRules` with one `LinkOrName` type, and the case-folded seen-set loop is one. The 17 reference fields are listed in six places: `ReferenceTextField` derives from `CitationFields`, and `REFERENCE_TEXT_FIELDS` is exported from the formatter's table for MB.212 to build the GraphQL types from. The day regex and the quotation-mark set live in `lib/citation.ts`, which validation may import, and the two date messages become one. `lib/contrast.ts` exports `HEX_COLOR` for the group validation's colour check, the two component copies of it MB.115's, and `channels` for `group-colors.ts`, which converts a hex to channels a second time.
+
+_Acceptance criteria:_
+
+- The regression test fails on `staging` and passes here: a fixture-shaped group id reaches the service's "no such group" refusal, not a format refusal
+- `tests/modules/*/validation/**` otherwise unchanged and green
+- No validation file declares its own required-text helper, day regex or hex regex
+- `REFERENCE_TEXT_FIELDS` is the one list of the reference's text fields
+
+**MB.210 — Vocabulary and identity services: the curated write steps once** · 3h
+
+_Story:_ As a developer, I want each curated vocabulary's service to say what is its own — the deity's slug under its tradition, the form's rename carried onto entries, the group's colours — and nothing else twice, so that a change to how a slug collision or a move is refused is one edit across the seven.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`), on the owner's call for shared helpers rather than a descriptor factory: each exported service keeps its own function and JSDoc, and `tests/guards/compendium-expiry.test.ts`, which reads each exported admin write for `assertSiteAdmin(` and `expireCompendium()`, keeps counting them. The seven vocabulary services repeat the slug-collision refusal seven times, the "an id that is not a uuid names nothing" lookup fifteen, the page walk four, the move-target refusal three, the held-entries refusal four, the parent check three and the list-and-count pair three. `vocabulary/services/curated-writes.ts`, internal like `group-moves.ts`, holds `refuseSlugCollision`, `liveRow`, `moveTarget` and a `deleteGroup` built on `MovedRows`, which gains the parent column and the child's slug rule; `allPages` goes to `lib/pagination.ts`; `held-entries.ts` gains `refuseWhileHeld` and is the one `describeEntry`, the compendium's quoted variant retired and one style chosen, and `redirectRefusal` serves both ending-a-redirect refusals; `parseUnderLiveParent`, `readableFilter` and `cachedFilteredList` take the rest, the cache keys kept unique for the cache guard. `plural`, `joinAnd` and `inIdOrder` go to `src/lib/`. Coven exports `readersOf` for the five "compendium only, or this coven too" copies. Identity: `liveUser` once, `assertAdminChangesOpen` for the five check-then-pause pairs, `isSiteAdmin` and `refuseBatch` for the three hand-written role checks, `adminDeclaration` for the three trimmed notes. `ingredients/types.ts` drops its `CategoryRow` for vocabulary's export.
+
+_Acceptance criteria:_
+
+- `tests/guards/compendium-expiry.test.ts` counts no fewer admin writes
+- Every service test is unchanged and green, and the `Forbidden` count per service file is not lower (MB.187's criterion)
+- No service file defines a local slug-collision refusal, move target, `describeEntry` or page walk, asserted by a guard over `src/modules/*/services`
+- The admin e2e specs pass
+
+**MB.211 — Ingredient writes: the child sequence and the input fields once** · 2h
+
+_Story:_ As a developer, I want a sixth child table of an ingredient to cost one writer, one loader and one input field, so that the compendium's write and the coven's cannot drift apart.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`). The compendium's and the coven's create, update and delete make the same five child calls in the same order, in two files that always change together, and their four GraphQL input types declare the same sixteen fields; the five child-loader clears after an update are written twice, and nothing would catch a sixth loader missed in one. `ingredient-rows.ts` gains `ingredientColumns` and `writeChildren`, so each write makes one call, and the tier-message choice is one function; `loaders/ingredient-children.ts` exports `clearIngredientChildren`, built from the loaders it defines; `graphql/ingredient-input.ts` exports `ingredientInputFields` for the four input types to spread, with the two switches they differ by. The SDL is unchanged, which the committed snapshot proves.
+
+_Acceptance criteria:_
+
+- `src/graphql/schema.graphql` is unchanged
+- Each of the two services makes one child call per write, and a loader added beside the others is cleared by both mutations without either being edited, asserted
+- Service and GraphQL tests unchanged and green
+- `claude-docs/db/compendium-writes.md` and `workspace-ingredients.md` say what a sixth child table costs
+
+**MB.212 — GraphQL transport: the resolver plumbing and the curated-vocabulary writes once** · 2.5h
+
+_Story:_ As a developer, I want a resolver to hold only what the transport adds, so that the session narrowing, the null-to-undefined mapping and a curated vocabulary's three writes are written once and not in every file.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`), on the owner's call for a factory here beside the small helpers, the committed SDL being the proof it changed nothing. The compile-time session narrowing is written 48 times across sixteen files, the argument mapping in six filter helpers and about fourteen inline coalesces, the suggestion field six times, the loader wrapper seven; the six curated-vocabulary files repeat one object type, one input type and eighteen mutation fields, three of them the same delete-with-move. `src/graphql/context-helpers.ts` gains `sessionOf`, `definedArgs`, `suggestionConnection` and `pageStart`; `define-loader.ts` gains `defineSignedInLoader` and `definePublicLoader`; `vocabulary/graphql/curated.ts` gains `curatedVocabularyWrites`, on the astrology loop's precedent, every field description passed through so the SDL does not move; the reference object and input types build from MB.209's `REFERENCE_TEXT_FIELDS`. The guard is a lint rule: `.oxlintrc.json`'s GraphQL override refuses the inline narrowing once `sessionOf` exists. The real gate is the service, so no authorization moves.
+
+_Acceptance criteria:_
+
+- `src/graphql/schema.graphql` is byte-identical, so `codegen` is a no-op
+- The lint entry refuses the inline session narrowing in `src/modules/*/graphql/**`, and `npm run lint` is green
+- The query-scope sweep and `tests/graphql/**` unchanged and green
+- The vocabulary admin e2e specs pass, and `claude-docs/graphql/schema.md` and `loaders.md` name the helpers
+
+**MB.213 — Auth, sign-in and mail: the provider roster once, the gates once** · 2h
+
+_Story:_ As a developer, I want a fifth sign-in provider to be one row the compiler checks, and the verification gates and mail templates to say each thing once, so that `auth.ts` cannot silently skip a provider or reword a refusal.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`). `auth.ts` configures the four providers as four near-identical blocks under a switch with no exhaustive default, so a provider added to the roster would compile and not register, against `social-providers.ts`'s own claim that it is "one entry here"; a `PROFILE` record keyed by `ProviderId` holds what differs — the account id's field, whether the provider vouches for the address, Microsoft's tenant — and `mapProfile` builds each block. The provider-id and role casts become the checks `request-session.ts` already has, exported; the three "signed in to this account" gates, the two quiet sweeps and the two set-or-throw-in-production reads become one each; `sign-in.ts`'s three identical message lookups become one, its repeated sentences written once. The two mail templates share `defineMessage`, `actionVerb`, `BaseEmailProps` and the ignore paragraph, and the two senders share `requestOrigin`. The colour helpers are MB.209's.
+
+_Acceptance criteria:_
+
+- `npm run build` is green
+- A fifth `ProviderId` without a `PROFILE` entry fails `typecheck`, asserted by a type test
+- `tests/lib/**`, the identity services and the email stories unchanged and green
+- The sign-in e2e specs pass
+
+**MB.214 — Categories and category groups refuse a blank description** · 0.5h
+
+_Story:_ As a site admin, I want a category or a category group with a blank description refused at the database as a form or a deity is, so that the vocabularies hold to one rule however a row reaches them.
+
+Minted on 2026-10-10 from the backend DRY review (`design-decisions/mb.206-plan.md`), the drift MB.207 found when it put the vocabulary indexes through one builder: six vocabulary tables carry a blank-description CHECK and `categories` and `category_groups` do not, though `description` is `notNull` on both and the zod input refuses a blank. One migration adds the two CHECKs under the siblings' naming, additive DDL with no sidecar; the builder's flag goes; a `db` test asserts each constraint by name. Its own task after MB.207 because it changes the database and MB.207 must not: a table task, then a behaviour task.
+
+_Acceptance criteria:_
+
+- Both constraints exist by name in `information_schema`, asserted
+- A blank description is refused at the database with the constraint named
+- The vocabulary index builder takes no flag
+- `npm run check:destructive-ddl` reports nothing
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -2440,6 +2566,8 @@ Minted during M5.4. Reviews the admin area once its last page lands: M5.4's layo
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
+The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: `CategoryForm` and `IngredientFormValueForm` are duplicated components (MB.189 kept their nine identically titled tests as one `it.each` so the next copy is a row); the hex regex is written in `GroupForm` and `ChipColorField` once more each after `lib/contrast.ts` exports it (MB.209); and the admin list pages carry their filter, cursor and "Page X of Y" plumbing per page.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -2453,6 +2581,7 @@ _Acceptance criteria:_
 - The phone design is signed off on its own, as screenshots on a touch screen at 375px and 412px, every admin page and the impersonation banner among them (amended during MB.53)
 - The user list is designed, not a bare table: at phone width every user's facts and controls are reachable without a hidden sideways scroll (amended during MB.53)
 - A destructive admin action looks destructive, and its confirmation says what will happen
+- No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
 **MB.116 — Design review: the sign-in and account pages** · 2h
 
@@ -2461,6 +2590,8 @@ _Story:_ As a member, I want signing in and managing my account to feel like one
 Minted during M5.4. Reviews the pages around signing in once MB.88 rebuilds `/account`: the public entry page `/` (MB.57), the sign-in page and its provider buttons with the last-used mark (M2.6, MB.77), `/account` with the name and address (MB.88), `/account/email` (MB.54) and the not-authorized page (M5.4). The sign-in methods list on `/account` has a review of its own, MB.117, straight after.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: the provider buttons' brand-coloured and greyed states, and the client twins of `sign-in.ts`'s error-message lookups.
 
 _Acceptance criteria:_
 
@@ -2471,6 +2602,7 @@ _Acceptance criteria:_
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The provider buttons keep their brand-coloured and greyed states distinct in both themes
 - `/`, `/sign-in` and the not-authorized page read as one site with the signed-in pages
+- No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
 **MB.117 — Design review: sign-in methods** · 1h
 
@@ -2479,6 +2611,8 @@ _Story:_ As a member, I want to see at a glance how I can sign in, and add or re
 Minted during M5.4, a review of its own at the owner's request, after the sign-in and account pages (MB.116): `SignInMethods` on `/account` (MB.71, moved there by MB.88) — each provider linked or addable, Add greyed for a provider that is not configured, Remove only while another method is left, and the error a failed link comes back with.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: `SignInMethods`' per-provider row — linked, addable or unavailable — as one row component.
 
 _Acceptance criteria:_
 
@@ -2490,6 +2624,7 @@ _Acceptance criteria:_
 - Linked, addable and unavailable providers are told apart without colour alone
 - The last remaining method reads as the one that cannot be removed, and says why
 - A failed link's error sits beside the provider it concerns
+- No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
 **MB.118 — Design review: the site's mail** · 2h
 
