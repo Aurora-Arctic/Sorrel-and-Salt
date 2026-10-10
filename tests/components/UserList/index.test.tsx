@@ -484,7 +484,7 @@ describe('UserList approval', () => {
 
     const asking = dialog('Approve Coven Creation');
     expect(asking).toHaveTextContent(
-      /^Approve Coven Creation×Let Bo Fixturewort create covens\?Approve/,
+      /^Approve Coven Creation×Let Bo Fixturewort create covens\?Reason/,
     );
     expect(within(asking).queryByText(UNVERIFIED_WARNING)).not.toBeInTheDocument();
     const approve = within(asking).getByRole('button', { name: 'Approve' });
@@ -507,6 +507,46 @@ describe('UserList approval', () => {
     expect(
       within(asking).getByRole('button', { name: 'Revoke' }),
     ).not.toHaveAccessibleDescription();
+  });
+
+  // The owner's call, beside MB.59's: each confirmation takes the same
+  // optional reason, sent trimmed, or not at all when blank.
+  it('approves with a reason, the field under the unverified warning, and revokes with one', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    const { rerender } = render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    const approving = dialog('Approve Coven Creation');
+    const reason = within(approving).getByRole('textbox', { name: 'Reason' });
+    expect(reason).toHaveAccessibleDescription(/^Optional\./);
+    // Below the warning, which keeps its own spacing class.
+    const warning = within(approving).getByText(UNVERIFIED_WARNING);
+    expect(warning).toHaveClass('notice', 'user-list__warning');
+    expect(warning.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.change(reason, { target: { value: '  Runs the Tuesday circle ' } });
+    fireEvent.click(within(approving).getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+
+    rerender(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+    const revoking = dialog('Revoke Coven Creation');
+    fireEvent.change(within(revoking).getByRole('textbox', { name: 'Reason' }), {
+      target: { value: '   ' },
+    });
+    fireEvent.click(within(revoking).getByRole('button', { name: 'Revoke' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(2));
+
+    expect(calls).toEqual([{ userId: BO.id, note: 'Runs the Tuesday circle' }, { userId: BO.id }]);
   });
 
   it('approves the row’s user from the modal, busy until the list is read again', async () => {

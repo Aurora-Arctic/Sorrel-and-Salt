@@ -174,7 +174,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   page,
 }) => {
   // Signed in once to make the account, then the page signs in as the admin.
-  await signInAs(page, 'awaiting@admin-approval.test');
+  const { userId } = await signInAs(page, 'awaiting@admin-approval.test');
   await signInAs(page, 'an-admin@admin-approval.test', ['discord'], 'admin');
 
   const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
@@ -188,12 +188,22 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
   // A verified address, so no warning (MB.205).
   await expect(approving).not.toContainText('has not been verified');
+  // An optional reason, as Grant and Revoke of admin take one.
+  await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
   await assertNoAccessibilityViolations(page);
 
   await approving.getByRole('button', { name: 'Approve' }).click();
   await expect(approving).toHaveCount(0);
 
   await expect(row.getByRole('cell').nth(5)).toHaveText(/^Yes/);
+  expect(await privilegeChanges(userId)).toEqual([
+    {
+      privilege: 'create_workspace',
+      change: 'grant',
+      via: 'admin',
+      note: 'Runs the Tuesday circle',
+    },
+  ]);
 
   // And revoked again, behind its own modal.
   await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();

@@ -113,11 +113,12 @@ for (const { field, description, write } of CREATION_WRITES) {
     t.field({
       type: UserRef,
       description,
-      args: { userId: t.arg.id({ required: true }) },
+      // The note is the confirmation's optional reason, kept on the ledger row.
+      args: { userId: t.arg.id({ required: true }), note: t.arg.string() },
       authScopes: { admin: true },
-      resolve: (_root, { userId }, { session }) => {
+      resolve: (_root, { userId, note }, { session }) => {
         if (!session) throw new Forbidden();
-        return write(session, userId);
+        return write(session, userId, note ?? undefined);
       },
     }),
   );

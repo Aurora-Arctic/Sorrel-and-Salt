@@ -67,6 +67,23 @@ describe('Mutation.setUserRole', () => {
     ]);
   });
 
+  // The actor is the session's, whatever the request carries: an undeclared
+  // variable is dropped, and an argument the field does not take fails
+  // validation before anything runs.
+  it('stamps the ledger with the session’s admin, never one the request names', async () => {
+    const smuggled = await run(
+      asUser(E),
+      `mutation { setUserRole(userId: "${GRANTEE}", role: admin, createdBy: "${A.id}") { id } }`,
+    );
+    expect(smuggled.errors?.[0]?.message).toMatch(/Unknown argument "createdBy"/);
+    expect(await sql`select 1 from user_privilege_changes`).toHaveLength(0);
+
+    await run(asUser(E), SET_ROLE, { userId: GRANTEE, role: 'admin', createdBy: A.id });
+
+    const actors = await sql`select distinct created_by from user_privilege_changes`;
+    expect(actors).toEqual([{ created_by: E.id }]);
+  });
+
   it('answers a revoke the user, no longer an admin', async () => {
     await asManualFix(
       sql,

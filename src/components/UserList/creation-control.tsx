@@ -9,13 +9,14 @@ import type { CreationControlProps } from './types';
 
 // The row's Approve or Revoke (M5.8), beside the mark it changes: lets a user
 // with no invitation create a coven, or stops them, behind a confirmation
-// naming them. A success re-reads the page, whose row then offers the other
-// action. Approving an unverified address warns first, and still approves
-// (MB.205).
+// naming them, with an optional reason the ledger keeps, as Grant and Revoke
+// of admin take one. A success re-reads the page, whose row then offers the
+// other action. Approving an unverified address warns first, and still
+// approves (MB.205).
 
 const GrantWorkspaceCreationDocument = graphql(`
-  mutation GrantWorkspaceCreation($userId: ID!) {
-    grantWorkspaceCreation(userId: $userId) {
+  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {
+    grantWorkspaceCreation(userId: $userId, note: $note) {
       id
       canCreateWorkspace
     }
@@ -23,8 +24,8 @@ const GrantWorkspaceCreationDocument = graphql(`
 `);
 
 const RevokeWorkspaceCreationDocument = graphql(`
-  mutation RevokeWorkspaceCreation($userId: ID!) {
-    revokeWorkspaceCreation(userId: $userId) {
+  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {
+    revokeWorkspaceCreation(userId: $userId, note: $note) {
       id
       canCreateWorkspace
     }
@@ -54,7 +55,8 @@ const CreationControl = ({
       warning={emailVerified ? undefined : unverifiedWarning('Approving')}
       busy="Approving"
       confirmClass="btn btn--solid"
-      send={() => graphqlRequest(GrantWorkspaceCreationDocument, { userId })}
+      withNote
+      send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
   ) : (
     <ConfirmedAction
@@ -70,7 +72,8 @@ const CreationControl = ({
       }
       busy="Revoking"
       confirmClass="btn btn--destructive"
-      send={() => graphqlRequest(RevokeWorkspaceCreationDocument, { userId })}
+      withNote
+      send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />
   );
 

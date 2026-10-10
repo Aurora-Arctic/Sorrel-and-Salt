@@ -94,8 +94,8 @@ creates no workspace, and a revoke leaves every workspace the user already
 created, and their ownership of it
 ([`m5.8-revoking-workspace-creation.md`](../design-decisions/m5.8-revoking-workspace-creation.md)).
 
-- **One service, two transports.** `grantWorkspaceCreation(session, userId)`
-  and `revokeWorkspaceCreation(session, userId)`
+- **One service, two transports.** `grantWorkspaceCreation(session, userId, note?)`
+  and `revokeWorkspaceCreation(session, userId, note?)`
   (`src/modules/identity/services/workspace-creation.ts`) assert the site
   role themselves, by direct call, and the two mutations in front of them carry
   the `admin` scope as the second check
@@ -103,7 +103,9 @@ created, and their ownership of it
   no path of its own: the row's control sends the mutation.
 - **Each change is a ledger row, in the same transaction.** The flag is an
   `updateById` on the user's row through `withAudit`, declared
-  `{ via: 'admin' }`, and the trigger on `users` writes a `create_workspace`
+  `{ via: 'admin', note }`, `note` being the confirmation's optional reason, a
+  blank one stored as none (added 2026-10-10 beside MB.59's, on the owner's
+  call), and the trigger on `users` writes a `create_workspace`
   `grant` or `revoke` row in `user_privilege_changes` beside it, stamped as
   the admin from the session, never the request (MB.195). The service writes
   no ledger row itself. The row's own `updated_by` goes with its next update;
@@ -123,7 +125,8 @@ created, and their ownership of it
   destructive and says their covens stay theirs, and an approval of an
   unverified address warns that nobody has proved who holds it and that
   approving keeps the account from lapsing (MB.204, MB.205), and still
-  approves ([`components/user-list.md`](../components/user-list.md)).
+  approves. Each takes the same optional Reason as Grant and Revoke of admin
+  ([`components/user-list.md`](../components/user-list.md)).
 
 **Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
 each write, its stamps and its ledger row; each non-admin fixture user refused
@@ -133,7 +136,10 @@ of W surviving a revoke; and a soft-deleted or unknown user. The transport's
 half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
 signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
-and approves an unverified one through the warning.
+approves an unverified one through the warning, and approves one with a
+reason, read back off the ledger. The note on the ledger, trimmed or none, is
+the service test's, and the transport test asserts the actor is the
+session's whatever the request carries.
 
 ## Granting and revoking admin (MB.59)
 

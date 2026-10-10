@@ -97,9 +97,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   owner's call; an admin's row has the
   mark alone, since every admin holds the flag (MB.177). Each asks first, in a
   `Modal` ([`modal.md`](modal.md)) titled "Approve Coven Creation" or "Revoke
-  Coven Creation", on the owner's call, the name in bold: "Let <name> create covens?", or "Stop
-  <name> from creating covens? Covens they own stay theirs.", with the action
-  again, which takes focus, and a quiet Cancel, which closes it and hands focus
+  Coven Creation", on the owner's call, the name in bold: "Let <name> create
+  covens?", or "Stop <name> from creating covens? Covens they own stay
+  theirs.", then the same optional Reason field as the role control's (below;
+  added beside MB.59's on the owner's call), under the warning where there is
+  one, sent as the ledger row's note, and the action again, which takes focus, and a quiet Cancel, which closes it and hands focus
   back to the row's button. The modal's Revoke is `.btn--destructive`, its
   Approve `.btn--solid`. Every button in the table, Impersonate included, is
   `.btn--small`, so a row is no taller than its text. The modal's action sends
