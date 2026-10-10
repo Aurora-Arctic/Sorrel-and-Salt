@@ -42,7 +42,7 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
-    // Facebook among them, so its mark shows on the row's band (MB.63).
+    // Facebook among them, so its mark shows (MB.63).
     providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,

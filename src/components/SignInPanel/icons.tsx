@@ -71,12 +71,15 @@ export function FacebookIcon(): ReactElement {
 }
 
 // The same Meta asset filled Facebook's own blue, with no chip, for a list
-// rather than a button (/admin/users' Sign-In Methods, MB.63): the path's
-// "f" is a hole, so it shows whatever ground the row has, in either theme,
-// where FacebookIcon's white fill needs the blue chip behind it.
+// rather than a button (/admin/users' Sign-In Methods, MB.63): Facebook's
+// standard blue circle with a white "f", on the owner's call, where
+// FacebookIcon's white fill needs the blue chip behind it. The path's "f" is
+// a hole, so a white disc sits behind it, inset (r 245 against the path's
+// 250) so no white fringe antialiases around the blue edge.
 export function FacebookMark(): ReactElement {
   return (
     <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
+      <circle cx="250" cy="250" r="245" fill="#ffffff" />
       <path
         fill="#0866ff"
         fillRule="nonzero"

@@ -68,8 +68,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   logo, on the owner's call: the sign-in page's own mark (`SignInPanel/icons.tsx`)
   on a small circle of its brand's ground, white for Google and Microsoft,
   blurple for Discord. Facebook's is `FacebookMark`, Meta's circle filled its
-  own blue with no chip, the "f" a hole the row's band shows through in
-  either theme, on the owner's call (MB.63); the panel's `FacebookIcon`, white
+  own blue with no chip and a white "f", a white disc behind the path's hole,
+  Facebook's standard mark in either theme, on the owner's call (MB.63); the panel's `FacebookIcon`, white
   over a blue chip, suits its blue button instead. The colours are hex literals
   as the panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
   in the same tip bubble on hover as the email's mark (`.user-list__hint`). A
