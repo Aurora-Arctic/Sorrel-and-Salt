@@ -1,6 +1,6 @@
-import { sql } from 'drizzle-orm';
-import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
+import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 
 // Category groups: global, admin-curated. A table rather than an enum so an
 // admin can add a ninth without DDL (MB.35). Two colours because one hex cannot
@@ -8,63 +8,33 @@ import { auditColumns } from '../../identity/schema/users';
 // build-time Sass token; no CHECK — the service validates, where it can name
 // the ratio missed. No order column: groups list alphabetically
 // (claude-docs/db/categories.md, "Categories, and the two group vocabularies").
+// The slug is unique alone because two groups may both display "Protection".
 export const categoryGroups = pgTable(
   'category_groups',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
-    name: text('name').notNull(),
-    slug: text('slug').notNull(),
+    ...vocabularyColumns(),
     colorDark: text('color_dark').notNull(),
     colorLight: text('color_light').notNull(),
-    description: text('description').notNull(),
-    // The identity the reference seed gave the row, null on any other; never
-    // changed after, so a reseed knows a row an admin has since edited (MB.171).
-    seedKey: text('seed_key'),
     ...auditColumns,
   },
-  (table) => [
-    uniqueIndex('category_groups_seed_key_unique')
-      .on(table.seedKey)
-      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
-    // Partial per CLAUDE.md rule 4, and on the slug alone: two groups may both
-    // display "Protection".
-    uniqueIndex('category_groups_slug_unique')
-      .on(table.slug)
-      .where(sql`${table.deletedAt} is null`),
-  ],
+  (table) =>
+    vocabularyIndexes('category_groups', table, { trigram: false, descriptionCheck: false }),
 );
 
 // Categories: global, admin-curated, and carrying no `workspaceId` — one
 // shared vocabulary, which is what makes assigned-versus-derived comparable.
 // No colour of its own; the group carries the pair. `groupId` is a real
 // foreign key where `ingredients.form` is text: only an admin writes both sides.
+// The slug is unique globally rather than per group: a chip filter and the
+// seed's idempotency key both read the slug alone.
 export const categories = pgTable(
   'categories',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
-    name: text('name').notNull(),
-    slug: text('slug').notNull(),
-    description: text('description').notNull(),
+    ...vocabularyColumns(),
     groupId: uuid('group_id')
       .notNull()
       .references(() => categoryGroups.id),
-    // The identity the reference seed gave the row, null on any other; never
-    // changed after, so a reseed knows a row an admin has since edited (MB.171).
-    seedKey: text('seed_key'),
     ...auditColumns,
   },
-  (table) => [
-    uniqueIndex('categories_seed_key_unique')
-      .on(table.seedKey)
-      .where(sql`${table.seedKey} is not null and ${table.deletedAt} is null`),
-    // Partial per rule 4, and global rather than per group: a chip filter and
-    // the seed's idempotency key both read the slug alone.
-    uniqueIndex('categories_slug_unique')
-      .on(table.slug)
-      .where(sql`${table.deletedAt} is null`),
-  ],
+  (table) => vocabularyIndexes('categories', table, { trigram: false, descriptionCheck: false }),
 );

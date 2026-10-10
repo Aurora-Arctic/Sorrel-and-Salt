@@ -4,6 +4,7 @@ import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve
@@ -39,9 +40,7 @@ const CANONICAL_KEY = canonicalKeyOf(sql.raw('name'), sql.raw('canonical_name'),
 export const ingredients = pgTable(
   'ingredients',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     workspaceId: uuid('workspace_id').references(() => workspaces.id),
     name: text('name').notNull(),
     // The public address: `ingredientSlug` of the label, the form and the
@@ -124,9 +123,7 @@ export const ingredients = pgTable(
     uniqueIndex('ingredients_compendium_slug_unique')
       .on(table.slug)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
-    uniqueIndex('ingredients_workspace_slug_unique')
-      .on(table.workspaceId, table.slug)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique('ingredients_workspace_slug_unique', table, table.workspaceId, table.slug),
 
     // The pick read backwards (M5.6a): the live compendium entries picking a
     // form, which hold its delete and follow its rename (MB.167). Partial on

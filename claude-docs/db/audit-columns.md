@@ -17,6 +17,15 @@ because every stamp references it, and a table imports them from there —
 `import { auditColumns } from '../../identity/schema/users'`, relative, since
 the schema graph is what drizzle-kit loads.
 
+**The factories' keys are the only list of the audit field names** (MB.207).
+`src/db/types.ts` reads `StampField` and `DeletionField` off their return
+types and builds `AuditFields` from them, each field typed as its column
+holds it; `applyAudit`'s overloads `Pick` those, the seed's `InsertStamps`
+is `StampField`, and the runtime `AUDIT_FIELD_NAMES` that `applyAudit`
+strips a payload of is `Object.keys` of the two factories' output, built
+with a reference that is never resolved. A column renamed or added in a
+factory reaches all of them without a second edit.
+
 Every table spreads `...auditColumns` **except two join tables**:
 `ingredient_categories` and `spell_categories` spread `...auditStampColumns`
 and are hard-deleted (MB.34) — see ["Hard delete on two join tables"](hard-delete-join-tables.md) for

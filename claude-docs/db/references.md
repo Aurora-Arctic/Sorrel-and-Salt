@@ -49,6 +49,16 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
+**The sourced tables are listed once** (MB.207). `SOURCED` in
+`src/modules/ingredients/schema/reference-links.ts` maps each property —
+`ingredientId`, `deityId`, `deityTraditionId`, `planetId`, `zodiacSignId` —
+to its column and the table it keys into, and the five foreign keys, the five
+partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
+A sixth sourced table is one entry there, and the migration `db:generate`
+writes from it drops and re-adds `reference_links_one_row`, which takes an
+`.ack.md` sidecar ([destructive DDL](expand-contract.md)). What reads and
+writes the new links is still code of its own.
+
 **One link per reference per row, and the index serves the read.** Each
 partial unique index leads on its sourced id, so a read of one ingredient's
 links — `ingredient_id = $1 AND deleted_at IS NULL` — implies the predicate

@@ -3,6 +3,7 @@ import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { ingredients } from './ingredients';
+import { idColumn } from '../../../db/schema-parts';
 
 // Midnight of the retirement's calendar date, plus 180 days: one instant for
 // every slug retired that day, whatever the hour. `timestamp` holds UTC here,
@@ -18,9 +19,7 @@ const EXPIRES_AT = sql`date_trunc('day', retired_at) + interval '180 days'`;
 export const retiredIngredientSlugs = pgTable(
   'retired_ingredient_slugs',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),

@@ -108,18 +108,25 @@ adopts the mechanism in that finder's own PR rather than a retrofit pass.
 carry `WHERE deleted_at IS NULL`. Without it, a plain `UNIQUE` constraint
 still matches a soft-deleted row's value, so deleting a record permanently
 reserves its name/slug/whatever the index covers — the exact opposite of
-"deleted records stay recoverable but invisible." `users_email_unique`
+"deleted records stay recoverable but invisible." An index whose only
+predicate is the tombstone is built by `liveUnique` in
+`src/db/schema-parts.ts` (MB.207), which writes the predicate itself, so a
+table cannot forget it or spell it differently; `users_email_unique`
 (`src/modules/identity/schema/users.ts`) is the worked example:
 
 ```ts
-uniqueIndex('users_email_unique')
-  .on(table.email)
-  .where(sql`${table.deletedAt} is null`);
+liveUnique('users_email_unique', table, table.email);
+// uniqueIndex('users_email_unique').on(table.email).where(sql`${table.deletedAt} is null`)
 ```
 
+An index with a predicate of its own beside the tombstone — a tier, a
+nullable link — is still written out, `and ${table.deletedAt} is null` last;
+the seed key's is `seedKeyUnique`, beside `liveUnique`, for the vocabularies
+and `references`.
+
 `tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
-second scratch table (`repository_probe_charms`) carries a unique index built
-exactly this way, and the tests assert a live duplicate name is still
+second scratch table (`repository_probe_charms`) carries a unique index with
+the same predicate, and the tests assert a live duplicate name is still
 rejected, while soft-deleting the original row and reinserting the same name
 succeeds — the row that comes back is a new id, and `findMany` sees only it.
 

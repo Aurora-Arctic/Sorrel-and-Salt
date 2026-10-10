@@ -1,6 +1,6 @@
-import { sql } from 'drizzle-orm';
 import { pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns, users } from './users';
+import { idColumn } from '../../../db/schema-parts';
 
 // pgEnums because each set is closed. The privilege names the `users` column
 // a change was to, `role` as `admin` and `can_create_workspace` as
@@ -29,9 +29,7 @@ export const userPrivilegeRoute = pgEnum('user_privilege_route', [
 // account, not §13's edit history
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 export const userPrivilegeChanges = pgTable('user_privilege_changes', {
-  id: uuid('id')
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
+  id: idColumn(),
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id),

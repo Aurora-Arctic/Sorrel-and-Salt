@@ -1,6 +1,7 @@
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
+import type { AnyPgColumn, ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import type postgres from 'postgres';
 import type { userPrivilegeRoute } from '../modules/identity/schema/user-privilege-changes';
+import type { auditStampColumnsReferencing, deletionColumnsReferencing } from './audit';
 
 /** A thunk to `users.id`, resolved when the foreign key is read rather than when the columns are built. */
 export type UsersIdReference = () => AnyPgColumn;
@@ -30,13 +31,22 @@ export interface PrivilegeDeclaration {
   note?: string;
 }
 
+/** The audit stamps' four names, read off the factory that builds them. */
+export type StampField = keyof ReturnType<typeof auditStampColumnsReferencing>;
+
+/** The two names the soft-deleted tables add, read off theirs. */
+export type DeletionField = keyof ReturnType<typeof deletionColumnsReferencing>;
+
+type AuditColumnBuilders = ReturnType<typeof auditStampColumnsReferencing> &
+  ReturnType<typeof deletionColumnsReferencing>;
+
+/**
+ * The six audit fields as a write carries them, each typed as its column
+ * holds it, non-null: a factory's rename or a seventh column reaches every
+ * `Pick` and `Omit` of this without a list to keep beside it.
+ */
 export type AuditFields = {
-  createdAt: Date;
-  createdBy: string;
-  updatedAt: Date;
-  updatedBy: string;
-  deletedAt: Date;
-  deletedBy: string;
+  [Field in StampField | DeletionField]: AuditColumnBuilders[Field]['_']['data'];
 };
 
 export type WithoutAuditFields<T> = Omit<T, keyof AuditFields>;
@@ -57,3 +67,20 @@ export type NamedWrites = { readonly $writes: 'named' };
 
 /** Every unmarked table: what each generic writer method demands, so a marked one is refused. */
 export type Generic = { $writes?: never };
+
+/** The columns a table's extra config sees, as far as schema-parts.ts's `liveUnique` reads them. */
+export interface LiveTable {
+  deletedAt: ExtraConfigColumn;
+}
+
+/** A table carrying the reference seed's key beside its tombstone. */
+export interface SeedKeyedTable extends LiveTable {
+  seedKey: ExtraConfigColumn;
+}
+
+/** What `vocabularyIndexes` reads of a vocabulary table: the columns `vocabularyColumns` built. */
+export interface VocabularyTable extends SeedKeyedTable {
+  name: ExtraConfigColumn;
+  slug: ExtraConfigColumn;
+  description: ExtraConfigColumn;
+}

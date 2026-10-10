@@ -1,7 +1,7 @@
-import { sql } from 'drizzle-orm';
 import { pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
+import { idColumn } from '../../../db/schema-parts';
 
 // An enum rather than a text CHECK: v2's approval workflow adds values, and
 // `ALTER TYPE … ADD VALUE` expands where widening a CHECK re-validates every row.
@@ -13,9 +13,7 @@ export const spellVisibility = pgEnum('spell_visibility', ['private', 'workspace
 
 // The grimoire: what a workspace makes (claude-docs/db/grimoire.md, "The grimoire").
 export const spells = pgTable('spells', {
-  id: uuid('id')
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
+  id: idColumn(),
   workspaceId: uuid('workspace_id')
     .notNull()
     .references(() => workspaces.id),
