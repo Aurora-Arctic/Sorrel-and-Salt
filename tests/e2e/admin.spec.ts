@@ -303,14 +303,17 @@ test('the primary admin’s row is labelled, and its Revoke says why it cannot b
   const response = await page.goto('/admin/users?role=admin&query=admin-bootstrap.invalid');
   expect(response?.status()).toBe(200);
   const row = page.getByRole('row', { name: /admin-bootstrap\.invalid/ });
-  await expect(row.getByText('Primary Admin')).toBeVisible();
+  await expect(row.getByText('Primary Admin', { exact: true })).toBeVisible();
   const revoke = row.getByRole('button', { name: 'Revoke admin from Fixture Person' });
   await expect(revoke).toHaveAttribute('aria-disabled', 'true');
   await expect(revoke).toHaveAccessibleDescription(PRIMARY_ADMIN_REASON);
   await expect(row.getByText(PRIMARY_ADMIN_REASON)).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
-  await revoke.click();
+  // From the keyboard: it stays in the tab order, and Playwright's click
+  // waits for an enabled control, which an `aria-disabled` one never is.
+  await revoke.focus();
+  await page.keyboard.press('Enter');
 
   await expect(row.getByRole('alert')).toHaveText(PRIMARY_ADMIN_REASON);
   await expect(page.getByRole('dialog')).toHaveCount(0);
