@@ -71,9 +71,10 @@ export async function findProvidersOfUsers(
 }
 
 /** The filter's arms, each `undefined` when its part is absent. */
-function userArms({ query, awaitingApproval }: UserFilter): (SQL | undefined)[] {
+function userArms({ query, awaitingApproval, role }: UserFilter): (SQL | undefined)[] {
   return [
     query ? or(containsText(users.name, query), containsText(users.email, query)) : undefined,
     awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
+    role ? eq(users.role, role) : undefined,
   ];
 }

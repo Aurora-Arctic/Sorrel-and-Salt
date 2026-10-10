@@ -82,10 +82,11 @@ reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
 
-`users(query: String, awaitingApproval: Boolean)` is the admin user list
+`users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
 its scope and no second path. `query` matches a substring of the name or the
-email, and `awaitingApproval` narrows to `canCreateWorkspace = false`. Its
+email, `awaitingApproval` narrows to `canCreateWorkspace = false`, and `role`
+to one site role. Its
 service, `listUsers`, refuses anyone but a site admin, and the query carries
 no scope of its own: it is a read, which M5.7's mutation sweep does not reach
 ([`auth/admin-users.md`](../auth/admin-users.md), "The user list").

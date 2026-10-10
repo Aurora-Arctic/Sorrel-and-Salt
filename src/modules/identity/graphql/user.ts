@@ -73,12 +73,17 @@ builder.queryField('users', (t) =>
     args: {
       query: t.arg.string({ required: false }),
       awaitingApproval: t.arg.boolean({ required: false }),
+      role: t.arg({ type: UserRoleEnum, required: false }),
     },
-    resolve: (_root, { query, awaitingApproval }, page, { session }) => {
+    resolve: (_root, { query, awaitingApproval, role }, page, { session }) => {
       if (!session) throw new Forbidden();
       return listUsers(
         session,
-        { query: query ?? undefined, awaitingApproval: awaitingApproval ?? undefined },
+        {
+          query: query ?? undefined,
+          awaitingApproval: awaitingApproval ?? undefined,
+          role: role ?? undefined,
+        },
         page,
       );
     },

@@ -36,14 +36,16 @@ may _change_.
   `resolvePage`, as `t.pagedConnection` does. `?after=` and `?before=` carry
   the cursor. A cursor the codec cannot read gets the first page rather than an
   error, since only a hand-edited address carries one.
-- **Two filters, both in SQL.** `?query=` matches a substring of the name or
+- **Three filters, all in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally, through
   the repository's `containsText`, which the category and form lists share (MB.178). It
   is an `ilike` rather than a trigram match, because an admin looks a person
   up by part of an address, which similarity scores poorly. `?awaiting`, a flag read by
   its presence (MB.53), narrows to `canCreateWorkspace = false`, the to-do
-  list M5.8 acts on. The filter is a GET form to the page itself, so a
-  filtered page is an address.
+  list M5.8 acts on. `?role=admin` or `?role=user` narrows to that site role
+  (M5.8, on the owner's review); any other value is no role, since only a
+  hand-edited address carries one. The filter is a GET form to the page
+  itself, so a filtered page is an address.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build
   one.

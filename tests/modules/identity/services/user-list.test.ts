@@ -159,6 +159,28 @@ describe('listUsers', () => {
     expect(await names({ awaitingApproval: true, query: 'percent' })).toEqual([]);
   });
 
+  it('narrows to one role, alone or beside the other filters', async () => {
+    const live = await sql<{ id: string; role: string }[]>`
+      select id, role::text from users where deleted_at is null and id <> ${BOOTSTRAP_USER_ID}
+    `;
+    const admins = live.filter((row) => row.role === 'admin').map((row) => row.id);
+    // Both roles are live, or a filter narrowing nothing would pass.
+    expect(admins).toContain(E.id);
+    expect(admins.length).toBeLessThan(live.length);
+
+    const onlyAdmins = await listUsers(asUser(E), { role: 'admin' }, PAGE);
+    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
+
+    expect(onlyAdmins.map((entry) => entry.node.id).sort()).toEqual([...admins].sort());
+    expect(onlyUsers).toHaveLength(live.length - admins.length);
+    expect(onlyUsers.every((entry) => entry.node.role === 'user')).toBe(true);
+    expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
+      'Pending Fixturewort',
+    ]);
+    // Every admin holds the flag (MB.177), so none awaits approval.
+    expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
+  });
+
   // Why it could have succeeded: the rows exist and the same call answers E.
   it('refuses a user who is not an admin, by direct call', async () => {
     expect(await listUsers(asUser(E), {}, PAGE)).not.toHaveLength(0);

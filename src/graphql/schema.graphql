@@ -485,7 +485,7 @@ type Query {
   planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
+  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
   The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.

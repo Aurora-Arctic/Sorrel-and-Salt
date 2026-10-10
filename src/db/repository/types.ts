@@ -2,7 +2,7 @@ import type { SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
-import type { auditColumns } from '../../modules/identity/schema/users';
+import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
@@ -605,6 +605,8 @@ export interface UserFilter {
   query?: string;
   /** Only the users who may not yet create a workspace: M5.8's to-do list. */
   awaitingApproval?: boolean;
+  /** Only the users holding this site role (M5.8, on the owner's review). */
+  role?: (typeof users.$inferSelect)['role'];
 }
 
 /** What the admin category list is narrowed by (MB.178). Each part is optional, and absent means no filter. */
