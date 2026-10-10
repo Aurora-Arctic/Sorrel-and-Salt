@@ -120,6 +120,13 @@ const TIER_PREDICATES = ['inTiers', 'readableInTiers', 'readableIngredientParent
 /** Every exported finder, the escape hatches included: each reads through the shared builders. */
 const FINDERS = EXPORTED_FUNCTIONS.filter((name) => name.startsWith('find'));
 
+/**
+ * The two-tier scope spelled out: the compendium ORed with a proof's
+ * workspace, one proof or a list mapped. A tier rule comparing a linked row
+ * with its parent, `or(inCompendium(references), eq(…))`, is not it.
+ */
+const TIER_SCOPE = /or\(\s*inCompendium\(\w+\),\s*(?:\.\.\.\w+\.map\(\(?\w+\)?\s*=>\s*)?scopedTo\(/;
+
 /** Where a page is cut and where it is counted, each once (MB.206). */
 const PAGE_READER = 'readPage';
 const COUNT_READER = 'readCount';
@@ -342,9 +349,7 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(FINDERS.length).toBeGreaterThan(0);
     for (const finder of FINDERS) {
       const body = functionBody(finder);
-      expect(body, `${finder} spells the two-tier scope by hand`).not.toMatch(
-        /or\(\s*inCompendium\(/,
-      );
+      expect(body, `${finder} spells the two-tier scope by hand`).not.toMatch(TIER_SCOPE);
       expect(body, `${finder} cuts a page by hand`).not.toMatch(/pageBounds\(|\bcount:/);
     }
 
@@ -355,8 +360,8 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
     expect(occurrences(/pageBounds\(/g)).toHaveLength(1);
     expect(functionBody(COUNT_READER)).toMatch(/\bcount:/);
     expect(occurrences(/\bcount:/g)).toHaveLength(1);
-    expect(occurrences(/or\(\s*inCompendium\(/g)).toHaveLength(1);
-    expect(functionBody('inTiers')).toMatch(/or\(\s*inCompendium\(/);
+    expect(occurrences(new RegExp(TIER_SCOPE, 'g'))).toHaveLength(1);
+    expect(functionBody('inTiers')).toMatch(TIER_SCOPE);
   });
 
   // DESIGN.md §5 and CLAUDE.md rule 7: a private spell is excluded in SQL, so
