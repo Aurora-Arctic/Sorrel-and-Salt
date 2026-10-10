@@ -437,6 +437,72 @@ describe('UserList approval', () => {
     expect(calls).toEqual([]);
   });
 
+  // MB.205: an unverified address is said in the confirmation, read with its
+  // Approve, since the focus lands there; a warning, not a refusal.
+  const UNVERIFIED_WARNING =
+    'This email address has not been verified, so nobody has proved who holds it. Approving keeps the account rather than letting it lapse.';
+
+  it('warns before approving a user whose email is unverified, and still approves', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+    // The precondition: Bo's address is unverified, as the row's mark says.
+    expect(within(boRow()).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+
+    const asking = dialog('Approve Coven Creation');
+    expect(asking).toHaveTextContent(`Let Bo Fixturewort create covens?${UNVERIFIED_WARNING}`);
+    const approve = within(asking).getByRole('button', { name: 'Approve' });
+    expect(approve).toHaveFocus();
+    expect(approve).toHaveAccessibleDescription(UNVERIFIED_WARNING);
+    expect(within(asking).getByText(UNVERIFIED_WARNING)).toHaveClass('notice', 'notice--warn');
+    fireEvent.click(approve);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('gives no warning before approving a user whose email is verified', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+
+    const asking = dialog('Approve Coven Creation');
+    expect(asking).toHaveTextContent(
+      /^Approve Coven Creation×Let Bo Fixturewort create covens\?Approve/,
+    );
+    expect(within(asking).queryByText(UNVERIFIED_WARNING)).not.toBeInTheDocument();
+    const approve = within(asking).getByRole('button', { name: 'Approve' });
+    expect(approve).not.toHaveAccessibleDescription();
+    fireEvent.click(approve);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('gives no warning before revoking, even from a user whose email is unverified', () => {
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+
+    const asking = dialog('Revoke Coven Creation');
+    expect(within(asking).queryByText(UNVERIFIED_WARNING)).not.toBeInTheDocument();
+    expect(
+      within(asking).getByRole('button', { name: 'Revoke' }),
+    ).not.toHaveAccessibleDescription();
+  });
+
   it('approves the row’s user from the modal, busy until the list is read again', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {

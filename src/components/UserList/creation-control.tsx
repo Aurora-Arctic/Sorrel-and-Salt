@@ -2,7 +2,7 @@
 
 import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import Modal from '../Modal';
@@ -12,7 +12,8 @@ import type { CreationAction, CreationControlProps, CreationStep } from './types
 // first in a modal: lets a user with no invitation create a
 // coven, or stops them, behind a confirmation naming them. The service is the
 // guard; this only puts it where an admin looks. A success re-reads the page,
-// whose row then offers the other action.
+// whose row then offers the other action. Approving an unverified address
+// warns first, and still approves (MB.205).
 
 const GrantWorkspaceCreationDocument = graphql(`
   mutation GrantWorkspaceCreation($userId: ID!) {
@@ -80,6 +81,15 @@ const ACTIONS: Record<
   },
 };
 
+/**
+ * Approve's warning on an unverified address (MB.205): an admin vouches for
+ * whoever holds it, and the vouching keeps the account from MB.67's sweep
+ * (MB.204). A warning rather than a refusal, since M2.9 leaves confirming who
+ * someone is to the admin.
+ */
+const UNVERIFIED_WARNING =
+  'This email address has not been verified, so nobody has proved who holds it. Approving keeps the account rather than letting it lapse.';
+
 const GENERIC_ERROR = "That didn't work. Please try again.";
 
 /** The service's own refusal, verbatim, or one generic sentence. */
@@ -88,9 +98,17 @@ function messageOf(error: unknown): string {
   return error.response.errors?.[0]?.message || GENERIC_ERROR;
 }
 
-const CreationControl = ({ userId, name, action }: CreationControlProps): ReactElement => {
+const CreationControl = ({
+  userId,
+  name,
+  emailVerified,
+  action,
+}: CreationControlProps): ReactElement => {
   const router = useRouter();
   const copy = ACTIONS[action];
+  // Revoke vouches for no one, so it carries none.
+  const warns = action === 'approve' && !emailVerified;
+  const warningId = useId();
   const [step, setStep] = useState<CreationStep>('idle');
   const [failure, setFailure] = useState<string>();
   const confirmRef = useRef<HTMLButtonElement>(null);
@@ -156,11 +174,19 @@ const CreationControl = ({ userId, name, action }: CreationControlProps): ReactE
           {(close) => (
             <>
               <p>{copy.question(name)}</p>
+              {warns && (
+                <p id={warningId} className="notice notice--warn user-list__warning">
+                  {UNVERIFIED_WARNING}
+                </p>
+              )}
               <div className="modal__actions">
+                {/* Described by the warning: the focus lands here as the modal
+                    opens, so the warning is read with what it confirms. */}
                 <button
                   ref={confirmRef}
                   className={copy.confirmClass}
                   type="button"
+                  aria-describedby={warns ? warningId : undefined}
                   disabled={sending}
                   aria-busy={sending || undefined}
                   onClick={() => void confirm()}

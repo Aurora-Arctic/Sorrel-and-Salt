@@ -56,5 +56,7 @@ export interface CreationControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
+  /** Whether the user's address is verified; Approve warns when it is not (MB.205). */
+  emailVerified: boolean;
   action: CreationAction;
 }
