@@ -25,7 +25,7 @@ const GENERIC_ERROR = "That didn't work. Please try again.";
 
 /** What accepting grants, by tier; M7.5 adds the workspace's. */
 const GRANTS = {
-  site: 'You have been invited to become an admin of Sorrel & Salt. Admins look after the compendium and the lists it draws on.',
+  site: 'You have been invited to become an admin of Sorrel & Salt.',
 } as const;
 
 function messageOf(error: unknown): string {

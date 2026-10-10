@@ -67,7 +67,9 @@ describe('InvitationAcceptance', () => {
       },
     );
     render(<InvitationAcceptance status="acceptable" token="abc" tier="site" landing="/admin" />);
-    expect(screen.getByText(/invited to become an admin/)).toBeInTheDocument();
+    expect(
+      screen.getByText('You have been invited to become an admin of Sorrel & Salt.'),
+    ).toBeInTheDocument();
 
     fireEvent.click(accept());
 
