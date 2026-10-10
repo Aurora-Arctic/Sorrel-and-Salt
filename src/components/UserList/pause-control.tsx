@@ -30,7 +30,8 @@ const ResumeAdminRoleChangesDocument = graphql(`
 const STATES = {
   paused: {
     state:
-      'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
+      // Short, on the owner's call: who may still act is the switch's tip.
+      'Admin changes are paused.',
     label: 'Resume Admin Changes',
     busy: 'Resuming',
     // Red and full size like Pause, on the owner's call, so the control

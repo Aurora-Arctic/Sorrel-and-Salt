@@ -1008,11 +1008,11 @@ describe('UserList admin changes switch', () => {
     render(<PauseControl paused={true} canToggle={true} />);
 
     // A warning notice, on the owner's call.
-    expect(
-      screen.getByText(
-        'Admin changes are paused: only the primary admin can make someone an admin or stop them being one.',
-      ),
-    ).toHaveClass('notice', 'notice--warn', 'user-list__pause-state');
+    expect(screen.getByText('Admin changes are paused.')).toHaveClass(
+      'notice',
+      'notice--warn',
+      'user-list__pause-state',
+    );
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
     // Red and full size like Pause, on the owner's call.
     expect(resume).toHaveClass('btn', 'btn--destructive');
@@ -1067,7 +1067,7 @@ describe('UserList admin changes switch', () => {
   it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
     render(<PauseControl paused canToggle={false} />);
 
-    expect(screen.getByText(/^Admin changes are paused:/)).toHaveClass('notice--warn');
+    expect(screen.getByText('Admin changes are paused.')).toHaveClass('notice--warn');
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
     expect(resume).toHaveAttribute('aria-disabled', 'true');
     expect(resume).toHaveClass('btn', 'btn--destructive');

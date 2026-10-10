@@ -180,8 +180,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
   which the primitive wraps beneath the heading on a narrow screen. While
   changes are on it shows the button alone; while paused it first says so in
-  a `.notice--warn`: "Admin changes are paused: only the primary admin can
-  make someone an admin or stop them being one." The notice is a plain
+  a `.notice--warn`: "Admin changes are paused.", on the owner's call. The notice is a plain
   paragraph, compounded as `.notice.user-list__pause-state` past the
   `body .notice` primitive, and is the page's one sentence about the pause.
   Then Pause Admin Changes or Resume Admin Changes, both full size and

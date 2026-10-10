@@ -374,7 +374,7 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   );
   const list = '/admin/users?query=paused-grantee%40admin-role.test';
   // A warning while paused, and no sentence while on (the owner's call).
-  const status = page.getByRole('main').getByText(/^Admin changes are paused:/);
+  const status = page.getByRole('main').getByText('Admin changes are paused.', { exact: true });
 
   // Another admin sees the switch, unusable, and why.
   await page.goto(list);
