@@ -1,5 +1,11 @@
-import { Action, EmailLayout, Paragraph, renderParts } from './parts/layout';
-import type { Message } from '../lib/types';
+import {
+  Action,
+  EmailLayout,
+  IgnoreNote,
+  Paragraph,
+  actionVerb,
+  defineMessage,
+} from './parts/layout';
 import type { AdminInvitationProps } from './types';
 
 // MB.70's mail: the one place an admin invitation's link exists outside the
@@ -18,24 +24,13 @@ export function AdminInvitation({ url, origin = new URL(url).origin, part }: Adm
         An admin of Sorrel &amp; Salt has invited this email address to become an admin.
       </Paragraph>
       <Paragraph>
-        {part === 'html'
-          ? `To accept, click the button below within ${LIFETIME}, then sign in with an account that uses this email address.`
-          : `To accept, open the link below within ${LIFETIME}, then sign in with an account that uses this email address.`}
+        {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}
       </Paragraph>
       <Action href={url} label="Accept the Invitation" part={part} />
-      <Paragraph muted>If you weren&apos;t expecting this, you can ignore this email.</Paragraph>
+      <IgnoreNote when="If you weren't expecting this" />
     </EmailLayout>
   );
 }
 
 /** The admin invitation mail for `to`, rendered to the html and plain text `send` takes. */
-export async function adminInvitationMessage({
-  to,
-  ...props
-}: Omit<AdminInvitationProps, 'part'> & { to: string }): Promise<Message> {
-  return {
-    to,
-    subject: SUBJECT,
-    ...(await renderParts((part) => <AdminInvitation {...props} part={part} />)),
-  };
-}
+export const adminInvitationMessage = defineMessage<AdminInvitationProps>(SUBJECT, AdminInvitation);

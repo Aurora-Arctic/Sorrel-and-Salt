@@ -128,7 +128,8 @@ this is the shape.
 
 - **Facebook and Microsoft arrive unverified**, whatever they report: their
   `mapProfileToUser` answers `emailVerified: false`, spread after the
-  provider's own mapping. Google and Discord keep theirs. The one exception
+  provider's own mapping, because their `PROFILE` entry says `vouches: false`
+  (`src/lib/social-providers-config.ts`). Google and Discord keep theirs. The one exception
   is the callback of an explicit link, where every provider vouches
   ("Linking a second provider" below); it writes nothing to the row.
 - **Offered, never required for a session.** `emailVerification.sendOnSignUp`

@@ -24,7 +24,8 @@ from `@react-email/components` (which re-exports `@react-email/render` at the
 version it pins, so there is one copy): once to HTML and once with
 `{ plainText: true }` to the text part, by `renderParts` in
 `src/emails/parts/layout.tsx`. Each template module exports the
-component and a function returning a finished `Message`, so a caller never
+component and a function returning a finished `Message`, built by
+`defineMessage(subject, Template)` from the same file, so a caller never
 renders anything itself:
 
 ```ts
@@ -44,13 +45,16 @@ await send(await verifyEmailMessage({ to, url, providers }));
   written out beneath it, for a client that hides buttons; the text part has
   the link once and says "open the link below", with no button to click and
   nothing to copy twice. `Action` does this for every template; a sentence
-  that names the button branches on `part` itself. Headings keep their
+  that names the button takes its words from `actionVerb(part)`, "click the
+  button below" or "open the link below". Every mail closes on `IgnoreNote`,
+  "…, you can ignore this email.", in the template's own words for who did
+  not ask for it. Headings keep their
   case in the text part, which the converter would otherwise capitalise.
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
   a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
   requires. The frame every mail shares is `src/emails/parts/layout.tsx`
-  (`EmailLayout`, `Paragraph`, `Action`). Their types are in `parts/types.ts`, and the
-  templates' in `src/emails/types.ts`. Not in `src/components/`: a mail is
+  (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in `parts/types.ts`, and the
+  templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the link, the origin and the part. Not in `src/components/`: a mail is
   not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
   project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:

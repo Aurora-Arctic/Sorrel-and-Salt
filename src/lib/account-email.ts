@@ -1,4 +1,4 @@
-import { safeReturnPath } from './sign-in';
+import { messageLookup, safeReturnPath } from './sign-in';
 
 // Pure helpers for /account/email?error=, the page a followed verification
 // link lands on. Every sentence is ours: a code is what Better Auth's
@@ -71,7 +71,4 @@ export function isEmailPage(path: string | undefined): boolean {
 }
 
 /** One readable sentence for a `/verify-email` `?error=` code; `undefined` for none. */
-export function verifyErrorMessage(code: string | string[] | undefined): string | undefined {
-  if (typeof code !== 'string' || code.length === 0) return undefined;
-  return ERROR_MESSAGES[code] ?? GENERIC_VERIFY_ERROR;
-}
+export const verifyErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_VERIFY_ERROR);

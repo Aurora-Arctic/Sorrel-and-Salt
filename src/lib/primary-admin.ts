@@ -4,6 +4,7 @@
 // change needs no data fix (claude-docs/design-decisions/m2.9-granting-admin.md,
 // "The primary admin"). Here rather than in auth.ts, since the role service
 // asks it too and must not load Better Auth to do so.
+import { requiredInProduction } from './env';
 
 /**
  * The variable's address, or `undefined` where it is unset. Required wherever
@@ -13,11 +14,7 @@
  * @throws {Error} unset at NODE_ENV=production.
  */
 export function primaryAdminEmail(): string | undefined {
-  const email = process.env.ADMIN_BOOTSTRAP_EMAIL;
-  if (!email && process.env.NODE_ENV === 'production') {
-    throw new Error('ADMIN_BOOTSTRAP_EMAIL is not set');
-  }
-  return email || undefined;
+  return requiredInProduction('ADMIN_BOOTSTRAP_EMAIL');
 }
 
 /** Whether the two addresses are one, compared as Better Auth stores them, lower-cased. */

@@ -14,6 +14,8 @@ import {
 } from '@react-email/components';
 import { EMAIL_THEMES } from '../theme';
 import { ORNAMENTS, ornamentPath, type Corner } from '../ornaments';
+import type { Message } from '../../lib/types';
+import type { BaseEmailProps, MessageInput } from '../types';
 import type { EmailLayoutProps, Part } from './types';
 
 // Every mail's frame: the site's palette, type and corner photographs
@@ -246,6 +248,23 @@ export function Action({ href, label, part }: { href: string; label: string; par
   );
 }
 
+/**
+ * What a sentence tells the reader to do with the `Action`: the HTML has a
+ * button, and the text part a link with nothing to click.
+ */
+export function actionVerb(part: Part): string {
+  return part === 'html' ? 'click the button below' : 'open the link below';
+}
+
+/**
+ * The closing line every mail ends on: whoever did not ask for it can ignore
+ * it. `when` is the template's own way of saying who that is. One string
+ * rather than JSX text around an expression, which would render as two nodes.
+ */
+export function IgnoreNote({ when }: { when: string }) {
+  return <Paragraph muted>{`${when}, you can ignore this email.`}</Paragraph>;
+}
+
 /** Renders a template once per part, so the text part is written for text rather than stripped from the HTML. */
 export async function renderParts(
   email: (part: Part) => ReactElement,
@@ -258,4 +277,22 @@ export async function renderParts(
       htmlToTextOptions: { selectors: [{ selector: 'h1', options: { uppercase: false } }] },
     }),
   };
+}
+
+/**
+ * A template's message function: `subject` and `to`, and the template
+ * rendered to both parts `send` takes, so a caller never renders anything
+ * itself. The template is handed `to` along with its own props and ignores
+ * it: dropping it first would leave a generic `Omit` TypeScript cannot
+ * prove is the template's props again.
+ */
+export function defineMessage<Props extends BaseEmailProps>(
+  subject: string,
+  Template: (props: Omit<Props, 'part'> & { part: Part }) => ReactElement,
+): (input: MessageInput<Props>) => Promise<Message> {
+  return async (input) => ({
+    to: input.to,
+    subject,
+    ...(await renderParts((part) => <Template {...input} part={part} />)),
+  });
 }

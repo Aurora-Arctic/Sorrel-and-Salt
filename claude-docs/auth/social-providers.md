@@ -7,7 +7,19 @@ registers a provider only when **both** halves of its pair are set as non-empty
 strings (`clientCredentials`, `src/lib/social-providers-config.ts`), never with
 an empty string, which Better Auth would treat as a configured but broken
 provider rather than an absent one. The sign-in page greys out a provider that
-is not configured. Facebook and Microsoft are pinned unverified on arrival (see
+is not configured.
+
+What differs between the four registrations is `PROFILE`, beside the
+credentials in `src/lib/social-providers-config.ts`: the profile field naming
+the account (`sub`, `id`, `sub` or `id` for Facebook's two profile shapes,
+`oid`), whether the provider vouches for an address, and Microsoft's tenant.
+`mapProfile` in `src/lib/auth.ts` builds every `mapProfileToUser` from it
+(MB.213). It is typed as one required entry per `ProviderId`, so a provider
+added to the id without one fails `npm run typecheck`
+(`tests/lib/provider-profiles.test.ts`); the switch it replaced had no
+default, so a provider given its credentials built and never registered. A new provider is
+its id, a roster entry, and the two entries the compiler then asks for, with
+no edit to `auth.ts`. Facebook and Microsoft are pinned unverified on arrival (see
 ["First-party verification"](admin-bootstrap.md#first-party-verification-mb66)),
 and Microsoft's tenant is stated as `common` so personal accounts can sign in.
 Every provider's `mapProfileToUser` also stands in a placeholder for a profile
