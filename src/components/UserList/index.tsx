@@ -4,6 +4,7 @@ import UserListFilter from './filter';
 import CreationControl from './creation-control';
 import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
+import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import Pager from '../Pager';
 import type { UserListEntry, UserListProps } from './types';
@@ -92,7 +93,14 @@ const UserRow = ({
   canImpersonate: boolean;
 }): ReactElement => (
   <tr>
-    <td>{user.name}</td>
+    {/* The way into their privilege history (MB.200), then the name, on
+        every row: an admin's changes are the ones most worth reading. */}
+    <td>
+      <span className="user-list__name">
+        <HistoryLink email={user.email} name={user.name} />
+        {user.name}
+      </span>
+    </td>
     {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
     <td>
       <span className="user-list__email">

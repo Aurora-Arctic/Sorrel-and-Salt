@@ -6,7 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
-import { cachedCompendiumRead } from '../../../lib/compendium-cache';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -80,10 +80,12 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
   const fields = await parseCategory(input);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(categories, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -106,11 +108,13 @@ export async function updateCategory(
   if (!RowId.safeParse(id).success) throw new NotFound('No such category');
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(categories, id, { ...fields, slug });
     if (!row) throw new NotFound('No such category');
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -137,6 +141,7 @@ export async function deleteCategory(session: Session, id: string): Promise<void
     const [row] = await write.softDeleteByIds(categories, [id]);
     if (!row) throw new NotFound('No such category');
   });
+  expireCompendium();
 }
 
 /**

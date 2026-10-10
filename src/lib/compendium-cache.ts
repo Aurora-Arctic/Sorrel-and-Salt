@@ -1,10 +1,10 @@
 import 'server-only';
-import { unstable_cache } from 'next/cache';
+import { revalidateTag, unstable_cache } from 'next/cache';
 import superjson from 'superjson';
 
 // The compendium's data cache (CLAUDE.md rule 6; DESIGN.md §7): the curated
 // reads every viewer sees alike, held across requests under one tag, which an
-// admin write expires. Every use of `next/cache` is in this file, so the tag
+// admin write expires through `expireCompendium`. Every use of `next/cache` is in this file, so the tag
 // has one spelling (tests/guards/compendium-cache.test.ts). `unstable_cache`
 // rather than `use cache`, deliberately: DESIGN.md §7, "Caching — three
 // layers in v1" (claude-docs/db/compendium-cache.md).
@@ -39,4 +39,16 @@ export function cachedCompendiumRead<A extends unknown[], R>(
     { tags: [COMPENDIUM_TAG], revalidate: COMPENDIUM_REVALIDATE_SECONDS },
   );
   return async (...args) => superjson.parse<R>(await cached(...args));
+}
+
+/**
+ * Expires every entry under `COMPENDIUM_TAG`, called by an admin's write to
+ * anything the cache holds once the write has committed (M8.7). `{ expire: 0 }`
+ * rather than the recommended `'max'`, so the admin's next read is a miss
+ * and not the stale answer `'max'` serves while it revalidates; `updateTag`,
+ * which would do the same, throws outside a Server Action, and every write
+ * here arrives through `/api/graphql` (DESIGN.md §7).
+ */
+export function expireCompendium(): void {
+  revalidateTag(COMPENDIUM_TAG, { expire: 0 });
 }

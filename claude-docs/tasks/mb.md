@@ -3726,13 +3726,13 @@ _Acceptance criteria:_
 
 _Story 61 — As an admin, I want to see every change to who is an admin and who may create a coven, with who made it, how, when and why, so that misuse comes to light._
 
-`/admin/privilege-changes`, one page over MB.199's read: one ledger, filtered by user (`?user=`, linked from each row of `/admin/users`) and by privilege (`?privilege=`), not a page per privilege and not a feed merged with the pause or invitations, which stay where they are acted on. A server component calling the service through `cache()`, numbered through `src/lib/pagination.ts`'s helper as every admin page is (MB.132), with a `PrivilegeLedger` component (its directory, story and doc) listing when, subject, privilege, change, route, actor and the note where there is one. `AdminNav` gains it after Users, and `UserList` rows gain a History link.
+`/admin/privilege-changes`, one page over MB.199's read: one ledger, filtered by part of the subject's name or email (`?query=`, which MB.199's read takes from this task on, matched as the user list matches) and by privilege (`?privilege=`, a dropdown), not a page per privilege and not a feed merged with the pause or invitations, which stay where they are acted on. A server component calling the service through `cache()`, numbered through `src/lib/pagination.ts`'s helper as every admin page is (MB.132), with a `PrivilegeLedger` component (its directory, story and doc) listing when, subject, privilege, change, route, actor and the note where there is one. `AdminNav` gains it after Users, and each `UserList` row gains a permissions history icon before the name, opening the page searched for that user's address (the owner's calls in review, over a `?user=` filter and a History column).
 
 _Acceptance criteria:_
 
 - An admin sees every change, newest first, paged, and the filters narrow it; each row names the subject and actor, linking to their `/admin/users` row, and shows the note only where one was given
 - The page states plainly when there is nothing to show, overall and for a filter
-- A user row's History link opens the page filtered to that user
+- A user row's permissions history icon opens the page searched for that user's address
 - A signed-in non-admin gets the styled not-authorised page, as every `/admin` page does
 - The Playwright spec covers the page, the filters and the link, with `@axe-core/playwright` clean, run against the e2e container
 - Component tests use role and label queries only, and story 61's acceptance test passes
