@@ -284,11 +284,35 @@ input IngredientUpdateInput {
 }
 
 """
+An invitation, pending or not. Its link is mailed to the address and never answered.
+"""
+type Invitation {
+  acceptedAt: DateTime
+  audit: AuditInfo!
+  email: String!
+  expiresAt: DateTime!
+  id: ID!
+
+  """Why the person is invited, where the inviter gave a reason."""
+  note: String
+  revokedAt: DateTime
+}
+
+"""
 A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
 """
 scalar LocalDate
 
 type Mutation {
+  """
+  Accepts the invitation a link's token names, as the signed-in account, which must hold the invited address, verified; answers it accepted.
+  """
+  acceptInvitation(token: String!): Invitation!
+
+  """
+  Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
+  """
+  createAdminInvitation(email: String!, note: String): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCompendiumIngredient(
@@ -365,6 +389,11 @@ type Mutation {
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
   """
   resumeAdminRoleChanges: Boolean!
+
+  """
+  Withdraws a pending admin invitation, so its link says so. Refused while admin changes are paused, but to the primary admin.
+  """
+  revokeAdminInvitation(id: ID!): Invitation!
 
   """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.

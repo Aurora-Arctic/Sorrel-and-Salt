@@ -73,3 +73,32 @@ export interface NamedUserRow {
   updated_by: string;
   updated_at: Date;
 }
+
+/** One `invitations` row as the invitation tests read it, the role cast to text. */
+export interface InvitationStateRow {
+  id: string;
+  workspace_id: string | null;
+  role: string | null;
+  email: string;
+  token_hash: string;
+  note: string | null;
+  accepted_at: Date | null;
+  accepted_by?: string | null;
+  revoked_at: Date | null;
+  expires_at: Date;
+  created_by: string;
+  updated_by: string;
+}
+
+/** How an acceptance test shapes the invitation it inserts. */
+export interface InvitationFixture {
+  email?: string;
+  token?: string;
+  createdBy?: string;
+  note?: string | null;
+  workspaceId?: string | null;
+  role?: 'viewer' | 'member' | null;
+  expired?: boolean;
+  revoked?: boolean;
+  accepted?: boolean;
+}

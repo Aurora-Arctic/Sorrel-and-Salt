@@ -102,6 +102,7 @@ export type {
   ReferenceLinkRow,
   ReferenceRow,
   SimilarityScore,
+  SiteInvitationRow,
   SiteInvitationValues,
   SlugRedirect,
   SortPart,

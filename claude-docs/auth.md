@@ -96,6 +96,10 @@ An admin grants or revokes admin from a user's row through `setUserRole`, declar
 
 The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole` refuses every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
 
+### Inviting an admin (MB.70)
+
+An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
+
 ## Plugins (MB.74)
 
 `lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)

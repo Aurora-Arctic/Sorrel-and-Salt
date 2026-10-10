@@ -5,16 +5,18 @@ import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
 import { selectFrom } from './select';
-import type { AuditWriter, WriterContext } from './types';
+import type { AuditWriter, SiteInvitationRow, WriterContext } from './types';
 
 /**
  * The open pause on admin role changes, or `undefined` while none holds
  * (MB.62): what MB.63's grant and revoke read before acting. Under the
- * `SiteAdmin` proof, since only an admin's act asks. The one-open index
- * allows one at most.
+ * `SiteAdmin` proof, since only an admin's act asks, or under a site-tier
+ * invitation, which is an admin's act its invitee completes: the accept
+ * (MB.70) reads it as the grant does, from a session that holds no proof. The
+ * one-open index allows one at most.
  */
 export async function findOpenAdminRoleChangePause(
-  _admin: SiteAdmin,
+  _asker: SiteAdmin | SiteInvitationRow,
 ): Promise<typeof adminRoleChangePauses.$inferSelect | undefined> {
   const [row] = await selectFrom(
     adminRoleChangePauses,

@@ -171,7 +171,8 @@ person's row on `/admin/users`, so a second admin is no longer an `UPDATE` in
   is the granting admin's job, from the row's sign-in methods and verified
   mark; the confirmation warns when the address is unverified, since a grant,
   like an approval, keeps the account from MB.67's sweep (MB.204, MB.205).
-  The grantee must already have an account; inviting by email is MB.70's.
+  The grantee must already have an account; inviting by email is MB.70's,
+  below.
 - **A change that changes nothing is refused**, with a `Forbidden` naming the
   user: granting to an admin, or revoking from someone who is not one. No
   column changes, so the trigger records nothing.
@@ -279,6 +280,109 @@ revoke recorded while paused.
 half, the stamps the session's whatever the request carries, and
 `tests/e2e/admin.spec.ts` pauses, refuses another admin's grant, and resumes
 against the built server.
+
+## Inviting an admin (MB.70)
+
+An admin can make someone an admin who has not signed in yet, by inviting
+their address: M2.9's option B
+([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The
+approaches"), on the site tier of MB.201's `invitations`
+([`db/invitations.md`](../db/invitations.md)). The link is mailed to the
+address and accepted only by an account that has proved it holds it, so no
+one is handed a bearer token for the site's highest privilege (story 62).
+
+- **One service each way, two checks.** `createAdminInvitation(session,
+email, note, sender)` and `revokeAdminInvitation(session, id)`
+  (`src/modules/identity/services/admin-invitations.ts`) assert the site role
+  themselves, by direct call, and the two mutations in front of them carry the
+  `admin` scope as the second check. `listPendingAdminInvitations(session)` is
+  the pending list, newest first, a read the page calls; no GraphQL query
+  lists invitations.
+- **The token is the mail's alone.** `crypto.randomBytes(32)`, base64url,
+  goes to the repository's `insertInvitation(admin, …)`, which stores its
+  hash, and to the sender, which mails the link; the row the mutation answers
+  carries neither, and `Invitation` has no field that could. The sender,
+  `invitationSender(request)` in `src/lib/invitation-mail.ts`, is built per
+  request by the GraphQL context as the email page's is, because the link's
+  origin is Better Auth's to resolve against its allowed hosts: a forged
+  `Host` cannot have a live token mailed on a link to another site. The mail
+  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)). A failed
+  send is logged by the transport and never thrown, so the invitation stays
+  pending, to be withdrawn and sent again.
+- **What is refused at creation.** An address the email page would refuse,
+  as a `ValidationError` on `email`, and the address of a live admin, who
+  would have nothing to accept. A second invitation to the same address is
+  not refused: either link works, and the other then says it has been
+  accepted, or the admin withdraws it.
+- **Paused with the rest (MB.63).** While admin changes are paused, inviting
+  and withdrawing are refused for every admin but the primary one, with
+  "Admin changes are paused, so admin invitations can't be sent or withdrawn
+  until they are resumed.", naming nobody.
+- **One accept service, for both tiers.** `acceptInvitation(session, token)`
+  (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
+  entry describes, built here with the site tier's branch; M7.5 adds the
+  workspace's, and until then a workspace invitation is refused as an invalid
+  link. It checks, in this order:
+  1. The token names a live invitation, or the link is invalid (`NotFound`).
+     The token is hashed in the repository, so a hash read off a dumped row
+     names nothing.
+  2. The link is not dead: **accepted, then revoked, then expired**, so a
+     link in two states always reports the same one reason, an act before
+     the clock. Each is a `Forbidden` in words of its own, and none names a
+     workspace (M7.7, which asserts them on the workspace tier).
+  3. The tier: the site tier's branch, below; a workspace's is invalid until
+     M7.5.
+  4. The session's account holds the invited address, compared
+     case-insensitively, or "This invitation was sent to a different email
+     address"; and holds it **verified**, or it is pointed at `/account/email`
+     to confirm it first. The repository's accept repeats the address match in
+     its statement, so a path that forgot the check still cannot redeem.
+  5. Admin changes are not paused, or the primary admin sent the invitation:
+     the pause exempts the primary admin's own grants, and an invitation is a
+     grant its invitee completes. One a rogue admin sent before the pause
+     waits for the resume.
+- **Accepting is a grant.** The invitation is stamped `acceptedAt` and
+  `acceptedBy`, and the user made an admin who may create covens through
+  `writeAdminGrant`, MB.59's role write, in one transaction declared
+  `{ via: 'invitation', note }` with the invitation's note, so the trigger on
+  `users` records an `admin` grant, and a `create_workspace` grant if the flag
+  was off, as the accepting user's act. The service writes no ledger row. An
+  account that is already an admin has the invitation stamped and nothing
+  granted, so nothing is recorded. A revoke or a second accept that commits
+  between the checks and the stamp leaves nothing to stamp, and the refusal
+  is the link's state read again.
+- **`/invite/[token]`** is public in `src/proxy.ts`. Signed out, it says an
+  invitation is waiting and offers Sign In, which returns to the link; it
+  reads nothing of the invitation until a session holds it. Signed in, it
+  asks `invitationStanding(session, token)`, the same checks as the accept,
+  and shows the refusal, with a link to the email page for an unverified
+  match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
+  unverified account reaches the page, since `requireSession()`'s redirect
+  would lose the reason; the accept refuses it all the same.
+- **On `/admin/users`** every admin sees Invite Admin above the list, and the
+  pending invitations beneath it, each with its address, its reason, when it
+  expires and Revoke ([`components/admin-invitations.md`](../components/admin-invitations.md)).
+  While changes are paused, both controls are `aria-disabled` for any admin
+  but the primary one, with the pause as the reason.
+
+**Not done here.** Revoking an admin does not withdraw the invitations they
+sent: the pending list is where an admin sees them and acts. An accepted
+invitation is already in the privilege ledger as its `invitation` row, so no
+list of past invitations is kept.
+
+**Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
+creating, with the real sender over a mocked transport, so the link that
+reaches the address is the one read back; revoking and listing; each
+non-admin fixture user refused by direct call, with E proven able; and the
+pause, with the same calls succeeding once resumed.
+`tests/modules/identity/services/invitation-acceptance.test.ts` covers the
+grant and its ledger rows; the same write undeclared refused by the trigger;
+the unverified match and the different address, each beside the call that
+succeeds; each dead link, the two-state links, a second use, a hashed token
+and a workspace invitation; and the pause, by whom the invitation was sent.
+`tests/modules/identity/graphql/admin-invitations.test.ts` is the
+transport's half, the scope is `tests/db/graphql-query-scopes.test.ts`'s, and
+story 62's acceptance test is in `tests/acceptance/08-email-and-admin.test.ts`.
 
 ## The privilege ledger (MB.199, MB.200)
 

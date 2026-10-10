@@ -48,12 +48,17 @@ export async function actsAsPrimaryAdmin(session: Session): Promise<boolean> {
 /**
  * Refuses a role change while the primary admin has paused them (MB.63),
  * unless the caller is the primary admin, whom the pause exempts so it can
- * clean up without resuming first.
+ * clean up without resuming first. `refusal` is what the refusal says, for
+ * an admin invitation's create and revoke (MB.70).
  */
-async function assertChangesOpen(session: Session, admin: SiteAdmin): Promise<void> {
+export async function assertChangesOpen(
+  session: Session,
+  admin: SiteAdmin,
+  refusal = PAUSED_REFUSAL,
+): Promise<void> {
   if (!(await findOpenAdminRoleChangePause(admin))) return;
   if (await actsAsPrimaryAdmin(session)) return;
-  throw new Forbidden(PAUSED_REFUSAL);
+  throw new Forbidden(refusal);
 }
 
 /** The live user, or `NotFound`: a soft-deleted one reads as no one. */
@@ -64,10 +69,19 @@ async function liveUser(userId: string): Promise<UserRow> {
 }
 
 /**
- * The role write every route to admin shares, inside the caller's
- * transaction: a grant sets the creation flag too, since the users CHECK
- * refuses an admin without it (MB.177), and a revoke leaves it, the grant
- * having been a vouching too. A revoke first locks the live admins and counts
+ * The grant every route to admin but the bootstrap shares, inside the
+ * caller's transaction: the creation flag too, since the users CHECK refuses
+ * an admin without it (MB.177). An admin's grant and an accepted admin
+ * invitation (MB.70) both write it; the route is the caller's declaration.
+ */
+export function writeAdminGrant(write: AuditWriter, userId: string): Promise<UserRow[]> {
+  return write.updateById(users, userId, { role: 'admin', canCreateWorkspace: true });
+}
+
+/**
+ * The role write an admin's grant and revoke share, inside the caller's
+ * transaction: a grant is `writeAdminGrant`, and a revoke leaves the flag,
+ * the grant having been a vouching too. A revoke first locks the live admins and counts
  * them, so two revokes at once cannot leave none.
  */
 async function writeRole(
@@ -89,8 +103,10 @@ async function writeRole(
       );
     }
   }
-  const values = role === 'admin' ? { role, canCreateWorkspace: true } : { role };
-  const [written] = await write.updateById(users, user.id, values);
+  const [written] =
+    role === 'admin'
+      ? await writeAdminGrant(write, user.id)
+      : await write.updateById(users, user.id, { role });
   // Soft-deleted between the read and the write: the update matches no row,
   // so the trigger never fires and nothing is recorded.
   if (!written) throw new NotFound('No such user');

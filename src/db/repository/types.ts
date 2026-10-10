@@ -615,6 +615,12 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/**
+ * A site-tier invitation, which grants admin: the workspace and the role both
+ * null, as the `invitations_tier` CHECK makes them together (MB.201).
+ */
+export type SiteInvitationRow = InvitationRow & { workspaceId: null; role: null };
+
 /** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
 export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
 

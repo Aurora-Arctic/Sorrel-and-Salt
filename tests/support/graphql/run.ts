@@ -5,7 +5,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import type { Context } from '@/graphql/types';
 import type { Session } from '@/lib/session';
-import { noSender } from '../email-verification';
+import { noInvitationSender, noSender } from '../email-verification';
 import type { Answer, ContextOverrides } from './types';
 
 // A resolver test's one way in (MB.185): the route's schema behind Yoga with
@@ -44,7 +44,13 @@ export function runnerOn(target: GraphQLSchema) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ query, variables }),
       },
-      { session, loaders: createLoaders(session), emailVerification: noSender, ...context },
+      {
+        session,
+        loaders: createLoaders(session),
+        emailVerification: noSender,
+        invitations: noInvitationSender,
+        ...context,
+      },
     );
     return (await response.json()) as Answer<T>;
   };

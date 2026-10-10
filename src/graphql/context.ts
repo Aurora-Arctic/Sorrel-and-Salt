@@ -1,4 +1,5 @@
 import { emailVerificationSender } from '../lib/email-verification';
+import { invitationSender } from '../lib/invitation-mail';
 import { sessionFromHeaders } from '../lib/request-session';
 import { createLoaders } from './loaders';
 import type { Context } from './types';
@@ -10,5 +11,6 @@ export async function createContext({ request }: { request: Request }): Promise<
     session,
     loaders: createLoaders(session),
     emailVerification: emailVerificationSender(request),
+    invitations: invitationSender(request),
   };
 }

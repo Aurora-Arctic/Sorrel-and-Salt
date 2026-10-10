@@ -50,3 +50,17 @@ export interface PrivilegeChangesResult {
     pageInfo: { hasNextPage: boolean; endCursor: string | null };
   };
 }
+
+export interface CreateAdminInvitationResult {
+  createAdminInvitation: {
+    id: string;
+    email: string;
+    note: string | null;
+    expiresAt: string;
+    audit: { createdBy: string };
+  };
+}
+
+export interface AcceptInvitationResult {
+  acceptInvitation: { id: string; acceptedAt: string };
+}
