@@ -307,6 +307,21 @@ describe('createDeityTradition and updateDeityTradition', () => {
       fieldErrors: [{ path: ['name'] }],
     });
   });
+
+  it('refuse a coven owner a rename as FORBIDDEN, leaving the row', async () => {
+    const id = await seedTradition('Fixture Kept');
+    const before = await sql`select name, slug, updated_by from deity_traditions where id = ${id}`;
+
+    const refused = await run(OWNER, UPDATE_TRADITION, {
+      id,
+      input: { name: 'Fixture Taken', description: 'x' },
+    });
+
+    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(await sql`select name, slug, updated_by from deity_traditions where id = ${id}`).toEqual(
+      before,
+    );
+  });
 });
 
 describe('deleteDeityTradition', () => {
