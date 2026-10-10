@@ -1,7 +1,8 @@
 import { sql } from 'drizzle-orm';
-import { index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { index, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // The regional and common names an ingredient also answers to (story 21).
 // A child table rather than `folkNames text[]`: `array_to_string` is STABLE on
@@ -11,9 +12,7 @@ import { ingredients } from './ingredients';
 export const ingredientFolkNames = pgTable(
   'ingredient_folk_names',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
@@ -24,9 +23,12 @@ export const ingredientFolkNames = pgTable(
     // Partial per CLAUDE.md rule 4, an index because no constraint takes a
     // WHERE or `lower(name)`. Per ingredient and deliberately not global:
     // several plants claiming "Cat's Claw" is what is being documented.
-    uniqueIndex('ingredient_folk_names_unique')
-      .on(table.ingredientId, sql`lower(${table.name})`)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique(
+      'ingredient_folk_names_unique',
+      table,
+      table.ingredientId,
+      sql`lower(${table.name})`,
+    ),
     // Not partial: a trigram index reserves nothing. The threshold rule that
     // makes `%` reach it is ingredients.ts's (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
     index('ingredient_folk_names_trgm').using('gin', sql`${table.name} gin_trgm_ops`),

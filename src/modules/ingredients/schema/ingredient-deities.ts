@@ -3,6 +3,7 @@ import { check, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle
 import { auditColumns } from '../../identity/schema/users';
 import { deities } from '../../vocabulary/schema/deities';
 import { ingredients } from './ingredients';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // The deities an ingredient names, one row per entry in the order entered
 // (MB.165): a name, and beside it a link to the curated deity the member
@@ -14,9 +15,7 @@ import { ingredients } from './ingredients';
 export const ingredientDeities = pgTable(
   'ingredient_deities',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
@@ -35,9 +34,7 @@ export const ingredientDeities = pgTable(
     // `ingredient_id`, it reads the list in order, so no plain parent index
     // is built beside it. Checked per row, so a reorder moves the live rows
     // through a scratch offset, as a jar's layers do.
-    uniqueIndex('ingredient_deities_position_unique')
-      .on(table.ingredientId, table.position)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique('ingredient_deities_position_unique', table, table.ingredientId, table.position),
     // One live link per deity, and one live unlinked name, case folded. Links
     // to two same-named deities are two deities, so the name index covers
     // unlinked rows only. Partial per rule 4.

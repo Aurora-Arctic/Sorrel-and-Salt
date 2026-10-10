@@ -1,17 +1,8 @@
 import { sql } from 'drizzle-orm';
-import {
-  pgTable,
-  text,
-  boolean,
-  uuid,
-  pgEnum,
-  uniqueIndex,
-  index,
-  check,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, pgEnum, index, check, timestamp } from 'drizzle-orm/pg-core';
 import { auditStampColumnsReferencing, deletionColumnsReferencing } from '../../../db/audit';
 import type { UsersIdReference } from '../../../db/types';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // The audit column instances every table spreads, built here because each
 // references `users.id` — `users` included, so the thunk resolves the table
@@ -34,9 +25,7 @@ export const userRole = pgEnum('user_role', ['user', 'admin']);
 export const users = pgTable(
   'users',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     name: text('name').notNull(),
     email: text('email').notNull(),
     emailVerified: boolean('email_verified').default(false).notNull(),
@@ -50,9 +39,7 @@ export const users = pgTable(
   },
   (table) => [
     // Partial per CLAUDE.md rule 4.
-    uniqueIndex('users_email_unique')
-      .on(table.email)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique('users_email_unique', table, table.email),
     // Better Auth lowercases on every write; this holds a hand-written row to
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.

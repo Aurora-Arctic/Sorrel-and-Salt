@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, users } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // A default, not a policy: a caller may pass its own `expiresAt`, and the
 // column exists so omitting one cannot mean forever
@@ -22,9 +23,7 @@ export const invitations = namedWrites(
   pgTable(
     'invitations',
     {
-      id: uuid('id')
-        .default(sql`pg_catalog.gen_random_uuid()`)
-        .primaryKey(),
+      id: idColumn(),
       // Null on the site tier, with `role`: the tier check pairs them.
       workspaceId: uuid('workspace_id').references(() => workspaces.id),
       // Not a foreign key: an invitee may have no account yet.
@@ -53,9 +52,7 @@ export const invitations = namedWrites(
       ),
       // The acceptance lookup, across both tiers: one hash must resolve to at
       // most one row. Partial per rule 4, though nothing re-proposes a random hash.
-      uniqueIndex('invitations_token_hash_unique')
-        .on(table.tokenHash)
-        .where(sql`${table.deletedAt} is null`),
+      liveUnique('invitations_token_hash_unique', table, table.tokenHash),
     ],
   ),
 );

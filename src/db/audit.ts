@@ -4,6 +4,8 @@ import type {
   AuditOperation,
   AuditSession,
   AuditFields,
+  DeletionField,
+  StampField,
   WithoutAuditFields,
 } from './types';
 
@@ -33,14 +35,17 @@ export function deletionColumnsReferencing(usersId: UsersIdReference) {
   };
 }
 
-const AUDIT_FIELD_NAMES = [
-  'createdAt',
-  'createdBy',
-  'updatedAt',
-  'updatedBy',
-  'deletedAt',
-  'deletedBy',
-] as const;
+// The six names a payload is stripped of, read off the factories rather than
+// listed beside them, so a column added to either is stripped too. The
+// builders are thrown away: none is spread into a table, so the reference
+// is never resolved.
+const unresolved: UsersIdReference = () => {
+  throw new Error('An audit field name list resolves no foreign key');
+};
+const AUDIT_FIELD_NAMES = Object.keys({
+  ...auditStampColumnsReferencing(unresolved),
+  ...deletionColumnsReferencing(unresolved),
+}) as (keyof AuditFields)[];
 
 function stripAuditFields<T extends object>(payload: T): WithoutAuditFields<T> {
   const rest = { ...payload };
@@ -58,7 +63,7 @@ export function applyAudit<T extends object>(
   operation: 'insert',
   payload: T,
   session: AuditSession,
-): WithoutAuditFields<T> & Pick<AuditFields, 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy'>;
+): WithoutAuditFields<T> & Pick<AuditFields, StampField>;
 export function applyAudit<T extends object>(
   operation: 'update',
   payload: T,
@@ -68,7 +73,7 @@ export function applyAudit<T extends object>(
   operation: 'delete',
   payload: T,
   session: AuditSession,
-): WithoutAuditFields<T> & Pick<AuditFields, 'deletedAt' | 'deletedBy'>;
+): WithoutAuditFields<T> & Pick<AuditFields, DeletionField>;
 export function applyAudit<T extends object>(
   operation: AuditOperation,
   payload: T,

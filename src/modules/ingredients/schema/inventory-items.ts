@@ -1,19 +1,11 @@
 import { sql } from 'drizzle-orm';
-import {
-  check,
-  date,
-  numeric,
-  pgEnum,
-  pgTable,
-  text,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { check, date, numeric, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { QUANTITY_PRECISION, QUANTITY_SCALE } from './quantities';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
 import { workspaces } from '../../coven/schema/workspaces';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // Both enums are stocked from `./units.ts`, so a unit added there reaches
 // the database, the converter and the form in one edit; nothing in this file
@@ -43,9 +35,7 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 export const inventoryItems = pgTable(
   'inventory_items',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id),
@@ -79,8 +69,11 @@ export const inventoryItems = pgTable(
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
     // What "already added" means. Partial per CLAUDE.md rule 4: throwing a jar
     // out is recoverable, so it must not reserve the ingredient.
-    uniqueIndex('inventory_items_workspace_id_ingredient_id_unique')
-      .on(table.workspaceId, table.ingredientId)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique(
+      'inventory_items_workspace_id_ingredient_id_unique',
+      table,
+      table.workspaceId,
+      table.ingredientId,
+    ),
   ],
 );

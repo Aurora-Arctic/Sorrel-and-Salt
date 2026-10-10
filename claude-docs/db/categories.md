@@ -67,6 +67,19 @@ idempotency keys read, and none of them carries a group alongside it. Display
 names carry no constraint: two groups may each want a "Protection", and the
 slug is what tells them apart.
 
+**One builder declares a vocabulary's shared columns and indexes** (MB.207).
+`src/db/schema-parts.ts`'s `vocabularyColumns()` is `id`, `name`, `slug`,
+`description` and `seedKey`, and `vocabularyIndexes(prefix, table, options)`
+is `<prefix>_seed_key_unique`, `<prefix>_slug_unique`,
+`<prefix>_description_not_blank` and, with `trigram`, `<prefix>_trgm`, the
+names the migrations created. All eight vocabulary tables — these four, the
+two astrology tables and the two deity tables — spread the one and return the
+other, adding only their own columns: a group's colour pair, an item's key
+to its group. `db:generate` writing no migration is what proved the builder
+reproduces the DDL. Drizzle's column order in the source changed with it, and
+nothing reads that order: the database's is the migrations', where
+`seed_key` is already the last column (migration 0045).
+
 **On `ingredient_forms` that last sentence has a consequence the other three
 do not have, and it is deliberate.** A category is referenced by **id**, so
 two categories sharing a display name are only two similar chips.
@@ -110,7 +123,8 @@ than input validation, unlike M5.6b's contrast floor, because "say
 something" needs no ratio in its error message. The two category tables carry
 no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
 shipped NOT NULL alone and this is a difference in the specification, not a
-gap in M4.2.
+gap in M4.2. `vocabularyIndexes` takes `descriptionCheck: false` for the two
+until MB.214 adds their CHECKs and removes the option.
 
 ## Category writes (M5.6)
 

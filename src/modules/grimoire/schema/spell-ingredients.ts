@@ -3,7 +3,9 @@ import { check, integer, numeric, pgTable, text, uniqueIndex, uuid } from 'drizz
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from '../../ingredients/schema/ingredients';
 import { inventoryUnit } from '../../ingredients/schema/inventory-items';
+import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/quantities';
 import { spells } from './spells';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // What is in the jar and in what order (stories 50, 57): a layer is either an
 // ingredient the workspace knows or a name written for this one jar.
@@ -18,9 +20,7 @@ export const spellIngredients = pgTable(
   {
     // A surrogate key, because the layer cannot be one: a removed layer's
     // tombstone would go on holding its depth.
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     spellId: uuid('spell_id')
       .notNull()
       .references(() => spells.id),
@@ -32,10 +32,10 @@ export const spellIngredients = pgTable(
     // beside a name, which a CHECK below enforces.
     name: text('name'),
     form: text('form'),
-    // `numeric(12, 3)`, matching `inventory_items.quantityOnHand` so the
+    // A stock amount's shape, matching `inventory_items.quantityOnHand` so the
     // converter reads both sides. Nullable, with `unit`: "a pinch" names no
     // measurement, and zero is a quantity where absence is not.
-    quantity: numeric('quantity', { precision: 12, scale: 3 }),
+    quantity: numeric('quantity', { precision: QUANTITY_PRECISION, scale: QUANTITY_SCALE }),
     // The same enum a jar is measured in, so the converter can go between them.
     // No `unitDimension` here: nothing groups a spell's layers by dimension.
     unit: inventoryUnit('unit'),
@@ -52,9 +52,12 @@ export const spellIngredients = pgTable(
     // reads a jar in order. Checked per row, not at end of statement, so a
     // reorder moves the live rows through a scratch offset rather than
     // sweeping `layer_order + 1`.
-    uniqueIndex('spell_ingredients_spell_id_layer_order_unique')
-      .on(table.spellId, table.layerOrder)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique(
+      'spell_ingredients_spell_id_layer_order_unique',
+      table,
+      table.spellId,
+      table.layerOrder,
+    ),
 
     // One ingredient per jar: wanted at two depths is one row with a note.
     // A custom row's null `ingredient_id` is nothing to be unique about.

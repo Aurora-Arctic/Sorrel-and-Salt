@@ -9,6 +9,7 @@ import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astro
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import type { CitationFields } from '../../lib/types';
+import type { StampField } from '../types';
 import type {
   ingredientFormGroups,
   ingredientForms,
@@ -24,7 +25,7 @@ export type SeedDatabase = PostgresJsDatabase<Record<string, unknown>>;
 export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>[0]>[0];
 
 /** The stamps `applyAudit('insert', …)` supplies, so a caller's row is typed without them. */
-export type InsertStamps = 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy';
+export type InsertStamps = StampField;
 
 /** Typed against the insert model, so a column renamed in users.ts fails here. */
 export type SeedUser = Pick<typeof users.$inferInsert, 'id' | 'name' | 'email' | 'role'>;

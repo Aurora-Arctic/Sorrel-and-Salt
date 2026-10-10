@@ -140,7 +140,8 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   type and not a second copy of it: a tablespoon in a spell is the tablespoon a
   jar is measured in, and M9.5 converts between them. The type keeps its
   `inventory_unit` name — renaming it to suit a second consumer would be a
-  `RENAME` under rule 10 for no gain. `quantity` is `numeric(12, 3)`, matching
+  `RENAME` under rule 10 for no gain. `quantity` is `numeric(12, 3)`, built from
+  `quantities.ts`'s precision and scale as the stock columns are (MB.207), matching
   `inventory_items.quantityOnHand` exactly, so "do I have enough for this spell"
   loses no precision on the comparison. Both are nullable: a layer may name no
   measurement at all.

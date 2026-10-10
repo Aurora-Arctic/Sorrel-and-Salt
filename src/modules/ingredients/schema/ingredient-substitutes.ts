@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
+import { idColumn } from '../../../db/schema-parts';
 
 // What an ingredient may be replaced with, one row per entry (MB.138): a link
 // to another ingredient, or a name typed for one that is not entered — the
@@ -13,9 +14,7 @@ import { ingredients } from './ingredients';
 export const ingredientSubstitutes = pgTable(
   'ingredient_substitutes',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
