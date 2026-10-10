@@ -16,9 +16,29 @@ ones through `findManyOfIngredients` with no proofs, which is the compendium
 alone. The slug follows the label, the form and the formal name, and the one
 an update leaves is retired and redirects for 180 days
 (["Ingredient slugs"](ingredient-slugs.md)).
-The row mapping and the folk-name diff live in one internal file,
-`services/ingredient-rows.ts`, which both services import. The categories
-are `categoryIds`, written in the same transaction as a coven's are (MB.125).
+The categories are `categoryIds`, written in the same transaction as a
+coven's are (MB.125).
+
+**What both tiers write the same way is written once** (MB.211), in one
+internal file, `services/ingredient-rows.ts`, which both services import and
+the module's index does not. `splitChildren` splits the parse into the row's
+fields, the deities to check and the child lists written as sent;
+`ingredientColumns` maps the fields to columns, the slug among them;
+`writeChildren(write, memberships, id, children, mode)` is each write's one
+child call, `'add'` on a create and `'replace'` on an update, writing the folk
+names, substitutes, deities, references and categories in that order; and
+`softDeleteIngredient` is both deletes' body, each passing its tier's writer.
+`memberships` is the tier: none here, the proof's coven for a coven's.
+**A sixth child table costs one writer, one loader and one input field**: its
+add and replace pair in `ingredient-rows.ts`, a line in each branch of
+`writeChildren` and its list in `splitChildren` and `IngredientChildren`; a
+key in the record of loaders in `loaders/ingredient-children.ts`, exported by
+name for `src/graphql/loaders/index.ts` to register, which both update
+mutations clear through `clearIngredientChildren`; and a field in
+`graphql/ingredient-input.ts`'s `ingredientInputFields`, which the four input
+types spread. No service, mutation or input type is edited, and
+`tests/guards/ingredient-child-loaders.test.ts` fails a loader defined
+outside the record or one a mutation clears by hand.
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and

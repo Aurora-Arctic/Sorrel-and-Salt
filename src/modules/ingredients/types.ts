@@ -42,6 +42,20 @@ export interface PickedDeity {
 }
 
 /**
+ * What `writeChildren` writes beside an ingredient's row: the parsed input's
+ * lists, each absent one written as empty, the deities as `resolvePicks`
+ * resolved them, and the deity rows the ingredient held before, which a
+ * replace keeps where it lists them again — none on an add.
+ */
+export interface IngredientChildren extends Pick<
+  LocalIngredientInput,
+  'folkNames' | 'substitutes' | 'references' | 'categoryIds'
+> {
+  deities: readonly PickedDeity[];
+  heldDeities?: readonly DeityRecord[];
+}
+
+/**
  * One deity as `Ingredient.deities` reads it (MB.167): the name the row holds,
  * and the curated deity picked, null on a typed name and once that deity or
  * its tradition is retired, when the row reads as its name.

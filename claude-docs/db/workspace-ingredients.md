@@ -72,9 +72,17 @@ clears the case-folded unique index before the insert meets it. The service
 test asserts the one transaction by comparing `xmin`: every row a
 transaction writes carries its id.
 
+**Every child is written by one call, the compendium's own** (MB.211). Each
+write hands `writeChildren` in `services/ingredient-rows.ts` its folk names,
+substitutes, deities, references and categories, `'add'` on a create and
+`'replace'` on an update, under `[membership]`; the compendium's make the
+same call with none. A sixth child table costs one writer, one loader and one
+input field, and no edit to this service or its mutations
+(["Compendium writes"](compendium-writes.md) says which three).
+
 **The slug follows the label, the form and the formal name.** `slug` is
-`NOT NULL`, so a create writes `ingredientSlug` of the three, and an update
-writes it again from the new values. Nothing redirects from the old one: no
+`NOT NULL`, so a create writes `ingredientSlug` of the three, through
+`ingredientColumns`, and an update writes it again from the new values. Nothing redirects from the old one: no
 route reads a coven ingredient's slug, so MB.82's retirements are the
 compendium's alone (["Ingredient slugs"](ingredient-slugs.md)).
 
