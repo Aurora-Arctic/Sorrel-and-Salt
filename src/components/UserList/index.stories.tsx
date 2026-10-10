@@ -4,7 +4,9 @@ import UserList from '.';
 import type { UserListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter
-// and the pager reach `/admin/users`, which the workshop does not serve.
+// and the pager reach `/admin/users`, and each name's permissions history icon
+// `/admin/privilege-changes` (MB.200), neither of which the workshop serves;
+// hover or focus an icon to see its tip.
 export default {
   title: 'Admin / Users',
 };

@@ -3,8 +3,8 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import './index.scss';
 
-// The `/admin` layout's nav: one entry per admin-curated resource, and the
-// user list. It renders only inside the guarded layout, so only an admin ever
+// The `/admin` layout's nav: one entry per admin-curated resource, the user
+// list and the privilege ledger. It renders only inside the guarded layout, so only an admin ever
 // sees it (claude-docs/components/admin-nav.md).
 
 // Each href is checked against the built routes (typedRoutes).
@@ -20,6 +20,8 @@ const RESOURCES: readonly { href: Route; label: string }[] = [
   { href: '/admin/deities', label: 'Deities' },
   { href: '/admin/deity-traditions', label: 'Deity traditions' },
   { href: '/admin/users', label: 'Users' },
+  // Who holds which privilege, and who changed it (MB.200).
+  { href: '/admin/privilege-changes', label: 'Privilege changes' },
 ];
 
 const AdminNav = (): ReactElement => (

@@ -64,13 +64,21 @@ builder.queryField('privilegeChanges', (t) =>
     args: {
       userId: t.arg.id({ required: false }),
       privilege: t.arg({ type: UserPrivilegeEnum, required: false }),
+      query: t.arg.string({
+        required: false,
+        description: "Part of the subject's name or email, case-insensitively.",
+      }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { userId, privilege }, page, { session }) => {
+    resolve: (_root, { userId, privilege, query }, page, { session }) => {
       if (!session) throw new Forbidden();
       return listPrivilegeChanges(
         session,
-        { userId: userId ?? undefined, privilege: privilege ?? undefined },
+        {
+          userId: userId ?? undefined,
+          privilege: privilege ?? undefined,
+          query: query ?? undefined,
+        },
         page,
       );
     },
