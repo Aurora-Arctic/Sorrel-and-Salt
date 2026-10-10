@@ -113,7 +113,10 @@ read beside it.
 
 ## Styling
 
-Layout only, until the admin area's design review (MB.115). The filter is a
+Layout only, until the admin area's design review (MB.115). Its cells are centred on the row rather than on the text's baseline, the
+primitive's rule, since its rows mix text with logo circles, marks and
+buttons whose baselines sit at different heights, and the signup date never
+breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
 a wrapping row of the mark and the control, and the confirmation is the
 `Modal`'s own layout, its buttons in `.modal__actions`, all built on the

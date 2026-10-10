@@ -10,6 +10,19 @@
   gap: space(5);
 }
 
+// Every cell centred on its row rather than on the text's baseline, which
+// the primitive uses: these rows mix text with logo circles, marks and
+// buttons, whose boxes put their baselines at different heights, so on the
+// baseline a row's contents sat unevenly (the owner's review). The signup
+// date stays on one line rather than breaking at its hyphens.
+.user-list .data-table td {
+  vertical-align: middle;
+}
+
+.user-list .data-table time {
+  white-space: nowrap;
+}
+
 .user-list__search {
   display: flex;
   flex-wrap: wrap;
