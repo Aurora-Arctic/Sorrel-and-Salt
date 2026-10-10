@@ -108,6 +108,17 @@ read beside it.
   fresh one, without the modal, rather than keeping the busy state. A refusal
   closes the modal, puts the service's message in the row as an alert, and
   offers the action again. The service is the guard.
+- **Approving an unverified address warns first** (MB.205). When the row's
+  `emailVerified` is false, the Approve modal says, under its question, in a
+  `.notice--warn`: "This email address has not been verified, so nobody has
+  proved who holds it. Approving keeps the account rather than letting it
+  lapse." An approval vouches for whoever holds the address, and the vouching
+  keeps the account from MB.67's sweep of lapsed unverified accounts (MB.204).
+  It is a warning, not a refusal: the modal's Approve still approves, since
+  M2.9 leaves confirming who someone is to the admin. The modal's Approve is
+  `aria-describedby` the warning, so a screen reader reads it as the focus
+  lands there on opening. A verified user's Approve, and every Revoke, carries
+  none. The control takes `emailVerified` from the row for it.
 - **MB.59's grant control sits on these rows too.** It does not exist yet, and
   adds its own column in its own PR.
 
@@ -128,9 +139,11 @@ are banded and its header carries a hairline, as every admin list's does, and it
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
-`Default`, `Filtered`, `NoMatch` and `WithImpersonation`, inside the admin
-layout's frame; the list holds an admin, a user awaiting approval and an
-approved user, so each control shows. In the workshop neither Impersonate nor Approve or Revoke reaches a
+`Default`, `Filtered`, `NoMatch`, `WithImpersonation` and `UnverifiedApproval`,
+inside the admin layout's frame; the list holds an admin, a user awaiting
+approval and an approved user, so each control shows. `UnverifiedApproval`
+holds two users awaiting approval, one unverified and one verified, so the
+first's Approve opens the warning (MB.205) and the second's does not. In the workshop neither Impersonate nor Approve or Revoke reaches a
 server, so a click shows the refusal.
 Render-only, no test ids, no snapshots.
 
@@ -145,7 +158,10 @@ Impersonate column: absent when off, on non-admin rows only, the call and
 the landing, and the refusal; the yes-or-no marks and their words; and the creation cell: Approve on rows awaiting
 approval, Revoke on approved ones and nothing on an admin's, each modal
 and its focus, Cancel sending nothing, each call and its busy state until the
-refresh, and the refusal. `tests/e2e/admin.spec.ts` approves and revokes a user
-against the built server, with axe over the open modal.
+refresh, and the refusal; and the unverified warning: in Approve's modal and
+describing its Approve for an unverified user, which still approves, and
+absent for a verified one and from Revoke. `tests/e2e/admin.spec.ts` approves
+and revokes a user against the built server, and approves an unverified one
+through the warning, with axe over each open modal.
 `tests/app/admin/users/page.test.tsx` covers what the page hands it, the
 impersonation gate included, and `awaiting` read by its presence.

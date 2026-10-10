@@ -80,3 +80,28 @@ export const WithImpersonation: Story = () => (
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate />
   </Frame>
 );
+
+// MB.205: two users awaiting approval, one unverified and one verified. Approve
+// on the first opens a confirmation warning that nobody has proved who holds
+// the address; on the second, none.
+export const UnverifiedApproval: Story = () => (
+  <Frame>
+    <UserList
+      users={[
+        USERS[1] as UserListEntry,
+        {
+          id: 'u-di',
+          name: 'Di Fixturewort',
+          email: 'di@users.test',
+          role: 'user',
+          canCreateWorkspace: false,
+          createdAt: new Date('2026-07-08T09:10:11Z'),
+          providers: ['discord'],
+          emailVerified: true,
+        },
+      ]}
+      query=""
+      awaitingApproval
+    />
+  </Frame>
+);
