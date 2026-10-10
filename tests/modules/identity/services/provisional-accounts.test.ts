@@ -12,6 +12,7 @@ import {
 } from '../../../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../../../support/auth-module';
+import { asManualFix } from '../../../support/db/privileges';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 
@@ -58,6 +59,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`update users set updated_by = id where updated_by in (${mine})`;
+  // The ledger goes before the users its rows name, and by truncate, since
+  // `forbid_rewrite` refuses a delete.
+  await sql`truncate user_privilege_changes`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
@@ -111,8 +115,8 @@ async function backdate(userId: string, by: string): Promise<void> {
 }
 
 /** A Facebook sign-up holding `email` unverified: the squat. */
-async function squat(email: string) {
-  const response = await signIn('facebook', { sub: 'fb-squatter', email, verified: true });
+async function squat(email: string, sub = 'fb-squatter') {
+  const response = await signIn('facebook', { sub, email, verified: true });
   expectSignedIn(response);
   const row = await userRow(email);
   // The preconditions every sweep assertion below could otherwise be explained by.
@@ -226,6 +230,69 @@ describe('Story 58: what the sweep removes', () => {
       expect.stringContaining('provisional-account sweep failed'),
       expect.anything(),
     );
+  });
+});
+
+// MB.204: an admin may approve an unverified account (M5.8) or make it an
+// admin (MB.59), and the ledger row that writes references the account with a
+// plain foreign key, so the sweep keeps it rather than fail on it.
+describe('Story 58: an account an admin has vouched for is not swept', () => {
+  const VOUCHED = `vouched${DOMAIN}`;
+
+  async function ledgerRows(userId: string): Promise<number> {
+    const [{ count }] = await sql`
+      select count(*)::int as count from user_privilege_changes where user_id = ${userId}
+    `;
+    return count as number;
+  }
+
+  /** Approves the account for coven creation as the bootstrap admin, a `psql` fix declaring itself. */
+  async function vouch(userId: string): Promise<void> {
+    await asManualFix(
+      sql,
+      (tx) => tx`
+        update users set can_create_workspace = true, updated_by = ${BOOTSTRAP_USER_ID}
+        where id = ${userId}
+      `,
+    );
+  }
+
+  /** Two lapsed squats, alike but for whether an admin vouched for the first. */
+  async function lapsedPair(vouched: boolean) {
+    const kept = await squat(VOUCHED, 'fb-vouched');
+    if (vouched) await vouch(kept.row.id);
+    const beside = await squat(OWNER);
+    await backdate(kept.row.id, EXPIRED);
+    await backdate(beside.row.id, EXPIRED);
+    expect(await ledgerRows(kept.row.id)).toBe(vouched ? 1 : 0);
+    expect(await ledgerRows(beside.row.id)).toBe(0);
+    return { kept: kept.row.id, beside: beside.row.id };
+  }
+
+  it('keeps a lapsed account holding a privilege change, and sweeps the one beside it in the same run', async () => {
+    const { kept, beside } = await lapsedPair(true);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+
+    // The sweep ran and did not fail on the ledger's foreign key.
+    expect(error).not.toHaveBeenCalledWith(
+      expect.stringContaining('provisional-account sweep failed'),
+      expect.anything(),
+    );
+    expect((await linkedRows(beside)).users).toBe(0);
+    // The kept account is otherwise untouched.
+    expect(await linkedRows(kept)).toEqual({ users: 1, accounts: 1, sessions: 1 });
+    expect(await ledgerRows(kept)).toBe(1);
+  });
+
+  it('sweeps that same account when nothing vouches for it, so the row is what kept it', async () => {
+    const { kept, beside } = await lapsedPair(false);
+
+    expectSignedIn(await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true }));
+
+    expect(await linkedRows(kept)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect((await linkedRows(beside)).users).toBe(0);
   });
 });
 

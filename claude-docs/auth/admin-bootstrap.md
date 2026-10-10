@@ -291,7 +291,19 @@ verification window, and three hours at most. The argument is
   callback carries on. One lapsed row that another row references makes the
   whole statement fail, because every audit foreign key is `NO ACTION`.
   Nothing in v1 lets an unverified account write beyond its own row, so
-  this needs a bug or a hand edit.
+  this needs a bug or a hand edit; the one row others write about it, a
+  privilege change, the sweep steps around (next).
+- **An account an admin has vouched for is not swept** (MB.204). Approving
+  an unverified account for coven creation (M5.8) or making it an admin
+  (MB.59) writes a `user_privilege_changes` row naming it with a plain
+  foreign key, and the sweep skips any account holding one. Deleted, it
+  would fail the whole statement on that key, and so every sweep after, and
+  the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
+  and letting the rows go with the user would erase what the ledger is for.
+  Revoking the privilege adds a row rather than removing one, so the account
+  is kept until it verifies, with its sessions and provider accounts, and
+  goes on holding its address; MB.205 is to warn the admin of that before
+  they vouch.
 - **Hard delete, outside `withAudit`.** A tombstone would go on blocking
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
