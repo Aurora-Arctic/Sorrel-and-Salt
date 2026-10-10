@@ -9,6 +9,12 @@ export interface SeedEntry {
   name: string;
   run: (handle: SeedDatabase) => Promise<void>;
   tables: string[];
+  /**
+   * The inserts this entry makes as someone other than the bootstrap user:
+   * fixture E's, whose privileges the trigger on `users` records stamped as
+   * E (MB.195). Absent for an entry that seeds no admin.
+   */
+  actingAsOther?: { table_name: string; acting_user: string }[];
 }
 
 /** A `planets` or `zodiac_signs` row. */

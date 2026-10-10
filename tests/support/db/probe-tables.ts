@@ -20,6 +20,9 @@ export const herbs = pgTable('repository_probe_herbs', {
   actingUser: text('acting_user'),
   // The same for `app.impersonated_by` (MB.53).
   impersonatingAdmin: text('impersonating_admin'),
+  // And for `app.privilege_route` and `app.privilege_note` (MB.195).
+  privilegeRoute: text('privilege_route'),
+  privilegeNote: text('privilege_note'),
   ...auditColumns,
 });
 
@@ -115,6 +118,8 @@ export function useProbeTables() {
         name text not null,
         acting_user text default current_setting('app.current_user_id', true),
         impersonating_admin text default current_setting('app.impersonated_by', true),
+        privilege_route text default current_setting('app.privilege_route', true),
+        privilege_note text default current_setting('app.privilege_note', true),
         created_at timestamp not null default now(),
         created_by uuid not null,
         updated_at timestamp not null default now(),

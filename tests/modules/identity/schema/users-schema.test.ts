@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
+import { asManualFix } from '../../../support/db/privileges';
 import { statementsOfMigrationContaining } from '../../../support/db/migrations';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
@@ -136,14 +137,18 @@ describe('users admin creation flag', () => {
 
   const CONSTRAINT = 'users_admin_can_create_workspace';
 
-  const insert = (email: string, role: 'user' | 'admin', canCreateWorkspace: boolean) => sql<
-    { id: string }[]
-  >`
-    insert into users (name, email, role, can_create_workspace, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, ${canCreateWorkspace},
-            ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-    returning id
-  `;
+  // Each write here that grants a privilege declares itself, as a `psql` fix
+  // must since MB.195's trigger; the CHECK refuses before the trigger runs.
+  const insert = (email: string, role: 'user' | 'admin', canCreateWorkspace: boolean) =>
+    sql.begin(async (tx) => {
+      await tx`select set_config('app.privilege_route', 'manual', true)`;
+      return tx<{ id: string }[]>`
+        insert into users (name, email, role, can_create_workspace, created_by, updated_by)
+        values ('Fixture Person', ${email}, ${role}, ${canCreateWorkspace},
+                ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+        returning id
+      `;
+    });
 
   it('refuses an admin row without the flag', async () => {
     const error = await failureOf(insert('flagless-admin@admin-flag.test', 'admin', false));
@@ -167,7 +172,10 @@ describe('users admin creation flag', () => {
 
     expect(error.code).toBe('23514');
     expect(error.constraint_name).toBe(CONSTRAINT);
-    await sql`update users set role = 'admin', can_create_workspace = true where id = ${id}`;
+    await asManualFix(
+      sql,
+      (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${id}`,
+    );
     const [row] =
       await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
     expect(row).toEqual({ role: 'admin', can_create_workspace: true });
@@ -180,21 +188,28 @@ describe('users admin creation flag', () => {
     const liveAdmin = '00000000-0000-0000-0000-0000000000fa';
     const deletedAdmin = '00000000-0000-0000-0000-0000000000fb';
     const user = '00000000-0000-0000-0000-0000000000fc';
-    await sql`
-      insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
-      values
-        (${liveAdmin}, 'Live Admin', 'live@admin-flag.test', 'admin', false,
-         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null),
-        (${deletedAdmin}, 'Lapsed Admin', 'lapsed@admin-flag.test', 'admin', false,
-         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, now(), ${BOOTSTRAP_USER_ID}),
-        (${user}, 'Plain User', 'plain@admin-flag.test', 'user', false,
-         ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null)
-    `;
+    // The migration ran before MB.195's trigger existed; re-run after it, its
+    // rows and its backfill are privilege changes, declared as a `psql` fix.
+    await asManualFix(
+      sql,
+      (tx) => tx`
+        insert into users (id, name, email, role, can_create_workspace, created_by, updated_by, deleted_at, deleted_by)
+        values
+          (${liveAdmin}, 'Live Admin', 'live@admin-flag.test', 'admin', false,
+           ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null),
+          (${deletedAdmin}, 'Lapsed Admin', 'lapsed@admin-flag.test', 'admin', false,
+           ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, now(), ${BOOTSTRAP_USER_ID}),
+          (${user}, 'Plain User', 'plain@admin-flag.test', 'user', false,
+           ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}, null, null)
+      `,
+    );
 
     const statements = statementsOfMigrationContaining(`ADD CONSTRAINT "${CONSTRAINT}"`);
     // The backfill, then the check it makes room for.
     expect(statements).toHaveLength(2);
-    for (const statement of statements) await sql.unsafe(statement);
+    await asManualFix(sql, async (tx) => {
+      for (const statement of statements) await tx.unsafe(statement);
+    });
 
     const rows = await sql`
       select id, can_create_workspace, updated_by from users

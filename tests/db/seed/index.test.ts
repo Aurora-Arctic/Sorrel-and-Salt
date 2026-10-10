@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
@@ -195,13 +196,21 @@ describe('resolveScenario', () => {
 //
 // Each entry names the tables it is the seed of: the ones it fills from empty,
 // which is also what proves `seed()` routed a scenario to its own seed. The
-// `standard` list leaves out two it writes: `admin_role_changes`, whose one
-// ledger row is stamped as fixture E, the way MB.58's migration stamps every
-// admin's, and `ingredient_deities`, whose deleted pick a re-run of
+// `standard` list leaves out two it writes: `user_privilege_changes`, whose
+// rows the trigger on `users` writes as the cast is inserted, fixture E's
+// two stamped as E, inserted as itself the way a primary admin's promotion is
+// stamped (MB.195), and `ingredient_deities`, whose deleted pick a re-run of
 // `standard` puts back by design: it resets its fixtures, and
 // standard.test.ts asserts the restoration. `demo` keeps the deletion, so the
 // table is on its list — claude-docs/db/standard-scenario.md, "A reseed of
 // standard puts a deity pick back; demo does not".
+// Fixture E's insert, and the two grants the trigger records for it.
+const AS_FIXTURE_E = [
+  { table_name: 'users', acting_user: FIXTURE_USERS.E.id },
+  { table_name: 'user_privilege_changes', acting_user: FIXTURE_USERS.E.id },
+  { table_name: 'user_privilege_changes', acting_user: FIXTURE_USERS.E.id },
+];
+
 const SEED_ENTRIES: SeedEntry[] = [
   {
     name: 'the minimal scenario',
@@ -219,11 +228,13 @@ const SEED_ENTRIES: SeedEntry[] = [
       'ingredient_folk_names',
       'ingredient_categories',
     ],
+    actingAsOther: AS_FIXTURE_E,
   },
   {
     name: 'the demo scenario',
     run: (db) => seed(db, { scenario: 'demo' }),
     tables: ['spells', 'spell_ingredients', 'spell_categories', 'ingredient_deities'],
+    actingAsOther: AS_FIXTURE_E,
   },
   { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
   { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
@@ -251,7 +262,7 @@ describe('the shape every seed shares', () => {
   // insert — each with the precondition that the rows are this run's.
   it.each(SEED_ENTRIES)(
     '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
-    async ({ run, tables: own }) => {
+    async ({ run, tables: own, actingAsOther = [] }) => {
       // Precondition: the truncated clone really starts empty, so these rows are this run's.
       for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
 
@@ -278,7 +289,12 @@ describe('the shape every seed shares', () => {
       // Precondition: the probe saw this seed's own rows, not only the bootstrap user's.
       const seen = new Set(inserts.map((row) => row.table_name));
       for (const table of ['users', ...own]) expect(seen.has(table), table).toBe(true);
-      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID)).toEqual([]);
+      // Sorted: the ledger's trigger and the probe's fire in name order, not insert order.
+      const byTable = (x: { table_name: string }, y: { table_name: string }) =>
+        x.table_name === y.table_name ? 0 : x.table_name < y.table_name ? -1 : 1;
+      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID).sort(byTable)).toEqual(
+        [...actingAsOther].sort(byTable),
+      );
     },
   );
 
