@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { Forbidden } from '../../../lib/errors';
+import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import {
   userPrivilege,
   userPrivilegeChange,
@@ -70,17 +70,7 @@ builder.queryField('privilegeChanges', (t) =>
       }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { userId, privilege, query }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return listPrivilegeChanges(
-        session,
-        {
-          userId: userId ?? undefined,
-          privilege: privilege ?? undefined,
-          query: query ?? undefined,
-        },
-        page,
-      );
-    },
+    resolve: (_root, { userId, privilege, query }, page, context) =>
+      listPrivilegeChanges(sessionOf(context), definedArgs({ userId, privilege, query }), page),
   }),
 );

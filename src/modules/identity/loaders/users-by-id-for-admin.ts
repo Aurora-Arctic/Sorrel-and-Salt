@@ -1,5 +1,4 @@
-import { defineLoader } from '../../../graphql/loaders/define-loader';
-import { Forbidden } from '../../../lib/errors';
+import { defineSignedInLoader } from '../../../graphql/loaders/define-loader';
 import { usersForAdmin } from '../services/privilege-changes';
 import type { UserRow } from '../types';
 
@@ -8,6 +7,4 @@ import type { UserRow } from '../types';
  * ledger names, in one read whichever field asked. Null for an id no live
  * user holds.
  */
-export const usersByIdForAdmin = defineLoader<string, UserRow | null>(async (session, userIds) =>
-  session ? usersForAdmin(session, userIds) : userIds.map(() => new Forbidden()),
-);
+export const usersByIdForAdmin = defineSignedInLoader<string, UserRow | null>(usersForAdmin);

@@ -1,16 +1,36 @@
+import type { InputFieldRef } from '@pothos/core';
 import { builder } from '../../../graphql/builder';
+import { sessionOf, suggestionConnection } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
+import type { BuilderTypes } from '../../../graphql/types';
 import { citationText } from '../../../lib/citation';
-import { Forbidden } from '../../../lib/errors';
+import type { CitationFields } from '../../../lib/types';
 import { REFERENCE_KINDS } from '../schema/ingredient-enums';
 import { createReference, suggestReferences, updateReference } from '../services/references';
 import type { CitedReference, ReferenceRow } from '../types';
+import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
+import type { ReferenceTextField } from '../validation/types';
 
 // A reference as DESIGN.md §7 sketches it (MB.151, built by MB.153): its
 // fields, the tier as `isGlobal`, and the citation rendered on the server by
 // the one renderer, plain. Its two writes and the picker's search are here;
 // `Ingredient.references` reads through the request's loader in
 // `ingredient.ts`. `workspaceId` stays off the wire, as it does on `Ingredient`.
+
+/** Every text field but the title, which every kind of reference requires. */
+const OPTIONAL_FIELDS = REFERENCE_TEXT_FIELDS.filter(
+  (field): field is Exclude<ReferenceTextField, 'title'> => field !== 'title',
+);
+
+/** The fields a day is written in, which the wire types as one; the rest are text. */
+const DAY_FIELDS: ReadonlySet<ReferenceTextField> = new Set(['modified', 'accessed']);
+
+/** What the type says of a field its name does not explain. */
+const DESCRIPTION_OF: Partial<Record<ReferenceTextField, string>> = {
+  container:
+    "The book of a chapter, the journal of an article, the reference work of an entry, or a web page's site.",
+  host: 'The repository a print work was read through.',
+};
 
 export const ReferenceKindEnum = builder.enumType('ReferenceKind', { values: REFERENCE_KINDS });
 
@@ -19,30 +39,17 @@ export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').impleme
   fields: (t) => ({
     id: t.exposeID('id'),
     kind: t.expose('kind', { type: ReferenceKindEnum }),
-    authors: t.exposeString('authors', { nullable: true }),
     title: t.exposeString('title'),
-    container: t.exposeString('container', {
-      nullable: true,
-      description:
-        "The book of a chapter, the journal of an article, the reference work of an entry, or a web page's site.",
-    }),
-    contributors: t.exposeString('contributors', { nullable: true }),
-    edition: t.exposeString('edition', { nullable: true }),
-    volume: t.exposeString('volume', { nullable: true }),
-    issue: t.exposeString('issue', { nullable: true }),
-    series: t.exposeString('series', { nullable: true }),
-    place: t.exposeString('place', { nullable: true }),
-    publisher: t.exposeString('publisher', { nullable: true }),
-    published: t.exposeString('published', { nullable: true }),
-    pages: t.exposeString('pages', { nullable: true }),
-    host: t.exposeString('host', {
-      nullable: true,
-      description: 'The repository a print work was read through.',
-    }),
-    url: t.exposeString('url', { nullable: true }),
-    modified: t.expose('modified', { type: 'LocalDate', nullable: true }),
-    accessed: t.expose('accessed', { type: 'LocalDate', nullable: true }),
-    note: t.exposeString('note', { nullable: true }),
+    ...Object.fromEntries(
+      OPTIONAL_FIELDS.map((field) => [
+        field,
+        t.expose(field, {
+          type: DAY_FIELDS.has(field) ? 'LocalDate' : 'String',
+          nullable: true,
+          description: DESCRIPTION_OF[field],
+        }),
+      ]),
+    ),
     citation: t.string({
       description:
         'Chicago bibliography form, rendered on the server, plain; a surface that shows italics renders the parts itself.',
@@ -83,22 +90,18 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
   fields: (t) => ({
     kind: t.field({ type: ReferenceKindEnum, required: true }),
     title: t.string({ required: true }),
-    authors: t.string(),
-    container: t.string(),
-    contributors: t.string(),
-    edition: t.string(),
-    volume: t.string(),
-    issue: t.string(),
-    series: t.string(),
-    place: t.string(),
-    publisher: t.string(),
-    published: t.string(),
-    pages: t.string(),
-    host: t.string(),
-    url: t.string(),
-    modified: t.field({ type: 'LocalDate' }),
-    accessed: t.field({ type: 'LocalDate' }),
-    note: t.string(),
+    // Typed back from the list: `Object.fromEntries` answers string keys.
+    ...(Object.fromEntries(
+      OPTIONAL_FIELDS.map((field) => [
+        field,
+        DAY_FIELDS.has(field) ? t.field({ type: 'LocalDate' }) : t.string(),
+      ]),
+    ) as {
+      [Field in (typeof OPTIONAL_FIELDS)[number]]: InputFieldRef<
+        BuilderTypes,
+        CitationFields[Field]
+      >;
+    }),
   }),
 });
 
@@ -119,10 +122,8 @@ builder.mutationField('createReference', (t) =>
       input: t.arg({ type: ReferenceInput, required: true }),
     },
     authScopes: tierScope,
-    resolve: (_root, { workspaceId, input }, { session }) => {
-      if (!session) throw new Forbidden();
-      return createReference(session, workspaceId, input);
-    },
+    resolve: (_root, { workspaceId, input }, context) =>
+      createReference(sessionOf(context), workspaceId, input),
   }),
 );
 
@@ -136,9 +137,8 @@ builder.mutationField('updateReference', (t) =>
       input: t.arg({ type: ReferenceInput, required: true }),
     },
     authScopes: tierScope,
-    resolve: async (_root, { workspaceId, id, input }, { session, loaders }) => {
-      if (!session) throw new Forbidden();
-      const row = await updateReference(session, workspaceId, id, input);
+    resolve: async (_root, { workspaceId, id, input }, { loaders, ...context }) => {
+      const row = await updateReference(sessionOf(context), workspaceId, id, input);
       // An earlier root field of this request may have read a citation of it.
       loaders.referencesByIngredient.clearAll();
       return row;
@@ -146,20 +146,5 @@ builder.mutationField('updateReference', (t) =>
   }),
 );
 
-// The reference picker's search (MB.154 reads it). The resolver refuses only
-// a missing session; which covens a caller may ask about is the service's
-// check, as `ingredientSuggestions`' is.
-builder.queryField('referenceSuggestions', (t) =>
-  t.pagedConnection({
-    type: ReferenceRef,
-    args: {
-      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
-      workspaceId: t.arg.id({ required: false }),
-      query: t.arg.string({ required: false }),
-    },
-    resolve: (_root, { workspaceId, query }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return suggestReferences(session, workspaceId, query ?? '', page);
-    },
-  }),
-);
+// The reference picker's search (MB.154 reads it).
+suggestionConnection('referenceSuggestions', ReferenceRef, suggestReferences);

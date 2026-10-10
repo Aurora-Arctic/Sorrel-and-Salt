@@ -1,4 +1,4 @@
-import { defineLoader } from '../../../graphql/loaders/define-loader';
+import { definePublicLoader } from '../../../graphql/loaders/define-loader';
 import { formChoicesOf } from '../services/curated-values';
 import { categoryGroupsOf, deityTraditionsOf, formGroupsOf } from '../services/groups';
 import type {
@@ -9,27 +9,23 @@ import type {
 } from '../types';
 
 // Keyed by id and answered for anyone: the groups are public reference data,
-// so the request's session is taken and ignored, as the services take none.
+// and the services take no session.
 
 /** `Category.group`, batched: the group of every category loaded in one request. */
-export const categoryGroupsById = defineLoader<string, CategoryGroupRow>((_session, ids) =>
-  categoryGroupsOf(ids),
-);
+export const categoryGroupsById = definePublicLoader<string, CategoryGroupRow>(categoryGroupsOf);
 
 /** `IngredientFormValue.group`, batched the same way. */
-export const ingredientFormGroupsById = defineLoader<string, IngredientFormGroupRow>(
-  (_session, ids) => formGroupsOf(ids),
+export const ingredientFormGroupsById = definePublicLoader<string, IngredientFormGroupRow>(
+  formGroupsOf,
 );
 
 /** `Deity.tradition`, batched the same way. */
-export const deityTraditionsById = defineLoader<string, DeityTraditionRow>((_session, ids) =>
-  deityTraditionsOf(ids),
-);
+export const deityTraditionsById = definePublicLoader<string, DeityTraditionRow>(deityTraditionsOf);
 
 /**
  * `Ingredient.formChoice`, batched: the curated form behind each pick on a
  * page, null for one no longer curated (MB.167).
  */
-export const ingredientFormsById = defineLoader<string, IngredientFormValueRow | null>(
-  (_session, ids) => formChoicesOf(ids),
+export const ingredientFormsById = definePublicLoader<string, IngredientFormValueRow | null>(
+  formChoicesOf,
 );

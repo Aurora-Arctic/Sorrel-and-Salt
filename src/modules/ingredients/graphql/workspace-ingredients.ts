@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { Forbidden } from '../../../lib/errors';
+import { sessionOf } from '../../../graphql/context-helpers';
 import {
   createWorkspaceIngredient,
   deleteWorkspaceIngredient,
@@ -37,10 +37,8 @@ builder.mutationField('createWorkspaceIngredient', (t) =>
       input: t.arg({ type: IngredientInput, required: true }),
     },
     authScopes: { signedIn: true },
-    resolve: (_root, { workspaceId, input }, { session }) => {
-      if (!session) throw new Forbidden();
-      return createWorkspaceIngredient(session, workspaceId, input);
-    },
+    resolve: (_root, { workspaceId, input }, context) =>
+      createWorkspaceIngredient(sessionOf(context), workspaceId, input),
   }),
 );
 
@@ -53,9 +51,8 @@ builder.mutationField('updateIngredient', (t) =>
       input: t.arg({ type: IngredientUpdateInput, required: true }),
     },
     authScopes: { signedIn: true },
-    resolve: async (_root, { workspaceId, id, input }, { session, loaders }) => {
-      if (!session) throw new Forbidden();
-      const row = await updateWorkspaceIngredient(session, workspaceId, id, input);
+    resolve: async (_root, { workspaceId, id, input }, { loaders, ...context }) => {
+      const row = await updateWorkspaceIngredient(sessionOf(context), workspaceId, id, input);
       clearIngredientChildren(loaders, row);
       return row;
     },
@@ -71,9 +68,8 @@ builder.mutationField('deleteIngredient', (t) =>
       id: t.arg.id({ required: true }),
     },
     authScopes: { signedIn: true },
-    resolve: async (_root, { workspaceId, id }, { session }) => {
-      if (!session) throw new Forbidden();
-      await deleteWorkspaceIngredient(session, workspaceId, id);
+    resolve: async (_root, { workspaceId, id }, context) => {
+      await deleteWorkspaceIngredient(sessionOf(context), workspaceId, id);
       return id;
     },
   }),

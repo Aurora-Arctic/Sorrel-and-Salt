@@ -107,3 +107,17 @@ export interface PagedConnectionOptions<
 export interface Counted {
   count: () => Promise<PageCount>;
 }
+
+/** The builder's own types, as Pothos extends `SchemaTypes`: what a ref is typed under. */
+export type BuilderTypes = PothosSchemaTypes.ExtendDefaultTypes<SchemaTypes>;
+
+/** An argument object with each null made absent: what `definedArgs` answers. */
+export type Defined<T> = { [Name in keyof T]: Exclude<T[Name], null> };
+
+/** A picker's search, as `suggestionConnection` calls it: the caller's, a coven or none, a query. */
+export type Suggest<Node> = (
+  session: Session,
+  workspaceId: string | null | undefined,
+  query: string,
+  page: PageRequest,
+) => Promise<PageEntry<Node>[]>;
