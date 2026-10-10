@@ -1,4 +1,3 @@
-import type { PgInsertValue } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -10,11 +9,11 @@ import type {
   SourcedKey,
 } from '../../modules/ingredients/schema/reference-links';
 import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
-import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import type { CitationFields } from '../../lib/types';
 import type { StampField } from '../types';
+import type { FlatTable, ItemTable, TwoTierPair } from '../vocabularies';
 import type {
   ingredientFormGroups,
   ingredientForms,
@@ -113,44 +112,35 @@ export type SeedSpell = Pick<
   layers: SeedLayer[];
 };
 
-// The reference vocabularies: each shape's tables, then the rows filed in them.
-
-/** The group tables are typed as a union rather than a generic: the columns the seed writes are common to all three, so the row type survives. */
-export type GroupTable =
-  typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions;
-/** A generic over this union, not the union itself: `deities` names its key `traditionId`, the others `groupId`. */
-export type ItemTable = typeof categories | typeof ingredientForms | typeof deities;
+// The reference vocabularies: the shape the two-tier ones share, then the
+// rows filed in each. Their tables are listed once, in src/db/vocabularies.ts.
 
 /** What every item row carries before its foreign key to its group. */
-export interface TwoTierItemRow {
-  name: string;
-  slug: string;
-  seedKey: string;
-  description: string;
-}
+export type TwoTierItemRow = Pick<
+  ItemTable['$inferInsert'],
+  'name' | 'slug' | 'seedKey' | 'description'
+>;
 
 export interface TwoTierVocabulary<
   G extends { name: string; description: string },
   I extends { name: string; description: string },
-  T extends ItemTable,
 > {
-  groupTable: GroupTable;
-  itemTable: T;
+  /** The item and group tables, and the item's key to its group: an entry of `TWO_TIER`. */
+  vocabulary: TwoTierPair;
   groups: readonly G[];
   items: readonly I[];
   /** The `name` of the group an item is filed under: `category.group`, `deity.tradition`. */
   groupOf: (item: I) => string;
-  /** The item's row with its group's id under the table's own key: `{ ...row, groupId }`. */
-  toItemRow: (row: TwoTierItemRow, groupId: string) => Omit<PgInsertValue<T>, InsertStamps>;
   /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`, `Deity`. */
   itemNoun: string;
   /**
-   * The item's slug, given the name of the group it is filed under now:
-   * `slugify(item.name)` when absent. A form's carries its group (M5.6a),
-   * and a deity's its tradition (MB.132), so two items of one name under two
-   * groups hold two addresses.
+   * An item's slug, given its name and the name of the group it is filed
+   * under now: `slugify(name)` when absent. A form's carries its group
+   * (M5.6a), and a deity's its tradition (MB.132), so two items of one name
+   * under two groups hold two addresses. Given, every live item's slug is
+   * brought to it on each run too.
    */
-  slugOf?: (item: I, groupName: string) => string;
+  slugOf?: (name: string, groupName: string) => string;
 }
 
 // Each literal's row typed against its table's insert model, so a column
@@ -185,9 +175,6 @@ export type SeedDeity = Pick<typeof deities.$inferInsert, 'name' | 'description'
   /** The `name` of the tradition in DEITY_TRADITIONS this is filed under. */
   tradition: string;
 };
-
-/** Typed as a union rather than a generic: the columns are identical, so the row type survives. */
-export type FlatTable = typeof planets | typeof zodiacSigns;
 
 export type SeedAstrologyValue = Pick<FlatTable['$inferInsert'], 'name' | 'description'>;
 

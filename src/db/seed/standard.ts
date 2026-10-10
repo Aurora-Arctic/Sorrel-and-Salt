@@ -21,6 +21,7 @@ import {
   insertMissingReturningIds,
   requireFrom,
 } from './idempotent';
+import type { PickedTable } from '../vocabularies';
 import type {
   FixtureUser,
   SeedDatabase,
@@ -436,7 +437,7 @@ export async function seedStandardContent(
  */
 async function pickedIdByName(
   tx: SeedTransaction,
-  table: typeof ingredientForms | typeof deities,
+  table: PickedTable,
 ): Promise<Map<string, string>> {
   const rows = await tx
     .select({ id: table.id, name: table.name })

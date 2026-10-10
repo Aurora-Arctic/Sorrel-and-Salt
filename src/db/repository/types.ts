@@ -11,14 +11,11 @@ import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import type { categories } from '../../modules/vocabulary/schema/categories';
-import type { deities } from '../../modules/vocabulary/schema/deities';
-import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
+import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
 
 // The repository's types: the table shapes a finder or writer admits, the
 // options `selectFrom` reads, the writer `withAudit` hands out, and the
@@ -541,12 +538,11 @@ export interface IngredientIdentity {
   form?: string | null;
 }
 
-/** A vocabulary an admin list pages, the four that file their rows under a group or none. */
-export type ListedVocabulary = SuggestingVocabulary | typeof categories;
+/** A vocabulary an admin list pages: every one, filed under a group or under none. */
+export type ListedVocabulary = FlatTable | ItemTable;
 
-/** A vocabulary a member's autofill suggests from. */
-export type SuggestingVocabulary =
-  typeof planets | typeof zodiacSigns | typeof ingredientForms | typeof deities;
+/** A vocabulary a member's autofill suggests from: the flat ones, and the two an ingredient picks. */
+export type SuggestingVocabulary = FlatTable | PickedTable;
 
 /**
  * Where a vocabulary's in-use values are written: one value to a `column` of
@@ -693,7 +689,7 @@ export interface CategoryFilter {
 export type AstrologyList = 'planets' | 'zodiacSigns';
 
 /** One of the two astrology vocabularies, flat and alike (MB.95). */
-export type AstrologyVocabulary = typeof planets | typeof zodiacSigns;
+export type AstrologyVocabulary = FlatTable;
 
 /** What an admin astrology list is narrowed by (MB.95): a name fragment, as the forms' list is. */
 export interface AstrologyValueFilter {

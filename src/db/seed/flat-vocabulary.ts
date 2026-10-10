@@ -1,6 +1,7 @@
 import { insertMissing, presentKeys } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { FlatTable, SeedTransaction } from './types';
+import type { FlatTable } from '../vocabularies';
+import type { SeedTransaction } from './types';
 
 // The one-tier shape: a vocabulary with no group, each row keyed by the slug
 // it was seeded under (MB.172), a slug nobody writes down.

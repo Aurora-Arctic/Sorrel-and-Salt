@@ -3,14 +3,8 @@ import type { AnyPgColumn, PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
 import { applyAudit, publishActor } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type {
-  FlatTable,
-  GroupTable,
-  InsertStamps,
-  ItemTable,
-  SeedDatabase,
-  SeedTransaction,
-} from './types';
+import type { FlatTable, GroupTable, ItemTable } from '../vocabularies';
+import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
 
 // The three moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
