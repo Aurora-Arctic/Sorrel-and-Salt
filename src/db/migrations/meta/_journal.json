@@ -407,6 +407,13 @@
       "when": 1791654495745,
       "tag": "0057_two-tier-invitations",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1791655904437,
+      "tag": "0058_drop-old-privilege-ledgers",
+      "breakpoints": true
     }
   ]
 }

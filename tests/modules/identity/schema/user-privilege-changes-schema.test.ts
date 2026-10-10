@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { refusalOf } from '../../../support/db/privileges';
@@ -23,6 +23,8 @@ const ROUTES = ['bootstrap', 'admin', 'invitation', 'manual'];
 
 // What marks the copy among the shipped migrations: it re-runs below.
 const COPY_MIGRATION = 'INSERT INTO "user_privilege_changes"';
+// And the sweep MB.197 runs before the drops it marks.
+const DROP_MIGRATION = 'DROP TABLE "admin_role_changes"';
 
 describe('user_privilege_changes schema', () => {
   const { byName, byIndexName, foreignKeyByColumn, nonAuditForeignKeys } =
@@ -125,11 +127,10 @@ describe('user_privilege_changes table', () => {
     expect(nobody.code).toBe('23503');
   });
 
-  // On a fresh database the migration's copy finds nothing to copy, so every
+  // On a fresh database the copy and the sweep find nothing to copy, so every
   // row the seeded template holds is one the trigger on `users` wrote as the
-  // seed inserted the cast (MB.195), each a `bootstrap` grant; the two old
-  // ledgers it would have copied are empty.
-  it('holds no copied row on a fresh database, only the seeded cast’s bootstrap grants', async () => {
+  // seed inserted the cast (MB.195), each a `bootstrap` grant.
+  it('holds only the seeded cast’s bootstrap grants on a fresh database', async () => {
     const rows = await everyChange();
     const cast = Object.values(FIXTURE_USERS).map((user) => user.id);
 
@@ -138,11 +139,6 @@ describe('user_privilege_changes table', () => {
       expect(cast).toContain(row.user_id);
       expect({ change: row.change, via: row.via }).toEqual({ change: 'grant', via: 'bootstrap' });
     }
-    const [{ old }] = await sql<{ old: number }[]>`
-      select (select count(*) from admin_role_changes)::int
-           + (select count(*) from workspace_creation_changes)::int as old
-    `;
-    expect(old).toBe(0);
   });
 });
 
@@ -211,10 +207,13 @@ describe('forbid_rewrite', () => {
   });
 });
 
-// The migration copies both old ledgers with their ids and stamps, so MB.197's
-// final sweep can skip what is already there. Its own SQL re-runs here, the
-// three tables emptied first and one row of each old kind written by hand.
-describe('the copy', () => {
+// MB.197: the drop migration sweeps both old ledgers once more, with
+// `ON CONFLICT (id) DO NOTHING`, for any row the deploy before MB.196 wrote
+// after 0055's copy, then drops both tables and both enums. The template no
+// longer holds the old tables, so this file's clone takes them back from the
+// migrations that made them (0043, 0054) — the template is re-cloned before
+// every file, and no other sees them — and re-runs both migrations' own SQL.
+describe('the sweep before the drop', () => {
   // Read back as text, so no client time zone moves them.
   const CREATED = '2025-03-01 10:00:00';
   const UPDATED = '2025-03-02 11:00:00';
@@ -232,12 +231,28 @@ describe('the copy', () => {
     ['admin', 'create_workspace', 'grant', 'admin'],
   ] as const;
 
+  const OLD_TABLES = [
+    ['admin_role_changes', 'admin_role_change'],
+    ['workspace_creation_changes', 'workspace_creation_change'],
+  ] as const;
+
+  const stamps = {
+    user_id: SUBJECT,
+    created_at: CREATED,
+    created_by: ADMIN,
+    updated_at: UPDATED,
+    updated_by: SUBJECT,
+    deleted_at: null,
+    deleted_by: null,
+  };
+
   function oldId(table: number, row: number): string {
     return `00000000-0000-0000-00${table}0-00000000000${row}`;
   }
 
-  async function copy(): Promise<void> {
-    const statements = statementsOfMigrationContaining(COPY_MIGRATION).filter((statement) =>
+  /** The one `INSERT` of the first migration containing `marker`, run here. */
+  async function runInsertOf(marker: string): Promise<void> {
+    const statements = statementsOfMigrationContaining(marker).filter((statement) =>
       /^insert\b/i.test(statement),
     );
     // One statement copies both.
@@ -245,64 +260,114 @@ describe('the copy', () => {
     await sql.unsafe(statements[0]);
   }
 
-  beforeEach(async () => {
-    await sql`truncate user_privilege_changes, admin_role_changes, workspace_creation_changes`;
+  const firstCopy = () => runInsertOf(COPY_MIGRATION);
+  const sweep = () => runInsertOf(DROP_MIGRATION);
 
-    for (const [index, [change, , , , note]] of OLD_ADMIN_ROWS.entries()) {
-      await sql`
-        insert into admin_role_changes (id, user_id, change, note, created_at, created_by, updated_at, updated_by)
-        values (${oldId(1, index)}, ${SUBJECT}, ${change}, ${note}, ${CREATED}, ${ADMIN}, ${UPDATED}, ${SUBJECT})
-      `;
-    }
-    for (const [index, [change]] of OLD_CREATION_ROWS.entries()) {
-      await sql`
-        insert into workspace_creation_changes (id, user_id, change, created_at, created_by, updated_at, updated_by)
-        values (${oldId(2, index)}, ${SUBJECT}, ${change}, ${CREATED}, ${ADMIN}, ${UPDATED}, ${SUBJECT})
-      `;
+  async function writeOldAdminRow(index: number): Promise<void> {
+    const [change, , , , note] = OLD_ADMIN_ROWS[index];
+    await sql`
+      insert into admin_role_changes (id, user_id, change, note, created_at, created_by, updated_at, updated_by)
+      values (${oldId(1, index)}, ${SUBJECT}, ${change}, ${note}, ${CREATED}, ${ADMIN}, ${UPDATED}, ${SUBJECT})
+    `;
+  }
+
+  async function writeOldCreationRow(index: number): Promise<void> {
+    const [change] = OLD_CREATION_ROWS[index];
+    await sql`
+      insert into workspace_creation_changes (id, user_id, change, created_at, created_by, updated_at, updated_by)
+      values (${oldId(2, index)}, ${SUBJECT}, ${change}, ${CREATED}, ${ADMIN}, ${UPDATED}, ${SUBJECT})
+    `;
+  }
+
+  const adminRow = (index: number) => {
+    const [, privilege, change, via, note] = OLD_ADMIN_ROWS[index];
+    return { id: oldId(1, index), privilege, change, via, note, ...stamps };
+  };
+
+  const creationRow = (index: number) => {
+    const [, privilege, change, via] = OLD_CREATION_ROWS[index];
+    return { id: oldId(2, index), privilege, change, via, note: null, ...stamps };
+  };
+
+  it('drops both old tables and both enums from the catalogue', async () => {
+    for (const [table, type] of OLD_TABLES) {
+      const [{ relation, enumType }] = await sql<
+        { relation: string | null; enumType: string | null }[]
+      >`select to_regclass(${table})::text as relation, to_regtype(${type})::text as "enumType"`;
+      expect({ relation, enumType }).toEqual({ relation: null, enumType: null });
     }
   });
 
-  it('lands every old row with its id, its stamps and its mapped privilege, change and route', async () => {
-    await copy();
+  it('sweeps, then drops the two tables and their enums, and does nothing else', () => {
+    const statements = statementsOfMigrationContaining(DROP_MIGRATION);
 
-    const stamps = {
-      user_id: SUBJECT,
-      created_at: CREATED,
-      created_by: ADMIN,
-      updated_at: UPDATED,
-      updated_by: SUBJECT,
-      deleted_at: null,
-      deleted_by: null,
-    };
-    const expected = [
-      ...OLD_ADMIN_ROWS.map(([, privilege, change, via, note], index) => ({
-        id: oldId(1, index),
-        privilege,
-        change,
-        via,
-        note,
-        ...stamps,
-      })),
-      ...OLD_CREATION_ROWS.map(([, privilege, change, via], index) => ({
-        id: oldId(2, index),
-        privilege,
-        change,
-        via,
-        note: null,
-        ...stamps,
-      })),
-    ];
-
-    const rows = await everyChange();
-    expect(rows).toHaveLength(OLD_ADMIN_ROWS.length + OLD_CREATION_ROWS.length);
-    expect(rows).toEqual(expect.arrayContaining(expected));
+    expect(statements).toHaveLength(5);
+    expect(statements[0]).toMatch(/^insert into "user_privilege_changes"/i);
+    expect(statements[0]).toMatch(/on conflict \("id"\) do nothing;?$/i);
+    expect(statements.slice(1).sort()).toEqual(
+      [
+        'DROP TABLE "admin_role_changes" CASCADE;',
+        'DROP TABLE "workspace_creation_changes" CASCADE;',
+        'DROP TYPE "public"."admin_role_change";',
+        'DROP TYPE "public"."workspace_creation_change";',
+      ].sort(),
+    );
   });
 
-  it('copies nothing into a ledger whose old tables are empty', async () => {
-    await sql`truncate admin_role_changes, workspace_creation_changes`;
+  describe('against the old tables, restored', () => {
+    beforeAll(async () => {
+      for (const [table] of OLD_TABLES) {
+        const made = statementsOfMigrationContaining(`CREATE TABLE "${table}"`).filter(
+          (statement) => /^create (type|table)\b/i.test(statement),
+        );
+        expect(made).toHaveLength(2);
+        for (const statement of made) await sql.unsafe(statement);
+      }
+    });
 
-    await copy();
+    beforeEach(async () => {
+      await sql`truncate user_privilege_changes, admin_role_changes, workspace_creation_changes`;
+    });
 
-    expect(await everyChange()).toEqual([]);
+    it('lands a row written to either old table after the first copy with its id, mapped, and keeps the copied rows once', async () => {
+      // Before 0055: one row of each kind, which its copy takes.
+      await writeOldAdminRow(0);
+      await writeOldCreationRow(0);
+      await firstCopy();
+      expect((await everyChange()).map((row) => row.id).sort()).toEqual(
+        [oldId(1, 0), oldId(2, 0)].sort(),
+      );
+
+      // Mid-rollout: the outgoing deploy writes the rest.
+      for (const index of OLD_ADMIN_ROWS.keys()) if (index > 0) await writeOldAdminRow(index);
+      for (const index of OLD_CREATION_ROWS.keys()) if (index > 0) await writeOldCreationRow(index);
+
+      await sweep();
+
+      const rows = await everyChange();
+      expect(rows).toHaveLength(OLD_ADMIN_ROWS.length + OLD_CREATION_ROWS.length);
+      expect(rows).toEqual(
+        expect.arrayContaining([
+          ...[...OLD_ADMIN_ROWS.keys()].map(adminRow),
+          ...[...OLD_CREATION_ROWS.keys()].map(creationRow),
+        ]),
+      );
+    });
+
+    it('leaves a row already in the ledger as it is, rather than refusing the migration', async () => {
+      await writeOldAdminRow(1);
+      await firstCopy();
+      const before = await everyChange();
+
+      await sweep();
+
+      expect(await everyChange()).toEqual(before);
+    });
+
+    it('copies nothing when the old tables are empty', async () => {
+      await sweep();
+
+      expect(await everyChange()).toEqual([]);
+    });
   });
 });
