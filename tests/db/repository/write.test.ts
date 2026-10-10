@@ -268,19 +268,19 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 
     expect(methods).toEqual(
       [
-        'acceptAdminInvitation',
+        'acceptInvitation',
         'carryAstrologyRename',
         'carryDeityRename',
         'carryFormRename',
         'delete',
         'deleteLapsedSlugRetirements',
         'insert',
-        'insertAdminInvitation',
+        'insertInvitation',
         'insertInCompendium',
         'insertInWorkspace',
         'pauseAdminRoleChanges',
         'resumeAdminRoleChanges',
-        'revokeAdminInvitation',
+        'revokeInvitation',
         'softDelete',
         'softDeleteByIdInCompendium',
         'softDeleteByIdInWorkspace',

@@ -1,7 +1,7 @@
 import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
-import type { adminInvitations } from '../../modules/identity/schema/admin-invitations';
+import type { invitations } from '../../modules/coven/schema/invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -394,29 +394,41 @@ export interface AuditWriter {
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
   /**
-   * Invite an address to become an admin, stamped from the session (MB.69).
-   * The token is hashed here and only the hash is stored. Only the columns an
-   * invitation starts with are written: it starts pending, whatever a cast
-   * smuggled into `values`.
+   * Invite an address into the proof's workspace, with the role it names,
+   * stamped from the session (M7.2; MB.202). The workspace is the proof's,
+   * never the values'. The token is hashed here and only the hash is stored.
+   * Only the columns an invitation starts with are written: it starts
+   * pending, whatever a cast smuggled into `values`.
    */
-  insertAdminInvitation(
-    admin: SiteAdmin,
-    values: AdminInvitationValues,
-  ): Promise<AdminInvitationRow[]>;
+  insertInvitation(
+    membership: Membership,
+    values: WorkspaceInvitationValues,
+  ): Promise<InvitationRow[]>;
   /**
-   * Accept the pending invitation a link's token names, as the session's
-   * user, stamping `accepted_at` now and `accepted_by` from the session.
-   * Under no role's proof, since the invitee is not yet an admin: the token
-   * is what admits, and the session's user must hold the invited address,
-   * verified. No row comes back for a token naming no pending invitation, or
-   * for a user whose live row holds another address or holds it unverified.
+   * Invite an address to become an admin, on the site tier, where the
+   * workspace and the role are both null (MB.69; MB.202). On the same terms
+   * otherwise.
    */
-  acceptAdminInvitation(token: string): Promise<AdminInvitationRow[]>;
+  insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
-   * Revoke a pending invitation, stamping `revoked_at` now; `updated_by` is
-   * who revoked. No row comes back for one already accepted, revoked or expired.
+   * Accept the pending invitation a link's token names, on either tier, as
+   * the session's user, stamping `accepted_at` now and `accepted_by` from the
+   * session. Under no proof, since the invitee holds neither a membership nor
+   * the site role yet: the token is what admits, and the session's user must
+   * hold the invited address, verified. No row comes back for a token naming
+   * no pending invitation, or for a user whose live row holds another address
+   * or holds it unverified.
    */
-  revokeAdminInvitation(admin: SiteAdmin, id: string): Promise<AdminInvitationRow[]>;
+  acceptInvitation(token: string): Promise<InvitationRow[]>;
+  /**
+   * Revoke a pending invitation in the proof's workspace, stamping
+   * `revoked_at` now; `updated_by` is who revoked. No row comes back for one
+   * already accepted, revoked or expired, or for an id in another workspace or
+   * on the site tier.
+   */
+  revokeInvitation(membership: Membership, id: string): Promise<InvitationRow[]>;
+  /** The same on the site tier: a workspace's invitation is not reached. */
+  revokeInvitation(admin: SiteAdmin, id: string): Promise<InvitationRow[]>;
   /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
@@ -590,17 +602,23 @@ export interface SlugRedirect {
   expiresAt: Date;
 }
 
-/** An `admin_invitations` row, as a finder or a write returns it. */
-export type AdminInvitationRow = typeof adminInvitations.$inferSelect;
+/** An `invitations` row, either tier, as a finder or a write returns it. */
+export type InvitationRow = typeof invitations.$inferSelect;
 
-/** What an admin invitation starts with; the expiry defaults to seven days out. */
-export type AdminInvitationValues = Pick<
-  typeof adminInvitations.$inferInsert,
+/** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
+export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
+
+/** What a site-tier invitation starts with; the expiry defaults to seven days out. */
+export type SiteInvitationValues = Pick<
+  typeof invitations.$inferInsert,
   'email' | 'expiresAt' | 'note'
 > & {
   /** The link's token, never stored: the writer stores its hash. */
   token: string;
 };
+
+/** What a workspace invitation starts with: the same, and the role it grants. */
+export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
 export interface UserFilter {
