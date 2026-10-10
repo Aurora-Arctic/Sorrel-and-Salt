@@ -47,7 +47,19 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## Invitations (M7.1)
 
-`workspace_invitations`: the invited address, the role, the hashed token, four lifecycle columns rather than a `status` enum, and the constraint that keeps `owner` out of it. [`db/invitations.md`](db/invitations.md)
+`invitations`, one table in two tiers since MB.201: a workspace and a role, or neither for the site tier, which grants admin; the hashed token, four lifecycle columns rather than a `status` enum, and the constraint that keeps `owner` out of it. [`db/invitations.md`](db/invitations.md)
+
+### Admin invitations (MB.69), now the site tier
+
+In [`db/invitations.md`](db/invitations.md#admin-invitations-mb69-now-the-site-tier).
+
+### Written and read by tier (MB.202)
+
+In [`db/invitations.md`](db/invitations.md#written-and-read-by-tier-mb202).
+
+### Policy, in two services
+
+In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The ingredient identity model (MB.28, table M4.1)
 

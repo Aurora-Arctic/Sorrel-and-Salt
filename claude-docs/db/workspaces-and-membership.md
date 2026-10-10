@@ -26,7 +26,7 @@ proof"](membership-proof.md)).
   `joinedAt` is deliberately distinct from `created_at` — a role change
   rewrites the row without changing when the person joined.
 - **`owner` is a role here but not an invitable one.** That narrowing lives on
-  `workspace_invitations` (M7.1), whose check constraint rejects it — see
+  `invitations` (M7.1; one table since MB.201), whose check constraint rejects it — see
   ["Invitations"](invitations.md); ownership is granted afterwards by an existing owner on
   the members page.
 - Both tables carry the full six-column audit spread, and every `*_by` column

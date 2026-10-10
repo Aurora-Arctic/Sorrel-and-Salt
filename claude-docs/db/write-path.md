@@ -61,9 +61,8 @@ filtering and the partial-index convention"](soft-delete.md).
 Some tables are written only through named writer methods, because a row
 authorises something or holds a state only a named call may move:
 `admin_role_change_pauses` (MB.62), opened and ended by
-`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and
-`admin_invitations` (MB.69), made, accepted and revoked by its named insert,
-accept and revoke. Such a table says so once, in its schema file:
+`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and `invitations`
+(MB.201), made, accepted and revoked by its named insert, accept and revoke. Such a table says so once, in its schema file:
 
 ```ts
 export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));
@@ -90,8 +89,8 @@ own statement, and nothing else reads it.
 
 **Where the named writes live.** Beside the table's finders, in its
 repository file, rather than in `write.ts`: `admin-roles.ts` exports
-`adminRoleChangePauseWrites` and `admin-invitations.ts`
-`adminInvitationWrites`, each a function of a `WriterContext` (the
+`adminRoleChangePauseWrites` and `invitations.ts`
+`invitationWrites`, each a function of a `WriterContext` (the
 transaction, the session, and the writer's own stamped `insert` and
 `update`), whose result `writerFor` spreads into the writer. So a new marked
 table touches its own repository file, and the writer's surface,

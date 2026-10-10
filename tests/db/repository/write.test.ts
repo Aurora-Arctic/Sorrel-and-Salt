@@ -251,7 +251,9 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
   // are named for it, the ended pair stamped from the session. Twenty since
   // MB.69, whose admin invitation will authorise a grant: a generic insert
   // would let any service mint one, so the table takes a named insert under
-  // the proof and a named accept and revoke, each matching a pending row.
+  // the proof and a named accept and revoke, each matching a pending row;
+  // MB.202 renamed the three for both tiers of `invitations`, overloaded on
+  // the proof, keeping the count.
   // Twenty-one since M5.6a, whose form rename rewrites the compendium entries
   // picking the form: the vocabulary module may not name `ingredients`, so
   // the rewrite and the slugs it retires are named for it, below the boundary,
