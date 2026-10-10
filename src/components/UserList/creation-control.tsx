@@ -3,7 +3,9 @@
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
 import ConfirmedAction from './confirmed-action';
+import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { CreationControlProps } from './types';
 
@@ -36,9 +38,20 @@ const CreationControl = ({
   userId,
   name,
   emailVerified,
+  paused = false,
   action,
 }: CreationControlProps): ReactElement =>
-  action === 'approve' ? (
+  // Locked while admin changes are paused, as Grant and Revoke are (MB.63).
+  paused ? (
+    <LockedControl
+      label={action === 'approve' ? 'Approve' : 'Revoke'}
+      accessibleName={action === 'approve' ? `Approve ${name}` : `Revoke approval for ${name}`}
+      className={
+        action === 'approve' ? 'btn btn--small btn--quiet' : 'btn btn--small btn--destructive'
+      }
+      reason={ADMIN_CHANGES_PAUSED_REFUSAL}
+    />
+  ) : action === 'approve' ? (
     <ConfirmedAction
       label="Approve"
       accessibleName={`Approve ${name}`}

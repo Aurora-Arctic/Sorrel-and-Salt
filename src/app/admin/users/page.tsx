@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
-import UserList from '../../../components/UserList';
+import UserList, { PauseControl } from '../../../components/UserList';
 import { userListHref } from '../../../components/UserList/href';
 import type { UserListEntry } from '../../../components/UserList/types';
 import { impersonationEnabled } from '../../../lib/impersonation';
@@ -9,7 +9,12 @@ import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
 import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
-import { isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
+import {
+  adminRoleChangePauseState,
+  isPrimaryAdmin,
+  listUsers,
+  providersOf,
+} from '@/modules/identity';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -66,24 +71,29 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const after = readableCursor(single(params.after));
   const before = after ? undefined : readableCursor(single(params.before));
 
-  const { users, pageInfo } = await readUsers(
-    session,
-    query,
-    awaitingApproval,
-    role,
-    after,
-    before,
-  );
+  const [{ users, pageInfo }, adminChanges] = await Promise.all([
+    readUsers(session, query, awaitingApproval, role, after, before),
+    // The pause on admin changes and whether this admin may flip it (MB.63).
+    adminRoleChangePauseState(session),
+  ]);
 
   return (
     <main>
-      <h1>Users</h1>
+      {/* The switch on admin changes beside the heading, as the other admin
+          pages put their primary action (MB.63, on the owner's call). Keyed by
+          the state, so the refresh after a flip mounts a fresh switch rather
+          than keeping this one's busy state. */}
+      <div className="page-header">
+        <h1>Users</h1>
+        <PauseControl key={String(adminChanges.paused)} {...adminChanges} />
+      </div>
       <UserList
         users={users}
         query={query}
         awaitingApproval={awaitingApproval}
         role={role}
         canImpersonate={impersonationEnabled()}
+        adminChanges={adminChanges}
         previousHref={
           pageInfo.hasPreviousPage && pageInfo.startCursor
             ? userListHref({ query, awaitingApproval, role }, { before: pageInfo.startCursor })

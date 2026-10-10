@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import UserListFilter from './filter';
 import CreationControl from './creation-control';
-import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
+import { DiscordIcon, FacebookMark, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
@@ -22,7 +22,7 @@ const ROLE_LABELS = { admin: 'Admin', user: 'User' } as const;
 /** Each roster provider's own mark, as the sign-in page draws it. */
 const PROVIDER_LOGOS: Record<string, () => ReactElement> = {
   discord: DiscordIcon,
-  facebook: FacebookIcon,
+  facebook: FacebookMark,
   google: GoogleIcon,
   microsoft: MicrosoftIcon,
 };
@@ -90,9 +90,12 @@ const Mark = ({
 const UserRow = ({
   user,
   canImpersonate,
+  changesPaused,
 }: {
   user: UserListEntry;
   canImpersonate: boolean;
+  /** Admin changes are paused and the viewer is not the primary admin (MB.63). */
+  changesPaused: boolean;
 }): ReactElement => (
   <tr>
     {/* The way into their privilege history (MB.200), then the name, on
@@ -137,6 +140,7 @@ const UserRow = ({
           name={user.name}
           emailVerified={user.emailVerified}
           primaryAdmin={user.primaryAdmin}
+          paused={changesPaused}
           action={user.role === 'admin' ? 'revoke' : 'grant'}
         />
       </div>
@@ -154,6 +158,7 @@ const UserRow = ({
             userId={user.id}
             name={user.name}
             emailVerified={user.emailVerified}
+            paused={changesPaused}
             action={user.canCreateWorkspace ? 'revoke' : 'approve'}
           />
         )}
@@ -190,6 +195,7 @@ const UserList = ({
   previousHref,
   nextHref,
   canImpersonate = false,
+  adminChanges,
 }: UserListProps): ReactElement => (
   <div className="user-list">
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
@@ -214,7 +220,14 @@ const UserList = ({
           </thead>
           <tbody>
             {users.map((user) => (
-              <UserRow key={user.id} user={user} canImpersonate={canImpersonate} />
+              <UserRow
+                key={user.id}
+                user={user}
+                canImpersonate={canImpersonate}
+                // The page's own read of the pause, not a second query: the
+                // primary admin (`canToggle`) is exempt. The service still refuses.
+                changesPaused={Boolean(adminChanges?.paused && !adminChanges.canToggle)}
+              />
             ))}
           </tbody>
         </table>
@@ -228,3 +241,7 @@ const UserList = ({
 );
 
 export default UserList;
+
+// The pause switch, which the page puts beside its heading (MB.63): part of
+// this list's controls, so it lives here, but drawn outside the list.
+export { default as PauseControl } from './pause-control';

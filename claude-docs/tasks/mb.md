@@ -277,6 +277,7 @@ _Acceptance criteria:_
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
 - Admin entry appears only for admins
+- An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries (added 2026-10-10, on the owner's call)
 - axe clean, keyboard navigable
 
 **MB.8 — Zod schema for spells** · 1h
@@ -1595,7 +1596,7 @@ _Acceptance criteria:_
 
 _Story 60 — As the primary admin, I want to switch admin grants and revokes off for every other admin, so that an admin account that has gone rogue cannot make more admins or remove the good ones while I sort it out._
 
-M2.9's pause switch, behaviour half, on MB.62's ledger and MB.59's service ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). Only the primary admin may pause or resume, and only the primary admin is exempt from it: while paused, `setUserRole` refuses a grant or a revoke from any other admin with an explaining `Forbidden` that says admin changes are paused and names nobody, and the primary admin can still do both, so it can clean up without first unpausing. The exemption costs nothing, because the primary admin is the one account a rogue admin cannot become: it is set by `ADMIN_BOOTSTRAP_EMAIL` and cannot be revoked (MB.59). Revokes are paused as well as grants because a rogue admin removing the good admins is the same attack from the other side. The control sits on `/admin/users`, visible to every admin and active only for the primary admin, with the current state stated in words beside it. Pausing and resuming go through `withAudit` and the writer's named pause and resume, so each pause records who began it and who ended it, and when; MB.62 keeps those rows as a ledger, and nothing in v1 lists them. The pause reads unchanged by MB.195: a grant or revoke it refuses changes no column, so the trigger on `users` records nothing for it (corrected 2026-10-10; [`design-decisions/mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
+M2.9's pause switch, behaviour half, on MB.62's ledger and MB.59's service ([`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)). Only the primary admin may pause or resume, and only the primary admin is exempt from it: while paused, `setUserRole` refuses a grant or a revoke from any other admin with an explaining `Forbidden` that says admin changes are paused and names nobody, and the primary admin can still do both, so it can clean up without first unpausing. The exemption costs nothing, because the primary admin is the one account a rogue admin cannot become: it is set by `ADMIN_BOOTSTRAP_EMAIL` and cannot be revoked (MB.59). Revokes are paused as well as grants because a rogue admin removing the good admins is the same attack from the other side. Approving and revoking coven creation (M5.8) are paused the same way, refused by the same guard with the primary admin exempt, and locked on the page (amended 2026-10-10, on the owner's call). The control sits on `/admin/users`, visible to every admin and active only for the primary admin, with the current state stated in words beside it. Pausing and resuming go through `withAudit` and the writer's named pause and resume, so each pause records who began it and who ended it, and when; MB.62 keeps those rows as a ledger, and nothing in v1 lists them. The pause reads unchanged by MB.195: a grant or revoke it refuses changes no column, so the trigger on `users` records nothing for it (corrected 2026-10-10; [`design-decisions/mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 
 _Acceptance criteria:_
 
@@ -1603,6 +1604,7 @@ _Acceptance criteria:_
 - A non-primary admin sees the control, cannot activate it, and is refused at the service with an explaining `Forbidden`; the test asserts the caller is a live admin who can otherwise grant
 - While paused, a grant or a revoke by any other admin is refused with an explaining `Forbidden` and writes no ledger row; the test asserts the same call succeeds once resumed, so it is the pause that refuses
 - While paused, the primary admin can still grant and revoke, each recorded in the ledger as usual (by the trigger on `users`, since MB.195)
+- While paused, approving and revoking coven creation by any other admin are refused with the same `Forbidden` and write no ledger row, succeed once resumed, and stay open to the primary admin (amended 2026-10-10, on the owner's call)
 - A pause stamps `created_by` and a resume `ended_by` from the session through `withAudit`, and a request body can set neither
 - The mutation carries M5.7's Pothos admin scope as well as the service check
 - `auth.md` documents the switch beside granting and revoking

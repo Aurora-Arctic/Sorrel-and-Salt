@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import UserList from '@/components/UserList';
+import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -956,5 +956,285 @@ describe('UserList admin role', () => {
       }),
     ).toBeEnabled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
+
+// MB.63: the primary admin's switch on admin changes, its state in words; to
+// any other admin the control is in view but unusable, saying why.
+describe('UserList admin changes switch', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
+
+  // The page puts the switch beside its heading; the list draws none of its own.
+  it('draws no switch inside the list', () => {
+    render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
+
+    expect(screen.queryByRole('button', { name: /Admin Changes/ })).not.toBeInTheDocument();
+  });
+
+  it('lets the primary admin pause, stating that changes are on, busy until the page is read again', async () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    // No sentence while changes are on, on the owner's call: only the button.
+    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause).not.toHaveAttribute('aria-disabled');
+    // Big and red, on the owner's call.
+    expect(pause).toHaveClass('btn', 'btn--destructive');
+    expect(pause).not.toHaveClass('btn--small');
+    fireEvent.click(pause);
+
+    const busy = screen.getByRole('button', { name: 'Pausing' });
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('lets the primary admin resume, stating that changes are paused', async () => {
+    let calls = 0;
+    mockGraphQLMutation('ResumeAdminRoleChanges', () => {
+      calls += 1;
+      return { resumeAdminRoleChanges: false };
+    });
+    render(<PauseControl paused={true} canToggle={true} />);
+
+    // A warning notice, on the owner's call.
+    expect(screen.getByText('Admin changes are paused.')).toHaveClass(
+      'notice',
+      'notice--warn',
+      'user-list__pause-state',
+    );
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    // Red and full size like Pause, on the owner's call.
+    expect(resume).toHaveClass('btn', 'btn--destructive');
+    expect(resume).not.toHaveClass('btn--small');
+    fireEvent.click(resume);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('says why beside the switch when the service refuses, and offers it again', async () => {
+    mockGraphQLError('PauseAdminRoleChanges', {
+      code: 'FORBIDDEN',
+      message: 'Only the primary admin may pause or resume admin changes',
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Only the primary admin may pause or resume admin changes',
+    );
+    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('shows another admin the state and the switch, aria-disabled, stating why when tried and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={false} />);
+
+    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause).toBeEnabled();
+    expect(pause).toHaveAttribute('aria-disabled', 'true');
+    expect(pause).toHaveClass('btn', 'btn--destructive');
+    expect(pause).toHaveAccessibleDescription(NOT_PRIMARY);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(pause);
+
+    expect(screen.getByRole('alert')).toHaveTextContent(NOT_PRIMARY);
+    expect(screen.getAllByText(NOT_PRIMARY)).toHaveLength(1);
+    expect(calls).toBe(0);
+  });
+
+  // One sentence on the page, on the owner's call: the notice; the switch's
+  // own reason is in its tip.
+  it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
+    render(<PauseControl paused canToggle={false} />);
+
+    expect(screen.getByText('Admin changes are paused.')).toHaveClass('notice--warn');
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    expect(resume).toHaveAttribute('aria-disabled', 'true');
+    expect(resume).toHaveClass('btn', 'btn--destructive');
+    expect(resume).toHaveAccessibleDescription(NOT_PRIMARY);
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(NOT_PRIMARY);
+  });
+});
+
+// MB.63: while admin changes are paused, an admin the pause binds sees every
+// Grant and Revoke in view but unusable, saying why; the primary admin, whom
+// the pause exempts, keeps them. The service refuses the same.
+describe('UserList admin role while admin changes are paused', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
+  const PAUSED_REASON = 'Admin changes are paused by the primary admin.';
+
+  it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('SetUserRole', () => {
+      calls += 1;
+      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ adminChanges: { paused: true, canToggle: false } })} />);
+
+    const grant = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Grant admin to Bo Fixturewort',
+    });
+    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+    for (const button of [grant, revoke]) {
+      expect(button).toBeEnabled();
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription(PAUSED_REASON);
+    }
+    expect(grant).toHaveClass('btn--small', 'btn--quiet');
+    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
+
+    fireEvent.click(grant);
+
+    expect(within(row('Bo Fixturewort')).getByRole('alert')).toHaveTextContent(PAUSED_REASON);
+    fireEvent.click(revoke);
+    expect(within(row('Ada Fixturewort')).getByRole('alert')).toHaveTextContent(PAUSED_REASON);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  // Amended on the owner's call: coven creation's Approve and Revoke pause too.
+  it('locks Approve and Revoke of coven creation for another admin, opening and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('GrantWorkspaceCreation', () => {
+      calls += 1;
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(
+      <UserList
+        {...props({
+          users: [BO, { ...BO, id: 'u-cy', name: 'Cy Fixturewort', canCreateWorkspace: true }],
+          adminChanges: { paused: true, canToggle: false },
+        })}
+      />,
+    );
+
+    const approve = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Approve Bo Fixturewort',
+    });
+    const revoke = within(row('Cy Fixturewort')).getByRole('button', {
+      name: 'Revoke approval for Cy Fixturewort',
+    });
+    for (const button of [approve, revoke]) {
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription(PAUSED_REASON);
+    }
+    expect(approve).toHaveClass('btn--small', 'btn--quiet');
+    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
+
+    fireEvent.click(approve);
+
+    expect(within(row('Bo Fixturewort')).getAllByRole('alert')[0]).toHaveTextContent(PAUSED_REASON);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  it('leaves the primary admin’s Approve usable while paused', () => {
+    render(
+      <UserList {...props({ users: [BO], adminChanges: { paused: true, canToggle: true } })} />,
+    );
+
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Approve Bo Fixturewort' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Approve Coven Creation' })).toBeInTheDocument();
+  });
+
+  it('leaves the primary admin’s Grant and Revoke usable while paused', () => {
+    render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
+
+    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+    expect(revoke).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Grant Admin' })).toBeInTheDocument();
+  });
+
+  it('locks nothing while changes are on', () => {
+    render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
+
+    for (const name of ['Grant admin to Bo Fixturewort', 'Revoke admin from Ada Fixturewort']) {
+      expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-disabled');
+    }
+  });
+
+  // The primary admin's own reason holds whether or not changes are paused.
+  it('keeps the primary admin’s Revoke on its own reason while paused', () => {
+    render(
+      <UserList
+        {...props({
+          users: [{ ...ADA, primaryAdmin: true }, BO],
+          adminChanges: { paused: true, canToggle: false },
+        })}
+      />,
+    );
+
+    expect(
+      within(row('Ada Fixturewort')).getByRole('button', {
+        name: 'Revoke admin from Ada Fixturewort',
+      }),
+    ).toHaveAccessibleDescription(/^This is the primary admin/);
+  });
+});
+
+// A locked control's tip is placed against the viewport by measuring it at
+// the origin; reopened at the same spot, it must land there again rather than
+// stay at the origin (the owner's report).
+describe('UserList locked control tip', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('places the tip by its button each time it opens, not only the first', () => {
+    // jsdom lays nothing out, so the button and the tip are given boxes.
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const box =
+        this.tagName === 'BUTTON'
+          ? { top: 300, left: 200, width: 80, height: 30 }
+          : { top: 0, left: 0, width: 100, height: 40 };
+      return { ...box, right: box.left + box.width, bottom: box.top + box.height } as DOMRect;
+    });
+    render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }] })} />);
+    const revoke = screen.getByRole('button', { name: 'Revoke admin from Ada Fixturewort' });
+    const tip = () => screen.getByText(/^This is the primary admin/);
+
+    fireEvent.focus(revoke);
+    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
+    fireEvent.blur(revoke);
+    fireEvent.focus(revoke);
+
+    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
   });
 });

@@ -10,14 +10,15 @@ the hrefs of the pages either side
 
 `UserListProps` (`types.ts`):
 
-| Prop               | What it is                                                       |
-| ------------------ | ---------------------------------------------------------------- |
-| `users`            | This page's `UserListEntry` rows, in the list's order            |
-| `query`            | The name-or-email filter as asked, blank for none                |
-| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`     |
-| `previousHref`     | The page before this one, absent on the first                    |
-| `nextHref`         | The page after this one, absent on the last                      |
-| `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default |
+| Prop               | What it is                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `users`            | This page's `UserListEntry` rows, in the list's order                              |
+| `query`            | The name-or-email filter as asked, blank for none                                  |
+| `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`                       |
+| `previousHref`     | The page before this one, absent on the first                                      |
+| `nextHref`         | The page after this one, absent on the last                                        |
+| `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default                   |
+| `adminChanges`     | `{ paused, canToggle }`, the pause on admin changes (MB.63); no switch when absent |
 
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
@@ -66,8 +67,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the sign-in page's own mark (`SignInPanel/icons.tsx`)
   on a small circle of its brand's ground, white for Google and Microsoft,
-  blurple for Discord, Facebook's its own blue, the colours hex literals as the
-  panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
+  blurple for Discord. Facebook's is `FacebookMark`, Meta's circle filled its
+  own blue with no chip and a white "f", a white disc behind the path's hole,
+  Facebook's standard mark in either theme, on the owner's call (MB.63); the panel's `FacebookIcon`, white
+  over a blue chip, suits its blue button instead. The colours are hex literals
+  as the panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
   in the same tip bubble on hover as the email's mark (`.user-list__hint`). A
   provider the roster no longer has keeps its id as text, so an account linked
   by one since removed still says so; an account with none has an empty cell.
@@ -105,7 +109,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   every other is the muted ink. It is sticky at the table's right edge, so on
   a narrow screen the other columns scroll beneath it (on the owner's call,
   during MB.59): its tint is therefore mixed into the ground it sits on, the
-  page or a banded row's card, rather than laid over transparent. The table's
+  page or a banded row's card, rather than laid over transparent. Every tip
+  in the table sits one layer above it (`$tip-layer`, the column's
+  `$sticky-column-layer` plus one): a tip reaches into its own row, whose
+  Impersonate cell comes later in the DOM, and at the same layer the cell
+  painted over the tip's corner (fixed in MB.63's PR;
+  `tests/components/UserList/layers.test.ts`). The table's
   borders are separate rather than the primitive's collapsed ones, so each
   rule belongs to its cell and the headings' hairline scrolls beneath the red
   one rather than being drawn across it. No cell wraps: the table scrolls
@@ -167,6 +176,40 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   as the creation control's: both are `confirmed-action.tsx`'s
   `ConfirmedAction`, each control only its words and its write. Grant warns
   on an unverified address as Approve does, in its own verb (below).
+- **The switch on admin changes sits beside the page's heading** (MB.63,
+  [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
+  from `pause-control.tsx`, exported beside the list as `PauseControl`: the
+  page draws it as the second child of its `.page-header`, as the other admin
+  pages put their primary action beside their heading, and keys it by the
+  state so the refresh after a flip mounts a fresh one (all on the owner's
+  call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
+  which the primitive wraps beneath the heading on a narrow screen. While
+  changes are on it shows the button alone; while paused it first says so in
+  a `.notice--warn`: "Admin changes are paused.", on the owner's call. The notice is a plain
+  paragraph, compounded as `.notice.user-list__pause-state` past the
+  `body .notice` primitive, and is the page's one sentence about the pause.
+  Then Pause Admin Changes or Resume Admin Changes, both full size and
+  `.btn--destructive`, big and red on the owner's call, so the control keeps
+  its look as it flips. For the primary admin (`canToggle`) it sends the
+  mutation at once, with no modal, since pausing takes nothing away and
+  resuming is the way back, and stays busy, spinner and "Pausing" or
+  "Resuming", until `router.refresh()` re-reads the page; a refusal says why
+  beside it. For any other admin it is `locked-control.tsx`'s
+  `LockedControl`, as the primary admin's Revoke is: in view,
+  `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
+  resume admin changes.", that describes it and that each try mounts afresh as
+  an alert.
+- **While paused, an admin the pause binds cannot use Grant or Revoke, nor
+  coven creation's Approve or Revoke** (MB.63, on the owner's call; the
+  creation controls amended 2026-10-10). The page passes the pause it already read,
+  and every row's role and creation control, for a viewer who is not the primary admin
+  (`canToggle`), is locked as the primary admin's Revoke is: in view,
+  `aria-disabled`, described by the service's own refusal in a tip,
+  `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
+  both): "Admin changes are paused by the primary admin." Activating it opens nothing, sends
+  nothing and mounts the reason afresh as an alert. The primary admin's
+  controls stay usable, since the pause exempts it, and its own Revoke keeps
+  its own reason. The service still refuses: the lock only reflects it.
 - **The primary admin's row is marked by a crown** beside the role
   (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
   saying so, as InfoTip's ⓘ is a button with its tip, and through the same
@@ -190,7 +233,8 @@ primitive's rule, since its rows mix text with logo circles, marks and
 buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
-a wrapping row of the mark and the control, and the role cell a wrapping row
+the mark on the left and the control on the right, centred on one line, as
+the role cell is (MB.63, on the owner's call), and the role cell a wrapping row
 of the role, with the primary admin's crown in `$text-muted` beside it, on the
 left and the control on the right, centred on one line (MB.59, on the owner's
 call). Both of the role cell's tips, the crown's and the locked Revoke's, are
@@ -205,8 +249,8 @@ are banded and its header carries a hairline, as every admin list's does, and it
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
-`Default`, `Filtered`, `NoMatch`, `WithImpersonation`, `UnverifiedApproval`
-and `AdminRoles`,
+`Default`, `Filtered`, `NoMatch`, `WithImpersonation`, `UnverifiedApproval`,
+`AdminRoles`, `AdminChangesPaused` and `AdminChangesNotPrimary`,
 inside the admin layout's frame, each name led by its permissions history
 icon, whose tip shows on hover or focus; the list holds an admin, a user awaiting
 approval and an approved user, so each control shows. `UnverifiedApproval`
@@ -214,7 +258,9 @@ holds two users awaiting approval, one unverified and one verified, so the
 first's Approve opens the warning (MB.205) and the second's does not.
 `AdminRoles` holds the primary admin, its Revoke unusable with the reason
 beside it, a second admin whose Revoke opens its modal, and users whose Grant
-opens theirs, Bo's with the warning (MB.59). In the workshop neither Impersonate nor Approve or Revoke reaches a
+opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused` shows
+the switch paused with the primary admin's Resume, and
+`AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63). In the workshop neither Impersonate nor Approve or Revoke reaches a
 server, so a click shows the refusal.
 Render-only, no test ids, no snapshots.
 
@@ -238,7 +284,14 @@ trimmed or not at all, Cancel sending nothing, Grant's warning for an
 unverified user, the refusal in the row, the fresh control after the
 refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
 by the reason and stating it as an alert each time it is tried, sending
-nothing. `tests/e2e/admin.spec.ts` approves
+nothing; and the switch on admin changes (MB.63): none inside the list, no sentence
+while on and the warning while paused, Pause and Resume big and red, busy
+until the refresh, a refusal beside it, and another admin's locked switch,
+its reason a tip and an alert when tried; and while paused, every Grant and
+Revoke locked for another admin with the pause's reason, none for the
+primary admin or while changes are on, and the primary admin's Revoke kept on
+its own reason. `tests/app/admin/users/page.test.tsx` finds the switch in
+the heading's `.page-header`. `tests/e2e/admin.spec.ts` approves
 and revokes a user against the built server, approves an unverified one
 through the warning, grants admin with a reason and revokes it, and tries
 the primary admin's Revoke, with axe over each open modal.

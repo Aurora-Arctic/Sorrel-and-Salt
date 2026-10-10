@@ -92,6 +92,10 @@ In [`auth/admin-users.md`](auth/admin-users.md#approving-workspace-creation-m58)
 
 An admin grants or revokes admin from a user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; a grant sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be revoked, a count under a `for update` lock refuses leaving no admin, and a revoke takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#granting-and-revoking-admin-mb59).
 
+### Pausing admin changes (MB.63)
+
+The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole`, and coven creation's approve and revoke, refuse every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
+
 ## Plugins (MB.74)
 
 `lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)

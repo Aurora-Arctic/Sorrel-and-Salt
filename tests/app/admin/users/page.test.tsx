@@ -18,7 +18,13 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 const listUsers = vi.fn();
 const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
-vi.mock('@/modules/identity', () => ({ isPrimaryAdmin, listUsers, providersOf }));
+const adminRoleChangePauseState = vi.fn();
+vi.mock('@/modules/identity', () => ({
+  adminRoleChangePauseState,
+  isPrimaryAdmin,
+  listUsers,
+  providersOf,
+}));
 
 const { default: AdminUsersPage } = await import('@/app/admin/users/page');
 
@@ -58,6 +64,8 @@ beforeEach(() => {
   );
   isPrimaryAdmin.mockReset();
   isPrimaryAdmin.mockReturnValue(false);
+  adminRoleChangePauseState.mockReset();
+  adminRoleChangePauseState.mockResolvedValue({ paused: false, canToggle: false });
 });
 
 describe('the /admin/users page', () => {
@@ -66,6 +74,7 @@ describe('the /admin/users page', () => {
 
     await expect(renderPage()).rejects.toThrow('forbidden');
     expect(listUsers).not.toHaveBeenCalled();
+    expect(adminRoleChangePauseState).not.toHaveBeenCalled();
     expect(providersOf).not.toHaveBeenCalled();
   });
 
@@ -109,6 +118,22 @@ describe('the /admin/users page', () => {
     expect(within(primary).getByText('Primary Admin')).toBeInTheDocument();
     const other = screen.getByRole('row', { name: /Listed Fixture 01/ });
     expect(within(other).queryByText('Primary Admin')).not.toBeInTheDocument();
+  });
+
+  // MB.63: the switch's state, as the identity service answers it for this admin.
+  it('states whether admin changes are paused, asked as the guard’s session', async () => {
+    adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: true });
+
+    await renderPage();
+
+    expect(adminRoleChangePauseState).toHaveBeenCalledWith(ADMIN);
+    expect(screen.getByText(/^Admin changes are paused/)).toBeInTheDocument();
+    // Beside the heading, in its `.page-header` (the owner's call).
+    const header = screen.getByRole('heading', { level: 1, name: 'Users' }).parentElement;
+    expect(header).toHaveClass('page-header');
+    expect(
+      within(header as HTMLElement).getByRole('button', { name: 'Resume Admin Changes' }),
+    ).toBeEnabled();
   });
 
   it('turns the search parameters into the filter', async () => {

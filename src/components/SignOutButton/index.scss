@@ -1,0 +1,14 @@
+@use '../../scss/variables' as *;
+
+// Layout only: the button, and beside it a failure, on one wrapping line.
+.sign-out-button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(3);
+}
+
+// Compounded with `.notice`, whose primitive is `body .notice` in the app.
+.notice.sign-out-button__failure {
+  margin: 0;
+}

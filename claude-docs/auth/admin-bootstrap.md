@@ -489,7 +489,11 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   links to each section by its prefixed id (`#account-name`,
   `#account-email`, `#account-sign-in-methods`), and a hairline `<hr>`
   rules each section from the next (on the owner's call). A section a link
-  lands on stops clear of the top inset.
+  lands on stops clear of the top inset. Beside the heading, in a
+  `.page-header`, is Sign Out (`SignOutButton`,
+  [`components/sign-out-button.md`](../components/sign-out-button.md)):
+  Better Auth's own sign-out, then a full load of `/` (added in MB.63's PR,
+  on the owner's call).
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
@@ -562,7 +566,7 @@ tasks that build the rest:
   primary admin can be neither revoked nor deleted, and a revoke that would
   leave zero admins is refused (the record's "The primary admin" and
   "Revoking").
-- **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
+- **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
   the primary admin pauses granting and revoking for every other admin (the
   record's "Granting"; MB.62 built the table,
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).

@@ -31,6 +31,12 @@ export interface UserListProps {
   nextHref?: string;
   /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
   canImpersonate?: boolean;
+  /**
+   * The pause on admin changes and whether this admin may flip it (MB.63):
+   * while paused, a viewer who may not has every Grant and Revoke locked. The
+   * switch itself is the page's, beside its heading.
+   */
+  adminChanges?: PauseControlProps;
 }
 
 /** The filter the page shows, which the form starts from and compares against. */
@@ -100,6 +106,12 @@ export interface RoleControlProps {
   emailVerified: boolean;
   /** Whether this is the primary admin, whose Revoke says why it cannot be used. */
   primaryAdmin: boolean;
+  /**
+   * Whether admin changes are paused for the viewing admin (MB.63): paused,
+   * and the viewer not the primary admin, whom the pause exempts. Its Grant
+   * or Revoke then says why it cannot be used.
+   */
+  paused?: boolean;
   action: RoleAction;
 }
 
@@ -109,5 +121,27 @@ export interface CreationControlProps {
   name: string;
   /** Whether the user's address is verified; Approve warns when it is not (MB.205). */
   emailVerified: boolean;
+  /**
+   * Whether admin changes are paused for the viewing admin (MB.63, amended on
+   * the owner's call to cover coven creation): its Approve or Revoke then
+   * says why it cannot be used.
+   */
+  paused?: boolean;
   action: CreationAction;
+}
+
+/** The pause on admin grants and revokes, as the page read it (MB.63). */
+export interface PauseControlProps {
+  paused: boolean;
+  /** Whether the viewing admin is the primary admin, the only one who may flip it. */
+  canToggle: boolean;
+}
+
+/** A control in view but unusable, and the reason it says why (MB.59, MB.63). */
+export interface LockedControlProps {
+  label: string;
+  /** The button's accessible name, opening with `label`. */
+  accessibleName?: string;
+  className: string;
+  reason: string;
 }

@@ -1,6 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The sticky Impersonate column's layer, and every tip's one above it: a
+// tip's lower edge reaches into its own row, whose Impersonate cell comes
+// later in the DOM, so at the same z-index the cell would paint over the
+// tip's corner (fixed in MB.63's PR).
+$sticky-column-layer: 1;
+$tip-layer: $sticky-column-layer + 1;
+
 // Layout only, until the admin area's design review (MB.115). The table and
 // the pager are primitives (`.data-table`, `.pager`).
 
@@ -77,7 +84,7 @@
   position: absolute;
   bottom: 100%;
   left: 50%;
-  z-index: 1;
+  z-index: $tip-layer;
   width: max-content;
   margin-bottom: space(1);
   translate: -50% 0;
@@ -100,7 +107,8 @@
 // Each logo on a small circle of its brand's own ground, as the sign-in
 // buttons give it one: the marks are drawn for those grounds, Discord's white
 // for its blurple. The colours are the brand's, as hex literals
-// (SignInPanel/icons.tsx). Facebook's mark brings its own blue circle.
+// (SignInPanel/icons.tsx). Facebook's mark is its own blue circle with a
+// white "f", so it fills the circle's whole box.
 .user-list__provider {
   display: inline-flex;
   align-items: center;
@@ -123,6 +131,11 @@
 
 .user-list__provider--discord {
   background-color: #5865f2;
+}
+
+.user-list__provider--facebook > svg {
+  width: 100%;
+  height: 100%;
 }
 
 // The history link, then the name, side by side.
@@ -185,7 +198,7 @@
   position: absolute;
   bottom: 100%;
   left: 0;
-  z-index: 1;
+  z-index: $tip-layer;
   width: max-content;
   margin-bottom: space(1);
 
@@ -214,7 +227,7 @@
 .user-list__impersonate {
   position: sticky;
   right: 0;
-  z-index: 1;
+  z-index: $sticky-column-layer;
   border-left: 1px solid $secondary;
   background-color: color-mix(in srgb, $secondary 6%, $surface-page);
   color: $secondary;
@@ -230,11 +243,13 @@
   border-bottom-color: $secondary;
 }
 
-// The creation cell: the Yes or No, then the control that changes it, on one
-// line.
+// The creation cell: the Yes or No on the left, the control that changes it
+// on the right, centred on one line, as the role cell holds its own (the
+// owner's call).
 .user-list__creation {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: space(2) space(3);
 }
 
@@ -323,7 +338,7 @@
   position: absolute;
   bottom: 100%;
   left: 0;
-  z-index: 1;
+  z-index: $tip-layer;
   width: max-content;
   max-width: min(18rem, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
@@ -340,4 +355,18 @@
   position: fixed;
   bottom: auto;
   margin-inline: space(4);
+}
+
+// The pause on admin changes, beside the page's heading as its `.page-header`
+// child: the warning while paused and the button on one line (MB.63).
+.user-list__pause {
+  display: flex;
+  align-items: center;
+  gap: space(3);
+
+  // Compounded with `.notice`, whose primitive is `body .notice` in the app,
+  // as `.notice.user-list__warning` is: a lone class loses to it there.
+  .notice.user-list__pause-state {
+    margin: 0;
+  }
 }

@@ -228,6 +228,67 @@ next request through the real session reader.
 signed-out caller and the scope are `tests/db/graphql-query-scopes.test.ts`'s,
 and `tests/e2e/admin.spec.ts` grants and revokes against the built server.
 
+## Pausing admin changes (MB.63)
+
+The primary admin can switch granting and revoking admin off for every other
+admin, so an admin account gone rogue can neither make more admins nor remove
+the good ones while it is dealt with, and back on. The argument is
+[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
+"Granting"; the ledger the switch is kept in is MB.62's
+([`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
+
+- **Only the primary admin may pause or resume.**
+  `pauseAdminRoleChanges(session)` and `resumeAdminRoleChanges(session)`
+  (`src/modules/identity/services/admin-role-pause.ts`) assert the site role,
+  then read the caller's own row and refuse anyone `isPrimaryAdmin` does not
+  name, with "Only the primary admin may pause or resume admin changes". The
+  two mutations carry the `admin` scope as the second check, and take no
+  argument, so a request names no actor.
+- **Each pause is a row.** Pausing opens one through the writer's
+  `pauseAdminRoleChanges`, stamped `created_by` from the session; resuming
+  ends it through `resumeAdminRoleChanges`, stamping `ended_at` and
+  `ended_by`. Both go through `withAudit`. A second pause or resume writes
+  nothing and answers the state, `true` paused or `false` not, so a double
+  click is not an error. Nothing in v1 lists the rows.
+- **While paused, `setUserRole` refuses every other admin.** It reads the
+  open pause first, and refuses a grant or a revoke from any admin but the
+  primary one with "Admin changes are paused by the primary admin.", naming a role and no person. Nothing
+  changes, so the trigger on `users` records nothing. Revokes are paused as
+  well as grants, since removing the good admins is the same attack from the
+  other side.
+- **Coven creation pauses too** (amended 2026-10-10, on the owner's call):
+  `grantWorkspaceCreation` and `revokeWorkspaceCreation` call the same
+  `assertChangesOpen` guard, exported from `admin-role-pause.ts`, so another
+  admin's approve or revoke is refused with the same `Forbidden` and writes no
+  ledger row while a pause is open.
+- **The primary admin is exempt**, so it can clean up without resuming first:
+  its grants and revokes go through and are recorded as usual. The exemption
+  costs nothing, since the primary admin is the one account a rogue admin
+  cannot become: the variable names it, and it cannot be revoked.
+- **On `/admin/users`** every admin sees the control beside the page's
+  heading, and a warning saying changes are paused while they are. The
+  control is usable by the primary admin alone, in view but `aria-disabled`
+  for any other, with the reason in a tip; while paused, such an admin's
+  Grant and Revoke, and coven creation's Approve and Revoke, are locked the
+  same way
+  ([`components/user-list.md`](../components/user-list.md)). The page reads
+  the state through `adminRoleChangePauseState(session)`.
+
+**Tests.** `tests/modules/identity/services/admin-role-pause.test.ts` covers
+pausing and resuming and their stamps; a second pause and a second resume;
+another live admin refused, with that admin proven able to grant; nobody
+allowed while the variable names no one; each non-admin fixture user; a grant
+and a revoke by another admin refused while paused, writing no ledger row,
+and the same calls succeeding once resumed; and the primary admin's grant and
+revoke recorded while paused.
+`tests/modules/identity/services/workspace-creation.test.ts` covers another
+admin's approve and revoke refused while paused with no ledger row, the same
+calls succeeding once resumed, and the primary admin's recorded as usual.
+`tests/modules/identity/graphql/admin-role-pause.test.ts` is the transport's
+half, the stamps the session's whatever the request carries, and
+`tests/e2e/admin.spec.ts` pauses, refuses another admin's grant, and resumes
+against the built server.
+
 ## The privilege ledger (MB.199, MB.200)
 
 Every change to who is an admin and who may create a coven is a row of

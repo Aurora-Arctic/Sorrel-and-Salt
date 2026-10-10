@@ -2,6 +2,7 @@ import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { Forbidden } from '../../../lib/errors';
 import { userRole } from '../schema/users';
+import { pauseAdminRoleChanges, resumeAdminRoleChanges } from '../services/admin-role-pause';
 import { setEmail } from '../services/email';
 import { setName } from '../services/name';
 import { getMe } from '../services/profile';
@@ -157,6 +158,34 @@ builder.mutationField('setUserRole', (t) =>
     resolve: (_root, { userId, role, note }, { session }) => {
       if (!session) throw new Forbidden();
       return setUserRole(session, userId, role, note ?? undefined);
+    },
+  }),
+);
+
+// MB.63's switch: the site admin's scope here, and the service refuses every
+// admin but the primary one. Each answers whether changes are paused now, so
+// a second click answers the state rather than an error; the stamps are the
+// session's, and neither takes an argument.
+builder.mutationField('pauseAdminRoleChanges', (t) =>
+  t.boolean({
+    description:
+      'Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.',
+    authScopes: { admin: true },
+    resolve: (_root, _args, { session }) => {
+      if (!session) throw new Forbidden();
+      return pauseAdminRoleChanges(session);
+    },
+  }),
+);
+
+builder.mutationField('resumeAdminRoleChanges', (t) =>
+  t.boolean({
+    description:
+      'Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.',
+    authScopes: { admin: true },
+    resolve: (_root, _args, { session }) => {
+      if (!session) throw new Forbidden();
+      return resumeAdminRoleChanges(session);
     },
   }),
 );

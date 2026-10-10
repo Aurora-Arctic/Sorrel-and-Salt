@@ -1,8 +1,9 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
-import { PRIMARY_ADMIN_EMAIL, signInAs } from './session';
+import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from './session';
 
 // The `/admin` guard against the built server (M5.4; claude-docs/auth/admin-guard.md, "The
 // admin guard"): a signed-out visitor is sent to sign in, a signed-in
@@ -15,6 +16,21 @@ test.beforeAll(async () => {
 
 const PRIMARY_ADMIN_REASON =
   "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
+
+/**
+ * The primary admin's id: the user an earlier test signed in at the address,
+ * or one made now, since the email index admits the address once.
+ */
+async function primaryAdminId(page: Page): Promise<string> {
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const [row] = await sql`select id from users where email = ${PRIMARY_ADMIN_EMAIL}`;
+    if (row) return row.id as string;
+  } finally {
+    await sql.end();
+  }
+  return (await signInAs(page, PRIMARY_ADMIN_EMAIL, ['google'], 'admin')).userId;
+}
 
 /** The privilege ledger's rows for one user, as the trigger on `users` wrote them (MB.195). */
 async function privilegeChanges(userId: string) {
@@ -340,6 +356,72 @@ test('the primary admin’s row is marked, and its Revoke says why it cannot be 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
+});
+
+// MB.63: the primary admin pauses admin changes, another admin is refused a
+// grant while they are paused, and the primary admin resumes them. Every
+// admin sees the state in words; only the primary admin's switch works.
+test('the primary admin pauses admin changes, another admin is refused a grant, and it resumes', async ({
+  page,
+}) => {
+  const primary = await primaryAdminId(page);
+  await signInAs(page, 'paused-grantee@admin-role.test');
+  const { userId: other } = await signInAs(
+    page,
+    'other-admin@admin-role.test',
+    ['discord'],
+    'admin',
+  );
+  const list = '/admin/users?query=paused-grantee%40admin-role.test';
+  // A warning while paused, and no sentence while on (the owner's call).
+  const status = page.getByRole('main').getByText('Admin changes are paused.', { exact: true });
+
+  // Another admin sees the switch, unusable, and why.
+  await page.goto(list);
+  await expect(status).toHaveCount(0);
+  const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
+  await expect(unusable).toHaveAttribute('aria-disabled', 'true');
+  await expect(unusable).toHaveAccessibleDescription(
+    'Only the primary admin can pause or resume admin changes.',
+  );
+
+  // The primary admin pauses.
+  await signInAgainAs(page, primary);
+  await page.goto(list);
+  await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
+  await expect(status).toBeVisible();
+  await expect(status).toHaveClass(/notice--warn/);
+  await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+  await assertNoAccessibilityViolations(page);
+
+  // The other admin's Grant is locked, in words that name no person; tried from
+  // the keyboard, it says why and opens nothing. The service refuses the same.
+  const PAUSED_REASON = 'Admin changes are paused by the primary admin.';
+  await signInAgainAs(page, other);
+  await page.goto(list);
+  await expect(status).toBeVisible();
+  const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
+  const grant = row.getByRole('button', { name: 'Grant admin to Fixture Person' });
+  await expect(grant).toHaveAttribute('aria-disabled', 'true');
+  await expect(grant).toHaveAccessibleDescription(PAUSED_REASON);
+  await grant.focus();
+  await page.keyboard.press('Enter');
+  await expect(row.getByRole('alert')).toHaveText(PAUSED_REASON);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  // Coven creation's Approve is locked the same way (amended on the owner's call).
+  const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+  await expect(approve).toHaveAttribute('aria-disabled', 'true');
+  await expect(approve).toHaveAccessibleDescription(PAUSED_REASON);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+
+  // And the primary admin resumes.
+  await signInAgainAs(page, primary);
+  await page.goto(list);
+  await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
+  await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+  await expect(status).toHaveCount(0);
 });
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({

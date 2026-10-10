@@ -2,9 +2,11 @@ import 'server-only';
 import { findOneById, withAudit } from '../../../db/repository';
 import type { AuditWriter, PrivilegeDeclaration } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
-import { PRIMARY_ADMIN_REFUSAL, primaryAdminEmail, sameAddress } from '../../../lib/primary-admin';
+import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
+import { assertChangesOpen } from './admin-role-pause';
+import { isPrimaryAdmin } from './primary-admin';
 import { assertSiteAdmin, type SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
@@ -17,20 +19,6 @@ import type { UserRow } from '../types';
 // "Granting and revoking admin".
 
 const REFUSAL = 'Only a site admin may change who is an admin';
-
-/**
- * Whether `user` is the primary admin: a live admin whose email matches
- * ADMIN_BOOTSTRAP_EMAIL as it reads now. Nobody is while it is unset.
- */
-export function isPrimaryAdmin(user: Pick<UserRow, 'email' | 'role' | 'deletedAt'>): boolean {
-  const email = primaryAdminEmail();
-  return (
-    email !== undefined &&
-    user.role === 'admin' &&
-    user.deletedAt === null &&
-    sameAddress(user.email, email)
-  );
-}
 
 /** The live user, or `NotFound`: a soft-deleted one reads as no one. */
 async function liveUser(userId: string): Promise<UserRow> {
@@ -81,7 +69,8 @@ async function writeRole(
  * @throws {Forbidden} the session's role is not `admin`; the user already
  * holds the role asked for, since the change would record nothing; the
  * revoke's target is the primary admin, for every caller, the primary admin
- * included; or the revoke would leave no live admin.
+ * included; the revoke would leave no live admin; or the primary admin has
+ * paused admin changes and the caller is another admin (MB.63).
  * @throws {NotFound} no live user has this id.
  */
 export async function setUserRole(
@@ -91,6 +80,7 @@ export async function setUserRole(
   note?: string,
 ): Promise<UserRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
+  await assertChangesOpen(session, admin);
   const user = await liveUser(userId);
   if (role === 'admin' && user.role === 'admin') {
     throw new Forbidden(`${user.name} is already an admin`);
