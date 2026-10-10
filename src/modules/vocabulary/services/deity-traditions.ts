@@ -7,6 +7,7 @@ import {
   findPageCount,
   withAudit,
 } from '../../../db/repository';
+import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
@@ -73,10 +74,12 @@ export async function createDeityTradition(
   const fields = parseInput(DeityTraditionInput, input);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deityTraditions, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -112,7 +115,7 @@ export async function updateDeityTradition(
   );
   await refuseCollidingMoves(DEITIES, moves, refuse);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(deityTraditions, id, { ...fields, slug });
     if (!row) throw new NotFound('No such tradition');
     for (const { row: deity, slug: moved } of moves) {
@@ -123,6 +126,8 @@ export async function updateDeityTradition(
     await refuseCollidingMoves(DEITIES, moves, refuse, error);
     return refuseCollision(error, slug);
   });
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -163,6 +168,7 @@ export async function deleteDeityTradition(
     await refuseCollidingMoves(DEITIES, moves, refuse, error);
     throw error;
   });
+  expireCompendium();
 }
 
 /**

@@ -6,7 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
-import { cachedCompendiumRead } from '../../../lib/compendium-cache';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -130,10 +130,12 @@ export async function createAstrologyValue(
   const fields = parseInput(vocabulary.input, input);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(vocabulary.table, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(field, error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -163,7 +165,7 @@ export async function updateAstrologyValue(
   const current = await liveRow(field, id);
   const slug = slugify(fields.name);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(vocabulary.table, id, { ...fields, slug });
     if (!row) throw new NotFound(`No such ${vocabulary.noun}`);
     if (current.name !== fields.name) {
@@ -171,6 +173,8 @@ export async function updateAstrologyValue(
     }
     return row;
   }).catch((error: unknown) => refuseCollision(field, error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -199,6 +203,7 @@ export async function deleteAstrologyValue(
     const [deleted] = await write.softDeleteByIds(vocabulary.table, [id]);
     if (!deleted) throw new NotFound(`No such ${vocabulary.noun}`);
   });
+  expireCompendium();
 }
 
 /** The filter as the repository reads it, its query trimmed and a blank one dropped. */

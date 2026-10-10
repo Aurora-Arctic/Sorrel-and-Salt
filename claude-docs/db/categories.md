@@ -168,7 +168,8 @@ first.` The entries are read through the compendium's own category filter,
 
 The owner chose the delete rule over two others, and
 [`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md)
-records them. Revalidating the `compendium` tag after each write is M8.7's.
+records them. Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 ## Form writes (M5.6a)
 
@@ -226,7 +227,8 @@ keep it one after the write.
 
 The owner's calls on the slug, the redirect and the stale pick are
 [`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md).
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 ## Group writes (M5.6b)
 
@@ -293,4 +295,5 @@ to`. The form group's say "form" and "forms". A moved form that would take
 
 The owner's calls on the delete are
 [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md).
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).

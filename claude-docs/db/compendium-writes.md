@@ -111,8 +111,8 @@ bare column names it renders the text the migrations hold, byte for byte, so
 between the two statements — leaves the message without a name rather than
 surfacing the raw error.
 
-Firing `revalidateTag` after each write is M8.7's, once M8.6 has put the
-compendium behind the cache (CLAUDE.md rule 6). The GraphQL mutations over
+Each write expires the `compendium` tag once it has committed, so the
+cached list answers it on the next read (M8.7; ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")). The GraphQL mutations over
 these services are M5.5's: `createCompendiumIngredient`,
 `updateCompendiumIngredient` and `deleteCompendiumIngredient`
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
