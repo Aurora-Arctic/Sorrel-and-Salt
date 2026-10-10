@@ -14,7 +14,7 @@ export const VOCABULARY_COPY: Record<FlatVocabulary, VocabularyCopy> = {
   },
   zodiacSigns: {
     path: '/admin/zodiac-signs' as Route,
-    title: 'Zodiac signs',
+    title: 'Zodiac Signs',
     noun: 'sign',
     plural: 'signs',
     label: 'Sign',

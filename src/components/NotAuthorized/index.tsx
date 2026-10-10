@@ -8,7 +8,7 @@ import './index.scss';
 
 const NotAuthorized = (): ReactElement => (
   <div className="not-authorized">
-    <h1 className="not-authorized__title">Not authorized</h1>
+    <h1 className="not-authorized__title">Not Authorized</h1>
     <p className="not-authorized__reason">
       This part of Sorrel &amp; Salt is where the site&rsquo;s admins curate the shared compendium,
       and your account does not have admin rights.

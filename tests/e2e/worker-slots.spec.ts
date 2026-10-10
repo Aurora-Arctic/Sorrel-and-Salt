@@ -18,7 +18,7 @@ test("a worker's session reaches its own slot's server", async ({ page, slot }) 
 
   expect(new URL(page.url()).port).toBe(String(slotPort(slot)));
   await expect(
-    page.getByRole('main').getByRole('heading', { name: 'Sign-in methods' }),
+    page.getByRole('main').getByRole('heading', { name: 'Sign-In Methods' }),
   ).toBeVisible();
 });
 
@@ -33,7 +33,7 @@ test("a session signed in on one slot is unknown to another slot's server", asyn
   // slot's database lacking it rather than a cookie no server would take.
   await page.goto('/account');
   await expect(
-    page.getByRole('main').getByRole('heading', { name: 'Sign-in methods' }),
+    page.getByRole('main').getByRole('heading', { name: 'Sign-In Methods' }),
   ).toBeVisible();
 
   const other = (slot + 1) % E2E_SLOTS;

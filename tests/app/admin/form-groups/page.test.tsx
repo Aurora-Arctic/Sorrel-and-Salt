@@ -94,7 +94,7 @@ describe('the /admin/form-groups page', () => {
   it('lists the first page of 25, each group by its name, and no modal', async () => {
     await renderPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Form groups' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Form Groups' })).toBeInTheDocument();
     expect(listIngredientFormGroups).toHaveBeenCalledWith({ limit: 26, inverted: false });
     expect(screen.getByRole('cell', { name: 'Fixture Wards' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Fixture Wards' })).toHaveAttribute(
@@ -134,7 +134,7 @@ describe('the /admin/form-groups page', () => {
   it('puts Add Group on the line of the heading, linking the empty modal over this page', async () => {
     await renderPage();
 
-    const heading = screen.getByRole('heading', { level: 1, name: 'Form groups' });
+    const heading = screen.getByRole('heading', { level: 1, name: 'Form Groups' });
     const add = screen.getByRole('link', { name: 'Add Group' });
     expect(add.parentElement).toBe(heading.parentElement);
     expect(add).toHaveAttribute('href', '/admin/form-groups?new');

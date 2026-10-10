@@ -73,7 +73,7 @@ test('a signed-in non-admin is refused at /admin/compendium with the 403 page', 
   const response = await page.goto('/admin/compendium?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 

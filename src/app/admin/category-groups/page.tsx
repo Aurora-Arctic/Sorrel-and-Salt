@@ -94,7 +94,7 @@ export default async function AdminCategoryGroupsPage({
       {/* The page's one primary action on its heading's line, as every admin
           vocabulary page has it. */}
       <div className="page-header">
-        <h1>Category groups</h1>
+        <h1>Category Groups</h1>
         <Link className="btn btn--solid" href={groupsHref('category', here, 'new')}>
           Add Group
         </Link>

@@ -35,7 +35,7 @@ test('a signed-in non-admin is refused at /admin with a 403 page that says why',
   expect(await response?.text()).not.toContain('/admin/compendium');
 
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(main.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(main.getByText(/does not have admin rights/)).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
@@ -95,7 +95,7 @@ test('a signed-in non-admin is refused at /admin/users with the 403 page', async
 
   expect(response?.status()).toBe(403);
   expect(await response?.text()).not.toContain('not-an-admin@admin-users.test');
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
 });
 
 test('an admin lists the users at /admin/users, filtered, with their sign-in methods', async ({
@@ -177,7 +177,7 @@ test('a signed-in non-admin is refused at /admin/categories with the 403 page', 
   const response = await page.goto('/admin/categories?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -292,7 +292,7 @@ test('a signed-in non-admin is refused at /admin/forms with the 403 page', async
   const response = await page.goto('/admin/forms?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -422,7 +422,7 @@ test('a signed-in non-admin is refused at /admin/planets and /admin/zodiac-signs
     const response = await page.goto(path);
 
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });
@@ -478,7 +478,7 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await signInAs(page, 'filter-admin@admin-astrology.test', ['discord'], 'admin');
   const response = await page.goto('/admin/zodiac-signs');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Zodiac signs — Admin — Sorrel & Salt');
+  await expect(page).toHaveTitle('Zodiac Signs — Admin — Sorrel & Salt');
   const search = page.getByRole('search');
   const filter = search.getByRole('button', { name: 'Filter' });
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
@@ -528,7 +528,7 @@ test('a signed-in non-admin is refused at both group pages with the 403 page', a
   for (const path of ['/admin/category-groups?new', '/admin/form-groups?new']) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });
@@ -639,7 +639,7 @@ test('a signed-in non-admin is refused at both deity pages with the 403 page', a
   for (const path of ['/admin/deities?new', '/admin/deity-traditions?new']) {
     const response = await page.goto(path);
     expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
     await expect(page.getByRole('dialog')).toHaveCount(0);
   }
 });

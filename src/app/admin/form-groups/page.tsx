@@ -85,7 +85,7 @@ export default async function AdminFormGroupsPage({ searchParams }: AdminFormGro
       {/* The page's one primary action on its heading's line, as every admin
           vocabulary page has it. */}
       <div className="page-header">
-        <h1>Form groups</h1>
+        <h1>Form Groups</h1>
         <Link className="btn btn--solid" href={groupsHref('form', here, 'new')}>
           Add Group
         </Link>

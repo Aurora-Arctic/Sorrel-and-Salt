@@ -10,7 +10,7 @@ describe('NotAuthorized', () => {
   it('says the visitor is not authorized, as the page heading', () => {
     render(<NotAuthorized />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeInTheDocument();
   });
 
   it('explains that the account lacks admin rights', () => {

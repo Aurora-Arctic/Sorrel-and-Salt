@@ -35,7 +35,7 @@ describe('EmailForm', () => {
   it('prefills the field with the account address', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Your email' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Your Email' })).toBeInTheDocument();
     expect(emailField()).toHaveValue('ada@example.test');
   });
 

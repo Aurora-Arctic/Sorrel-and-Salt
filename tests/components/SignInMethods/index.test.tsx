@@ -35,7 +35,7 @@ describe('SignInMethods', () => {
   it('lists every roster provider, offering the ones not linked', () => {
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
-    expect(screen.getByRole('heading', { name: 'Sign-in methods' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Sign-In Methods' })).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
     // No status text: a linked row is the one without an Add.
     expect(within(row('Discord')).queryByText('Linked')).not.toBeInTheDocument();

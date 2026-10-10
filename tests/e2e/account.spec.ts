@@ -18,7 +18,7 @@ test('lists the sign-in methods, with no accessibility violations', async ({ pag
   await page.goto('/account');
 
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { name: 'Sign-in methods' })).toBeVisible();
+  await expect(main.getByRole('heading', { name: 'Sign-In Methods' })).toBeVisible();
   await expect(main.getByRole('button', { name: /^Add/ })).toHaveCount(3);
   await expect(main.getByRole('button', { name: 'Add Microsoft' })).toHaveAttribute(
     'aria-disabled',

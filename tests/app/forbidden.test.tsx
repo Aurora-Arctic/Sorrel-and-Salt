@@ -10,7 +10,7 @@ describe('the forbidden page', () => {
     render(<ForbiddenPage />);
 
     expect(
-      within(screen.getByRole('main')).getByRole('heading', { level: 1, name: 'Not authorized' }),
+      within(screen.getByRole('main')).getByRole('heading', { level: 1, name: 'Not Authorized' }),
     ).toBeInTheDocument();
   });
 });
