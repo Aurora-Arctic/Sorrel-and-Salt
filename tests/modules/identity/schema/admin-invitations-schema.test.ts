@@ -7,6 +7,7 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { A, B, E, asUser } from '../../../support/as-user';
 import type { SessionUser } from '../../../support/types';
 import { findAdminInvitationByToken, withAudit, type AuditWriter } from '@/db/repository';
+import type { NamedWrites } from '@/db/types';
 import { assertSiteAdmin } from '@/modules/identity';
 import { adminInvitations } from '@/modules/identity/schema/admin-invitations';
 import { users } from '@/modules/identity/schema/users';
@@ -227,8 +228,9 @@ describe('admin_invitations table', () => {
 // so a dumped row's hash redeems nothing. The insert and the revoke take the
 // `SiteAdmin` proof, since only an admin invites or withdraws; the accept and
 // the read take none, since the invitee is not yet an admin, and the accept
-// matches only the user holding the invited address, verified. Every generic
-// write is refused the table at compile time.
+// matches only the user holding the invited address, verified. The table is
+// marked `namedWrites` (MB.198), so every generic write is refused it at
+// compile time.
 describe('the repository', () => {
   const admin = assertSiteAdmin(asUser(E));
 
@@ -399,28 +401,30 @@ describe('the repository', () => {
 
   // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
   // moment its constraint is loosened, which a runtime assertion cannot see.
-  it('refuses every generic write of the table, and the named ones without the proof, at compile time', () => {
+  it('carries the namedWrites mark, refusing every generic write, and the named ones without the proof, at compile time', () => {
+    // The mark itself, as a type: a table that lost it fails this assignment.
+    const marked: NamedWrites = adminInvitations;
     const id = ADMIN;
     const where = eq(adminInvitations.email, INVITED);
 
     const writes = [
       (write: AuditWriter) =>
-        // @ts-expect-error — no generic insert: an invitation is an admin's to make.
+        // @ts-expect-error — the mark: no generic insert, since an invitation is an admin's to make.
         write.insert(adminInvitations, { email: INVITED, tokenHash: HASH_A }),
       (write: AuditWriter) =>
-        // @ts-expect-error — no generic update: the stamps are the named writes'.
+        // @ts-expect-error — the mark: no generic update, since the stamps are the named writes'.
         write.update(adminInvitations, { revokedAt: null }, where),
       (write: AuditWriter) =>
         // @ts-expect-error — nor by id.
         write.updateById(adminInvitations, id, { acceptedBy: id }),
       (write: AuditWriter) =>
-        // @ts-expect-error — no soft delete, though the table carries deleted_at.
+        // @ts-expect-error — the mark: no soft delete, though the table carries deleted_at.
         write.softDelete(adminInvitations, where),
       (write: AuditWriter) =>
         // @ts-expect-error — nor by id.
         write.softDeleteByIds(adminInvitations, [id]),
       (write: AuditWriter) =>
-        // @ts-expect-error — and no hard delete, which deleted_at alone refuses too.
+        // @ts-expect-error — the mark: no hard delete, which deleted_at alone refuses too.
         write.delete(adminInvitations, { id }),
       (write: AuditWriter) =>
         // @ts-expect-error — the insert takes the proof first.
@@ -444,6 +448,8 @@ describe('the repository', () => {
         write.revokeAdminInvitation(id),
     ];
 
+    // And nothing at runtime: the cast adds no property for drizzle-kit to see.
+    expect(marked.$writes).toBeUndefined();
     expect(writes).toHaveLength(10);
   });
 });

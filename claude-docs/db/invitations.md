@@ -74,11 +74,12 @@ table, reusing the `workspace_role` enum declared beside `workspaces`.
   a row takes, so `updated_by` is who revoked.
 - **Written only through named calls.** A pending row is what will authorise
   a grant, so a generic insert would let any service mint its own user an
-  admin invitation and accept it. `NotInvitation`, `{ tokenHash?: never }`,
-  takes the table off the writer's generic insert, both updates, both soft
-  deletes and the hard delete, as `NotPauseLedger` does for MB.62's table;
-  `workspace_invitations` carries a `token_hash` too and is already off those
-  methods, which take only an unscoped table. In their place:
+  admin invitation and accept it. The table is marked `namedWrites` in its
+  schema file, which takes it off every generic writer method, as it does
+  MB.62's pause table ([`write-path.md`](write-path.md#table-marks-mb198),
+  "Table marks"; MB.198). The named writes live beside the finder, in
+  `admin-invitations.ts`, and `writerFor` spreads them into the writer.
+  In place of the generic methods:
   - **`insertAdminInvitation(admin, values)`**, under the `SiteAdmin` proof,
     takes the email, the token, the note and an optional expiry, and writes
     the token's hash and nothing else, so a row starts pending even if a

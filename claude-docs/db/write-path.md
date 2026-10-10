@@ -56,6 +56,59 @@ The read-side finder builder that applies `deleted_at IS NULL` (M1.20)
 deliberately lands on top of this rather than beside it — see ["Soft-delete
 filtering and the partial-index convention"](soft-delete.md).
 
+### Table marks (MB.198)
+
+Some tables are written only through named writer methods, because a row
+authorises something or holds a state only a named call may move:
+`admin_role_change_pauses` (MB.62), opened and ended by
+`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and
+`admin_invitations` (MB.69), made, accepted and revoked by its named insert,
+accept and revoke. Such a table says so once, in its schema file:
+
+```ts
+export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));
+```
+
+`namedWrites`, in `src/db/table-marks.ts`, is a cast and nothing more. It
+types the table as `NamedWrites`, `{ readonly $writes: 'named' }`, and adds no
+property, so drizzle-kit and every query see the same object. Every generic
+writer method takes `Generic`, `{ $writes?: never }`, which a marked table
+cannot satisfy: the six unscoped ones (`insert`, `update`, `updateById`,
+`softDelete`, `softDeleteByIds`, `delete`), the five workspace-scoped ones
+and the three compendium-tier ones, so a marked two-tier table is off the
+proof-scoped methods too. `$writes` is a phantom key beside Drizzle's
+`$inferSelect`, so no column can be named like it. Both types are in
+`src/db/types.ts`.
+
+**Why a mark, not a marker per table.** Before it, each such table was
+refused by a type keyed on a column it alone happened to carry,
+`NotPauseLedger` on `ended_at` and `NotInvitation` on `token_hash`, each
+added to six signatures. A third named table would have added a third marker
+to every one of them, and an unrelated table that later took one of those
+column names would have been refused by accident. The mark is the table's
+own statement, and nothing else reads it.
+
+**Where the named writes live.** Beside the table's finders, in its
+repository file, rather than in `write.ts`: `admin-roles.ts` exports
+`adminRoleChangePauseWrites` and `admin-invitations.ts`
+`adminInvitationWrites`, each a function of a `WriterContext` (the
+transaction, the session, and the writer's own stamped `insert` and
+`update`), whose result `writerFor` spreads into the writer. So a new marked
+table touches its own repository file, and the writer's surface,
+`AuditWriter`, is where its methods are argued for, as before:
+`write.test.ts` still pins their number.
+
+**The guard.** `tests/support/db/probe-tables.ts` declares two marked
+probes, never created as tables: `switches`, unscoped, and `tiers`, with a
+nullable `workspace_id`. `write.test.ts` asserts with `@ts-expect-error`
+that every generic method refuses each, beside the same calls compiling
+against their unmarked twins, `herbs` and `tinctures`; the hard delete is
+also asserted against `pairs` marked, since `deleted_at` refuses it
+`switches` anyway. `npm run typecheck` is the check: a generic method that
+stops demanding `Generic` leaves a directive unused. Each marked table's
+schema test assigns the table to `NamedWrites`, so one that loses its mark
+fails too.
+
 ### `app.current_user_id`, published per transaction (M1.19)
 
 Before it calls `fn`, `withAudit` publishes the session's acting user to

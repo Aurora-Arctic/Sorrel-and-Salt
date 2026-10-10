@@ -1,5 +1,6 @@
-import type { SQL } from 'drizzle-orm';
-import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
+import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { adminInvitations } from '../../modules/identity/schema/admin-invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
@@ -15,6 +16,7 @@ import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
+import type { AuditSession, Generic } from '../types';
 
 // The repository's types: the table shapes a finder or writer admits, the
 // options `selectFrom` reads, the writer `withAudit` hands out, and the
@@ -67,19 +69,12 @@ export type NotIngredientScoped = { ingredientId?: never };
 // insert and the finders.
 export type NotAppendOnly = { change?: never };
 
-// And for the pause ledger (MB.62): `admin_role_change_pauses` is opened and
-// ended by the writer's two named calls alone, so a pause cannot be inserted
-// already ended, reopened or deleted, and its ended pair comes from the
-// session. Its `ended_at` column marks it, and `NotPauseLedger` takes it off
-// the generic insert, every update and every delete below.
-export type NotPauseLedger = { endedAt?: never };
-
-// And for the admin invitation (MB.69): `admin_invitations` is what will
-// authorise a grant, so a row is made only by the writer's named insert under
-// the `SiteAdmin` proof, and is stamped accepted or revoked only by its two
-// named writes. Its `token_hash` marks it; `workspace_invitations` carries
-// one too, and is already off every method below as `WorkspaceScoped`.
-export type NotInvitation = { tokenHash?: never };
+// And for a table written only through its own named calls: the schema file
+// marks it `namedWrites` (MB.198), and every generic method below, unscoped,
+// workspace-scoped and compendium-tier, takes `Generic` and so refuses it.
+// The mark is the table's own statement, where the markers it replaced keyed
+// a refusal on a column one table happened to carry
+// (claude-docs/db/write-path.md, "Table marks").
 
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
@@ -191,15 +186,41 @@ export interface Derived<TRow extends Record<string, unknown>> {
   fields: { [K in keyof TRow]: SQL<TRow[K]> };
 }
 
+/**
+ * `withAudit`'s transaction, spelled from Drizzle's types rather than as
+ * `typeof db`: the client is importable only where its exemption is pinned,
+ * and a file holding named writes needs the transaction, not the client.
+ */
+export type WriterTransaction = PgTransaction<
+  PostgresJsQueryResultHKT,
+  Record<string, never>,
+  ExtractTablesWithRelations<Record<string, never>>
+>;
+
+/**
+ * What a marked table's named writes are built from (MB.198): the
+ * transaction, the session, and the writer's own stamped insert and update,
+ * which skip a soft-deleted row as every write does. `writerFor` hands it to
+ * the repository file holding a table's finders, and spreads the writes that
+ * file returns into the writer. The insert and the update return what the
+ * named write's signature says, as the writer's own cast does.
+ */
+export interface WriterContext {
+  tx: WriterTransaction;
+  session: AuditSession;
+  insert(table: PgTable, values: object): Promise<never>;
+  update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
+}
+
 /** What `withAudit` hands its callback: every write, stamped from the session. */
 export interface AuditWriter {
   /** Insert one row, stamping created_* and updated_* from the session. */
-  insert<TTable extends PgTable & Unscoped & NotPauseLedger & NotInvitation>(
+  insert<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Writable<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
   /** Insert one row into the workspace the proof names, filling `workspace_id` from it. */
-  insertInWorkspace<TTable extends PgTable & WorkspaceScoped>(
+  insertInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     values: WritableInWorkspace<TTable>,
@@ -208,7 +229,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation>(
+  update<TTable extends PgTable & Unscoped & NotAppendOnly & Generic>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -218,15 +239,13 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<
-    TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation & Identified,
-  >(
+  updateById<TTable extends PgTable & Unscoped & NotAppendOnly & Generic & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, with `workspace_id = membership.workspaceId` ANDed onto the `where`. */
-  updateInWorkspace<TTable extends PgTable & WorkspaceScoped>(
+  updateInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     values: Partial<WritableInWorkspace<TTable>>,
@@ -238,7 +257,7 @@ export interface AuditWriter {
    * `drizzle-orm` at runtime — so the predicate every entity update needs is
    * built by the writer instead.
    */
-  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Identified>(
+  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic & Identified>(
     membership: Membership,
     table: TTable,
     id: string,
@@ -249,25 +268,20 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Generic>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, scoped by the proof. */
-  softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped>(
+  softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, naming the one row by its own id, for `updateByIdInWorkspace`'s reason. */
-  softDeleteByIdInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Identified>(
+  softDeleteByIdInWorkspace<
+    TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic & Identified,
+  >(
     membership: Membership,
     table: TTable,
     id: string,
@@ -278,13 +292,7 @@ export interface AuditWriter {
    * nothing without a statement.
    */
   softDeleteByIds<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation &
-      Identified,
+    TTable extends PgTable & SoftDeletable & Unscoped & NotAppendOnly & Generic & Identified,
   >(
     table: TTable,
     ids: readonly string[],
@@ -294,7 +302,7 @@ export interface AuditWriter {
    * `workspace_id` with null — the site role's counterpart of
    * `insertInWorkspace`, under its proof.
    */
-  insertInCompendium<TTable extends PgTable & TwoTier>(
+  insertInCompendium<TTable extends PgTable & TwoTier & Generic>(
     admin: SiteAdmin,
     table: TTable,
     values: WritableInWorkspace<TTable>,
@@ -304,14 +312,16 @@ export interface AuditWriter {
    * A workspace's row, or a soft-deleted one, is not reached: nothing is
    * written and nothing returned.
    */
-  updateByIdInCompendium<TTable extends PgTable & TwoTier & Identified>(
+  updateByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
     admin: SiteAdmin,
     table: TTable,
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** Soft-delete the one live compendium row with this id, on the same terms. */
-  softDeleteByIdInCompendium<TTable extends PgTable & TwoTier & SoftDeletable & Identified>(
+  softDeleteByIdInCompendium<
+    TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
+  >(
     admin: SiteAdmin,
     table: TTable,
     id: string,
@@ -416,14 +426,7 @@ export interface AuditWriter {
    * matching nothing deletes nothing without a statement, and a match naming
    * no column is refused rather than emptying the table.
    */
-  delete<
-    TTable extends PgTable &
-      HardDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & NotAppendOnly & Generic>(
     table: TTable,
     match: ColumnMatch<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
