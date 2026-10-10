@@ -258,8 +258,9 @@ export function actionVerb(part: Part): string {
 
 /**
  * The closing line every mail ends on: whoever did not ask for it can ignore
- * it. `when` is the template's own way of saying who that is. One string
- * rather than JSX text around an expression, which would render as two nodes.
+ * it. `when` is the template's own way of saying who that is. One string,
+ * not JSX text around an expression, which React renders with a `<!-- -->`
+ * between the two in the HTML.
  */
 export function IgnoreNote({ when }: { when: string }) {
   return <Paragraph muted>{`${when}, you can ignore this email.`}</Paragraph>;
