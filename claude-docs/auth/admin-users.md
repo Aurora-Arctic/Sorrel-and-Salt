@@ -134,3 +134,90 @@ half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
 signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
 and approves an unverified one through the warning.
+
+## Granting and revoking admin (MB.59)
+
+An admin makes another user an admin, or stops one being one, from that
+person's row on `/admin/users`, so a second admin is no longer an `UPDATE` in
+`psql`. The rules, and the approaches rejected, are
+[`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
+"The primary admin", "Granting" and "Revoking"; this is the shape.
+
+- **One service, two checks.** `setUserRole(session, userId, role, note?)`
+  (`src/modules/identity/services/user-role.ts`) asserts the site role itself,
+  by direct call, and the `setUserRole` mutation in front of it carries the
+  `admin` scope as the second check ([`graphql/schema.md`](../graphql/schema.md),
+  "Auth scopes"). The page has no path of its own: the row's control sends the
+  mutation.
+- **Each change is a ledger row, written by the database.** The role is an
+  `updateById` on the user's row through `withAudit`, declared
+  `{ via: 'admin', note }`, `note` being the confirmation's optional reason, a
+  blank one stored as none. The trigger on `users` writes an `admin` `grant`
+  or `revoke` row in `user_privilege_changes` beside it, stamped as the admin
+  from the session, never the request (MB.195); the service writes none.
+- **A grant sets `canCreateWorkspace` in the same write**, since MB.177's
+  CHECK holds every admin to it, so a grant to a user without the flag is two
+  rows at one instant, `admin` and `create_workspace`, and a grant to one who
+  holds it the `admin` row alone. **A revoke leaves the flag**, the grant
+  having been a vouching too, and leaves memberships and the `created_by` of
+  everything the admin wrote: rows are stamped with a person, not a role.
+- **Any live user may be granted, verified or not.** Confirming who someone is
+  is the granting admin's job, from the row's sign-in methods and verified
+  mark; the confirmation warns when the address is unverified, since a grant,
+  like an approval, keeps the account from MB.67's sweep (MB.204, MB.205).
+  The grantee must already have an account; inviting by email is MB.70's.
+- **A change that changes nothing is refused**, with a `Forbidden` naming the
+  user: granting to an admin, or revoking from someone who is not one. No
+  column changes, so the trigger records nothing.
+- **The primary admin cannot be revoked**, by anyone, itself included. It is
+  the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL` when the check
+  runs, read from the variable at each check by `isPrimaryAdmin` (in
+  `user-role.ts`, over `src/lib/primary-admin.ts`), compared case-insensitively. The refusal is a
+  `Forbidden` in plain words that name no variable, the words its row shows:
+  "This is the primary admin and can't be removed. Changing who the primary
+  admin is takes a change to the site's configuration." How to change it is
+  below, and in [`admin-bootstrap.md`](admin-bootstrap.md).
+- **The count is the fallback.** A revoke locks every live admin row
+  `for update`, in id order, through the writer's `lockLiveAdmins`, then
+  refuses with a `Forbidden` if the target is the only one. Two admins
+  revoking each other at once queue on the lock; the second reads the first's
+  committed revoke, finds itself counting one, and is refused, so exactly one
+  admin is left. While the primary admin exists the count is never what
+  refuses; it guards the gap a change of the variable opens, before the new
+  address's first qualifying sign-in, or for good if it never makes one.
+- **A revoke takes effect on the next request.** The revoked admin's sessions
+  stay valid, since they are still a user, and no new session is issued; their
+  next request reads `role: 'user'` off the users row, so `/admin` and every
+  admin mutation close to them. That holds because Better Auth's
+  `session.cookieCache` is off, which `tests/lib/auth.test.ts` pins in its
+  "session lifetimes" block: a cache would answer from the cookie until its
+  TTL ran out.
+- **A soft-deleted user is `NotFound`**, as an unknown id is.
+
+**Changing the primary admin.** Set `ADMIN_BOOTSTRAP_EMAIL` to the new address
+on the Vercel project and redeploy ([`config.md`](config.md)); the new address
+is promoted at its next Google or Discord sign-in, or when it verifies the
+address by mail ([`admin-bootstrap.md`](admin-bootstrap.md)). The previous
+primary admin keeps `role: 'admin'` and is simply no longer protected: any
+admin may now revoke them like any other. Between the redeploy and the new
+address's promotion nobody is protected, and the count above is what keeps a
+revoke from leaving no admin.
+
+**Any future user-deletion path must refuse the primary admin.** v1 deletes no
+user but the provisional-account sweep, which only ever reaches an unverified
+account holding no privilege. A path added later that soft-deletes or removes
+a `users` row must call `isPrimaryAdmin` and refuse, as the revoke does.
+
+**Tests.** `tests/modules/identity/services/user-role.test.ts` covers each
+write, its stamps and its ledger rows; the unverified grantee; the trigger
+refusing the same write undeclared; each non-admin fixture user refused by
+direct call, with the same call proven to succeed for E; the repeated change
+refused with nothing written; memberships and `created_by` surviving a revoke;
+the primary admin refused for another admin and for itself, with the same
+revoke succeeding once the variable names someone else; the last admin
+refused with no primary admin in the fixture; and two real concurrent revokes
+leaving one admin. `tests/db/admin-revocation.test.ts` reads a revoked admin's
+next request through the real session reader.
+`tests/modules/identity/graphql/user-role.test.ts` is the transport's half, a
+signed-out caller and the scope are `tests/db/graphql-query-scopes.test.ts`'s,
+and `tests/e2e/admin.spec.ts` grants and revokes against the built server.

@@ -22,7 +22,7 @@
 | `provisional-users.ts` | The provisional-account delete                                                                                                                                                                                                        |
 | `invitations.ts`       | Both tiers' invitation finders, the token read among the four that take no proof (MB.69; by tier since MB.202), and the named insert, accept and revoke, which `writerFor` spreads into the writer (MB.198)                           |
 | `tokens.ts`            | `hashToken`, the one place a link's token is hashed, so no caller holds a hash (MB.69)                                                                                                                                                |
-| `admin-roles.ts`       | The open admin-role-change pause, under the `SiteAdmin` proof (MB.62), and the pause ledger's named pause and resume, which `writerFor` spreads into the writer (MB.198)                                                              |
+| `admin-roles.ts`       | The open admin-role-change pause, under the `SiteAdmin` proof (MB.62), the pause ledger's named pause and resume, and the live admins locked for a revoke (MB.59), which `writerFor` spreads into the writer (MB.198)                 |
 
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` and `existsIn` are exported from `select.ts`

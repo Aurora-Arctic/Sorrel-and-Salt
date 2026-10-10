@@ -80,6 +80,14 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)
 
+### Approving workspace creation (M5.8)
+
+In [`auth/admin-users.md`](auth/admin-users.md#approving-workspace-creation-m58).
+
+### Granting and revoking admin (MB.59)
+
+An admin grants or revokes admin from a user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; a grant sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be revoked, a count under a `for update` lock refuses leaving no admin, and a revoke takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#granting-and-revoking-admin-mb59).
+
 ## Plugins (MB.74)
 
 `lastLoginMethod` is registered everywhere, its cookie marking the browser's last provider with no database write, and `admin` outside production for impersonation alone; a table rules on every other plugin and option, with `oAuthProxy` scheduled and `organization` never. [`auth/plugins.md`](auth/plugins.md)

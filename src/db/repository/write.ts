@@ -9,7 +9,7 @@ import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-d
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
-import { adminRoleChangePauseWrites } from './admin-roles';
+import { adminRoleWrites } from './admin-roles';
 import { invitationWrites } from './invitations';
 import { existsIn } from './select';
 import type { Membership } from '@/modules/coven';
@@ -157,7 +157,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
           ),
         ),
       ),
-    ...adminRoleChangePauseWrites(context),
+    ...adminRoleWrites(context),
     ...invitationWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);

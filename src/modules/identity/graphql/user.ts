@@ -5,6 +5,7 @@ import { userRole } from '../schema/users';
 import { setEmail } from '../services/email';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
+import { setUserRole } from '../services/user-role';
 import { grantWorkspaceCreation, revokeWorkspaceCreation } from '../services/workspace-creation';
 import type { UserRow } from '../types';
 
@@ -121,3 +122,25 @@ for (const { field, description, write } of CREATION_WRITES) {
     }),
   );
 }
+
+// MB.59's grant and revoke: the site admin's alone, scoped here and refused
+// again by the service, which is the real gate. The note is the
+// confirmation's optional reason, kept on the ledger row the trigger writes;
+// the actor is the session's, never an argument.
+builder.mutationField('setUserRole', (t) =>
+  t.field({
+    type: UserRef,
+    description:
+      'Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.',
+    args: {
+      userId: t.arg.id({ required: true }),
+      role: t.arg({ type: UserRoleEnum, required: true }),
+      note: t.arg.string(),
+    },
+    authScopes: { admin: true },
+    resolve: (_root, { userId, role, note }, { session }) => {
+      if (!session) throw new Forbidden();
+      return setUserRole(session, userId, role, note ?? undefined);
+    },
+  }),
+);

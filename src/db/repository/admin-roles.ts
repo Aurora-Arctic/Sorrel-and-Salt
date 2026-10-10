@@ -1,6 +1,7 @@
-import { and, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { applyAudit } from '../audit';
 import { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
+import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
 import { selectFrom } from './select';
@@ -23,16 +24,27 @@ export async function findOpenAdminRoleChangePause(
 }
 
 /**
- * The pause ledger's two named writes (MB.62), beside its finder rather than
- * in `write.ts`: the table is marked `namedWrites`, so these are the only
- * writes it takes, and `writerFor` spreads them into the writer (MB.198).
+ * The admin role's writer methods, beside the pause's finder rather than in
+ * `write.ts`: the pause ledger's two named writes (MB.62), the only writes its
+ * `namedWrites` table takes, and the lock a revoke counts under (MB.59).
+ * `writerFor` spreads them into the writer (MB.198).
  */
-export function adminRoleChangePauseWrites({
+export function adminRoleWrites({
   tx,
   session,
   update,
-}: WriterContext): Pick<AuditWriter, 'pauseAdminRoleChanges' | 'resumeAdminRoleChanges'> {
+}: WriterContext): Pick<
+  AuditWriter,
+  'pauseAdminRoleChanges' | 'resumeAdminRoleChanges' | 'lockLiveAdmins'
+> {
   return {
+    // Every live admin, locked in id order, so two revokes at once queue on
+    // the first row rather than each holding one the other wants.
+    lockLiveAdmins: () =>
+      selectFrom(users, and(notSoftDeleted(users), eq(users.role, 'admin')), {
+        lockIn: tx,
+        lockOrder: users.id,
+      }),
     // No conflict target: the one-open index is an expression index, and the
     // generated primary key is the only other unique.
     pauseAdminRoleChanges: () =>

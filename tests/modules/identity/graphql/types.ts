@@ -23,3 +23,7 @@ export interface GrantedUserResult {
 export interface RevokedUserResult {
   revokeWorkspaceCreation: { id: string; canCreateWorkspace: boolean };
 }
+
+export interface SetUserRoleResult {
+  setUserRole: { id: string; role: string; canCreateWorkspace: boolean };
+}

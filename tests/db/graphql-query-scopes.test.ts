@@ -256,6 +256,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   revokeWorkspaceCreation: write(
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
   ),
+  setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort" }) { id } }`,
   ),
@@ -364,6 +365,8 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // M5.8: who may create a coven, granted and revoked by an admin.
   grantWorkspaceCreation: { governs: 'workspace creation' },
   revokeWorkspaceCreation: { governs: 'workspace creation' },
+  // MB.59: who is an admin, granted and revoked by an admin.
+  setUserRole: { governs: 'admin role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },

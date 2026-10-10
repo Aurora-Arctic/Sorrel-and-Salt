@@ -161,6 +161,18 @@ export interface LeftJoin<TJoined extends PgTable> {
   on: SQL;
 }
 
+/**
+ * How `selectFrom` reads rows a write in the same transaction is about to
+ * decide on: in the writer's transaction, locked `for update` until it ends,
+ * and in `lockOrder`, so two writers locking the same rows take them in one
+ * order rather than deadlocking. A row another transaction changes while this
+ * one waits is read as it committed, so a row that no longer matches drops out.
+ */
+export interface Locked {
+  lockIn: WriterTransaction;
+  lockOrder: AnyPgColumn;
+}
+
 /** A row read under a `LeftJoin`, and the row joined to it. */
 export interface JoinedRow<TRow, TJoined> {
   row: TRow;
@@ -383,6 +395,13 @@ export interface AuditWriter {
    * session. No row comes back when none is open.
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
+  /**
+   * The live admins, locked `for update` until the transaction ends (MB.59):
+   * what a revoke counts before it writes, so two admins revoking each other
+   * at once cannot both leave the other the last. A read, and in the writer
+   * only because the lock must be taken in the transaction that writes.
+   */
+  lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
   /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
