@@ -96,13 +96,18 @@ test('sends an unverified account to the email page instead', async ({ page }) =
 });
 
 // Sign Out beside the heading (added in MB.63's PR, on the owner's call).
-// The served build cannot complete it: Better Auth refuses the plain-http
-// origin the remote browser reaches it on, so the call itself is
-// tests/db/sign-out.test.ts's and the full load tests/components/SignOutButton's.
-// Here the button is in place, axe-clean, and a refusal is said beside it.
+// The refusal is routed rather than awaited from Better Auth: whether it
+// refuses depends on the origin the browser reaches the server on, a local
+// one in CI and the remote browser's plain-http one in the devcontainer. The
+// call itself is tests/db/sign-out.test.ts's and the full load
+// tests/components/SignOutButton's. Here the button is in place, axe-clean,
+// and a refusal is said beside it.
 test('offers Sign Out beside the heading, saying so when the endpoint refuses', async ({
   page,
 }) => {
+  await page.route('**/api/auth/sign-out', (route) =>
+    route.fulfill({ status: 403, json: { code: 'INVALID_ORIGIN', message: 'Invalid origin' } }),
+  );
   await signInAs(page, 'signing-out@account-page.test');
   await page.goto('/account');
   const main = page.getByRole('main');
