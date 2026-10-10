@@ -86,7 +86,7 @@ export function listAstrologyValues(
   filter: AstrologyValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<AstrologyValueRow>[]> {
-  return cachedPage(field, readableFilter(filter) ?? {}, page);
+  return cachedPage(field, readableFilter(filter), page);
 }
 
 /**
@@ -98,7 +98,7 @@ export function countAstrologyValues(
   filter: AstrologyValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return cachedCount(field, readableFilter(filter) ?? {}, start);
+  return cachedCount(field, readableFilter(filter), start);
 }
 
 /**

@@ -9,7 +9,7 @@ export function plural(count: number, one: string, many: string): string {
 
 /** The items as a sentence lists them: "A", "A and B", "A, B and C". */
 export function joinAnd(items: readonly string[]): string {
-  if (items.length <= 1) return items[0] ?? '';
+  if (items.length <= 1) return items.join('');
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 

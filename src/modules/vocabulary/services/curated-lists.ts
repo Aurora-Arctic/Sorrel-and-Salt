@@ -11,8 +11,14 @@ import { RowId } from '../../../lib/validation';
 /**
  * The filter as the repository reads it, its query trimmed and a blank one
  * dropped; `undefined` when `idKey` holds an id that is not a uuid, which
- * names nothing and would be a driver error at the comparison.
+ * names nothing and would be a driver error at the comparison. Without an
+ * `idKey` there is no id to refuse, so the filter always reads.
  */
+export function readableFilter<Filter extends { query?: string }>(filter: Filter): Filter;
+export function readableFilter<Filter extends { query?: string }>(
+  filter: Filter,
+  idKey: Exclude<keyof Filter, 'query'>,
+): Filter | undefined;
 export function readableFilter<Filter extends { query?: string }>(
   filter: Filter,
   idKey?: Exclude<keyof Filter, 'query'>,
