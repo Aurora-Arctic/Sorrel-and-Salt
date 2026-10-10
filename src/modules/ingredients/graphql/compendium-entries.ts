@@ -5,9 +5,9 @@ import {
   deleteCompendiumEntry,
   updateCompendiumEntry,
 } from '../services/compendium';
-import { IngredientElementEnum, IngredientRef, NomenclatureEnum } from './ingredient';
-import { ReferenceLinkInput } from './references';
-import { IngredientDeityInput, SubstituteInput } from './workspace-ingredients';
+import { clearIngredientChildren } from '../loaders/ingredient-children';
+import { IngredientRef } from './ingredient';
+import { ingredientInputFields } from './ingredient-input';
 
 // The compendium's three writes (M5.5), the site admin's alone: scoped here
 // and refused again by the service, which is the real gate, as M5.6's
@@ -20,24 +20,7 @@ import { IngredientDeityInput, SubstituteInput } from './workspace-ingredients';
  * entry and the shared schema gives it no default here.
  */
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
-  fields: (t) => ({
-    name: t.string({ required: true }),
-    canonicalName: t.string(),
-    nomenclature: t.field({ type: NomenclatureEnum, required: true }),
-    form: t.string(),
-    formId: t.id({ description: 'The curated form picked for `form`.' }),
-    description: t.string(),
-    elements: t.field({ type: [IngredientElementEnum] }),
-    planets: t.stringList(),
-    zodiacSigns: t.stringList(),
-    deities: t.field({ type: [IngredientDeityInput] }),
-    colors: t.stringList(),
-    safetyNotes: t.string(),
-    substitutes: t.field({ type: [SubstituteInput] }),
-    references: t.field({ type: [ReferenceLinkInput] }),
-    folkNames: t.stringList(),
-    categoryIds: t.idList({ description: 'The categories it is filed under.' }),
-  }),
+  fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: false }),
 });
 
 // An update replaces the entry, so a field left out would be cleared — the
@@ -46,30 +29,7 @@ const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput',
 // does for a coven's (MB.159).
 const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientUpdateInput', {
   description: 'The whole entry, replacing the row. Every field is sent, and "" or [] clears one.',
-  fields: (t) => ({
-    name: t.string({ required: true }),
-    canonicalName: t.string({ required: true }),
-    nomenclature: t.field({ type: NomenclatureEnum, required: true }),
-    form: t.string({ required: true }),
-    formId: t.id({
-      required: true,
-      description: 'The curated form picked for `form`; "" when there is none.',
-    }),
-    description: t.string({ required: true }),
-    elements: t.field({ type: [IngredientElementEnum], required: true }),
-    planets: t.stringList({ required: true }),
-    zodiacSigns: t.stringList({ required: true }),
-    deities: t.field({ type: [IngredientDeityInput], required: true }),
-    colors: t.stringList({ required: true }),
-    safetyNotes: t.string({ required: true }),
-    substitutes: t.field({ type: [SubstituteInput], required: true }),
-    references: t.field({ type: [ReferenceLinkInput], required: true }),
-    folkNames: t.stringList({ required: true }),
-    categoryIds: t.idList({
-      required: true,
-      description: 'The categories it is filed under; [] when none.',
-    }),
-  }),
+  fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: true }),
 });
 
 const END_REDIRECT =
@@ -106,13 +66,7 @@ builder.mutationField('updateCompendiumIngredient', (t) =>
         ...input,
         endRedirect: endRedirect ?? undefined,
       });
-      // As `updateIngredient`: an earlier root field of this request may have
-      // read this entry's children, and the answer must be this write's.
-      loaders.categoriesByIngredient.clear(row);
-      loaders.folkNamesByIngredient.clear(row);
-      loaders.substitutesByIngredient.clear(row);
-      loaders.deitiesByIngredient.clear(row);
-      loaders.referencesByIngredient.clear(row);
+      clearIngredientChildren(loaders, row);
       return row;
     },
   }),
