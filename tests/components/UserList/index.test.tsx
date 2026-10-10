@@ -1085,8 +1085,7 @@ describe('UserList admin role while admin changes are paused', () => {
   });
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
-  const PAUSED_REASON =
-    'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
+  const PAUSED_REASON = 'Admin changes are paused by the primary admin.';
 
   it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
     let calls = 0;
@@ -1157,5 +1156,37 @@ describe('UserList admin role while admin changes are paused', () => {
         name: 'Revoke admin from Ada Fixturewort',
       }),
     ).toHaveAccessibleDescription(/^This is the primary admin/);
+  });
+});
+
+// A locked control's tip is placed against the viewport by measuring it at
+// the origin; reopened at the same spot, it must land there again rather than
+// stay at the origin (the owner's report).
+describe('UserList locked control tip', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('places the tip by its button each time it opens, not only the first', () => {
+    // jsdom lays nothing out, so the button and the tip are given boxes.
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const box =
+        this.tagName === 'BUTTON'
+          ? { top: 300, left: 200, width: 80, height: 30 }
+          : { top: 0, left: 0, width: 100, height: 40 };
+      return { ...box, right: box.left + box.width, bottom: box.top + box.height } as DOMRect;
+    });
+    render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }] })} />);
+    const revoke = screen.getByRole('button', { name: 'Revoke admin from Ada Fixturewort' });
+    const tip = () => screen.getByText(/^This is the primary admin/);
+
+    fireEvent.focus(revoke);
+    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
+    fireEvent.blur(revoke);
+    fireEvent.focus(revoke);
+
+    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
   });
 });

@@ -200,8 +200,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   (`canToggle`), is locked as the primary admin's Revoke is: in view,
   `aria-disabled`, described by the service's own refusal in a tip,
   `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
-  both): "Admin changes are paused, so no one can be made an admin or stop
-  being one until they are resumed." Activating it opens nothing, sends
+  both): "Admin changes are paused by the primary admin." Activating it opens nothing, sends
   nothing and mounts the reason afresh as an alert. The primary admin's
   controls stay usable, since the pause exempts it, and its own Revoke keeps
   its own reason. The service still refuses: the lock only reflects it.

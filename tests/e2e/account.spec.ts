@@ -94,3 +94,23 @@ test('sends an unverified account to the email page instead', async ({ page }) =
   await page.goto('/account/email?next=%2Faccount');
   await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
 });
+
+// Sign Out beside the heading (added in MB.63's PR, on the owner's call):
+// Better Auth's own sign-out, then a full load of `/`, signed out.
+test('signs out from the account page, landing on / signed out', async ({ page }) => {
+  await signInAs(page, 'signing-out@account-page.test');
+  await page.goto('/account');
+  const header = page.getByRole('main').getByRole('heading', { level: 1, name: 'Your Account' });
+  await expect(header).toBeVisible();
+  const signOut = page.getByRole('main').getByRole('button', { name: 'Sign Out' });
+  await expect(signOut).toBeEnabled();
+  await assertNoAccessibilityViolations(page);
+
+  await signOut.click();
+
+  await expect(page).toHaveURL(/\/$/);
+  // The session is gone, not just the cookie on this page: the browser still
+  // sends the extra header, so it is the row that was revoked.
+  await page.goto('/account');
+  expect(new URL(page.url()).pathname).toBe('/sign-in');
+});

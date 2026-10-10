@@ -252,8 +252,7 @@ the good ones while it is dealt with, and back on. The argument is
   click is not an error. Nothing in v1 lists the rows.
 - **While paused, `setUserRole` refuses every other admin.** It reads the
   open pause first, and refuses a grant or a revoke from any admin but the
-  primary one with "Admin changes are paused, so no one can be made an admin
-  or stop being one until they are resumed.", naming nobody. Nothing
+  primary one with "Admin changes are paused by the primary admin.", naming a role and no person. Nothing
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good admins is the same attack from the
   other side.

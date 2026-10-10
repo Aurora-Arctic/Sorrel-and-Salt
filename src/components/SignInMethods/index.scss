@@ -19,7 +19,10 @@
   margin-inline: auto;
 }
 
-.account-page__heading {
+// The heading and Sign Out, a `.page-header`. Compounded with it, whose
+// primitive is `body .page-header` in the app, so its bottom margin gives way
+// to the column's gap.
+.page-header.account-page__heading {
   margin: 0;
   width: 100%;
   max-width: 28rem;

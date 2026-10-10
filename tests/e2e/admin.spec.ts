@@ -394,10 +394,9 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
   await assertNoAccessibilityViolations(page);
 
-  // The other admin's Grant is locked, in words that name nobody; tried from
+  // The other admin's Grant is locked, in words that name no person; tried from
   // the keyboard, it says why and opens nothing. The service refuses the same.
-  const PAUSED_REASON =
-    'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
+  const PAUSED_REASON = 'Admin changes are paused by the primary admin.';
   await signInAgainAs(page, other);
   await page.goto(list);
   await expect(status).toBeVisible();

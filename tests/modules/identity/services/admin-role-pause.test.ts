@@ -30,8 +30,7 @@ const GRANTEE = '00000000-0000-0000-0000-0000000000a3';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
 
-const PAUSED_REFUSAL =
-  'Admin changes are paused, so no one can be made an admin or stop being one until they are resumed.';
+const PAUSED_REFUSAL = 'Admin changes are paused by the primary admin.';
 const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin changes';
 
 async function insertUser(id: string, local: string, role: 'user' | 'admin'): Promise<void> {

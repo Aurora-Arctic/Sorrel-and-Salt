@@ -489,7 +489,11 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   links to each section by its prefixed id (`#account-name`,
   `#account-email`, `#account-sign-in-methods`), and a hairline `<hr>`
   rules each section from the next (on the owner's call). A section a link
-  lands on stops clear of the top inset.
+  lands on stops clear of the top inset. Beside the heading, in a
+  `.page-header`, is Sign Out (`SignOutButton`,
+  [`components/sign-out-button.md`](../components/sign-out-button.md)):
+  Better Auth's own sign-out, then a full load of `/` (added in MB.63's PR,
+  on the owner's call).
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
