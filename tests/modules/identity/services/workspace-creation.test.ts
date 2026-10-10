@@ -1,10 +1,15 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { users } from '@/modules/identity/schema/users';
-import { grantWorkspaceCreation, revokeWorkspaceCreation } from '@/modules/identity';
+import {
+  grantWorkspaceCreation,
+  pauseAdminRoleChanges,
+  resumeAdminRoleChanges,
+  revokeWorkspaceCreation,
+} from '@/modules/identity';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix, refusalOf } from '../../../support/db/privileges';
@@ -266,5 +271,65 @@ describe('revokeWorkspaceCreation', () => {
 
     expect(await flagOf(DELETED)).toMatchObject({ can_create_workspace: true });
     expect(await changes()).toEqual([]);
+  });
+});
+
+// MB.63, amended on the owner's call: while the primary admin has paused admin
+// changes, approving and revoking coven creation are paused too, for every
+// admin but the primary one.
+describe('approving and revoking while admin changes are paused', () => {
+  const PRIMARY = '00000000-0000-0000-0000-0000000000b3';
+  const PRIMARY_EMAIL = 'primary@creation-pause.test';
+  const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
+
+  beforeEach(async () => {
+    await sql`truncate admin_role_change_pauses`;
+    await sql`delete from users where id = ${PRIMARY}`;
+    await asManualFix(sql, async (tx) => {
+      await tx`
+        insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+        values (${PRIMARY}, 'Primary Fixturewort', ${PRIMARY_EMAIL}, true, 'admin', true, ${PRIMARY}, ${PRIMARY})
+      `;
+    });
+    await sql`truncate user_privilege_changes`;
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
+    await pauseAdminRoleChanges(asUser(AS_PRIMARY));
+  });
+
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    await sql`truncate admin_role_change_pauses`;
+  });
+
+  // E is a live admin, not the primary one; the same calls succeed once
+  // resumed, so it is the pause that refuses.
+  it('refuses another admin approving or revoking, writing no ledger row', async () => {
+    expect(E.role).toBe('admin');
+
+    await expect(grantWorkspaceCreation(asUser(E), PENDING)).rejects.toThrow(
+      'Admin changes are paused by the primary admin.',
+    );
+    await expect(revokeWorkspaceCreation(asUser(E), A.id)).rejects.toThrow(Forbidden);
+    expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
+    expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });
+    expect(await changes()).toEqual([]);
+
+    await resumeAdminRoleChanges(asUser(AS_PRIMARY));
+    await expect(grantWorkspaceCreation(asUser(E), PENDING)).resolves.toMatchObject({
+      canCreateWorkspace: true,
+    });
+    await expect(revokeWorkspaceCreation(asUser(E), A.id)).resolves.toMatchObject({
+      canCreateWorkspace: false,
+    });
+  });
+
+  it('lets the primary admin approve and revoke, each recorded as usual', async () => {
+    await grantWorkspaceCreation(asUser(AS_PRIMARY), PENDING);
+    await revokeWorkspaceCreation(asUser(AS_PRIMARY), PENDING);
+
+    expect((await changes()).map(({ change, created_by }) => [change, created_by])).toEqual([
+      ['grant', PRIMARY],
+      ['revoke', PRIMARY],
+    ]);
   });
 });

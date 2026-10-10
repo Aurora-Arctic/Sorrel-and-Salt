@@ -410,6 +410,11 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
   await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  // Coven creation's Approve is locked the same way (amended on the owner's call).
+  const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+  await expect(approve).toHaveAttribute('aria-disabled', 'true');
+  await expect(approve).toHaveAccessibleDescription(PAUSED_REASON);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
   // And the primary admin resumes.
   await signInAgainAs(page, primary);

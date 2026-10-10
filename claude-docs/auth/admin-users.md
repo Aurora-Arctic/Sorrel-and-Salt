@@ -256,6 +256,11 @@ the good ones while it is dealt with, and back on. The argument is
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good admins is the same attack from the
   other side.
+- **Coven creation pauses too** (amended 2026-10-10, on the owner's call):
+  `grantWorkspaceCreation` and `revokeWorkspaceCreation` call the same
+  `assertChangesOpen` guard, exported from `admin-role-pause.ts`, so another
+  admin's approve or revoke is refused with the same `Forbidden` and writes no
+  ledger row while a pause is open.
 - **The primary admin is exempt**, so it can clean up without resuming first:
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
@@ -264,7 +269,8 @@ the good ones while it is dealt with, and back on. The argument is
   heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
-  Grant and Revoke are locked the same way
+  Grant and Revoke, and coven creation's Approve and Revoke, are locked the
+  same way
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
 
@@ -275,6 +281,9 @@ allowed while the variable names no one; each non-admin fixture user; a grant
 and a revoke by another admin refused while paused, writing no ledger row,
 and the same calls succeeding once resumed; and the primary admin's grant and
 revoke recorded while paused.
+`tests/modules/identity/services/workspace-creation.test.ts` covers another
+admin's approve and revoke refused while paused with no ledger row, the same
+calls succeeding once resumed, and the primary admin's recorded as usual.
 `tests/modules/identity/graphql/admin-role-pause.test.ts` is the transport's
 half, the stamps the session's whatever the request carries, and
 `tests/e2e/admin.spec.ts` pauses, refuses another admin's grant, and resumes

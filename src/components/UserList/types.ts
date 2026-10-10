@@ -121,6 +121,12 @@ export interface CreationControlProps {
   name: string;
   /** Whether the user's address is verified; Approve warns when it is not (MB.205). */
   emailVerified: boolean;
+  /**
+   * Whether admin changes are paused for the viewing admin (MB.63, amended on
+   * the owner's call to cover coven creation): its Approve or Revoke then
+   * says why it cannot be used.
+   */
+  paused?: boolean;
   action: CreationAction;
 }
 

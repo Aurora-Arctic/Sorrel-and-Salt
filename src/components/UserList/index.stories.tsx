@@ -159,7 +159,8 @@ export const AdminChangesPaused: Story = () => (
 );
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Grant and Revoke locked with the pause's reason.
+// tip, and every Grant, Revoke, Approve and coven-creation Revoke locked with
+// the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
   <Frame>
     <div className="page-header">

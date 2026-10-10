@@ -158,6 +158,7 @@ const UserRow = ({
             userId={user.id}
             name={user.name}
             emailVerified={user.emailVerified}
+            paused={changesPaused}
             action={user.canCreateWorkspace ? 'revoke' : 'approve'}
           />
         )}

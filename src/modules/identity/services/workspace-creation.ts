@@ -3,6 +3,7 @@ import { findOneById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
+import { assertChangesOpen } from './admin-role-pause';
 import { assertSiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
@@ -51,7 +52,8 @@ async function setFlag(
  * admin and recorded as a `grant` with `note`, the confirmation's optional
  * reason, and answers the row as written.
  *
- * @throws {Forbidden} the session's role is not `admin`, or the user may
+ * @throws {Forbidden} the session's role is not `admin`; admin changes are
+ * paused and the caller is not the primary admin (MB.63); or the user may
  * already create one — a second approval would record a change that never
  * happened.
  * @throws {NotFound} no live user has this id.
@@ -61,7 +63,7 @@ export async function grantWorkspaceCreation(
   userId: string,
   note?: string,
 ): Promise<UserRow> {
-  assertSiteAdmin(session, REFUSAL);
+  await assertChangesOpen(session, assertSiteAdmin(session, REFUSAL));
   const user = await liveUser(userId);
   if (user.canCreateWorkspace) throw new Forbidden(`${user.name} may already create a coven`);
   return setFlag(session, userId, true, note);
@@ -72,7 +74,8 @@ export async function grantWorkspaceCreation(
  * a `revoke` with `note`, and answers the row as written. The workspaces they already
  * created stay theirs: the flag governs creating, not keeping.
  *
- * @throws {Forbidden} the session's role is not `admin`; the user cannot
+ * @throws {Forbidden} the session's role is not `admin`; admin changes are
+ * paused and the caller is not the primary admin (MB.63); the user cannot
  * create one already; or the user is an admin, whom the users CHECK holds to
  * the flag (MB.177), so revoking their admin role is the route.
  * @throws {NotFound} no live user has this id.
@@ -82,7 +85,7 @@ export async function revokeWorkspaceCreation(
   userId: string,
   note?: string,
 ): Promise<UserRow> {
-  assertSiteAdmin(session, REFUSAL);
+  await assertChangesOpen(session, assertSiteAdmin(session, REFUSAL));
   const user = await liveUser(userId);
   if (!user.canCreateWorkspace) {
     throw new Forbidden(`${user.name} cannot create a coven, so there is nothing to revoke`);

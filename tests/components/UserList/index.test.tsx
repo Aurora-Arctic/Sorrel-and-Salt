@@ -1118,6 +1118,54 @@ describe('UserList admin role while admin changes are paused', () => {
     expect(calls).toBe(0);
   });
 
+  // Amended on the owner's call: coven creation's Approve and Revoke pause too.
+  it('locks Approve and Revoke of coven creation for another admin, opening and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('GrantWorkspaceCreation', () => {
+      calls += 1;
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(
+      <UserList
+        {...props({
+          users: [BO, { ...BO, id: 'u-cy', name: 'Cy Fixturewort', canCreateWorkspace: true }],
+          adminChanges: { paused: true, canToggle: false },
+        })}
+      />,
+    );
+
+    const approve = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Approve Bo Fixturewort',
+    });
+    const revoke = within(row('Cy Fixturewort')).getByRole('button', {
+      name: 'Revoke approval for Cy Fixturewort',
+    });
+    for (const button of [approve, revoke]) {
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription(PAUSED_REASON);
+    }
+    expect(approve).toHaveClass('btn--small', 'btn--quiet');
+    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
+
+    fireEvent.click(approve);
+
+    expect(within(row('Bo Fixturewort')).getAllByRole('alert')[0]).toHaveTextContent(PAUSED_REASON);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  it('leaves the primary admin’s Approve usable while paused', () => {
+    render(
+      <UserList {...props({ users: [BO], adminChanges: { paused: true, canToggle: true } })} />,
+    );
+
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Approve Bo Fixturewort' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Approve Coven Creation' })).toBeInTheDocument();
+  });
+
   it('leaves the primary admin’s Grant and Revoke usable while paused', () => {
     render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
 

@@ -194,9 +194,10 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
   resume admin changes.", that describes it and that each try mounts afresh as
   an alert.
-- **While paused, an admin the pause binds cannot use Grant or Revoke**
-  (MB.63, on the owner's call). The page passes the pause it already read,
-  and every row's control, for a viewer who is not the primary admin
+- **While paused, an admin the pause binds cannot use Grant or Revoke, nor
+  coven creation's Approve or Revoke** (MB.63, on the owner's call; the
+  creation controls amended 2026-10-10). The page passes the pause it already read,
+  and every row's role and creation control, for a viewer who is not the primary admin
   (`canToggle`), is locked as the primary admin's Revoke is: in view,
   `aria-disabled`, described by the service's own refusal in a tip,
   `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
