@@ -24,7 +24,9 @@ function signed(value: string, secret: string): string {
  * provider named, with the site role given. The user is verified unless
  * `emailVerified` says otherwise, as for an account an admin approves
  * unverified (MB.205); signed in as itself, such a user reaches only
- * `/account/email`. The cookie rides as a request header rather than in the
+ * `/account/email`. The rows go to this worker's slot database unless
+ * `database` names the server's own, as the compendium-cache server's is.
+ * The cookie rides as a request header rather than in the
  * cookie jar: a `Secure` cookie is never sent to the plain-http origin the
  * remote browser reaches the server on.
  */
@@ -33,13 +35,13 @@ export async function signInAs(
   email: string,
   providers: readonly string[] = ['discord'],
   role: 'user' | 'admin' = 'user',
-  { emailVerified = true }: { emailVerified?: boolean } = {},
+  { emailVerified = true, database }: { emailVerified?: boolean; database?: string } = {},
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
   if (!secret)
     throw new Error('BETTER_AUTH_SECRET must be set for the runner and the server alike');
 
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  const sql = postgres(e2eDatabaseUrl(database), { onnotice: () => {} });
   const userId = randomUUID();
   const token = randomBytes(24).toString('base64url');
   try {

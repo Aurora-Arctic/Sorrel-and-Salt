@@ -11,6 +11,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
+import { cachedCompendiumRead } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import { MAX_PAGE_SIZE } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
@@ -33,6 +34,11 @@ import type { FormRewrite, IngredientFormValueFilter, IngredientFormValueRow } f
 // ingredient never holds a form and is never rewritten: what it picked stays,
 // and an admin writes nothing of a coven's (M6.6).
 
+// The list and its count, held in the data cache under the `compendium` tag
+// (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('ingredient-form-page', findIngredientFormValues);
+const cachedCount = cachedCompendiumRead('ingredient-form-count', findIngredientFormValueCount);
+
 /**
  * One page of the curated form vocabulary under `filter`, for
  * `ingredientFormValues` and the admin page's list: a public read (MB.80), so
@@ -45,7 +51,7 @@ export async function listIngredientFormValues(
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormValueRow>[]> {
   const read = readable(filter);
-  return read ? findIngredientFormValues(read, page) : [];
+  return read ? cachedPage(read, page) : [];
 }
 
 /**
@@ -58,7 +64,7 @@ export async function countIngredientFormValues(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const read = readable(filter);
-  return read ? findIngredientFormValueCount(read, start) : { totalCount: 0, countBefore: null };
+  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
 }
 
 /**
