@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { Forbidden } from '../../../lib/errors';
+import { sessionOf } from '../../../graphql/context-helpers';
 import type { InvitationRow } from '../../../db/repository';
 import { createAdminInvitation, revokeAdminInvitation } from '../services/admin-invitations';
 import { acceptInvitation } from '../services/invitation-acceptance';
@@ -38,10 +38,8 @@ builder.mutationField('createAdminInvitation', (t) =>
       'Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.',
     args: { email: t.arg.string({ required: true }), note: t.arg.string() },
     authScopes: { admin: true },
-    resolve: (_root, { email, note }, { session, invitations }) => {
-      if (!session) throw new Forbidden();
-      return createAdminInvitation(session, email, note ?? undefined, invitations);
-    },
+    resolve: (_root, { email, note }, context) =>
+      createAdminInvitation(sessionOf(context), email, note ?? undefined, context.invitations),
   }),
 );
 
@@ -52,10 +50,7 @@ builder.mutationField('revokeAdminInvitation', (t) =>
       'Withdraws a pending admin invitation, so its link says so. Refused while admin changes are paused, but to the primary admin.',
     args: { id: t.arg.id({ required: true }) },
     authScopes: { admin: true },
-    resolve: (_root, { id }, { session }) => {
-      if (!session) throw new Forbidden();
-      return revokeAdminInvitation(session, id);
-    },
+    resolve: (_root, { id }, context) => revokeAdminInvitation(sessionOf(context), id),
   }),
 );
 
@@ -68,9 +63,6 @@ builder.mutationField('acceptInvitation', (t) =>
       "Accepts the invitation a link's token names, as the signed-in account, which must hold the invited address, verified; answers it accepted.",
     args: { token: t.arg.string({ required: true }) },
     authScopes: { signedIn: true },
-    resolve: (_root, { token }, { session }) => {
-      if (!session) throw new Forbidden();
-      return acceptInvitation(session, token);
-    },
+    resolve: (_root, { token }, context) => acceptInvitation(sessionOf(context), token),
   }),
 );

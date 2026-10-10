@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { Forbidden } from '../../../lib/errors';
+import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { userRole } from '../schema/users';
 import { pauseAdminRoleChanges, resumeAdminRoleChanges } from '../services/admin-role-pause';
 import { setEmail } from '../services/email';
@@ -44,11 +44,7 @@ builder.queryField('me', (t) =>
   t.field({
     type: UserRef,
     authScopes: { signedIn: true },
-    resolve: (_query, _args, { session }) => {
-      // The scope has already refused a null session; the type does not know.
-      if (!session) throw new Forbidden();
-      return getMe(session);
-    },
+    resolve: (_query, _args, context) => getMe(sessionOf(context)),
   }),
 );
 
@@ -60,10 +56,8 @@ builder.mutationField('setEmail', (t) =>
     type: UserRef,
     args: { email: t.arg.string({ required: true }), next: t.arg.string() },
     authScopes: { signedIn: true },
-    resolve: (_root, { email, next }, { session, emailVerification }) => {
-      if (!session) throw new Forbidden();
-      return setEmail(session, email, emailVerification, next ?? undefined);
-    },
+    resolve: (_root, { email, next }, context) =>
+      setEmail(sessionOf(context), email, context.emailVerification, next ?? undefined),
   }),
 );
 
@@ -74,10 +68,7 @@ builder.mutationField('setName', (t) =>
     type: UserRef,
     args: { name: t.arg.string({ required: true }) },
     authScopes: { signedIn: true },
-    resolve: (_root, { name }, { session }) => {
-      if (!session) throw new Forbidden();
-      return setName(session, name);
-    },
+    resolve: (_root, { name }, context) => setName(sessionOf(context), name),
   }),
 );
 
@@ -92,18 +83,8 @@ builder.queryField('users', (t) =>
       awaitingApproval: t.arg.boolean({ required: false }),
       role: t.arg({ type: UserRoleEnum, required: false }),
     },
-    resolve: (_root, { query, awaitingApproval, role }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return listUsers(
-        session,
-        {
-          query: query ?? undefined,
-          awaitingApproval: awaitingApproval ?? undefined,
-          role: role ?? undefined,
-        },
-        page,
-      );
-    },
+    resolve: (_root, { query, awaitingApproval, role }, page, context) =>
+      listUsers(sessionOf(context), definedArgs({ query, awaitingApproval, role }), page),
   }),
 );
 
@@ -132,10 +113,8 @@ for (const { field, description, write } of CREATION_WRITES) {
       // The note is the confirmation's optional reason, kept on the ledger row.
       args: { userId: t.arg.id({ required: true }), note: t.arg.string() },
       authScopes: { admin: true },
-      resolve: (_root, { userId, note }, { session }) => {
-        if (!session) throw new Forbidden();
-        return write(session, userId, note ?? undefined);
-      },
+      resolve: (_root, { userId, note }, context) =>
+        write(sessionOf(context), userId, note ?? undefined),
     }),
   );
 }
@@ -155,10 +134,8 @@ builder.mutationField('setUserRole', (t) =>
       note: t.arg.string(),
     },
     authScopes: { admin: true },
-    resolve: (_root, { userId, role, note }, { session }) => {
-      if (!session) throw new Forbidden();
-      return setUserRole(session, userId, role, note ?? undefined);
-    },
+    resolve: (_root, { userId, role, note }, context) =>
+      setUserRole(sessionOf(context), userId, role, note ?? undefined),
   }),
 );
 
@@ -171,10 +148,7 @@ builder.mutationField('pauseAdminRoleChanges', (t) =>
     description:
       'Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.',
     authScopes: { admin: true },
-    resolve: (_root, _args, { session }) => {
-      if (!session) throw new Forbidden();
-      return pauseAdminRoleChanges(session);
-    },
+    resolve: (_root, _args, context) => pauseAdminRoleChanges(sessionOf(context)),
   }),
 );
 
@@ -183,9 +157,6 @@ builder.mutationField('resumeAdminRoleChanges', (t) =>
     description:
       'Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.',
     authScopes: { admin: true },
-    resolve: (_root, _args, { session }) => {
-      if (!session) throw new Forbidden();
-      return resumeAdminRoleChanges(session);
-    },
+    resolve: (_root, _args, context) => resumeAdminRoleChanges(sessionOf(context)),
   }),
 );

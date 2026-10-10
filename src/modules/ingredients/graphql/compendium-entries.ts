@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { Forbidden } from '../../../lib/errors';
+import { sessionOf } from '../../../graphql/context-helpers';
 import {
   createCompendiumEntry,
   deleteCompendiumEntry,
@@ -43,10 +43,11 @@ builder.mutationField('createCompendiumIngredient', (t) =>
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { input, endRedirect }, { session }) => {
-      if (!session) throw new Forbidden();
-      return createCompendiumEntry(session, { ...input, endRedirect: endRedirect ?? undefined });
-    },
+    resolve: (_root, { input, endRedirect }, context) =>
+      createCompendiumEntry(sessionOf(context), {
+        ...input,
+        endRedirect: endRedirect ?? undefined,
+      }),
   }),
 );
 
@@ -60,9 +61,8 @@ builder.mutationField('updateCompendiumIngredient', (t) =>
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
     },
     authScopes: { admin: true },
-    resolve: async (_root, { id, input, endRedirect }, { session, loaders }) => {
-      if (!session) throw new Forbidden();
-      const row = await updateCompendiumEntry(session, id, {
+    resolve: async (_root, { id, input, endRedirect }, { loaders, ...context }) => {
+      const row = await updateCompendiumEntry(sessionOf(context), id, {
         ...input,
         endRedirect: endRedirect ?? undefined,
       });
@@ -78,9 +78,8 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
     description: 'A soft delete; a spell holding the entry still reaches it.',
     args: { id: t.arg.id({ required: true }) },
     authScopes: { admin: true },
-    resolve: async (_root, { id }, { session }) => {
-      if (!session) throw new Forbidden();
-      await deleteCompendiumEntry(session, id);
+    resolve: async (_root, { id }, context) => {
+      await deleteCompendiumEntry(sessionOf(context), id);
       return id;
     },
   }),
