@@ -6,7 +6,7 @@ import {
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
-import { cachedCompendiumRead } from '../../../lib/compendium-cache';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { deitySlug } from '../../../lib/slugify';
@@ -86,10 +86,12 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
   const { fields, traditionName } = await parseDeity(input);
   const slug = deitySlug(fields.name, traditionName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deities, { ...fields, slug });
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -117,12 +119,14 @@ export async function updateDeity(
   const current = await liveDeity(id);
   const slug = deitySlug(fields.name, traditionName);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(deities, id, { ...fields, slug });
     if (!row) throw new NotFound('No such deity');
     if (current.name !== fields.name) await write.carryDeityRename(admin, id, fields.name);
     return row;
   }).catch((error: unknown) => refuseCollision(error, slug));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -147,6 +151,7 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
     const [row] = await write.softDeleteByIds(deities, [id]);
     if (!row) throw new NotFound('No such deity');
   });
+  expireCompendium();
 }
 
 /**
