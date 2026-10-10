@@ -4,27 +4,31 @@ import {
   findCompendiumEntryByIdentity,
   findCompendiumEntryBySlug,
   findCompendiumPage,
-  findCompendiumSlugRedirect,
   findIngredientFormValueCount,
   findIngredientFormValues,
-  findOneById,
   findOneBySlug,
   withAudit,
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
-import { MAX_PAGE_SIZE } from '../../../lib/pagination';
+import { NotFound, ValidationError } from '../../../lib/errors';
+import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import { formSlug, ingredientSlug } from '../../../lib/slugify';
+import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { inUtc } from '../../../lib/utc';
-import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
-import { describeEntry, heldBy } from './held-entries';
-import type { FormRewrite, IngredientFormValueFilter, IngredientFormValueRow } from '../types';
+import { cachedFilteredList } from './curated-lists';
+import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
+import { describeEntry, redirectRefusal, refuseWhileHeld } from './held-entries';
+import type {
+  CuratedVocabulary,
+  FormRewrite,
+  IngredientFormValueFilter,
+  IngredientFormValueRow,
+} from '../types';
 
 // The curated form vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6a).
@@ -38,6 +42,15 @@ import type { FormRewrite, IngredientFormValueFilter, IngredientFormValueRow } f
 // (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('ingredient-form-page', findIngredientFormValues);
 const cachedCount = cachedCompendiumRead('ingredient-form-count', findIngredientFormValueCount);
+const list = cachedFilteredList(cachedPage, cachedCount, 'groupId');
+
+/** A form's slug is its name and its group's, so a collision is cured by changing either. */
+const FORMS: CuratedVocabulary<typeof ingredientForms> = {
+  table: ingredientForms,
+  slugIndex: 'ingredient_forms_slug_unique',
+  noun: 'form',
+  addressHint: ' or group',
+};
 
 /**
  * One page of the curated form vocabulary under `filter`, for
@@ -46,12 +59,11 @@ const cachedCount = cachedCompendiumRead('ingredient-form-count', findIngredient
  * under a live group. A blank query is no query, and a group id that is not a
  * uuid names no group, so lists nothing, as `listCategories` reads its filter.
  */
-export async function listIngredientFormValues(
+export function listIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<IngredientFormValueRow>[]> {
-  const read = readable(filter);
-  return read ? cachedPage(read, page) : [];
+  return list.list(filter, page);
 }
 
 /**
@@ -59,12 +71,11 @@ export async function listIngredientFormValues(
  * many come before `start` — a page's first row, none on an empty page:
  * "Page X of Y".
  */
-export async function countIngredientFormValues(
+export function countIngredientFormValues(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  const read = readable(filter);
-  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
+  return list.count(filter, start);
 }
 
 /**
@@ -97,7 +108,7 @@ export async function createIngredientFormValue(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(ingredientForms, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseFormCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(FORMS, error, slug));
   expireCompendium();
   return written;
 }
@@ -133,17 +144,22 @@ export async function updateIngredientFormValue(
 ): Promise<IngredientFormValueRow> {
   const admin = assertSiteAdmin(session);
   const { fields, groupName, endRedirect } = await parseForm(input);
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such form');
-  const current = await findOneById(ingredientForms, id);
-  if (!current) throw new NotFound('No such form');
+  const current = await liveRow(FORMS, id);
   const slug = formSlug(fields.name, groupName);
 
   const rename = { from: current.name, to: fields.name };
   const rewrites = rename.from === rename.to ? [] : await rewritesOf(id, rename.to);
   const at = new Date();
   await refuseCollidingRewrites(rename, rewrites);
-  if (endRedirect !== true) await refuseEndingRedirects(rewrites, at);
+  if (endRedirect !== true) {
+    const refused = await redirectRefusal(
+      rewrites
+        .filter(({ entry, slug: moved }) => moved !== entry.slug)
+        .map(({ entry, slug: moved }) => ({ slug: moved, entryId: entry.id })),
+      at,
+    );
+    if (refused) throw refused;
+  }
 
   const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientForms, id, { ...fields, slug });
@@ -165,7 +181,7 @@ export async function updateIngredientFormValue(
     return row;
   }).catch(async (error: unknown) => {
     await refuseCollidingRewrites(rename, rewrites, error);
-    return refuseFormCollision(error, slug);
+    return refuseSlugCollision(FORMS, error, slug);
   });
   expireCompendium();
   return written;
@@ -186,29 +202,22 @@ export async function updateIngredientFormValue(
  */
 export async function deleteIngredientFormValue(session: Session, id: string): Promise<void> {
   assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such form');
-  const form = await findOneById(ingredientForms, id);
-  if (!form) throw new NotFound('No such form');
-  await refuseWhilePicked(form);
+  const form = await liveRow(FORMS, id);
+  // Read through the compendium's own filter on the pick.
+  await refuseWhileHeld(
+    { formId: form.id },
+    {
+      name: form.name,
+      holding: 'is the form of',
+      remedy: (count) => `Change ${plural(count, 'its', 'their')} form first.`,
+    },
+  );
 
   await withAudit(session, async (write) => {
     const [row] = await write.softDeleteByIds(ingredientForms, [id]);
     if (!row) throw new NotFound('No such form');
   });
   expireCompendium();
-}
-
-/**
- * The filter as the repository reads it, its query trimmed and a blank one
- * dropped; `undefined` for a group id that is not a uuid, which names nothing
- * and would be a driver error at the comparison.
- */
-function readable({
-  query,
-  groupId,
-}: IngredientFormValueFilter): IngredientFormValueFilter | undefined {
-  if (groupId !== undefined && !RowId.safeParse(groupId).success) return undefined;
-  return { query: query?.trim() || undefined, groupId };
 }
 
 /**
@@ -221,26 +230,13 @@ async function parseForm(input: IngredientFormValueInput): Promise<{
   groupName: string;
   endRedirect: boolean | undefined;
 }> {
-  const { endRedirect, ...fields } = parseInput(IngredientFormValueInput, input);
-  const group = await findOneById(ingredientFormGroups, fields.groupId);
-  if (!group) throw new ValidationError([{ path: ['groupId'], message: 'Choose a group' }]);
-  return { fields, groupName: group.name, endRedirect };
-}
-
-/**
- * The refusal of a delete while live compendium entries picked the form: the
- * first few by name, each told apart from a namesake, and how many more, read
- * through the compendium's own filter on the pick.
- */
-async function refuseWhilePicked(form: IngredientFormValueRow): Promise<void> {
-  const held = await heldBy({ formId: form.id });
-  if (!held) return;
-  const { totalCount, list } = held;
-  const entries = totalCount === 1 ? 'entry' : 'entries';
-  const their = totalCount === 1 ? 'its' : 'their';
-  throw new Forbidden(
-    `"${form.name}" is the form of ${totalCount} compendium ${entries} — ${list}. Change ${their} form first.`,
-  );
+  const { fields: parsed, parent } = await parseUnderLiveParent(IngredientFormValueInput, input, {
+    table: ingredientFormGroups,
+    column: 'groupId',
+    refusal: 'Choose a group',
+  });
+  const { endRedirect, ...fields } = parsed;
+  return { fields, groupName: parent.name, endRedirect };
 }
 
 /**
@@ -250,17 +246,7 @@ async function refuseWhilePicked(form: IngredientFormValueRow): Promise<void> {
  * `ingredients_compendium_form_id_idx` index answers.
  */
 async function rewritesOf(formId: string, name: string): Promise<FormRewrite[]> {
-  const entries: IngredientRow[] = [];
-  let after: Cursor | undefined;
-  for (;;) {
-    const page = await findCompendiumPage(
-      { formId },
-      { after, limit: MAX_PAGE_SIZE, inverted: false },
-    );
-    entries.push(...page.map(({ node }) => node));
-    if (page.length < MAX_PAGE_SIZE) break;
-    after = page[page.length - 1].cursor;
-  }
+  const entries = await allPages((page) => findCompendiumPage({ formId }, page));
   return entries.map((entry) => ({
     entry,
     slug: ingredientSlug(entry.name, name, entry.canonicalName),
@@ -317,51 +303,4 @@ async function refuseCollidingRewrites(
       `${renaming} would give a compendium entry another entry's identity or address — try again`,
     );
   }
-}
-
-/**
- * Refuses a rename moving an entry onto a slug another entry's redirect still
- * runs from, until the admin confirms ending it (MB.82), naming each entry
- * whose redirect would end and the instant its window closes. On
- * `endRedirect`, so the form can ask and send the write again. Read before the
- * write rather than inside it: two admins saving at once can both pass it.
- */
-async function refuseEndingRedirects(rewrites: readonly FormRewrite[], at: Date): Promise<void> {
-  const ended: string[] = [];
-  for (const { entry, slug } of rewrites) {
-    if (slug === entry.slug) continue;
-    const redirect = await findCompendiumSlugRedirect(slug, at, entry.id);
-    if (redirect) {
-      ended.push(
-        `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)}`,
-      );
-    }
-  }
-  if (ended.length === 0) return;
-  const list =
-    ended.length === 1
-      ? ended[0]
-      : `${ended.slice(0, -1).join(', ')} and ${ended[ended.length - 1]}`;
-  const those = ended.length === 1 ? 'that redirect' : 'those redirects';
-  throw new ValidationError([
-    { path: ['endRedirect'], message: `${list} — confirm to end ${those}` },
-  ]);
-}
-
-/**
- * A write that broke the form slug index, as a `ValidationError` on `name` —
- * the slug is derived and has no field of its own (MB.43) — naming the form
- * holding the address; any other error unchanged.
- */
-async function refuseFormCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'ingredient_forms_slug_unique') {
-    const holder = await findOneBySlug(ingredientForms, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another form'} already has the address "${slug}" — choose another name or group`,
-      },
-    ]);
-  }
-  throw error;
 }

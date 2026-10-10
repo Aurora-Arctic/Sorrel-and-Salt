@@ -1,5 +1,6 @@
 import 'server-only';
 import { findCuratedRowsByIds, findCuratedRowsByName } from '../../../db/repository';
+import { inIdOrder } from '../../../lib/in-id-order';
 import { planets, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
@@ -65,6 +66,5 @@ export async function formChoicesOf(
   ids: readonly string[],
 ): Promise<(IngredientFormValueRow | null)[]> {
   const rows = await findCuratedRowsByIds(ingredientForms, [...new Set(ids)]);
-  const byId = new Map(rows.map((row) => [row.id, row]));
-  return ids.map((id) => byId.get(id) ?? null);
+  return inIdOrder(ids, rows, () => null);
 }

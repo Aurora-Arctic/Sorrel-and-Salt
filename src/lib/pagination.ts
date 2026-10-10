@@ -129,3 +129,22 @@ export async function resolveNumberedPage<T, Edge extends object = {}>(
   };
   return { ...page, position };
 }
+
+/**
+ * Every row a page finder holds, read `MAX_PAGE_SIZE` at a time in its own
+ * order: for a service that must act on all of them, as a group's delete
+ * moves every row filed under it. Through the finder rather than an unpaged
+ * read, so "live" means what the list means by it, and no read is unbounded.
+ */
+export async function allPages<T, Edge extends object = {}>(
+  read: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  let after: Cursor | undefined;
+  for (;;) {
+    const page = await read({ after, limit: MAX_PAGE_SIZE, inverted: false });
+    rows.push(...page.map(({ node }) => node));
+    if (page.length < MAX_PAGE_SIZE) return rows;
+    after = page[page.length - 1].cursor;
+  }
+}

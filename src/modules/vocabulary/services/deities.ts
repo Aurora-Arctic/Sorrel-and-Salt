@@ -1,23 +1,18 @@
 import 'server-only';
-import {
-  findDeityCount,
-  findDeityPage,
-  findOneById,
-  findOneBySlug,
-  withAudit,
-} from '../../../db/repository';
+import { findDeityCount, findDeityPage, findOneBySlug, withAudit } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { deitySlug } from '../../../lib/slugify';
+import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityInput } from '../validation/deity';
-import { heldBy } from './held-entries';
-import type { DeityFilter, DeityRow } from '../types';
+import { cachedFilteredList } from './curated-lists';
+import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
+import { refuseWhileHeld } from './held-entries';
+import type { CuratedVocabulary, DeityFilter, DeityRow } from '../types';
 
 // The curated deity vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone
@@ -33,6 +28,15 @@ import type { DeityFilter, DeityRow } from '../types';
 // (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('deity-page', findDeityPage);
 const cachedCount = cachedCompendiumRead('deity-count', findDeityCount);
+const list = cachedFilteredList(cachedPage, cachedCount, 'traditionId');
+
+/** A deity's slug is its name and its tradition's, so a collision is cured by changing either. */
+const DEITIES: CuratedVocabulary<typeof deities> = {
+  table: deities,
+  slugIndex: 'deities_slug_unique',
+  noun: 'deity',
+  addressHint: ' or tradition',
+};
 
 /**
  * One page of the curated deities under `filter`, each under its tradition,
@@ -42,24 +46,19 @@ const cachedCount = cachedCompendiumRead('deity-count', findDeityCount);
  * names no tradition, so lists nothing, as `listIngredientFormValues` reads
  * its filter.
  */
-export async function listDeities(
+export function listDeities(
   filter: DeityFilter,
   page: PageRequest,
 ): Promise<PageEntry<DeityRow>[]> {
-  const read = readable(filter);
-  return read ? cachedPage(read, page) : [];
+  return list.list(filter, page);
 }
 
 /**
  * How many deities `listDeities` pages under `filter`, and how many come
  * before `start` — a page's first row, none on an empty page: "Page X of Y".
  */
-export async function countDeities(
-  filter: DeityFilter,
-  start: Cursor | undefined,
-): Promise<PageCount> {
-  const read = readable(filter);
-  return read ? cachedCount(read, start) : { totalCount: 0, countBefore: null };
+export function countDeities(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
+  return list.count(filter, start);
 }
 
 /**
@@ -89,7 +88,7 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
   const written = await withAudit(session, async (write) => {
     const [row] = await write.insert(deities, { ...fields, slug });
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
   expireCompendium();
   return written;
 }
@@ -116,7 +115,7 @@ export async function updateDeity(
 ): Promise<DeityRow> {
   const admin = assertSiteAdmin(session);
   const { fields, traditionName } = await parseDeity(input);
-  const current = await liveDeity(id);
+  const current = await liveRow(DEITIES, id);
   const slug = deitySlug(fields.name, traditionName);
 
   const written = await withAudit(session, async (write) => {
@@ -124,7 +123,7 @@ export async function updateDeity(
     if (!row) throw new NotFound('No such deity');
     if (current.name !== fields.name) await write.carryDeityRename(admin, id, fields.name);
     return row;
-  }).catch((error: unknown) => refuseCollision(error, slug));
+  }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
   expireCompendium();
   return written;
 }
@@ -144,8 +143,17 @@ export async function updateDeity(
  */
 export async function deleteDeity(session: Session, id: string): Promise<void> {
   assertSiteAdmin(session);
-  const deity = await liveDeity(id);
-  await refuseWhilePicked(deity);
+  const deity = await liveRow(DEITIES, id);
+  // Read through the compendium's own filter on the pick, which the
+  // `ingredient_deities_deity_id_idx` index answers.
+  await refuseWhileHeld(
+    { deityId: deity.id },
+    {
+      name: deity.name,
+      holding: 'is among the deities of',
+      remedy: (count) => `Take it off ${plural(count, 'its', 'their')} deities first.`,
+    },
+  );
 
   await withAudit(session, async (write) => {
     const [row] = await write.softDeleteByIds(deities, [id]);
@@ -155,73 +163,16 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
 }
 
 /**
- * The filter as the repository reads it, its query trimmed and a blank one
- * dropped; `undefined` for a tradition id that is not a uuid, which names
- * nothing and would be a driver error at the comparison.
- */
-function readable({ query, traditionId }: DeityFilter): DeityFilter | undefined {
-  if (traditionId !== undefined && !RowId.safeParse(traditionId).success) return undefined;
-  return { query: query?.trim() || undefined, traditionId };
-}
-
-/**
  * The input parsed, its tradition checked live — a foreign key admits a
  * retired one — and the tradition's name, which the slug carries.
  */
 async function parseDeity(
   input: DeityInput,
 ): Promise<{ fields: DeityInput; traditionName: string }> {
-  const fields = parseInput(DeityInput, input);
-  const tradition = await findOneById(deityTraditions, fields.traditionId);
-  if (!tradition) {
-    throw new ValidationError([{ path: ['traditionId'], message: 'Choose a tradition' }]);
-  }
-  return { fields, traditionName: tradition.name };
-}
-
-/**
- * The live deity `id` names.
- *
- * @throws {NotFound} none does — an id that is not a uuid included, which
- * names nothing and would be a driver error at the comparison.
- */
-async function liveDeity(id: string): Promise<DeityRow> {
-  const row = RowId.safeParse(id).success ? await findOneById(deities, id) : undefined;
-  if (!row) throw new NotFound('No such deity');
-  return row;
-}
-
-/**
- * The refusal of a delete while live compendium entries link the deity: the
- * first few by name, each told apart from a namesake, and how many more, read
- * through the compendium's own filter on the pick, which the
- * `ingredient_deities_deity_id_idx` index answers.
- */
-async function refuseWhilePicked(deity: DeityRow): Promise<void> {
-  const held = await heldBy({ deityId: deity.id });
-  if (!held) return;
-  const { totalCount, list } = held;
-  const entries = totalCount === 1 ? 'entry' : 'entries';
-  const their = totalCount === 1 ? 'its' : 'their';
-  throw new Forbidden(
-    `"${deity.name}" is among the deities of ${totalCount} compendium ${entries} — ${list}. Take it off ${their} deities first.`,
-  );
-}
-
-/**
- * A write that broke the deity slug index, as a `ValidationError` on `name` —
- * the slug is derived and has no field of its own (MB.43) — naming the deity
- * holding the address; any other error unchanged.
- */
-async function refuseCollision(error: unknown, slug: string): Promise<never> {
-  if (violatedUniqueIndex(error) === 'deities_slug_unique') {
-    const holder = await findOneBySlug(deities, slug);
-    throw new ValidationError([
-      {
-        path: ['name'],
-        message: `${holder ? `"${holder.name}"` : 'Another deity'} already has the address "${slug}" — choose another name or tradition`,
-      },
-    ]);
-  }
-  throw error;
+  const { fields, parent } = await parseUnderLiveParent(DeityInput, input, {
+    table: deityTraditions,
+    column: 'traditionId',
+    refusal: 'Choose a tradition',
+  });
+  return { fields, traditionName: parent.name };
 }

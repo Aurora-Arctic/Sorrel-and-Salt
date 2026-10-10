@@ -1,13 +1,14 @@
 import 'server-only';
-import { findOneById, withAudit } from '../../../db/repository';
-import type { AuditWriter, PrivilegeDeclaration } from '../../../db/repository';
+import { withAudit } from '../../../db/repository';
+import type { AuditWriter } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
 import type { Session, UserRole } from '../../../lib/session';
 import { users } from '../schema/users';
-import { assertChangesOpen } from './admin-role-pause';
+import { adminDeclaration, liveUser } from './admin-changes';
+import { assertAdminChangesOpen } from './admin-role-pause';
 import { isPrimaryAdmin } from './primary-admin';
-import { assertSiteAdmin, type SiteAdmin } from './site-admin';
+import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
 // MB.59: an admin makes a user an admin, or stops one being one, from
@@ -19,13 +20,6 @@ import type { UserRow } from '../types';
 // "Granting and revoking admin".
 
 const REFUSAL = 'Only a site admin may change who is an admin';
-
-/** The live user, or `NotFound`: a soft-deleted one reads as no one. */
-async function liveUser(userId: string): Promise<UserRow> {
-  const user = await findOneById(users, userId);
-  if (!user) throw new NotFound('No such user');
-  return user;
-}
 
 /**
  * The grant every route to admin but the bootstrap shares, inside the
@@ -90,8 +84,7 @@ export async function setUserRole(
   role: UserRole,
   note?: string,
 ): Promise<UserRow> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  await assertChangesOpen(session, admin);
+  const admin = await assertAdminChangesOpen(session, REFUSAL);
   const user = await liveUser(userId);
   if (role === 'admin' && user.role === 'admin') {
     throw new Forbidden(`${user.name} is already an admin`);
@@ -99,6 +92,5 @@ export async function setUserRole(
   if (role === 'user' && user.role !== 'admin') {
     throw new Forbidden(`${user.name} is not an admin, so there is nothing to revoke`);
   }
-  const declaration: PrivilegeDeclaration = { via: 'admin', note: note?.trim() || undefined };
-  return withAudit(session, (write) => writeRole(write, admin, user, role), declaration);
+  return withAudit(session, (write) => writeRole(write, admin, user, role), adminDeclaration(note));
 }

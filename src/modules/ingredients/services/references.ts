@@ -12,7 +12,7 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { references } from '../schema/references';
 import { CompendiumFilter } from '../validation/compendium-filter';
 import { ReferenceInput } from '../validation/reference';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership, readersOf } from '@/modules/coven';
 import { type SiteAdmin, assertSiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { ReferenceValues } from '../types';
@@ -140,10 +140,7 @@ export async function suggestReferences(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<ReferenceRow, CompendiumScore>[]> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
   const filter = parseInput(CompendiumFilter, { query });
   return findReferenceSuggestions(memberships, filter.query ?? '', page);
 }

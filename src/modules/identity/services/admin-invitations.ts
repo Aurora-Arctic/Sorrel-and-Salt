@@ -6,7 +6,8 @@ import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { normaliseEmail, validateEmailAddress } from './email';
 import { assertSiteAdmin } from './site-admin';
-import { assertChangesOpen } from './admin-role-pause';
+import { adminDeclaration } from './admin-changes';
+import { assertAdminChangesOpen } from './admin-role-pause';
 import type { InvitationSender } from '../types';
 
 // MB.70: an admin invites an address to become an admin, M2.9's option B on
@@ -44,8 +45,7 @@ export async function createAdminInvitation(
   note: string | undefined,
   sender: InvitationSender,
 ): Promise<InvitationRow> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  await assertChangesOpen(session, admin);
+  const admin = await assertAdminChangesOpen(session, REFUSAL);
   const email = normaliseEmail(input);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
@@ -57,7 +57,7 @@ export async function createAdminInvitation(
 
   const token = newToken();
   const [row] = await withAudit(session, (write) =>
-    write.insertInvitation(admin, { email, token, note: note?.trim() || null }),
+    write.insertInvitation(admin, { email, token, note: adminDeclaration(note).note ?? null }),
   );
   // After the commit, so a mailed link always names a row.
   await sender.siteInvitation(email, token);
@@ -72,8 +72,7 @@ export async function createAdminInvitation(
  * @throws {NotFound} no pending site-tier invitation has this id.
  */
 export async function revokeAdminInvitation(session: Session, id: string): Promise<InvitationRow> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  await assertChangesOpen(session, admin);
+  const admin = await assertAdminChangesOpen(session, REFUSAL);
   const [row] = await withAudit(session, (write) => write.revokeInvitation(admin, id));
   if (!row) throw new NotFound('No pending admin invitation has this id');
   return row;

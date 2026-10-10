@@ -3,11 +3,13 @@ import type { IngredientRow, ReferenceRow } from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
-import type { DeityRow } from '@/modules/vocabulary';
-import type { categories } from '@/modules/vocabulary/schema/categories';
+import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
 export type { IngredientRow, ReferenceRow };
+
+// The vocabulary's own, which a category's loader answers with.
+export type { CategoryRow };
 
 /**
  * An ingredient as its children's loaders key it: the row a resolver already
@@ -16,8 +18,6 @@ export type { IngredientRow, ReferenceRow };
  * answered with nothing.
  */
 export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
-
-export type CategoryRow = typeof categories.$inferSelect;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
