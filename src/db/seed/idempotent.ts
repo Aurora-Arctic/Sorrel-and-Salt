@@ -6,7 +6,7 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { FlatTable, GroupTable, ItemTable } from '../vocabularies';
 import type { InsertStamps, SeedDatabase, SeedTransaction } from './types';
 
-// The three moves every seed makes. Writes go through the handle the caller
+// The moves every seed makes. Writes go through the handle the caller
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 
 /**
@@ -49,9 +49,9 @@ export async function declaringBootstrapPrivileges<T>(
 /**
  * Inserts every `wanted` whose key `existing` did not return, stamped by the
  * bootstrap user, and touches nothing already present. `existing` is the
- * caller's own query: each site scopes it (by id list, by tier, by workspace)
- * and decides for itself whether `deleted_at` is ignored — which it is,
- * everywhere, so a retired row is not resurrected on the next run.
+ * caller's own read, for a present that is not one key on both sides: a
+ * vocabulary's `presentKeys`, a seed key or a live slug. A key built from
+ * columns is `insertMissingBy`'s.
  */
 export async function insertMissing<TTable extends PgTable, W, K>(
   tx: SeedTransaction,

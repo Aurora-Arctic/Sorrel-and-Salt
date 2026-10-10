@@ -39,7 +39,7 @@ none matched — a typed name here. The joined table takes no filter from
 `selectFrom`, which is the point of this one finder and why the option
 carries the caller's `on` and `where` alone. The linked ingredient is the
 alias `linked`, since the parent's correlated subquery reads `ingredients`
-itself. `findReferencesOfIngredients` (MB.153) is the option's other user,
+itself. `findReferencesOf` (MB.153, MB.208) is the option's other user,
 and no hatch: its `on` holds the reference to `deleted_at IS NULL`, and its
 `where` takes only a row that joined one, so it reads as an inner join with
 every tombstone filtered ([`references.md`](references.md)).

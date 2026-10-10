@@ -46,10 +46,12 @@ nothing.
 What stays outside a module, and why:
 
 - **`src/db/`** — `connection.ts`, `repository/`, `audit.ts`, `bootstrap.ts`,
-  `migrations/`, `seed/`. The repository is the one query author for every
-  module (CLAUDE.md rules 2 and 4), so it is shared rather than owned. The
-  seed is the one legitimately cross-domain composer and reaches tables
-  through the modules' schema files.
+  `vocabularies.ts`, `migrations/`, `seed/`. The repository is the one query
+  author for every module (CLAUDE.md rules 2 and 4), so it is shared rather
+  than owned. The seed is the one legitimately cross-domain composer and
+  reaches tables through the modules' schema files. `vocabularies.ts` lists
+  the curated vocabularies by shape, two-tier and flat, for both of them to
+  read (MB.208): tables and types, no client.
 - **`src/graphql/`** — the builder, the context, pagination, armor, Altair,
   `loaders/define-loader.ts`, `schema/audit.ts` (the cross-cutting
   `AuditInfo`), a `types.ts` beside each of the three, the printed SDL, and the two composition points:
@@ -235,11 +237,11 @@ write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
 ingredient's substitutes and the ingredients they link, deleted or not;
-`findReferencesOfIngredients` (MB.153), an ingredient's references, each
+`findReferencesOf` (MB.153, MB.208), a sourced row's references, each
 where its readers may look; `findManyReferences` (MB.153), what a row
 written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
 reference picker's search; `citesNothing` (MB.153), the admin's to-do
-filter, an entry citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+filter, a sourced row citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
 curated form's rename onto the entries picking it (`carryFormRename`, M5.6a). The

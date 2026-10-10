@@ -59,8 +59,9 @@ deity is retired is kept, link and name, on a coven's ingredient, whether the
 save sends back its id or its name
 ([`../design-decisions/mb.167-read-and-write-the-pick.md`](../design-decisions/mb.167-read-and-write-the-pick.md)).
 
-**References have one too, `findReferencesOfIngredients(memberships,
-ingredientIds)`** (MB.153). It reads each live link beside the live
+**References have one too, `findReferencesOf(memberships, 'ingredientId',
+ingredientIds)`** (MB.153; the key since MB.208, which reads any sourced
+table's links). It reads each live link beside the live
 reference it cites in one statement, through the same left join, and holds
 the reference to the compendium or the parent's own coven inside the
 parent's `EXISTS`, so a link written past the service's tier rule, or one
