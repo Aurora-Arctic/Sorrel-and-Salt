@@ -10,7 +10,14 @@ The repository splits on the table's own shape, the way it already splits
 | carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                                                       | the workspace-scoped writes above                                                                                                    |
 | carries `spell_id` (the two spell join tables)                         | `findManyInSpell`, proof first                                                                                       | `insert`, `update`; a layer `updateById`, `softDelete`, `softDeleteByIds`; a category link `delete`                                  |
 | carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first; `findManyOfSpellIngredientsIncludingSoftDeleted`, proof first                 | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                                      |
+| marked `namedWrites` (the pause ledger, the admin invitation)          | its named finders, and those its shape admits: the mark governs writes only                                          | its own named writes only; every generic write above and below refuses it (MB.198)                                                   |
 | none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted`                            | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                          |
+
+A marked table is decided by its schema file rather than by a column: the
+mark is how a table says it takes only the calls named for it
+(["Table marks"](write-path.md#table-marks-mb198)), and it holds
+whatever the table's columns are, so a marked table with a `workspace_id`
+is off the scoped writes as well.
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table

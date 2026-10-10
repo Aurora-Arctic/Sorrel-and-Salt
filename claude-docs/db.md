@@ -141,6 +141,10 @@ In [`db/updated-at.md`](db/updated-at.md#a-table-added-later-does-not-get-the-tr
 
 `withAudit(session, fn)` is the one exported write path: `fn` gets a narrow `AuditWriter`, and `app.current_user_id` is published for each transaction. [`db/write-path.md`](db/write-path.md)
 
+### Table marks
+
+In [`db/write-path.md`](db/write-path.md#table-marks-mb198).
+
 ### `app.current_user_id`, published per transaction (M1.19)
 
 In [`db/write-path.md`](db/write-path.md#appcurrent_user_id-published-per-transaction-m119).
