@@ -164,7 +164,7 @@ first, for the admin who suspects misuse (story 61).
   It is the admin's whole row, not MB.10's display-name `usersById`.
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
   ledger, filtered by user (`?user=<id>`, the History link on each
-  `/admin/users` row) and by privilege (`?privilege=admin|create_workspace`).
+  `/admin/users` row) and by privilege (`?privilege=admin|create_workspace`, a dropdown).
   It is not merged with the pause or the invitations, which stay where they
   are acted on; an accepted invitation is already in the ledger as its
   `invitation` row. A server component under `requireAdminSession()`, it

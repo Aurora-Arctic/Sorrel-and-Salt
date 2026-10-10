@@ -1,5 +1,5 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import PrivilegeLedger from '@/components/PrivilegeLedger';
 import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
 import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
@@ -102,17 +102,72 @@ describe('PrivilegeLedger', () => {
     );
   });
 
-  it('offers each privilege as a filter, keeping the user, the shown one current', () => {
-    render(<PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />);
+  describe('the privilege filter', () => {
+    const assign = vi.fn();
+    afterEach(() => {
+      assign.mockReset();
+      vi.unstubAllGlobals();
+    });
+    const filterButton = () => screen.getByRole('button', { name: 'Filter' });
 
-    const nav = screen.getByRole('navigation', { name: 'Privilege' });
-    const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['All Privileges', privilegeLedgerHref({ userId: SUBJECT })],
-      ['Admin', privilegeLedgerHref({ userId: SUBJECT, privilege: 'admin' })],
-      ['Coven Creation', privilegeLedgerHref({ userId: SUBJECT, privilege: 'create_workspace' })],
-    ]);
-    expect(within(nav).getByRole('link', { current: 'page' })).toHaveTextContent('Admin');
+    it('is a GET form to the page, its privilege a native select keeping the user', () => {
+      render(
+        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
+      );
+
+      const form = screen.getByRole('form', { name: 'Filter privilege changes' });
+      expect(form).toHaveAttribute('method', 'get');
+      expect(form).toHaveAttribute('action', '/admin/privilege-changes');
+      expect(form.querySelector('input[type="hidden"][name="user"]')).toHaveValue(SUBJECT);
+      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
+      expect(privilege).toHaveAttribute('name', 'privilege');
+      expect(privilege).toHaveValue('admin');
+      expect(
+        within(privilege)
+          .getAllByRole('option')
+          .map((option) => [option.textContent, option.getAttribute('value')]),
+      ).toEqual([
+        ['All', ''],
+        ['Admin', 'admin'],
+        ['Coven creation', 'create_workspace'],
+      ]);
+    });
+
+    it('carries no user when the ledger is not narrowed to one', () => {
+      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+
+      const form = screen.getByRole('form', { name: 'Filter privilege changes' });
+      expect(form.querySelector('input[name="user"]')).toBeNull();
+      expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('');
+    });
+
+    it('offers Filter only for a new privilege, and opens it from the first page', () => {
+      vi.stubGlobal('location', { ...window.location, assign });
+      render(
+        <PrivilegeLedger changes={[GRANT]} filter={{ userId: SUBJECT, privilege: 'admin' }} />,
+      );
+      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
+      expect(filterButton()).toBeDisabled();
+
+      fireEvent.change(privilege, { target: { value: 'create_workspace' } });
+      expect(filterButton()).toBeEnabled();
+      fireEvent.change(privilege, { target: { value: 'admin' } });
+      expect(filterButton()).toBeDisabled();
+
+      fireEvent.change(privilege, { target: { value: '' } });
+      fireEvent.click(filterButton());
+
+      expect(assign).toHaveBeenCalledWith(privilegeLedgerHref({ userId: SUBJECT }));
+    });
+
+    it('sends nothing when nothing changed', () => {
+      vi.stubGlobal('location', { ...window.location, assign });
+      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+
+      fireEvent.submit(screen.getByRole('form', { name: 'Filter privilege changes' }));
+
+      expect(assign).not.toHaveBeenCalled();
+    });
   });
 
   it('says whose changes it shows, and links back to every user', () => {
@@ -135,11 +190,6 @@ describe('PrivilegeLedger', () => {
     render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
 
     expect(screen.queryByRole('link', { name: 'Show Every User' })).toBeNull();
-    expect(
-      within(screen.getByRole('navigation', { name: 'Privilege' })).getByRole('link', {
-        current: 'page',
-      }),
-    ).toHaveTextContent('All Privileges');
   });
 
   it.each([

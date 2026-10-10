@@ -26,14 +26,20 @@ id.
 
 ## Contracts
 
-- **One ledger, filtered, not a page per privilege.** A `<nav>` labelled
-  "Privilege" offers All Privileges, Admin and Coven Creation as links, each
-  keeping the user filter, the one shown `aria-current="page"` and in
-  `<strong>`, so it is told apart by more than colour. A link rather than a
-  form: there is nothing to type, and a link is an address before hydration.
-  `href.ts`'s `privilegeLedgerHref` builds every address here, the pager's and
-  each `UserList` row's History link included: `?user=<id>` and
-  `?privilege=admin|create_workspace`.
+- **One ledger, filtered, not a page per privilege.** The filter is a GET
+  form to `/admin/privilege-changes`, named "Filter privilege changes" inside
+  a `<search>` landmark, as the user list's is
+  ([`user-list.md`](user-list.md)): a native Privilege dropdown
+  (`privilege`: All, Admin or Coven creation), on the owner's call, and a
+  Filter button. It is `filter.tsx`, the one client file here. A native
+  `<select>`, so before hydration the form still submits, All as
+  `privilege=`, which the page reads as no privilege, and the user the ledger
+  is narrowed to rides along as a hidden `user`. Filter is `disabled` while
+  the dropdown matches the filter shown, as the user list's is (MB.53), and a
+  submit opens the new filter from the first page as a full load, the user
+  kept. `href.ts`'s `privilegeLedgerHref` builds every address here, the
+  submit's, the pager's and each `UserList` row's History link included:
+  `?user=<id>` and `?privilege=admin|create_workspace`.
 - **Narrowed to one user, it says so**: "Changes to <name> only.", with a
   Show Every User link that keeps the privilege.
 - **Seven columns**: When, User, Privilege, Change, How, Changed By and Note,
@@ -56,7 +62,8 @@ id.
 ## Styling
 
 Layout only, until the admin area's design review (MB.115): a column of the
-filter, the table and the pager; the privilege links a wrapping row; the time
+filter, the table and the pager; the filter a wrapping row of the field and
+the button, on the `.field`, `.select` and `.btn` primitives; the time
 on one line; and the note held to `$measure`. The table is the `.data-table`
 primitive in its `.data-table-frame`, the pager the `.pager` primitive.
 Tokens: `space()` and `$measure`.
@@ -73,7 +80,8 @@ snapshots.
 
 `tests/components/PrivilegeLedger/index.test.tsx` covers the headings, each
 row's cells, the links to the user rows and the people without one, the
-`<time>`, the privilege links and the current one, the user line, every empty
+`<time>`, the filter's form, dropdown, hidden user, disabled and enabled
+Filter and the address it opens, the user line, every empty
 state, the pager, and `privilegeLedgerHref`.
 `tests/app/admin/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built

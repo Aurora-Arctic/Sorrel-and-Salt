@@ -16,13 +16,11 @@
   gap: space(3);
 }
 
-.privilege-ledger__privileges {
+.privilege-ledger__search {
   display: flex;
   flex-wrap: wrap;
+  align-items: end;
   gap: space(3) space(5);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .privilege-ledger .data-table time {

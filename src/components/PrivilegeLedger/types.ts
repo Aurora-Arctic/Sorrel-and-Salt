@@ -38,6 +38,11 @@ export interface PrivilegeLedgerFilter {
   privilege?: LedgerPrivilege;
 }
 
+/** The privilege filter: the filter the page shows, which the form starts from and compares against. */
+export interface PrivilegeLedgerFilterProps {
+  filter: PrivilegeLedgerFilter;
+}
+
 export interface PrivilegeLedgerProps {
   /** This page's rows, newest first. */
   changes: readonly PrivilegeLedgerEntry[];

@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import Pager from '../Pager';
+import PrivilegeLedgerFilter from './filter';
 import { privilegeLedgerHref } from './href';
 import type {
   LedgerPerson,
@@ -12,7 +13,8 @@ import './index.scss';
 
 // `/admin/privilege-changes`' filter, table and pager (MB.200). Render-only:
 // the page reads one page of the ledger through the identity service and
-// hands it over (claude-docs/components/privilege-ledger.md).
+// hands it over (claude-docs/components/privilege-ledger.md). The filter is
+// `filter.tsx`, its one client file.
 
 const PRIVILEGE_LABELS: Record<LedgerPrivilege, string> = {
   admin: 'Admin',
@@ -27,13 +29,6 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   invitation: 'Invitation accepted',
   manual: 'Manual fix',
 };
-
-/** What each privilege filter is called, in the order offered. */
-const PRIVILEGE_FILTERS: readonly { privilege?: LedgerPrivilege; label: string }[] = [
-  { label: 'All Privileges' },
-  { privilege: 'admin', label: 'Admin' },
-  { privilege: 'create_workspace', label: 'Coven Creation' },
-];
 
 /** What a privilege grants, as the empty state says it. */
 const WHO_HOLDS: Record<LedgerPrivilege, string> = {
@@ -88,21 +83,7 @@ const PrivilegeLedger = ({
 }: PrivilegeLedgerProps): ReactElement => (
   <div className="privilege-ledger">
     <div className="privilege-ledger__filter">
-      <nav aria-label="Privilege">
-        <ul className="privilege-ledger__privileges">
-          {PRIVILEGE_FILTERS.map(({ privilege, label }) => (
-            <li key={label}>
-              <a
-                href={privilegeLedgerHref({ userId: filter.userId, privilege })}
-                aria-current={privilege === filter.privilege ? 'page' : undefined}
-              >
-                {/* Told apart from the others by more than its colour. */}
-                {privilege === filter.privilege ? <strong>{label}</strong> : label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <PrivilegeLedgerFilter filter={filter} />
       {filter.userId && (
         <p>
           Changes to {subjectName ?? 'this account'} only.{' '}
