@@ -1,3 +1,4 @@
+import type { SQL } from 'drizzle-orm';
 import type { AnyPgColumn, ExtraConfigColumn } from 'drizzle-orm/pg-core';
 import type postgres from 'postgres';
 import type { userPrivilegeRoute } from '../modules/identity/schema/user-privilege-changes';
@@ -29,6 +30,23 @@ export type PrivilegeRoute = (typeof userPrivilegeRoute.enumValues)[number];
 export interface PrivilegeDeclaration {
   via: PrivilegeRoute;
   note?: string;
+}
+
+/**
+ * Who `publishActor` publishes: the acting user, the admin impersonating
+ * them, and the privilege route and note a write changing a privilege
+ * declares (MB.195). Each absent one is published as ''.
+ */
+export interface PublishedActor {
+  userId: string;
+  impersonatedBy?: string;
+  route?: PrivilegeRoute;
+  note?: string;
+}
+
+/** What `publishActor` runs its one statement on: `withAudit`'s transaction or the seed's. */
+export interface ActorExecutor {
+  execute(query: SQL): PromiseLike<unknown>;
 }
 
 /** The audit stamps' four names, read off the factory that builds them. */

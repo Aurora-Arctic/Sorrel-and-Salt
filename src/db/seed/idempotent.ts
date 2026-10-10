@@ -1,7 +1,6 @@
-import { sql } from 'drizzle-orm';
 import type { PgInsertValue, PgTable } from 'drizzle-orm/pg-core';
 import { BOOTSTRAP_SESSION, insertBootstrapAdmin } from './bootstrap-admin';
-import { applyAudit } from '../audit';
+import { applyAudit, publishActor } from '../audit';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type {
   FlatTable,
@@ -16,16 +15,17 @@ import type {
 // gives, not `withAudit` (claude-docs/design-decisions/m1.21-seed-writes-through-its-handle.md).
 
 /**
- * The seed's transaction: the GUC published exactly as `withAudit` publishes it
- * — parameterised `set_config`, transaction-local — and the bootstrap user
- * present before `body` writes a row that names it as creator.
+ * The seed's transaction: the bootstrap user published as the actor by
+ * `publishActor`, as `withAudit` publishes its session — all four settings,
+ * transaction-local — and present before `body` writes a row that names it as
+ * creator.
  */
 export async function beginSeedTransaction<T>(
   db: SeedDatabase,
   body: (tx: SeedTransaction) => Promise<T>,
 ): Promise<T> {
   return db.transaction(async (tx) => {
-    await tx.execute(sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true)`);
+    await publishActor(tx, { userId: BOOTSTRAP_USER_ID });
     await insertBootstrapAdmin(tx);
     return body(tx);
   });
@@ -45,13 +45,9 @@ export async function declaringBootstrapPrivileges<T>(
   actor: string,
   body: () => Promise<T>,
 ): Promise<T> {
-  await tx.execute(
-    sql`select set_config('app.current_user_id', ${actor}, true), set_config('app.privilege_route', 'bootstrap', true)`,
-  );
+  await publishActor(tx, { userId: actor, route: 'bootstrap' });
   const result = await body();
-  await tx.execute(
-    sql`select set_config('app.current_user_id', ${BOOTSTRAP_USER_ID}, true), set_config('app.privilege_route', '', true)`,
-  );
+  await publishActor(tx, { userId: BOOTSTRAP_USER_ID });
   return result;
 }
 

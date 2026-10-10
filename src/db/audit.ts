@@ -1,5 +1,8 @@
+import { sql } from 'drizzle-orm';
 import { timestamp, uuid } from 'drizzle-orm/pg-core';
 import type {
+  ActorExecutor,
+  PublishedActor,
   UsersIdReference,
   AuditOperation,
   AuditSession,
@@ -96,4 +99,24 @@ export function applyAudit<T extends object>(
     case 'delete':
       return { ...rest, deletedAt: now, deletedBy: session.userId };
   }
+}
+
+/**
+ * Publishes who is writing as the four transaction-local settings every write
+ * publishes — `app.current_user_id`, `app.impersonated_by`,
+ * `app.privilege_route` and `app.privilege_note` — each always set, an
+ * absent one as '', so no reader sees a value an earlier transaction left on
+ * a pooled connection. `set_config(…, true)` is `SET LOCAL` with a bind
+ * parameter, and one statement costs one round trip
+ * (claude-docs/db/write-path.md, "app.current_user_id, published per
+ * transaction"). The executor is the caller's transaction, so this module
+ * stays client-free and serves `withAudit` and the seed alike.
+ */
+export async function publishActor(
+  executor: ActorExecutor,
+  { userId, impersonatedBy, route, note }: PublishedActor,
+): Promise<void> {
+  await executor.execute(
+    sql`select set_config('app.current_user_id', ${userId}, true), set_config('app.impersonated_by', ${impersonatedBy ?? ''}, true), set_config('app.privilege_route', ${route ?? ''}, true), set_config('app.privilege_note', ${note ?? ''}, true)`,
+  );
 }
