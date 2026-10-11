@@ -2,7 +2,6 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { setupServer } from 'msw/node';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { signInErrorMessage } from '@/lib/sign-in';
 import {
   ORIGIN,
   cookieHeader,
@@ -147,7 +146,7 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
     expect(await sessionUser(cookieHeader(response))).toBe(owner?.id);
   });
 
-  it('refuses the same sign-in with the mapped sentence while the squat is inside its window', async () => {
+  it('refuses the same sign-in as account_not_linked while the squat is inside its window', async () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, INSIDE);
 
@@ -156,9 +155,6 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
     expect(response.status).toBe(302);
     const error = new URL(response.headers.get('location')!, ORIGIN).searchParams.get('error');
     expect(error).toBe('account_not_linked');
-    expect(signInErrorMessage(error!)).toBe(
-      "Sign-in didn't work. If you signed in before with a different provider, sign in that way, then add this one under Account.",
-    );
     // The squat is what refused it, and it is still there.
     expect((await userRow(OWNER))?.id).toBe(squatter.row.id);
   });

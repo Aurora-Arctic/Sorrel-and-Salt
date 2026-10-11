@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 
 // /sign-in touches no database — unlike smoke.spec.ts, no
 // test.describe.configure({ mode: 'serial' }) or recreateE2eDatabase() is
@@ -26,6 +26,7 @@ test('sign-in page offers every roster provider, reachable by keyboard, with no 
     await expect(button).toHaveAttribute('aria-disabled', 'true');
   }
   await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
 
   // "Reachable by keyboard" means real Tab navigation reaches every one —
   // aria-disabled (not the disabled attribute) is what keeps a greyed

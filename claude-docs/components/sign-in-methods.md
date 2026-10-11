@@ -53,8 +53,8 @@ the code and the provider it was for, and the sentence shows in that
 provider's row. A failure before any redirect, such as a network error or an
 unregistered provider, shows `GENERIC_LINK_ERROR` in the row too.
 
-An unconfigured provider's Add is `aria-disabled`, names the "Not available
-right now." note (`ProviderUnavailableNote`,
+An unconfigured provider's Add is `aria-disabled`, names the "This sign-in
+method isn't available right now." note (`ProviderUnavailableNote`,
 [`provider-mark.md`](provider-mark.md)) in its `aria-describedby`, and
 starts nothing. It is not `disabled`, so it stays in the tab order, as on
 `/sign-in`. A provider that is linked but no longer configured still has its

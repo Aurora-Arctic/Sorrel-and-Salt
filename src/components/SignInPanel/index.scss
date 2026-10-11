@@ -6,7 +6,7 @@
 // column of its own, narrower than the frame's 28rem: 22rem is about the
 // button column plus the room the last-used badge hangs into, and a wider
 // panel only stretches the error notice past the buttons it is about.
-// `border-box`, so a caller's padding — a `.panel` ground — stays inside it.
+// `border-box`, so the padding of its own `.panel` ground stays inside it.
 // Children stretch to the column, and the button grid centres its own.
 .sign-in-panel {
   box-sizing: border-box;
@@ -69,7 +69,7 @@
 // the provider's published colours rather than our $accent/$secondary
 // tokens, since they are the provider's; icons.tsx names each mark's source.
 // A white button takes its brand's `edge`; one with none keeps the
-// transparent edge above, restated so a brand can be swapped in over another.
+// transparent edge above.
 //
 // `.btn` itself changes text colour on hover/focus (to `$text-on-color`,
 // for a plain outlined button); a brand button's text colour is part of the
@@ -83,8 +83,6 @@
 
   @if map.has-key(map.get($brand-palettes, $brand), 'edge') {
     border-color: brand-color($brand, 'edge');
-  } @else {
-    border-color: transparent;
   }
 
   &:hover,
@@ -128,26 +126,4 @@
   top: -1.125rem;
   left: -1.25rem;
   box-shadow: $shadow-floating;
-}
-
-// Proposal (MB.116), for the owner's call between the corner and the end of
-// the label: the badge back in the flow after "Continue with X", so the
-// column needs no room above each button. Delete whichever placement loses.
-.sign-in-panel--badge-inline {
-  .sign-in-panel__providers {
-    gap: space(3);
-    margin-top: 0;
-  }
-
-  .sign-in-panel__last-used {
-    position: static;
-    box-shadow: none;
-  }
-}
-
-// Proposal (MB.116), for the owner's call on Microsoft's white button in the
-// light theme: Microsoft's own dark button in its place, against the #808080
-// edge. Delete with the story that loses.
-.sign-in-panel--microsoft-dark .sign-in-panel__button--microsoft.btn {
-  @include brand-button('microsoft-dark');
 }

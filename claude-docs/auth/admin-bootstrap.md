@@ -319,9 +319,8 @@ verification window, and three hours at most. The argument is
   vouching for its address, into a row that is an admin until MB.58
   demotes it.
 - **The refusal.** `account_not_linked` maps in `src/lib/sign-in.ts` to one
-  sentence whatever the cause: _"Sign-in didn't work. If you signed in
-  before with a different provider, sign in that way, then add this one
-  under Account."_ A squatted address and a provider that never vouches
+  sentence whatever the cause: _"We couldn't sign you in this way. Use the
+  sign-in method you used before, then add this one on your account page."_ A squatted address and a provider that never vouches
   share the code, and naming either would confirm the address is taken
   (MB.71).
 - **A change never unverifies a row.** An established account asking for a

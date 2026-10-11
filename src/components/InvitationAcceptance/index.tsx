@@ -24,7 +24,7 @@ const AcceptInvitationDocument = graphql(`
 
 /** What accepting grants, by tier; M7.5 adds the workspace's. */
 const GRANTS = {
-  site: 'You have been invited to become an admin of Sorrel & Salt.',
+  site: "You've been invited to be an admin of Sorrel & Salt.",
 } as const;
 
 const Accept = ({
@@ -64,7 +64,7 @@ const Accept = ({
           onClick={() => void accept()}
         >
           {sending && <span className="spinner" aria-hidden="true" />}
-          {sending ? 'Accepting' : 'Accept Invitation'}
+          {sending ? 'Accepting Invitation' : 'Accept Invitation'}
         </button>
       </p>
     </>
@@ -77,8 +77,8 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
     {props.status === 'signed-out' && (
       <>
         <p className="invitation-acceptance__text">
-          Someone has invited you to Sorrel &amp; Salt. Sign in with an account that uses the email
-          address the invitation was sent to.
+          You&apos;ve been invited to Sorrel &amp; Salt. Sign in with an account whose email address
+          is the one this invitation was sent to.
         </p>
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>

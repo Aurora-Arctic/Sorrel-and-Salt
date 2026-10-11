@@ -15,7 +15,7 @@ import './index.scss';
 // writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
-const SignInPanel = ({ next, error, configured, className }: SignInPanelProps): ReactElement => {
+const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // Seeded from the server-rendered callback error, then replaced by a
   // pre-redirect failure (signIn.social's own `{ error }` result) — the two
   // never show at once, so one field covers both.
@@ -38,9 +38,12 @@ const SignInPanel = ({ next, error, configured, className }: SignInPanelProps): 
   };
 
   return (
-    <div className={className ? `sign-in-panel ${className}` : 'sign-in-panel'}>
+    // Its own card ground, `.panel`, rather than the page's: /sign-in holds
+    // nothing else (claude-docs/components/sign-in-panel.md, "Styling").
+    <div className="panel sign-in-panel">
       <div className="header sign-in-panel__header">
         <h1>Sign In</h1>
+        <p className="lede">Sign in, or create your account, with one of these.</p>
       </div>
       {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
@@ -75,14 +78,14 @@ const SignInPanel = ({ next, error, configured, className }: SignInPanelProps): 
                 aria-disabled={isAvailable ? undefined : true}
                 aria-describedby={isAvailable ? undefined : noteId}
                 // Read as one phrase with a pause, where the text alone would
-                // run the label into the badge: "Discord Last used".
+                // run the label into the badge: "Discord Last Used".
                 aria-label={isLastUsed ? `Continue with ${provider.label}, last used` : undefined}
                 onClick={() => handleClick(provider.id)}
               >
                 <Mark chip />
                 Continue with {provider.label}
                 {isLastUsed && (
-                  <span className="badge badge--last-used sign-in-panel__last-used">Last used</span>
+                  <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
                 )}
               </button>
               {!isAvailable && <ProviderUnavailableNote id={noteId} />}
