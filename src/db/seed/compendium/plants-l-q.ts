@@ -9,6 +9,13 @@ import type { SeedCompendiumShard } from '../types';
 export const PLANTS_L_Q: SeedCompendiumShard = {
   name: 'plants-l-q',
   sources: {
+    'nccih-european-mistletoe': {
+      kind: 'web_page',
+      title: 'European Mistletoe: Usefulness and Safety',
+      container: 'National Center for Complementary and Integrative Health',
+      url: 'https://www.nccih.nih.gov/health/european-mistletoe',
+      accessed: '2026-10-11',
+    },
     'nccih-lavender': {
       kind: 'web_page',
       title: 'Lavender: Usefulness and Safety',
@@ -21,6 +28,34 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       title: 'Licorice Root: Usefulness and Safety',
       container: 'National Center for Complementary and Integrative Health',
       url: 'https://www.nccih.nih.gov/health/licorice-root',
+      accessed: '2026-10-11',
+    },
+    'nccih-milk-thistle': {
+      kind: 'web_page',
+      title: 'Milk Thistle: Usefulness and Safety',
+      container: 'National Center for Complementary and Integrative Health',
+      url: 'https://www.nccih.nih.gov/health/milk-thistle',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-acacia-dealbata': {
+      kind: 'entry',
+      title: 'Acacia dealbata',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Acacia_dealbata&oldid=1367581492',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-aconitum-napellus': {
+      kind: 'entry',
+      title: 'Aconitum napellus',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Aconitum_napellus&oldid=1354831815',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-adiantum': {
+      kind: 'entry',
+      title: 'Adiantum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Adiantum&oldid=1354820818',
       accessed: '2026-10-11',
     },
     'wikipedia-alchemilla-vulgaris': {
@@ -44,6 +79,13 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Aloysia_citrodora&oldid=1355041172',
       accessed: '2026-10-11',
     },
+    'wikipedia-althaea-officinalis': {
+      kind: 'entry',
+      title: 'Althaea officinalis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Althaea_officinalis&oldid=1335930474',
+      accessed: '2026-10-11',
+    },
     'wikipedia-anemone-hepatica': {
       kind: 'entry',
       title: 'Anemone hepatica',
@@ -56,6 +98,27 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       title: 'Arum maculatum',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Arum_maculatum&oldid=1332625066',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-botrychium': {
+      kind: 'entry',
+      title: 'Botrychium',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Botrychium&oldid=1371114794',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-calendula-officinalis': {
+      kind: 'entry',
+      title: 'Calendula officinalis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Calendula_officinalis&oldid=1370530450',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-caltha-palustris': {
+      kind: 'entry',
+      title: 'Caltha palustris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Caltha_palustris&oldid=1346030121',
       accessed: '2026-10-11',
     },
     'wikipedia-cardamine-pratensis': {
@@ -86,6 +149,13 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Cypripedium_parviflorum&oldid=1349033568',
       accessed: '2026-10-11',
     },
+    'wikipedia-dryopteris-filix-mas': {
+      kind: 'entry',
+      title: 'Dryopteris filix-mas',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Dryopteris_filix-mas&oldid=1315784801',
+      accessed: '2026-10-11',
+    },
     'wikipedia-ficaria-verna': {
       kind: 'entry',
       title: 'Ficaria verna',
@@ -93,11 +163,25 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Ficaria_verna&oldid=1371144682',
       accessed: '2026-10-11',
     },
+    'wikipedia-filipendula-ulmaria': {
+      kind: 'entry',
+      title: 'Filipendula ulmaria',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Filipendula_ulmaria&oldid=1344915470',
+      accessed: '2026-10-11',
+    },
     'wikipedia-galium-verum': {
       kind: 'entry',
       title: 'Galium verum',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Galium_verum&oldid=1361872865',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-ipomoea': {
+      kind: 'entry',
+      title: 'Ipomoea',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ipomoea&oldid=1368824290',
       accessed: '2026-10-11',
     },
     'wikipedia-key-lime': {
@@ -170,11 +254,95 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Lobelia_inflata&oldid=1371624053',
       accessed: '2026-10-11',
     },
+    'wikipedia-lovage': {
+      kind: 'entry',
+      title: 'Lovage',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Lovage&oldid=1365919161',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-magnolia-virginiana': {
+      kind: 'entry',
+      title: 'Magnolia virginiana',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Magnolia_virginiana&oldid=1372165589',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-maize': {
+      kind: 'entry',
+      title: 'Maize',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Maize&oldid=1377441710',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-malva-sylvestris': {
+      kind: 'entry',
+      title: 'Malva sylvestris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Malva_sylvestris&oldid=1377982137',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-mandragora-officinarum': {
+      kind: 'entry',
+      title: 'Mandragora officinarum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Mandragora_officinarum&oldid=1335584400',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-maple': {
+      kind: 'entry',
+      title: 'Maple',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Maple&oldid=1373909275',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-marjoram': {
+      kind: 'entry',
+      title: 'Marjoram',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Marjoram&oldid=1375540427',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-neltuma-juliflora': {
+      kind: 'entry',
+      title: 'Neltuma juliflora',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Neltuma_juliflora&oldid=1376750310',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-nelumbo-nucifera': {
+      kind: 'entry',
+      title: 'Nelumbo nucifera',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Nelumbo_nucifera&oldid=1379327692',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-peucedanum-ostruthium': {
+      kind: 'entry',
+      title: 'Peucedanum ostruthium',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Peucedanum_ostruthium&oldid=1368840188',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-podophyllum-peltatum': {
+      kind: 'entry',
+      title: 'Podophyllum peltatum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Podophyllum_peltatum&oldid=1352956831',
+      accessed: '2026-10-11',
+    },
     'wikipedia-pseudognaphalium-obtusifolium': {
       kind: 'entry',
       title: 'Pseudognaphalium obtusifolium',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Pseudognaphalium_obtusifolium&oldid=1368567046',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-silybum-marianum': {
+      kind: 'entry',
+      title: 'Silybum marianum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Silybum_marianum&oldid=1374092218',
       accessed: '2026-10-11',
     },
     'wikipedia-syringa-vulgaris': {
@@ -184,11 +352,25 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Syringa_vulgaris&oldid=1337977374',
       accessed: '2026-10-11',
     },
+    'wikipedia-thalictrum': {
+      kind: 'entry',
+      title: 'Thalictrum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Thalictrum&oldid=1367084534',
+      accessed: '2026-10-11',
+    },
     'wikipedia-tilia-europaea': {
       kind: 'entry',
       title: 'Tilia × europaea',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Tilia_%C3%97_europaea&oldid=1379421096',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-viscum-album': {
+      kind: 'entry',
+      title: 'Viscum album',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Viscum_album&oldid=1376608628',
       accessed: '2026-10-11',
     },
   },
@@ -2603,6 +2785,2662 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
               source: 'kynes-plants',
               locator: 's.v. Lords and Ladies',
               supports: ['colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Lotus',
+      canonicalName: 'Nelumbo nucifera',
+      nomenclature: 'botanical',
+      description:
+        'The sacred lotus is an aquatic perennial, one of just two living species in the family Nelumbonaceae, and often confused with the true water lilies, although modern classification places its nearest relatives among the sycamores. It roots in the mud of ponds and river beds, and its round leaves, up to a metre across, either float or stand high above the water on long stalks. The flowers, as much as 35 centimetres wide, are usually pink with a yellow centre, and the central cone ripens into the seed head. Its native range runs from East Asia through northern Indochina to central and northern India. It has been grown for its edible seeds for some three thousand years, and its starchy rhizomes are a common vegetable across Asia. It is the national flower of India, sacred in both Hinduism and Buddhism, and closely tied to Lakshmi and Vishnu. Kynes notes that Hindu texts make it an emblem of the womb and the life-giving mother, while Buddhists see the four elements in its rise from mud through water into air and sunlight. The ancient Egyptians held it sacred and offered it to their gods. In magical practice its scent is said to protect whoever breathes it in, and carrying any part of it is meant to win divine favour and good fortune.',
+      elements: ['water', 'air', 'earth', 'fire'],
+      planets: ['Moon', 'Sun'],
+      zodiacSigns: ['Cancer'],
+      safetyNotes: 'Cunningham warns that it may upset the digestive system if taken internally.',
+      folkNames: [
+        'Baino',
+        'Egyptian Lotus',
+        'Sacred Lotus',
+        'Indian Lotus',
+        'Pink Lotus',
+        'Padma',
+        'Kamala',
+        'East Indian Lotus',
+        'Hindu Lotus',
+        'Oriental Lotus',
+      ],
+      deities: [
+        'Aphrodite',
+        'Apollo',
+        'Ceres',
+        'Demeter',
+        'Hathor',
+        'Hermes',
+        'Horus',
+        'Isis',
+        'Kuan Yin',
+        'Lakshmi',
+        'Osiris',
+        'Ra',
+        'Thoth',
+        'Vishnu',
+      ],
+      categories: [
+        'Protection',
+        'Harmony',
+        'Creativity',
+        'Inspiration',
+        'Love',
+        'Peace',
+        'Purification',
+        'Transformation',
+        'Truth',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Lotus; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Lotus',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 594',
+          supports: ['canonicalName', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-nelumbo-nucifera',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            'The seed is the part the AHPA handbook covers, as traditional Chinese medicine uses it, with the green embryo taken out. Husked and peeled, the seeds are eaten fresh or dried for keeping; lotus seed tea is drunk in Korea, and a tea of the embryo in China and Vietnam. Cunningham uses the seeds, with the pods, to counter love spells.',
+          safetyNotes:
+            'AHPA safety class 2d: not for people with constipation, dry stools or a distended abdomen. Reference texts on Chinese and Indian medicine give no caution for pregnancy, though seed extracts disturbed the oestrous cycle in rats and mice. Its safety while nursing has not been established.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 594–595; p. xxii',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-nelumbo-nucifera',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description:
+            'The thick rhizome, sold as lotus root, is eaten as a vegetable across Asia, especially in China, Japan, India and Pakistan: fried, cooked in soups, steeped in syrup or pickled, or dried and ground into flour. Cunningham has a piece of the root placed under the tongue, with spoken words, to open a locked door.',
+          safetyNotes:
+            'Eaten raw, the rhizome, like the leaves and petals, can pass on parasites such as Fasciolopsis buski, so it should be cooked first.',
+          references: [
+            {
+              source: 'wikipedia-nelumbo-nucifera',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Pod',
+          description:
+            'The dried seed head, shaped like the spout of a watering can, is sold around the world for decoration and dried flower arranging, and Kynes lists dried pods among the forms on sale. Cunningham pairs the pods with the seeds to counter love spells.',
+          references: [
+            {
+              source: 'wikipedia-nelumbo-nucifera',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            "The flower holds its own temperature between 30 and 35 °C even when the air is far cooler, perhaps to draw cold-blooded insect pollinators. Kynes describes the sacred lotus's bloom as usually pink with a yellow centre, sometimes white or white tipped with pink, and cultivated flowering varieties also come in yellow and red.",
+          colors: ['pink', 'white', 'yellow', 'red'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-nelumbo-nucifera',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Kynes lists lotus essential oil among the forms on sale, and uses it in a diffuser to make a ritual space sacred.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lotus',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Lovage',
+      canonicalName: 'Levisticum officinale',
+      nomenclature: 'botanical',
+      description:
+        "Lovage is a tall, upright perennial of the carrot family, Apiaceae, and the only species in its genus, reaching about two and a half metres. Its glossy, deeply divided leaves recall parsley or celery, and in late spring it bears tiny yellow to greenish-yellow flowers in rounded umbels. It is native to Afghanistan and Iran, and has been introduced to most of Europe, parts of South-east Asia and the Americas. Long grown in Europe, it gives leaves for the kitchen, roots eaten as a vegetable and seeds used as a spice, all tasting like a sharper celery or parsley. Charlemagne's Capitulare de villis, written around 800, recommends growing it on royal estates, and in Cornwall a lovage cordial was added to brandy. The English name grew out of 'love-ache', a folk reshaping of the older French levesche, from the late Latin levisticum. Kynes traces its standing as a love herb to the Anglo-Saxons, whose name for it, lufestice, sounded close to the Latin; medieval Europe counted it an aphrodisiac, though it flavoured ale more often, and Romanian custom hung it on doors and windows against evil spirits. In Ukraine women rinsed their hair in an infusion of the leaves to draw men. Cunningham adds a sachet of it to the bath to make the bather more attractive.",
+      elements: ['fire', 'earth'],
+      planets: ['Sun', 'Venus'],
+      zodiacSigns: ['Pisces', 'Taurus'],
+      safetyNotes:
+        'Not to be taken internally during pregnancy or by anyone with kidney problems. Handling the plant while harvesting it can make sensitive skin react to sunlight.',
+      folkNames: [
+        'Chinese Lovage',
+        'Cornish Lovage',
+        'Italian Lovage',
+        'Italian Parsley',
+        'Lavose',
+        'Love Herbs',
+        'Love Rod',
+        'Love Root',
+        'Loving Herbs',
+        'Lubestico',
+        'Sea Parsley',
+        'Common Lovage',
+        'Garden Lovage',
+      ],
+      categories: ['Love', 'Fertility', 'Protection', 'Purification'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Lovage; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Lovage',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-lovage',
+          supports: ['canonicalName', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The root is eaten as a vegetable or grated into salads, and, holding a heavy volatile oil, is used as a mild aquaretic. Kynes sells it cut and dried, and has a piece of it held briefly to steady and ground oneself.',
+          references: [
+            {
+              source: 'wikipedia-lovage',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lovage',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The seeds are used as a spice in the same way as fennel seeds, and in Romania they go, with the dried leaves, into pickled cabbage and cucumbers for flavour and keeping. Kynes lays a ring of scattered seed on the altar to kindle romance between partners.',
+          references: [
+            {
+              source: 'wikipedia-lovage',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lovage',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The shiny green leaves go into salads, soups and broths; in Romania they are as favoured a seasoning for broths as parsley or dill. In Ukraine an infusion of the leaves was used as a hair rinse to attract men.',
+          colors: ['green'],
+          references: [
+            {
+              source: 'wikipedia-lovage',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lovage',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Kynes uses lovage essential oil in a diffuser to drive out negativity and cleanse a room before magic.',
+          safetyNotes:
+            'The essential oil distilled from the root contains furanocoumarins, which can make sensitive people react to sunlight whether it is taken as a medicine or put on the skin.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Lovage',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-lovage',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Magnolia',
+      canonicalName: 'Magnolia virginiana',
+      nomenclature: 'botanical',
+      description:
+        "Sweetbay magnolia is a tree of the magnolia family that can reach 30 metres, evergreen in the milder south of its range and semi-evergreen or deciduous further north. It is native to the lowlands and swamps of the Atlantic coastal plain of the eastern United States, from Florida to Long Island, with an outlying stand on Cape Ann in Massachusetts and a subspecies found only in Cuba's Matanzas Province, and it copes with both flood and drought. Its leaves are silvery beneath, its smooth grey bark is faintly scented like bay laurel, and in late spring or early summer it opens creamy white, strongly vanilla-scented flowers, followed by pinkish-red fruits whose black seeds wear a red coat that birds eat. It was the first magnolia described under modern botanical rules and is the type species of its genus; John Banister collected it in 1678 and it became the first magnolia grown in England. Gardeners plant it for its scented flowers, clean foliage and quick growth. Kynes notes that the Cherokee, Choctaw and Houma used magnolia medicinally. In magical practice magnolia placed by or beneath the bed is meant to hold a couple faithful, Kynes makes a love sachet of the dried leaves, and a seedpod near where a couple sleeps is meant to deepen romance.",
+      elements: ['earth', 'water'],
+      planets: ['Venus', 'Jupiter', 'Saturn'],
+      zodiacSigns: ['Capricorn', 'Libra', 'Taurus'],
+      safetyNotes: 'Cunningham marks magnolia as currently recognised as safe.',
+      folkNames: [
+        'Blue Magnolia',
+        'Cucumber Tree',
+        'Swamp Sassafras',
+        'Sweetbay Magnolia',
+        'Sweetbay',
+        'Swamp Magnolia',
+        'Swamp Bay',
+        'White Bay',
+        'Laurel Magnolia',
+        'Beaver Tree',
+        'Swamp Laurel',
+      ],
+      deities: ['Aphrodite', 'Venus'],
+      categories: [
+        'Fidelity',
+        'Clarity',
+        'Dream Work',
+        'Love',
+        'Protection',
+        'Purification',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Magnolia; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Magnolia',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 542',
+          supports: ['canonicalName', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-magnolia-virginiana',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Bark',
+          description:
+            'The bark is smooth and grey, and its inner layer has a mild scent like bay laurel. It is the part the AHPA handbook covers; American medical texts of the nineteenth and early twentieth centuries list it without cautions.',
+          safetyNotes:
+            'AHPA safety class 2b: best avoided in pregnancy except under the supervision of a qualified healthcare practitioner, because related magnolias are not for use in pregnancy, although no information on this species in pregnancy was found. Its safety while nursing has not been established.',
+          colors: ['grey'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 542–543; p. xxii',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-magnolia-virginiana',
+              supports: ['description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The leaves are glossy green above and, on the sweet bay, silvery beneath, 6 to 12 centimetres long. Kynes sells them dried and makes a love sachet of them.',
+          colors: ['green'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Magnolia',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-magnolia-virginiana',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'The creamy white flowers, 8 to 14 centimetres across, open in late spring or early summer and carry a strong vanilla scent that can sometimes be smelt hundreds of yards away. Kynes lists a magnolia flower essence among the forms on sale.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'wikipedia-magnolia-virginiana',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Magnolia',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Pod',
+          description:
+            'The cone-like fruit, 3 to 5 centimetres long, turns pinkish red in early autumn and splits to release seeds in a fleshy red coat. Kynes keeps a seedpod where a couple sleeps, for romance and faithfulness.',
+          colors: ['red'],
+          references: [
+            {
+              source: 'wikipedia-magnolia-virginiana',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Magnolia',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Kynes diffuses magnolia essential oil while meditating, for clear thought and an honest view of oneself.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Magnolia',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Maidenhair Fern',
+      canonicalName: 'Adiantum',
+      nomenclature: 'botanical',
+      description:
+        "The maidenhair ferns make up Adiantum, a genus of about 250 species in the family Pteridaceae, distinct from the similar-looking maidenhair spleenwort. Their dark, often black stalks carry bright green, delicately cut fronds that Kynes likens to strands of hair, and in spring the new fronds unroll from red fiddleheads. They like moist, well-drained ground rich in humus, from valley-bottom soils to sheer rock walls, and many grow around waterfalls and seeps. Species are most numerous in the Andes, with nearly 40 in China; the five-fingered fern is native to North America, and the Venus-hair fern is found across the world. Many are grown in horticulture. The genus name comes from the Greek for 'unwetted', because the fronds shed water. The Romans linked the fern with Venus, who rose from the sea with her hair dry, and in England, Wales and Ireland it was used against baldness. Legend crowns faeries with it on festive days, yet in Norfolk it was thought unlucky to bring indoors, and in Brazil a maidenhair that wilted under someone's gaze showed the evil eye at work. In magical practice a little maidenhair is soaked in water and then carried or kept where one sleeps, for grace, beauty and love.",
+      elements: ['water', 'air', 'earth'],
+      planets: ['Venus', 'Mercury'],
+      safetyNotes:
+        'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, as it has traditionally been used to bring on menstruation. Large doses may cause vomiting. Its safety while nursing has not been established. Cunningham also advises against taking it internally in pregnancy, and against high doses.',
+      folkNames: ['Venus Hair', 'Rock Fern', 'Fairy Fern'],
+      deities: ['Venus', 'Aphrodite'],
+      categories: [
+        'Love',
+        'Abundance',
+        'Banishing',
+        'Divination',
+        'Healing',
+        'Peace',
+        'Protection',
+        'Psychic Work',
+        'Release',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Maidenhair; p. 266',
+          supports: [
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Maidenhair Fern',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 24; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-adiantum',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 24',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            "Kynes sells the leaves cut and dried. The southern maidenhair's leaflets are small, fan-shaped and slightly lobed; the northern's come in pairs of dark green, wing-shaped leaflets that shorten towards the tip of the frond.",
+          colors: ['green'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maidenhair Fern',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-adiantum',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            "Kynes sells the leaves powdered, and in a ritual to send healing spreads the powder on a plate and traces the recipient's initials in it.",
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maidenhair Fern',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Maize',
+      canonicalName: 'Zea mays',
+      nomenclature: 'botanical',
+      description:
+        'Maize, known in North America as corn, is a tall annual grass, from about 1.2 to 4 metres high, grown for its cereal grain. Its male flowers form a tassel at the top of the stem and shed pollen on the wind, while the female flowers sit lower down as ears, first appearing as silk, each strand of which becomes a kernel. Modern varieties usually have yellow or white kernels, though others are red, blue, purple or black. Indigenous peoples of southern Mexico domesticated it from wild teosinte some nine thousand years ago, and it still depends on people to spread. It is now a staple across the world, eaten as tortillas, polenta and grits, fed to livestock, and pressed or processed into oil, starch, syrup and fuel. Its name reached English through Spanish from the Taíno word mahis. In Mesoamerica maize was honoured as a god, and Kynes notes that it was held sacred in Mexico and in Central and South America. Cunningham tells of the Corn Mother, a goddess of plenty and fertility, and of the Zuni use of differently coloured corn in ritual, with blue cornmeal scattered to bless and as an offering. In folk magic an ear of corn laid in a cradle guards the baby, cornstalks hung over a mirror bring the household luck, and a necklace of dried red kernels is worn against nosebleeds.',
+      elements: ['earth'],
+      planets: ['Venus', 'Sun'],
+      zodiacSigns: ['Virgo'],
+      safetyNotes:
+        'Cunningham marks both the seed and the silk as safe. AHPA places corn silk in safety class 1, with no known contraindications, precautions, drug interactions or side effects; it notes that the silk is a diuretic, and that its safety in pregnancy and while nursing has not been conclusively established.',
+      folkNames: ['Corn', 'Giver of Life', 'Sacred Mother', 'Seed of Seeds', 'Indian Corn'],
+      deities: [
+        'Brigid',
+        'Ceres',
+        'Demeter',
+        'Holda',
+        'Inanna',
+        'Isis',
+        'Lugh',
+        'Osiris',
+        'Persephone',
+      ],
+      categories: [
+        'Protection',
+        'Divination',
+        'Abundance',
+        'Fertility',
+        'Love',
+        'Prophecy',
+        'Prosperity',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Corn; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Grain',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 947–948; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-maize',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            'The kernels, botanically fruits fused to the seed coat, sit in 8 to 32 rows around the cob, up to about 1,200 on a large one. Cunningham divines age with them: draw any ear from a bin and count its grains, twelve to a year. Kynes scatters a handful of grain on the altar as an offering to a chosen deity.',
+          colors: ['yellow', 'white', 'red', 'blue'],
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Corn',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Grain',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-maize',
+              supports: ['description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Pollen',
+          description:
+            'Shed from the tassel and carried by the wind, though most of it settles within a few metres of the plant. Cunningham records that ancient Mesoamerican peoples used maize pollen to bring rain, probably by throwing it into the air.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Corn',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-maize',
+              supports: ['description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Male Fern',
+      canonicalName: 'Dryopteris filix-mas',
+      nomenclature: 'botanical',
+      description:
+        'Male fern is a common fern of the temperate Northern Hemisphere, native to much of Europe, Asia and North America. It grows in damp shade beneath woodland trees and in shady spots on hedge-banks, rocks and screes, though near the northern edge of its range it prefers sunny, well-drained sites. Its upright, semi-evergreen fronds, twice divided into many pairs of leaflets, reach about one and a half metres and rise from a single crown on each rootstock; their stalks are clothed in orange-brown scales, and rows of spore cases form on the underside of mature fronds, opening to release spores between late summer and autumn. The epithet filix-mas means male fern: its robust growth once led people to take it for the male of the more delicate lady fern. Its rhizome has been made into medicines against tapeworms, and a pharmaceutical factory at Nurmijärvi in Finland produced such medicines from it between 1899 and 1964, which is why the fern is that municipality’s emblem plant. Several garden cultivars hold the Royal Horticultural Society’s Award of Garden Merit. In magic, Cunningham assigns it to Mercury and the element of air, and says it is carried to draw luck and to attract women.',
+      elements: ['air'],
+      planets: ['Mercury'],
+      safetyNotes:
+        'Poisonous. Cunningham labels it poison, and AHPA puts it in safety class 3: to be used only under the supervision of an expert qualified in its use. Reported poisonings have caused vomiting, diarrhoea, vertigo, headache, tremors, cold sweats, difficulty breathing, cyanosis, convulsions, stupor and mental disturbance, sometimes with disturbed vision or blindness that was permanent in several cases, and deaths have been reported. Taking it with castor oil, as was once done, is considered dangerous, since the oil is believed to raise the absorption of its toxins. AHPA advises against its use in pregnancy and while nursing.',
+      folkNames: [
+        'Paproc',
+        'Basket Fern',
+        'Aspidium',
+        'Marginal Shield Fern',
+        'Male Shield Fern',
+        'Marginal Fern',
+      ],
+      categories: ['Love'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Male Fern',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 319–320; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-dryopteris-filix-mas',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The part in use is the rhizome, the underground stem from which the fronds rise. It was the raw material for the Finnish tapeworm medicines Filisin and Filicon, and was still being gathered around Nurmijärvi in the 1960s.',
+          safetyNotes:
+            'The rhizome is toxic: too large a dose can cause serious poisoning, blindness and even death.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 319',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-dryopteris-filix-mas',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mallow',
+      canonicalName: 'Malva sylvestris',
+      nomenclature: 'botanical',
+      description:
+        'Common mallow is a herbaceous plant of the mallow family, Malvaceae, and the type species of its genus. Native to Western Europe, North Africa and Asia, it grows in meadows, hedgerows and fallow fields and on waste and rough ground, and it has naturalised as an invasive plant in eastern Australia and North America. It stands up to about a metre and a half, with softly hairy stems and palmately lobed leaves, and through the summer bears showy mauve to reddish-purple flowers streaked with dark veins. Its round fruit, likened to a little wheel of cheese, gave it names such as cheeses and fairy cheese. The young leaves and shoots are eaten from the Mediterranean to the Caucasus, the plant has long served as a yellow dye, and gardeners grow many named cultivars. The Greeks planted it on graves. Irish legend held mallow so strong that nothing natural or supernatural could harm it; in Germany it was used to cure someone bewitched, and on the Isle of Man to lift afflictions caused by faeries. In magic it is a herb of love and protection: Cunningham sets a bouquet of mallow outside the door to turn an absent lover’s thoughts homeward and carries it to attract love, and makes an ointment of its leaves and stems that protects the wearer against black magic.',
+      elements: ['water'],
+      planets: ['Moon', 'Venus'],
+      safetyNotes:
+        'Cunningham marks it safe. AHPA places the flower and leaf in safety class 1, with no known contraindications. It should be taken with at least 250 ml of liquid, and other medicines taken an hour before it or several hours after, since its mucilage may slow their absorption. Its safety in pregnancy and while nursing has not been conclusively established.',
+      folkNames: [
+        'High Mallow',
+        'Mauls',
+        'Cheese Flower',
+        'Blue Mallow',
+        'Common Mallow',
+        'Wood Mallow',
+        'Buttonweed',
+        'Cheese Plant',
+        'Fairy Cheese',
+        'Cheeses',
+        'Tall Mallow',
+        'Mauve des Bois',
+        'Creeping Charlie',
+        'Malva',
+      ],
+      categories: [
+        'Love',
+        'Protection',
+        'Banishing',
+        'Binding',
+        'Dream Work',
+        'Fertility',
+        'Healing',
+        'Peace',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mallow; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mallow',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 546; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-malva-sylvestris',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          description:
+            'Five-petalled, rosy pink to reddish purple and streaked with darker veins. Kynes lists them dried and as a flower essence, a dab of which behind the ears goes into a love spell. They were once strewn on doorways and woven into garlands for May Day, and a tincture of them makes a sensitive test for alkalis.',
+          colors: ['pink', 'purple'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 546',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-malva-sylvestris',
+              supports: ['description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The young leaves are eaten raw or cooked: steamed with garlic and tomatoes in Morocco, Tunisia and Palestine, and stewed in Egypt as khobeiza. Herbalists lay them on the skin in poultices to soften it. Cunningham steeps leaves and stems in vegetable shortening for a protective ointment, and Kynes burns a couple of leaves in the cauldron to counter hexes.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 546',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mallow',
+              supports: ['description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-malva-sylvestris',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Fruit',
+          description:
+            'A ring of 10 to 12 segments about half a centimetre across, shaped like a tiny wheel of cheese and especially rich in mucilage. Kynes likens the fruits to little round moons and uses them in esbat rituals to draw on lunar energy.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-malva-sylvestris',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'Brown to brownish green when ripe and about 2.5 millimetres long. They are taken as a decoction or tea for a soothing, demulcent effect, and yield yellow-green dyes.',
+          colors: ['brown'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-malva-sylvestris',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mandrake',
+      canonicalName: 'Mandragora officinarum',
+      nomenclature: 'botanical',
+      description:
+        'Mandrake is a perennial of the nightshade family, Solanaceae, and the type species of its genus. It has almost no stem: its variable, often hairy leaves, up to about 45 centimetres long, lie in a rosette above a long, thick and often branched root. Bell-shaped flowers, greenish white to pale blue or violet, open between autumn and spring and are followed by glossy yellow to orange berries rather like small tomatoes. Botanists disagree on how widely to draw the species; taken broadly, it grows around the Mediterranean, from North Africa and southern Iberia through Italy, Greece and Turkey to the Levant, in light woodland, olive groves, fallow land and ruins. Its hallucinogenic alkaloids and the human shape of its roots have long tied it to ritual and magic. The root was used to put patients under for surgery in antiquity, and amulets made from it were thought to bring good fortune and cure sterility. Legend said the root screamed as it was pulled up, killing anyone who heard, so animals were tied to it to draw it out. Kynes notes that it has been prized as an aphrodisiac since the Egyptians, and that in Germany owning a root could see a woman executed for witchcraft. Cunningham keeps a whole root on the mantelpiece for the protection, fertility and prosperity of the house.',
+      elements: ['fire', 'earth'],
+      planets: ['Mercury', 'Pluto', 'Saturn', 'Uranus'],
+      zodiacSigns: ['Gemini', 'Taurus'],
+      safetyNotes:
+        'Poisonous. Kynes warns that every part of the plant is toxic and can be fatal if eaten, and Cunningham labels it poison. Its tropane alkaloids, among them atropine, hyoscyamine and scopolamine, make the plant poisonous, the root and leaves above all. Reported poisonings resemble atropine poisoning: blurred vision, dilated pupils, a dry mouth, difficulty passing urine, dizziness, headache, vomiting, flushing and a racing heart, with hyperactivity and hallucinations in most patients, and its anticholinergic effects can lead to asphyxiation.',
+      folkNames: [
+        'Alraun',
+        'Anthropomorphon',
+        'Baaras',
+        'Brain Thief',
+        'Circeium',
+        'Circoea',
+        'Galgenmannchen',
+        'Gallows',
+        'Herb of Circe',
+        'Hexenmannchen',
+        'Ladykins',
+        'Mandragen',
+        'Mandragor',
+        'Mannikin',
+        'Raccoon Berry',
+        'Semihomo',
+        'Wild Lemon',
+        'Womandrake',
+        'Zauberwurzel',
+        "Devil's Apple",
+        'Love Apple',
+        'Mandragora',
+        "Sorcerer's Root",
+        'Mediterranean Mandrake',
+        'European Mandrake',
+      ],
+      deities: ['Hecate', 'Hathor', 'Aphrodite', 'Circe', 'Diana', 'Saturn'],
+      categories: [
+        'Protection',
+        'Fertility',
+        'Love',
+        'Banishing',
+        'Binding',
+        'Courage',
+        'Divination',
+        'Dream Work',
+        'Prosperity',
+        'Psychic Work',
+      ],
+      substitutes: [
+        {
+          name: 'Ash',
+        },
+        {
+          name: 'Apple',
+        },
+        {
+          name: 'Briony',
+        },
+        {
+          identity: 'podophyllum peltatum',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mandrake',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'deities',
+            'categories',
+            'substitutes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mandrake',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'safetyNotes',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-mandragora-officinarum',
+          supports: ['canonicalName', 'description', 'safetyNotes', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The thick, often forked root, whose human-like shape gave the plant its fame. Cunningham hangs it on the bedhead for protection in sleep, uses it as a poppet, sets silver coins beside it to double them, and wakes a dried root by leaving it undisturbed for three days and then soaking it overnight in warm water, which can then be sprinkled about the house to protect it. Kynes puts a root under the bed as a fertility charm.',
+          safetyNotes:
+            'The root is hallucinogenic and narcotic; eating it is likely to cause vomiting and diarrhoea, and large internal doses were said to bring on delirium and madness.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mandrake',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mandrake',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-mandragora-officinarum',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Wrinkled leaves in a rosette at the base of the plant, which Kynes compares to Swiss chard. She lays three of them on the altar or table to strengthen any kind of magical work.',
+          safetyNotes: 'With the root, the leaves are the most poisonous part of the plant.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mandrake',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-mandragora-officinarum',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Maple',
+      canonicalName: 'Acer',
+      nomenclature: 'botanical',
+      description:
+        'The maples make up the genus Acer, about 132 species of trees and shrubs in the soapberry family, most of them native to East Asia, with others in Europe, northern Africa and North America. Most are trees of ten to forty-five metres with opposite, palmately lobed leaves, many are prized for their autumn colour, and all bear paired, winged fruits, the samaras or keys, which spin as they fall and ride the wind. Sugar maple sap is boiled down into maple syrup, the hard timber goes into furniture, bowling pins and the backs of violins, and a maple leaf is the emblem on the flag of Canada. The Latin acer means sharp, which may come from the Greek and Roman use of the wood for spears; the Anglo-Saxons made shields of it, and in medieval England both the tree and a drinking bowl made from a large maple burl were called a mazer. An old belief held that a child passed through the branches of a maple would live long, and Kynes adds that it could also cure illness and turn aside the evil eye. In magical practice the leaves go into love spells and money rituals, branches have long been cut for wands, and three seeds hung in a sachet on the bedpost are said to foster prophetic dreams.',
+      elements: ['air', 'earth'],
+      planets: ['Jupiter'],
+      zodiacSigns: ['Cancer', 'Libra', 'Virgo'],
+      safetyNotes: "Cunningham's health code for maple marks it as currently recognised as safe.",
+      folkNames: ['Hedge Maple', 'Maplin Tree', 'Mazer', "Bird's Eye Maple", 'Hard Maple'],
+      deities: ['Ares', 'Athena', 'Rhiannon', 'Venus'],
+      categories: [
+        'Love',
+        'Longevity',
+        'Abundance',
+        'Communication',
+        'Divination',
+        'Dream Work',
+        'Prophecy',
+        'Prosperity',
+        'Release',
+        'Transformation',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Maple; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Maple',
+          supports: [
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-maple',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          description:
+            'The leaves are the part both books put to use: they go into love spells and money rituals, red autumn leaves are pressed and scattered across the altar to draw or rekindle love, and a couple of leaves are burned to lift the burden of a loss.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Maple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maple',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Maple branches have long served as magical wands. The timber was used for Greek and Roman spears and Anglo-Saxon shields, and the medieval mazer, the drinking bowl that also served for wassail, was made from a maple burl. Today the hard wood of the sugar maple makes bowling pins, butcher blocks and the backs and necks of stringed instruments, and dried maple wood is used to smoke food.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Maple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maple',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-maple',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The seeds grow in pairs, each in a nutlet with a papery wing that makes it spin as it falls. For prophetic dreams, three maple seeds are put in a sachet and hung on the bedpost.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-maple',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Syrup',
+          description:
+            'Maple syrup is made from sap tapped in late winter and early spring, when nights freeze and days thaw, and boiled down in a sugar house; about forty litres of sugar maple sap give one litre of syrup. Any maple can be tapped, but the sugar maple is the usual source.',
+          references: [
+            {
+              source: 'wikipedia-maple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Maple',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Marigold',
+      canonicalName: 'Calendula officinalis',
+      nomenclature: 'botanical',
+      description:
+        'Pot marigold is a short-lived, aromatic perennial of the daisy family, often grown as an annual, standing up to about eighty centimetres with hairy, oblong leaves and yellow or orange flower heads that can open in any month where the climate allows. It is probably native to southern Europe, though its long cultivation has blurred where it began, and it has naturalised widely. The English name honours the Virgin Mary, and the generic name comes from the Latin calends, the first day of the month, after the belief that it flowered every month of the year. The petals are eaten in salads and used in place of saffron, the flowers have served as medicine and dye since Greek and Roman times, and an oil made from them goes into skin products. Greek myth had marigolds spring from the tears Aphrodite shed for Adonis, garlands of them were offered in Hindu temples, and there was once a strong belief in England that the flowers followed the sun. In England they were used to dream of a future love and marriage, and were believed to reveal thieves. In magical practice marigold garlands on the doorposts keep evil out, flowers scattered under the bed protect the sleeper and bring prophetic dreams, a few carried in the pocket win a fair hearing in court, and dried petals strewn around a home dispel negativity.',
+      elements: ['fire'],
+      planets: ['Sun'],
+      zodiacSigns: ['Leo'],
+      safetyNotes:
+        'Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common. Allergic reactions, including anaphylaxis, are rare but have been reported, and so has contact dermatitis from handling the plant. Older references report that it acts as an emmenagogue, and a calendula extract stimulated contractions in isolated animal wombs, though how far that applies to people is unknown. Its safety while nursing has not been established.',
+      folkNames: [
+        'Bride of the Sun',
+        'Calendula',
+        'Drunkard',
+        'Goldes',
+        'Holigolde',
+        "Husbandman's Dial",
+        'Marybud',
+        'Marygold',
+        'Mary Gowles',
+        'Ruddes',
+        'Ruddles',
+        'Spousa Solis',
+        "Summer's Bride",
+        'Common Marigold',
+        'English Marigold',
+        'Goldins',
+        'Pot Marigold',
+        'Sunflower',
+        "Mary's Gold",
+        'Scotch Marigold',
+        'Golds',
+        'Goules',
+        'Souvenir',
+      ],
+      deities: ['Adonis', 'Aphrodite', 'Apollo', 'Artemis', 'Diana'],
+      categories: [
+        'Protection',
+        'Legal Matters',
+        'Psychic Work',
+        'Divination',
+        'Dream Work',
+        'Healing',
+        'Justice',
+        'Prophecy',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Marigold; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Marigold',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 151–152; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 68–70',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-calendula-officinalis',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          colors: ['yellow', 'orange'],
+          description:
+            'The flowers are the part used. Picked at noon, when the sun is strongest, they are said to strengthen and comfort the heart, and added to a bath they win the respect of everyone met. The florets are edible.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 151',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Marigold',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Marigold',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-calendula-officinalis',
+              supports: ['colors', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'An oil made from the flowers is widely used in skin products; Kynes lists calendula infused oil among the forms sold.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Marigold',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-calendula-officinalis',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The leaves can be made into a poultice, believed to help scratches and shallow cuts heal faster and to keep them from infection.',
+          references: [
+            {
+              source: 'wikipedia-calendula-officinalis',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Marjoram',
+      canonicalName: 'Origanum majorana',
+      nomenclature: 'botanical',
+      description:
+        "Marjoram is a perennial herb or low shrub that does not stand much cold, with small, smooth, oval leaves, white, pink or purplish flowers, and a sweet flavour with notes of pine and citrus. It is native to Cyprus and the Mediterranean, Turkey, western Asia, the Arabian Peninsula and the Levant, and may have reached the British Isles in the Middle Ages. Its leaves, fresh or dried, season soups, stews, sausages and blends such as herbes de Provence and za'atar, and the flowering tops are distilled for an essential oil. The Greeks believed Aphrodite created it, the Romans called it the herb of happiness, Greek brides wore garlands of it, and marjoram growing on a grave was taken as a sign that the dead had found happiness. Its scent was once highly valued: it was put in nosegays, sweet bags and washing waters and used as a strewing herb, and in Germany it was hung over the door to keep witchcraft, ghosts and goblins out of the house. In magical practice it is added to food to strengthen love, carried or set in every room for protection, grown in the garden against evil, and given to a downcast person to bring happiness, and the dried herb sprinkled at the corners of a house is said to bring security.",
+      elements: ['air'],
+      planets: ['Mercury'],
+      zodiacSigns: ['Aries', 'Gemini', 'Libra', 'Virgo'],
+      safetyNotes:
+        'Considered safe when used appropriately (AHPA safety class 1), with no known cautions, and Cunningham marks it as currently recognised as safe. No concerns were found for use in pregnancy or while nursing, but safety then has not been conclusively established.',
+      folkNames: [
+        'Joy of the Mountain',
+        'Knotted Marjoram',
+        'Marjorlaine',
+        'Mountain Mint',
+        'Pot Marjoram',
+        'Sweet Marjoram',
+        'Wintersweet',
+      ],
+      deities: ['Venus', 'Aphrodite'],
+      categories: [
+        'Protection',
+        'Love',
+        'Healing',
+        'Peace',
+        'Prosperity',
+        'Psychic Work',
+        'Purification',
+        'Release',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Marjoram; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Oregano and Marjoram',
+          supports: [
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 609; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'p. 31',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-marjoram',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          description:
+            'The aromatic leaves are the part grown and used, fresh or dried; the tops are cut as the plants start to flower and dried slowly in shade.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 609',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Oregano and Marjoram',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-marjoram',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          colors: ['yellow'],
+          description:
+            'The essential oil is steam-distilled from the flowering leaves and tops. It is yellowish and turns brown with age, and its constituents include borneol, camphor and pinene.',
+          references: [
+            {
+              source: 'wikipedia-marjoram',
+              supports: ['form', 'colors', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Oregano and Marjoram',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Marsh Marigold',
+      canonicalName: 'Caltha palustris',
+      nomenclature: 'botanical',
+      description:
+        'Marsh marigold, also called kingcup, is a fleshy, hairless perennial of the buttercup family that grows in marshes, fens, ditches and wet woodland across the temperate Northern Hemisphere. It stands ten to eighty centimetres tall with broad, kidney-shaped leaves, and from April to August carries glossy yellow flowers whose colour comes from petal-like sepals, for it has no true petals. Despite its name it is not related to the other plants called marigolds. The name is said to come from its use in medieval churches at Easter in honour of the Virgin Mary, and it has many local names across Britain, from Molly-blob to publicans-and-sinners. In Ireland the flowers were gathered on May Eve or before dawn on Beltane and hung in houses and barns, laid on windowsills and strewn on doorsteps against malicious faeries. On the Isle of Man it was called the herb of Beltane, used against faeries and witches on Beltane and as a protective charm all through May, in Scotland it protected the milk, and a flower kept in a jar of water was a charm against lightning. In magical practice the flowers are laid on the altar to deepen the bond with spirit guides, and a picture of the flowering plant helps bring clarity about a path of personal growth.',
+      elements: ['water'],
+      planets: ['Sun', 'Uranus'],
+      safetyNotes:
+        'Every part of the plant contains an irritant, chiefly protoanemonin, and its juice can blister or inflame the skin and mucous membranes. The leaves are toxic if eaten, and larger amounts can cause convulsions, a burning throat, vomiting, bloody diarrhoea, dizziness and fainting. Early spring greens and buds are edible only when cooked, since heat breaks the toxins down; they are poisonous raw.',
+      folkNames: [
+        'Kingcup',
+        'Broad Buttercup',
+        'Fairy Bubbles',
+        'Goblin Flower',
+        'May Buttercup',
+        'Brave Bassinets',
+        'Crazy Beth',
+        'Molly-Blob',
+        'May Blob',
+        'Mare Blob',
+        'Boots',
+        'Water Boots',
+        'Meadow-Bright',
+        'Bullflower',
+        'Meadow Buttercup',
+        'Water Buttercup',
+        "Soldier's Buttons",
+        'Meadow Cowslip',
+        'Water Cowslip',
+        "Publican's Cloak",
+        'Crowfoot',
+        'Water Dragon',
+        'Drunkards',
+        'Water Goggles',
+        'Meadow Gowan',
+        'Water Gowan',
+        'Yellow Gowan',
+        'Goldes',
+        'Golds',
+        'Goldings',
+        'Gools',
+        'Cow Lily',
+        'Marybuds',
+        'Publicans-and-Sinners',
+      ],
+      categories: ['Clarity', 'Healing', 'Inspiration', 'Prosperity', 'Protection', 'Strength'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Marsh Marigold',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'wikipedia-caltha-palustris',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          colors: ['yellow'],
+          description:
+            "The flowers carry the plant's lore: gathered at Beltane against faeries, witches and lightning, and laid on the altar in work with spirit guides.",
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Marsh Marigold',
+              supports: ['form', 'colors', 'description'],
+            },
+            {
+              source: 'wikipedia-caltha-palustris',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          safetyNotes:
+            'The leaves are toxic if eaten, and poisonous raw; early spring greens are eaten only after being dipped several times in fresh boiling water until barely tender.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Marsh Marigold',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-caltha-palustris',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Marshmallow',
+      canonicalName: 'Althaea officinalis',
+      nomenclature: 'botanical',
+      description:
+        'Marshmallow is a herbaceous perennial of the mallow family, native to Europe, western Asia and North Africa, and grown both as a garden ornamental and for herbal use. It can stand up to about 1.8 metres tall with few side branches, and the whole plant is clothed in soft, star-shaped hairs. Its broad, toothed leaves are often shallowly lobed, and in August and September it bears pale pink flowers, followed by flat, round fruits known as cheeses. The name of the genus comes from a Greek word meaning to heal. The leaves, flowers and root, the last especially rich in mucilage, have long served in herbal medicine to soothe irritated mucous membranes, and country people used the plant against inflammation both inside and out. The Romans counted a dish of it among their delicacies, and in France the young tops went into spring salads. Kynes notes that the Egyptians wove it into funeral garlands, and that in medieval Europe the slippery sap of the root was rubbed on the hands and body of anyone facing trial by fire. In magical practice it belongs to protection rites, is burned as incense or carried in a sachet to stir the psychic powers, and is set on the altar to draw good spirits into a ritual.',
+      elements: ['water'],
+      planets: ['Moon', 'Venus'],
+      safetyNotes:
+        'Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. It should be taken with plenty of liquid, at least 250 ml. Because it may slow the absorption of drugs taken by mouth, other medicines should be taken an hour before it or several hours after. Its safety in pregnancy and while nursing has not been established, although no concerns were identified.',
+      folkNames: [
+        'Mortification Root',
+        'Sweet Weed',
+        'Wymote',
+        'Heemst',
+        'Slaz',
+        'Hock Herb',
+        'Wild Mallow',
+        'Althaea',
+        'Althea',
+        'Guimauve',
+      ],
+      categories: [
+        'Protection',
+        'Psychic Work',
+        'Banishing',
+        'Binding',
+        'Dream Work',
+        'Fertility',
+        'Healing',
+        'Love',
+        'Peace',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Althea; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mallow',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 53–54; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames', 'description'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'p. 67; p. 165; p. 170',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-althaea-officinalis',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The thick, tapering root is whitish yellow outside and white within, and holds much of the plant’s mucilage. It was once boiled into a soothing posset, and the French pâtes de guimauve were made from it. Peeled, boiled and sweetened it makes a sweet, and boiled and then fried with onions and butter it is said to make a good dish.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 53',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['form'],
+            },
+            {
+              source: 'northcote-herbs',
+              locator: 'p. 67; p. 165',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-althaea-officinalis',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The young leaves can be cooked, and in France the young tops and leaves were eaten in spring salads. Kynes’s mallow entry has a couple of leaves burned in the cauldron to counter hexes.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 53',
+              supports: ['form'],
+            },
+            {
+              source: 'northcote-herbs',
+              locator: 'p. 67',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-althaea-officinalis',
+              supports: ['description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'The flowers are pale pink to lilac, and the buds can be pickled. Dried flowers and flower essence are sold, and Kynes’s mallow entry has the essence dabbed behind the ears in a spell to attract love.',
+          colors: ['pink'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 53',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mallow',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-althaea-officinalis',
+              supports: ['description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Masterwort',
+      canonicalName: 'Peucedanum ostruthium',
+      nomenclature: 'botanical',
+      description:
+        'Masterwort is a perennial of the family Apiaceae, native to the mountains of central and southern Europe, from the Alps and Carpathians to the Massif Central and the northern Apennines, though it has been planted so widely that its true native range is uncertain. Kynes describes it as growing to a little under a metre, with toothed, three-lobed leaves and broad, lacy heads of small white flowers. It flavours a number of liqueurs and bitters, and in Austrian folk medicine its roots and leaves were drunk as tea, wine or liqueur and used outwardly as fumigation, tincture or incense. In the Middle Ages it was prized so highly as a healer that Germans, Danes and Swedes simply called it master and counted it a divine medicine, and it was thought to counter poisons, even the bite of a rabid dog. In the Tyrol the dried root was burned to cleanse the house on Christmas Eve, New Year’s Eve and Twelfth Night, and in hoodoo the root serves in spirit work and protection and is the chief ingredient of master key oil. In magical practice it is worn to lend bodily strength, carried to steady the will and calm the feelings, kept as an amulet against evil, and sprinkled about to make spirits appear.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      safetyNotes:
+        'Kynes cautions that the sap may cause dermatitis, sensitivity to sunlight, or both.',
+      folkNames: ['Hog Fennel', 'Imperatoria', 'Master Root'],
+      categories: [
+        'Strength',
+        'Courage',
+        'Protection',
+        'Intuition',
+        'Manifestation',
+        'Purification',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Masterwort',
+          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Masterwort',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-peucedanum-ostruthium',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Masterwort',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mayapple',
+      canonicalName: 'Podophyllum peltatum',
+      nomenclature: 'botanical',
+      description:
+        'Mayapple is a herbaceous perennial of the barberry family from the woodlands of the eastern United States and south-eastern Canada, where it grows in colonies that spread from a single creeping rootstock. Its stems stand thirty to forty centimetres tall, each under one umbrella-like, deeply lobed leaf, or a pair on a flowering stem, and a white flower grows in the fork, usually hidden by the leaves. In some places it is the flower that appears in early May, while the egg-shaped yellow fruit, which looks like a small lemon, ripens later in the summer. All parts of the plant are poisonous, though the ripe fruit can be eaten in small amounts and is sometimes made into jelly. Indigenous Americans used it as an emetic, a purge and a remedy for worms, and two of its derivatives have shown promise against some cancers; one of them, etoposide, is on the World Health Organization’s list of essential medicines. Despite its name of American mandrake, it is no relation of the true mandrake, and Kynes traces the confusion to both plants being used as purgatives in England. Appalachian lore told of male and female plants, and the Delaware used it as a love charm. Cunningham treats it as a stand-in for European mandrake, with practically the same uses.',
+      elements: ['fire'],
+      planets: ['Mercury'],
+      safetyNotes:
+        'Poisonous. AHPA places it in safety class 3: not to be used except under the supervision of an expert qualified in its use. Poisoning has followed both swallowing it and putting it on the skin, with nausea, vomiting, nerve damage in the limbs, difficulty breathing, lethargy and coma, and some cases have been fatal. It acts as an abortifacient, an emetic and a stimulant laxative; putting its compounds podophyllin and podophyllotoxin on the skin in pregnancy is strongly contraindicated, and its safety while nursing has not been established. Cunningham marks it Poison, never to be taken internally or put on the skin, and Kynes warns that the unripe fruit and other parts are toxic and can be fatal if eaten.',
+      folkNames: [
+        'American Mandrake',
+        'Duck’s Foot',
+        'Hog Apple',
+        'Mandrake',
+        'Raccoon Berry',
+        'Wild Lemon',
+        'Devil’s Apple',
+        'Duck Foot Leaf',
+        'Wild Mandrake',
+        'Ground Lemon',
+      ],
+      categories: ['Love', 'Prosperity', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. May Apple; Part II, How to Read the Entries',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'folkNames',
+            'safetyNotes',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mayapple',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 684–686; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-podophyllum-peltatum',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The root is the part used, sold cut, dried or powdered and often labelled as mandrake. Kynes has the powdered root sprinkled at the cardinal points of a property to raise protection around a home, and records an Appalachian belief that a couple’s hair wound around the root kept them faithful.',
+          safetyNotes:
+            'Applying the fresh or dried root to the skin again and again may cause irritation followed by festering, and the fresh or recently dried root has been described as an irritant poison. Workers processing dried mayapple or its resin have suffered irritation of the mucous membranes, including inflamed eyes.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 684–686',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mayapple',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Fruit',
+          description:
+            'The fruit is a yellow, oval or egg-shaped berry that looks like a small lemon and ripens later in the summer. Once ripe it can be eaten in small amounts, and it is sometimes made into jelly.',
+          safetyNotes:
+            'The unripe green fruit is poisonous and can be fatal if eaten, and the ripe fruit may also be harmful when eaten in excess.',
+          colors: ['yellow'],
+          references: [
+            {
+              source: 'wikipedia-podophyllum-peltatum',
+              supports: ['form', 'description', 'safetyNotes', 'colors'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mayapple',
+              supports: ['description', 'safetyNotes', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Meadow Rue',
+      canonicalName: 'Thalictrum',
+      nomenclature: 'botanical',
+      description:
+        'Meadow rue is the common name for Thalictrum, a genus of between 120 and 200 species of herbaceous perennials in the buttercup family, Ranunculaceae, found mostly in temperate regions. Botanists find it a difficult genus, with species boundaries that are poorly understood and still in need of study. Despite the name, the meadow rues are not close kin of the true rue, which belongs to the family Rutaceae; they only resemble it in their compound leaves, divided twice or three times over. Some species are pollinated by the wind and others by insects, and besides alkaloids the plants produce a wide range of other compounds, among them triterpenoids, flavonoids and cyanogenic glycosides. Gardeners grow them as ornamentals for their airy sprays of delicately coloured flowers, and several cultivars hold the Royal Horticultural Society’s Award of Garden Merit. Cunningham records that Native Americans wore it around the neck as an all-purpose protective amulet, and that it is carried to draw love; he also gives it a power of divination and the folk name flute plant.',
+      safetyNotes: 'Cunningham marks it as currently recognised as safe.',
+      folkNames: ['Flute Plant'],
+      categories: ['Love', 'Divination'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Meadow Rue; p. 266',
+          supports: ['canonicalName', 'categories', 'folkNames', 'safetyNotes', 'description'],
+        },
+        {
+          source: 'wikipedia-thalictrum',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Whole',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Meadow Rue',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Meadowsweet',
+      canonicalName: 'Filipendula ulmaria',
+      nomenclature: 'botanical',
+      description:
+        'Meadowsweet is a perennial herb of the rose family that favours damp meadows, fens and wet woods. It is native to most of Europe and western Asia, is common throughout the British Isles, and has naturalised in North America. Its furrowed, reddish stems reach one to two metres, its divided leaves are dark green above and pale and downy beneath, and from early summer into early autumn it carries dense clusters of small, creamy-white, strongly scented flowers. The name first meant a herb for sweetening mead rather than a sweet plant of the meadow, and the Anglo-Saxons called it meadwort. It was strewn in churches and woven into bridal garlands, which earned it the name bridewort, and Elizabeth I liked it above every other herb for strewing her rooms. It has been found with cremated remains in a Bronze Age cairn in Carmarthenshire, and in Welsh legend Gwydion and Math made Blodeuwedd partly from its flowers. Salicylic acid was first obtained from its buds in 1838, and its old name, Spiraea ulmaria, gave aspirin its name. Irish lore put it under the bed of someone made ill by the faeries, and an Icelandic custom gathered it at Midsummer and dropped it on water to tell whether a thief was a man, if it sank, or a woman, if it floated. In magical practice it is laid fresh on the altar or mixed dried into love blends, and strewn through the house to keep the peace.',
+      elements: ['air', 'water'],
+      planets: ['Jupiter'],
+      zodiacSigns: ['Pisces'],
+      safetyNotes:
+        'Considered safe when used appropriately (AHPA safety class 1), and marked safe by Cunningham. People sensitive to aspirin or other salicylate-containing medicines, and people with G6PD deficiency, should take care: it contains salicylates and tannins. In laboratory tests on isolated animal uterine tissue an extract strengthened contractions, though what that means for human use is unknown, and its safety while nursing has not been established.',
+      folkNames: [
+        'Bride of the Meadow',
+        'Bridewort',
+        'Dollor',
+        'Gravel Root',
+        'Lady of the Meadow',
+        'Little Queen',
+        'Meadowwort',
+        'Queen of the Meadow',
+        'Steeplebush',
+        'Trumpet Weed',
+        'Meadwort',
+        'Pride of the Meadow',
+        'Meadow Queen',
+        'Dollof',
+        'Meadsweet',
+        'Reinette',
+      ],
+      deities: ['Aine', 'Blodeuwedd', 'Danu', 'Gwydion'],
+      categories: [
+        'Love',
+        'Divination',
+        'Peace',
+        'Harmony',
+        'Creativity',
+        'Fertility',
+        'Healing',
+        'Inspiration',
+        'Strength',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Meadowsweet; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Meadowsweet',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 367; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 127–128',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-filipendula-ulmaria',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 367',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Meadowsweet',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'The small, creamy-white flowers carry a sweet, almond-like scent. Dried, they go into potpourri and are used to scent ritual clothing; fresh, they are added to a bridal bouquet to strengthen love and the marriage. Cooks add them to stewed fruit and jams for a faint almond flavour.',
+          safetyNotes:
+            'The flowers have been reported to contain heparin-like compounds that slowed blood clotting when injected into animals; whether this matters when meadowsweet is taken by mouth is not known.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Meadowsweet',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-filipendula-ulmaria',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 367',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mesquite',
+      canonicalName: 'Neltuma juliflora',
+      nomenclature: 'botanical',
+      description:
+        'Mesquite here is Neltuma juliflora, long known as Prosopis juliflora: a thorny shrub or small tree of the legume family, native to Mexico, South America and the Caribbean. It grows to about twelve metres, with light green, feathery leaves, thorns set in pairs, and greenish-yellow flowers in cylindrical spikes, followed by long pods holding ten to thirty seeds each. Its roots reach deep for water, and it has become an invasive weed in Africa, India, Australia and elsewhere; since 2019 the European Union has forbidden importing or planting it. Indigenous peoples in Peru, Chile and California ate the sweet pods raw, ground them into flour for bread or fermented them into a mild drink, and the tree also gives fodder, firewood, timber and honey. Best known today as a barbecue flavouring, mesquite takes its name from mizquitl, the Aztec word for the tree. In the Aztec creation story Quetzalcoatl, remaking the world, fed its people on mesquite fruit; the Yuma used mesquite charcoal for tattooing at girls’ puberty ceremonies, and the Moapa hardened mesquite sticks in fire for arrow tips. In magical practice it is added to healing incenses and mixtures, used to feed ritual fires, and burned as wood chips to cleanse an outdoor space before ritual.',
+      elements: ['water', 'air', 'fire'],
+      planets: ['Moon', 'Saturn'],
+      safetyNotes:
+        "Cunningham's health code marks it safe. The AHPA safety handbook has no entry for it.",
+      folkNames: [
+        'Mizquitl',
+        'Ironwood',
+        'Bayahonda Blanca',
+        'Cuji',
+        'Trupillo',
+        'Long-Thorn Kiawe',
+        'Algarrobe',
+        'Cashaw',
+        'Mathenge',
+        'Mesquit',
+        'Algaroba',
+        'Honey Pod',
+      ],
+      deities: ['Quetzalcoatl'],
+      categories: ['Healing', 'Abundance', 'Protection', 'Purification', 'Success'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mesquite; p. 266',
+          supports: [
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mesquite',
+          supports: ['elements', 'planets', 'deities', 'categories', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-neltuma-juliflora',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Wood',
+          description:
+            'The wood is burned to fuel magical fires, and its chips are burned to cleanse an area for outdoor ritual. In India the tree is widely cut for firewood.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mesquite',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mesquite',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-neltuma-juliflora',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Pod',
+          description:
+            'The long, thin pods ripen from green to brown. They are sweet and edible, and were dried and ground into flour or chewed on long journeys against thirst. Magically, the pods are said to strengthen healing herbs, and a bundle tied with red ribbon is kept on the altar as a charm for endurance.',
+          safetyNotes:
+            'The seed pods contain neurotoxic alkaloids, and livestock that eat too many of them are poisoned (Wikipedia; no safety handbook covers this plant).',
+          colors: ['brown'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mesquite',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-neltuma-juliflora',
+              supports: ['description', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Milk Thistle',
+      canonicalName: 'Silybum marianum',
+      nomenclature: 'botanical',
+      description:
+        'Milk thistle is an annual or biennial thistle of the daisy family, from about thirty centimetres to two metres tall, with shiny, spiny-edged leaves marbled with milk-white veins and large red-purple flower heads ringed by spine-tipped bracts. Its fruits are black, each with a long white plume that carries it on the wind. Native from the Mediterranean and much of Europe to Central Asia and India, it has spread far beyond that range and is treated as an invasive weed in North America, Australia and New Zealand. It is grown mainly as a medicinal crop: the seeds, botanically whole fruits, yield silymarin, and herbal tradition used the plant for liver complaints and to increase breast milk, though there is still no good clinical evidence that it helps. It was also eaten. Northcote, quoting older writers, describes the young stalks cooked like cardoon or eaten as salad, the bracts eaten like artichoke and the roots in spring, and notes that goldfinches feed on its seeds; by the doctrine of signatures its prickles made it a cure for a stitch in the side. Sometimes called Scotch thistle, it was once put forward as the thistle of Scotland. Cunningham records an Anglo-Saxon belief that milk thistle hung round a man’s neck would set every snake near him fighting.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      safetyNotes:
+        'Considered safe when used appropriately (AHPA safety class 1), with no known contraindications, and marked safe by Cunningham. Taken by mouth it is usually well tolerated; the commonest side effects are bloating, nausea and wind. Allergic reactions, including anaphylaxis, have been reported, especially in people allergic to related plants such as ragweed, chrysanthemum, marigold and daisy. It may change blood sugar control, so people with diabetes should watch their levels closely and talk to a qualified practitioner first. Limited studies of its extract silymarin in pregnancy and while nursing found no harm, but little is known about its safety at those times. Some supplements hold far more or less silymarin than the label says, or are contaminated with pesticides, microbes or mould toxins. Anyone taking medicines should ask a healthcare provider before using it.',
+      folkNames: [
+        'Marian Thistle',
+        'Lady Thistle',
+        "Mary's Thistle",
+        'Blessed Milkthistle',
+        'Mary Thistle',
+        "Saint Mary's Thistle",
+        'Mediterranean Milk Thistle',
+        'Variegated Thistle',
+        'Scotch Thistle',
+        'Dappled Thistle',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Thistle, Milk; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Thistle',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 815–816; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'nccih-milk-thistle',
+          supports: ['canonicalName', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 95–96',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-silybum-marianum',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            'What is sold as seed is botanically the whole fruit, a black achene. It holds roughly four to six per cent silymarin, almost all of it in the outer coat, and it is the part from which standardised extracts are made.',
+          colors: ['black'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 815',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-silybum-marianum',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mimosa',
+      canonicalName: 'Acacia dealbata',
+      nomenclature: 'botanical',
+      description:
+        'Mimosa in this entry is Acacia dealbata, the silver or blue wattle: a shrub or spreading tree of the legume family that can reach thirty metres. It has smooth bark, fern-like, twice-divided leaves of bluish grey or silver, and round heads of yellow to bright yellow flowers, borne from July to November, followed by flat, bluish pods dusted with a white bloom; its species name means whitewashed. It is native to south-eastern mainland Australia, where the Wiradjuri call it giigandul, and it is grown as an ornamental across warm temperate regions, where it has naturalised widely and become an invasive weed in South Africa, Portugal, Spain and California. The Ngunnawal and Wiradjuri peoples made rope from its bark, glue and poultices from its sap, tools from its timber and flour from its seeds. Florists sell its flowering shoots as mimosa, a name not to be confused with the genus Mimosa; in Italy, Albania, Russia and Georgia the flowers are given to women on International Women’s Day, and their essence goes into perfume. In England its flowers were generally thought unlucky to bring indoors, and in some places the tree was unlucky to plant in a house garden. In magical practice it is scattered about a space to purify it, used in love and healing spells, and laid beneath the pillow for prophetic dreams.',
+      elements: ['water', 'air'],
+      planets: ['Saturn', 'Venus'],
+      zodiacSigns: ['Aquarius', 'Cancer', 'Capricorn', 'Pisces', 'Virgo'],
+      safetyNotes:
+        'Cunningham advises against taking it internally during pregnancy. The AHPA safety handbook has no entry for it.',
+      folkNames: ['Silver Wattle', 'Blue Wattle', 'Giigandul'],
+      categories: [
+        'Protection',
+        'Love',
+        'Purification',
+        'Healing',
+        'Dream Work',
+        'Intuition',
+        'Peace',
+        'Psychic Work',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mimosa; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mimosa',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-acacia-dealbata',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          description:
+            'The yellow flower heads and tip shoots are cut for the florist trade under the name mimosa, and an essence of the flowers, called mimosa or, in older texts, cassie, is used in perfumery. Dried flowers are also sold.',
+          colors: ['yellow'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mimosa',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-acacia-dealbata',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mistletoe',
+      canonicalName: 'Viscum album',
+      nomenclature: 'botanical',
+      description:
+        'European mistletoe is an evergreen shrub that lives as a hemiparasite on the branches of trees such as apple, lime, hawthorn and poplar, drawing water and nutrients from its host. It is native to Europe and to western and southern Asia, and is found only rarely in North America, where it was introduced. Its forked stems carry pairs of leathery, strap-shaped, yellowish-green leaves and tiny flowers of the same colour, followed by sticky white or yellow berries that each hold a single seed; the berry juice was once made into birdlime for trapping small birds. Pre-Christian Europe read it as a sign of the male life force and so of fertility, and it is thought to be the golden bough of Aeneas, while Greek myth gave it to heroes passing into the underworld. Pliny described Gaulish druids cutting it from oak with a golden sickle on the sixth day of the moon, and in Norse myth it is the one thing that swore no oath to spare Baldr, and so the thing that killed him. In Germany, England, Wales and France a sprig was kept in the house for luck and changed each Yule, and kissing beneath it at Christmas is recorded from sixteenth-century England. In magical practice it is carried against lightning, illness and misfortune, laid in cradles so fairies cannot swap the child for a changeling, carried by women hoping to conceive, and burned to drive out evil.',
+      elements: ['air'],
+      planets: ['Sun', 'Mercury'],
+      zodiacSigns: ['Leo'],
+      safetyNotes:
+        'AHPA places European mistletoe in safety classes 2b and 2d: it is not for use in pregnancy except under the supervision of a qualified practitioner, and the recommended dose should not be exceeded. Allergic reactions, anaphylaxis among them, have been reported. Animal studies suggest it may alter blood-sugar control, so people with diabetes should watch their levels and talk to a practitioner first, and some authorities advise regular blood-pressure checks for anyone drinking the tea. NCCIH says the berries and leaves can do serious harm when taken by mouth, that it is probably unsafe in pregnancy, and that little is known about its safety while breastfeeding. Cunningham advises against taking it internally with a protein hypersensitivity or a chronic progressive infection, and Kynes warns that it is toxic if eaten.',
+      folkNames: [
+        'All Heal',
+        'Birdlime',
+        "Devil's Fuge",
+        'Donnerbesen',
+        'European Mistletoe',
+        'Golden Bough',
+        'Holy Wood',
+        'Lignam sanctae crucis',
+        'Misseltoe',
+        'Thunderbesem',
+        'Witches Broom',
+        'Wood of the Cross',
+        "Devil's Grass",
+        "Witches' Nest",
+        'Common Mistletoe',
+      ],
+      deities: [
+        'Apollo',
+        'Freya',
+        'Venus',
+        'Odin',
+        'Arianrhod',
+        'Asclepius',
+        'Demeter',
+        'Frigg',
+        'Hades',
+        'Jupiter',
+        'Persephone',
+        'Pluto',
+        'Zeus',
+      ],
+      categories: [
+        'Protection',
+        'Love',
+        'Fertility',
+        'Banishing',
+        'Divination',
+        'Dream Work',
+        'Purification',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mistletoe; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mistletoe',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 928; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'nccih-european-mistletoe',
+          supports: ['safetyNotes'],
+        },
+        {
+          source: 'wikipedia-viscum-album',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 928',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mistletoe',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Berry',
+          description:
+            'The berries are sticky, white or yellow, and hold one seed each. Their juice was once used to make birdlime, and mistle thrushes, which are not harmed by the toxin, eat them and carry the seeds to new trees. Cunningham names the berries, with the leaves, as the parts used in protective charms, and Kynes rings a green candle with them in spells for fertility.',
+          colors: ['white', 'yellow'],
+          references: [
+            {
+              source: 'wikipedia-viscum-album',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mistletoe',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mistletoe',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Cunningham says a ring carved from mistletoe wood keeps sickness away from the one who wears it.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mistletoe',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Monkshood',
+      canonicalName: 'Aconitum napellus',
+      nomenclature: 'botanical',
+      description:
+        "Monkshood is a hairless herbaceous perennial of the family Ranunculaceae, native to western and central Europe. It grows to about a metre and bears rounded leaves cut into five to seven deep lobes, topped by spikes of dark purple to bluish-purple flowers shaped like narrow helmets; gardeners grow it for these showy spikes and as a cut flower. It is reckoned the most poisonous plant in Europe, dangerous both eaten and touched, because it holds aconitine and related alkaloids that poison the heart. It was put on spears and arrows for hunting and war, the Romans used it to dispose of criminals and enemies until anyone growing it could be sentenced to death, and Dioscorides knew it only as a poison for killing wolves. The old English herbalists dreaded it, though Parkinson commended it to hunters for dipping their arrowheads. The Greeks dedicated the aconites to Hecate, and Ovid told how Medea's aconite sprang from the spittle of Cerberus. In medieval Europe it was counted a witches' plant and believed to go into flying ointment. In magical practice it is added to protection sachets against vampires and werewolves, guards a home when grown in its garden, and its seed, carried wrapped in a lizard's skin, was said to make the bearer invisible.",
+      elements: ['water'],
+      planets: ['Saturn'],
+      safetyNotes:
+        'Every part of the plant is extremely poisonous. Kynes warns that eating any part can be fatal and that the poison can enter through broken skin, so it should be handled only in gloves; Cunningham marks it as a poison, never to be eaten or rubbed on the skin. AHPA, in its monograph on Sichuan aconite, says every Aconitum species in trade should be treated as safety class 3, for use only under the supervision of a qualified expert, and records cases of aconite poisoning, some of them fatal, with nausea, vomiting, numbness, an irregular heartbeat and cold extremities.',
+      folkNames: [
+        'Aconite',
+        "Cupid's Car",
+        "Dumble-dore's Delight",
+        'Storm Hat',
+        "Thor's Hat",
+        "Wolf's Hat",
+        'Blue Rocket',
+        "Friar's Cap",
+        'Helmet Flower',
+        'Wolf Root',
+        'Wolfsbane',
+        "Venus' Chariot",
+      ],
+      deities: ['Hecate', 'Shiva', 'Thor'],
+      categories: ['Protection', 'Peace', 'Prophecy', 'Strength'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Wolf\'s Bane; Part II, "How to Read the Entries"',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Aconite',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 5–6; p. xxii',
+          supports: ['safetyNotes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'p. 173',
+          supports: ['canonicalName', 'description'],
+        },
+        {
+          source: 'wikipedia-aconitum-napellus',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            "Kynes lists the seeds among the forms sold and suggests keeping a small pouch of them with ritual tools; Cunningham's charm of invisibility carries a seed wrapped in a lizard's skin.",
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Aconite',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: "s.v. Wolf's Bane",
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description:
+            'The root carries the poison of old accounts: an early medical dictionary tells of arrows tipped with poison from the roots being used to kill wild goats in Italy, and at Prague Castle in 1561 a condemned prisoner given about four grams of powdered root, followed by a trial antidote, died.',
+          references: [
+            {
+              source: 'wikipedia-aconitum-napellus',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Moonwort',
+      canonicalName: 'Botrychium',
+      nomenclature: 'botanical',
+      description:
+        "Moonworts are the small ferns of the genus Botrychium, in the family Ophioglossaceae. Each has fleshy roots and a leaf in two parts: a sterile, fern-like blade and a fertile stalk carrying clusters of spore cases, which shed their spores into the air. The leaves stand only two to ten centimetres above the soil, and most of a population lives out of sight underground, where a plant fed by mycorrhizal fungi can lie dormant for up to ten years; that dependence also makes moonworts hard to grow. They are found in prairies, forests and mountains, and some species are rare. Common moonwort carries up to nine pairs of fan- or half-moon-shaped leaves, and their crescent outline led German alchemists to credit it with the moon's power, call it lunary and use it to draw silver out of mercury. English and Irish legend said it could pull the shoes off a horse that trod on it, and Culpeper repeated a tale of thirty horseshoes found torn from the Earl of Essex's horses on a Devon down; pushed into a keyhole, it was said to open the lock. In magical practice it is put in boxes and bags to bring silver and used in money and love spells. Because common moonwort is endangered, Kynes suggests working with a picture of it instead.",
+      elements: ['water'],
+      planets: ['Moon'],
+      zodiacSigns: ['Cancer'],
+      folkNames: ['Unshoe-Horse', 'Grape-Fern', 'Moon Fern', 'Lunary', 'Martagon'],
+      deities: ['Aine', 'Arianrhod', 'Artemis', 'Diana', 'Hecate', 'Rhiannon', 'Selene', 'Shiva'],
+      categories: [
+        'Love',
+        'Banishing',
+        'Divination',
+        'Knowledge',
+        'Prosperity',
+        'Protection',
+        'Psychic Work',
+        'Purification',
+        'Release',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Moonwort',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Moonwort',
+          supports: [
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'p. 199',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-botrychium',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Whole',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Moonwort',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Morning Glory',
+      canonicalName: 'Ipomoea',
+      nomenclature: 'botanical',
+      description:
+        'Ipomoea is the largest genus in the plant family Convolvulaceae, with more than six hundred species across the tropics and subtropics. Most are twining climbers, though the genus also holds annual and perennial herbs, shrubs and small trees, and its name, built from Greek words for a woodworm and for resembling, refers to that twining habit. The flowers may be blue, red, pink, purple, white, orange or yellow. Morning glory is the commonest name, but the genus also takes in the sweet potato, water spinach and the moonflowers. The common morning glory has heart-shaped leaves and purple trumpet flowers that open in the morning and close at night or in rain. Aztec and Zapotec priests took the seeds of Mexican morning glory in divination rituals, and Kynes adds that the Aztecs used the plant to commune with their gods; the seeds of some species contain lysergamides such as ergine. English lore held that witches used morning glories in their spells. In magical practice the seeds are laid under the pillow against nightmares, blue morning glories grown in the garden are said to bring peace and happiness, a length of the vine serves in binding spells, and a vine hung over the bed aids dream work.',
+      elements: ['water'],
+      planets: ['Saturn'],
+      safetyNotes:
+        'Kynes warns that every part of the morning glories is toxic if eaten and can be fatal, and Cunningham marks the genus as a poison, never to be taken internally or applied to the skin.',
+      folkNames: ['Bindweed', 'Tall Morning Glory', 'Grannyvine'],
+      categories: [
+        'Peace',
+        'Harmony',
+        'Banishing',
+        'Binding',
+        'Divination',
+        'Dream Work',
+        'Strength',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Morning Glory; Part II, "How to Read the Entries"',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Morning Glory and Moonflower',
+          supports: [
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'wikipedia-ipomoea',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            'Kynes lists the seeds among the forms sold, and Cunningham lays them beneath the pillow to stop nightmares. Aztec and Zapotec priests used the seeds of Mexican morning glory in divination.',
+          safetyNotes:
+            'Seeds of Ipomoea tricolor and I. purpurea commonly contain ergine (LSA) and related lysergamides. In people, LSA has mild psychedelic effects with marked sedation, and nausea and narrowing of the blood vessels are frequent adverse effects.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Morning Glory and Moonflower',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Morning Glory',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-ipomoea',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description: 'Cunningham says the root may stand in for High John the Conqueror root.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Morning Glory',
+              supports: ['form', 'description'],
             },
           ],
         },
