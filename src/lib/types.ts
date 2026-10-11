@@ -180,6 +180,12 @@ export interface CitationFields {
   note?: string | null;
 }
 
+/**
+ * What `renderShortCitation` reads: the four fields a Chicago short form is
+ * made of, so a surface holding a source's citation need carry no more.
+ */
+export type ShortCitationFields = Pick<CitationFields, 'kind' | 'title' | 'authors' | 'container'>;
+
 /** One run of a rendered citation, set in italic or roman. */
 export interface CitationPart {
   text: string;

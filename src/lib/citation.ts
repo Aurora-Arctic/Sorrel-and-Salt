@@ -232,7 +232,7 @@ const roman = (text: string): CitationPart => ({ text, italic: false });
  * where no space precedes it and no letter or digit follows, so an underscore
  * inside a word is text. An unclosed or empty mark is text.
  */
-function marked(text: string, italic: boolean): CitationPart[] {
+export function marked(text: string, italic: boolean): CitationPart[] {
   const runs: CitationPart[] = [];
   let start = 0;
   let index = 0;
@@ -272,7 +272,7 @@ function closingMark(text: string, open: number): number {
 }
 
 /** Neighbouring runs of one style as one, and empty runs gone. */
-function merge(runs: CitationPart[]): CitationPart[] {
+export function merge(runs: CitationPart[]): CitationPart[] {
   const parts: CitationPart[] = [];
   for (const run of runs) {
     if (run.text === '') continue;
