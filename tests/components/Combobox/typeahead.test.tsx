@@ -14,7 +14,7 @@ const TRADITIONS = [
 ];
 
 /** The box with its value held outside it, and shown, as a form holds a field's. */
-function Harness({ initial = '' }: { initial?: string }) {
+function Harness({ initial = '', clearable }: { initial?: string; clearable?: boolean }) {
   const [value, setValue] = useState(initial);
   return (
     <>
@@ -26,6 +26,7 @@ function Harness({ initial = '' }: { initial?: string }) {
         choices={TRADITIONS}
         placeholder="Choose a tradition"
         required
+        clearable={clearable}
       />
       <output aria-label="Value">{value}</output>
     </>
@@ -117,5 +118,19 @@ describe('ComboboxTypeahead', () => {
     // Left, the box reads the choice's own label.
     fireEvent.blur(box());
     expect(box()).toHaveValue('Old Testic');
+  });
+
+  it('clears to no choice from its clear, shown while it holds text or a choice', () => {
+    render(<Harness initial="mockish" clearable />);
+    const clear = () => screen.queryByRole('button', { name: 'Clear Tradition' });
+
+    fireEvent.click(clear()!);
+    expect(value()).toBeEmptyDOMElement();
+    expect(box()).toHaveValue('');
+    expect(box()).toHaveFocus();
+    expect(clear()).not.toBeInTheDocument();
+
+    type('zz');
+    expect(clear()).toBeInTheDocument();
   });
 });

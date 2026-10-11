@@ -46,9 +46,9 @@ Sign", the long form the owner chose at MB.115's sign-off);
 `noun` and `plural`, what a sentence calls one row and several ("category",
 "categories"); and, for a grouped kind only, `group`: its `label`, the
 group column's heading and the filter's label ("Group"), its `plural`, for
-the filter's first option ("All groups"), and its `param`, the address
+the filter's empty choice, title case ("All Groups"), and its `param`, the address
 parameter the filter names a group by (`group`). The deity kind calls its
-group a tradition throughout: "Tradition", "All traditions" and
+group a tradition throughout: "Tradition", "All Traditions" and
 `tradition`. A flat kind has no `group`, so its table has no group column
 and its filter no group select. The page reads `label` too. The
 list carries the kind as a modifier class, `.grouped-value-list--<kind>`,
@@ -82,11 +82,18 @@ for a rule only one kind's rows need.
   `{ query, groupId }`, a deity's `{ query, traditionId }` and a flat kind's
   `{ query }`, and the count
   behind the pager reads the same filter as the list.
-- **The group filter is a native `<select>`, not `ComboboxSelect`**, so the
-  form submits before hydration. Its first option is "All groups" ("All
-  traditions"), valued
-  `""`, then each group by slug, alphabetical as read. A native submit sends
-  `query=&group=` (`query=&tradition=`), which the page reads as no filter.
+- **The group filter is typed into once hydrated, and a native `<select>`
+  before**, the owner's call in MB.115. The server draws the select, so the
+  form submits before hydration: its first option is "All Groups" ("All
+  Traditions"), valued `""`, then each group by slug, alphabetical as read,
+  and a native submit sends `query=&group=` (`query=&tradition=`), which the
+  page reads as no filter. Hydration swaps it for the combobox's type-ahead
+  box ([`combobox.md`](combobox.md), "The type-ahead box"), told apart by
+  `useSyncExternalStore`'s server snapshot: typing narrows the groups, its
+  placeholder reads "All Groups" while blank, and its clear, "Clear Group"
+  ("Clear Tradition"), is the way back to every group. Text naming no group
+  is no group, so it filters by none. A hidden input carries the same
+  parameter, by slug, so the form's fields are what they were.
 - **Filter is offered only when there is a new filter to apply**, as the user
   list's is: `disabled` while the trimmed query and the group match the
   filter the page shows, enabled once either differs. With JavaScript, a
@@ -165,7 +172,8 @@ kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter, the
-full-width Add and the rows as cards. The filter
+full-width Add and the rows as cards. Each kind has four invented groups, so
+typing in a story's group filter shows its list narrowing. The filter
 reaches the admin pages, which the workshop does not serve. Render-only, no
 test ids, no snapshots.
 
@@ -174,7 +182,9 @@ test ids, no snapshots.
 `tests/components/GroupedValueList/index.test.tsx` runs the behaviour the
 kinds share on the deities, whose group goes by its own name: the rows and
 their group, the Edit links, no table when there are none, the filter form's
-action, method, names and kept values, the Filter button's disabled and
+action, method, names and kept values, the group a native select in the
+server's markup and a type-ahead once hydrated, its list narrowing as it is
+typed into, a group picked from it and its clear, the Filter button's disabled and
 enabled states, the address it opens, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
 parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page

@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
@@ -171,8 +173,41 @@ describe('GroupedValueList', () => {
       expect(name).toHaveValue(DEITIES.query);
       expect(name).toHaveAttribute('name', 'query');
       const group = within(search).getByRole('combobox', { name: DEITIES.groupLabel });
-      expect(group).toHaveValue(groups[0].slug);
-      expect(group).toHaveAttribute('name', DEITIES.groupParam);
+      expect(group).toHaveValue(groups[0].name);
+      // The group goes under its own parameter, by slug, as the select sends it.
+      expect(new FormData(search as HTMLFormElement).get(DEITIES.groupParam)).toBe(groups[0].slug);
+    });
+
+    // The owner's call (MB.115): typed into once hydrated, but drawn as a
+    // native select by the server, so the filter works before JavaScript.
+    it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
+      const page = <GroupedValueList {...props({ filter: shown })} />;
+      const container = document.createElement('div');
+      container.innerHTML = renderToString(page);
+      document.body.append(container);
+      onTestFinished(() => container.remove());
+
+      const served = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
+      expect(served).toHaveValue(groups[0].slug);
+      expect(served).toHaveAttribute('name', DEITIES.groupParam);
+      expect(within(served).getAllByRole('option')).toHaveLength(groups.length + 1);
+      expect(served).not.toHaveAttribute('aria-autocomplete');
+
+      const root = await act(async () => hydrateRoot(container, page));
+      onTestFinished(() => act(() => root.unmount()));
+      const hydrated = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
+      expect(hydrated).toHaveAttribute('aria-autocomplete', 'list');
+      expect(hydrated).toHaveValue(groups[0].name);
+    });
+
+    it('narrows the groups as their name is typed', () => {
+      render(<GroupedValueList {...props()} />);
+
+      fireEvent.click(groupBox());
+      expect(screen.getAllByRole('option')).toHaveLength(groups.length);
+      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4).toUpperCase() } });
+      expect(screen.getAllByRole('option')).toHaveLength(1);
+      expect(filterButton()).toBeDisabled();
     });
 
     it('is disabled while the form matches the filter shown', () => {
@@ -199,7 +234,8 @@ describe('GroupedValueList', () => {
       );
 
       fireEvent.change(searchbox(), { target: { value: ' Two words ' } });
-      fireEvent.change(groupBox(), { target: { value: groups[1].slug } });
+      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
+      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
       fireEvent.click(filterButton());
 
       expect(router.push).toHaveBeenCalledWith(
@@ -211,7 +247,8 @@ describe('GroupedValueList', () => {
       render(<GroupedValueList {...props({ filter: shown })} />);
 
       fireEvent.change(searchbox(), { target: { value: '' } });
-      fireEvent.change(groupBox(), { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: `Clear ${DEITIES.groupLabel}` }));
+      expect(groupBox()).toHaveValue('');
       fireEvent.click(filterButton());
 
       expect(router.push).toHaveBeenCalledWith(path);

@@ -220,9 +220,11 @@ focus ring itself, where a suggesting box draws it for its inner text.
 ## The type-ahead box
 
 `ComboboxTypeahead` (`typeahead.tsx`) is a closed set chosen by typing,
-react-select's single select: the deities' Tradition, the owner's call in
-MB.115, where a select-only box made the admin scroll for one tradition
-among many. It is the typing box above over the set's choices, not a third
+react-select's single select: the owner's call in MB.115 for the curated
+values' groups, where a select-only box made the admin scroll for one among
+many. `GroupedValueForm`'s group field takes it through `SelectField`'s
+`typeahead`, and `GroupedValueList`'s group filter once hydrated, with its
+clear. It is the typing box above over the set's choices, not a third
 copy of the list: the text is its own, each choice is a row whose value is
 its label and whose `key` is the choice's value, and it passes
 `offerTyped={false}`, `highlightFirst` and `noun="choice"`, so the list
@@ -245,6 +247,9 @@ folder's index and the lint refuses an import cycle.
   save, as one never chosen does (`SelectField`, [`field.md`](field.md)).
 - **A pick or a value set from outside writes the choice's label** into the
   box, unless the text already names it.
+- **With `clearable`, a clear** sits on the control's right before the
+  chevron, as a list's does, while the box holds text or a choice: it empties
+  both and leaves the focus in the box.
 
 | Prop                 | Meaning                                                                           |
 | -------------------- | --------------------------------------------------------------------------------- |
@@ -254,6 +259,7 @@ folder's index and the lint refuses an import cycle.
 | `choices`            | `{ value, label }` in order; typing narrows them.                                 |
 | `placeholder`        | Shown, muted, while the box is empty; never in the list.                          |
 | `required`           | `aria-required`, as the field marks it.                                           |
+| `clearable`          | A clear, "Clear Tradition", while it holds text or a choice; it empties both.     |
 | `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                |
 
 ## The multi-select box
@@ -613,7 +619,8 @@ first match highlighted, the arrows moving and Enter choosing; a click
 choosing and Escape closing without choosing; a box holding a choice opening
 on every choice; and the value `''` while the text names no choice, the
 choice once it names one in any case, and its label written in as the box
-is left.
+is left; and its clear, there only while it holds something, emptying it and
+keeping the focus.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

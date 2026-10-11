@@ -26,7 +26,10 @@ full page load and none.
   a press before the script loads still submits, each field under its own
   `name`. A field must therefore submit something the page reads as the same
   filter: a blank `<select>` option as `role=`, a checkbox as `awaiting=` or
-  `withoutReferences=1`.
+  `withoutReferences=1`. A field that is a script's control, the curated
+  lists' type-ahead group, is drawn as a native control by the server and
+  swapped once hydrated, so the press before the script still sends it
+  (`GroupedValueList`, MB.115).
 - **Filter is offered only when something changed** (MB.53, the owner's
   word): the caller works out `disabled` from its own state, and Filter is a
   real `disabled` attribute then, since a submit with nothing to send has

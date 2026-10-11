@@ -15,7 +15,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     label: 'Category',
     noun: 'category',
     plural: 'categories',
-    group: { label: 'Group', plural: 'groups', param: 'group' },
+    group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   form: {
     path: '/admin/forms' as Route,
@@ -23,7 +23,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     label: 'Form',
     noun: 'form',
     plural: 'forms',
-    group: { label: 'Group', plural: 'groups', param: 'group' },
+    group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   deity: {
     path: '/admin/deities' as Route,
@@ -31,7 +31,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     label: 'Deity',
     noun: 'deity',
     plural: 'deities',
-    group: { label: 'Tradition', plural: 'traditions', param: 'tradition' },
+    group: { label: 'Tradition', plural: 'Traditions', param: 'tradition' },
   },
   planet: {
     path: '/admin/planets' as Route,

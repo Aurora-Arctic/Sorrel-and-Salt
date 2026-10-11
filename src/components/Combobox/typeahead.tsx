@@ -26,6 +26,7 @@ export function ComboboxTypeahead({
   choices,
   placeholder,
   required,
+  clearable,
   inputRef,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
@@ -80,6 +81,19 @@ export function ComboboxTypeahead({
         if (named && named.label !== text) setText(named.label);
         onBlur?.();
       }}
+      clear={
+        clearable && (text !== '' || value !== '')
+          ? {
+              label: `Clear ${label}`,
+              onClear: () => {
+                setText('');
+                if (value !== '') onChange('');
+                // The pressed clear goes; the box keeps the focus.
+                document.getElementById(id)?.focus();
+              },
+            }
+          : undefined
+      }
       suggestions={suggestions}
       offerTyped={false}
       highlightFirst
