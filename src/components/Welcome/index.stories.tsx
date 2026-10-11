@@ -10,10 +10,8 @@ export default {
   title: 'Welcome',
 };
 
-const Page = ({ className, children }: { className?: string; children: ReactNode }) => (
-  <main className={className ? `page-frame welcome-page ${className}` : 'page-frame welcome-page'}>
-    {children}
-  </main>
+const Page = ({ children }: { children: ReactNode }) => (
+  <main className="page-frame welcome-page">{children}</main>
 );
 
 const SignedOut = (): ReactElement => (
@@ -38,14 +36,3 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <SignedOut />;
 PhoneLight.meta = { theme: 'light', width: 375 };
-
-// MB.116's open call, side by side; the losing story is deleted at sign-off.
-// The lede on the `.lede` primitive: body size, muted, as every section head's.
-export const ProposalLedeBody: Story = () => <SignedOut />;
-
-// Today's lede: 1.125rem in the body ink, a step above the paragraphs.
-export const ProposalLedeLarge: Story = () => (
-  <Page className="welcome-proposal--lede-large">
-    <Welcome />
-  </Page>
-);

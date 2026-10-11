@@ -2,13 +2,11 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import type { ValidationIssue } from '../../lib/types';
+import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import Notice from '../Notice';
 import { VOCABULARY_COPY } from '../VocabularyValueList/vocabularies';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
@@ -97,24 +95,6 @@ type FieldName = (typeof FIELDS)[number];
 
 const EMPTY: VocabularyValueValues = { name: '', description: '' };
 
-/**
- * A failed request as issues pathed to the input: every field error of a
- * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
- * the shared reader rather than replaced by it: that one answers the first
- * field it finds, and this form places every issue at once and joins the
- * ones no field holds into its alert.
- */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (error instanceof ClientError) {
-    const extensions = error.response.errors?.[0]?.extensions as
-      { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-      return extensions.fieldErrors;
-    }
-  }
-  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
-}
-
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
 /**
@@ -168,7 +148,7 @@ const VocabularyValueForm = ({
       onDone();
     } catch (error) {
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [field, ...rest] = path;
         if (rest.length === 0 && isField(field)) setError(field, { type: 'server', message });
         else unplaced.push(message);
@@ -186,7 +166,7 @@ const VocabularyValueForm = ({
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setConfirming(false);
-      setAlert(issuesOf(error)[0]?.message ?? GENERIC_FAILURE);
+      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 

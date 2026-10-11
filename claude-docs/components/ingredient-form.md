@@ -746,7 +746,9 @@ description, so it is what a failed submit focuses. **The categories'
 errors are the picker's** the same way: its box takes `aria-invalid`, and
 the pick named is edged ("The categories", above).
 
-`issuesOf` reads the rejection:
+`issuesOf`, re-exported from `values.ts` for the form and its reference
+panel, is the shared `readGraphqlIssues` (`src/lib/graphql-failure.ts`,
+MB.116). It reads the rejection:
 
 | Failure                                   | Issues                                                                         |
 | ----------------------------------------- | ------------------------------------------------------------------------------ |
@@ -754,10 +756,10 @@ the pick named is edged ("The categories", above).
 | any other GraphQL error                   | one empty-path issue, carrying the error's own message                         |
 | no GraphQL answer at all (a failed fetch) | one empty-path issue: `GENERIC_FAILURE`, "That didn't work. Please try again." |
 
-The last two rows are the shared `readGraphqlFailure`'s answer
-(`src/lib/graphql-failure.ts`). `issuesOf` keeps the first row to itself
-because the shared reader answers only the first field it finds, and this
-form places every issue at once, a draft's nested path included (MB.116).
+The last two rows are `readGraphqlFailure`'s answer. The first is why the
+form uses `readGraphqlIssues` rather than that reader, which answers only
+the first field it finds: this form places every issue at once, a draft's
+nested path included.
 
 Each placeable issue goes in through `setError`, bar
 `['endRedirect']`, which is a question rather than an error

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from './session';
@@ -61,6 +61,7 @@ test('a signed-in non-admin is refused at /admin with a 403 page and no admin ma
   await expect(
     page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
   ).toBeVisible();
+  await assertNoSidewaysScroll(page);
   await assertNoAccessibilityViolations(page);
 });
 

@@ -94,13 +94,13 @@ const ConfirmedAction = ({
           {(close) => (
             <>
               <p>{question}</p>
-              {/* Hand-written rather than a `Notice kind="warn"`, which is an
-                  alert: this warning is read once, as the description of the
-                  button the focus lands on, and an alert would say it twice. */}
+              {/* Quiet, a status rather than an alert: this warning is read
+                  once, as the description of the button the focus lands on,
+                  and an alert would say it twice. */}
               {warning && (
-                <p id={warningId} className="notice notice--warn user-list__warning">
+                <Notice kind="warn" quiet id={warningId} className="user-list__warning">
                   {warning}
-                </p>
+                </Notice>
               )}
               {withNote && (
                 <div className="field user-list__note">

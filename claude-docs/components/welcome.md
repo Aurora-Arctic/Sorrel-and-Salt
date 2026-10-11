@@ -56,10 +56,10 @@ page's one action. It is a `.btn` on an anchor, which needs nothing of its
 own: `.btn` drops the underline and outranks the visited ink
 ([`styling.md`](../styling.md), "Buttons"). Function used: `space()`.
 
-**Open for MB.116's sign-off: the lede's size.** `.lede` sets it at body
-size in the muted ink. Before MB.116 it was 1.125rem in the body ink, a step
-above the paragraphs. Both are drawn as stories; the losing one, and the
-`.welcome-proposal--lede-large` rule that draws today's, go at sign-off.
+**The lede is the shared `.lede`, at body size in the muted ink**, as every
+section head's is. Before MB.116 it was 1.125rem in the body ink, a step
+above the paragraphs; the owner chose the shared one at MB.116's sign-off,
+so the component sets no type of its own.
 
 ## Stories
 
@@ -67,8 +67,7 @@ above the paragraphs. Both are drawn as stories; the losing one, and the
 `Default` (signed out), `SignedIn` (the `/coven` landing), and `PhoneDark`
 and `PhoneLight` at 375px. Each renders inside the page's real
 `main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)).
-`ProposalLedeBody` and `ProposalLedeLarge` draw the open call above side by
-side. Render-only, no test ids, no snapshots.
+Render-only, no test ids, no snapshots.
 
 ## Testing
 
@@ -81,5 +80,6 @@ copy, and no test asserts it. Role and label queries only. Runs in the `dom`
 Sign In signed out, and Continue signed in.
 
 `tests/e2e/smoke.spec.ts` renders `/` against the built server signed out,
-with no redirect and nothing scrolling, and runs the axe scan; signed in as
-an admin through `signInAs`, Continue reaches the admin area.
+with no redirect, nothing scrolling and nothing pushing it sideways at 375px,
+and runs the axe scan in each theme ([`testing/e2e.md`](../testing/e2e.md));
+signed in as an admin through `signInAs`, Continue reaches the admin area.
