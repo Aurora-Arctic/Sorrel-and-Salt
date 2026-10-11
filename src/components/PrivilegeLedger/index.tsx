@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import Pager from '../Pager';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import LedgerFilterForm from './filter';
 import type {
   LedgerPerson,
@@ -20,6 +21,17 @@ const PRIVILEGE_LABELS: Record<LedgerPrivilege, string> = {
   admin: 'Admin',
   create_workspace: 'Coven creation',
 };
+
+/** The columns: each heading, and the label its cell carries as a card at phone width. */
+const COLUMNS = {
+  when: 'When',
+  user: 'User',
+  privilege: 'Privilege',
+  change: 'Change',
+  how: 'How',
+  changedBy: 'Changed By',
+  note: 'Note',
+} as const;
 
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 
@@ -54,20 +66,22 @@ const Person = ({ person }: { person: LedgerPerson | null }): ReactElement => {
 };
 
 const ChangeRow = ({ change }: { change: PrivilegeLedgerEntry }): ReactElement => (
-  <tr>
-    <td>
+  <tr {...tableRole('row')}>
+    <td {...stackCell(COLUMNS.when)}>
       <time dateTime={change.at.toISOString()}>{when(change.at)}</time>
     </td>
-    <td>
+    <td {...stackCell(COLUMNS.user)}>
       <Person person={change.subject} />
     </td>
-    <td>{PRIVILEGE_LABELS[change.privilege]}</td>
-    <td>{CHANGE_LABELS[change.change]}</td>
-    <td>{ROUTE_LABELS[change.via]}</td>
-    <td>
+    <td {...stackCell(COLUMNS.privilege)}>{PRIVILEGE_LABELS[change.privilege]}</td>
+    <td {...stackCell(COLUMNS.change)}>{CHANGE_LABELS[change.change]}</td>
+    <td {...stackCell(COLUMNS.how)}>{ROUTE_LABELS[change.via]}</td>
+    <td {...stackCell(COLUMNS.changedBy)}>
       <Person person={change.actor} />
     </td>
-    <td className="privilege-ledger__note">{change.note}</td>
+    <td className="privilege-ledger__note" {...stackCell(COLUMNS.note)}>
+      {change.note}
+    </td>
   </tr>
 );
 
@@ -78,24 +92,22 @@ const PrivilegeLedger = ({
   nextHref,
   position,
 }: PrivilegeLedgerProps): ReactElement => (
-  <div className="privilege-ledger">
+  <div className="privilege-ledger list-frame">
     <LedgerFilterForm filter={filter} />
 
     {changes.length ? (
       <div className="data-table-frame">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">When</th>
-              <th scope="col">User</th>
-              <th scope="col">Privilege</th>
-              <th scope="col">Change</th>
-              <th scope="col">How</th>
-              <th scope="col">Changed By</th>
-              <th scope="col">Note</th>
+        <table className="data-table data-table--stack" {...tableRole('table')}>
+          <thead {...tableRole('rowgroup')}>
+            <tr {...tableRole('row')}>
+              {Object.values(COLUMNS).map((heading) => (
+                <th key={heading} scope="col" {...tableRole('columnheader')}>
+                  {heading}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody {...tableRole('rowgroup')}>
             {changes.map((change) => (
               <ChangeRow key={change.id} change={change} />
             ))}
