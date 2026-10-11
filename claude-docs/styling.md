@@ -605,8 +605,9 @@ The class layer every form is built from, in `_primitives.scss`:
   admin invite form took it at MB.115's review; any other form adopts it at
   its own design review.
 - **Every text, textarea, select and type-ahead field shows a placeholder,
-  a short action of one or two words** ("Add a name", "Describe it", "Choose
-  a group", "Search names"), and what the field is for goes in its hint's
+  a short action of one or two words** ("Add a name", "Choose a group",
+  "Search names"), or on a multi-line description a one-line prompt for
+  what to write ("What this category covers"), and what the field is for goes in its hint's
   info tip, never in the placeholder: the owner's call at MB.115's review. A
   box of several values keeps its placeholder after its chips, with room for
   it, while it can take another.

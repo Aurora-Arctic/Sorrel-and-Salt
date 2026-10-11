@@ -118,6 +118,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     many: 'categories',
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
+    describe: 'What the categories in this group share',
     // The schema's output is the input the mutation takes; its type is the values'.
     resolver: zodResolver(CategoryGroupInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
@@ -135,6 +136,8 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     many: 'forms',
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
+    // The question a form group answers: what kind of thing is it (DESIGN.md §5).
+    describe: 'What kind of thing the forms in this group are',
     // Drops the two empty colours, which a form group's input does not take.
     resolver: zodResolver(IngredientFormGroupInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
@@ -153,6 +156,8 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     many: 'deities',
     // A deity's address carries its tradition's name, as a form's does its group's.
     moved: "Each deity keeps its name and takes its new tradition's address.",
+    // A tradition is a people or a religion, never a region (DESIGN.md §5).
+    describe: 'The people or religion whose deities it holds',
     resolver: zodResolver(DeityTraditionInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
       if (id) await graphqlRequest(UpdateDeityTraditionDocument, { id, input });
@@ -454,7 +459,7 @@ const GroupForm = ({
         <TextField<GroupValues>
           name="description"
           label="Description"
-          placeholder="Describe it"
+          placeholder={spec.describe}
           multiline
           required
         />

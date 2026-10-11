@@ -68,8 +68,8 @@ the textarea's name. Inside a variant the fields are not sectioned.
 
 **Every field shows a short action while it is empty**, and what it is for
 sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
-"Contracts"): "Add a name", "Add formal name", "Add a folk name", "Describe it", "Add an element", "Add a planet", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
-"Add a locator", a variant's Form "Add a form", and the new reference
+"Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a planet", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
+"Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
 panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
 `ListField` (and so `LookupListField`) and `CategoryPicker` take
 `placeholder` for it, and a reference field's spec carries its own. A date

@@ -380,7 +380,7 @@ const IngredientForm = ({
           <TextField<IngredientFormValues>
             name="description"
             label="Description"
-            placeholder="Describe it"
+            placeholder="What it is, where it comes from and how it is used"
             multiline
             rows={10}
           />
