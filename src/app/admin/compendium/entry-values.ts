@@ -56,7 +56,7 @@ const substituteEntry =
             form: ingredient.form,
             description: ingredient.description,
             isGlobal: ingredient.workspaceId === null,
-            variants: formsOf.get(ingredient.id) ?? [],
+            variants: formsOf.get(ingredient.id),
           },
           ...(variantId ? { variantId } : {}),
         }
@@ -100,7 +100,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
   // The forms of every ingredient a substitute links, the entry's and its forms'.
   const linked = [
     ...substitutes,
-    ...variantSubstitutes.flatMap((answer) => (answer instanceof Error ? [] : answer)),
+    ...variantSubstitutes.flatMap((answer) => only([answer])),
   ].flatMap(({ ingredient }) => ingredient ?? []);
   const [groups, linkedForms] = await Promise.all([
     formGroupsOf(live.map((form) => form.groupId)),
@@ -108,11 +108,10 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
   ]);
   // Its group only ranks a lookup's rows, so a link read here carries none.
   const formsOfLinked = new Map(
-    linked.map(({ id }, i) => {
-      const answer = linkedForms[i];
-      const rows = answer === undefined || answer instanceof Error ? [] : answer;
-      return [id, rows.map((row) => ({ id: row.id, form: row.form, group: null }))];
-    }),
+    linked.map(({ id }, i) => [
+      id,
+      only([linkedForms[i]]).map((row) => ({ id: row.id, form: row.form, group: null })),
+    ]),
   );
   const toSubstitute = substituteEntry(formsOfLinked);
   const formOf = new Map(live.map((form, i) => [form.id, { form, group: nameOf(groups[i]) }]));
