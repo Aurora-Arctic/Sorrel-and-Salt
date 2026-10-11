@@ -101,3 +101,5 @@ finder that builds the key from the values
 (["Compendium writes"](compendium-writes.md)); inside one
 coven the label index makes the case that needs it rarer, and a coven-scoped
 twin of that finder is the change that would add it here.
+
+**MB.215: a coven's ingredient takes variants too.** The coven's writes take the same `variants` list through the same `writeChildren` call (MB.219), so this service changes only by what the shared recipe gives it; a coven's form stays free text, an uncurated one included. Its identity becomes the formal name alone, `identity_key`, unique per coven through `ingredients_workspace_identity_key_unique`, which MB.220 maps to `canonicalName`, or to `name` for an entry with no formal name, as the identity index lands today. A second form of a plant the coven already holds is a variant of that ingredient, not an entry beside it, and the slug drops the form (["Ingredient slugs"](ingredient-slugs.md)). Stock arrives with M9.4 naming a variant: `addIngredientToWorkspace(variantId)`, one live stock row per coven and variant ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).

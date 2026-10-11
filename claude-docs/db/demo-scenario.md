@@ -45,6 +45,8 @@ Layer order is the position in the `layers` array, never a number written
 beside it: one list, so the stack and its depths cannot disagree, and each jar
 is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
 
+**MB.215: W's ingredients take variants, and Fresh Ginger becomes Ginger.** MB.216 writes a variant beside each of W's ingredients' forms (Hearth Ash's `ash`, House Chamomile's `flower`), so every linked layer in the two jars can name one, and MB.217's migration fills each layer's `variant_id` from its ingredient's one variant. Identity on the formal name alone changes two of the fixtures above. Fresh Ginger and the compendium's Ginger are now one identity, _Zingiber officinale_, in two tiers, which the identity indexes permit, so W's entry shadows the compendium's under M8.3 as Garden Rosemary does; MB.222 renames it Ginger, with an uncurated `rhizome` variant, so it stays the coven's example of a form no admin has curated. Garden Rosemary shadows the compendium's Rosemary on the formal name, whatever forms either holds. MB.222 corrects this section ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 ### A jar's stack is seeded whole or not at all
 
 Idempotency is `standard`'s — insert what is missing, keyed on identity,
