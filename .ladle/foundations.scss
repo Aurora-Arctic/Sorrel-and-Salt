@@ -250,6 +250,26 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     min-height: 24rem;
   }
 
+  // --- data table, pager, filter row, page header ------------------------------
+  .fd-tables,
+  .fd-pagers {
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+  }
+
+  // A phone's width, 375px, the narrowest a review signs off at, so a
+  // container query inside fires at any window size. The box's padding is
+  // the admin layout's gutter, so its content is about as wide as on the phone.
+  .fd-phone {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 375px;
+    padding: space(4);
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
   .fd-brands {
     display: flex;
     flex-wrap: wrap;

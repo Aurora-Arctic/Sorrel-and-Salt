@@ -2,6 +2,8 @@ import { type ReactElement, type ReactNode, useId } from 'react';
 import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
 import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
+import InfoTip from '../src/components/InfoTip';
+import Pager from '../src/components/Pager';
 import ProviderMark from '../src/components/ProviderMark';
 import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
 import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
@@ -127,6 +129,27 @@ function Fields(): ReactElement {
       </p>
 
       <div className="field">
+        <div className="field__label-row">
+          <label className="field__label" htmlFor={`${id}-common`}>
+            Common Name
+            <span className="field__required" aria-hidden="true">
+              *
+            </span>
+          </label>
+          <InfoTip id={`${id}-common-tip`} label="Common Name">
+            What most people call it. A save asks for one.
+          </InfoTip>
+        </div>
+        <input
+          className="input"
+          id={`${id}-common`}
+          aria-required="true"
+          aria-describedby={`${id}-common-tip`}
+          defaultValue="Mugwort"
+        />
+      </div>
+
+      <div className="field">
         <label className="field__label" htmlFor={`${id}-name`}>
           Name
         </label>
@@ -143,7 +166,7 @@ function Fields(): ReactElement {
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-nomenclature`}>
-          Naming system
+          Naming System
         </label>
         <select className="select" id={`${id}-nomenclature`} defaultValue="botanical">
           <option value="">Choose one</option>
@@ -157,7 +180,7 @@ function Fields(): ReactElement {
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-canonical`}>
-          Formal name
+          Formal Name
         </label>
         <input
           className="input"
@@ -203,7 +226,7 @@ function Fields(): ReactElement {
       </div>
 
       <fieldset className="fieldset">
-        <legend className="fieldset__legend">Where it is kept</legend>
+        <legend className="fieldset__legend">Where It Is Kept</legend>
         <label className="checkbox">
           <input type="checkbox" defaultChecked />
           The apothecary shelf
@@ -234,6 +257,109 @@ function Fields(): ReactElement {
         </button>
       </div>
     </form>
+  );
+}
+
+// A list's rows, as an admin value list draws them: invented names, one
+// action at the end of each row.
+const TABLE_ROWS: readonly (readonly [name: string, group: string, entries: number])[] = [
+  ['Protection', 'Wards', 12],
+  ['Cleansing', 'Purification', 8],
+  ['Dreamwork', 'Sight', 5],
+  ['Prosperity', 'Hearth', 3],
+];
+
+// The `.data-table` primitive in its frame; with `stack`, the
+// `.data-table--stack` modifier with the explicit roles and per-cell
+// `data-label`s a stacking table needs (claude-docs/styling.md, "Tables at
+// phone width"). The roles are the elements' own, written out because WebKit
+// drops them once `display` changes on a table's parts.
+function DataTable({ label, stack = false }: { label: string; stack?: boolean }): ReactElement {
+  const role = (name: string): { role?: string } => (stack ? { role: name } : {});
+  return (
+    <div className="data-table-frame">
+      <table
+        className={stack ? 'data-table data-table--stack' : 'data-table'}
+        aria-label={label}
+        {...role('table')}
+      >
+        <thead {...role('rowgroup')}>
+          <tr {...role('row')}>
+            <th scope="col" {...role('columnheader')}>
+              Name
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              Group
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              Ingredients
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              <span className="visually-hidden">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody {...role('rowgroup')}>
+          {TABLE_ROWS.map(([name, group, entries]) => (
+            <tr key={name} {...role('row')}>
+              <td data-label="Name" {...role('cell')}>
+                {name}
+              </td>
+              <td data-label="Group" {...role('cell')}>
+                {group}
+              </td>
+              <td data-label="Ingredients" {...role('cell')}>
+                {entries}
+              </td>
+              <td data-label="" {...role('cell')}>
+                <a className="btn btn--small" href="#fd-data-table">
+                  Edit
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// A list's filter form on the `.filter-row` primitive: the query first, as
+// the row's narrow rule expects, then a select, a check and the button.
+function FilterRow(): ReactElement {
+  const id = useId();
+  return (
+    <search>
+      <form
+        className="filter-row"
+        aria-label="Filter Categories"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="field">
+          <label className="field__label" htmlFor={`${id}-query`}>
+            Name or Description
+          </label>
+          <input className="input" id={`${id}-query`} type="search" />
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor={`${id}-group`}>
+            Group
+          </label>
+          <select className="select" id={`${id}-group`} defaultValue="">
+            <option value="">Any Group</option>
+            <option value="wards">Wards</option>
+            <option value="sight">Sight</option>
+          </select>
+        </div>
+        <label className="checkbox">
+          <input type="checkbox" />
+          Unused Only
+        </label>
+        <button type="submit" className="btn btn--solid">
+          Filter
+        </button>
+      </form>
+    </search>
   );
 }
 
@@ -442,7 +568,10 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="_primitives.scss · .form / .field" title="Form fields">
           Label, an optional hint, the control, and its error beneath it — the resolver’s or the
           server’s, drawn the same. The error edge is a second pixel as well as a colour, and a rule
-          that belongs to no one field is a notice above them all.
+          that belongs to no one field is a notice above them all. A label with a tip or a required
+          mark beside it sits in a <code>.field__label-row</code>; the mark is{' '}
+          <code>.field__required</code>, hidden from a screen reader, which hears the control's{' '}
+          <code>aria-required</code> instead.
         </SectionHead>
         <Fields />
       </section>
@@ -493,13 +622,15 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
           A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
           list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
-          edge and wraps on a phone rather than overflowing it.
+          edge and wraps on a phone rather than overflowing it. The link to the page you are on
+          carries <code>aria-current="page"</code>, drawn firmer and with a heavy underline rather
+          than in another colour.
         </SectionHead>
         <div className="panel">
           <nav aria-label="Example Sections">
             <ul className="link-row">
               <li>
-                <a href="#fd-link-row" aria-current="true">
+                <a href="#fd-link-row" aria-current="page">
                   Name
                 </a>
               </li>
@@ -520,6 +651,75 @@ export default function Foundations(): ReactElement {
               </li>
             </ul>
           </nav>
+        </div>
+      </section>
+
+      <section id="fd-data-table">
+        <SectionHead eyebrow="_primitives.scss · .data-table" title="Data Tables">
+          A list's table inside its <code>.data-table-frame</code>, banded on the card surface so a
+          wide row stays readable across. With <code>--stack</code>, a frame narrower than{' '}
+          <code>$table-stack-width</code> turns each row into a card: the header row hidden, every
+          cell led by its own <code>data-label</code>, and a cell whose label is empty, an action,
+          across the foot. A stacking table carries explicit <code>role</code> attributes, since
+          WebKit drops a table's meaning once its parts change <code>display</code>. The second
+          table sits in a phone-width box, so its frame stacks at any window size.
+        </SectionHead>
+        <div className="fd-tables">
+          <DataTable label="Categories" />
+          <div className="fd-phone">
+            <DataTable label="Categories at Phone Width" stack />
+          </div>
+        </div>
+      </section>
+
+      <section id="fd-pager">
+        <SectionHead eyebrow="_primitives.scss · .pager" title="The Pager">
+          A paged list's Prev and Next, centred under its table, with where the list stands between
+          them. An end with no page is disabled rather than hidden, so neither moves. Drawn by the{' '}
+          <code>Pager</code> component, on its first page and on a middle one.
+        </SectionHead>
+        <div className="fd-pagers">
+          <Pager nextHref="#fd-pager" position={{ page: 1, pages: 3 }} />
+          <Pager previousHref="#fd-pager" nextHref="#fd-pager" position={{ page: 2, pages: 3 }} />
+        </div>
+      </section>
+
+      <section id="fd-filter-row">
+        <SectionHead eyebrow="_primitives.scss · .filter-row" title="The Filter Row">
+          A list's filter form: the query, its selects and checks and the Filter button, wrapping on
+          their line's end so each stands level with the boxes beside it. Under the forms' column of
+          its own width, the query takes the whole line and the rest wrap beneath it, as in the
+          phone-width box.
+        </SectionHead>
+        <div className="fd-tables">
+          <FilterRow />
+          <div className="fd-phone">
+            <FilterRow />
+          </div>
+        </div>
+      </section>
+
+      <section id="fd-page-header">
+        <SectionHead eyebrow="_primitives.scss · .page-header" title="The Page Header">
+          A page's heading with its one primary action at the line's end, brought down to the
+          heading's letters. Under the forms' column of its own width, the action goes beneath the
+          heading at its natural width, as in the phone-width box.
+        </SectionHead>
+        <div className="fd-tables">
+          <div className="page-header">
+            <h1>Category Groups</h1>
+            <a className="btn btn--solid" href="#fd-page-header">
+              Add Category Group
+            </a>
+          </div>
+          <div className="fd-phone">
+            <div className="page-header">
+              <h1>Category Groups</h1>
+              <a className="btn btn--solid" href="#fd-page-header">
+                Add Category Group
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
