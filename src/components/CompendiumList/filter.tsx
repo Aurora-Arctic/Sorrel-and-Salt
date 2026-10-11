@@ -73,7 +73,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
           onChange={(event) => setDraftQuery(event.target.value)}
         />
       </FieldShell>
-      <FieldShell label="Form" {...formField}>
+      <FieldShell label="Form" className="filter-row__typeahead" {...formField}>
         {hydrated ? (
           <>
             {/* Every form while blank, as the select's first choice says;
