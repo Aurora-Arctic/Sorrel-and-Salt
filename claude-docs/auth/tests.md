@@ -132,17 +132,16 @@
   that names itself and carries its message, and that `Forbidden`,
   `NotFound` and `ValidationError` are told apart by type. How Vitest's
   `rejects.toThrow(Class)` behaves is Vitest's, and not tested here (MB.229).
-- **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
-  own `getTableConfig()` introspection: `name`/`image` columns,
-  `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s
-  `false` default, the exact column set with the audit spread (MB.188), and the email
-  index being a partial unique index (`WHERE deleted_at IS NULL`) rather
-  than a plain unique constraint. It was kept out of the schema directory from
+- **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' exact
+  column set with the audit spread through Drizzle's `getTableConfig()` (MB.188),
+  and against the database the lower-case email CHECK, a new account landing as
+  a `user` who may not create a workspace, and the CHECK holding every admin to
+  the creation flag (MB.177); nullability, defaults and the email index's
+  partiality are `tests/db/schema-drift.test.ts`'s (MB.226). It was kept out of the schema directory from
   the start — a `*.test.ts` file there gets swept into `drizzle.config.ts`'s
   `schema` glob, and `drizzle-kit generate` fails trying to `require()` a
   file that imports Vitest; MB.41 moved the whole suite to `tests/`, which
   settles that by construction rather than by convention.
-  Pure introspection, no real Postgres — see the next bullet for why.
 - **No automated test for the sign-in redirect, and not for the same reason as
   the introspection gap below.** A `POST /api/auth/sign-in/social` case lived in
   `route.test.ts` briefly and broke CI: unlike `/ok`, that endpoint persists a

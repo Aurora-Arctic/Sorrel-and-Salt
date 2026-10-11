@@ -19,8 +19,10 @@ name it shipped under, since its tag is in the journal.
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.planets` and
-  `.zodiac_signs` point none at either table — `astrology-schema.test.ts`
-  asserts both from the schema and by scanning the shipped SQL per statement.
+  `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
+  holds `ingredients`' own keys to its workspace and `form_id`, and
+  `tests/db/schema-drift.test.ts` holds the migrated database to the schema
+  files (MB.226).
 
 **They are `form`'s pattern, and the two lists stay free text.** A member
 writes planets and zodiac signs, so by MB.35's rule each entry is text over a

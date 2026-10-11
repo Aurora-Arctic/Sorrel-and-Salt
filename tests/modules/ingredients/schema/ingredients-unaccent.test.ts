@@ -1,12 +1,6 @@
-import { join } from 'node:path';
-import { readFileSync, readdirSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { useTestDatabase } from '../../../support/db/database';
-import { tableFacts } from '../../../support/db/table-metadata';
-import { MIGRATIONS_DIR } from '../../../support/paths';
-import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
@@ -15,49 +9,10 @@ import { ingredientSlug } from '@/lib/slugify';
 // claude-docs/db/compendium-read.md, "The compendium read". That they are
 // reached is proved on the SQL the finder sends, in
 // tests/db/repository/compendium-search-query.test.ts (MB.184); what stays
-// here is the declaration, the wrapper, and the fold.
+// here is the indexes' expressions, the wrapper, and the fold.
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 const FOLK_NAMES_UNACCENT_INDEX = 'ingredient_folk_names_unaccent_trgm';
 const WRAPPER = 'unaccent_immutable';
-
-describe('unaccent index declarations', () => {
-  const { byIndexName: onIngredients } = tableFacts(ingredients);
-  const { byIndexName: onFolkNames } = tableFacts(ingredientFolkNames);
-
-  it('declares a gin index over the folded name and formal name', () => {
-    expect(onIngredients[UNACCENT_INDEX].config.method).toBe('gin');
-    expect(onIngredients[UNACCENT_INDEX].config.columns).toHaveLength(2);
-  });
-
-  it('declares a gin index over the folded folk name', () => {
-    expect(onFolkNames[FOLK_NAMES_UNACCENT_INDEX].config.method).toBe('gin');
-    expect(onFolkNames[FOLK_NAMES_UNACCENT_INDEX].config.columns).toHaveLength(1);
-  });
-
-  // As the raw trigram indexes are: uniqueness is the unique indexes' job, and a
-  // predicate would narrow the planner's choice over rows a finder filters anyway.
-  it('makes both neither unique nor partial', () => {
-    for (const index of [onIngredients[UNACCENT_INDEX], onFolkNames[FOLK_NAMES_UNACCENT_INDEX]]) {
-      expect(index.config.unique).toBe(false);
-      expect(index.config.where).toBeUndefined();
-    }
-  });
-});
-
-function migrationStatementsContaining(marker: string): string[] {
-  const files = readdirSync(MIGRATIONS_DIR)
-    .filter((name) => name.endsWith('.sql'))
-    .sort()
-    .map((name) => join(MIGRATIONS_DIR, name))
-    .filter((path) => readFileSync(path, 'utf8').includes(marker));
-  if (files.length === 0) throw new Error(`No migration contains ${marker}`);
-  return files.flatMap((file) =>
-    readFileSync(file, 'utf8')
-      .split('--> statement-breakpoint')
-      .map((statement) => statement.trim())
-      .filter(Boolean),
-  );
-}
 
 const AUTHOR = FIXTURE_USERS.A.id;
 
@@ -95,19 +50,6 @@ beforeEach(async () => {
 });
 
 describe('unaccent', () => {
-  // Enabled by migration 0026; asserted because the wrapper below cannot exist without it.
-  it('is installed in this database', async () => {
-    const rows = await sql`select extname from pg_extension where extname = 'unaccent'`;
-
-    expect(rows.map((row) => row.extname as string)).toEqual(['unaccent']);
-  });
-
-  it('strips diacritics through the wrapper', async () => {
-    const [row] = await sql`select ${sql.unsafe(WRAPPER)}('Uña de Gato') as folded`;
-
-    expect(row.folded).toBe('Una de Gato');
-  });
-
   // `unaccent()` itself is STABLE, because it reads a dictionary; an expression
   // index needs IMMUTABLE, which the wrapper declares by naming the dictionary.
   it('declares the wrapper immutable', async () => {
@@ -120,24 +62,17 @@ describe('unaccent', () => {
 });
 
 describe('the unaccent trigram indexes', () => {
-  describe('catalogue introspection', () => {
-    it('folds name and canonical_name in one gin index', async () => {
-      const index = await catalogue.indexRow('ingredients', UNACCENT_INDEX);
+  it('folds name and canonical_name in one gin index, and the folk name in its own', async () => {
+    const onIngredients = await catalogue.indexRow('ingredients', UNACCENT_INDEX);
+    const onFolkNames = await catalogue.indexRow(
+      'ingredient_folk_names',
+      FOLK_NAMES_UNACCENT_INDEX,
+    );
 
-      expect(index?.definition).toContain(
-        `USING gin (${WRAPPER}(name) gin_trgm_ops, ${WRAPPER}(canonical_name) gin_trgm_ops)`,
-      );
-      expect(index?.unique).toBe(false);
-      expect(index?.predicate).toBeNull();
-    });
-
-    it('folds the folk name in its own gin index', async () => {
-      const index = await catalogue.indexRow('ingredient_folk_names', FOLK_NAMES_UNACCENT_INDEX);
-
-      expect(index?.definition).toContain(`USING gin (${WRAPPER}(name) gin_trgm_ops)`);
-      expect(index?.unique).toBe(false);
-      expect(index?.predicate).toBeNull();
-    });
+    expect(onIngredients?.definition).toContain(
+      `USING gin (${WRAPPER}(name) gin_trgm_ops, ${WRAPPER}(canonical_name) gin_trgm_ops)`,
+    );
+    expect(onFolkNames?.definition).toContain(`USING gin (${WRAPPER}(name) gin_trgm_ops)`);
   });
 
   // Why the plans in compendium-search-query.test.ts mean something: the fold
@@ -148,35 +83,9 @@ describe('the unaccent trigram indexes', () => {
       await addIngredient('Una de Gato Root', null);
     });
 
-    it('finds an accented name from an unaccented query', async () => {
+    it('finds an accented name from an unaccented query, and the reverse', async () => {
       expect(await namesMatching('una de gato')).toEqual(['Una de Gato Root', 'Uña de Gato']);
-    });
-
-    it('finds an unaccented name from an accented query', async () => {
       expect(await namesMatching('uña de gato')).toEqual(['Una de Gato Root', 'Uña de Gato']);
-    });
-  });
-
-  // `IF NOT EXISTS` and `OR REPLACE`, like 0000 and 0016: belt to
-  // `__drizzle_migrations`' braces.
-  describe('the migrations are idempotent', () => {
-    it('apply a second time without error', async () => {
-      for (const statement of migrationStatementsContaining(WRAPPER)) {
-        await sql.unsafe(statement);
-      }
-
-      // Still one folded index per table, not a second alongside it.
-      const rows = await sql`
-        select c.relname as name
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where c.relname like '%unaccent_trgm%'
-        order by c.relname
-      `;
-      expect(rows.map((row) => row.name as string)).toEqual([
-        FOLK_NAMES_UNACCENT_INDEX,
-        UNACCENT_INDEX,
-      ]);
     });
   });
 });

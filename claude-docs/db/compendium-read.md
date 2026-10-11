@@ -25,8 +25,8 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
   needs; `compendium-search-query.test.ts` proves by `EXPLAIN` that the
   statement the finder sends reaches both (below), and
-  `ingredients-unaccent.test.ts` keeps the declarations, the wrapper and the
-  fold (MB.184). The three matches are a `UNION ALL`, the
+  `ingredients-unaccent.test.ts` keeps the two indexes' expressions, the
+  wrapper's volatility and the fold (MB.184, MB.226). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope.
 - **The score is the row's best word similarity** across the three, and it is

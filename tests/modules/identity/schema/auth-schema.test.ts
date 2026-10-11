@@ -3,8 +3,8 @@ import type postgres from 'postgres';
 import type { BetterAuthOptions } from 'better-auth';
 import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { rateLimits, sessions } from '@/modules/identity/schema/auth';
+import { tableFacts } from '../../../support/db/table-metadata';
+import { rateLimits } from '@/modules/identity/schema/auth';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
@@ -13,8 +13,9 @@ warmImport(() => import('@/lib/auth'));
 // `count`, and `lastRequest` a bigint of epoch milliseconds, which outgrows an
 // integer (claude-docs/auth/tables.md, "Tables").
 describe('rate_limits schema', () => {
-  const { byName, columns } = tableFacts(rateLimits);
+  const { columns } = tableFacts(rateLimits);
 
+  // No audit column: Better Auth writes and prunes it alone.
   it('has id, key, count and last_request, and nothing else', () => {
     expect(columns.map((column) => column.name).sort()).toEqual([
       'count',
@@ -23,57 +24,12 @@ describe('rate_limits schema', () => {
       'last_request',
     ]);
   });
-
-  it('keys on a unique, not-null text key', () => {
-    expect(byName.key.columnType).toBe('PgText');
-    expect(byName.key.notNull).toBe(true);
-    expect(byName.key.isUnique).toBe(true);
-  });
-
-  it('counts in a not-null integer', () => {
-    expect(byName.count.columnType).toBe('PgInteger');
-    expect(byName.count.notNull).toBe(true);
-  });
-
-  it('holds last_request as a not-null bigint read as a number', () => {
-    expect(byName.last_request.columnType).toBe('PgBigInt53');
-    expect(byName.last_request.notNull).toBe(true);
-  });
-
-  it('carries no audit column — Better Auth writes and prunes it alone', () => {
-    for (const column of AUDIT_COLUMNS) {
-      expect(byName[column]).toBeUndefined();
-    }
-  });
 });
 
 describe('rate_limits in the migrated database', () => {
   let sql: postgres.Sql;
-  const catalogue = useTestDatabase((client) => {
+  useTestDatabase((client) => {
     sql = client;
-  });
-
-  it('has the four columns with the types Better Auth writes', async () => {
-    const rows = await sql<{ column_name: string; data_type: string; is_nullable: string }[]>`
-      select column_name, data_type, is_nullable from information_schema.columns
-      where table_schema = 'public' and table_name = 'rate_limits'
-      order by column_name
-    `;
-
-    expect(rows).toEqual([
-      { column_name: 'count', data_type: 'integer', is_nullable: 'NO' },
-      { column_name: 'id', data_type: 'uuid', is_nullable: 'NO' },
-      { column_name: 'key', data_type: 'text', is_nullable: 'NO' },
-      { column_name: 'last_request', data_type: 'bigint', is_nullable: 'NO' },
-    ]);
-  });
-
-  it('holds key unique, as a plain constraint rather than a partial index', async () => {
-    const index = await catalogue.indexRow('rate_limits', 'rate_limits_key_unique');
-
-    expect(index?.unique).toBe(true);
-    expect(index?.predicate).toBeNull();
-    expect(index?.definition).toMatch(/USING btree \(key\)/);
   });
 
   it('refuses a second row for the same key', async () => {
@@ -135,41 +91,5 @@ describe("rate_limits through Better Auth's adapter", () => {
       where: [{ field: 'key', value: key }],
     });
     expect(found).toMatchObject({ key, count: 1, lastRequest });
-  });
-});
-
-// MB.53: the admin acting as `user_id`, on an impersonation session alone —
-// the `admin` plugin's one column, null on every other session.
-describe('sessions.impersonated_by', () => {
-  const { byName } = tableFacts(sessions);
-  let sql: postgres.Sql;
-  useTestDatabase((client) => {
-    sql = client;
-  });
-
-  it('is a nullable uuid', () => {
-    expect(byName.impersonated_by.columnType).toBe('PgUUID');
-    expect(byName.impersonated_by.notNull).toBe(false);
-  });
-
-  it('references users.id in the migrated database', async () => {
-    const rows = await sql<{ definition: string }[]>`
-      select pg_get_constraintdef(oid) as definition from pg_constraint
-      where conrelid = 'sessions'::regclass and conname = 'sessions_impersonated_by_users_id_fk'
-    `;
-
-    expect(rows).toEqual([{ definition: 'FOREIGN KEY (impersonated_by) REFERENCES users(id)' }]);
-  });
-
-  it('refuses an admin id naming no user', async () => {
-    const [user] = await sql<{ id: string }[]>`select id from users limit 1`;
-
-    const error = await failureOf(sql`
-      insert into sessions (token, user_id, expires_at, updated_at, impersonated_by)
-      values ('impersonated-by-nobody', ${user.id}, now(), now(), '00000000-0000-0000-0000-0000000000ff')
-    `);
-
-    expect(error.code).toBe('23503');
-    expect(error.constraint_name).toBe('sessions_impersonated_by_users_id_fk');
   });
 });

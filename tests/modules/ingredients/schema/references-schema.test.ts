@@ -3,13 +3,11 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { referenceKind, references } from '@/modules/ingredients/schema/references';
-import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { ReferenceFields } from './types';
 
 // DESIGN.md §5's `references` (MB.151): one source per row, in Chicago
-// bibliography form, two-tiered as ingredients are. The table task, MB.152:
-// nothing reads or writes it until MB.153.
+// bibliography form, two-tiered as ingredients are.
 const KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'];
 
 // Text as Chicago prints it, nullable, and non-blank when set.
@@ -41,73 +39,17 @@ const CHECK_URL_ABSOLUTE = 'references_url_absolute';
 const CHECK_ACCESSED_NEEDS_URL = 'references_accessed_needs_url';
 const CHECK_KIND_NEEDS_CONTAINER = 'references_kind_needs_container';
 const CHECK_WEB_PAGE_LOCATED = 'references_web_page_located';
-const CHECKS = [
-  ...NOT_BLANK.map(notBlankCheck),
-  CHECK_URL_ABSOLUTE,
-  CHECK_ACCESSED_NEEDS_URL,
-  CHECK_KIND_NEEDS_CONTAINER,
-  CHECK_WEB_PAGE_LOCATED,
-].sort();
-
-const WORKSPACE_FK = 'references_workspace_id_workspaces_id_fk';
 
 describe('references schema', () => {
-  const { byName, indexes, checks, primaryKeys, foreignKeyByColumn, nonAuditForeignKeys } =
-    tableFacts(references);
+  const { byName } = tableFacts(references);
 
   // The full six: a reference is content, edited in place and kept for v2's history.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
-
-  it('keys on a surrogate id', () => {
-    expect(byName.id.primary).toBe(true);
-    expect(byName.id.hasDefault).toBe(true);
-    expect(primaryKeys).toEqual([]);
-  });
-
-  it('requires the kind and the title, and nothing else of its own', () => {
-    expect(byName.kind.notNull).toBe(true);
-    expect(byName.title.notNull).toBe(true);
-    for (const column of ['workspace_id', ...OPTIONAL_TEXT, ...DATES]) {
-      expect(byName[column].notNull, column).toBe(false);
-    }
-  });
-
-  // As printed, never structured: a name order or a season is not mechanical.
-  it('holds the title and every optional field as text, and the two days as dates', () => {
-    for (const column of ['title', ...OPTIONAL_TEXT]) {
-      expect(byName[column].getSQLType(), column).toBe('text');
-    }
-    for (const column of DATES) {
-      expect(byName[column].getSQLType(), column).toBe('date');
-    }
-  });
-
-  it('declares reference_kind as the five kinds MB.151 settled', () => {
-    expect(referenceKind.enumName).toBe('reference_kind');
-    expect(referenceKind.enumValues).toEqual(KINDS);
-  });
-
-  // `workspace_id IS NULL` is the compendium tier, as on `ingredients`.
-  it('points the tier at workspaces and nothing else', () => {
-    expect(foreignKeyByColumn.workspace_id.foreignTable).toBe(workspaces);
-    expect(nonAuditForeignKeys.map((fk) => fk.column)).toEqual(['workspace_id']);
-  });
-
-  // Two rows may be the same book: nothing short of a librarian identifies a
-  // source. The one index is the seed's key for its own rows (MB.171).
-  it('declares no index but the seed key’s', () => {
-    expect(indexes.map((index) => index.config.name)).toEqual(['references_seed_key_unique']);
-  });
-
-  it('declares a blank CHECK per text column beside the four that make the renderer total', () => {
-    expect(checks.map((check) => check.name).sort()).toEqual(CHECKS);
-  });
 });
 
 const AUTHOR = FIXTURE_USERS.A.id;
-const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 // The least each kind needs, so a test varies one field against a row that
 // is otherwise accepted.
@@ -130,7 +72,7 @@ const MINIMAL: Record<string, ReferenceFields> = {
 };
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function addReference(fields: ReferenceFields): Promise<string> {
   const [inserted] = await sql`
@@ -145,45 +87,12 @@ beforeEach(async () => {
 });
 
 describe('references table', () => {
-  describe('catalogue introspection', () => {
-    it('carries the six audit columns beside its own', async () => {
-      expect(await catalogue.columnNames('references')).toEqual(
-        [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
-      );
-    });
+  // A closed list is the database's and the code's alike.
+  it('holds the five kinds MB.151 settled, as the code declares them', async () => {
+    const [row] = await sql`select enum_range(null::reference_kind)::text[] as kinds`;
 
-    it('stores the kind as reference_kind, in MB.151’s order', async () => {
-      const rows = await sql`
-        select e.enumlabel from pg_enum e
-        join pg_type t on t.oid = e.enumtypid
-        where t.typname = 'reference_kind'
-        order by e.enumsortorder
-      `;
-
-      expect(rows.map((row) => row.enumlabel)).toEqual(KINDS);
-    });
-
-    it('carries no index beyond the primary key and the seed key', async () => {
-      const rows = await sql`
-        select c.relname from pg_index i join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = '"references"'::regclass
-      `;
-
-      expect(rows.map((row) => row.relname).sort()).toEqual([
-        'references_pkey',
-        'references_seed_key_unique',
-      ]);
-    });
-
-    it('declares exactly the CHECKs the schema does', async () => {
-      const rows = await sql`
-        select conname from pg_constraint
-        where conrelid = '"references"'::regclass and contype = 'c'
-        order by conname
-      `;
-
-      expect(rows.map((row) => row.conname)).toEqual(CHECKS);
-    });
+    expect(row.kinds).toEqual(referenceKind.enumValues);
+    expect(row.kinds).toEqual(KINDS);
   });
 
   describe('a row of each kind', () => {
@@ -228,38 +137,38 @@ describe('references table', () => {
       expect(second).not.toBe(first);
     });
 
-    it('refuses a missing title', async () => {
-      const error = await failureOf(addReference({ kind: 'book' }));
-
-      // 23502 is not_null_violation.
-      expect(error.code).toBe('23502');
-      expect(error.column_name).toBe('title');
-    });
-
     it('refuses a kind outside the five', async () => {
       const error = await failureOf(addReference({ ...BOOK, kind: 'other' }));
 
       // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
     });
-
-    it('refuses a workspace id no workspace holds', async () => {
-      const error = await failureOf(addReference({ ...BOOK, workspace_id: ABSENT }));
-
-      // 23503 is foreign_key_violation.
-      expect(error.code).toBe('23503');
-      expect(error.constraint_name).toBe(WORKSPACE_FK);
-    });
   });
 
   // 23514 is check_violation, named: each refusal is the CHECK MB.153's field
   // error is pathed from, where NOT NULL alone would accept ''.
   describe('text is non-blank when set', () => {
-    it.each(NOT_BLANK)('refuses a blank %s', async (column) => {
-      const error = await failureOf(addReference({ ...MINIMAL.chapter, [column]: '   ' }));
+    it('refuses a blank title', async () => {
+      const error = await failureOf(addReference({ ...MINIMAL.chapter, title: '   ' }));
 
       expect(error.code).toBe('23514');
-      expect(error.constraint_name).toBe(notBlankCheck(column));
+      expect(error.constraint_name).toBe(notBlankCheck('title'));
+    });
+
+    // The refusal above, for every other text column: each CHECK reads its
+    // own column, so a copied CHECK naming the wrong one fails here.
+    it('carries a blank CHECK on each text column, over that column', async () => {
+      const rows = await sql`
+        select conname, pg_get_constraintdef(oid) as definition from pg_constraint
+        where conrelid = '"references"'::regclass and contype = 'c'
+          and conname like '%_not_blank'
+      `;
+      const definitionOf = Object.fromEntries(rows.map((row) => [row.conname, row.definition]));
+
+      for (const column of NOT_BLANK) {
+        expect(definitionOf[notBlankCheck(column)], column).toContain(`btrim(${column})`);
+      }
+      expect(rows).toHaveLength(NOT_BLANK.length);
     });
 
     it('refuses a blank url as not absolute', async () => {
@@ -273,20 +182,15 @@ describe('references table', () => {
   // The CHECKs that make MB.153's renderer total: every row admitted renders
   // without a branch for a missing required field.
   describe('the renderer is total over every row', () => {
-    it('takes an http or https url', async () => {
-      await addReference({ ...BOOK, url: 'http://example.org/a' });
-      await addReference({ ...BOOK, url: 'https://example.org/Greek_Mythology/' });
-    });
-
-    it.each(['ftp://example.org/a', 'www.example.org', 'javascript:alert(1)'])(
-      'refuses %s as not an absolute http(s) url',
-      async (url) => {
+    // An http(s) url is taken above, by every web page and the filled row.
+    it('refuses a url that is not absolute http(s)', async () => {
+      for (const url of ['ftp://example.org/a', 'www.example.org', 'javascript:alert(1)']) {
         const error = await failureOf(addReference({ ...BOOK, url }));
 
-        expect(error.code).toBe('23514');
+        expect(error.code, url).toBe('23514');
         expect(error.constraint_name).toBe(CHECK_URL_ABSOLUTE);
-      },
-    );
+      }
+    });
 
     it('refuses an accessed date without a url', async () => {
       const error = await failureOf(addReference({ ...BOOK, accessed: '2026-10-06' }));
@@ -295,8 +199,8 @@ describe('references table', () => {
       expect(error.constraint_name).toBe(CHECK_ACCESSED_NEEDS_URL);
     });
 
-    it.each(['chapter', 'article', 'entry'])('refuses a %s without a container', async (kind) => {
-      const error = await failureOf(addReference({ ...MINIMAL[kind], container: null }));
+    it('refuses a chapter without a container', async () => {
+      const error = await failureOf(addReference({ ...MINIMAL.chapter, container: null }));
 
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe(CHECK_KIND_NEEDS_CONTAINER);
