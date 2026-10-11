@@ -66,4 +66,5 @@ copy, and no test asserts it. Role and label queries only. Runs in the `dom`
 Sign In signed out, and Continue signed in.
 
 `tests/e2e/smoke.spec.ts` renders `/` against the built server signed out,
-with no redirect, and runs the axe scan.
+with no redirect and nothing scrolling, and runs the axe scan; signed in as
+an admin through `signInAs`, Continue reaches the admin area.
