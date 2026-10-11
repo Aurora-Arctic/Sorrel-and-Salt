@@ -14,7 +14,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // and this owns what an admin sees of it and sends, Invite Admin beside the
 // heading included (claude-docs/components/admin-invitations.md).
 
-const router = { replace: vi.fn(), refresh: vi.fn() };
+const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // jsdom implements no modal dialog; stood in for as a browser behaves.
@@ -44,6 +44,7 @@ const INVITATIONS = [
 ];
 
 beforeEach(() => {
+  router.push.mockClear();
   router.replace.mockClear();
   router.refresh.mockClear();
 });
@@ -213,5 +214,73 @@ describe('AdminInvitations', () => {
 
     fireEvent.click(invite);
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
+
+// The filter (MB.115): FilterForm's loading state and Clear Filters are
+// CompendiumList's to test; this asserts the address this one builds, which
+// of its values count as a filter, and that the invite form keeps it.
+describe('AdminInvitations filter', () => {
+  const FERN = { email: 'fern', expiringSoon: true };
+  const email = () => screen.getByRole('searchbox', { name: 'Email' });
+  const soon = () => screen.getByRole('switch', { name: 'Expires in 24 Hrs' });
+  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+  const clearLink = () => screen.getByRole('link', { name: 'Clear Filters' });
+
+  it('opens the filtered list, the email trimmed and Expires in 24 Hrs a bare flag', () => {
+    render(<AdminInvitations invitations={INVITATIONS} />);
+    expect(filterButton()).toBeDisabled();
+
+    fireEvent.change(email(), { target: { value: ' Fern ' } });
+    fireEvent.click(soon());
+    fireEvent.click(filterButton());
+
+    expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
+  });
+
+  it('starts from the filter shown, and offers Clear Filters to the unfiltered list while either part is shown', () => {
+    for (const filter of [
+      { email: 'fern', expiringSoon: false },
+      { email: '', expiringSoon: true },
+    ]) {
+      const { unmount } = render(<AdminInvitations invitations={[]} filter={filter} />);
+
+      expect(email()).toHaveValue(filter.email);
+      expect(soon()).toHaveProperty('checked', filter.expiringSoon);
+      expect(clearLink()).toHaveAttribute('href', '/admin/invitations');
+      unmount();
+    }
+
+    render(<AdminInvitations invitations={[]} />);
+    expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('empties the email and Expires in 24 Hrs in place when neither is applied yet', () => {
+    render(<AdminInvitations invitations={INVITATIONS} />);
+
+    fireEvent.change(email(), { target: { value: 'fern' } });
+    fireEvent.click(soon());
+    fireEvent.click(clearLink());
+
+    expect(router.push).not.toHaveBeenCalled();
+    expect(email()).toHaveValue('');
+    expect(soon()).not.toBeChecked();
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('keeps the filter in Invite Admin and in the invite form’s close', () => {
+    render(
+      <>
+        <InviteAdmin filter={FERN} />
+        <AdminInvitations invitations={[]} filter={FERN} inviting />
+      </>,
+    );
+
+    expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
+      'href',
+      '/admin/invitations?email=fern&expiring&invite',
+    );
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring');
   });
 });

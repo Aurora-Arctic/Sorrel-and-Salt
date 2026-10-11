@@ -1,11 +1,14 @@
 import { InviteAdmin } from '../../../../../components/AdminInvitations';
 import { requireAdminSession } from '../../../../../lib/request-session';
+import { readInvitationsFilter } from '../../invitations/filter';
 import { invitationsLock } from '../../invitations/lock';
+import type { AdminInvitationsPageProps } from '../../invitations/types';
 
 // Invite Admin, beside the page's heading while Invitations is open
-// (MB.70; MB.115): a link to the tab's `?invite`, which opens the form, or
-// locked with the pause as its reason.
-export default async function InvitationsAction() {
+// (MB.70; MB.115): a link to the tab's `?invite`, keeping the tab's filter,
+// which opens the form, or locked with the pause as its reason.
+export default async function InvitationsAction({ searchParams }: AdminInvitationsPageProps) {
   const session = await requireAdminSession();
-  return <InviteAdmin locked={await invitationsLock(session)} />;
+  const [locked, params] = await Promise.all([invitationsLock(session), searchParams]);
+  return <InviteAdmin locked={locked} filter={readInvitationsFilter(params)} />;
 }

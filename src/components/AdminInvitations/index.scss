@@ -7,15 +7,11 @@
 // their own stylesheet (`UserList/controls.scss`).
 
 // Spaced as the tab's panel spaces any other tab's content: the sent notice,
-// then the table or the empty state.
+// then the list's frame, its filter row above the table or the empty state.
 .admin-invitations {
   display: flex;
   flex-direction: column;
   gap: space(5);
-}
-
-.admin-invitations__empty {
-  margin: 0;
 }
 
 // No cell wraps, heading or body: the table scrolls inside its frame, as the
