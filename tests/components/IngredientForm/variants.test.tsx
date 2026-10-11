@@ -655,4 +655,211 @@ describe('IngredientForm’s variants', () => {
       expect(within(list).queryByRole('option', { name: /^Testwort · Oil/ })).toBeNull();
     });
   });
+
+  // MB.115, the owner's call: each of an open variant's fields but its form
+  // fills from the ingredient's own, adding and never taking away.
+  describe('copying from the ingredient', () => {
+    const CATEGORY_A = '8a9b0c1d-2e3f-4b4c-8d5e-6f7a8b9c0d1e';
+    const CATEGORY_B = '9b0c1d2e-3f4a-4c5d-9e6f-7a8b9c0d1e2f';
+    const REFERENCE_ID = '6f7a8b9c-0d1e-4f2a-8b3c-4d5e6f7a8b9c';
+    const OTHER_REFERENCE_ID = '7a8b9c0d-1e2f-4a3b-9c4d-5e6f7a8b9c0d';
+    const reference = (id: string, title: string, locator: string) => ({
+      value: title,
+      link: { id, isGlobal: true, kind: 'book' as const, title, authors: null, container: null },
+      locator,
+    });
+    const COPIED = [
+      'Description',
+      'Element',
+      'Planets',
+      'Zodiac Signs',
+      'Colours',
+      'Categories',
+      'Substitute Ingredients',
+      'Safety Notes',
+      'References',
+    ];
+    const copyOf = (scope: HTMLElement, field: string) =>
+      within(scope).getByRole('button', { name: `Copy From Ingredient: ${field}` });
+
+    /** An entry whose ingredient holds something in every field a variant copies, its Oil some of it already. */
+    const filled = (): IngredientFormValues => {
+      const base = twoForms({
+        safetyNotes: 'Dilute before use.',
+        planets: [{ value: 'venus' }],
+        colors: [{ value: 'Fixture Red' }],
+        elements: ['fire'],
+        categoryIds: [CATEGORY_B],
+        substitutes: [
+          {
+            value: 'Plainwort',
+            link: {
+              id: PLAINWORT_ID,
+              canonicalName: null,
+              forms: [],
+              description: null,
+              isGlobal: true,
+              variants: [],
+            },
+          },
+        ],
+        references: [reference(OTHER_REFERENCE_ID, 'The Second Herbal', '')],
+      });
+      return {
+        ...base,
+        description: 'A fixture herb.',
+        safetyNotes: 'Keep from children.',
+        elements: ['fire', 'water'],
+        planets: [{ value: 'Mercury' }, { value: 'Venus' }],
+        zodiacSigns: [{ value: 'Gemini' }],
+        colors: [{ value: 'Fixture Red' }, { value: 'Fixture Green' }],
+        categoryIds: [CATEGORY_A, CATEGORY_B],
+        substitutes: [
+          {
+            value: 'Oilwort',
+            link: {
+              id: OILWORT_ID,
+              canonicalName: null,
+              forms: [' OIL'],
+              description: null,
+              isGlobal: true,
+              variants: [{ id: OILWORT_OIL_ID, form: ' OIL', group: null }],
+            },
+          },
+          {
+            value: 'Tinctwort',
+            link: {
+              id: TINCTWORT_ID,
+              canonicalName: null,
+              forms: ['Tincture'],
+              description: null,
+              isGlobal: true,
+              variants: [
+                { id: '6e7f8a9b-0c1d-4e2f-9a3b-5c6d7e8f9a0b', form: 'Tincture', group: null },
+              ],
+            },
+          },
+          {
+            value: 'Plainwort',
+            link: {
+              id: PLAINWORT_ID,
+              canonicalName: null,
+              forms: [],
+              description: null,
+              isGlobal: true,
+              variants: [],
+            },
+          },
+          { value: 'Fixture moss' },
+        ],
+        references: [
+          reference(REFERENCE_ID, 'The Fixture Herbal', 'p. 112'),
+          reference(OTHER_REFERENCE_ID, 'The Second Herbal', 'p. 9'),
+        ],
+      };
+    };
+
+    it('gives each copied field its own button, named for the field, none of them a submit', () => {
+      renderForm({ workspaceId: null, values: filled() });
+
+      const oil = openVariant('Oil');
+
+      const buttons = within(oil).getAllByRole('button', { name: /^Copy From Ingredient: / });
+      expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(
+        COPIED.map((field) => `Copy From Ingredient: ${field}`),
+      );
+      for (const button of buttons) expect(button).toHaveAttribute('type', 'button');
+      // The ingredient's own fields have none.
+      const everywhere = screen.getAllByRole('button', { name: /^Copy From Ingredient: / });
+      expect(everywhere.every((button) => oil.contains(button))).toBe(true);
+    });
+
+    it('shuts each button while the ingredient’s field is empty, and opens it as the field gains a value', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const oil = openVariant('Oil');
+
+      for (const field of COPIED) expect(copyOf(oil, field)).toBeDisabled();
+
+      // The ingredient's own Description, the first in the page.
+      fireEvent.change(screen.getAllByRole('textbox', { name: 'Description' })[0], {
+        target: { value: 'A fixture herb.' },
+      });
+
+      expect(copyOf(oil, 'Description')).toBeEnabled();
+      expect(copyOf(oil, 'Safety Notes')).toBeDisabled();
+    });
+
+    it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
+      const calls = acceptUpdate();
+      renderForm({ workspaceId: null, values: filled() });
+      const oil = openVariant('Oil');
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+
+      for (const field of [
+        'Element',
+        'Planets',
+        'Zodiac Signs',
+        'Colours',
+        'Categories',
+        'References',
+      ]) {
+        const button = copyOf(oil, field);
+        act(() => button.focus());
+        fireEvent.click(button);
+        expect(button).toHaveFocus();
+      }
+      // Pressed again, it adds nothing more.
+      fireEvent.click(copyOf(oil, 'Planets'));
+      expect(
+        within(oil).getByRole('status', { name: 'Planets changes' }),
+      ).not.toBeEmptyDOMElement();
+
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]).toEqual(
+        expect.objectContaining({
+          elements: ['fire', 'water'],
+          planets: ['venus', 'Mercury'],
+          zodiacSigns: ['Gemini'],
+          colors: ['Fixture Red', 'Fixture Green'],
+          categoryIds: [CATEGORY_B, CATEGORY_A],
+          references: [
+            { referenceId: OTHER_REFERENCE_ID, locator: '' },
+            { referenceId: REFERENCE_ID, locator: 'p. 112' },
+          ],
+        }),
+      );
+    });
+
+    it('fills an empty text box with the ingredient’s text, and adds it after a blank line to a filled one', () => {
+      renderForm({ workspaceId: null, values: filled() });
+      const oil = openVariant('Oil');
+
+      fireEvent.click(copyOf(oil, 'Description'));
+      act(() => copyOf(oil, 'Safety Notes').focus());
+      fireEvent.click(copyOf(oil, 'Safety Notes'));
+
+      expect(control(oil, 'Description')).toHaveValue('A fixture herb.');
+      expect(control(oil, 'Safety Notes')).toHaveValue('Dilute before use.\n\nKeep from children.');
+      expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
+    });
+
+    it('links each substitute’s same form where it comes in one, the ingredient alone where not, and a name as a name', async () => {
+      const calls = acceptUpdate();
+      renderForm({ workspaceId: null, values: filled() });
+      const oil = openVariant('Oil');
+
+      fireEvent.click(copyOf(oil, 'Substitute Ingredients'));
+      save();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
+        { ingredientId: PLAINWORT_ID },
+        { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
+        { ingredientId: TINCTWORT_ID },
+        { name: 'Fixture moss' },
+      ]);
+    });
+  });
 });

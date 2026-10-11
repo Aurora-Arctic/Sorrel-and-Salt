@@ -41,6 +41,7 @@ export function FieldShell({
   error,
   children,
   after,
+  action,
   className,
 }: FieldShellProps): ReactElement {
   return (
@@ -57,6 +58,7 @@ export function FieldShell({
             {hint}
           </InfoTip>
         )}
+        {action}
       </div>
       {note && (
         <p className="field__hint" id={noteId}>

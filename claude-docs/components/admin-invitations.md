@@ -47,7 +47,13 @@ admin is held by the pause (`invitations/lock.ts`), and hands both down. The rul
   input ([`field.md`](field.md)). **Send Invitation** stays disabled until
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
   a spinner and "Sending" while the request is out; Cancel is quiet and
-  closes back to the tab. A `VALIDATION` refusal on `email`
+  closes back to the tab. With anything typed in either field, Cancel asks
+  first, "You have unsaved changes. Discard them?", beside Discard Changes,
+  which closes, and Keep Editing, which goes back to the form as it was; the
+  modal's Close button, Escape and a click outside ask the same (MB.115, the
+  owner's call; [`modal.md`](modal.md), "Unsaved changes"). The form is
+  `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
+  guard reaches the modal's ways out. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent
   invitation closes the modal back to the tab, refreshing it so the re-read
   lists it, and says "Invitation sent to …" above the list. The address is
@@ -101,7 +107,9 @@ fails into its alert. Render-only, no test ids, no snapshots.
 `tests/components/AdminInvitations/index.test.tsx` covers the list and the
 empty state; Invite Admin a link to `?invite`; sending, with Send disabled
 until there is an address, the trimmed variables, the close back to the tab
-and its refresh, and the notice outlasting the form; a refused address beside its field;
+and its refresh, and the notice outlasting the form; Cancel and Escape
+asking once something is typed, Discard Changes closing, and Cancel closing
+at once with nothing typed; a refused address beside its field;
 Revoke after its confirmation; and both controls locked with the pause's
 reason. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:

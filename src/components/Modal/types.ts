@@ -6,7 +6,8 @@ export interface ModalProps {
   title: string;
   /**
    * Asked for by the Close button, Escape and a click outside, once the modal
-   * has faded out (M5.5). The owner closes the modal by unmounting it — a
+   * has faded out (M5.5), unless a form inside asks about its unsaved changes
+   * first (MB.115). The owner closes the modal by unmounting it — a
    * URL-driven one by navigating away from its address.
    */
   onClose: () => void;

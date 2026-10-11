@@ -26,6 +26,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   describedBy,
   invalid,
   after,
+  action,
   format,
   autoComplete,
 }: TextFieldProps<V>): ReactElement {
@@ -56,7 +57,15 @@ export function TextField<V extends FieldValues = FieldValues>({
     ...register(name, { deps, onBlur: format ? tidy : undefined }),
   };
   return (
-    <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
+    <FieldShell
+      label={label}
+      hint={hint}
+      note={note}
+      required={required}
+      after={after}
+      action={action}
+      {...field}
+    >
       {multiline ? (
         <textarea className="textarea" rows={rows} {...control} />
       ) : (
