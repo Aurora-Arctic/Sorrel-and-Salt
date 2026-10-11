@@ -1,9 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClientError } from 'graphql-request';
 import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from 'react-hook-form';
-import type { ErrorExtensions } from '../../graphql/types';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import type { ValidationIssue } from '../../lib/types';
 import {
   CompendiumIngredientInput,
   LocalIngredientInput,
@@ -346,21 +342,7 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
 
-/**
- * A failed request as issues pathed to the input: every field error of a
- * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
- * the shared reader rather than replaced by it: that one answers the first
- * field it finds, and this form places every issue at once, a draft's nested
- * path included, and joins the ones no field holds into its alert. Shared by
- * the form and its reference panel.
- */
-export function issuesOf(error: unknown): ValidationIssue[] {
-  if (error instanceof ClientError) {
-    const extensions = error.response.errors?.[0]?.extensions as
-      Partial<ErrorExtensions> | undefined;
-    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-      return extensions.fieldErrors;
-    }
-  }
-  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
-}
+// The form's and its reference panel's one reader for a failed request,
+// placing every field error at once, a draft's nested path included
+// (src/lib/graphql-failure.ts), under the name both import it by.
+export { readGraphqlIssues as issuesOf } from '../../lib/graphql-failure';

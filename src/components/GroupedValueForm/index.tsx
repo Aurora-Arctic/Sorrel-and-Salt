@@ -3,13 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
-import type { ValidationIssue } from '../../lib/types';
+import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import { ComboboxSelect } from '../Combobox';
 import Notice from '../Notice';
 import { CategoryInput } from '@/modules/vocabulary/validation/category';
@@ -203,24 +201,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
 };
 
-/**
- * A failed request as issues pathed to the input: every field error of a
- * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
- * the shared reader rather than replaced by it: that one answers the first
- * field it finds, and this form places every issue at once and joins the
- * ones no field holds into its alert.
- */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (error instanceof ClientError) {
-    const extensions = error.response.errors?.[0]?.extensions as
-      { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-      return extensions.fieldErrors;
-    }
-  }
-  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
-}
-
 /** The field an input key names, under the kind's own name for it where it has one. */
 const fieldOf = ({ inputKeys }: GroupedValueFormKind, key: unknown): FieldName | undefined =>
   FIELDS.find((field) => (inputKeys?.[field] ?? field) === key);
@@ -285,7 +265,7 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
       // so Rename Anyway is busy in its place rather than swapped for Save.
       let next: RedirectQuestion | undefined;
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [key, ...rest] = path;
         const field = rest.length === 0 ? fieldOf(spec, key) : undefined;
         if (rest.length === 0 && key === 'endRedirect')
@@ -307,7 +287,7 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setConfirming(false);
-      setAlert(issuesOf(error)[0]?.message ?? GENERIC_FAILURE);
+      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 

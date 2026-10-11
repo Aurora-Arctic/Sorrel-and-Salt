@@ -175,12 +175,14 @@ required asterisk is `$secondary`, and the rename note sits a step above the
 actions with a closer gap between it and them. Nothing goes further before
 MB.115's design review.
 
-The alert above the fields is a `Notice` ([`notice.md`](notice.md)). The
-form's reader of a failed request, `issuesOf`, stays its own rather than the
-shared `readGraphqlFailure`: the shared one answers only the first field it
-finds, and this form places every field error at once and joins the rest into
-the alert. Everything that is not a `VALIDATION` refusal it takes from the
-shared reader, so its one fallback sentence is `GENERIC_FAILURE` (MB.116).
+The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
+failed request is read by the shared `readGraphqlIssues`
+(`src/lib/graphql-failure.ts`, MB.116), which gives every field error of a
+`VALIDATION` refusal at once, where `readGraphqlFailure` answers only the
+first field it finds. The form places each issue under its field and joins
+the rest into the alert. Anything that is not a `VALIDATION` refusal comes
+back as one issue carrying the server's sentence, or `GENERIC_FAILURE` when
+there is none.
 
 ## Stories
 
