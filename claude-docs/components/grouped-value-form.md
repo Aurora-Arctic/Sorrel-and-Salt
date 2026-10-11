@@ -43,10 +43,7 @@ its three mutation documents, and nothing else:
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
   "Form", "Deity", "Planet", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label` and `placeholder`, what it shows until one is chosen
-  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"),
-  and `typeahead` where the field is typed into to narrow the groups rather
-  than picked from the select-only box: the deity's Tradition alone, the
-  owner's call in MB.115; `deleteNote`, what the
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (every kind but the category).
 - **Its schema and input**: `schema`, the shared schema the values pass
@@ -81,12 +78,16 @@ its three mutation documents, and nothing else:
   group's input key (`groupId`, or a deity's `traditionId`). Anything else
   renders above the fields in a `role="alert"` notice. The slug collision is pathed to `name`, since the
   slug is derived from the name and has no field of its own (MB.43).
-- **The group, where the kind has one, is a closed set**, on the combobox's select-only box
-  (`ComboboxSelect`), with the kind's placeholder, "Choose a group". It is
-  named by the kind's label, "Group", and its list is "Group choices"; a
-  deity's is "Tradition", "Choose a tradition" and "Tradition choices". The
-  list floats over the modal rather than stretching it, as every combobox
-  list does.
+- **The group, where the kind has one, is a closed set typed into**, on the
+  combobox's type-ahead box (`ComboboxTypeahead`, through `SelectField`'s
+  `typeahead`), the owner's call in MB.115, with the kind's placeholder,
+  "Choose a group". Typing narrows the list to the groups whose name holds the
+  text, the first highlighted, so Enter takes it. Only a listed group is ever
+  the value: text naming none leaves the group blank, so Save shows the
+  schema's error beside the field, as for a group never chosen. It is named by
+  the kind's label, "Group", and its list is "Group choices"; a deity's is
+  "Tradition", "Choose a tradition" and "Tradition choices". The list floats
+  over the modal rather than stretching it, as every combobox list does.
 - **Every field is required**, as the schema and the columns say, and
   each label carries an asterisk in the error red. The asterisk is hidden from
   the field's name: a screen reader hears "Name" and the control's
@@ -202,18 +203,18 @@ there is none.
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
 — `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
 `AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingAZodiacSign`, each in
-the modal and its own iframe, the deities under four invented traditions; `PhoneDark` and `PhoneLight`,
-the category's edit at 375px in each theme, where the buttons stack; and
-`DeityPhoneDark` and `DeityPhoneLight`, the deity's edit at 375px, its
-type-ahead Tradition opening inside the modal. Renaming in `EditingAForm`, `EditingADeity` or
+the modal and its own iframe, each kind's groups four invented ones, enough to narrow; and `PhoneDark` and
+`PhoneLight`, the category's edit at 375px in each theme, where the buttons
+stack and the type-ahead Group opens inside the modal. Renaming in `EditingAForm`, `EditingADeity` or
 `EditingAZodiacSign` shows the note. The workshop has no API, so a save answers
 with the generic error.
 
 ## Testing
 
 `tests/components/GroupedValueForm/index.test.tsx`, with the mutations
-answered by MSW in the route's own shape. The seven tests every kind shares —
-the save rules, the schema's refusal, the busy Save, the slug refusal, Cancel
+answered by MSW in the route's own shape. The nine tests every kind shares —
+the save rules, the schema's refusal, the busy Save, the group typed into
+and narrowing, text naming no group refused on Save, the slug refusal, Cancel
 and the confirmed delete — are rows of `tests/support/grouped-value-form.tsx`,
 run once, on the category: a kind shares that code path, so another kind's
 run would prove nothing more (MB.189). What only one kind does stays under
@@ -221,8 +222,7 @@ that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's
 create sending its tradition as `traditionId`, its rename saved under its
-id after the note, its Tradition typed into, the list narrowing and Enter choosing, text
-naming no tradition holding none and refused on Save, a `traditionId`
+id after the note, a `traditionId`
 refusal landing beside Tradition, and
 its delete refusal. The flat kinds, the planet and the zodiac sign, are rows of
 `describe.each` getting only what they change, their three mutations, the

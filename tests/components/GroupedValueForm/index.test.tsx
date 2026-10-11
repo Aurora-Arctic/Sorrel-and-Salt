@@ -437,52 +437,6 @@ describe('GroupedValueForm, a deity', () => {
     ]);
   });
 
-  // The owner's call (MB.115): the tradition is typed into, the list
-  // narrowing as it is, and only a listed tradition is ever the value.
-  it('takes its tradition by typing, the list narrowing to the traditions holding the text', async () => {
-    const calls: CreateDeityMutationVariables[] = [];
-    mockGraphQLMutation<CreateDeityMutation, CreateDeityMutationVariables>(
-      'CreateDeity',
-      (variables) => {
-        calls.push(variables);
-        return { createDeity: { id: DEITY.id, slug: 'testra-mockish' } };
-      },
-    );
-    const onDone = renderDeity();
-
-    type(name(), 'Testra');
-    type(description(), 'A god the test made');
-    type(tradition(), 'MOCK');
-    const list = screen.getByRole('listbox', { name: 'Tradition choices' });
-    expect(within(list).getAllByRole('option')).toHaveLength(1);
-    fireEvent.keyDown(tradition(), { key: 'Enter' });
-    press('Save Deity');
-
-    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-    expect(calls[0]?.input.traditionId).toBe(TRADITIONS[1].id);
-  });
-
-  it('holds no tradition while the text names none, and says so on Save', async () => {
-    const calls: UpdateDeityMutationVariables[] = [];
-    mockGraphQLMutation<UpdateDeityMutation, UpdateDeityMutationVariables>(
-      'UpdateDeity',
-      (variables) => {
-        calls.push(variables);
-        return { updateDeity: { id: DEITY.id, slug: 'testra-mockish' } };
-      },
-    );
-    const onDone = renderDeity({ value: DEITY });
-
-    expect(tradition()).not.toHaveAttribute('aria-invalid');
-    type(tradition(), 'Mockis');
-    press('Save Deity');
-
-    await waitFor(() => expect(tradition()).toHaveAttribute('aria-invalid', 'true'));
-    expect(tradition()).toHaveAccessibleDescription(/\S/);
-    expect(calls).toEqual([]);
-    expect(onDone).not.toHaveBeenCalled();
-  });
-
   it("lands the server's `traditionId` refusal beside Tradition", async () => {
     mockGraphQLError('UpdateDeity', {
       code: 'VALIDATION',

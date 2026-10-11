@@ -73,7 +73,8 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 as the field is left) and `autoComplete`. `SelectField` adds `name`,
 `options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
-set long enough to want a search, the deities' Tradition (MB.115). Its text
+set long enough to want a search: `GroupedValueForm`'s group, a category's or
+a form's Group and a deity's Tradition (MB.115). Its text
 naming no option is no value, so a required one shows its error on save as
 an unchosen one does ([`combobox.md`](combobox.md), "The type-ahead box"). Both are generic over the
 form's values, `TextField<IngredientFormValues>`, so `name` is checked
@@ -123,6 +124,6 @@ Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 
 No file of its own: the forms that use it cover it (claude-docs/testing/layer-ownership.md,
 "What a test may assert", rule 5). `tests/components/IngredientForm/` covers
-`TextField` and `SelectField`, and `tests/components/GroupedValueForm/` its
-`typeahead`; the NameForm and EmailForm tests cover the
+`TextField` and `SelectField`, and `tests/components/GroupedValueForm/` (with
+`tests/support/grouped-value-form.tsx`) its `typeahead`; the NameForm and EmailForm tests cover the
 shell around a plain control.

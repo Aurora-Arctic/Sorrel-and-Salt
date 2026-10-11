@@ -51,8 +51,6 @@ export interface GroupedValueGroupField {
   label: string;
   /** What the field shows until one is chosen: "Choose a group". */
   placeholder: string;
-  /** Chosen by typing to narrow the groups, the owner's call for the deities' traditions (MB.115). */
-  typeahead?: boolean;
 }
 
 /** What a kind's form says: its noun, its group field if it has one, and its confirmations. */
