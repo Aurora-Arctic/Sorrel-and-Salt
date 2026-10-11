@@ -7,6 +7,7 @@ import Combobox, {
   ComboboxSelect,
   ComboboxSortableEntries,
 } from '.';
+import { ComboboxTypeahead } from './typeahead';
 import type { ComboboxOption } from './types';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
@@ -239,6 +240,32 @@ export const SelectOnly: Story = () => {
         choices={KINDS}
         placeholder="Choose a classification"
       />
+    </>
+  );
+};
+
+const TRADITIONS = ['Fixtural', 'Mockish', 'Old Testic', 'Stubbish', 'Testwardish'].map(
+  (label) => ({ value: label.toLowerCase(), label }),
+);
+
+/** The type-ahead box: a closed set typed into, the list narrowing to the choices holding the text, the first highlighted, and only a choice the value. */
+export const Typeahead: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <>
+      <label id="tradition-label" htmlFor="tradition">
+        Tradition
+      </label>
+      <ComboboxTypeahead
+        id="tradition"
+        label="Tradition"
+        labelId="tradition-label"
+        value={value}
+        onChange={setValue}
+        choices={TRADITIONS}
+        placeholder="Choose a tradition"
+      />
+      <p>Value: {value || '(none)'}</p>
     </>
   );
 };

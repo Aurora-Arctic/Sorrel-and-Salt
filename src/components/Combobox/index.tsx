@@ -139,11 +139,11 @@ function keepText<O extends ComboboxOption>(
   }
 }
 
-function statusOf(isOpen: boolean, suggestions: Suggestions | undefined): string {
+function statusOf(isOpen: boolean, suggestions: Suggestions | undefined, noun: string): string {
   if (!isOpen || !suggestions) return '';
   const count = suggestions.options.length;
-  if (count > 0) return `${count} suggestion${count === 1 ? '' : 's'}`;
-  return suggestions.pending ? 'Looking for suggestions' : 'No suggestions';
+  if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
 function Combobox<O extends ComboboxOption = ComboboxOption>({
@@ -162,6 +162,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   clear,
   create,
   offerTyped = true,
+  highlightFirst = false,
+  noun = 'suggestion',
+  placeholder,
+  required,
   qualifier,
   listAnchor,
   inputRef,
@@ -213,6 +217,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     // adds an entry on each pick.
     selectedItem: null,
     isOpen,
+    // A closed set's first row, so Enter takes the best match of what was
+    // typed; a free-text box highlights nothing until asked.
+    defaultHighlightedIndex: highlightFirst ? 0 : undefined,
     itemToString: (item) => item?.value ?? '',
     itemToKey: (item) => (item === null ? null : keyOf(item)),
     stateReducer: keepText,
@@ -322,6 +329,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               {...getInputProps({
                 ref: inputRef,
                 name,
+                placeholder,
+                'aria-required': required || undefined,
                 // One character wide of its own, so that the slot, not the
                 // browser's default of twenty, decides how wide the text is.
                 size: 1,
@@ -396,7 +405,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               <button
                 type="button"
                 className="combobox__indicator"
-                {...getToggleButtonProps({ 'aria-label': `Show ${label} suggestions` })}
+                {...getToggleButtonProps({ 'aria-label': `Show ${label} ${noun}s` })}
               >
                 <ChevronIcon />
               </button>
@@ -410,7 +419,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         // Placed beneath or above the box, as there is room (useListPosition).
         style={listStyle}
         data-placement={placement}
-        {...getMenuProps({ ref: setList, 'aria-label': `${label} suggestions` })}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} ${noun}s` })}
       >
         {isOpen && firstRow && row(firstRow)}
         {isOpen &&
@@ -440,8 +449,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       {/* What the list holds, for a screen reader: the rows arrive after the
           typing, and nothing else says so. */}
       {hasSource && (
-        <output className="visually-hidden" aria-label={`${label} suggestions`}>
-          {statusOf(isOpen, suggestions)}
+        <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
+          {statusOf(isOpen, suggestions, noun)}
         </output>
       )}
     </div>

@@ -90,6 +90,12 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   /** Shown until a choice is made, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
+  /**
+   * Chosen by typing, the list narrowing to the options whose label holds the
+   * text, rather than picked from the select-only box: a set long enough to
+   * want a search, the deities' traditions.
+   */
+  typeahead?: boolean;
   deps?: FieldPath<V>[];
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
