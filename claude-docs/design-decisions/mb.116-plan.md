@@ -284,7 +284,7 @@ The owner's calls on the proposals drawn in 1d and the pieces built around them.
 ## Calls on the applied design (2026-10-11, the owner, in the running app)
 
 - **The only sign-in method's Remove is greyed, not gone**: `aria-disabled`, still in the tab order, with "Your only sign-in method" beneath it as its description, so the reason sits under the control it explains.
-- **The sign-in card is bigger**: it fills the narrow column (28rem) rather than its own 22rem, pads itself a step more than `.panel` (`space(6)`, 2rem, on every side), is one centred `max-content` column, so the lede and the error wrap at the buttons' width, and its buttons sit a `space(4)` apart, the room the last-used badge needs and no more.
+- **The sign-in card is bigger**: it fills the narrow column (28rem) rather than its own 22rem, pads itself a step more than `.panel` at the sides and below (`space(6)`, 2rem, over the default `space(5)` above), is one centred `max-content` column, so the lede and the error wrap at the buttons' width, and its buttons sit a `space(4)` apart, the room the last-used badge needs and no more.
 - **The email page's way on is a quiet "Continue to Account" button (`.btn--quiet`) inside the card**, centred, offered only to a verified account; on the confirmed view it sits beside the solid "Continue".
 - **A page-frame child is `border-box`**: the 375px width check caught the account sections' panels growing past the column by their padding. The fix is in the primitive, so every padded child keeps its padding inside the column.
 - **`assertNoSidewaysScroll` names what overflows** in its failure message, the outermost offenders only.

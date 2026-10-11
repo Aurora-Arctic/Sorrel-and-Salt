@@ -180,8 +180,9 @@ and holds it clear of the top inset. The panel itself is a `.panel`, the card
 ground (`_primitives.scss`), so the one thing on the page sits on a surface
 of its own, as the owner chose in MB.116. It fills the frame's narrow column
 (`$narrow-column`, 28rem) and pads itself a step more than the `.panel`
-default, `space(6)` on every side, since the card is the one thing on the
-page and the owner asked for it bigger at the sign-off. The rule is
+default at the sides and below, `space(6)`, keeping the default `space(5)`
+above, since the card is the one thing on the page and the owner asked for
+it bigger there at the sign-off. The rule is
 `.sign-in-panel.panel`, compounded so it outranks the app's `body .panel`
 ([`styling.md`](../styling.md), "The page frame"). The
 buttons sit `space(4)` apart, the room the last-used badge needs and no more. The panel is `border-box`, so the padding
