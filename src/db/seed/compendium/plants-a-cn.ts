@@ -8,6 +8,214 @@ import type { SeedCompendiumShard } from '../types';
 export const PLANTS_A_CN: SeedCompendiumShard = {
   name: 'plants-a-cn',
   sources: {
+    'grieve-adders-tongue-american': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: "Adder's Tongue (American)",
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/adder008.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-agrimony': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Agrimony',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/agrim015.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-alder-common': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Alder, Common',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/alder019.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-alkanets': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Alkanets',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/alkan024.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-allspice': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Allspice',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/allsp025.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-almonds': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Almonds',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/almon026.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-aloes': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Aloes',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/aloes027.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-amaranths': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Amaranths',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/amara030.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-angelica': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Angelica',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/anegl037.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-anise': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Anise',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/anise040.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-apple': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Apple',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/apple044.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-apricot': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Apricot',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/apric050.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-arnica': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Arnica',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/arnic058.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-ash': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Ash',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/ash--073.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-avens': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Avens',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/avens083.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-barberry-common': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Barberry, Common',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/barcom12.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-basil-sweet': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Basil, Sweet',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/basswe18.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bean-kidney': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bean, Kidney',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/beakid21.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bearberry': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bearberry',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bearbe22.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-beech': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Beech',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/beech-27.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bergamot': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bergamot',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bergam32.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-ginseng': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Ginseng',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/g/ginsen15.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-laurel-bay': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Laurel (Bay)',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/l/larbay10.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-lucerne': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Lucerne',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/l/lucern48.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-poplar-trembling': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Poplar, trembling',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/p/poplar61.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-unicorn-root-true': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Unicorn Root, True',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/u/unitru02.html',
+      accessed: '2026-10-11',
+    },
     'wikipedia-agrimonia-eupatoria': {
       kind: 'entry',
       title: 'Agrimonia eupatoria',
@@ -357,8 +565,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           ],
         },
         {
-          source: 'grieve-herbal',
-          locator: "s.v. Adder's Tongue (American)",
+          source: 'grieve-adders-tongue-american',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -378,8 +585,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: "s.v. Adder's Tongue (American)",
+              source: 'grieve-adders-tongue-american',
               supports: ['form', 'description'],
             },
           ],
@@ -392,8 +598,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The leaves should not be eaten by women trying to conceive. No modern pharmacological study has confirmed a contraceptive or abortifacient effect.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: "s.v. Adder's Tongue (American)",
+              source: 'grieve-adders-tongue-american',
               supports: ['form', 'description'],
             },
             {
@@ -537,8 +742,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'zodiacSigns'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Agrimony',
+          source: 'grieve-agrimony',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -561,8 +765,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Agrimony',
+              source: 'grieve-agrimony',
               supports: ['form'],
             },
           ],
@@ -652,8 +855,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Unicorn Root, True',
+          source: 'grieve-unicorn-root-true',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
@@ -671,8 +873,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Unicorn Root, True',
+              source: 'grieve-unicorn-root-true',
               supports: ['form'],
             },
             {
@@ -748,8 +949,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Alder, Common',
+          source: 'grieve-alder-common',
           supports: ['canonicalName', 'description'],
         },
         {
@@ -769,8 +969,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The bark is the part herbalists and craftspeople used most. A decoction of it bathed swellings and sore, inflamed throats, and was once credited with curing ague. Rich in tannin, it served tanners and dyers, giving black with iron salts and reddish, yellow or brown shades otherwise. Kynes records an Austrian belief that a love potion could be undone by drinking wine boiled with a piece of the bark.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Alder, Common',
+              source: 'grieve-alder-common',
               supports: ['form', 'description'],
             },
             {
@@ -800,8 +999,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Alder, Common',
+              source: 'grieve-alder-common',
               supports: ['form', 'description'],
             },
           ],
@@ -821,8 +1019,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Alder, Common',
+              source: 'grieve-alder-common',
               supports: ['description'],
             },
           ],
@@ -860,8 +1057,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Lucerne',
+          source: 'grieve-lucerne',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
@@ -879,8 +1075,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Lucerne',
+              source: 'grieve-lucerne',
               supports: ['form'],
             },
           ],
@@ -977,8 +1172,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Alkanets',
+          source: 'grieve-alkanets',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
@@ -997,8 +1191,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Alkanets',
+              source: 'grieve-alkanets',
               supports: ['form', 'colors'],
             },
             {
@@ -1097,8 +1290,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Allspice',
+          source: 'grieve-allspice',
           supports: ['folkNames', 'description'],
         },
         {
@@ -1126,8 +1318,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Allspice',
+              source: 'grieve-allspice',
               supports: ['form', 'substitutes'],
             },
             {
@@ -1142,8 +1333,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'Allspice oil is distilled from the fruit, which holds three to four and a half per cent of it. Grieve describes a yellow to yellowish-red liquid that darkens as it is kept, smelling much like oil of cloves, and made up largely of eugenol, sixty to seventy-five per cent. It has been used to scent soap and, two or three drops on sugar, as an old remedy for wind.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Allspice',
+              source: 'grieve-allspice',
               supports: ['form', 'description'],
             },
             {
@@ -1240,8 +1430,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Almonds',
+          source: 'grieve-almonds',
           supports: ['description'],
         },
         {
@@ -1271,8 +1460,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Almonds',
+              source: 'grieve-almonds',
               supports: ['substitutes'],
             },
           ],
@@ -1287,8 +1475,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Almonds',
+              source: 'grieve-almonds',
               supports: ['form', 'description'],
             },
             {
@@ -1376,8 +1563,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Aloes',
+          source: 'grieve-aloes',
           supports: ['canonicalName', 'description'],
         },
         {
@@ -1394,8 +1580,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The inner leaf gel is AHPA safety class 1. Take other medicines an hour before it or several hours after, as it may slow their absorption; contact dermatitis has been reported in some people after putting it on the skin.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Aloes',
+              source: 'grieve-aloes',
               supports: ['form'],
             },
             {
@@ -1432,8 +1617,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Aloes',
+              source: 'grieve-aloes',
               supports: ['form', 'description'],
             },
             {
@@ -1489,8 +1673,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Amaranths',
+          source: 'grieve-amaranths',
           supports: ['canonicalName', 'deities', 'folkNames', 'description'],
         },
         {
@@ -1668,8 +1851,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Ginseng',
+          source: 'grieve-ginseng',
           supports: ['folkNames'],
         },
         {
@@ -1697,8 +1879,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Ginseng',
+              source: 'grieve-ginseng',
               supports: ['form'],
             },
           ],
@@ -1786,8 +1967,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Angelica',
+          source: 'grieve-angelica',
           supports: ['canonicalName', 'folkNames', 'description', 'substitutes'],
         },
         {
@@ -1815,8 +1995,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Angelica',
+              source: 'grieve-angelica',
               supports: ['form'],
             },
           ],
@@ -1832,8 +2011,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Angelica',
+              source: 'grieve-angelica',
               supports: ['form', 'description'],
             },
           ],
@@ -1897,8 +2075,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Anise',
+          source: 'grieve-anise',
           supports: ['canonicalName', 'description'],
         },
         {
@@ -1926,8 +2103,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Anise',
+              source: 'grieve-anise',
               supports: ['form', 'substitutes'],
             },
             {
@@ -1958,8 +2134,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Anise',
+              source: 'grieve-anise',
               supports: ['description'],
             },
           ],
@@ -2071,8 +2246,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           ],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Apple',
+          source: 'grieve-apple',
           supports: ['description'],
         },
         {
@@ -2093,8 +2267,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description', 'colors'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Apple',
+              source: 'grieve-apple',
               supports: ['form'],
             },
             {
@@ -2211,8 +2384,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Apricot',
+          source: 'grieve-apricot',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -2276,8 +2448,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Apricot',
+              source: 'grieve-apricot',
               supports: ['form', 'description'],
             },
             {
@@ -2294,8 +2465,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           safetyNotes: 'The oil pressed from apricot kernels contains no cyanogenic glycosides.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Apricot',
+              source: 'grieve-apricot',
               supports: ['form', 'description'],
             },
             {
@@ -2367,8 +2537,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Arnica',
+          source: 'grieve-arnica',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -2392,8 +2561,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Arnica',
+              source: 'grieve-arnica',
               supports: ['form'],
             },
             {
@@ -2408,8 +2576,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The rhizome, dug in autumn once the leaves have died back and then dried. Grieve gives a tincture of the root as the British Pharmacopoeia preparation, where the United States used the flowers.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Arnica',
+              source: 'grieve-arnica',
               supports: ['form', 'description'],
             },
             {
@@ -2532,8 +2699,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Ash',
+          source: 'grieve-ash',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -2554,8 +2720,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Ash',
+              source: 'grieve-ash',
               supports: ['form', 'description'],
             },
             {
@@ -2584,8 +2749,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Ash',
+              source: 'grieve-ash',
               supports: ['form', 'description'],
             },
           ],
@@ -2622,8 +2786,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Ash',
+              source: 'grieve-ash',
               supports: ['form', 'description'],
             },
           ],
@@ -2774,8 +2937,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           ],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Poplar, Trembling',
+          source: 'grieve-poplar-trembling',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
@@ -2805,8 +2967,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The bark is the part herbalists used. Gathered in spring, it tastes bitter and has no smell, and was given as a tonic and for recurring fevers, a substitute for Peruvian bark; Indigenous North Americans and settlers in the American West drew a quinine substitute from it.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Poplar, Trembling',
+              source: 'grieve-poplar-trembling',
               supports: ['form', 'description'],
             },
             {
@@ -2964,8 +3125,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           ],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Avens',
+          source: 'grieve-avens',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
@@ -2988,8 +3148,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Avens',
+              source: 'grieve-avens',
               supports: ['form'],
             },
             {
@@ -3324,8 +3483,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Barberry, Common',
+          source: 'grieve-barberry-common',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -3362,8 +3520,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The root bark holds about 6.1% berberine, against about 0.4% in the woody part of the root.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Barberry, Common',
+              source: 'grieve-barberry-common',
               supports: ['form', 'description'],
             },
             {
@@ -3388,8 +3545,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Barberry, Common',
+              source: 'grieve-barberry-common',
               supports: ['form', 'description'],
             },
             {
@@ -3621,8 +3777,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['folkNames', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Basil, Sweet',
+          source: 'grieve-basil-sweet',
           supports: ['deities', 'folkNames', 'description'],
         },
         {
@@ -3830,8 +3985,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Laurel (Bay)',
+          source: 'grieve-laurel-bay',
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
@@ -3878,8 +4032,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The essential oil has caused allergic skin reactions, confirmed by patch tests. Its main component, 1,8-cineole (eucalyptol), makes up 36–46% of the leaf oil. The oral LD50 in rats is 3.95 g/kg.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Laurel (Bay)',
+              source: 'grieve-laurel-bay',
               supports: ['form', 'description'],
             },
             {
@@ -4006,8 +4159,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'folkNames', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Bean, Kidney',
+          source: 'grieve-bean-kidney',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -4020,8 +4172,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           form: 'Seed',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bean, Kidney',
+              source: 'grieve-bean-kidney',
               supports: ['form'],
             },
             {
@@ -4099,8 +4250,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Bearberry',
+          source: 'grieve-bearberry',
           supports: ['canonicalName', 'description'],
         },
         {
@@ -4118,8 +4268,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bearberry',
+              source: 'grieve-bearberry',
               supports: ['form'],
             },
             {
@@ -4144,8 +4293,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bearberry',
+              source: 'grieve-bearberry',
               supports: ['form', 'description'],
             },
             {
@@ -4202,8 +4350,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['canonicalName', 'folkNames', 'safetyNotes'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Bergamot',
+          source: 'grieve-bergamot',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -4228,8 +4375,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'The leaves smell of mint when crushed. Steeped young, they make Oswego tea, once drunk daily across much of the United States. English folk belief held that a leaf kept in a pocket or purse would bring money. Dried leaves are sold cut.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bergamot',
+              source: 'grieve-bergamot',
               supports: ['form', 'description'],
             },
             {
@@ -4259,8 +4405,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description', 'colors'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bergamot',
+              source: 'grieve-bergamot',
               supports: ['form', 'description'],
             },
           ],
@@ -4276,8 +4421,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Bergamot',
+              source: 'grieve-bergamot',
               supports: ['form', 'description'],
             },
           ],
@@ -4363,8 +4507,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: ['planets', 'description'],
         },
         {
-          source: 'grieve-herbal',
-          locator: 's.v. Beech',
+          source: 'grieve-beech',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -4389,8 +4532,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'description'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Beech',
+              source: 'grieve-beech',
               supports: ['form', 'description'],
             },
             {
@@ -4443,8 +4585,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               supports: ['form', 'safetyNotes'],
             },
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Beech',
+              source: 'grieve-beech',
               supports: ['form', 'description'],
             },
           ],
@@ -4455,8 +4596,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'Fully ripe beechmast holds seventeen to twenty per cent oil, of the kind that does not dry, and Grieve names this oil as the part of the tree used. It was pressed in nineteenth-century England for cooking and lamps, is used on the Continent for cooking and burning, and in Silesia stood in for butter; the pressed cake fed cattle. Beechnut oil is still sold.',
           references: [
             {
-              source: 'grieve-herbal',
-              locator: 's.v. Beech',
+              source: 'grieve-beech',
               supports: ['form', 'description'],
             },
             {

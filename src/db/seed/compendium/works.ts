@@ -5,8 +5,9 @@ import type { CitationFields } from '../../../lib/types';
 // is the edition in the owner's library, as its own title and copyright pages
 // give it (claude-docs/db/compendium-seed/README.md, "The library"); a shard's
 // per-entry pages (a Wikipedia revision, a web page) are its own `SOURCES`.
-// A shard names a work here by its handle. The two read online, Culpeper
-// and Grieve, are cited as the edition the site transcribes (MB.243).
+// A shard names a work here by its handle. Culpeper, read online, is cited as
+// the edition Project Gutenberg transcribes (MB.243); Grieve is cited page by
+// page in each shard's own sources, as `grieve-<heading>` (MB.247).
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',
@@ -93,19 +94,6 @@ export const WORKS = {
     host: 'Project Gutenberg ebook 49513',
     url: 'https://www.gutenberg.org/ebooks/49513',
     modified: '2024-10-24',
-    accessed: '2026-10-11',
-  },
-  'grieve-herbal': {
-    kind: 'book',
-    authors: 'Grieve, M.',
-    title:
-      'A Modern Herbal: The Medicinal, Culinary, Cosmetic and Economic Properties, Cultivation and Folk-Lore of Herbs, Grasses, Fungi, Shrubs & Trees with Their Modern Scientific Uses',
-    contributors: 'Edited by C. F. Leyel',
-    place: 'New York',
-    publisher: 'Dover Publications',
-    published: '1971',
-    host: 'botanical.com',
-    url: 'https://www.botanical.com/botanical/mgmh/mgmh.html',
     accessed: '2026-10-11',
   },
 } as const satisfies Record<string, CitationFields>;

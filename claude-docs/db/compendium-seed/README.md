@@ -256,12 +256,11 @@ Paul Beyerl's _A Compendium of Herbal Magick_ and Melody's _Love Is in the Earth
 - Kynes, Sandra. _Herbal Remedies for Beginners: Natural Ways to Treat Ailments_. Woodbury, MN: Llewellyn Publications, 2020. EPUB.
 - Northcote, Lady Rosalind. _The Book of Herbs_. Handbooks of Practical Gardening 12. London: John Lane, The Bodley Head, 1903.
 
-Two works read online, added to `works.ts` by MB.243 from their own title pages, read on 2026-10-11. Each is cited as the edition its site transcribes, not as the first edition: Gutenberg #49513 is the 1850 London edition, and botanical.com transcribes Dover's 1971 republication of the 1931 first edition. A locator is the entry heading, `s.v. Agrimony`.
+Culpeper, read online, was added to `works.ts` by MB.243 from its own title page, read on 2026-10-11. It is cited as the edition Project Gutenberg transcribes, the 1850 London edition, not the first edition of 1653; its locator is the entry heading, `s.v. Agrimony`.
 
 - Culpeper, Nicholas. _The Complete Herbal_. London: Thomas Kelly, 1850. Project Gutenberg ebook 49513. https://www.gutenberg.org/ebooks/49513.
-- Grieve, M. _A Modern Herbal: The Medicinal, Culinary, Cosmetic and Economic Properties, Cultivation and Folk-Lore of Herbs, Grasses, Fungi, Shrubs & Trees with Their Modern Scientific Uses_. Edited by C. F. Leyel. New York: Dover Publications, 1971. botanical.com. https://www.botanical.com/botanical/mgmh/mgmh.html.
 
-botanical.com refuses a request without a browser's `User-Agent` and `Accept` headers (HTTP 406 from its firewall); with them it answers.
+Grieve's _A Modern Herbal_ is cited page by page, as MB.247 first did: each heading read on botanical.com is a shard source `grieve-<slug of the heading>`, `kind: 'web_page'`, `authors: 'Grieve, M.'`, the heading as `title`, `container: 'A Modern Herbal'`, the page's address and the day it was read. Every lane uses that shape, so two shards citing one page write one `references` row. botanical.com refuses a request without a browser's `User-Agent` and `Accept` headers (HTTP 406 from its firewall); with them it answers.
 
 The sources seed already holds a citation of the first edition, "Cunningham, Scott. _Cunningham's Encyclopedia of Magical Herbs_. St. Paul, MN: Llewellyn Publications, 1985." That is a different edition and stays a different row: the compendium cites the 2012 e-book, the one the lanes read.
 
