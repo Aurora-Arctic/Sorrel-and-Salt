@@ -689,7 +689,8 @@ describe('a collision with another compendium entry', () => {
 
   it("refuses a rewrite onto another entry's identity, leaving the row as it was", async () => {
     await seed({ name: 'Testwort', form: 'root' });
-    const id = await seed({ name: 'Testwort', form: 'leaf' });
+    // Another formal name: one formal name is one entry per tier since MB.216.
+    const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis', form: 'root' });
     const before = await rowOf(id);
 
     const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ form: 'Root' })));
@@ -885,7 +886,7 @@ describe('the slug', () => {
 
   it("refuses a rewrite onto another entry's current address, on `name`, naming it", async () => {
     await seed({ name: 'Testwort', nomenclature: 'none', form: 'root' });
-    const id = await seed({ name: 'Testwort', nomenclature: 'none', form: 'leaf' });
+    const id = await seed({ name: 'Testleaf', nomenclature: 'none', form: 'leaf' });
 
     expect(
       await issuesOf(

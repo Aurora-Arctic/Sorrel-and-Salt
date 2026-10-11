@@ -10,7 +10,7 @@ import type { IngredientFixture } from '../fixtures/types';
 // the seed does — the author's stamps and the GUC, inside one transaction.
 
 /**
- * Writes `fixture`'s row, its folk names, its typed substitutes, its typed
+ * Writes `fixture`'s row, a variant of its form when it has one (MB.216), its folk names, its typed substitutes, its typed
  * deities at their positions and its category links, stamped by
  * `author`, and returns the ingredient's id. Categories are named as §6 does
  * and resolved through the seeded `categories`; a name with no live row is a
@@ -31,6 +31,18 @@ export async function insertIngredient(
       insert into ingredients ${tx({ ...ingredientColumns(fixture), ...stamps })}
       returning id`;
     const id = row.id as string;
+
+    // The row's form as migration 0062 fills one, so a fixture holds what a
+    // migrated entry does until MB.219's writer writes variants itself.
+    if (fixture.form !== null) {
+      await tx`
+        insert into ingredient_variants ${tx({
+          ingredient_id: id,
+          form: fixture.form.trim(),
+          form_id: fixture.formId,
+          ...stamps,
+        })}`;
+    }
 
     if (fixture.folkNames.length > 0) {
       const folkNames = fixture.folkNames.map((name) => ({ ingredient_id: id, name, ...stamps }));

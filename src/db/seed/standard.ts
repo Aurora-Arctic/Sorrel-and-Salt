@@ -1,4 +1,4 @@
-import { isNull, max } from 'drizzle-orm';
+import { and, inArray, isNotNull, isNull, max } from 'drizzle-orm';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -6,6 +6,7 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import { ingredientSlug, slugify } from '../../lib/slugify';
@@ -424,6 +425,7 @@ export async function seedStandardContent(
   await insertMissingMemberships(tx);
 
   const ingredientIds = await insertMissingIngredients(tx);
+  await insertMissingVariants(tx, [...ingredientIds.values()]);
   await insertMissingFolkNames(tx, ingredientIds);
   await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
@@ -552,6 +554,37 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
       }),
     },
   );
+}
+
+/**
+ * One variant per form the entries `ingredientIds` name carry, its curated
+ * pick beside it, as migration 0062 filled them (MB.216), so every seeded
+ * layer can name a variant. Read off the rows rather than the literals, so
+ * `demo`'s coven entries take the same path. Keyed as the variant's unique
+ * index keys it, the entry and the folded form; a variant an admin removed
+ * counts as present, so it is not restored.
+ */
+export async function insertMissingVariants(
+  tx: SeedTransaction,
+  ingredientIds: readonly string[],
+): Promise<void> {
+  if (ingredientIds.length === 0) return;
+  const formed = await tx
+    .select({
+      ingredientId: ingredients.id,
+      form: ingredients.form,
+      formId: ingredients.formId,
+    })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, ingredientIds), isNotNull(ingredients.form)));
+  const wanted = formed.flatMap(({ form, ...variant }) => (form ? [{ ...variant, form }] : []));
+
+  await insertMissingBy(tx, ingredientVariants, wanted, {
+    columns: ['ingredientId', 'form'],
+    fold: { form: (form) => form.trim().toLowerCase() },
+    where: inArray(ingredientVariants.ingredientId, ingredientIds),
+    toRow: (variant) => ({ ...variant, form: variant.form.trim() }),
+  });
 }
 
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {

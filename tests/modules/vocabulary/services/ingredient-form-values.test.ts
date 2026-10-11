@@ -28,17 +28,17 @@ import { makeIngredient } from '../../../support/fixtures';
 // seeded vocabulary stays, so every form a test writes is named `Fixture …`.
 
 // Two repository reads wrapped, each passing through to the real one: the
-// page finder, to see what the list hands it, and the identity lookup, so one
+// page finder, to see what the list hands it, and the address lookup, so one
 // test can have a colliding entry appear after the check, as a second admin's
 // write would.
 const repository = vi.hoisted(() => ({
   findIngredientFormValues: vi.fn(),
-  findCompendiumEntryByIdentity: vi.fn(),
+  findCompendiumEntryBySlug: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findIngredientFormValues.mockImplementation(actual.findIngredientFormValues);
-  repository.findCompendiumEntryByIdentity.mockImplementation(actual.findCompendiumEntryByIdentity);
+  repository.findCompendiumEntryBySlug.mockImplementation(actual.findCompendiumEntryBySlug);
   return { ...actual, ...repository };
 });
 
@@ -604,35 +604,11 @@ describe('updateIngredientFormValue', () => {
       expect(await retirements()).toEqual([]);
     });
 
-    it('is refused, naming both, when an entry would become another live entry, and nothing is written', async () => {
-      const id = await seed('Fixture Resin');
-      const amber = await seed('Fixture Amber', 'Animal');
-      const renamed = await entry('Testwort', 'Fixture Resin', id);
-      const holder = await entry('Testwort', 'Fixture Amber', amber);
-      const before = await Promise.all([formOf(id), ingredientOf(renamed), ingredientOf(holder)]);
-
-      const issues = await issuesOf(
-        updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
-      );
-
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would make Testwort (Fixture Resin) the same entry as Testwort (Fixture Amber) — change one of them first',
-        },
-      ]);
-      expect(await Promise.all([formOf(id), ingredientOf(renamed), ingredientOf(holder)])).toEqual(
-        before,
-      );
-      expect(await retirements()).toEqual([]);
-    });
-
     it('is refused, naming both, when an entry would move onto a live entry’s address', async () => {
       const id = await seed('Fixture Resin');
       const renamed = await entry('Testwort', 'Fixture Resin', id);
-      // A typed form folding to the same address but not the same identity.
-      const holder = await entry('Testwort', 'Fixture-Amber', null);
+      // A label and form folding to the same address but not the same identity.
+      const holder = await entry('Testwort-Fixture', 'Amber', null);
       expect((await ingredientOf(holder)).slug).toBe('testwort-fixture-amber');
       const before = await Promise.all([formOf(id), ingredientOf(renamed)]);
 
@@ -644,7 +620,7 @@ describe('updateIngredientFormValue', () => {
         {
           path: ['name'],
           message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would move Testwort (Fixture Resin) to the address "testwort-fixture-amber", which Testwort (Fixture-Amber) already has — change one of them first',
+            'Renaming "Fixture Resin" to "Fixture Amber" would move Testwort (Fixture Resin) to the address "testwort-fixture-amber", which Testwort-Fixture (Amber) already has — change one of them first',
         },
       ]);
       expect(await Promise.all([formOf(id), ingredientOf(renamed)])).toEqual(before);
@@ -652,22 +628,20 @@ describe('updateIngredientFormValue', () => {
 
     // Two admins: the check passed, and the colliding entry was written before
     // the rename's own write. The index refuses the entry's rewrite, and the
-    // form's rename, written first in the same transaction, goes with it.
+    // form's rename, written first in the same transaction, goes with it. The
+    // address index, since MB.216: one formal name is one entry per tier, so a
+    // rename can no longer make two entries one.
     it('rolls the form back with the entries when the index refuses a rewrite, naming both', async () => {
       const id = await seed('Fixture Resin');
-      const amber = await seed('Fixture Amber', 'Animal');
       const renamed = await entry('Testwort', 'Fixture Resin', id);
-      // The identity alone, at another address, so only the identity index can refuse.
-      const holder = await entry('Testbane', 'Fixture Amber', amber, {
-        nomenclature: 'unknown',
-        canonicalName: 'Testwort',
-      });
+      // Another identity at the address the rename moves to, so only the slug index can refuse.
+      const holder = await entry('Testwort Fixture', 'Amber', null);
       expect(await ingredientOf(holder)).toMatchObject({
-        canonical_key: 'testwort :: fixture amber',
-        slug: 'testbane-fixture-amber-testwort',
+        canonical_key: 'testwort fixture :: amber',
+        slug: 'testwort-fixture-amber',
       });
       const before = await Promise.all([formOf(id), ingredientOf(renamed)]);
-      repository.findCompendiumEntryByIdentity.mockResolvedValueOnce(undefined);
+      repository.findCompendiumEntryBySlug.mockResolvedValueOnce(undefined);
 
       const issues = await issuesOf(
         updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
@@ -677,7 +651,7 @@ describe('updateIngredientFormValue', () => {
         {
           path: ['name'],
           message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would make Testwort (Fixture Resin) the same entry as Testbane (Testwort, Fixture Amber) — change one of them first',
+            'Renaming "Fixture Resin" to "Fixture Amber" would move Testwort (Fixture Resin) to the address "testwort-fixture-amber", which Testwort Fixture (Amber) already has — change one of them first',
         },
       ]);
       expect(await Promise.all([formOf(id), ingredientOf(renamed)])).toEqual(before);
