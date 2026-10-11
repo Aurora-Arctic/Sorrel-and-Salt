@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { ClientError } from 'graphql-request';
 import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from 'react-hook-form';
 import type { ErrorExtensions } from '../../graphql/types';
+import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import type { ValidationIssue } from '../../lib/types';
 import {
   CompendiumIngredientInput,
@@ -61,8 +62,6 @@ export const EMPTY_VALUES: IngredientFormValues = {
     references: '',
   },
 };
-
-export const GENERIC_ERROR = "That didn't work. Please try again.";
 
 const isListField = (field: unknown): field is ListFieldName =>
   LIST_FIELDS.includes(field as ListFieldName);
@@ -348,17 +347,20 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
 
 /**
- * What a failed save says, as issues pathed to the input. A `VALIDATION`
- * error's field errors are the server's; anything else is one sentence about
- * the whole form — the refusal's own message, or a generic one when the
- * request never reached an answer.
+ * A failed request as issues pathed to the input: every field error of a
+ * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
+ * the shared reader rather than replaced by it: that one answers the first
+ * field it finds, and this form places every issue at once, a draft's nested
+ * path included, and joins the ones no field holds into its alert. Shared by
+ * the form and its reference panel.
  */
 export function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as Partial<ErrorExtensions> | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
+  if (error instanceof ClientError) {
+    const extensions = error.response.errors?.[0]?.extensions as
+      Partial<ErrorExtensions> | undefined;
+    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
+      return extensions.fieldErrors;
+    }
   }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
+  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }

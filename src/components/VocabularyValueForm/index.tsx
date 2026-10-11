@@ -7,7 +7,9 @@ import { type ReactElement, useId, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import type { ValidationIssue } from '../../lib/types';
+import Notice from '../Notice';
 import { VOCABULARY_COPY } from '../VocabularyValueList/vocabularies';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
 import type { FlatVocabulary } from '../VocabularyValueList/types';
@@ -90,23 +92,27 @@ const WRITES: Record<
   },
 };
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const FIELDS = ['name', 'description'] as const;
 type FieldName = (typeof FIELDS)[number];
 
 const EMPTY: VocabularyValueValues = { name: '', description: '' };
 
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
+/**
+ * A failed request as issues pathed to the input: every field error of a
+ * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
+ * the shared reader rather than replaced by it: that one answers the first
+ * field it finds, and this form places every issue at once and joins the
+ * ones no field holds into its alert.
+ */
 function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
+  if (error instanceof ClientError) {
+    const extensions = error.response.errors?.[0]?.extensions as
+      { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
+    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
+      return extensions.fieldErrors;
+    }
   }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
+  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }
 
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
@@ -180,7 +186,7 @@ const VocabularyValueForm = ({
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setConfirming(false);
-      setAlert(issuesOf(error)[0]?.message ?? GENERIC_ERROR);
+      setAlert(issuesOf(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 
@@ -274,11 +280,7 @@ const VocabularyValueForm = ({
       onSubmit={handleSubmit((input) => send(input))}
       noValidate
     >
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
+      {rootError && <Notice kind="error">{rootError}</Notice>}
       <div className="field">
         <label className="field__label" htmlFor={ids('name').control}>
           Name

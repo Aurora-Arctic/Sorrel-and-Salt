@@ -4,6 +4,7 @@ import { cache } from 'react';
 import GroupedValueList from '../../../components/GroupedValueList';
 import { groupedValuesHref } from '../../../components/GroupedValueList/href';
 import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
+import Notice from '../../../components/Notice';
 import { NotFound } from '../../../lib/errors';
 import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
@@ -132,9 +133,9 @@ export default async function AdminCategoriesPage({ searchParams }: AdminCategor
         </Link>
       </div>
       {!adding && editSlug && !edited && (
-        <p className="notice notice--error" role="alert">
+        <Notice kind="error">
           No category has that address — it may have been renamed or deleted.
-        </p>
+        </Notice>
       )}
       <GroupedValueList
         kind="category"

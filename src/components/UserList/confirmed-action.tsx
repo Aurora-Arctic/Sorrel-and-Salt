@@ -1,9 +1,10 @@
 'use client';
 
-import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { readGraphqlFailure } from '../../lib/graphql-failure';
 import Modal from '../Modal';
+import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
 
 // A row's action that asks first, in a modal naming the user, shared by the
@@ -11,14 +12,6 @@ import type { ConfirmedActionProps, ConfirmStep } from './types';
 // sends the write and stays busy until the re-read page replaces the row; a
 // refusal closes it and says why in the row. The service is the guard; this
 // only puts it where an admin looks (claude-docs/components/user-list.md).
-
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
-/** The service's own refusal, verbatim, or one generic sentence. */
-function messageOf(error: unknown): string {
-  if (!(error instanceof ClientError)) return GENERIC_ERROR;
-  return error.response.errors?.[0]?.message || GENERIC_ERROR;
-}
 
 const ConfirmedAction = ({
   label,
@@ -63,7 +56,9 @@ const ConfirmedAction = ({
       router.refresh();
     } catch (error) {
       setStep('idle');
-      setFailure(messageOf(error));
+      // No fields of its own, so the shared reader always answers an alert:
+      // the service's refusal verbatim, or the one generic sentence.
+      setFailure(readGraphqlFailure(error).alert);
     }
   }
 
@@ -90,11 +85,7 @@ const ConfirmedAction = ({
       >
         {label}
       </button>
-      {failure && (
-        <p className="notice notice--error" role="alert">
-          {failure}
-        </p>
-      )}
+      {failure && <Notice kind="error">{failure}</Notice>}
       {/* Asks first, in a modal, on the owner's call. A success leaves it open,
           busy, until the refresh replaces this control; a refusal closes it
           and says why in the row. */}
@@ -103,6 +94,9 @@ const ConfirmedAction = ({
           {(close) => (
             <>
               <p>{question}</p>
+              {/* Hand-written rather than a `Notice kind="warn"`, which is an
+                  alert: this warning is read once, as the description of the
+                  button the focus lands on, and an alert would say it twice. */}
               {warning && (
                 <p id={warningId} className="notice notice--warn user-list__warning">
                   {warning}
