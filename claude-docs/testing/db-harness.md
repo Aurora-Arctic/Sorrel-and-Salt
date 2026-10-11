@@ -19,8 +19,8 @@ run as a test.
   `useTestDatabase` registers a `beforeAll` that opens one `postgres` client
   (reading `DATABASE_URL` inside the hook, after `db-setup.ts` has pointed it
   at the worker's clone) and an `afterAll` that ends it, and returns the
-  catalogue reads — `columnNames(table)`, `indexRow(table, name)`,
-  `uniqueIndexNames(table)` — closing over that client. **It is per file, not
+  catalogue reads — `columnNames(table)` and `indexRow(table, name)` —
+  closing over that client. **It is per file, not
   per worker, and that is not a style choice:** `db-setup.ts` re-clones the
   worker's database `WITH (FORCE)` before every test file, which terminates
   any session still open on it, so a connection shared across files would be

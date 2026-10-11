@@ -132,6 +132,6 @@ name and address, and carries Stop Impersonating, at the top of every page
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is
   B's, so that is the write stamped B.
-- `tests/modules/identity/schema/auth-schema.test.ts`: the column and its
-  foreign key.
+- `tests/db/schema-drift.test.ts`: the column and its foreign key, against
+  the schema file (MB.226).
 - The component, page and layout tests: the control and the banner.
