@@ -22,6 +22,7 @@ import {
   suggestCommonNames,
   suggestIngredients,
   updateCompendiumEntry,
+  variantsOf,
 } from '@/modules/ingredients';
 import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
@@ -467,6 +468,14 @@ describe('a deleted entry', () => {
       async (id) => {
         const [cited] = await referencesOf(null, [{ id, workspaceId: null }]);
         return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // The fixture's own form, a variant since MB.216 (MB.218).
+    [
+      'its variants',
+      async (id) => {
+        const [forms] = await variantsOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(forms) && forms.length > 0;
       },
     ],
     // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).

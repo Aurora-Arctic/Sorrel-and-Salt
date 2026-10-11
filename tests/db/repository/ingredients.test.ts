@@ -4,6 +4,8 @@ import {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findIngredientSuggestions,
+  findManyOfIngredients,
   findOneIngredient,
   type CompendiumScore,
   type IngredientFilter,
@@ -15,8 +17,13 @@ import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { A, B, D, E, asUser } from '../../support/as-user';
-import { insertDeityLink, insertIngredient } from '../../support/db/insert-ingredient';
+import {
+  insertDeityLink,
+  insertIngredient,
+  insertVariant,
+} from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
@@ -206,6 +213,68 @@ describe('findCompendiumPage', () => {
 
       expect(page.edges.map((edge) => edge.node.name)).toContain('Fixture Mugwort');
       expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
+    });
+
+    // The search reaches an entry's forms (MB.218): a word in a variant's form
+    // or description finds the entry, still one row however many forms match.
+    describe('through a variant', () => {
+      let mugwortId: string;
+
+      beforeEach(async () => {
+        [{ id: mugwortId }] = await sql<{ id: string }[]>`
+          select id from ingredients where name = 'Fixture Mugwort'`;
+      });
+
+      it("matches a live variant's form", async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+
+        expect(await namesOf({ query: 'testoil' })).toEqual(['Fixture Mugwort']);
+      });
+
+      it("matches a word in a variant's description", async () => {
+        await insertVariant(
+          sql,
+          mugwortId,
+          { form: 'Testoil', description: 'Pressed from the fixturberry seed' },
+          A.id,
+        );
+
+        expect(await namesOf({ query: 'fixturberry' })).toEqual(['Fixture Mugwort']);
+      });
+
+      it('answers one row, at its best score, for an entry two of whose variants match', async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        await insertVariant(
+          sql,
+          mugwortId,
+          { form: 'Resin', description: 'Testoil, thickened' },
+          A.id,
+        );
+        // The precondition: each variant matches the query on its own, by its
+        // form and by its description.
+        const [scores] = await sql`
+          select word_similarity('testoil', 'Testoil') as form,
+                 word_similarity('testoil', 'Testoil, thickened') as description`;
+        expect(scores).toEqual({ form: 1, description: 1 });
+
+        const page = await pageOf({ query: 'testoil' }, { first: 100 });
+
+        expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+          ['Fixture Mugwort', 1],
+        ]);
+      });
+
+      it('matches nothing through a soft-deleted variant', async () => {
+        const variantId = await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        // The precondition: the live variant is found.
+        expect(await namesOf({ query: 'testoil' })).toEqual(['Fixture Mugwort']);
+
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where id = ${variantId}`;
+
+        expect(await namesOf({ query: 'testoil' })).toEqual([]);
+      });
     });
   });
 
@@ -671,6 +740,50 @@ describe('findOneIngredient', () => {
         workspaceId: null,
       });
     }
+  });
+});
+
+// An ingredient's forms are its children (MB.216, MB.218): read through
+// `findManyOfIngredients` under the parent's tier, never by a bare id, and
+// reached by the search only where the parent is readable.
+describe('a variant read under its ingredient', () => {
+  let inW: Membership;
+  let inX: Membership;
+  let localId: string;
+
+  beforeAll(async () => {
+    inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
+  });
+
+  beforeEach(async () => {
+    localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
+    await insertVariant(sql, localId, { form: 'Testoil' }, A.id);
+  });
+
+  const formsOf = async (proofs: Membership[], id: string) =>
+    (await findManyOfIngredients(proofs, ingredientVariants, [id])).map((row) => row.form).sort();
+
+  it("answers a coven's variants under its own coven's proof only, by direct id", async () => {
+    // Why the refusals below could have passed wrongly: the variants are
+    // there, and the right proof reaches them by this id.
+    expect(await formsOf([inW], localId)).toEqual(['Testoil', 'herb']);
+
+    expect(await formsOf([], localId)).toEqual([]);
+    expect(await formsOf([inX], localId)).toEqual([]);
+  });
+
+  it("offers a coven's entry by its variant's form to that coven's picker alone", async () => {
+    const offered = async (membership: Membership) =>
+      (
+        await resolvePage({ first: 100 }, (request) =>
+          findIngredientSuggestions(membership, 'testoil', request),
+        )
+      ).edges.map((edge) => edge.node.id);
+    // The precondition: the coven's own picker finds it by that form.
+    expect(await offered(inW)).toEqual([localId]);
+
+    expect(await offered(inX)).toEqual([]);
   });
 });
 

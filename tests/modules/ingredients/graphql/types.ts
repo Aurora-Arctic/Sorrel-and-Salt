@@ -46,6 +46,20 @@ export interface IngredientNode {
   categories: { name: string }[];
 }
 
+/** One `IngredientVariant` as ingredient.test.ts selects it (MB.218). */
+export interface IngredientVariantNode {
+  id: string;
+  form: string;
+  formChoice: { id: string } | null;
+  description: string | null;
+  safetyNotes: string | null;
+  elements: string[] | null;
+  planets: string[] | null;
+  zodiacSigns: string[] | null;
+  colors: string[] | null;
+  audit: { createdBy: string; updatedBy: string };
+}
+
 /** One `IngredientDeity`, its curated deity selected by id and tradition (MB.167). */
 export interface IngredientDeityNode {
   name: string;

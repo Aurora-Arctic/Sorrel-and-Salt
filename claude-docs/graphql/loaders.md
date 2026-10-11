@@ -19,9 +19,10 @@ merely absent:
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
   `.actor`, MB.199),
   `categoriesByIngredient`, `folkNamesByIngredient`,
-  `substitutesByIngredient`, `deitiesByIngredient` and `referencesByIngredient`
-  (`ingredients`, for `Ingredient.categories`, `Ingredient.folkNames`,
-  `Ingredient.substitutes`, `Ingredient.deities` and `Ingredient.references`),
+  `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`
+  and `variantsByIngredient` (`ingredients`, for `Ingredient.categories`,
+  `Ingredient.folkNames`, `Ingredient.substitutes`, `Ingredient.deities`,
+  `Ingredient.references` and `Ingredient.variants`, the last MB.218's),
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `Ingredient.formChoice`;
@@ -32,7 +33,7 @@ merely absent:
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](../modules.md)).
 - **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
-  third type parameter names what it returns. The five ingredient loaders are
+  third type parameter names what it returns. The six ingredient loaders are
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. They are
   one record in `loaders/ingredient-children.ts`, each exported by name for
   `LOADERS`, and `clearIngredientChildren(loaders, row)` clears a row from

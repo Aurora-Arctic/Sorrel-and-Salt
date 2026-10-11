@@ -1,6 +1,7 @@
 import type postgres from 'postgres';
+import { toColumns } from '../fixtures/columns';
 import { ingredientColumns } from '../fixtures/ingredient';
-import type { IngredientFixture } from '../fixtures/types';
+import type { IngredientFixture, VariantFixture } from '../fixtures/types';
 
 // The one way a test seeds an ingredient it is not testing the writing of.
 // Through the raw client rather than `withAudit`: setup must not depend on the
@@ -88,6 +89,29 @@ export async function insertIngredient(
 
     return id;
   });
+}
+
+/**
+ * Writes one more variant of `ingredientId` — a form and what it adds
+ * (MB.215) — stamped by `author`, and returns its id. Raw, as
+ * `insertIngredient` is; the fixture's own form is already a variant, so this
+ * is a second form beside it.
+ */
+export async function insertVariant(
+  sql: postgres.Sql,
+  ingredientId: string,
+  variant: VariantFixture,
+  author: string,
+): Promise<string> {
+  const [row] = await sql`
+    insert into ingredient_variants ${sql({
+      ...toColumns(variant),
+      ingredient_id: ingredientId,
+      created_by: author,
+      updated_by: author,
+    })}
+    returning id`;
+  return row.id as string;
 }
 
 /**

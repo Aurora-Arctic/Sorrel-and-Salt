@@ -82,11 +82,12 @@ hard-deleted through `write.delete`, the table carrying no tombstone
 ([`hard-delete-join-tables.md`](hard-delete-join-tables.md)); one new is
 inserted, stamped from the session.
 
-**Five services and five loaders over them**, in `ingredients`:
-`categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167) and
-`referencesOf` (MB.153) in `services/ingredient-children.ts`, batched as
-`categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient`,
-`deitiesByIngredient` and `referencesByIngredient`
+**Six services and six loaders over them**, in `ingredients`:
+`categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167),
+`referencesOf` (MB.153) and `variantsOf` (MB.218) in
+`services/ingredient-children.ts`, batched as `categoriesByIngredient`,
+`folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`,
+`referencesByIngredient` and `variantsByIngredient`
 ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
 row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
 one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,
@@ -102,8 +103,10 @@ Folk names come back as strings, flattened as §7's `folkNames: [String!]!`
 exposes them; categories come back as rows, with a soft-deleted category
 dropped by `findManyByIds`; substitutes come back as §7's `Substitute`, the
 name each shows and the live ingredient it leads to, or null; deities come
-back as §7's `IngredientDeity`, the name and the curated deity, or null. Each
-list is sorted by name, but the deities, which keep the order entered by
-`position`. The cost is one read each for folk names, substitutes and deities,
-and two for categories, plus one role lookup per coven in the batch, whatever the
+back as §7's `IngredientDeity`, the name and the curated deity, or null;
+variants come back as their rows, each carrying the tier of the key it was
+read under, which a variant's own children's loaders ask a proof for (MB.218).
+Each list is sorted by name, but the deities, which keep the order entered by
+`position`, and the variants, sorted by form, case aside. The cost is one read
+each for folk names, substitutes, deities and variants, and two for categories, plus one role lookup per coven in the batch, whatever the
 number of ingredients.

@@ -3,10 +3,15 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
-import type { IngredientDeityRow, IngredientRow, SubstituteRow } from '../types';
+import type {
+  IngredientDeityRow,
+  IngredientRow,
+  IngredientVariantRow,
+  SubstituteRow,
+} from '../types';
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
-// every correspondence field, the tier as `isGlobal`, and the five children
+// every correspondence field, the tier as `isGlobal`, and the six children
 // and the picked form through the request's loaders. `canonicalKey`,
 // `workspaceId` and `formId` stay off the wire: the key is the database's
 // own, the tier is a flag, and the pick is `formChoice`.
@@ -16,8 +21,9 @@ export const IngredientElementEnum = builder.enumType('IngredientElement', {
   values: INGREDIENT_ELEMENTS,
 });
 
-// Declared before `Ingredient` is implemented, since each names the other.
+// Declared before any is implemented, since the types below name one another.
 export const IngredientRef = builder.objectRef<IngredientRow>('Ingredient');
+export const IngredientVariantRef = builder.objectRef<IngredientVariantRow>('IngredientVariant');
 
 /**
  * A link or a typed name (DESIGN.md §7, MB.138). No `audit`, as `folkNames`
@@ -64,6 +70,36 @@ export const IngredientDeityRef = builder
     }),
   });
 
+/**
+ * One form of an ingredient (DESIGN.md §7, MB.215): what it adds to its
+ * ingredient, never what it overrides, so a client shows both. `ingredientId`
+ * and `workspaceId` stay off the wire: a variant is read beneath its
+ * ingredient, whose tier it takes.
+ */
+IngredientVariantRef.implement({
+  description:
+    "One form an ingredient comes in, and what that form adds to the ingredient: its lists add to the ingredient's, and nothing overrides it.",
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    form: t.exposeString('form'),
+    formChoice: t.field({
+      type: IngredientFormValueRef,
+      nullable: true,
+      description:
+        'The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.',
+      resolve: (row, _args, { loaders }) =>
+        row.formId === null ? null : loaders.ingredientFormsById.load(row.formId),
+    }),
+    description: t.exposeString('description', { nullable: true }),
+    safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
+    elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
+    planets: t.exposeStringList('planets', { nullable: true }),
+    zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
+    colors: t.exposeStringList('colors', { nullable: true }),
+    audit: t.field({ type: AuditInfo, resolve: (row) => row }),
+  }),
+});
+
 IngredientRef.implement({
   fields: (t) => ({
     id: t.exposeID('id'),
@@ -108,6 +144,12 @@ IngredientRef.implement({
     deities: t.field({
       type: [IngredientDeityRef],
       resolve: (row, _args, { loaders }) => loaders.deitiesByIngredient.load(row),
+    }),
+    // By form, case aside, `[]` for an entry that is information only (MB.218).
+    // A bare list, bounded by its parent, as every child list here is.
+    variants: t.field({
+      type: [IngredientVariantRef],
+      resolve: (row, _args, { loaders }) => loaders.variantsByIngredient.load(row),
     }),
     // Alphabetical by citation, `[]` when there are none.
     references: t.field({

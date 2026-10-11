@@ -5,6 +5,7 @@ import {
   folkNamesOf,
   referencesOf,
   substitutesOf,
+  variantsOf,
 } from '../services/ingredient-children';
 import type { Built } from '../../../graphql/loaders/types';
 import type {
@@ -12,6 +13,7 @@ import type {
   CitedReference,
   IngredientDeityRow,
   IngredientKey,
+  IngredientVariantRow,
   SubstituteRow,
 } from '../types';
 
@@ -41,6 +43,12 @@ const CHILD_LOADERS = {
 
   /** `Ingredient.deities`, batched: the deities of each ingredient loaded in one request. */
   deitiesByIngredient: defineLoader<IngredientKey, IngredientDeityRow[], string>(deitiesOf, byId),
+
+  /** `Ingredient.variants`, batched: the forms of each ingredient loaded in one request (MB.218). */
+  variantsByIngredient: defineLoader<IngredientKey, IngredientVariantRow[], string>(
+    variantsOf,
+    byId,
+  ),
 };
 
 // One export each, as src/graphql/loaders/index.ts registers them by name.
@@ -50,6 +58,7 @@ export const {
   referencesByIngredient,
   substitutesByIngredient,
   deitiesByIngredient,
+  variantsByIngredient,
 } = CHILD_LOADERS;
 
 /**

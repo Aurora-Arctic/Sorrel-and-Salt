@@ -3,10 +3,11 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, C, D, asUser } from '../../../support/as-user';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { curatedFormId } from '../../../support/db/curated-ids';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
-import type { IngredientNode } from './types';
+import type { IngredientNode, IngredientVariantNode } from './types';
 
 // The `ingredient` detail query: a compendium entry for anyone, and a coven's
 // own entry for its members when they name the coven. Non-null: a miss is
@@ -108,5 +109,58 @@ describe('ingredient', () => {
         extensions: { code: 'FORBIDDEN' },
       });
     });
+  });
+
+  // The transport's half of `variants` (MB.218): each field reaches the wire,
+  // in form order. Who may read them is the loader matrix's
+  // (tests/modules/ingredients/loaders/ingredient-children.test.ts).
+  it('answers its variants in form order, each with its fields', async () => {
+    const barkId = await curatedFormId(sql, 'Bark');
+    // Written after the fixture's own `herb`, and sorting before it.
+    const variantId = await insertVariant(
+      sql,
+      compendiumId,
+      {
+        form: 'Bark',
+        formId: barkId,
+        description: 'Fixture shavings',
+        safetyNotes: 'Fixture caution',
+        elements: ['earth', 'fire'],
+        planets: ['Fixture Star'],
+        zodiacSigns: ['Fixture Sign'],
+        colors: ['Fixture Grey'],
+      },
+      A.id,
+    );
+
+    const result = await runOperation<{ ingredient: { variants: IngredientVariantNode[] } }>(
+      null,
+      `query ($id: ID!) {
+        ingredient(id: $id) {
+          variants {
+            id form formChoice { id } description safetyNotes elements planets zodiacSigns colors
+            audit { createdBy updatedBy }
+          }
+        }
+      }`,
+      { id: compendiumId },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.ingredient.variants).toEqual([
+      {
+        id: variantId,
+        form: 'Bark',
+        formChoice: { id: barkId },
+        description: 'Fixture shavings',
+        safetyNotes: 'Fixture caution',
+        elements: ['earth', 'fire'],
+        planets: ['Fixture Star'],
+        zodiacSigns: ['Fixture Sign'],
+        colors: ['Fixture Grey'],
+        audit: { createdBy: A.id, updatedBy: A.id },
+      },
+      expect.objectContaining({ form: 'herb', formChoice: null, description: null }),
+    ]);
   });
 });

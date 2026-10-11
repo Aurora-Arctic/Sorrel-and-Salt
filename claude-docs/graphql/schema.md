@@ -424,7 +424,8 @@ type QueryCompendiumConnectionEdge {
   `form` are the service's, filtered in SQL
   ([`db/compendium-read.md`](../db/compendium-read.md), "The compendium
   read"): the query at least 0.5 word-similar (`<%`) to the label, the formal
-  name or a live folk name, case- and accent-folded, so a prefix and a
+  name, a live folk name, or a live variant's form or description (MB.218),
+  case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
   adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
@@ -440,8 +441,8 @@ type QueryCompendiumConnectionEdge {
   the same filter.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`: the row's word
-  similarity to the query, the best of the label, the formal name and its folk
-  names. Without a search the list pages `(name, id)` and `score` is null. A
+  similarity to the query, the best of the label, the formal name, its folk
+  names and its variants' forms and descriptions. Without a search the list pages `(name, id)` and `score` is null. A
   query shorter than two characters is no search — one letter would filter and
   rank by noise — so it lists every entry, unranked. The score lives on the
   edge rather than on `Ingredient` because it describes the match, not the
@@ -466,7 +467,8 @@ type QueryCompendiumConnectionEdge {
   `categories`, `substitutes`, `deities` and `references` go through the five
   ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient` and
-  `referencesByIngredient`, keyed by the row itself; `Category.group`,
+  `referencesByIngredient`, keyed by the row itself, and `variants` through
+  `variantsByIngredient` (MB.218); `Category.group`,
   `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
   `deityTraditionsById`; and `formChoice` through `ingredientFormsById`
@@ -629,8 +631,9 @@ signatures DESIGN.md §7's sketch gives them.
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
   `updateIngredient` first clears the entry from `categoriesByIngredient`,
-  `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`
-  and `referencesByIngredient`, through `clearIngredientChildren`, which
+  `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`,
+  `referencesByIngredient` and `variantsByIngredient`, through
+  `clearIngredientChildren`, which
   clears every loader `loaders/ingredient-children.ts` defines (MB.211). Root mutation fields run in turn within one
   request, so an earlier field may already have loaded the categories, folk
   names, substitutes, deities or references this write replaced.

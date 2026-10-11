@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { IngredientRow, ReferenceRow } from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
+import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
 import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
@@ -18,6 +19,23 @@ export type { CategoryRow };
  * answered with nothing.
  */
 export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
+
+/**
+ * One live form of an ingredient as `Ingredient.variants` reads it (MB.218):
+ * the variant's row, and the tier of the ingredient it was read under. A
+ * variant has no `workspace_id` of its own, and its children's loaders need
+ * one to know which proof to ask for, as an ingredient's do.
+ */
+export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
+  Pick<IngredientRow, 'workspaceId'>;
+
+/**
+ * A variant as its children's loaders key it, the row a resolver already
+ * holds. `workspaceId` is its ingredient's, and says which proof to ask
+ * for; it is never the scope, which the read takes through the variant to its
+ * ingredient, as `IngredientKey` says of an ingredient's.
+ */
+export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
 
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<

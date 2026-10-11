@@ -4,6 +4,7 @@ import { ingredientCategories } from '../../modules/ingredients/schema/ingredien
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
@@ -35,10 +36,11 @@ import type {
 } from './types';
 
 /**
- * The rows of `ingredient_folk_names` or `ingredient_categories` belonging to
- * these ingredients — readable exactly when the parent is: live, and in the
+ * The rows of an ingredient's child table — `ingredient_folk_names`,
+ * `ingredient_categories` or `ingredient_variants` (MB.218) — belonging to
+ * these ingredients, readable exactly when the parent is: live, and in the
  * compendium or in a coven one of `memberships` proves. No proofs reads the
- * compendium alone. Neither table carries a `workspace_id`, so the correlated
+ * compendium alone. No such table carries a `workspace_id`, so the correlated
  * `EXISTS` over the parent is where the tier comes from, and a caller naming
  * another coven's ingredient gets no rows rather than a filter applied after
  * the fetch (rule 7).
@@ -302,15 +304,18 @@ function compendiumList(filter: IngredientFilter): {
 /**
  * The rows matching a search, as a relation to join and each row's score. A
  * row matches when the query is word-similar (`<%`) to its label, its formal
- * name or a live folk name, each side folded through `unaccent_immutable` so
- * the expression indexes of migration 0027 answer the match; the threshold is
- * the keyset read's (`wordMatch`). The three matches are a `UNION ALL`, for
- * `findSimilarIngredients`'s reason, each arm scoring what it matched with
- * `word_similarity` — which the index's recheck has just computed — and the
- * score is the best of them, `max … group by id`. A plain column, so the
- * order and the page bound read it per matched row rather than a correlated
- * folk-name subquery per compendium row (claude-docs/db/compendium-read.md, "The compendium
- * read"). Blank means no search.
+ * name, a live folk name, or the form or description of a live variant
+ * (MB.218), each side folded through `unaccent_immutable` so the expression
+ * indexes of migration 0027 and `ingredient_variants_unaccent_trgm` answer
+ * the match; the threshold is the keyset read's (`wordMatch`). The three
+ * arms are a `UNION ALL`, for `findSimilarIngredients`'s reason, each
+ * scoring what it matched with `word_similarity` — which the index's recheck
+ * has just computed — and the score is the best of them, `max … group by
+ * id`, so an entry two of whose forms match is still one row. A plain
+ * column, so the order and the page bound read it per matched row rather than
+ * a correlated folk-name subquery per compendium row
+ * (claude-docs/db/compendium-read.md, "The compendium read"). Blank means no
+ * search.
  */
 function searchMatch(
   query: string | undefined,
@@ -321,7 +326,8 @@ function searchMatch(
   const candidate = alias(ingredients, 'candidate');
   const arms = sql.identifier('arms');
   const matched = sql.identifier('matched');
-  // `greatest` skips nulls, so an entry with no formal name scores on its label.
+  // `greatest` skips nulls, so an entry with no formal name scores on its
+  // label, and a variant with no description on its form.
   const source = sql`(
     select ${arms}.id, max(${arms}.score) as score from (
       select ${candidate.id},
@@ -332,6 +338,14 @@ function searchMatch(
       select ${ingredientFolkNames.ingredientId}, ${similarity(ingredientFolkNames.name)}
       from ${ingredientFolkNames}
       where ${and(matches(ingredientFolkNames.name), notSoftDeleted(ingredientFolkNames))}
+      union all
+      select ${ingredientVariants.ingredientId},
+        greatest(${similarity(ingredientVariants.form)}, ${similarity(ingredientVariants.description)})
+      from ${ingredientVariants}
+      where ${and(
+        or(matches(ingredientVariants.form), matches(ingredientVariants.description)),
+        notSoftDeleted(ingredientVariants),
+      )}
     ) as ${arms}
     group by ${arms}.id) as ${matched}`;
   return {

@@ -11,6 +11,7 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
+import { ingredientVariants } from '../schema/ingredient-variants';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import { type Membership, assertMembership } from '@/modules/coven';
 import type {
@@ -18,6 +19,7 @@ import type {
   CitedReference,
   IngredientDeityRow,
   IngredientKey,
+  IngredientVariantRow,
   SubstituteRow,
 } from '../types';
 
@@ -151,6 +153,28 @@ export async function deitiesOf(
 }
 
 /**
+ * The live forms of each ingredient, as `Ingredient.variants` reads them
+ * (MB.218) — one answer per ref, sorted by form, case aside. Each carries the
+ * ref's tier, which its own children's loaders ask a proof for. One read
+ * whatever the batch size, plus one role lookup per coven named; refused
+ * exactly as `categoriesOf` refuses.
+ */
+export async function variantsOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+): Promise<(IngredientVariantRow[] | Forbidden)[]> {
+  const { admitted, answer } = await admit(session, refs);
+  const rows = await admitted(ingredientVariants);
+
+  return answer((id, { workspaceId }) =>
+    rows
+      .filter((row) => row.ingredientId === id)
+      .sort(byForm)
+      .map((row) => ({ ...row, workspaceId })),
+  );
+}
+
+/**
  * The check the reads share: a proof for every coven the refs name that this
  * session may read, and a `Forbidden` for each that it may not. `admitted`
  * reads a child table for the refs that passed, whose `ids` and proofs a read
@@ -169,11 +193,14 @@ async function admit(session: Session | null, refs: readonly IngredientKey[]) {
   return {
     memberships,
     ids,
-    admitted: <TTable extends typeof ingredientCategories | typeof ingredientFolkNames>(
+    admitted: <
+      TTable extends
+        typeof ingredientCategories | typeof ingredientFolkNames | typeof ingredientVariants,
+    >(
       table: TTable,
     ) => findManyOfIngredients(memberships, table, ids),
-    answer: <T>(childrenOf: (id: string) => T) =>
-      refs.map((ref) => (isRefused(ref) ? new Forbidden() : childrenOf(ref.id))),
+    answer: <T>(childrenOf: (id: string, ref: IngredientKey) => T) =>
+      refs.map((ref) => (isRefused(ref) ? new Forbidden() : childrenOf(ref.id, ref))),
   };
 }
 
@@ -193,4 +220,9 @@ async function proofFor(
 
 function byName(a: { name: string }, b: { name: string }): number {
   return a.name.localeCompare(b.name);
+}
+
+/** By form, case aside, as the variant index folds a form (`lower(btrim(form))`). */
+function byForm(a: { form: string }, b: { form: string }): number {
+  return a.form.toLowerCase().localeCompare(b.form.toLowerCase());
 }

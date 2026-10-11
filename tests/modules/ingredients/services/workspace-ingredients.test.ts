@@ -18,6 +18,7 @@ import {
   suggestCommonNames,
   suggestIngredients,
   updateWorkspaceIngredient,
+  variantsOf,
 } from '@/modules/ingredients';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
@@ -794,6 +795,14 @@ describe('a deleted coven ingredient', () => {
       async (id) => {
         const [cited] = await referencesOf(member, ref(id));
         return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // The fixture's own form, a variant since MB.216 (MB.218).
+    [
+      'its variants',
+      async (id) => {
+        const [forms] = await variantsOf(member, ref(id));
+        return Array.isArray(forms) && forms.length > 0;
       },
     ],
     // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).

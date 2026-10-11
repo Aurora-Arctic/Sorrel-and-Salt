@@ -9,9 +9,14 @@ import {
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,
+  variantsByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
+import {
+  insertIngredient,
+  insertSubstituteLink,
+  insertVariant,
+} from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
@@ -106,7 +111,15 @@ async function addFifty(): Promise<Written[]> {
 }
 
 const loadersFor = (session: Session | null) =>
-  buildLoaders({ categoriesByIngredient, folkNamesByIngredient, substitutesByIngredient }, session);
+  buildLoaders(
+    {
+      categoriesByIngredient,
+      folkNamesByIngredient,
+      substitutesByIngredient,
+      variantsByIngredient,
+    },
+    session,
+  );
 
 const categoryNames = async (session: Session | null, ref: IngredientKey) =>
   (await loadersFor(session).categoriesByIngredient.load(ref)).map((category) => category.name);
@@ -118,6 +131,10 @@ const substituteNames = async (session: Session | null, ref: IngredientKey) =>
   (await loadersFor(session).substitutesByIngredient.load(ref)).map(
     (substitute) => substitute.name,
   );
+
+/** The forms each ingredient comes in, as `Ingredient.variants` lists them. */
+const variantForms = async (session: Session | null, ref: IngredientKey) =>
+  (await loadersFor(session).variantsByIngredient.load(ref)).map((variant) => variant.form);
 
 describe('the categoriesByIngredient loader', () => {
   it('answers fifty ingredients across two tiers with one role lookup and two reads', async () => {
@@ -234,7 +251,31 @@ describe('the substitutesByIngredient loader', () => {
   });
 });
 
-// The three loaders share one check, `admit`, and each has a read of its own,
+describe('the variantsByIngredient loader', () => {
+  it('answers fifty ingredients across two tiers with one role lookup and one read', async () => {
+    const written = await addFifty();
+    // A second form on every other one, written after the fixture's own
+    // `herb` and sorting before it, so each answer shows the sort by form.
+    for (let i = 1; i < written.length; i += 2) {
+      await insertVariant(sql, written[i].ref.id, { form: 'Fixture Gum' }, A.id);
+    }
+    const { variantsByIngredient: loader } = loadersFor(asUser(B));
+
+    const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
+
+    expect(answers.map((variants) => variants.map((variant) => variant.form))).toEqual(
+      written.map((_, i) => (i % 2 === 1 ? ['Fixture Gum', 'herb'] : ['herb'])),
+    );
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 1,
+      findManyByIds: 0,
+      findSubstitutesIncludingSoftDeleted: 0,
+      findWorkspaceRole: 1,
+    });
+  });
+});
+
+// The loaders share one check, `admit`, and each has a read of its own,
 // so every case runs through each in one matrix: a check or a scope forgotten
 // in one loader shows up as that loader's row differing from the others'.
 describe('who the ingredient-children loaders answer', () => {
@@ -242,11 +283,14 @@ describe('who the ingredient-children loaders answer', () => {
     categoriesByIngredient: categoryNames,
     folkNamesByIngredient: folkNames,
     substitutesByIngredient: substituteNames,
+    variantsByIngredient: variantForms,
   };
   const CHILDREN = {
     categoriesByIngredient: ['Protection'],
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
+    // The fixture's own form, a variant since MB.216.
+    variantsByIngredient: ['herb'],
   };
   type Loader = keyof typeof READS;
   const LOADERS = Object.keys(READS) as Loader[];
