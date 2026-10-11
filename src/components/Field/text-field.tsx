@@ -18,6 +18,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   note,
   required,
   multiline,
+  rows,
   type,
   disabled,
   deps,
@@ -55,7 +56,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   return (
     <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
       {multiline ? (
-        <textarea className="textarea" {...control} />
+        <textarea className="textarea" rows={rows} {...control} />
       ) : (
         <input className="input" type={type} {...control} />
       )}

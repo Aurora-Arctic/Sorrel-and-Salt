@@ -333,7 +333,12 @@ const IngredientForm = ({
           entry="Folk Name"
           hint="Other names it goes by. A search finds it by any of them."
         />
-        <TextField<IngredientFormValues> name="description" label="Description" multiline />
+        <TextField<IngredientFormValues>
+          name="description"
+          label="Description"
+          multiline
+          rows={10}
+        />
         {/* Several at once, in the order chosen (MB.159); none chosen is
             the answer "none", so there is no None to choose. */}
         <MultiSelectField

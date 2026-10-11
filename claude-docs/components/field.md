@@ -70,7 +70,7 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 </FieldShell>;
 ```
 
-`TextField` adds `name`, `multiline`, `type` (`text`, `date`, `url`),
+`TextField` adds `name`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description takes 10), `type` (`text`, `date`, `url`),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `format` (a tidy run
 as the field is left) and `autoComplete`. `SelectField` adds `name`,
 `options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`

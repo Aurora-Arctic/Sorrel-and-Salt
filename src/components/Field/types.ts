@@ -63,6 +63,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   name: FieldPath<V>;
   /** A textarea, for prose. */
   multiline?: boolean;
+  /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
+  rows?: number;
   /** The input's type, for a single line: a reference's days are `date`s. */
   type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
   /** Shut, for a field the rest of the form has ruled out; its note says why. */
