@@ -6,6 +6,7 @@ import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
+import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
@@ -355,22 +356,19 @@ export interface AuditWriter {
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
-   * Carry a curated form's new name onto the compendium entries picking it
-   * (M5.6a): each entry's `form` becomes `form`, re-keying it, and its slug
-   * the one the caller derived, the slug it held retired at `at` when the two
-   * differ (MB.82). An entry is reached only while it is a live compendium
-   * row whose `form_id` is `formId`, so a coven's ingredient, a deleted
-   * entry or one that has since picked another form is left alone and not
-   * returned. Named for its tables, since the vocabulary module that renames a
-   * form may not name `ingredients`.
+   * Carry a curated form's new name onto the compendium's variants picking it
+   * (M5.6a, MB.220): every live variant whose `form_id` is `formId`, of a
+   * live compendium entry, takes `form` as its text. No slug moves and no
+   * retirement is written, since a form is no part of an entry's identity or
+   * address. A coven's variant, a deleted entry's, a dropped variant and one
+   * picking another form are left alone and not returned. Named for its
+   * tables, since the vocabulary module that renames a form may not name them.
    */
   carryFormRename(
     admin: SiteAdmin,
     formId: string,
     form: string,
-    entries: readonly FormRenameEntry[],
-    at: Date,
-  ): Promise<IngredientRow[]>;
+  ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
   /**
    * Carry a planet's or a sign's new name onto the compendium's lists (MB.95):
    * in every live compendium entry whose `list` holds an entry folding to
@@ -485,13 +483,6 @@ export interface SimilarityScore {
   score: number;
 }
 
-/** One compendium entry a form's rename rewrites: the slug it moves to, and the slug it held. */
-export interface FormRenameEntry {
-  id: string;
-  slug: string;
-  previousSlug: string;
-}
-
 /** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
@@ -501,9 +492,9 @@ export interface IngredientFilter {
   /** The form, folded as `canonical_key` folds it. */
   form?: string;
   /**
-   * The curated form an entry picked, by `form_id` (MB.167): how a form's
-   * delete and rename find the entries holding it (M5.6a). A uuid; the caller
-   * checks one first.
+   * The curated form one of an entry's live variants picked, by its `form_id`
+   * (MB.167, MB.220): how a form's delete finds the entries holding it
+   * (M5.6a). A uuid; the caller checks one first.
    */
   formId?: string;
   /**
@@ -545,12 +536,15 @@ export type ListedVocabulary = FlatTable | ItemTable;
 export type SuggestingVocabulary = FlatTable | PickedTable;
 
 /**
- * Where a vocabulary's in-use values are written: one value to a `column` of
- * `ingredients`, a `list` whose entries are each one (MB.136), or the `name`
- * of a `child` table's rows (MB.167).
+ * Where a vocabulary's in-use values are written: a `list` of `ingredients`
+ * whose entries are each one (MB.136), or a `child` table's live rows, each
+ * holding one in its `value` column — a deity link's `name` (MB.167), a
+ * variant's `form` (MB.220).
  */
 export type InUseSource =
-  { column: AnyPgColumn } | { list: AnyPgColumn } | { child: typeof ingredientDeities };
+  | { list: AnyPgColumn }
+  | { child: typeof ingredientDeities; value: typeof ingredientDeities.name }
+  | { child: typeof ingredientVariants; value: typeof ingredientVariants.form };
 
 /** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {

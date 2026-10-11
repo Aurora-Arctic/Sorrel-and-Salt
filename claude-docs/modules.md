@@ -257,7 +257,7 @@ declaration it is written in, and a private helper under its own name rather
 than credited to whichever export happens to sit above it. Review holds the
 list since MB.224 retired the guard that pinned it.
 
-It holds the predicate, the five builders over it, seventeen functions and the
+It holds the predicate, the five builders over it, eighteen functions and the
 writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
 NULL` itself; `inTiers` and `readableInTiers` beside it,
 `readableIngredientParent` in `ingredient-parent.ts`, and `findPageInTiers`
@@ -271,7 +271,8 @@ public list, and `findCompendiumCount` (MB.105), its count;
 `findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
 `findIngredientSuggestions` (MB.138), the substitute picker's search;
 `findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
-write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
+write names; `findCompendiumFormRenameClashes` (MB.220), the entries a
+curated form's rename would give two forms of one name; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
@@ -283,8 +284,8 @@ reference picker's search; `citesNothing` (MB.153), the admin's to-do
 filter, a sourced row citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
-curated form's rename onto the entries picking it (`carryFormRename`, M5.6a). The
-list, its count, the identity lookup, the two address finders and the writer
+curated form's rename onto the compendium variants picking it (`carryFormRename`, M5.6a, MB.220). The
+list, its count, the identity lookup, the rename's clash check, the two address finders and the writer
 touch the compendium tier alone, as does `citesNothing`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later
 task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to

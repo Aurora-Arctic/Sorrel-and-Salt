@@ -5,12 +5,14 @@ import {
   eq,
   getTableName,
   inArray,
+  isNull,
   ne,
   notInArray,
   or,
   sql,
 } from 'drizzle-orm';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { categories } from '../../modules/vocabulary/schema/categories';
@@ -20,7 +22,14 @@ import { TWO_TIER, type PickedTable, type TwoTierPair } from '../vocabularies';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPage, findPageCount } from './finders';
-import { containsText, fold, notSoftDeleted, readableInTiers, trigramMatch } from './predicates';
+import {
+  containsText,
+  fold,
+  inCompendium,
+  notSoftDeleted,
+  readableInTiers,
+  trigramMatch,
+} from './predicates';
 import { existsIn, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type {
@@ -31,6 +40,7 @@ import type {
   DeitySuggestion,
   FormSuggestion,
   IngredientFormValueFilter,
+  IngredientRow,
   InUseSource,
   ListedVocabulary,
   ListOrder,
@@ -251,38 +261,73 @@ export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
 }
 
 /**
+ * The live compendium entries a curated form's rename to `name` would give
+ * two forms of one name (MB.220): each holds a live variant that picked
+ * `formId`, which the rename rewrites, and another live variant whose form
+ * already folds to `name`, under the fold `ingredient_variants_form_unique`
+ * holds. What the rename is refused on, naming them, before its write and
+ * again after the index refuses one. A coven's entry is never rewritten, so
+ * never named. Unordered; the pick is read through
+ * `ingredient_variants_form_id_idx`.
+ */
+export function findCompendiumFormRenameClashes(
+  formId: string,
+  name: string,
+): Promise<IngredientRow[]> {
+  const ofEntry = eq(ingredientVariants.ingredientId, ingredients.id);
+  return selectFrom(
+    ingredients,
+    and(
+      inCompendium(ingredients),
+      notSoftDeleted(ingredients),
+      existsIn(ingredientVariants, and(ofEntry, eq(ingredientVariants.formId, formId))),
+      // Another variant: two of one entry cannot both pick the form, since a
+      // pick's text folds to the form's name and the index holds the fold.
+      existsIn(
+        ingredientVariants,
+        and(
+          ofEntry,
+          or(isNull(ingredientVariants.formId), ne(ingredientVariants.formId, formId)),
+          eq(fold(ingredientVariants.form), fold(name)),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
  * Where each vocabulary's in-use values are written, keyed by table name: a
  * vocabulary added to `SuggestingVocabulary` fails to compile until it names
  * its column, and a caller passes a table alone, so it cannot pair one with
  * the other's column. A list is read entry by entry (MB.136); the deities are
- * their own table's rows (MB.167).
+ * their own table's rows (MB.167), and the forms an entry's variants (MB.220),
+ * so a form is in use while any live variant holds it, not only the one the
+ * ingredient row mirrors.
  */
 const IN_USE = {
   planets: { list: ingredients.planets },
   zodiac_signs: { list: ingredients.zodiacSigns },
-  ingredient_forms: { column: ingredients.form },
-  deities: { child: ingredientDeities },
+  ingredient_forms: { child: ingredientVariants, value: ingredientVariants.form },
+  deities: { child: ingredientDeities, value: ingredientDeities.name },
 } satisfies Record<SuggestingVocabulary['_']['name'], InUseSource>;
 
 const ENTRY = sql.identifier('entry');
 
 /**
- * The rows an in-use scan reads, and the value each holds: the ingredients
- * themselves for a column; one row per entry for a list, unnested before
- * anything trims or folds it — so an entry counts as a column's value would,
- * and a value held by several lists, or twice by one, is grouped as one; or a
- * child table's live rows beside their ingredient, for the deities.
+ * The rows an in-use scan reads, and the value each holds: one row per entry
+ * for a list, unnested before anything trims or folds it — so a value held by
+ * several lists, or twice by one, is grouped as one; or a child table's live
+ * rows beside their ingredient, for the deities and the forms.
  */
 function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper } {
-  if ('column' in source) return { rows: ingredients, value: source.column };
   if ('child' in source) {
-    const { child } = source;
+    const { child, value } = source;
     return {
       rows: sql`${ingredients} inner join ${child} on ${and(
         eq(child.ingredientId, ingredients.id),
         notSoftDeleted(child),
       )}`,
-      value: child.name,
+      value,
     };
   }
   return {
@@ -346,7 +391,8 @@ export async function findVocabularySuggestions(
   const inScope = and(readableInTiers(memberships, ingredients), ne(sql`btrim(${inUse})`, ''));
 
   const grouping = groupingOf(vocabulary);
-  // Only a form names its claimants: a form is half an ingredient's identity.
+  // Only a form names its claimants: the entries already holding it, one of
+  // which a member adding a form may mean to add it to instead (MB.215).
   const claimed = vocabulary === ingredientForms;
   const curatedRows = grouping
     ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.column}`

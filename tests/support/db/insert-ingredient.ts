@@ -91,6 +91,31 @@ export async function insertIngredient(
 }
 
 /**
+ * Adds a live variant of `form` to `ingredientId`, picking `formId` when
+ * given, stamped by `author`, and returns its id: an entry's second form,
+ * beside the one `insertIngredient` writes from the fixture. Raw, as
+ * `insertSubstituteLink` is: a test can write the row the service would refuse.
+ */
+export async function insertVariant(
+  sql: postgres.Sql,
+  ingredientId: string,
+  form: string,
+  formId: string | null,
+  author: string,
+): Promise<string> {
+  const [row] = await sql`
+    insert into ingredient_variants ${sql({
+      ingredient_id: ingredientId,
+      form,
+      form_id: formId,
+      created_by: author,
+      updated_by: author,
+    })}
+    returning id`;
+  return row.id as string;
+}
+
+/**
  * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`,
  * and returns the row's id. Raw, as `insertIngredient` is, so the tier rule the
  * service holds is not: a test can write the row the service would refuse.

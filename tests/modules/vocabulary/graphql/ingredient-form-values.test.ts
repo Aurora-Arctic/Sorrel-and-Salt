@@ -124,11 +124,10 @@ describe('the admin writes', () => {
     await sql`delete from ingredient_forms where name like 'Fixture%'`;
   });
 
-  const input = (name = 'Fixture Shard', extra: Record<string, unknown> = {}) => ({
+  const input = (name = 'Fixture Shard') => ({
     name,
     description: 'Made over the wire',
     groupId: substance,
-    ...extra,
   });
 
   async function seed(name: string): Promise<string> {
@@ -280,43 +279,6 @@ describe('the admin writes', () => {
       const missing = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
       expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-    });
-
-    it('answers a rename onto a running redirect as VALIDATION on `endRedirect`, and takes `endRedirect`', async () => {
-      const id = await seed('Fixture Resin');
-      const renamed = await insertIngredient(
-        sql,
-        makeIngredient({
-          name: 'Testwort',
-          nomenclature: 'none',
-          form: 'Fixture Resin',
-          formId: id,
-        }),
-        E.id,
-      );
-      const moved = await insertIngredient(
-        sql,
-        makeIngredient({ name: 'Testsoil', nomenclature: 'none', form: 'Fixture Earth' }),
-        E.id,
-      );
-      await sql`
-        insert into retired_ingredient_slugs (ingredient_id, slug, created_by, updated_by)
-        values (${moved}, 'testwort-fixture-amber', ${E.id}, ${E.id})`;
-
-      const refused = await send(asUser(E), UPDATE, { id, input: input('Fixture Amber') });
-      const confirmed = await send<{ updateIngredientFormValue: FormValueNode }>(
-        asUser(E),
-        UPDATE,
-        { id, input: input('Fixture Amber', { endRedirect: true }) },
-      );
-
-      expect(refused.errors?.[0]?.extensions).toMatchObject({
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['endRedirect'] }],
-      });
-      expect(confirmed.errors).toBeUndefined();
-      const [row] = await sql`select form, slug from ingredients where id = ${renamed}`;
-      expect(row).toEqual({ form: 'Fixture Amber', slug: 'testwort-fixture-amber' });
     });
   });
 

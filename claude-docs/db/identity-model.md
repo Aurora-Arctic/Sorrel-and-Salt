@@ -218,8 +218,9 @@ curated row a live entry holds — a form or deity it picks, or a planet or
 sign's last live spelling — is refused, and renaming one carries onto the
 entries, so the rule holds after the write as well
 ([`../design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
-A form is identity, so a form rename carried onto an entry re-keys it and
-moves its slug.
+Since MB.220 a form rename is carried onto the entry's variants that picked
+the form and moves no slug, a form being no part of the entry's identity or
+address since MB.215.
 
 **Folk names got their own table instead of staying `folkNames text[]`
 because of one verified fact.** On this repo's live PostgreSQL 18.6,

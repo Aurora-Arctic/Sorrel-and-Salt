@@ -6,7 +6,7 @@ import { encodeCursor, resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import { type FormSuggestion, suggestForms } from '@/modules/vocabulary';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
@@ -208,6 +208,35 @@ describe('suggestForms', () => {
 
     it('offers a curated value nobody claims, with no claimants', async () => {
       expect(find(await all(asUser(B), 'ointment'), 'Ointment').claimants).toEqual([]);
+    });
+  });
+
+  // MB.220: an entry's forms are its variants, so a form is in use, and
+  // claimed, while any live variant holds it, not only the one its row mirrors.
+  describe('an entry with several forms', () => {
+    it('offers and attributes each live form, and not a dropped one', async () => {
+      const id = await addIngredient({
+        name: 'Testwort',
+        workspaceId: WORKSPACE_W_ID,
+        form: 'tuber',
+      });
+      await insertVariant(sql, id, 'rhizome', null, A.id);
+      await insertVariant(sql, id, 'Root', null, A.id);
+      const dropped = await insertVariant(sql, id, 'caudex', null, A.id);
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
+      // Why the second forms could only come from the variants: the row holds the first.
+      const [row] = await sql`select form from ingredients where id = ${id}`;
+      expect(row.form).toBe('tuber');
+
+      const suggestions = await all(asUser(B), '');
+
+      const claimant = [{ name: 'Testwort', canonicalName: null }];
+      expect(suggestions.filter((s) => !s.curated)).toEqual([
+        expect.objectContaining({ value: 'rhizome', claimants: claimant }),
+        expect.objectContaining({ value: 'tuber', claimants: claimant }),
+      ]);
+      expect(find(suggestions, 'Root').claimants).toEqual(claimant);
     });
   });
 

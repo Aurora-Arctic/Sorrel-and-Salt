@@ -65,10 +65,12 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   per id, so an entry must carry every one. OR is M8.12's argument to add.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
   `canonical_key` uses.
-- **`formId`** matches the curated form an entry picked, `form_id` (MB.167):
-  how a form's delete and rename find the entries holding it (M5.6a), read
-  through `ingredients_compendium_form_id_idx`. The repository's filter alone:
-  the public `compendium` query takes no such argument.
+- **`formId`** matches an entry holding a live variant that picked the
+  curated form, by the variant's `form_id` (MB.167, MB.220): a correlated
+  `EXISTS` over `ingredient_variants`, read through
+  `ingredient_variants_form_id_idx`, so any of an entry's forms holds it.
+  How a form's delete finds the entries holding it (M5.6a). The repository's
+  filter alone: the public `compendium` query takes no such argument.
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
   formal names still to look up: the admin's to-do list beside
   `withoutReferences`' (["References"](references.md)).

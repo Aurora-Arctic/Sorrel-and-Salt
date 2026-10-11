@@ -4,6 +4,7 @@ import { ingredientCategories } from '../../modules/ingredients/schema/ingredien
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
@@ -270,7 +271,7 @@ function compendiumList(filter: IngredientFilter): {
     arms: and(
       ...categoryArms(filter.categoryIds ?? []),
       formArm(filter.form),
-      filter.formId ? eq(ingredients.formId, filter.formId) : undefined,
+      pickedFormArm(filter.formId),
       listArm(ingredients.planets, filter.planet),
       listArm(ingredients.zodiacSigns, filter.zodiacSign),
       filter.deityId
@@ -366,4 +367,18 @@ function listArm(list: AnyPgColumn, value: string | undefined): SQL | undefined 
 function formArm(form: string | undefined): SQL | undefined {
   if (!form?.trim()) return undefined;
   return eq(fold(ingredients.form), fold(form));
+}
+
+/**
+ * The entry holds a live variant that picked the curated form `formId`
+ * (MB.220): any of its forms, not only the one the ingredient row mirrors, so
+ * a form's delete is held by every entry carrying it. A correlated `EXISTS`,
+ * answered by `ingredient_variants_form_id_idx`. Absent means no filter.
+ */
+function pickedFormArm(formId: string | undefined): SQL | undefined {
+  if (!formId) return undefined;
+  return existsIn(
+    ingredientVariants,
+    and(eq(ingredientVariants.ingredientId, ingredients.id), eq(ingredientVariants.formId, formId)),
+  );
 }

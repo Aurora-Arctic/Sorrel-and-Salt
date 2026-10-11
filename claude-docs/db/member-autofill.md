@@ -14,8 +14,10 @@ nothing else. The ingredient column each table suggests for is paired in the
 repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
 the `zodiac_signs` list, and a fifth vocabulary does not compile until it
 names its column. `planets` and `zodiac_signs` are paired with the lists of
-the same names, `ingredient_forms` with the single `form` (M4.7a), and
-`deities` with the rows of `ingredient_deities` (MB.167).
+the same names, `ingredient_forms` with the live rows of
+`ingredient_variants` and their `form` (M4.7a; MB.220, so each of an entry's
+forms is in use and claims, not only the one its row mirrors), and `deities`
+with the live rows of `ingredient_deities` and their `name` (MB.167).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
