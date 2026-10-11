@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
 import { KINDS } from './kinds';
@@ -39,7 +40,7 @@ const GroupedValueList = ({
   return (
     // The kind's modifier, so a rule one kind's rows need — the category
     // chip's padding — stays that kind's.
-    <div className={`list-frame grouped-value-list--${kind}`}>
+    <ListFrame className={`grouped-value-list--${kind}`}>
       {/* Keyed by the filter shown, so another one starts the form again from it. */}
       <GroupedValueListFilter
         key={`${filter.query}\n${filter.group}`}
@@ -48,68 +49,70 @@ const GroupedValueList = ({
         groups={groups}
       />
 
-      {values.length ? (
-        <div className="data-table-frame">
-          <table
-            className="data-table data-table--stack"
-            aria-label={title}
-            {...tableRole('table')}
-          >
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Name
-                </th>
-                {group && (
+      <ListBody>
+        {values.length ? (
+          <div className="data-table-frame">
+            <table
+              className="data-table data-table--stack"
+              aria-label={title}
+              {...tableRole('table')}
+            >
+              <thead {...tableRole('rowgroup')}>
+                <tr {...tableRole('row')}>
                   <th scope="col" {...tableRole('columnheader')}>
-                    {group.label}
+                    Name
                   </th>
-                )}
-                <th scope="col" {...tableRole('columnheader')}>
-                  Description
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  <span className="visually-hidden">Edit</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {values.map((entry) => (
-                <tr key={entry.id} {...tableRole('row')}>
-                  <td {...stackCell('Name')}>{entry.name}</td>
                   {group && (
-                    <td {...stackCell(group.label)}>
-                      {/* The group in its own chip, as the category picker shows it. */}
-                      {entry.groupColors ? (
-                        <span className="chip" style={chipColors(entry.groupColors)}>
-                          {entry.groupName}
-                        </span>
-                      ) : (
-                        entry.groupName
-                      )}
-                    </td>
+                    <th scope="col" {...tableRole('columnheader')}>
+                      {group.label}
+                    </th>
                   )}
-                  <td className="grouped-value-list__description" {...stackCell('Description')}>
-                    {entry.description}
-                  </td>
-                  {/* No label: an action spans its card on a phone. */}
-                  <td {...stackCell('')}>
-                    {/* Soft navigation: the page renders again with the modal open. */}
-                    <Link className="btn btn--small btn--quiet" href={entry.editHref}>
-                      Edit <span className="visually-hidden">{entry.name}</span>
-                    </Link>
-                  </td>
+                  <th scope="col" {...tableRole('columnheader')}>
+                    Description
+                  </th>
+                  <th scope="col" {...tableRole('columnheader')}>
+                    <span className="visually-hidden">Edit</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>{empty}</p>
-      )}
+              </thead>
+              <tbody {...tableRole('rowgroup')}>
+                {values.map((entry) => (
+                  <tr key={entry.id} {...tableRole('row')}>
+                    <td {...stackCell('Name')}>{entry.name}</td>
+                    {group && (
+                      <td {...stackCell(group.label)}>
+                        {/* The group in its own chip, as the category picker shows it. */}
+                        {entry.groupColors ? (
+                          <span className="chip" style={chipColors(entry.groupColors)}>
+                            {entry.groupName}
+                          </span>
+                        ) : (
+                          entry.groupName
+                        )}
+                      </td>
+                    )}
+                    <td className="grouped-value-list__description" {...stackCell('Description')}>
+                      {entry.description}
+                    </td>
+                    {/* No label: an action spans its card on a phone. */}
+                    <td {...stackCell('')}>
+                      {/* Soft navigation: the page renders again with the modal open. */}
+                      <Link className="btn btn--small btn--quiet" href={entry.editHref}>
+                        Edit <span className="visually-hidden">{entry.name}</span>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p>{empty}</p>
+        )}
 
-      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-    </div>
+        <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+      </ListBody>
+    </ListFrame>
   );
 };
 

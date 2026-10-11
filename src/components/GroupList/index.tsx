@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import type { GroupKind } from '../GroupForm/types';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import type { GroupListProps } from './types';
@@ -43,65 +44,67 @@ const GroupList = ({
   nextHref,
   position,
 }: GroupListProps): ReactElement => (
-  <div className="list-frame">
-    {groups.length ? (
-      <div className="data-table-frame">
-        <table
-          className="data-table data-table--stack group-list__table"
-          {...tableRole('table')}
-          aria-label={TABLE_NAME[kind]}
-        >
-          <thead {...tableRole('rowgroup')}>
-            <tr {...tableRole('row')}>
-              <th scope="col" {...tableRole('columnheader')}>
-                Name
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                Description
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                <span className="visually-hidden">Edit</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody {...tableRole('rowgroup')}>
-            {groups.map((group) => (
-              <tr key={group.id} {...tableRole('row')}>
-                <td {...stackCell('Name')}>
-                  {kind === 'category' && group.colorDark && group.colorLight ? (
-                    <span
-                      className="chip"
-                      style={chipColors({
-                        colorDark: group.colorDark,
-                        colorLight: group.colorLight,
-                      })}
-                    >
-                      {group.name}
-                    </span>
-                  ) : (
-                    group.name
-                  )}
-                </td>
-                <td {...stackCell('Description')} className="group-list__description">
-                  {group.description}
-                </td>
-                <td {...stackCell('')}>
-                  {/* Soft navigation: the page renders again with the modal open. */}
-                  <Link className="btn btn--small btn--quiet" href={group.editHref}>
-                    Edit <span className="visually-hidden">{group.name}</span>
-                  </Link>
-                </td>
+  <ListFrame>
+    <ListBody>
+      {groups.length ? (
+        <div className="data-table-frame">
+          <table
+            className="data-table data-table--stack group-list__table"
+            {...tableRole('table')}
+            aria-label={TABLE_NAME[kind]}
+          >
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Name
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Description
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  <span className="visually-hidden">Edit</span>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <p>{EMPTY[kind]}</p>
-    )}
+            </thead>
+            <tbody {...tableRole('rowgroup')}>
+              {groups.map((group) => (
+                <tr key={group.id} {...tableRole('row')}>
+                  <td {...stackCell('Name')}>
+                    {kind === 'category' && group.colorDark && group.colorLight ? (
+                      <span
+                        className="chip"
+                        style={chipColors({
+                          colorDark: group.colorDark,
+                          colorLight: group.colorLight,
+                        })}
+                      >
+                        {group.name}
+                      </span>
+                    ) : (
+                      group.name
+                    )}
+                  </td>
+                  <td {...stackCell('Description')} className="group-list__description">
+                    {group.description}
+                  </td>
+                  <td {...stackCell('')}>
+                    {/* Soft navigation: the page renders again with the modal open. */}
+                    <Link className="btn btn--small btn--quiet" href={group.editHref}>
+                      Edit <span className="visually-hidden">{group.name}</span>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p>{EMPTY[kind]}</p>
+      )}
 
-    <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-  </div>
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+    </ListBody>
+  </ListFrame>
 );
 
 export default GroupList;

@@ -2,11 +2,13 @@ import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import { useState } from 'react';
 import { listHref } from '../../lib/list-href';
+import ListFrame from '../ListFrame';
 import FilterForm from '.';
 
-// Render-only; the lists that use it assert their filters. The workshop's
-// router goes nowhere, so Filter shows its spinner only for as long as the
-// stubbed push takes. The fields are the caller's: a name and a group here, as
+// Render-only; the lists that use it assert their filters. A filter sits in
+// its list's ListFrame, which holds its navigation; the workshop's router
+// goes nowhere, so a press shows nothing on its way here (GroupedValueList's
+// `Pending` stories draw that). The fields are the caller's: a name and a group here, as
 // a value list's are, with Filter offered once either differs from the
 // filter shown, and Clear Filters while the filter shown or the fields are
 // not blank.
@@ -22,49 +24,51 @@ const ValueFilter = ({ shown = NO_FILTER }: { shown?: typeof NO_FILTER }) => {
   const [query, setQuery] = useState(shown.query);
   const [group, setGroup] = useState(shown.group);
   return (
-    <FilterForm
-      label="Filter Categories"
-      action={PATH}
-      href={() => listHref(PATH, { query: query.trim(), group })}
-      disabled={query.trim() === shown.query && group === shown.group}
-      shown={[shown.query, shown.group]}
-      draft={[query, group]}
-      onClear={() => {
-        setQuery('');
-        setGroup('');
-      }}
-      navigation="soft"
-    >
-      <div className="field">
-        <label className="field__label" htmlFor="story-filter-query">
-          Name
-        </label>
-        <input
-          id="story-filter-query"
-          className="input"
-          type="search"
-          name="query"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-      </div>
-      <div className="field">
-        <label className="field__label" htmlFor="story-filter-group">
-          Group
-        </label>
-        <select
-          id="story-filter-group"
-          className="select"
-          name="group"
-          value={group}
-          onChange={(event) => setGroup(event.target.value)}
-        >
-          <option value="">Any</option>
-          <option value="fixture-substance">Fixture Substance</option>
-          <option value="testwort-wards">Testwort Wards</option>
-        </select>
-      </div>
-    </FilterForm>
+    <ListFrame>
+      <FilterForm
+        label="Filter Categories"
+        action={PATH}
+        href={() => listHref(PATH, { query: query.trim(), group })}
+        disabled={query.trim() === shown.query && group === shown.group}
+        shown={[shown.query, shown.group]}
+        draft={[query, group]}
+        onClear={() => {
+          setQuery('');
+          setGroup('');
+        }}
+        navigation="soft"
+      >
+        <div className="field">
+          <label className="field__label" htmlFor="story-filter-query">
+            Name
+          </label>
+          <input
+            id="story-filter-query"
+            className="input"
+            type="search"
+            name="query"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor="story-filter-group">
+            Group
+          </label>
+          <select
+            id="story-filter-group"
+            className="select"
+            name="group"
+            value={group}
+            onChange={(event) => setGroup(event.target.value)}
+          >
+            <option value="">Any</option>
+            <option value="fixture-substance">Fixture Substance</option>
+            <option value="testwort-wards">Testwort Wards</option>
+          </select>
+        </div>
+      </FilterForm>
+    </ListFrame>
   );
 };
 

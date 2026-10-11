@@ -1,12 +1,14 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { ListNavigationKind } from '../ListFrame/types';
 
 /**
- * How Filter navigates: `soft`, a client-side navigation inside a transition,
- * or `full`, a whole page load, which runs the layout's guard again, as the
- * pager's plain anchors do (UserList, PrivilegeLedger; claude-docs/components/pager.md).
+ * How Filter navigates: `soft`, a client-side navigation inside the list's
+ * transition, or `full`, a whole page load, which runs the layout's guard
+ * again, as the pager's plain anchors do (UserList, PrivilegeLedger;
+ * claude-docs/components/pager.md). The list's own `ListFrame` runs either.
  */
-export type FilterNavigation = 'soft' | 'full';
+export type FilterNavigation = ListNavigationKind;
 
 /** One value of the filter a page shows: a blank string, `false` or none is no filter. */
 export type FilterValue = string | boolean | null | undefined;

@@ -1,37 +1,43 @@
 'use client';
 
-import type { Route } from 'next';
-import { useRouter } from 'next/navigation';
 import {
   Fragment,
   type FormEvent,
   type MouseEvent,
   type ReactElement,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
-  useTransition,
 } from 'react';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
-import BusyButton from '../BusyButton';
+import { useListNavigation } from '../ListFrame';
 import type { FilterFormProps, FilterValue } from './types';
 
 // A list's filter: a GET form to the page itself (MB.52, MB.178), so before
 // hydration it still submits natively, each field under the name the page
 // reads. Once hydrated, Filter is offered only when the form differs from the
 // filter the page shows (MB.53, the owner's word), and opens the new filter
-// from the first page, busy until it arrives. Clear Filters, after it, is a
-// link to the page itself with no filter, offered while the page shows one or
-// a field holds a value not yet applied (the owner's calls at MB.115's
-// review): with a filter shown it opens the unfiltered list, and with only
-// unapplied values it empties the fields where they are. The caller keeps its own field state
-// and supplies the fields; this holds the form, the two controls and the
-// navigation, which five lists had each written for themselves
-// (claude-docs/components/filter-form.md).
+// from the first page. Clear Filters, after it, is a link to the page itself
+// with no filter, offered while the page shows one or a field holds a value
+// not yet applied (the owner's calls at MB.115's review): with a filter shown
+// it opens the unfiltered list, and with only unapplied values it empties the
+// fields where they are. Both navigate through the list's `ListFrame`, so
+// while the new list reads, the row greys out as a tabbed page's tabs do and
+// the list beneath it is the tabs' skeleton (the owner's call). The caller
+// keeps its own field state and supplies the fields; this holds the form, the
+// two controls and the navigation, which five lists had each written for
+// themselves (claude-docs/components/filter-form.md).
 
 /** A value the page shows a filter by: a blank, `false` or none is no filter. */
 const isSet = (value: FilterValue): boolean =>
   typeof value === 'string' ? value.trim() !== '' : value === true;
+
+/** The caller's controls, which the row marks `aria-disabled` while a list is on its way. */
+const FIELD_CONTROLS = 'input:not([type="hidden"]), select, textarea, button, a[href]';
+
+/** What would change a field or press a control, each refused while a list is on its way. */
+const PRESSES = ['keydown', 'beforeinput', 'mousedown', 'click', 'paste', 'drop'] as const;
 
 const FilterForm = ({
   label,
@@ -44,15 +50,7 @@ const FilterForm = ({
   navigation,
   children,
 }: FilterFormProps): ReactElement => {
-  const router = useRouter();
-  const [filtering, startFiltering] = useTransition();
-  const [clearing, startClearing] = useTransition();
-  // A full load has no transition to wait on: the flag, naming the control
-  // pressed, holds its spinner until the page unloads.
-  const [leaving, setLeaving] = useState<'filter' | 'clear' | null>(null);
-  const filterBusy = filtering || leaving === 'filter';
-  const clearBusy = clearing || leaving === 'clear';
-  const busy = filterBusy || clearBusy;
+  const { pending, go } = useListNavigation();
   const filtered = shown.some(isSet);
   const drafted = draft.some(isSet);
   const form = useRef<HTMLFormElement>(null);
@@ -71,33 +69,36 @@ const FilterForm = ({
       ?.focus();
   }, [emptied]);
 
-  // Back to a page the browser kept whole (the back-forward cache) restores
-  // it as it was left, spinner and all: the flag drops when it is shown again,
-  // as Pager's plain end does.
-  useEffect(() => {
-    if (!leaving) return;
-    const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) setLeaving(null);
+  // While a list is on its way the fields are off as the tabs are: each of
+  // the caller's controls `aria-disabled`, so a focus stays where it was
+  // rather than falling to the page as a `disabled` field's would, and every
+  // key but Tab, every press and every edit refused before it reaches them.
+  // Set on the controls themselves, since the caller draws them; the two
+  // controls this draws carry it already, and are left to React.
+  useLayoutEffect(() => {
+    const row = form.current;
+    if (!pending || !row) return;
+    const marked = [...row.querySelectorAll<HTMLElement>(FIELD_CONTROLS)].filter(
+      (control) => !control.hasAttribute('aria-disabled'),
+    );
+    for (const control of marked) control.setAttribute('aria-disabled', 'true');
+    const refuse = (event: Event) => {
+      if (event instanceof KeyboardEvent && event.key === 'Tab') return;
+      event.preventDefault();
+      event.stopPropagation();
     };
-    window.addEventListener('pageshow', onPageShow);
-    return () => window.removeEventListener('pageshow', onPageShow);
-  }, [leaving]);
-
-  function go(to: () => Route, control: 'filter' | 'clear') {
-    if (navigation === 'full') {
-      setLeaving(control);
-      window.location.assign(to());
-      return;
-    }
-    const start = control === 'filter' ? startFiltering : startClearing;
-    start(() => router.push(to()));
-  }
+    for (const type of PRESSES) row.addEventListener(type, refuse, true);
+    return () => {
+      for (const control of marked) control.removeAttribute('aria-disabled');
+      for (const type of PRESSES) row.removeEventListener(type, refuse, true);
+    };
+  }, [pending]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // A disabled submit stops a click, not a form submitted by Enter.
-    if (disabled || busy) return;
-    go(href, 'filter');
+    if (disabled || pending) return;
+    go(href(), navigation);
   }
 
   // A plain left click navigates as Filter does; a new tab or window is the
@@ -105,9 +106,9 @@ const FilterForm = ({
   function clear(event: MouseEvent<HTMLAnchorElement>) {
     if (opensElsewhere(event)) return;
     event.preventDefault();
-    if (busy) return;
+    if (pending) return;
     if (filtered) {
-      go(() => action, 'clear');
+      go(action, navigation);
       return;
     }
     onClear();
@@ -122,19 +123,20 @@ const FilterForm = ({
         method="get"
         action={action}
         aria-label={label}
+        aria-busy={pending || undefined}
         onSubmit={submit}
       >
         <Fragment key={emptied}>{children}</Fragment>
-        {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
-        <BusyButton
+        {/* `disabled` with nothing to send, a submit with nothing to do;
+            `aria-disabled` while a list is on its way, so a focus on it stays. */}
+        <button
           type="submit"
           className="btn btn--solid"
-          disabled={disabled || busy}
-          busy={filterBusy}
-          busyLabel="Filtering"
+          disabled={disabled}
+          aria-disabled={pending || undefined}
         >
           Filter
-        </BusyButton>
+        </button>
         {filtered || drafted ? (
           // A link, not a submit: the unfiltered first page is the page
           // itself, which works before hydration as an address, and a submit
@@ -144,10 +146,9 @@ const FilterForm = ({
             className="btn btn--quiet"
             href={action}
             onClick={clear}
-            aria-busy={clearBusy || undefined}
+            aria-disabled={pending || undefined}
           >
-            {clearBusy && <span className="spinner" aria-hidden="true" />}
-            {clearBusy ? 'Clearing Filters' : 'Clear Filters'}
+            Clear Filters
           </a>
         ) : (
           // Disabled rather than hidden with nothing to clear, as

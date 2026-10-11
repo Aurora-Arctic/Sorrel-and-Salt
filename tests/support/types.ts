@@ -76,10 +76,14 @@ export interface StoryReporterOptions {
   outputFile?: string;
 }
 
-/** What `Navigating` takes: the mocked router's `push`, and what it wraps. */
+/**
+ * What `Navigating` takes: the mocked router's `push`, what it wraps, and
+ * when the server's render arrives, by default never.
+ */
 export interface NavigatingProps {
   push: Mock;
   children: ReactNode;
+  arrives?: Promise<void>;
 }
 
 /** The Better Auth instance `@/lib/auth` exports, as `importAuth` hands it back. */

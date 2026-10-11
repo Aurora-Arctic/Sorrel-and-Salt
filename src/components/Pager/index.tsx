@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import PagerEndContent from './end-content';
-import { PlainPagerLink, SoftPagerLink } from './pager-link';
+import PagerLink from './pager-link';
 import type { PagerEndProps, PagerProps } from './types';
 import './index.scss';
 
@@ -22,11 +22,7 @@ const PagerEnd = ({ href, soft, label }: PagerEndProps): ReactElement => {
       </a>
     );
   }
-  return soft ? (
-    <SoftPagerLink href={href} label={label} />
-  ) : (
-    <PlainPagerLink href={href} label={label} />
-  );
+  return <PagerLink href={href} label={label} soft={soft} />;
 };
 
 const Pager = ({

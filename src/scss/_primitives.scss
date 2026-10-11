@@ -250,9 +250,8 @@
 
   // Twice the label, so the direction reads at a glance; a line height of 1
   // so the mark does not make the button taller.
-  // A box of its own, a label's em wide, so the spinner that takes the
-  // chevron's place while the end's page is on the way leaves the button the
-  // size it was (the owner's call, MB.178).
+  // A box of its own, a label's em wide, so either guillemet leaves its
+  // button the same size.
   .pager__mark {
     display: inline-flex;
     align-items: center;
@@ -260,23 +259,12 @@
     inline-size: 0.5em;
     font-size: 2em;
     line-height: 1;
-
-    // The label's size, back from the mark's double.
-    > .spinner {
-      font-size: 0.5em;
-    }
   }
 
   // The guillemet sits on the text's line, below the middle of the button,
   // so it is brought up to the label's centre (the owner's call).
   .pager__chevron {
     translate: 0 -0.08em;
-  }
-
-  // A busy button's left side comes in for a spinner ahead of a word; an
-  // end's spinner stands in its chevron's box, so its padding stays put.
-  .pager .btn[aria-busy='true'] {
-    padding-left: space(5);
   }
 
   // "Page 2 of 3" between the ends, in the muted ink at the body size: it
@@ -377,17 +365,61 @@
     }
   }
 
+  // The row while the list it filters is on its way, greyed as a tabbed
+  // page's tabs are (claude-docs/components/filter-form.md): every field
+  // faded to 55% with its colour taken out and the not-allowed cursor, and
+  // hover changing nothing. Filter and Clear Filters are `aria-disabled`
+  // meanwhile, so `.btn`'s own disabled look greys them, and they are left
+  // out here rather than faded twice. Here, under `body`, so it outweighs
+  // the fields' own hover.
+  .filter-row[aria-busy='true'] {
+    > :not(.btn) {
+      opacity: 0.55;
+      filter: grayscale(1);
+    }
+
+    *,
+    *:hover {
+      cursor: not-allowed;
+    }
+
+    :is(.input, .select, .textarea):hover {
+      border-color: $text-muted;
+    }
+  }
+
   // A list page's root (MB.115): the filter, the notice or empty state, the
   // table and the pager, a `space(5)` apart. Written four times as each
   // list's own root rule. A paragraph in it, an empty state, takes no margin,
   // since the gap alone spaces the column, as `.page-frame`'s does.
-  .list-frame {
+  // Its body, ListFrame's `ListBody`, is the list under the filter, the
+  // empty state, the table and the pager, spaced the same way, since the
+  // skeleton stands in for all of it while another page is on its way.
+  .list-frame,
+  .list-frame__body {
     display: flex;
     flex-direction: column;
     gap: space(5);
 
     > p {
       margin: 0;
+    }
+  }
+
+  // The new list, faded in as it replaces the skeleton, as a tab's content
+  // is (claude-docs/components/list-frame.md); a list the server drew,
+  // before any press, has no `data-arrived` and shows at once.
+  .list-frame__body[data-arrived] {
+    animation: list-frame-fade-in 200ms ease both;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
+
+  @keyframes list-frame-fade-in {
+    from {
+      opacity: 0;
     }
   }
 

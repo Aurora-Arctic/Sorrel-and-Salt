@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
@@ -340,7 +340,7 @@ describe('UserList filter', () => {
     expect(filterButton()).toBeDisabled();
   });
 
-  it('clears the filter as a full load, busy until the page goes', () => {
+  it('clears the filter as a full load, the row off until the page goes', () => {
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(
       <UserList {...props({ query: 'bo', previousHref: '/admin/users?query=bo&before=x' })} />,
@@ -350,8 +350,51 @@ describe('UserList filter', () => {
     fireEvent.click(clear);
 
     expect(assignMock).toHaveBeenCalledWith('/admin/users');
-    expect(clear).toHaveAttribute('aria-busy', 'true');
+    expect(clear).toHaveAttribute('aria-disabled', 'true');
     expect(filterButton()).toBeDisabled();
+  });
+
+  // The owner's call (MB.115): a full load has no transition to wait on, so
+  // the list is the tabs' skeleton, its one status, and the row is off from
+  // the press until the browser leaves; Back restoring the page from the
+  // cache brings the list back.
+  it('puts a status in place of the list and turns the row off from Filter until the page goes', () => {
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props()} />);
+    const row = screen.getByRole('form', { name: 'Filter Users' });
+    const controls = () => [
+      screen.getByLabelText('Name or Email'),
+      screen.getByLabelText('Role'),
+      screen.getByLabelText('Needs Approval'),
+      filterButton(),
+    ];
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'ada' } });
+    // Typing reads nothing: the list stays and the row is live.
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(row).not.toHaveAttribute('aria-busy');
+
+    fireEvent.click(filterButton());
+
+    expect(assignMock).toHaveBeenCalledWith('/admin/users?query=ada');
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(row).toHaveAttribute('aria-busy', 'true');
+    for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
+    // A press on a field while the page goes changes nothing.
+    fireEvent.click(screen.getByLabelText('Needs Approval'));
+    expect(screen.getByLabelText('Needs Approval')).not.toBeChecked();
+    fireEvent.submit(row);
+    expect(assignMock).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+    });
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(row).not.toHaveAttribute('aria-busy');
+    expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
   });
 });
 

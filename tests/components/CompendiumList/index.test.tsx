@@ -41,6 +41,13 @@ const ENTRIES: CompendiumListEntry[] = [
   },
 ];
 
+/**
+ * The list's loading status, the skeleton's: the Form type-ahead holds a
+ * status of its own, inside the filter's search landmark.
+ */
+const listStatus = () =>
+  screen.queryAllByRole('status').filter((status) => !status.closest('search'));
+
 const NO_FILTER = { query: '', form: '', nomenclature: '', withoutReferences: false } as const;
 
 /** Every filter in use, as a page shows it. */
@@ -307,22 +314,77 @@ describe('CompendiumList filter', () => {
     expect(router.push).toHaveBeenCalledWith('/admin/compendium');
   });
 
-  it('shows it is filtering until the filtered list arrives', async () => {
+  // The owner's call (MB.115): while the filtered list reads, the list
+  // beneath the filter gives way to the tabs' skeleton, its one status, and
+  // the row is off, every control in it `aria-disabled` and the form
+  // `aria-busy`, until the new list renders.
+  it('puts a status in place of the list and turns the filter row off until the filtered list arrives', async () => {
+    let arrive = () => {};
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <CompendiumList {...props()} />
+      </Navigating>,
+    );
+    const row = screen.getByRole('form', { name: 'Filter the Compendium' });
+    const controls = () => [
+      screen.getByRole('searchbox', { name: 'Name' }),
+      formBox(),
+      screen.getByRole('combobox', { name: 'Classification' }),
+      screen.getByRole('checkbox', { name: 'Without References' }),
+      filterButton(),
+    ];
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Without References' }));
+    // Before the press: the list shows, and every control can be used.
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(listStatus()).toEqual([]);
+    expect(row).not.toHaveAttribute('aria-busy');
+    expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
+
+    await act(async () => {
+      fireEvent.click(filterButton());
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/compendium?withoutReferences=1');
+    expect(listStatus()).toHaveLength(1);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(row).toHaveAttribute('aria-busy', 'true');
+    for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
+
+    // A second press, or Enter in the form, while the first is on its way goes nowhere.
+    fireEvent.click(filterButton());
+    fireEvent.submit(row);
+    expect(router.push).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      arrive();
+    });
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(listStatus()).toEqual([]);
+    expect(row).not.toHaveAttribute('aria-busy');
+    expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
+  });
+
+  it('leaves the list in place while a field is typed in', () => {
     render(
       <Navigating push={router.push}>
         <CompendiumList {...props()} />
       </Navigating>,
     );
 
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Without References' }));
-    const busy = filterButton();
-    await act(async () => {
-      fireEvent.click(busy);
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'test' },
     });
 
-    expect(busy).toBeDisabled();
-    expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(router.push).toHaveBeenCalledWith('/admin/compendium?withoutReferences=1');
+    expect(router.push).not.toHaveBeenCalled();
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(listStatus()).toEqual([]);
+    expect(screen.getByRole('form', { name: 'Filter the Compendium' })).not.toHaveAttribute(
+      'aria-busy',
+    );
   });
 
   it('starts again from the filter shown when the page shows another', () => {
@@ -445,21 +507,29 @@ describe('CompendiumList Clear Filters', () => {
     expect(router.push).toHaveBeenCalledWith('/admin/compendium');
   });
 
-  it('opens the unfiltered list, busy until it arrives', async () => {
+  it('opens the unfiltered list, a status in place of the list and the row off until it arrives', async () => {
     render(
       <Navigating push={router.push}>
         <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />
       </Navigating>,
     );
 
-    const busy = clearLink();
+    const clear = clearLink();
     await act(async () => {
-      fireEvent.click(busy);
+      fireEvent.click(clear);
     });
 
     expect(router.push).toHaveBeenCalledWith('/admin/compendium');
-    expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(filterButton()).not.toHaveAttribute('aria-busy');
-    expect(filterButton()).toBeDisabled();
+    expect(listStatus()).toHaveLength(1);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(clear).toHaveAttribute('aria-disabled', 'true');
+    expect(filterButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('form', { name: 'Filter the Compendium' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
+
+    fireEvent.click(clear);
+    expect(router.push).toHaveBeenCalledTimes(1);
   });
 });
