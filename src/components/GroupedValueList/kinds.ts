@@ -2,31 +2,48 @@ import type { Route } from 'next';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 import type { GroupedValueListKind } from './types';
 
-// Each grouped vocabulary's address and nouns, which are all that tell its
-// list from another's: a new kind is an entry here (MB.132).
+// Each curated vocabulary's address, title and nouns, which are all that tell
+// its list from another's: a new kind is an entry here (MB.132). The flat
+// kinds, the planets and the signs (MB.95), have no group, so their list has
+// no group column and their filter no group select. The sign is "sign"
+// wherever the page already says zodiac, as its heading does.
 export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
   category: {
     path: '/admin/categories' as Route,
+    title: 'Categories',
+    label: 'Category',
     noun: 'category',
     plural: 'categories',
-    groupLabel: 'Group',
-    groupPlural: 'groups',
-    groupParam: 'group',
+    group: { label: 'Group', plural: 'groups', param: 'group' },
   },
   form: {
     path: '/admin/forms' as Route,
+    title: 'Forms',
+    label: 'Form',
     noun: 'form',
     plural: 'forms',
-    groupLabel: 'Group',
-    groupPlural: 'groups',
-    groupParam: 'group',
+    group: { label: 'Group', plural: 'groups', param: 'group' },
   },
   deity: {
     path: '/admin/deities' as Route,
+    title: 'Deities',
+    label: 'Deity',
     noun: 'deity',
     plural: 'deities',
-    groupLabel: 'Tradition',
-    groupPlural: 'traditions',
-    groupParam: 'tradition',
+    group: { label: 'Tradition', plural: 'traditions', param: 'tradition' },
+  },
+  planet: {
+    path: '/admin/planets' as Route,
+    title: 'Planets',
+    label: 'Planet',
+    noun: 'planet',
+    plural: 'planets',
+  },
+  zodiacSign: {
+    path: '/admin/zodiac-signs' as Route,
+    title: 'Zodiac Signs',
+    label: 'Sign',
+    noun: 'sign',
+    plural: 'signs',
   },
 };

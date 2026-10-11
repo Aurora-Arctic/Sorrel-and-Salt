@@ -5,7 +5,7 @@ import { groupedValuesHref } from './href';
 import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
-// The filter reaches `/admin/categories`, `/admin/forms` or `/admin/deities`,
+// The filter reaches the admin pages (`/admin/categories` and the rest),
 // which the workshop does not serve.
 export default {
   title: 'Admin / Grouped Value List',
@@ -230,3 +230,72 @@ export const DeitiesNoMatch: Story = () => (
 export const DeitiesEmpty: Story = () => (
   <GroupedValueList kind="deity" values={[]} filter={NO_FILTER} groups={TRADITIONS} />
 );
+
+// The flat kinds (MB.95): no group column and no group filter.
+const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) => {
+  const slug = slugify(name);
+  return {
+    id: slug,
+    name,
+    slug,
+    description,
+    groupName: '',
+    editHref: groupedValuesHref(kind, {}, { edit: slug }),
+  };
+};
+
+export const PlanetsOnePageOfSeveral: Story = () => (
+  <GroupedValueList
+    kind="planet"
+    values={[
+      flat('planet', 'Testwort Star', 'An invented body, for the workshop.'),
+      flat('planet', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+      flat('planet', 'Fixture Moonlet', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    previousHref={groupedValuesHref('planet', { before: 'cursor' })}
+    nextHref={groupedValuesHref('planet', { after: 'cursor' })}
+    position={{ page: 2, pages: 3 }}
+  />
+);
+
+export const Signs: Story = () => (
+  <GroupedValueList
+    kind="zodiacSign"
+    values={[
+      flat('zodiacSign', 'Fixture Ram', 'An invented sign, for the workshop.'),
+      flat('zodiacSign', 'Fixture Scales', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+  />
+);
+
+export const PlanetsFiltered: Story = () => (
+  <GroupedValueList
+    kind="planet"
+    values={[flat('planet', 'Testwort Star', 'An invented body, for the workshop.')]}
+    filter={{ query: 'star', group: '' }}
+  />
+);
+
+export const PlanetsNoMatch: Story = () => (
+  <GroupedValueList kind="planet" values={[]} filter={{ query: 'nothing', group: '' }} />
+);
+
+export const PlanetsEmpty: Story = () => (
+  <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
+);
+
+// At a phone's width in each theme, inside the admin layout: the filter
+// stacked, and each row a card.
+const Phone = () => (
+  <div className="admin-layout">
+    <CategoriesOnePageOfSeveral />
+  </div>
+);
+
+export const PhoneDark: Story = () => <Phone />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <Phone />;
+PhoneLight.meta = { theme: 'light', width: 375 };

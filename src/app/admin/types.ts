@@ -1,7 +1,9 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
-import type { EditedVocabularyValue } from '../../components/VocabularyValueForm/types';
-import type { FlatVocabulary } from '../../components/VocabularyValueList/types';
+import type { EditedGroupedValue } from '../../components/GroupedValueForm/types';
+
+/** A flat vocabulary, as the astrology services name it. */
+export type FlatVocabulary = 'planets' | 'zodiacSigns';
 
 export interface AdminLayoutProps {
   children: ReactNode;
@@ -30,7 +32,7 @@ export interface VocabularyDialogProps {
   title: string;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
-  value?: EditedVocabularyValue;
+  value?: EditedGroupedValue;
 }
 
 /**

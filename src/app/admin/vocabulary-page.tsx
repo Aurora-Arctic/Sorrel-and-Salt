@@ -1,13 +1,10 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
-import VocabularyValueList from '../../components/VocabularyValueList';
-import { vocabularyHref } from '../../components/VocabularyValueList/href';
-import { VOCABULARY_COPY } from '../../components/VocabularyValueList/vocabularies';
-import type {
-  FlatVocabulary,
-  VocabularyValueListEntry,
-} from '../../components/VocabularyValueList/types';
+import GroupedValueList from '../../components/GroupedValueList';
+import { groupedValuesHref } from '../../components/GroupedValueList/href';
+import { KINDS } from '../../components/GroupedValueList/kinds';
+import type { GroupedValueListEntry } from '../../components/GroupedValueList/types';
 import Notice from '../../components/Notice';
 import { NotFound } from '../../lib/errors';
 import { resolveNumberedPage } from '../../lib/pagination';
@@ -19,7 +16,9 @@ import {
   listAstrologyValues,
 } from '@/modules/vocabulary';
 import VocabularyDialog from './vocabulary-dialog';
-import type { VocabularySearchParams } from './types';
+import type { FlatVocabulary, VocabularySearchParams } from './types';
+
+const KIND = { planets: 'planet', zodiacSigns: 'zodiacSign' } as const;
 
 // The page shape `/admin/planets` and `/admin/zodiac-signs` share (MB.95):
 // M5.6a's forms page without the group. Each route's `page.tsx` names its
@@ -77,21 +76,23 @@ export async function VocabularyPage({
   const before = after ? undefined : readableCursor(single(params.before));
   const editSlug = single(params.edit);
   const adding = params.new !== undefined;
-  const { title, noun, label } = VOCABULARY_COPY[vocabulary];
+  const kind = KIND[vocabulary];
+  const { title, noun, label } = KINDS[kind];
 
   const [page, edited] = await Promise.all([
     readValues(vocabulary, query, after, before),
     !adding && editSlug ? readEdited(vocabulary, editSlug) : undefined,
   ]);
   const here = { query, after, before };
-  const values = page.edges.map(({ node }): VocabularyValueListEntry => ({
+  const values = page.edges.map(({ node }): GroupedValueListEntry => ({
     id: node.id,
     name: node.name,
     slug: node.slug,
     description: node.description,
-    editHref: vocabularyHref(vocabulary, here, { edit: node.slug }),
+    groupName: '',
+    editHref: groupedValuesHref(kind, here, { edit: node.slug }),
   }));
-  const closeHref = vocabularyHref(vocabulary, here);
+  const closeHref = groupedValuesHref(kind, here);
 
   return (
     <main>
@@ -99,7 +100,7 @@ export async function VocabularyPage({
           vocabulary page has it. */}
       <div className="page-header">
         <h1>{title}</h1>
-        <Link className="btn btn--solid" href={vocabularyHref(vocabulary, here, 'new')}>
+        <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
           Add {label}
         </Link>
       </div>
@@ -108,19 +109,19 @@ export async function VocabularyPage({
           No {noun} has that address — it may have been renamed or deleted.
         </Notice>
       )}
-      <VocabularyValueList
-        vocabulary={vocabulary}
+      <GroupedValueList
+        kind={kind}
         values={values}
-        query={query}
+        filter={{ query, group: '' }}
         position={page.position}
         previousHref={
           page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
-            ? vocabularyHref(vocabulary, { query, before: page.pageInfo.startCursor })
+            ? groupedValuesHref(kind, { query, before: page.pageInfo.startCursor })
             : undefined
         }
         nextHref={
           page.pageInfo.hasNextPage && page.pageInfo.endCursor
-            ? vocabularyHref(vocabulary, { query, after: page.pageInfo.endCursor })
+            ? groupedValuesHref(kind, { query, after: page.pageInfo.endCursor })
             : undefined
         }
       />

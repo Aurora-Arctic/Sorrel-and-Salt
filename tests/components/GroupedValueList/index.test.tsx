@@ -13,10 +13,11 @@ import type { GroupedValueListSubject } from '../../support/types';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A grouped vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
+// A curated vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
 // MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132): each value
 // with its group, an Edit link opening it in the page's modal, and the filter
-// that narrows them (claude-docs/components/grouped-value-list.md). The kinds
+// that narrows them, and the flat planets and signs (MB.95) with no group at
+// all (claude-docs/components/grouped-value-list.md). The kinds
 // share every behaviour, so it runs on the deities, whose group goes by its
 // own name; the other kinds get only what they change, their page and their
 // group's parameter. Paging is Pager's, the filter's spinner and its reset to
@@ -25,7 +26,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 const DEITIES: GroupedValueListSubject = {
   kind: 'deity',
   path: '/admin/deities',
-  filterName: 'Filter deities',
+  filterName: 'Filter Deities',
   groupLabel: 'Tradition',
   groupParam: 'tradition',
   entries: [
@@ -83,6 +84,18 @@ describe('GroupedValueList', () => {
     );
   });
 
+  // MB.95's flat kinds, folded in at MB.115: filed under nothing, so
+  // neither the table nor the filter offers a group.
+  it('shows a flat kind with no group column and no group filter', () => {
+    render(<GroupedValueList {...props({ kind: 'planet', groups: undefined })} />);
+
+    const headings = within(screen.getByRole('table')).getAllByRole('columnheader');
+    expect(headings).toHaveLength(3);
+    expect(
+      within(screen.getByRole('form', { name: 'Filter Planets' })).queryByRole('combobox'),
+    ).not.toBeInTheDocument();
+  });
+
   it('draws no table when there are none, filtered or not', () => {
     const { rerender } = render(<GroupedValueList {...props({ values: [] })} />);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -122,11 +135,14 @@ describe('GroupedValueList', () => {
     });
 
     it.each([
-      { kind: 'category', path: '/admin/categories', groupParam: 'group' },
-      { kind: 'form', path: '/admin/forms', groupParam: 'group' },
-    ] as const)('addresses the $kind page, its group as $groupParam', (other) => {
+      { kind: 'category', path: '/admin/categories', group: 'group=g&' },
+      { kind: 'form', path: '/admin/forms', group: 'group=g&' },
+      // A flat kind has no group to write.
+      { kind: 'planet', path: '/admin/planets', group: '' },
+      { kind: 'zodiacSign', path: '/admin/zodiac-signs', group: '' },
+    ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(
-        `${other.path}?query=q&${other.groupParam}=g&after=a&new`,
+        `${other.path}?query=q&${other.group}after=a&new`,
       );
     });
   });
