@@ -159,7 +159,18 @@ const press = (button: HTMLElement) => {
 /** The harness's save, or the form's, by name. */
 const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
-const newReference = () => within(references()).getByRole('button', { name: 'New Reference' });
+/** Opens the box's list and picks its last row, New Reference…, which opens the panel. */
+const newReference = () => {
+  fireEvent.keyDown(box(), { key: 'ArrowDown' });
+  fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+};
+/** The row's Locator, once its edit has opened the row. */
+const locatorOf = (citation: string) => {
+  const inRow = within(row(citation));
+  const edit = inRow.getByRole('button', { name: `Edit ${citation}` });
+  if (edit.getAttribute('aria-expanded') !== 'true') press(edit);
+  return inRow.getByRole('textbox', { name: 'Locator' });
+};
 const chooseKind = (label: string) => {
   fireEvent.click(kindBox());
   fireEvent.click(
@@ -214,7 +225,7 @@ describe('ReferencesField', () => {
       expect(calls[1]).toMatchObject({ workspaceId: WORKSPACE_ID, query: 'testwort' });
     });
 
-    it('offers "Add a reference" first, then each source by its citation and whose it is, in the order found', async () => {
+    it('offers each source by its citation and whose it is, in the order found, then "New Reference…" last', async () => {
       renderField();
       const calls = offerReferences([NOTES, HERBAL]);
 
@@ -222,9 +233,9 @@ describe('ReferencesField', () => {
 
       await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
       expect(screen.getAllByRole('option').map((item) => item.textContent)).toEqual([
-        'Add a reference',
         `${NOTES.citation}This coven’s source`,
         `${HERBAL.citation}Compendium source`,
+        'New Reference…',
       ]);
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
@@ -258,6 +269,25 @@ describe('ReferencesField', () => {
       expect(box()).toHaveFocus();
     });
 
+    it('keeps a row to one line until its edit opens it on its Locator, and closes it again', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+      const inRow = within(row(HERBAL.citation));
+      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL.citation}` });
+      expect(edit).toHaveAttribute('aria-expanded', 'false');
+      expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
+
+      press(edit);
+      expect(edit).toHaveAttribute('aria-expanded', 'true');
+      expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
+
+      press(edit);
+      expect(edit).toHaveAttribute('aria-expanded', 'false');
+      expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
+    });
+
     it("gives each row a locator, labelled and read with its source's citation and the tip beside it", async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
@@ -265,7 +295,7 @@ describe('ReferencesField', () => {
       await pick(calls, 'testwort', HERBAL.citation);
 
       const inRow = within(row(HERBAL.citation));
-      const locator = inRow.getByRole('textbox', { name: 'Locator' });
+      const locator = locatorOf(HERBAL.citation);
       expect(locator).toHaveAccessibleDescription(expect.stringContaining(HERBAL.citation));
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
@@ -316,7 +346,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const locator = within(row(HERBAL.citation)).getByRole('textbox', { name: 'Locator' });
+      const locator = locatorOf(HERBAL.citation);
       typeIn(locator, ' pp. 12-19,   40; chap. 3 ');
       fireEvent.blur(locator);
 
@@ -344,24 +374,24 @@ describe('ReferencesField', () => {
     // The owner's call: asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
-    it('opens from New Reference and from the list’s "Add a reference" row, each taking you to Kind', async () => {
+    it('opens from the list’s last row, "New Reference…", taking you to Kind, and again while open', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
-      expect(newReference()).toHaveAttribute('aria-expanded', 'false');
+      noPanel();
 
-      press(newReference());
-      expect(newReference()).toHaveAttribute('aria-expanded', 'true');
+      newReference();
+      expect(panel()).toBeInTheDocument();
       expect(kindBox()).toHaveFocus();
 
       await lookUp(calls, 'testwort');
-      fireEvent.click(await screen.findByRole('option', { name: 'Add a reference' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference…' }));
       expect(kindBox()).toHaveFocus();
     });
 
     it('lists a new source saved to this coven by its id, closing, the box focused', async () => {
       const calls = acceptReference();
       const onSubmit = renderField();
-      press(newReference());
+      newReference();
 
       chooseKind('Book');
       typeIn(inPanel('Title'), 'A Fixture Grimoire');
@@ -386,7 +416,7 @@ describe('ReferencesField', () => {
     it('closes on Cancel, adding nothing, the focus back in the box', () => {
       const calls = acceptReference();
       renderField();
-      press(newReference());
+      newReference();
 
       chooseKind('Book');
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
@@ -399,7 +429,7 @@ describe('ReferencesField', () => {
 
     it('stops the ingredient save while it is open, until it is saved or cancelled', async () => {
       const onSubmit = renderField();
-      press(newReference());
+      newReference();
 
       save();
 
@@ -422,7 +452,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
-      typeIn(within(row(HERBAL.citation)).getByRole('textbox', { name: 'Locator' }), 'p. 112');
+      typeIn(locatorOf(HERBAL.citation), 'p. 112');
       typeIn(nameBox(), 'Testwort');
       press(saveButton('Save & Add Another'));
 
@@ -437,7 +467,7 @@ describe('ReferencesField', () => {
         { referenceId: COVEN_ID, locator: null },
       ]);
       await waitFor(() => expect(rows()).toHaveLength(0));
-      expect(newReference()).toHaveAttribute('aria-expanded', 'false');
+      noPanel();
     });
 
     it('puts a server error naming a source on its row, through the field’s one error element', async () => {

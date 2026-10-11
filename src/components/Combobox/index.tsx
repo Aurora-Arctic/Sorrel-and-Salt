@@ -76,8 +76,10 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
  * them, and bucketed for the headings. A source with one bucket shows no
  * headings; one whose rows carry a `heading` names its own buckets
  * (bucketByHeading). A caller that can make something new has its create row
- * first instead of the typed row, blank box or not, since what it lists can
- * only be picked (MB.154). A caller refusing what was typed has no typed row
+ * last instead of the typed row first, blank box or not, since what it lists
+ * can only be picked (MB.154): the sources found are what is looked for, and
+ * making one is the way out when none is (MB.115, the owner's call). A caller
+ * refusing what was typed has no typed row
  * (MB.174). The curated headings say where a value comes from, the owner's
  * call (MB.131): a curated value is the compendium's, since its entries hold
  * nothing else, and one only in use is this coven's own.
@@ -87,7 +89,12 @@ function arrange<O extends ComboboxOption>(
   typed: string,
   create: string | undefined,
   offerTyped: boolean,
-): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
+): {
+  items: Item<O>[];
+  buckets: Bucket<O>[];
+  firstRow: TypedRow | null;
+  lastRow: CreateRow | null;
+} {
   const headed = options.some((option) => option.heading !== undefined);
   const bucketed = options.some((option) => option.curated !== undefined);
   const buckets: Bucket<O>[] = headed
@@ -106,12 +113,13 @@ function arrange<O extends ComboboxOption>(
           },
         ].filter((bucket) => bucket.rows.length > 0)
       : [{ heading: null, key: 'all', rows: options }];
-  let firstRow: TypedRow | CreateRow | null = null;
-  if (create !== undefined) firstRow = { value: create, create: true };
-  else if (typed !== '' && offerTyped) firstRow = { value: typed, typed: true };
+  const lastRow: CreateRow | null = create === undefined ? null : { value: create, create: true };
+  const firstRow: TypedRow | null =
+    lastRow === null && typed !== '' && offerTyped ? { value: typed, typed: true } : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  return { items, buckets, firstRow };
+  if (lastRow) items.push(lastRow);
+  return { items, buckets, firstRow, lastRow };
 }
 
 /**
@@ -187,7 +195,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
   const createLabel = create?.label;
-  const { items, buckets, firstRow } = useMemo(
+  const { items, buckets, firstRow, lastRow } = useMemo(
     () => arrange(suggestions?.options ?? [], value.trim(), createLabel, offerTyped),
     [suggestions, value, createLabel, offerTyped],
   );
@@ -457,6 +465,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               // oxlint-enable jsx-a11y/prefer-tag-over-role
             ),
           )}
+        {isOpen && lastRow && row(lastRow)}
       </ul>
       {/* What the list holds, for a screen reader: the rows arrive after the
           typing, and nothing else says so. */}

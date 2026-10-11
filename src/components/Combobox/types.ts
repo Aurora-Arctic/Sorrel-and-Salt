@@ -65,9 +65,9 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /**
-   * A first row that makes something new rather than picking a suggestion,
-   * "Add a reference", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154).
+   * A last row that makes something new rather than picking a suggestion,
+   * "New Reference…", there whatever is typed and in place of the typed row:
+   * for a list whose entries can only be picked (MB.154; last since MB.115).
    */
   create?: { label: string; onCreate: () => void };
   /**

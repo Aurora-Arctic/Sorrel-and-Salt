@@ -337,20 +337,20 @@ describe('Combobox', () => {
   });
 
   describe('a create row', () => {
-    const create = (onCreate = vi.fn()) => ({ label: 'Add a reference', onCreate });
+    const create = (onCreate = vi.fn()) => ({ label: 'New Reference…', onCreate });
 
-    it('is the first row in place of the typed one, there with a blank box too', () => {
+    it('is the last row, with no typed one, there with a blank box too', () => {
       render(<Harness suggestions={ONE_BUCKET} create={create()} />);
 
       key('ArrowDown');
       expect(options()).toEqual([
-        'Add a reference',
         'Hedge FixtureUsed by Testwort',
         'Fixture Bane',
+        'New Reference…',
       ]);
 
       type('fix');
-      expect(options()[0]).toBe('Add a reference');
+      expect(options()[options().length - 1]).toBe('New Reference…');
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
 
@@ -360,7 +360,7 @@ describe('Combobox', () => {
       key('ArrowDown');
 
       expect(box()).toHaveAttribute('aria-expanded', 'true');
-      expect(options()).toEqual(['Add a reference']);
+      expect(options()).toEqual(['New Reference…']);
     });
 
     it('calls its own callback when picked, by click or by keyboard, and never onPick', () => {
@@ -369,12 +369,12 @@ describe('Combobox', () => {
       render(<Harness suggestions={ONE_BUCKET} create={create(onCreate)} onPick={onPick} />);
 
       type('fix');
-      fireEvent.click(screen.getByRole('option', { name: 'Add a reference' }));
-      // The click closed the list; ArrowDown opens it on its first row.
-      key('ArrowDown');
+      fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+      // The click closed the list; ArrowUp opens it on its last row.
+      key('ArrowUp');
       expect(box()).toHaveAttribute(
         'aria-activedescendant',
-        screen.getByRole('option', { name: 'Add a reference' }).id,
+        screen.getByRole('option', { name: 'New Reference…' }).id,
       );
       key('Enter');
 
