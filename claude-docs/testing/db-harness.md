@@ -106,7 +106,7 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   by that index by name, soft-deletes the holder and proves the same row is
   admitted. A per-index `clash` names the columns to share where the
   catalogue's list would collide on another index first or names a generated
-  column (`ingredients.canonical_key`). A new partial unique index fails the
+  column (`ingredients.identity_key`). A new partial unique index fails the
   sweep until it is classified; a schema test keeps only what is particular to
   its table, such as a slug shared across two groups. A second test reads every unique
   index on a table carrying `deleted_at` that is _not_ partial and holds the

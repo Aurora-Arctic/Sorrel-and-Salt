@@ -114,7 +114,6 @@ describe('a save carrying a picked form', () => {
     );
 
     expect(await rowOf(created.id)).toEqual({ form: 'Wax', form_id: substanceWax });
-    expect(created.slug).toBe('testwort-wax');
   });
 
   it('refuses text that is not the picked form’s name, beside the text', async () => {

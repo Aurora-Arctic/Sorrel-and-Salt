@@ -40,6 +40,7 @@ export {
   findOneIngredient,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
+  findWorkspaceIngredientByIdentity,
 } from './ingredients';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
@@ -47,6 +48,7 @@ export {
   findAstrologyValues,
   findCategoryCount,
   findCategoryPage,
+  findCompendiumFormRenameClashes,
   findCuratedRowsByIds,
   findCuratedRowsByName,
   findDeityCount,
@@ -85,7 +87,6 @@ export type {
   CompendiumScore,
   DeityFilter,
   DeitySuggestion,
-  FormRenameEntry,
   FormSuggestion,
   IngredientFilter,
   IngredientFormValueFilter,

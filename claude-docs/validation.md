@@ -286,9 +286,9 @@ extended where the vocabulary has more: a trimmed, non-blank `name` and
 `description`, and no slug, which is derived from the name and dropped if
 sent. `CategoryInput` adds a `groupId` as `requiredRowId` takes it,
 refused with "Choose a group", and `DeityInput` a `traditionId`, refused
-with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with an
-optional `endRedirect`, the admin's confirmation that a rename may take an
-address another entry's redirect still runs from (MB.82).
+with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a form, with a
+`groupId` as `CategoryInput` takes it; its `endRedirect` went with MB.220,
+since a form's rename moves no compendium entry's address.
 
 `IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
 the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `colorDark` and

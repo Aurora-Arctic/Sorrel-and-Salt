@@ -74,7 +74,7 @@ transaction writes carries its id.
 
 **Every child is written by one call, the compendium's own** (MB.211). Each
 write hands `writeChildren` in `services/ingredient-rows.ts` its folk names,
-substitutes, deities, references and categories, `'add'` on a create and
+substitutes, deities, references, categories and forms, `'add'` on a create and
 `'replace'` on an update, under `[membership]`; the compendium's make the
 same call with none. A sixth child table costs one writer, one loader and one
 input field, and no edit to this service or its mutations
@@ -87,8 +87,8 @@ form of the ingredient it links, `substituteVariantId`, which must be a live
 form of that ingredient in the writer's scope, refused on that field
 otherwise. And a form may not stand in for itself, though a sibling may.
 
-**The slug follows the label, the form and the formal name.** `slug` is
-`NOT NULL`, so a create writes `ingredientSlug` of the three, through
+**The slug follows the label and the formal name** (no form since MB.220).
+`slug` is `NOT NULL`, so a create writes `ingredientSlug` of the two, through
 `ingredientColumns`, and an update writes it again from the new values. Nothing redirects from the old one: no
 route reads a coven ingredient's slug, so MB.82's retirements are the
 compendium's alone (["Ingredient slugs"](ingredient-slugs.md)).
@@ -98,15 +98,19 @@ raw index error. The service catches the write's failure and reads the index
 name off it with `violatedUniqueIndex` (`src/lib/unique-violation.ts`), which
 walks the error's `cause` chain for SQLSTATE 23505 without importing the
 database layer, since a service may not (MB.33). The label index lands on `name`, and so does the
-identity index for an entry with no formal name, whose label is its identity.
-With a formal name, the identity index lands on `canonicalName`. The slug index lands on `name`, naming
-the address, on a create or on an update that moves the slug. Catching the failure rather than checking first is deliberate: a
-check-then-write leaves a window for a concurrent save, and the index is the
-one arbiter either way. The message names what the input asked for, not the
-row already holding it. The compendium's writes do name the holder, through a
-finder that builds the key from the values
-(["Compendium writes"](compendium-writes.md)); inside one
-coven the label index makes the case that needs it rarer, and a coven-scoped
-twin of that finder is the change that would add it here.
+identity index (`ingredients_workspace_identity_key_unique`, the formal name
+alone since MB.220) for an entry with no formal name, whose label is its
+identity. With a formal name, the identity index lands on `canonicalName`.
+The slug index lands on `name`, naming the address, on a create or on an
+update that moves the slug. Catching the failure rather than checking first
+is deliberate: a check-then-write leaves a window for a concurrent save, and
+the index is the one arbiter either way. An identity collision names the
+ingredient already holding it, through `findWorkspaceIngredientByIdentity`
+under the proof — the coven-scoped twin of the compendium's finder
+(["Compendium writes"](compendium-writes.md)) — and points at adding the
+form to it (MB.220); since the label and address indexes are older than the
+identity one, an oil written under the herb's own label meets one of them
+first, so those branches look for an identity holder before their own
+message.
 
-**MB.215: a coven's ingredient takes variants too.** The coven's writes take the same `variants` list through the same `writeChildren` call (MB.219), so this service changes only by what the shared recipe gives it; a coven's form stays free text, an uncurated one included. Its identity becomes the formal name alone, `identity_key`, unique per coven through `ingredients_workspace_identity_key_unique`, which MB.220 maps to `canonicalName`, or to `name` for an entry with no formal name, as the identity index lands today. A second form of a plant the coven already holds is a variant of that ingredient, not an entry beside it, and the slug drops the form (["Ingredient slugs"](ingredient-slugs.md)). Stock arrives with M9.4 naming a variant: `addIngredientToWorkspace(variantId)`, one live stock row per coven and variant ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: a coven's ingredient takes variants too.** The coven's writes take the same `variants` list through the same `writeChildren` call (MB.219), so this service changes only by what the shared recipe gives it; a coven's form stays free text, an uncurated one included. Its identity becomes the formal name alone, `identity_key`, unique per coven through `ingredients_workspace_identity_key_unique`, which MB.220 maps to `canonicalName`, or to `name` for an entry with no formal name, as above. A second form of a plant the coven already holds is a variant of that ingredient, not an entry beside it, and the slug drops the form (["Ingredient slugs"](ingredient-slugs.md)). Stock arrives with M9.4 naming a variant: `addIngredientToWorkspace(variantId)`, one live stock row per coven and variant ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).

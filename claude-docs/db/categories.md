@@ -210,36 +210,37 @@ keep it one after the write.
   It follows a rename and a regrouping, and keeps `seedKey` as it was
   (MB.171). The group is checked live first, as a category's is, and a slug
   collision is `VALIDATION` on `name`, naming the form at the address.
-- **A delete is refused while a live compendium entry picks the form**, by
-  `form_id`: `Forbidden`, naming the first three entries and how many more,
-  through the compendium's own filter on the pick (`IngredientFilter.formId`)
-  and the shared `refuseWhileHeld` every vocabulary delete uses. A same-named form
-  no entry picked deletes. A coven's pick never blocks it.
-- **A rename carries the new name onto every live compendium entry picking
-  the form, in the same transaction**, through `write.carryFormRename`: each
-  entry's `form` text, so its `canonical_key`, and its slug,
-  `ingredientSlug(name, newForm, canonicalName)`, the old slug retired to
-  redirect for 180 days as `updateCompendiumEntry` retires one, and the
-  tier's lapsed retirements cleared in the same write. A case-only rename
-  rewrites the text and moves no slug. A change of group alone rewrites no
-  entry, which holds the form's name, not its group.
+- **A delete is refused while a live compendium entry picks the form** on
+  any of its forms, by a live variant's `form_id` (MB.220): `Forbidden`,
+  naming the first three entries and how many more, through the compendium's
+  own filter on the pick (`IngredientFilter.formId`, an `EXISTS` over the
+  variants) and the shared `refuseWhileHeld` every vocabulary delete uses. A
+  same-named form no entry picked deletes. A coven's pick, a dropped variant's
+  and a deleted entry's never block it.
+- **A rename carries the new name onto every live compendium variant picking
+  the form, in the same transaction** (MB.220), through `write.carryFormRename`,
+  one statement over `ingredient_variants`: each variant's `form` text, and
+  nothing else. No slug moves and no retirement is written, since a form is no
+  part of an entry's identity or address since MB.215. Until MB.222 drops it,
+  the ingredient row's own `form`, which mirrors its first variant (MB.219),
+  follows where the row picked the form. A change of group alone rewrites no
+  variant, which holds the form's name, not its group.
 - **The rename is refused rather than half-carried.** Before the write it
-  refuses, on `name` and naming both entries, a rewrite that would give an
-  entry another live entry's identity or address. A collision an index finds
+  refuses, on `name`, a rename that would give an entry two forms of one
+  name — the variant renamed beside another already spelt as the new name,
+  which `ingredient_variants_form_unique` would refuse — naming each such
+  entry, read by `findCompendiumFormRenameClashes`. A change of case clashes
+  with nothing, the variant renamed being excepted. A clash the index finds
   inside the transaction, from a race, is read again and named the same way.
-  A rewrite onto an address another entry's redirect runs from is refused on
-  `endRedirect`, naming each entry and when its window closes, until the
-  admin confirms (MB.82).
-- **A coven's ingredient is never written.** One that picked the form keeps
-  its `form_id`, its text and its slug through a rename, and through a delete
-  reads its form as no pick, its text moving into that coven's in-use values.
-  An admin writes nothing of a coven's (M6.6). A pick whose row was renamed
-  since is the member's to settle, on M8.17's modal.
-- **The entries are read before the transaction**, as the category delete's
-  are. An entry picking the form in the instant between keeps the old
-  spelling through a rename, or holds a deleted form through a delete. The
-  writer matches `form_id` again, so an entry that picked another form since
-  is not rewritten.
+- **A coven's ingredient is never written.** One whose variant picked the
+  form keeps its `form_id` and its text through a rename, and through a
+  delete reads its form as no pick, its text moving into that coven's in-use
+  values. An admin writes nothing of a coven's (M6.6). A pick whose row was
+  renamed since is the member's to settle, on M8.17's modal.
+- **The clash check reads before the transaction**, as the category delete's
+  does; the carry itself matches `form_id` in its one statement, so a variant
+  picking the form in the instant between is renamed with the rest, and one
+  that picked another form since is not.
 
 The owner's calls on the slug, the redirect and the stale pick are
 [`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md).

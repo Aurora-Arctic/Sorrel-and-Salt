@@ -154,7 +154,7 @@ describe('createCompendiumIngredient', () => {
     const created = result.data?.createCompendiumIngredient as WorkspaceIngredientNode;
     expect(created).toMatchObject({
       name: 'Testwort',
-      slug: 'testwort-herb-fixtura-testalis',
+      slug: 'testwort-fixtura-testalis',
       nomenclature: 'botanical',
       isGlobal: true,
       folkNames: ['Fixture Root'],
@@ -294,7 +294,7 @@ describe('updateCompendiumIngredient', () => {
       await sql`
         insert into retired_ingredient_slugs ${sql({
           ingredient_id: movedId,
-          slug: 'testdirt-earth',
+          slug: 'testdirt',
           created_by: E.id,
           updated_by: E.id,
         })}`;
@@ -317,7 +317,7 @@ describe('updateCompendiumIngredient', () => {
       expect(confirmed.errors).toBeUndefined();
       expect(confirmed.data?.updateCompendiumIngredient).toMatchObject({
         id,
-        slug: 'testdirt-earth',
+        slug: 'testdirt',
       });
     });
   });

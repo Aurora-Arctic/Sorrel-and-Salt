@@ -427,7 +427,7 @@ type QueryCompendiumConnectionEdge {
   name, a live folk name, or a live variant's form or description (MB.218),
   case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
-  adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
+  adds a mode); the form trimmed and lower-cased on both sides. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
   that task's argument to add, and matches an entry whose `elements` holds
@@ -463,7 +463,7 @@ type QueryCompendiumConnectionEdge {
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
-  and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
+  and never exposes `identityKey` or `workspaceId`. `folkNames`,
   `categories`, `substitutes`, `deities` and `references` go through the five
   ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient` and
@@ -551,7 +551,7 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
-**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -808,7 +808,7 @@ vocabulary adds is told to it:
   form's `group`, a deity's `tradition`: the field, read through its loader,
   and the id column, which is also the input's required `ID`.
 - **`fields` and `input`**, the type's and the input's own: a category
-  group's two colours, a form's `endRedirect`.
+  group's two colours.
 - **`services`**, the three exported writes, each calling `assertSiteAdmin`
   itself; the input reaches them through `definedArgs`.
 - **`moveTo`**, present for a group whose delete moves its rows first: the
@@ -878,16 +878,15 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
   **`ingredientFormGroups`** is public too, the live groups by name, a form's
   group picked from them; six are seeded, so it carries no count.
 - **One input, `IngredientFormValueInput`, for both writes**: `name`,
-  `description` and `groupId`, required, and `endRedirect`, the admin's
-  answer to a rename that would end another entry's redirect (MB.82). No
-  slug: a form's is its name and its group, `formSlug`, and follows either.
+  `description` and `groupId`, required. No `endRedirect` since MB.220: a
+  rename moves no compendium entry's address. No slug: a form's is its name
+  and its group, `formSlug`, and follows either.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
   service. A slug collision is `VALIDATION` on `name`, naming the form holding
   the address; a retired or unknown group is `VALIDATION` on `groupId`; a
-  rename that would make a compendium entry another's identity or address is
-  `VALIDATION` on `name`, naming both; one that would end a redirect is
-  `VALIDATION` on `endRedirect`; an unknown, deleted or malformed id is
-  `NOT_FOUND`.
+  rename that would give a compendium entry two forms of one name is
+  `VALIDATION` on `name`, naming the entry (MB.220); an unknown, deleted or
+  malformed id is `NOT_FOUND`.
 - **`deleteIngredientFormValue` answers the deleted id**, and is `FORBIDDEN`
   while a live compendium entry picked the form, naming the entries and how
   many more. Update and delete clear `ingredientFormsById`, which an earlier
@@ -895,8 +894,7 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
 
 `tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` holds their
 half as `categories.test.ts` does, with the groups' page, `ingredientFormsById`
-cleared by an update, and `endRedirect` reaching the update as its
-`VALIDATION`; the rules are `services/ingredient-form-values.test.ts`'s.
+cleared by an update; the rules are `services/ingredient-form-values.test.ts`'s.
 
 ### Planets and signs: `planets`, `zodiacSigns` and the six writes
 

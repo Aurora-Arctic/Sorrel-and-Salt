@@ -46,39 +46,33 @@ describe('slugify', () => {
   });
 });
 
-// MB.80/MB.81: an ingredient's address is its label, its form and its formal
-// name, always, so two entries sharing a label and a form are told apart by
-// the name that is their identity rather than by insertion order —
-// claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
+// MB.80/MB.81: an ingredient's address is its label and its formal name,
+// always, so two entries sharing a label are told apart by the name that is
+// their identity rather than by insertion order —
+// claude-docs/db/ingredient-slugs.md, "Ingredient slugs". Every caller passes
+// no form since MB.220, a form being no part of an entry's address; MB.223
+// drops the parameter.
 describe('ingredientSlug', () => {
-  it('joins the label, the form and the formal name under the one slug rule', () => {
-    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa')).toBe(
-      'cats-claw-bark-uncaria-tomentosa',
+  it('joins the label and the formal name under the one slug rule', () => {
+    expect(ingredientSlug("Cat's Claw", null, 'Uncaria tomentosa')).toBe(
+      'cats-claw-uncaria-tomentosa',
     );
-    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria guianensis')).toBe(
-      'cats-claw-bark-uncaria-guianensis',
-    );
-    expect(ingredientSlug('Mugwort', 'herb', 'Artemisia vulgaris')).toBe(
-      'mugwort-herb-artemisia-vulgaris',
+    expect(ingredientSlug('Mugwort', null, 'Artemisia vulgaris')).toBe(
+      'mugwort-artemisia-vulgaris',
     );
   });
 
-  it('leaves out what the entry does not declare', () => {
-    expect(ingredientSlug('Graveyard Dirt', 'earth', null)).toBe('graveyard-dirt-earth');
-    expect(ingredientSlug('Moon Water', null, null)).toBe('moon-water');
+  it('leaves out a formal name the entry does not declare', () => {
+    expect(ingredientSlug('Graveyard Dirt', null, null)).toBe('graveyard-dirt');
     expect(ingredientSlug('Moon Water', undefined, undefined)).toBe('moon-water');
-    expect(ingredientSlug('Testwort', null, 'Fixtura testalis')).toBe('testwort-fixtura-testalis');
   });
 
-  it('is exactly slugify of the three, so the form and the formal name change it as the label does', () => {
-    expect(ingredientSlug('Valerian', 'root', 'Valeriana officinalis')).toBe(
-      slugify('Valerian root Valeriana officinalis'),
+  it('is exactly slugify of the two, so two entries sharing a label are told apart by the formal name', () => {
+    expect(ingredientSlug('Valerian', null, 'Valeriana officinalis')).toBe(
+      slugify('Valerian Valeriana officinalis'),
     );
-    expect(ingredientSlug('Valerian', 'leaf', 'Valeriana officinalis')).not.toBe(
-      ingredientSlug('Valerian', 'root', 'Valeriana officinalis'),
-    );
-    expect(ingredientSlug("Cat's Claw", 'bark', 'Uncaria guianensis')).not.toBe(
-      ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa'),
+    expect(ingredientSlug("Cat's Claw", null, 'Uncaria guianensis')).not.toBe(
+      ingredientSlug("Cat's Claw", null, 'Uncaria tomentosa'),
     );
   });
 });

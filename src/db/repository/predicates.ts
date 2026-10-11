@@ -105,8 +105,8 @@ export function listFolds(list: AnyPgColumn): SQL {
 }
 
 /**
- * `value` trimmed and lower-cased: the fold a suggestion, a list entry and an
- * ingredient's form are compared under (MB.162), and `canonical_key`'s own.
+ * `value` trimmed and lower-cased: the fold a suggestion, a list entry and a
+ * form are compared under (MB.162), and `ingredient_variants_form_unique`'s own.
  * Raw, since neither function has a builder.
  */
 export function fold(value: SQLWrapper | string): SQL {

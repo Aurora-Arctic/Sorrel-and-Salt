@@ -240,7 +240,6 @@ type IngredientFormValue {
 
 input IngredientFormValueInput {
   description: String!
-  endRedirect: Boolean
   groupId: ID!
   name: String!
 }
@@ -511,7 +510,7 @@ type Mutation {
   updateIngredientFormGroup(id: ID!, input: IngredientFormGroupInput!): IngredientFormGroup!
 
   """
-  Replaces the form; the slug follows the name and the group. A rename is carried onto every live compendium entry that picked the form.
+  Replaces the form; the slug follows the name and the group. A rename is carried onto every form of a live compendium entry that picked it, moving no entry address.
   """
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
 
