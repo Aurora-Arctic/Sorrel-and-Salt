@@ -189,6 +189,15 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   @include tip-bubble;
 }
 
+// The clear and the separator with nothing to clear: hidden, but holding
+// their room, so the control is one width empty or full (MB.115, the owner's
+// call). The markup takes them out of the accessibility tree and the tab
+// order; `visibility` takes them from the eye and the pointer.
+.combobox__indicator.is-empty,
+.combobox__separator.is-empty {
+  visibility: hidden;
+}
+
 // Between the clear and the chevron, as react-select draws it.
 .combobox__separator {
   align-self: stretch;

@@ -156,18 +156,15 @@ const CategoryPicker = ({
         suggestions={{ options, pending }}
         offerTyped={false}
         entries={entries}
-        clear={
-          value.length > 0
-            ? {
-                label: `Clear ${legend}`,
-                onClear: () => {
-                  onChange([]);
-                  setAnnouncement(`Cleared ${legend}`);
-                  focusBox();
-                },
-              }
-            : undefined
-        }
+        clear={{
+          label: `Clear ${legend}`,
+          empty: value.length === 0,
+          onClear: () => {
+            onChange([]);
+            setAnnouncement(`Cleared ${legend}`);
+            focusBox();
+          },
+        }}
         inputRef={box}
         aria-invalid={errorId ? true : undefined}
         aria-describedby={describedBy || undefined}

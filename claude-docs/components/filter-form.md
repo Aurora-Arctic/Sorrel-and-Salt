@@ -79,6 +79,21 @@ Filter and Clear Filters wrap beneath it, Clear Filters beside Filter or
 under it as the width allows, the owner's call at MB.115's review over a filter
 folded behind a disclosure.
 
+**A type-ahead field takes one width.** A field typed into once hydrated
+and drawn as a native `<select>` before, as the curated lists' Group and
+Tradition are, puts `filter-row__typeahead` on its `.field` block
+(`FieldShell`'s `className`, [`field.md`](field.md)). The block then
+stands at `$filter-choice-width`, 24rem, room for the longest seeded name,
+"Anglo-Saxon & Continental Germanic", beside the clear, separator and
+chevron, and the select and the type-ahead each fill it, so hydration
+moves nothing. It gives way on a narrower row, and under 28rem takes the
+whole line, as the query does. It is an opt-in rather than a rule on every
+select in the row, since before hydration the type-ahead's select is
+markup-for-markup a plain select such as the user list's Role, which keeps
+its own width. The clear inside the type-ahead keeps its room while hidden
+([`combobox.md`](combobox.md)), so typing does not change the width
+either.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),

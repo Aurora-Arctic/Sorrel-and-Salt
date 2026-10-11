@@ -63,7 +63,8 @@ const GroupedValueListFilter = ({
         />
       </FieldShell>
       {group && (
-        <FieldShell label={group.label} {...groupField}>
+        // One width for the select and the type-ahead, so hydration moves nothing.
+        <FieldShell label={group.label} className="filter-row__typeahead" {...groupField}>
           {hydrated ? (
             <>
               {/* Every group while blank, as the select's first choice says;

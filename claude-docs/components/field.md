@@ -54,8 +54,10 @@ Every field takes `FieldProps` (`types.ts`):
 | `required` | Optional: marked required beside its label, and to assistive technology                |
 
 `FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
-`hintId`, `noteId`, `errorId`, `error`), `children` (the control) and `after`
-(drawn beneath the error).
+`hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`
+(drawn beneath the error) and `className`, a class beside `field` on the
+block: a filter's type-ahead takes `filter-row__typeahead`
+([`filter-form.md`](filter-form.md), "Styling").
 
 `fieldDescription({ id, hint, note, describedBy, error, invalid })` takes a
 base id from `useId()` and returns those ids, the error, and `aria`, to spread

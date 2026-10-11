@@ -321,7 +321,7 @@ export function ListField({
           offerTyped={!pickOnly && !repeat(text)}
           listAnchor={boxRow}
           entries={entries}
-          clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}
+          clear={{ label: `Clear ${legend}`, onClear: clear, empty: fields.length === 0 }}
           inputRef={(element) => {
             field.ref(element);
             boxElement.current = element;

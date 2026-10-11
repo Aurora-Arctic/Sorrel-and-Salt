@@ -57,8 +57,13 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   suggestions?: Suggestions<O>;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
-  /** A control that empties the list, shown while it holds entries. */
-  clear?: { label: string; onClear: () => void };
+  /**
+   * A control that empties the box, on the control's right. `empty` while
+   * there is nothing to clear: the clear, and the separator beside it, keep
+   * their room but are hidden, out of the accessibility tree and the tab
+   * order, so the control's width never changes as it fills or empties.
+   */
+  clear?: { label: string; onClear: () => void; empty: boolean };
   /**
    * A first row that makes something new rather than picking a suggestion,
    * "Add a reference", there whatever is typed and in place of the typed row:
@@ -258,8 +263,9 @@ export interface ComboboxTypeaheadProps {
   placeholder?: string;
   required?: boolean;
   /**
-   * A clear on the control's right, "Clear Tradition", shown while the box
-   * holds text or a choice: a filter's way back to every group.
+   * A clear on the control's right, "Clear Tradition", offered while the box
+   * holds text or a choice, and its room kept while it does not: a filter's
+   * way back to every group.
    */
   clearable?: boolean;
   /** The text box, which takes the focus. */

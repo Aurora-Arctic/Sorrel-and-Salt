@@ -51,6 +51,8 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   children: ReactNode;
   /** Beneath the error: what a field adds of its own. */
   after?: ReactNode;
+  /** A class beside `field` on the block: a filter's type-ahead, `filter-row__typeahead`. */
+  className?: string;
 }
 
 /**

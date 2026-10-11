@@ -390,17 +390,29 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         </div>
         {(clear || hasSource) && (
           <div className="combobox__indicators">
+            {/* Always drawn once the caller has a clear, and hidden while
+                there is nothing to clear, rather than left out: its room,
+                and the separator's, stay in the control, so typing,
+                choosing and clearing never change its width (MB.115). */}
             {clear && (
               <button
                 type="button"
-                className="combobox__indicator"
+                className={clear.empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
                 aria-label={clear.label}
+                aria-hidden={clear.empty || undefined}
+                tabIndex={clear.empty ? -1 : undefined}
+                disabled={clear.empty}
                 onClick={clear.onClear}
               >
                 <ClearIcon />
               </button>
             )}
-            {clear && hasSource && <span className="combobox__separator" aria-hidden="true" />}
+            {clear && hasSource && (
+              <span
+                className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
+                aria-hidden="true"
+              />
+            )}
             {hasSource && (
               <button
                 type="button"

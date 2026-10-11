@@ -359,8 +359,20 @@
     container: filter-row / inline-size;
   }
 
+  // A type-ahead field in the row, opted into by its `.field` block: one
+  // width, `$filter-choice-width`, rather than its control's own, since the
+  // native select the server draws sizes itself by its longest option and
+  // the type-ahead that replaces it once hydrated by its few letters, and the
+  // swap shrank the field (MB.115). The select and the type-ahead each fill
+  // the block, so both stand at its width, and it gives way on a narrow row.
+  .filter-row__typeahead {
+    flex: 0 1 $filter-choice-width;
+    min-width: 0;
+  }
+
   @container filter-row (max-width: #{$narrow-column}) {
-    .filter-row > :first-child {
+    .filter-row > :first-child,
+    .filter-row > .filter-row__typeahead {
       flex-basis: 100%;
     }
   }

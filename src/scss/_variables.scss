@@ -360,6 +360,13 @@ $glyph-size: 1rem;
 // user list's locked-control tip each wrote 18rem.
 $tip-width: 18rem;
 
+// A filter's type-ahead field, the curated lists' Group and Tradition
+// (MB.115): one width for the native select the server draws and the
+// type-ahead that replaces it once hydrated, so the swap moves nothing, and
+// room for the longest seeded name, "Anglo-Saxon & Continental Germanic"
+// (18rem as the box draws it), beside the clear, separator and chevron.
+$filter-choice-width: 24rem;
+
 // The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
 // during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
 // `Modal/index.scss`.
