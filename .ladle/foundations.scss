@@ -209,6 +209,13 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     flex-direction: column;
   }
 
+  // Fields side by side, as a filter row spaces them.
+  .fd-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(3) space(5);
+  }
+
   .fd-form {
     max-width: 32rem;
   }

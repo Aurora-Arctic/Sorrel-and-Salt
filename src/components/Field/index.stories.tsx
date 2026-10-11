@@ -96,8 +96,9 @@ export const PlainShell: Story = () => {
 };
 
 // An on-or-off choice as a slide toggle, held in the caller's state as a
-// list filter holds it: off, on, and shut either way. Tab to one for the
-// focus ring; press and hold for the stretched thumb.
+// list filter holds it: off, on, and shut either way, each label above its
+// toggle as a field's is. Tab to one for the focus ring; press and hold for
+// the stretched thumb.
 const Toggle = ({
   label,
   on = false,
@@ -121,7 +122,7 @@ const Toggle = ({
 };
 
 export const Switch: Story = () => (
-  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+  <div className="form" style={{ maxWidth: '32rem' }}>
     <Toggle label="Without References" />
     <Toggle label="Needs Approval" on />
     <Toggle label="Off and Shut" disabled />

@@ -4,6 +4,7 @@ import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
 import { SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
+import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
 import ProviderMark from '../src/components/ProviderMark';
 import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
@@ -11,6 +12,7 @@ import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
 // The brand buttons' own rules, which only SignInPanel's stylesheet carries.
 import '../src/components/SignInPanel/index.scss';
 import type { SeedCategoryGroup } from '../src/db/seed/types';
+import type { ListNavigation } from '../src/components/ListFrame/types';
 import type { ProviderId } from '../src/lib/types';
 import './foundations.scss';
 
@@ -52,6 +54,9 @@ const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
   ['--secondary-hover', 'the secondary under hover / active press'],
   ['--text-on-color', 'the label on a solid fill — a solid button, a loud chip'],
 ];
+
+// The Pager section's list: nothing on its way, and a press going nowhere.
+const STILL_LIST: ListNavigation = { pending: false, go: () => {} };
 
 // Keys only: each value, and the label beside it, is printed by
 // foundations.scss from the map in _variables.scss.
@@ -600,13 +605,14 @@ export default function Foundations(): ReactElement {
       <section id="fd-switch">
         <SectionHead eyebrow="_primitives.scss · .switch" title="The Switch">
           An on-or-off choice, a filter's, as a slide toggle: a native checkbox with the switch
-          role, so it submits with its form and keeps Space and its name's click. Off is the field's
+          role, so it submits with its form and keeps Space and its label's click. A field like any
+          other: its label above, the toggle beneath at a control's height. Off is the field's
           ground and muted edge with the thumb at the start; on fills the track with the accent and
           the thumb slides to the end, so where it sits says which without its colour. Tab to one
           for the focus ring; press and hold for the stretched thumb. Disabled is dashed and faded,
-          its name dimmed, as a field is.
+          its label dimmed, as a field is.
         </SectionHead>
-        <div className="panel fd-buttons">
+        <div className="panel fd-switches">
           <Switch label="Off" />
           <Switch label="On" on />
           <Switch label="Disabled Off" disabled />
@@ -716,10 +722,14 @@ export default function Foundations(): ReactElement {
           them. An end with no page is disabled rather than hidden, so neither moves. Drawn by the{' '}
           <code>Pager</code> component, on its first page and on a middle one.
         </SectionHead>
-        <div className="fd-pagers">
-          <Pager nextHref="#fd-pager" position={{ page: 1, pages: 3 }} />
-          <Pager previousHref="#fd-pager" nextHref="#fd-pager" position={{ page: 2, pages: 3 }} />
-        </div>
+        {/* A pager reads its list's navigation, which a page's ListFrame
+            provides; here one that goes nowhere, and never pending. */}
+        <ListNavigationContext.Provider value={STILL_LIST}>
+          <div className="fd-pagers">
+            <Pager nextHref="#fd-pager" position={{ page: 1, pages: 3 }} />
+            <Pager previousHref="#fd-pager" nextHref="#fd-pager" position={{ page: 2, pages: 3 }} />
+          </div>
+        </ListNavigationContext.Provider>
       </section>
 
       <section id="fd-filter-row">
