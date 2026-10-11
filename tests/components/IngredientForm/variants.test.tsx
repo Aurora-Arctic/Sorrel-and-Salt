@@ -20,6 +20,7 @@ import type {
   UpdateCompendiumIngredientMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { openSections } from '../../support/ingredient-sections';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
@@ -123,6 +124,9 @@ function renderForm(
       <IngredientForm workspaceId={props.workspaceId} onSaved={onSaved} />
     );
   render(<QueryClientProvider client={makeQueryClient()}>{form}</QueryClientProvider>);
+  // An edit opens with every section closed (MB.115): its variants are what
+  // these tests work in.
+  if (props.workspaceId === null && props.values) openSections('Variants');
   return onSaved;
 }
 
@@ -780,7 +784,8 @@ describe('IngredientForm’s variants', () => {
 
       for (const field of COPIED) expect(copyOf(oil, field)).toBeDisabled();
 
-      // The ingredient's own Description, the first in the page.
+      // The ingredient's own Description, the first in the page, once its section is open.
+      openSections('Description');
       fireEvent.change(screen.getAllByRole('textbox', { name: 'Description' })[0], {
         target: { value: 'A fixture herb.' },
       });

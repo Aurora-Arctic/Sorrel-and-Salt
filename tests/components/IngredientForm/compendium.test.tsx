@@ -39,6 +39,7 @@ import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
+import { openSections } from '../../support/ingredient-sections';
 import {
   offerDeities,
   offerDuplicates,
@@ -453,6 +454,7 @@ describe('IngredientForm on the compendium', () => {
           ],
         },
       ]);
+      openSections('Relations');
 
       await search('Substitute Ingredient', 'wort');
 
@@ -507,6 +509,7 @@ describe('IngredientForm on the compendium', () => {
         },
         { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
       ]);
+      openSections('Identity');
 
       type('Name', 'Testworth');
       await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
@@ -547,7 +550,8 @@ describe('IngredientForm on the compendium', () => {
 
       fireEvent.click(button('Delete Ingredient'));
       expect(button('Delete')).toBeVisible();
-      expect(screen.getByText(/Testwort/)).toBeInTheDocument();
+      // The question names it: a paragraph, the closed Identity's summary line naming it too.
+      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
       // The question takes the focus on its safe answer, the pressed button gone (MB.115).
       expect(button('Keep It')).toHaveFocus();
       fireEvent.click(button('Keep It'));
