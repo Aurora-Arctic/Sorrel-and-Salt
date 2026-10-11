@@ -505,7 +505,8 @@ list open or closed, and otherwise closing the list or reaching the form;
 Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
 blur and a pick keeping the text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
-the box's description after the field's own, its detail's tooltip on hover
+the box's description after the field's own, a press on it putting the caret
+in the text, its detail's tooltip on hover
 and on the box's focus, closed by Escape and blur; the entry's ×, its
 tooltip on a cut-off text and on a detail, and its error read by its ×; the
 select-only box, its name, placeholder, list and choices, "None" among them,

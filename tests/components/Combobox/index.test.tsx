@@ -545,6 +545,9 @@ describe('Combobox', () => {
 
       expect(qualifier()).toBeInTheDocument();
       expect(box()).toHaveAccessibleDescription(`How it comes (Substance) ${DETAIL}`);
+      // Read as part of the text, so a press on it puts the caret there.
+      fireEvent.mouseDown(qualifier());
+      expect(box()).toHaveFocus();
     });
 
     it('shows its detail in a tooltip on hover and while the box has focus, closing on Escape', async () => {

@@ -141,7 +141,9 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /^Zestwort/ })).not.toBeInTheDocument();
   });
 
-  it('reports the picks in order through onChange', () => {
+  // The ×, Backspace and the clear are Combobox's; what the picker does with
+  // each is its own.
+  it('reports the picks in order through onChange, as one is added, removed, taken by Backspace or cleared', () => {
     const { onChange } = renderPicker({ value: ['c-zz', 'c-tw'] });
 
     open();
@@ -150,6 +152,14 @@ describe('CategoryPicker', () => {
 
     fireEvent.click(removeButton('Zestwort'));
     expect(onChange).toHaveBeenLastCalledWith(['c-tw']);
+
+    fireEvent.keyDown(box(), { key: 'Escape' });
+    fireEvent.keyDown(box(), { key: 'Backspace' });
+    expect(onChange).toHaveBeenLastCalledWith(['c-zz']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Categories' }));
+    expect(onChange).toHaveBeenLastCalledWith([]);
+    expect(box()).toHaveFocus();
   });
 
   it('describes each pick by its group and description, its tooltip naming the group', () => {
