@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
+import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
 import Modal, { DiscardQuestion, RouteModal, useDiscardGuard } from '.';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
@@ -172,3 +173,60 @@ export const PhoneLight: Story = () => <AskingToDiscardChanges />;
 
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+
+const PICKS = [
+  { value: 'fixture-mineral', label: 'Fixture Mineral' },
+  { value: 'fixture-substance', label: 'Fixture Substance' },
+  { value: 'mock-preparation', label: 'Mock Preparation' },
+];
+
+// A picker and a multi-picker in a modal: Escape on an open list closes the
+// list alone, and a second Escape, the list shut, closes the modal (MB.115).
+export const WithPickers: Story = () => {
+  const [open, setOpen] = useState(true);
+  const [group, setGroup] = useState('');
+  const [colours, setColours] = useState<string[]>([]);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Edit Form" onClose={() => setOpen(false)}>
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <div className="field">
+              <span className="field__label" id="story-group-label">
+                Group
+              </span>
+              <ComboboxSelect
+                id="story-group"
+                label="Group"
+                labelId="story-group-label"
+                value={group}
+                onChange={setGroup}
+                choices={PICKS}
+                placeholder="Choose a group"
+              />
+            </div>
+            <div className="field">
+              <span className="field__label" id="story-colours-label">
+                Colours
+              </span>
+              <ComboboxMultiSelect
+                id="story-colours"
+                label="Colours"
+                labelId="story-colours-label"
+                values={colours}
+                onChange={setColours}
+                choices={PICKS}
+                placeholder="Add a colour"
+              />
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+WithPickers.meta = { iframed: true };

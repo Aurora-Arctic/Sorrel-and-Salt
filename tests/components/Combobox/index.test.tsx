@@ -1026,6 +1026,20 @@ describe('Combobox', () => {
       expect(element()).toHaveAttribute('aria-expanded', 'false');
       expect(element()).toHaveTextContent('Earth');
     });
+
+    // In a modal, an Escape let through shuts the whole dialog (MB.115); a
+    // `<dialog>` ignores one marked handled, which jsdom cannot show, so the
+    // mark is what is asserted here (the browser checks the dialog stays open).
+    it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
+      render(<SelectHarness placeholder="Choose an element" />);
+
+      fireEvent.click(element());
+      const passedOn = fireEvent.keyDown(element(), { key: 'Escape' });
+
+      expect(passedOn).toBe(false);
+      expect(element()).toHaveAttribute('aria-expanded', 'false');
+      expect(fireEvent.keyDown(element(), { key: 'Escape' })).toBe(true);
+    });
   });
 
   // A closed set holding several values (MB.159): the select-only box, its
@@ -1108,6 +1122,19 @@ describe('Combobox', () => {
 
     // The owner's call at MB.115's review: a placeholder that went with the
     // first chip left nothing prompting for the next.
+    // In a modal, an Escape let through shuts the whole dialog (MB.115), as
+    // the select-only box's test says.
+    it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
+      render(<MultiHarness />);
+
+      fireEvent.click(elements());
+      const passedOn = fireEvent.keyDown(elements(), { key: 'Escape' });
+
+      expect(passedOn).toBe(false);
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(fireEvent.keyDown(elements(), { key: 'Escape' })).toBe(true);
+    });
+
     it('keeps the placeholder after the chips while a choice is left, for the eye alone, and drops it once none is', () => {
       render(<MultiHarness />);
       const prompt = () => within(elements()).queryByText('Choose elements');
