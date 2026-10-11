@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { MouseEvent, ReactElement } from 'react';
+import { type MouseEvent, type ReactElement, useLayoutEffect, useRef } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useTabSwitch } from './tab-switch';
@@ -21,14 +21,31 @@ import type { TabLinksProps } from './types';
 // `aria-disabled` and a press does nothing; the row is `aria-busy` rather
 // than the panel, whose status a screen reader should hear as it arrives,
 // not hold back.
+//
+// A row too wide for its column scrolls sideways inside its track (the
+// stylesheet). When the page loads and when a tab opens, the open tab is
+// centred in the track, so it is in view with a neighbour either side. The
+// track's own `scrollLeft` is set rather than `scrollIntoView()` called,
+// which would scroll the page too. A focus moving along the row is the
+// browser's to scroll into view.
 const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
   const pathname = usePathname();
   const { pending, go } = useTabSwitch();
+  const track = useRef<HTMLUListElement>(null);
+  const openHref = tabs.find(({ href }) => isAtPath(pathname, href))?.href;
+  useLayoutEffect(() => {
+    const row = track.current;
+    const link = row?.querySelector('[aria-current="page"]');
+    if (!row || !link) return;
+    const box = row.getBoundingClientRect();
+    const tab = link.getBoundingClientRect();
+    row.scrollLeft += tab.left + tab.width / 2 - (box.left + row.clientLeft + row.clientWidth / 2);
+  }, [openHref]);
   return (
-    <ul className="link-row tabbed-page__row" aria-busy={pending || undefined}>
+    <ul ref={track} className="tabbed-page__row" aria-busy={pending || undefined}>
       {tabs.map((tab) => {
         const { href, label } = tab;
-        const open = isAtPath(pathname, href);
+        const open = href === openHref;
         const press = (event: MouseEvent<HTMLAnchorElement>) => {
           if (pending) {
             event.preventDefault();
