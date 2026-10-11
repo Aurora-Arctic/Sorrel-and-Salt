@@ -18,7 +18,10 @@ What follows describes all three as built.
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, the generated `identityKey` (MB.216; below), the correspondence
   columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`,
-  `colors[]`, `safetyNotes`), + audit. `name` is the display label —
+  `colors[]`, `safetyNotes`), `seedKey` (MB.241), + audit. `seedKey` is the
+  key the compendium seed (MB.242) gives an entry it writes, so an entry an
+  admin renames is not seeded again beside itself; it is null on every other
+  row, the `standard` fixture's included (DESIGN.md §5, "`seedKey`"). `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
   moved off it onto the formal name, `canonicalName` and its `nomenclature`.
   The row has no form: each form an ingredient comes in is a row of
@@ -35,9 +38,10 @@ What follows describes all three as built.
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`
   and MB.141 dropped it; `deities[]` moved to `ingredient_deities` the
   same way, MB.167 switching every reader and writer and ceasing to declare
-  it, and MB.168 dropping it. Seven declared indexes: M4.1a's three partial unique ones, the identity pair
+  it, and MB.168 dropping it. Eight declared indexes: M4.1a's three partial unique ones, the identity pair
   on `identity_key` since MB.216 (below),
-  MB.81's two on the slug ("Ingredient slugs"), `ingredients_trgm`
+  MB.81's two on the slug ("Ingredient slugs"), MB.241's
+  `ingredients_seed_key_unique` on live keyed rows, `ingredients_trgm`
   (M4.6), one multicolumn `gin_trgm_ops` index over `name` and
   `canonical_name` — see ["Fuzzy matching"](fuzzy-matching.md) — and its folded twin
   `ingredients_unaccent_trgm` (["The compendium read"](compendium-read.md)).
