@@ -38,6 +38,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   name,
   label,
   hint,
+  placeholder,
   suggestions,
   onActivate,
   onPick,
@@ -68,6 +69,7 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
         suggestions={suggestions}
         qualifier={qualifier}
         offerTyped={offerTyped}
+        placeholder={placeholder}
         inputRef={field.ref}
         name={field.name}
         {...aria}
@@ -125,6 +127,7 @@ export function ListField({
   legend,
   entry,
   hint,
+  placeholder,
   suggestions,
   onActivate,
   ordered,
@@ -319,6 +322,7 @@ export function ListField({
           onRemoveLast={removeLast}
           suggestions={offered}
           offerTyped={!pickOnly && !repeat(text)}
+          placeholder={placeholder}
           listAnchor={boxRow}
           entries={entries}
           clear={{ label: `Clear ${legend}`, onClear: clear, empty: fields.length === 0 }}

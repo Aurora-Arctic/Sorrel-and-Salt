@@ -90,56 +90,84 @@ const title = (label: string): ReferenceFieldSpec => ({
   label,
   required: true,
   hint: ITALICS,
+  placeholder: 'Add a title',
 });
-const container = (label: string, required: boolean, hint: string): ReferenceFieldSpec => ({
+const container = (
+  label: string,
+  required: boolean,
+  hint: string,
+  placeholder: string,
+): ReferenceFieldSpec => ({
   name: 'container',
   label,
   required,
   hint: `${hint} ${ITALICS}`,
+  placeholder,
 });
 const AUTHORS: ReferenceFieldSpec = {
   name: 'authors',
   label: 'Authors',
+  placeholder: 'Add authors',
   hint: 'As printed, the first name inverted: Shelley, Mary.',
 };
 const CONTRIBUTORS: ReferenceFieldSpec = {
   name: 'contributors',
   label: 'Contributors',
+  placeholder: 'Add contributors',
   hint: 'Translators and editors, as a sentence: Translated by Angela Hall.',
 };
 const EDITION: ReferenceFieldSpec = {
   name: 'edition',
   label: 'Edition',
+  placeholder: 'Add an edition',
   hint: 'As printed: 2nd ed.',
 };
 const VOLUMES: ReferenceFieldSpec = {
   name: 'volume',
   label: 'Volume',
+  placeholder: 'Add a volume',
   hint: 'As printed: Vol. 2, or 4 vols.',
 };
-const SERIES: ReferenceFieldSpec = { name: 'series', label: 'Series' };
+const SERIES: ReferenceFieldSpec = {
+  name: 'series',
+  label: 'Series',
+  placeholder: 'Add a series',
+};
 const PLACE: ReferenceFieldSpec = {
   name: 'place',
   label: 'Place',
+  placeholder: 'Add a place',
   hint: 'The city it was published in: London.',
 };
-const PUBLISHER: ReferenceFieldSpec = { name: 'publisher', label: 'Publisher' };
+const PUBLISHER: ReferenceFieldSpec = {
+  name: 'publisher',
+  label: 'Publisher',
+  placeholder: 'Add a publisher',
+};
 const published = (required = false): ReferenceFieldSpec => ({
   name: 'published',
   label: 'Published',
   required,
+  placeholder: 'Add a date',
   hint: 'As precise as the source gives it: 1985, November 1950, 1882–88.',
 });
-const PAGES: ReferenceFieldSpec = { name: 'pages', label: 'Pages', hint: 'Its pages: 112–30.' };
+const PAGES: ReferenceFieldSpec = {
+  name: 'pages',
+  label: 'Pages',
+  hint: 'Its pages: 112–30.',
+  placeholder: 'Add pages',
+};
 const HOST: ReferenceFieldSpec = {
   name: 'host',
   label: 'Read Through',
+  placeholder: 'Name the library',
   hint: 'The library or archive a printed work was read through online: Perseus Digital Library.',
 };
 const url = (required = false): ReferenceFieldSpec => ({
   name: 'url',
   label: 'Address',
   required,
+  placeholder: 'Add an address',
   type: 'url',
   hint: 'The full web address, starting https://',
 });
@@ -154,6 +182,7 @@ const accessed = (required = false): ReferenceFieldSpec => ({
 const NOTE: ReferenceFieldSpec = {
   name: 'note',
   label: 'Note',
+  placeholder: 'Add a note',
   hint: `A short note, shown after the citation in brackets. ${ITALICS}`,
 };
 
@@ -180,7 +209,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   chapter: [
     title('Chapter Title'),
-    container('Book', true, 'The book this chapter is in.'),
+    container('Book', true, 'The book this chapter is in.', 'Name the book'),
     AUTHORS,
     CONTRIBUTORS,
     PAGES,
@@ -194,17 +223,22 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   article: [
     title('Article Title'),
-    container('Journal', true, 'The journal this article is in.'),
+    container('Journal', true, 'The journal this article is in.', 'Name the journal'),
     AUTHORS,
-    { name: 'volume', label: 'Volume' },
-    { name: 'issue', label: 'Issue' },
+    { name: 'volume', label: 'Volume', placeholder: 'Add a volume' },
+    { name: 'issue', label: 'Issue', placeholder: 'Add an issue' },
     published(),
     PAGES,
     ...ONLINE,
   ],
   entry: [
     title('Entry'),
-    container('Reference Work', true, 'The encyclopedia or dictionary the entry is in.'),
+    container(
+      'Reference Work',
+      true,
+      'The encyclopedia or dictionary the entry is in.',
+      'Name the work',
+    ),
     AUTHORS,
     EDITION,
     CONTRIBUTORS,
@@ -215,7 +249,7 @@ export const FIELDS_OF: Record<ReferenceKind, readonly ReferenceFieldSpec[]> = {
   ],
   web_page: [
     title('Page Title'),
-    container('Site', false, 'The website it is on.'),
+    container('Site', false, 'The website it is on.', 'Name the site'),
     AUTHORS,
     PUBLISHER,
     published(),

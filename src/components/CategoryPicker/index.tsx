@@ -47,6 +47,7 @@ const CategoryPicker = ({
   legend,
   hint,
   entry,
+  placeholder,
   categories,
   pending = false,
   value,
@@ -155,6 +156,7 @@ const CategoryPicker = ({
         }}
         suggestions={{ options, pending }}
         offerTyped={false}
+        placeholder={placeholder}
         entries={entries}
         clear={{
           label: `Clear ${legend}`,

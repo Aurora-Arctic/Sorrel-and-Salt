@@ -363,11 +363,18 @@ function VariantFieldset({
       >
         {/* On the compendium the form must be a pick (MB.162). */}
         <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
-        <TextField<IngredientFormValues> name={`${at}.description`} label="Description" multiline />
+        <TextField<IngredientFormValues>
+          name={`${at}.description`}
+          label="Description"
+          hint="What is particular to this form. What every form shares is the ingredient's description."
+          placeholder="Describe it"
+          multiline
+        />
         <TextField<IngredientFormValues>
           name={`${at}.safetyNotes`}
           label="Safety Notes"
           hint="What to take care over with this form in particular: an oil diluted, a resin burned."
+          placeholder="Add safety notes"
           multiline
         />
         <MultiSelectField
@@ -384,6 +391,7 @@ function VariantFieldset({
           pickOnly={compendium}
           legend="Planets"
           entry="Planet"
+          placeholder="Pick planets"
         />
         <LookupListField
           workspaceId={workspaceId}
@@ -393,8 +401,15 @@ function VariantFieldset({
           pickOnly={compendium}
           legend="Zodiac Signs"
           entry="Zodiac Sign"
+          placeholder="Pick signs"
         />
-        <ListField name={`${at}.colors`} ordered legend="Colours" entry="Colour" />
+        <ListField
+          name={`${at}.colors`}
+          ordered
+          legend="Colours"
+          entry="Colour"
+          placeholder="Add colours"
+        />
         <CategoryField at={at} />
         {/* Any ingredient may stand in for a form, this one's other forms
           included, so nothing is left out; those in this form, or in its
@@ -407,6 +422,7 @@ function VariantFieldset({
           name={`${at}.substitutes`}
           legend="Substitute Ingredients"
           entry="Substitute Ingredient"
+          placeholder="Pick substitutes"
         />
         <SubstituteForms name={`${at}.substitutes`} />
         <ReferencesField workspaceId={workspaceId} at={at} />

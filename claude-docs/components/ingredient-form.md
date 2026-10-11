@@ -66,6 +66,17 @@ group keeps its name. The Description section's one field would repeat its
 heading as its label, so the label is hidden from the eye alone and stays
 the textarea's name. Inside a variant the fields are not sectioned.
 
+**Every field shows a short action while it is empty**, and what it is for
+sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
+"Contracts"): "Add a name", "Add formal name", "Add folk names", "Describe
+it", "Pick planets", "Pick signs", "Add colours", "Pick deities", "Pick
+categories", "Pick substitutes", "Add safety notes", "Search references" and
+"Add a locator", a variant's Form "Add a form", and the new reference
+panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
+`ListField` (and so `LookupListField`) and `CategoryPicker` take
+`placeholder` for it, and a reference field's spec carries its own. A date
+field shows none: the browser draws its own format there.
+
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
   red asterisk hard against the label for the eye, "Name\*", in the error

@@ -155,6 +155,7 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
       autoComplete="off"
       required
       hint="What this coven calls it. It can differ from the formal name."
+      placeholder="Add a name"
       describedBy={shown.length > 0 ? warningId : undefined}
       invalid={blocking}
       after={

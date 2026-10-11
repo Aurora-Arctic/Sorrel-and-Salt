@@ -216,6 +216,7 @@ export function ReferencesField({
         <Combobox<ReferenceOption>
           id={`${id}-box`}
           label="Reference"
+          placeholder="Search references"
           value={field.value as string}
           onChange={field.onChange}
           onFocus={() => setActive(true)}
@@ -328,6 +329,7 @@ export function ReferencesField({
                     <input
                       id={locatorId}
                       className="input"
+                      placeholder="Add a locator"
                       aria-describedby={[citationId, locatorHintId, invalid && errorId]
                         .filter(Boolean)
                         .join(' ')}

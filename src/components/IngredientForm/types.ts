@@ -289,6 +289,8 @@ export interface MultiSelectFieldProps extends FieldProps {
 /** A text field whose box suggests as it is typed in; picking fills it. */
 export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
   name: TextFieldName;
+  /** A short action shown, muted, while the box is empty: "Add a form". */
+  placeholder?: string;
   suggestions: Suggestions<O>;
   /** The box has been focused: the lookup may start asking. */
   onActivate: () => void;
@@ -310,6 +312,8 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
+  /** A short action shown, muted, while the box is empty: "Pick planets". */
+  placeholder?: string;
   /** What the box suggests; left out for a list with no source, whose box never opens. */
   suggestions?: Suggestions<ListOption>;
   /** The box has been focused: the lookup may start asking. */
@@ -360,6 +364,8 @@ export interface ReferenceFieldSpec {
   name: ReferenceFieldName;
   label: string;
   hint?: string;
+  /** A short action shown while the field is empty: "Add a title". */
+  placeholder?: string;
   required?: boolean;
   type?: 'date' | 'url';
 }
