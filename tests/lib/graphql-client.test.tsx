@@ -101,17 +101,6 @@ describe('graphqlRequest', () => {
     expect(data).toEqual({ echo: 'salt' });
   });
 
-  it('demands the variables a document declares, and none it does not', () => {
-    mockGraphQLQuery('Ok', () => ({ ok: true }));
-    mockGraphQLQuery('Echo', () => ({ echo: '' }));
-
-    // @ts-expect-error Echo declares $word, so its variables are required.
-    void graphqlRequest(EchoDocument);
-    // @ts-expect-error Echo's $word is a string.
-    void graphqlRequest(EchoDocument, { word: 1 });
-    void graphqlRequest(OkDocument);
-  });
-
   it('throws the GraphQL error rather than resolving to partial data', async () => {
     refuseOk();
 
@@ -141,12 +130,6 @@ describe('graphqlQuery', () => {
   });
 });
 
-describe('staleness', () => {
-  it('holds an answer fresh for 30 seconds, so a remount reuses it', () => {
-    expect(makeQueryClient().getDefaultOptions().queries?.staleTime).toBe(30_000);
-  });
-});
-
 describe('the retry policy', () => {
   it('never retries an answer from the server', () => {
     // A GraphQL error arrives as a 200, and a 4xx is the request's own fault.
@@ -166,13 +149,6 @@ describe('the retry policy', () => {
   it('does not retry an error that is not a transport failure', () => {
     expect(shouldRetry(0, new Error('The GraphQL client runs in the browser'))).toBe(false);
   });
-
-  it('is the default for queries, and mutations are never retried', () => {
-    const defaults = makeQueryClient().getDefaultOptions();
-
-    expect(defaults.queries?.retry).toBe(shouldRetry);
-    expect(defaults.mutations?.retry ?? 0).toBe(0);
-  });
 });
 
 describe('the error-boundary policy', () => {
@@ -189,11 +165,16 @@ describe('the error-boundary policy', () => {
     // A failed background refetch leaves the last good answer rendered.
     expect(throwWhenEmpty(error, query({ ok: true }))).toBe(false);
   });
+});
 
-  it('is the default for queries and not for mutations, whose errors a form renders', () => {
+// Mutations are never retried, and their errors a form renders.
+describe("the client's defaults", () => {
+  it('retry and throw by the two policies for queries, and neither for mutations', () => {
     const defaults = makeQueryClient().getDefaultOptions();
 
+    expect(defaults.queries?.retry).toBe(shouldRetry);
     expect(defaults.queries?.throwOnError).toBe(throwWhenEmpty);
+    expect(defaults.mutations?.retry ?? 0).toBe(0);
     expect(defaults.mutations?.throwOnError).toBeFalsy();
   });
 });

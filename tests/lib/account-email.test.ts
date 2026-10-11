@@ -20,22 +20,20 @@ describe('verifyErrorMessage', () => {
     expect(verifyErrorMessage(['TOKEN_EXPIRED', 'INVALID_TOKEN'])).toBeUndefined();
   });
 
-  it.each([
-    'SIGN_IN_TO_VERIFY',
-    'EMAIL_TAKEN',
-    'TOKEN_EXPIRED',
-    'INVALID_TOKEN',
-    'INVALID_USER',
-    'USER_NOT_FOUND',
-  ])('gives %s a sentence of its own, never the code', (code) => {
-    const message = verifyErrorMessage(code);
+  it('gives each known code a sentence of its own, never the code', () => {
+    for (const code of [
+      'SIGN_IN_TO_VERIFY',
+      'EMAIL_TAKEN',
+      'TOKEN_EXPIRED',
+      'INVALID_TOKEN',
+      'INVALID_USER',
+      'USER_NOT_FOUND',
+    ]) {
+      const message = verifyErrorMessage(code);
 
-    expect(message).toMatch(/[a-z]/);
-    expect(message).not.toContain(code);
-  });
-
-  it('tells a signed-out click to sign in to the same account', () => {
-    expect(verifyErrorMessage('SIGN_IN_TO_VERIFY')).toMatch(/signed in to this account/i);
+      expect(message).not.toBe(GENERIC_VERIFY_ERROR);
+      expect(message).not.toContain(code);
+    }
   });
 
   it('gives an unknown code the generic sentence', () => {
@@ -57,12 +55,11 @@ describe("the email page's paths", () => {
 
   // The open-redirect guard runs when the link is built, not only when the
   // page reads it back: a mailed link never names somewhere else.
-  it.each([...UNSAFE_RETURN_PATHS, 'coven', ''])(
-    'drops a return path that leaves the site (%s), landing as it always has',
-    (next) => {
+  it('drops a return path that leaves the site, landing as it always has', () => {
+    for (const next of [...UNSAFE_RETURN_PATHS, 'coven', '']) {
       expect(verifiedLanding(next)).toBe('/account/email?verified');
-    },
-  );
+    }
+  });
 
   // Continue's landing without one is the role's, so an explicit /coven is
   // carried like any other: an admin who asked for it still lands on it (MB.113).

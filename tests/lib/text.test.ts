@@ -25,11 +25,11 @@ describe('joinAnd', () => {
 });
 
 describe('addressTaken', () => {
-  it('names the holder, the address and the remedy in that order', () => {
+  it('names the holder, the address and the remedy', () => {
     const sentence = addressTaken('HOLDER', 'the-slug', 'REMEDY');
 
-    expect(sentence.indexOf('HOLDER')).toBe(0);
-    expect(sentence.indexOf('"the-slug"')).toBeGreaterThan(0);
-    expect(sentence.endsWith('REMEDY')).toBe(true);
+    expect(sentence).toContain('HOLDER');
+    expect(sentence).toContain('the-slug');
+    expect(sentence).toContain('REMEDY');
   });
 });

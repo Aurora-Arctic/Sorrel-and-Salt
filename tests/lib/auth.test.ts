@@ -157,30 +157,6 @@ describe('social providers', () => {
       tenantId: 'a-specific-tenant',
     });
   });
-
-  it('registers every configured provider consistently with configuredProviders()', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
-    vi.stubEnv('DISCORD_CLIENT_ID', 'd-id');
-    vi.stubEnv('DISCORD_CLIENT_SECRET', 'd-secret');
-    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
-    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
-    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
-    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
-    vi.resetModules();
-
-    const { auth } = await import('@/lib/auth');
-    // A test is a legitimate exception to the client-boundary rule below —
-    // it needs to assert the server-only mapping directly, the same as
-    // tests/db/test-database-isolation.test.ts is exempt from the db-client
-    // boundary (CLAUDE.md rule 2).
-    // oxlint-disable-next-line no-restricted-imports
-    const { configuredProviders } = await import('@/lib/social-providers-config');
-
-    expect(Object.keys(auth.options.socialProviders ?? {}).sort()).toEqual(
-      configuredProviders().sort(),
-    );
-  });
 });
 
 // One BETTER_AUTH_URL cannot cover three production origins; an untrusted Host

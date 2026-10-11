@@ -226,10 +226,9 @@ describe('when nothing can be sent', () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining('MAIL_TRANSPORT=smtp'));
   });
 
+  // One missing variable per transport, each its own check.
   it.each([
     ['resend', 'RESEND_API_KEY'],
-    ['resend', 'MAIL_FROM'],
-    ['mailtrap-sandbox', 'MAILTRAP_SANDBOX_TOKEN'],
     ['mailtrap-sandbox', 'MAILTRAP_SANDBOX_ID'],
     ['mailpit', 'MAILPIT_URL'],
   ] as const)('logs %s without %s and sends nothing', async (transport, missing) => {

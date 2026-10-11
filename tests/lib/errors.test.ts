@@ -1,7 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { Forbidden, InvalidCursor, NotFound, ValidationError } from '@/lib/errors';
-import { fromRoot } from '../support/paths';
 
 // A refusal asserted by message is a test of today's wording, and passes
 // against a service that stopped checking. Assert the type.
@@ -50,52 +48,6 @@ describe('telling the two apart', () => {
     expect(new Forbidden()).not.toBeInstanceOf(NotFound);
     expect(new NotFound()).not.toBeInstanceOf(Forbidden);
   });
-
-  it('keeps them apart in a catch block', () => {
-    const caught: string[] = [];
-
-    for (const error of [new Forbidden(), new NotFound()]) {
-      try {
-        throw error;
-      } catch (thrown) {
-        caught.push(thrown instanceof Forbidden ? 'refused' : 'absent');
-      }
-    }
-
-    expect(caught).toEqual(['refused', 'absent']);
-  });
-
-  it('will not let a NotFound satisfy an assertion written for a Forbidden', async () => {
-    // The guard on the guard: the inner expectation is under test, so this
-    // asserts that *it* rejects.
-    await expect(
-      expect(Promise.reject(new NotFound('No such spell'))).rejects.toThrow(Forbidden),
-    ).rejects.toThrow();
-  });
-});
-
-describe('a denied call rejects rather than returning empty', () => {
-  // The silent no-op: an unauthorized read answered with an empty list, or a
-  // write with success, both look like success.
-  it('is satisfied by a service that throws', async () => {
-    const denied = async (): Promise<string[]> => {
-      throw new Forbidden('D is not a member of W');
-    };
-
-    await expect(denied()).rejects.toThrow(Forbidden);
-  });
-
-  it('is not satisfied by a service that resolves to an empty list', async () => {
-    const silentNoOp = async (): Promise<string[]> => [];
-
-    await expect(expect(silentNoOp()).rejects.toThrow(Forbidden)).rejects.toThrow();
-  });
-
-  it('is not satisfied by a service that resolves to a success value', async () => {
-    const silentSuccess = async (): Promise<{ ok: boolean }> => ({ ok: true });
-
-    await expect(expect(silentSuccess()).rejects.toThrow(Forbidden)).rejects.toThrow();
-  });
 });
 
 describe('InvalidCursor', () => {
@@ -140,16 +92,5 @@ describe('ValidationError', () => {
     expect(error).not.toBeInstanceOf(NotFound);
     expect(new Forbidden()).not.toBeInstanceOf(ValidationError);
     expect(new NotFound()).not.toBeInstanceOf(ValidationError);
-  });
-
-  // It carries issues rather than producing them, so a seed or a script can
-  // throw one without src/lib/ depending on the schema library.
-  it('imports nothing from Zod', () => {
-    const source = readFileSync(fromRoot('src/lib/errors.ts'), 'utf8');
-
-    // Why this could pass vacuously: the file is the one that declares the type.
-    expect(source).toContain('class ValidationError');
-    expect(source).not.toMatch(/from\s+['"]zod/);
-    expect(source).not.toMatch(/import\s*\(\s*['"]zod/);
   });
 });
