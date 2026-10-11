@@ -94,37 +94,46 @@ const sourceTitled = (title: string) => {
 };
 
 describe('seedSources', () => {
-  beforeAll(async () => {
-    await truncateAllTables(sql);
-    // Precondition: the truncated clone really starts empty, so every row read below is this run's.
-    expect(await allReferences()).toEqual([]);
-    expect(await allLinks()).toEqual([]);
-    await seedAll();
-  });
+  // Seeded before each test, not once for the block: the edited-database
+  // tests below empty the clone and write their own rows, and a test here
+  // must read a fresh seed whichever of them ran before it.
+  describe('over an emptied database', () => {
+    beforeEach(async () => {
+      await truncateAllTables(sql);
+      // Precondition: the truncated clone really starts empty, so every row read below is this run's.
+      expect(await allReferences()).toEqual([]);
+      expect(await allLinks()).toEqual([]);
+      await seedAll();
+    });
 
-  it('writes every source as a compendium reference, keyed by its citation', async () => {
-    const rows = await allReferences();
-    expect(rows).toHaveLength(SOURCES.length);
-    expect(rows.every((row) => row.workspace_id === null)).toBe(true);
-    expect(rows.map((row) => row.seed_key).sort()).toEqual(
-      SOURCES.map(({ reference }) => citationText(reference)).sort(),
-    );
-    expect(rows.every((row) => citationText(row) === row.seed_key)).toBe(true);
-  });
+    it('writes every source as a compendium reference, keyed by its citation', async () => {
+      const rows = await allReferences();
+      expect(rows).toHaveLength(SOURCES.length);
+      expect(rows.every((row) => row.workspace_id === null)).toBe(true);
+      expect(rows.map((row) => row.seed_key).sort()).toEqual(
+        SOURCES.map(({ reference }) => citationText(reference)).sort(),
+      );
+      expect(rows.every((row) => citationText(row) === row.seed_key)).toBe(true);
+    });
 
-  it('links a tradition’s source to the tradition and every deity under it', async () => {
-    const source = SOURCES.find(({ traditions }) => traditions?.includes('Greek'));
-    const greek = DEITIES.filter(({ tradition }) => tradition === 'Greek').map(({ name }) => name);
-    if (!source) throw new Error('No Greek source');
+    it('links a tradition’s source to the tradition and every deity under it', async () => {
+      const source = SOURCES.find(({ traditions }) => traditions?.includes('Greek'));
+      const greek = DEITIES.filter(({ tradition }) => tradition === 'Greek').map(
+        ({ name }) => name,
+      );
+      if (!source) throw new Error('No Greek source');
 
-    const linked = await namesLinkedFrom((await referenceCited(citationText(source.reference))).id);
+      const linked = await namesLinkedFrom(
+        (await referenceCited(citationText(source.reference))).id,
+      );
 
-    expect(linked.filter(({ kind }) => kind === 'tradition').map(({ name }) => name)).toEqual([
-      'Greek',
-    ]);
-    expect(linked.filter(({ kind }) => kind === 'deity').map(({ name }) => name)).toEqual(
-      expect.arrayContaining(greek),
-    );
+      expect(linked.filter(({ kind }) => kind === 'tradition').map(({ name }) => name)).toEqual([
+        'Greek',
+      ]);
+      expect(linked.filter(({ kind }) => kind === 'deity').map(({ name }) => name)).toEqual(
+        expect.arrayContaining(greek),
+      );
+    });
   });
 
   describe('over a database an admin has edited', () => {

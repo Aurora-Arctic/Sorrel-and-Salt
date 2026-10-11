@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import ChipColorField from '@/components/ChipColorField';
@@ -77,6 +77,11 @@ describe('ChipColorField', () => {
     it('opens a tooltip on the toggle when the keyboard focuses it', async () => {
       render(<Controlled />);
 
+      // The tooltip starts listening for the keyboard a microtask after it
+      // mounts (zag queues a machine's effects), and that listener is global
+      // and outlives the render, so only the file's first mount is without
+      // it. Yield once, so this test does not depend on running after another.
+      await act(async () => {});
       // Arrived at by the keyboard, as the tooltip opens on focus only then.
       fireEvent.keyDown(document.body, { key: 'Tab' });
       formatButton().focus();
