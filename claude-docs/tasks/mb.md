@@ -2779,7 +2779,7 @@ _Acceptance criteria:_
 - The last remaining method reads as the one that cannot be removed, and says why (from MB.117)
 - A failed link's error sits beside the provider it concerns (from MB.117)
 - Stylelint refuses a raw hue outside `_variables.scss`, as part of `npm run lint`
-- Every hand-written notice that carries a role, and every copy of the failure reader and its fallback sentence, uses `Notice`, `readGraphqlFailure` and `GENERIC_FAILURE`; a reader the shared one cannot replace says why in a comment
+- Every hand-written notice that carries a role, and every copy of the failure reader and its fallback sentence, uses `Notice`, `readGraphqlFailure` and `GENERIC_FAILURE`, and a form that places several field errors at once reads them with `readGraphqlIssues`
 - The section's copy is reviewed against one register, proposed in the sign-off comment and applied as agreed
 - No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 

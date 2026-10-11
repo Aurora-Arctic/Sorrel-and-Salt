@@ -99,8 +99,9 @@ describe('MB.116: the brand and text colours clear their floors on the page', ()
       row(`${brand} ink on its fill`, ink, fill, 4.5);
       row(`${brand} ink on its hover`, ink, hover, 4.5);
     }
+    // Text, so the text floor, not the 3 a control's edge needs.
     for (const token of ['--text-muted', '--text-primary', '--accent']) {
-      row(`${token} on the page`, tokens[token], page, 3);
+      row(`${token} on the page`, tokens[token], page, 4.5);
     }
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);

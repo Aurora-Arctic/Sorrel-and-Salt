@@ -38,9 +38,11 @@ in the light theme unless a spec says otherwise, while the site's own
 default is dark: a spec that scans once has scanned the light theme only. So
 the Welcome test in `smoke.spec.ts` checks the width and scans in each theme
 in turn, `page.emulateMedia({ colorScheme })` before each scan, and the 403
-test in `admin.spec.ts` checks the width before its scan;
-`sign-in-configured-providers.spec.ts` and `admin/privilege-changes.spec.ts`
-scan in both themes too. It is one per template rather than one per page
+test in `admin.spec.ts` checks the width before its scan; the account page
+test in `account.spec.ts` does as the Welcome test does, and the unverified
+account's email page gets a scan and the width check; `sign-in.spec.ts` checks
+the width; `sign-in-configured-providers.spec.ts` and
+`admin/privilege-changes.spec.ts` scan in both themes too. It is one per template rather than one per page
 because the frame decides the width and the surfaces text sits on, and every
 page on a template shares them; the rest of the scans stay single, which
 keeps the run short.

@@ -33,7 +33,6 @@ test('shows all three sections, with no accessibility violations', async ({ page
     'aria-disabled',
     'true',
   );
-  await assertNoAccessibilityViolations(page);
 
   // The nav beneath the heading jumps to a section.
   const nav = main.getByRole('navigation', { name: 'On this page' });
@@ -41,10 +40,11 @@ test('shows all three sections, with no accessibility violations', async ({ page
   await expect(page).toHaveURL(/#account-sign-in-methods$/);
   await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();
 
-  // The other theme once, and the phone's width (claude-docs/styling.md,
-  // "Designing a section").
-  await page.emulateMedia({ colorScheme: 'light' });
-  await assertNoAccessibilityViolations(page);
+  // Both themes, since a Playwright page is in the light theme unless told otherwise.
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    await assertNoAccessibilityViolations(page);
+  }
   await assertNoSidewaysScroll(page);
 });
 

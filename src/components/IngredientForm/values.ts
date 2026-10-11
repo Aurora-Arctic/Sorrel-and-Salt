@@ -341,8 +341,3 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
-
-// The form's and its reference panel's one reader for a failed request,
-// placing every field error at once, a draft's nested path included
-// (src/lib/graphql-failure.ts), under the name both import it by.
-export { readGraphqlIssues as issuesOf } from '../../lib/graphql-failure';

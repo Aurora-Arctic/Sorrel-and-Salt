@@ -667,7 +667,8 @@ What each section review (MB.115 to MB.124) designs to:
   message, or one sentence for the form's `Notice`: the server's own, or
   `GENERIC_FAILURE` when the request got no usable answer. A form that places
   several field errors at once, as the admin forms and `IngredientForm` do,
-  keeps a small reader of its own that falls back to the shared one.
+  reads them with `readGraphqlIssues` beside it, which hands back every issue
+  of a refusal, or one pathless issue carrying the same sentence.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
 - **The copy has one voice.** Speak to the reader as "you", in plain words.

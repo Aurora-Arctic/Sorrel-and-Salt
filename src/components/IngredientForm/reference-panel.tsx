@@ -25,7 +25,7 @@ import type {
   ReferencePanelProps,
   ReferenceSendInput,
 } from './types';
-import { issuesOf } from './values';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 
 // The citation sub-form (MB.154): a new source written to this coven without
 // leaving the ingredient form. Inline beneath the References field rather
@@ -307,7 +307,7 @@ export default function ReferencePanel({
       // anything else above the fields.
       const visible = shownFor(kind);
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [field, ...rest] = path;
         if (field === 'kind' && rest.length === 0) setError('kind', { type: 'server', message });
         else if (rest.length === 0 && visible.has(field as ReferenceFieldName)) {
