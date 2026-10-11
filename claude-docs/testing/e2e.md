@@ -196,15 +196,18 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
   shares — and can't corrupt — the production build e2e is serving from.
-- **CI restores `.next-e2e/cache` before the build** (MB.230), as
-  `checks.yml`'s `build` leg restores `.next/cache`: `playwright.yml`'s
-  `actions/cache` step, keyed `nextjs-e2e` on the lockfile and the source
-  hashes, falling back to the newest entry for the same lockfile. The build
+- **CI restores `.next-e2e/cache` before the build** (MB.230):
+  `playwright.yml`'s `actions/cache/restore` step, keyed `nextjs-e2e` on the
+  lockfile and the source hashes, falling back to the newest entry for the
+  same lockfile. The build
   runs inside `npm run e2e` as slot 0's `webServer` command, so the restore
   has to come before that step, and Turbopack's persistent cache under it is
-  what a warm build reuses. The e2e image is Ubuntu's, whose GNU `tar`
+  what a warm build reuses. The e2e image is Debian's, whose GNU `tar`
   `actions/cache` needs; Alpine's `testing` stage had to add it (MB.37). It
-  is CI time, not test time.
+  carries no `zstd`, so the cache is gzip, as it was on the Ubuntu image
+  before MB.237: the compression is part of a cache entry's version, so
+  adding `zstd` would miss every entry saved without it. It is CI time, not
+  test time.
 - **The cache a pull request restores is saved on `staging`** (MB.234). GitHub
   lets a run restore caches saved on its own branch, on `main`, or on a pull
   request's base branch, and a pull request's own run saves under its merge
@@ -216,14 +219,26 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   runs under, it calls `playwright.yml` with `build-only: true`, which adds
   `--grep-invert . --pass-with-no-tests` to `npm run e2e`. Every test title
   matches `.`, so no spec runs, but Playwright starts its `webServer` entries
-  before it loads a spec, so slot 0 still runs `npm run build` and the cache
-  step saves `/app/.next-e2e/cache` from `staging`. Because it is the same
-  workflow, the warm build has the pull request's image, path, build
-  directory and environment, and the same key; a pull request's run then
-  falls back to that entry through the lockfile-only restore key. The proof
-  is a pull request's run logging `Cache restored from key`. It costs about
-  2½ free GitHub-hosted minutes per qualifying push
+  before it loads a spec, so slot 0 still runs `npm run build`, and an
+  `actions/cache/save` step after it saves `/app/.next-e2e/cache` from
+  `staging` under the restore step's key. Because it is the same workflow,
+  the warm build has the pull request's image, path, build directory and
+  environment, and the same key; a pull request's run then falls back to
+  that entry through the lockfile-only restore key. The proof is a pull
+  request's run logging `Cache restored from key`. It costs about 2½ free
+  GitHub-hosted minutes per qualifying push
   ([`ci/runner-budget.md`](../ci/runner-budget.md)).
+- **A pull request's run restores and never saves** (MB.235). Restore and
+  save are two steps, `actions/cache/restore` and `actions/cache/save`,
+  rather than MB.230's single `actions/cache`, which saves at the end of
+  any job whose exact key missed. On a pull request the key's source hash
+  changes with almost every push, so that step uploaded 150–240 MB on nearly
+  every run, under the pull request's merge ref, where only a re-run of the
+  same pull request could read it. The upload came after the tests, on the
+  gate's critical path: 17s on run 38110758509. The save step runs only
+  under `build-only`, only when the build succeeded (it has no `always()`,
+  so a failed build hands nothing on), and only when the restore was not an
+  exact hit.
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
   `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
   server keeps whatever data cache it has — the compendium read's `unstable_cache`
@@ -262,10 +277,22 @@ does not reuse `build-image.yml`'s shared `testing` image for this — that
 image is Alpine/musl-based and explicitly excludes Playwright's browser/
 system deps (see `Docker/Dockerfile.node`'s header comment; Playwright's
 Chromium build has no official musl support at all). Instead
-`.github/workflows/playwright.yml` runs in a dedicated image
-(`Docker/Dockerfile.e2e`, built `FROM mcr.microsoft.com/playwright:v1.63.0-noble`
-and published by `build-e2e-image.yml`) with browsers already baked in — see
-`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in `e2e` service
-(`make docker-e2e`) builds that same image for local use, so a devcontainer
-session can run the full suite without installing browsers into its own
-Alpine-based image.
+`.github/workflows/playwright.yml` runs in a dedicated image,
+`Docker/Dockerfile.e2e`, published by `build-e2e-image.yml` — see
+`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in
+`e2e` service (`make docker-e2e`) builds that same image for local use, so a
+devcontainer session can run the full suite without installing browsers into
+its own Alpine-based image.
+
+**The e2e image is Debian with Chromium alone** (MB.237). It is built on
+`node:26.6.0-bookworm-slim`, the same Node as `Dockerfile.node`. After
+`npm ci`, the lockfile's own `@playwright/test` runs
+`playwright install --with-deps --only-shell chromium`, so the browser always
+matches the package. `--only-shell` takes the headless shell alone, which is what a
+headless run launches; the `headed` stage adds the full Chromium for
+`playwright-server`'s display. Until MB.237 the image was built on
+Microsoft's `mcr.microsoft.com/playwright` image, which also carries Firefox
+and WebKit and their system libraries, and pulling it was the largest fixed
+cost of every e2e job. The browsers sit in `/ms-playwright`
+(`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
+container job sets `HOME` to a directory the image never saw.

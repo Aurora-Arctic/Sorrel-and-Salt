@@ -14,7 +14,8 @@
 # decision, not a convenience.
 
 # deploy.yml and migrate.yml's setup-node must match: Node 22's npm 10 cannot
-# read this npm-11 lockfile.
+# read this npm-11 lockfile. So must Dockerfile.e2e's NODE_VERSION, so the e2e
+# build runs on the same Node as every other job.
 ARG NODE_VERSION=26.6.0
 
 # development — deps only, `npm run dev` on 8000 against the mount

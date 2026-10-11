@@ -26,17 +26,27 @@
     for the leg it is running, and treats an empty flag as true — so `act`,
     which applies no `workflow_call` input defaults, cannot report a check it
     never ran.
-  - **`build`'s extras**: the `/app/.next/cache` restore through
-    `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
+  - **`build`'s extras**: `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
     short-circuits the same way separate steps would. It posts no PR comment.
-    - **The cache `path` is the absolute `/app/.next/cache`**, not a
-      workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
-      the job's working directory is `/app`.
-    - **The `testing` stage carries GNU `tar` and `zstd` for this cache**
-      (MB.37). `actions/cache` runs inside the container, and the Alpine
-      image's busybox `tar` rejects `--posix`, so without them every save
-      fails with a warning and every restore misses.
+    - **It keeps no build cache** (MB.235). Until then an `actions/cache` step
+      restored and saved `/app/.next/cache`, keyed `nextjs` on the lockfile
+      and the source. Only pull requests ever ran it, so every save landed
+      under a merge ref no other pull request can read, and it never restored
+      once. On 11 October 2026 it held 39 entries, 6 GB of the 11.2 GB the
+      repo had cached against GitHub's 10 GB allowance, so it competed for
+      space, under eviction by last use, with the e2e entries pull requests
+      do read.
+      A warm Turbopack cache does save time (`npm run build` in the
+      devcontainer: 24–30s cold, 8–10s warm), but a save from `staging` would
+      mean a second set of `checks.yml` legs on every push there, and this
+      leg is not on the gate's critical path ([Runner
+      budget](runner-budget.md)), so the save bought nothing a pull request
+      waits for.
+    - **The `testing` stage still carries GNU `tar` and `zstd`** (MB.37),
+      which `actions/cache` needed inside the container, where the Alpine
+      image's busybox `tar` rejects `--posix`. No step in that image uses
+      them now; they go the next time `Docker/Dockerfile.node` changes.
     - **`package.json`'s `build` script forces `NODE_ENV=production`.** The
       `testing` image bakes in `NODE_ENV=test`, and Turbopack crashes
       prerendering `/_global-error` under anything but `production`/unset —
@@ -213,18 +223,23 @@
   both read, and `tests/e2e/admin-invitations.spec.ts` reads an invitation
   the site mailed back from it (MB.65). No mail variable is set on `checks.yml`'s
   `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
-  Before the run, an `actions/cache` step restores `/app/.next-e2e/cache`
-  (MB.230), the e2e build's own, keyed `nextjs-e2e` on the shape of
-  `build`'s `/app/.next/cache` entry above and for the same reasons: the
-  absolute path, and a lockfile-only restore key. It cannot share `build`'s
-  entry, because the two builds write different `distDir`s
-  (`testing/e2e.md`). A pull request restores the entry `staging` saved
+  Before the run, an `actions/cache/restore` step restores
+  `/app/.next-e2e/cache` (MB.230), the e2e build's own, keyed `nextjs-e2e` on
+  the lockfile and the source, with a lockfile-only restore key. The path is
+  absolute because `hashFiles()` reads `$GITHUB_WORKSPACE` while the build
+  writes `/app`. A pull request restores the entry `staging` saved
   (MB.234), since GitHub never lets one pull request's run read a cache
   another pull request saved, only its own, its base branch's and `main`'s.
   The input `build-only` is how that entry is made: set, the run step adds
   `--grep-invert . --pass-with-no-tests`, so the servers build and start but
-  no spec runs, and the coverage upload is skipped. Only
-  `.github/workflows/e2e-cache.yml` sets it. On a push to `staging` that
+  no spec runs, the coverage upload is skipped, and an `actions/cache/save`
+  step after the run saves the folder under the restore step's key. Only
+  that run saves (MB.235). A single `actions/cache` step saves at the end of
+  every job whose key missed, which on a pull request is nearly every push,
+  and that upload took about 15s after the tests to write an entry no other
+  run could read. The save has no `always()`, so a failed build saves
+  nothing. `.github/workflows/e2e-cache.yml` is the only caller that sets
+  `build-only`. On a push to `staging` that
   touches `src/**`, `public/**`, the Next, TypeScript or Playwright config,
   the manifests, `Docker/Dockerfile.e2e` or the workflows involved, it calls
   `build-e2e-image.yml`, `build-db-image.yml` and this workflow, as
@@ -234,11 +249,11 @@
   [Runner budget](runner-budget.md).
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
   `build-image.yml`, but for `Docker/Dockerfile.e2e`:
-  `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
-  which bundles a matching Node runtime, every OS dep Chromium needs, and
-  the browser itself, all pinned together) — pinned to
-  `@playwright/test`'s resolved `package-lock.json` version; bump both
-  together. `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile
+  `FROM node:26.6.0-bookworm-slim` (Debian, on `Dockerfile.node`'s Node
+  version; keep the two in step), with Chromium's headless shell and its
+  system libraries installed by the lockfile's own `@playwright/test`, so
+  the browser cannot drift from the package (MB.237;
+  [`testing/e2e.md`](../testing/e2e.md)). `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile
   `e2e`, `make docker-e2e`) builds this same file for local use, so a
   devcontainer session (still Alpine-based itself, via `Docker/Dockerfile.node`)
   can run the full e2e suite without a base-distro change of its own.

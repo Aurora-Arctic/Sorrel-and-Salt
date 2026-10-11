@@ -212,18 +212,6 @@ jobs:
         if: steps.flags.outputs.should-run == 'true'
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # The absolute /app path: hashFiles reads $GITHUB_WORKSPACE, the build
-      # writes /app. Restore and save run inside the container, hence GNU tar
-      # and zstd in Dockerfile.node's `testing` stage.
-      - name: Cache Next.js build cache
-        if: matrix.name == 'build' && steps.flags.outputs.should-run == 'true'
-        uses: actions/cache@v6
-        with:
-          path: /app/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
-
       # The brace group keeps `2>&1 | tee` on the whole command, not on `|| true`.
       - name: Run ${{ matrix.name }}
         id: run

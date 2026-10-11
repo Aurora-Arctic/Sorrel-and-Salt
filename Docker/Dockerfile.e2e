@@ -1,18 +1,45 @@
 # syntax=docker/dockerfile:1
 
 # Playwright e2e image, built by build-e2e-image.yml for CI and by the `e2e`
-# compose service locally. Playwright's Chromium has no musl support, so it
-# cannot ride in the Alpine Dockerfile.node. The workflow is in
-# claude-docs/ci.md, "Reusable checks"; the compose side in claude-docs/docker.md.
+# compose service locally. Playwright's Chromium has no musl build, so it
+# cannot ride in the Alpine Dockerfile.node; this is the same Node on Debian
+# instead. The workflow is in claude-docs/ci.md, "Reusable checks"; the
+# compose side in claude-docs/docker.md.
 #
-# PLAYWRIGHT_VERSION must move in lockstep with `@playwright/test` in
-# package-lock.json; a mismatch is Playwright's usual "browser not found".
+# Chromium only, installed by the lockfile's own `@playwright/test`, so the
+# browser can never disagree with the package. Not Microsoft's
+# mcr.microsoft.com/playwright image (MB.237): it carries Firefox and WebKit
+# and their libraries, which the suite never launches and every CI job pulled.
 #
 # Two stages: `e2e` (headless; CI and `make docker-e2e`) and `headed` (a
 # display for `playwright-server`). `docker build` with no `--target` picks
 # the LAST stage, so every `e2e` consumer pins `target: e2e`.
-ARG PLAYWRIGHT_VERSION=1.63.0
-FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble AS e2e
+
+# Keep in step with Dockerfile.node's NODE_VERSION: the e2e build must run on
+# the Node every other job and the deploy use.
+ARG NODE_VERSION=26.6.0
+FROM node:${NODE_VERSION}-bookworm-slim AS e2e
+
+# apt never stops to ask, here or inside `playwright install --with-deps`,
+# which sets nothing itself. An ARG, not an ENV, so it stays out of the
+# running container; each stage declares its own.
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Runs as root, the node image's default, which the workflow's container job
+# relies on. The browsers live outside $HOME: a GitHub container job sets
+# HOME=/github/home, a mount the image never saw, so the default
+# ~/.cache/ms-playwright would be empty at run time.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# What the slim base lacks and CI needs: git, so actions/checkout clones
+# rather than falling back to a REST download, and ca-certificates for its
+# https remote. No zstd: actions/cache then compresses with gzip, as it did on
+# the Ubuntu image, and the compression method is part of a cache entry's
+# version, so adding it would orphan the e2e build cache staging has saved.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -22,9 +49,13 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# A no-op when the versions agree; a disagreement fails the build here rather
-# than the test run.
-RUN npx playwright install --with-deps chromium
+# The headless shell alone, not the full Chromium: every run from this stage
+# is headless, which launches the shell, so the full browser would be dead
+# weight in what CI pulls. `--with-deps` runs apt itself, with
+# --no-install-recommends, but leaves its package lists behind, so they go in
+# the same layer.
+RUN npx playwright install --with-deps --only-shell chromium \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=test
 
@@ -32,11 +63,18 @@ ENV NODE_ENV=test
 # only `playwright-server` builds it.
 FROM e2e AS headed
 
+ARG DEBIAN_FRONTEND=noninteractive
 USER root
 
-# `xvfb` and `websockify` already arrive with the base image and `novnc`;
+# A headed launch needs the full Chromium, which `e2e` leaves out; its system
+# libraries are already there.
+RUN npx playwright install chromium
+
+# `xvfb` already arrives with `--with-deps` and `websockify` with `novnc`;
 # named anyway. `openbox` is not optional: without a window manager the
-# Chromium and Inspector windows overlap unmovably.
+# Chromium and Inspector windows overlap unmovably. Debian's `novnc` depends
+# on Debian's own `nodejs`, which lands in /usr/bin, behind the image's
+# /usr/local/bin/node on PATH, so it never runs.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xvfb \
     x11vnc \
