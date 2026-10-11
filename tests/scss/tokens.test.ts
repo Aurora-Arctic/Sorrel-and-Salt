@@ -8,7 +8,7 @@ import { fromRoot } from '../support/paths';
 // marks out a control at 3:1 (WCAG 1.4.11), and a button's label on its
 // ground at 4.5:1. The admin area's text and wax hold on the card surface
 // too (MB.115), the ground of a banded row, a stacked table's card and the
-// impersonation banner. One assertion per theme, the functional half of the
+// impersonation banner, and the tab row's open tab holds on its track. One assertion per theme, the functional half of the
 // tokens; how they look is the workshop's and the axe scan's
 // (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
@@ -128,6 +128,14 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const wax = toHex(tokens['--secondary'], theme);
     row('--secondary on the Impersonate tint on the page', wax, mixed(wax, page, 0.06), 4.5);
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
+    // The tab row's segmented control (TabbedPage/index.scss): the open
+    // tab's label on its pill, the accent 18% into the card, and the pill's
+    // accent edge against the card track, the line that marks which tab is
+    // open, since the fill alone sits under 3:1 against the track. The other
+    // labels are the muted ink on the card, above.
+    const accent = toHex(tokens['--accent'], theme);
+    row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
+    row("the open tab's edge on the card", accent, card, 3);
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });
