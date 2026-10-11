@@ -256,6 +256,15 @@ describe('Keyset pagination through the repository', () => {
     ).rejects.toThrow(InvalidCursor);
   });
 
+  // Only a cursor is client text, so only a data exception is a bad cursor;
+  // a fault in the query itself is not the client's to hear about.
+  it('passes any other database error through unchanged', async () => {
+    const attempt = resolvePage({}, (request) => findPage(leaves, [jars.label], request));
+
+    await expect(attempt).rejects.toThrow(/pagination_probe_jars/);
+    await expect(attempt).rejects.not.toBeInstanceOf(InvalidCursor);
+  });
+
   it('refuses a cursor whose id is not an id', async () => {
     await expect(
       leafPage({ after: encodeCursor({ key: ['Leaf 07'], id: 'seven' }) }),
