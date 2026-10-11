@@ -70,6 +70,8 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 // staying put and clipping it, so the page never scrolls sideways.
 .tabbed-page__row {
   display: flex;
+  // What the pill and the links measure their place from.
+  position: relative;
   min-width: 0;
   gap: space(1);
   margin: 0;
@@ -103,6 +105,9 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 
   > li {
     flex: none;
+    // `typography-base` positions every list item for its marker; the
+    // links measure their place from the track, so the items stand clear.
+    position: static;
     margin: 0;
   }
 
@@ -112,10 +117,11 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 }
 
 // A segment: a block target in the body's weight 500, no underline, its
-// label on one line. Every segment carries the edge the open one shows, in
-// no colour, so the open pill is no larger than the rest.
+// label on one line, over the pill. Every segment carries the edge the pill
+// shows, in no colour, so the pill is no larger than a segment.
 .tabbed-page__row a {
   display: block;
+  position: relative;
   padding: space(2) space(4);
   border: 1px solid transparent;
   border-radius: radius('pill');
@@ -129,6 +135,17 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
     color: $text-primary;
   }
 
+  // Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts`
+  // marks a tap, which `:active` alone misses on a phone): the pill's
+  // fill under the label at once and the segment sunk a pixel, flat, so a
+  // press answers before the pill slides over. Not on a tab that is on its
+  // way or waiting for one, which takes no press.
+  &:is(:active, [data-pressed]):not([aria-disabled='true']) {
+    background-color: $segment-pill;
+    color: $text-primary;
+    transform: translateY(1px);
+  }
+
   // Inside the segment rather than round it, where the track would clip it.
   &:focus-visible {
     @include focus-ring($accent);
@@ -138,17 +155,53 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 }
 
 .tabbed-page__row a[aria-current='page'] {
-  border-color: $accent;
-  background-color: $segment-pill;
   color: $text-primary;
+}
+
+// The pill, drawn by the open link itself as the server sends the page and
+// where no script runs, and once the script has placed it by the one
+// sliding element beneath the links (`tab-links.tsx`), which the row's
+// `data-sliding` marks.
+@mixin tab-pill {
+  border: 1px solid $accent;
+  border-radius: radius('pill');
+  background-color: $segment-pill;
   box-shadow: $shadow-floating;
+}
+
+.tabbed-page__row:not([data-sliding]) a[aria-current='page'] {
+  @include tab-pill;
+}
+
+.tabbed-page__row > .tabbed-page__pill {
+  @include tab-pill;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  visibility: hidden;
+}
+
+// Sliding from tab to tab, its width easing to the new one's; under reduced
+// motion it jumps.
+.tabbed-page__row[data-sliding] > .tabbed-page__pill {
+  visibility: visible;
+  transition:
+    transform 250ms ease,
+    width 250ms ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // Every tab while one is on its way, the muted, faded look a disabled
 // control has (claude-docs/styling.md, "Disabled is dashed and faded"),
-// without a button's edge to dash; hover changes nothing. The open pill
-// keeps its place, its colour taken out and its shadow gone, so it reads
-// as pressed flat. `tab-links.tsx` ignores a press meanwhile.
+// without a button's edge to dash; hover changes nothing. The pill, on the
+// pressed tab by then, fades with them, its colour taken out and its shadow
+// gone, so it reads as on its way rather than arrived. `tab-links.tsx`
+// ignores a press meanwhile.
 .tabbed-page__row a[aria-disabled='true'] {
   &,
   &:hover {
@@ -156,11 +209,12 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
     opacity: 0.55;
     cursor: not-allowed;
   }
+}
 
-  &[aria-current='page'] {
-    box-shadow: none;
-    filter: grayscale(1);
-  }
+.tabbed-page__row[aria-busy='true'] > .tabbed-page__pill {
+  opacity: 0.55;
+  box-shadow: none;
+  filter: grayscale(1);
 }
 
 // At a phone's width, under the forms' column the page header stacks at,

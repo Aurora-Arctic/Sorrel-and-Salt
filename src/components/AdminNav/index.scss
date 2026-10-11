@@ -59,6 +59,15 @@
     display: none;
   }
 
+  // Pressed, for as long as the pointer is down: the muted ink 18% into the
+  // card, the combobox's quiet fill, so a tap answers at once now the
+  // phone's own tap highlight is off (`globals.scss`). `data-pressed` marks
+  // a tap, which `:active` alone misses on a phone (`src/lib/press-feedback.ts`).
+  &:active,
+  &[data-pressed] {
+    background-color: color-mix(in srgb, $text-muted 18%, $surface-card);
+  }
+
   &:focus-visible {
     @include focus-ring;
   }
