@@ -54,10 +54,11 @@ own: its forms are its variants (MB.222).
 **The fields run in seven titled sections** (MB.115, the owner's call, once
 the form read as one long column): Identity (name, classification, formal
 name, folk names), Description, Correspondences (element, planets, zodiac
-signs, colours, deities), Relations (substitute ingredients, categories),
-Safety (safety notes), Sources (references) and Variants. No field moved:
-the sections cut the order the fields already ran in, so Relations keeps
-substitutes ahead of categories. Each is a `<section>` under a small `h3`,
+signs, colours, deities), Relations (categories, substitute ingredients),
+Safety (safety notes), Sources (references) and Variants. The sections cut
+the order the fields already ran in, bar one move on the owner's call:
+Categories leads Relations, ahead of the substitutes, where MB.126 had put
+it after the lists. Each is a `<section>` under a small `h3`,
 the dialog's title being the `h2`; it has no accessible name, so it is no
 landmark, and a screen reader moves by the headings. The Variants section's
 heading is its fieldset's legend, an `h3` inside the `<legend>`, so the

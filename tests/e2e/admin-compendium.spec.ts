@@ -169,6 +169,8 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   await page.reload();
   const reopened = page.getByRole('dialog', { name: 'Edit Ingredient' });
   await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
+  // A variant opens closed to its summary line (MB.115): its Edit shows its fields.
+  await reopened.getByRole('button', { name: 'Edit Oil' }).click();
   await expect(
     reopened
       .getByRole('group', { name: 'Oil', exact: true })

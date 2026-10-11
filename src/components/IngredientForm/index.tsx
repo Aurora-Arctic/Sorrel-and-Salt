@@ -438,6 +438,10 @@ const IngredientForm = ({
           />
         </Section>
         <Section title="Relations">
+          {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
+            after the lists): every live category, picked from chips grouped by
+            category group. */}
+          <CategoryField />
           <LookupListField
             workspaceId={workspaceId}
             // Fixed for the form's life, since its tier is, so the hook called is always the same.
@@ -450,9 +454,6 @@ const IngredientForm = ({
           />
           {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
           <SubstituteForms name="substitutes" />
-          {/* After the lists (MB.126): every live category, picked from chips
-            grouped by category group. */}
-          <CategoryField />
         </Section>
         <Section title="Safety">
           <TextField<IngredientFormValues>
