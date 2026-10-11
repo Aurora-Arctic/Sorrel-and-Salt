@@ -10,6 +10,8 @@ import { seedCategories } from '@/db/seed/categories';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
+import { seedCompendium } from '@/db/seed/compendium';
+import { FIXTURE_SHARD } from './compendium-fixture';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
@@ -136,7 +138,7 @@ describe('resolveScenario', () => {
 // revocable row on /admin/users.
 //
 // Each entry names the tables it is the seed of: the ones it fills from empty.
-// The five that `migrate.yml` runs on staging and production; the dev-only
+// The six that `migrate.yml` runs on staging and production; the dev-only
 // scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = [
   { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
@@ -152,6 +154,29 @@ const SEED_ENTRIES: SeedEntry[] = [
       await seedSources(db);
     },
     tables: ['references', 'reference_links'],
+  },
+  {
+    // On the invented fixture shard, after everything it picks from and the
+    // sources it may share a work with: the real list grows shard by shard.
+    name: 'the compendium seed, after the vocabularies and sources',
+    run: async (db) => {
+      await seedCategories(db);
+      await seedForms(db);
+      await seedAstrology(db);
+      await seedDeities(db);
+      await seedSources(db);
+      await seedCompendium(db, [FIXTURE_SHARD]);
+    },
+    tables: [
+      'ingredients',
+      'ingredient_variants',
+      'ingredient_folk_names',
+      'ingredient_deities',
+      'ingredient_categories',
+      'ingredient_substitutes',
+      'references',
+      'reference_links',
+    ],
   },
 ];
 

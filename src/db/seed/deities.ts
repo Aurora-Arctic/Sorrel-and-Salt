@@ -7,12 +7,12 @@ import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } fro
 // MB.127's deity vocabulary: thirty-five traditions and the deities filed
 // under them, a starting set an admin may edit. Reference data, not a
 // scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
-// itself. Transcribed from the seed doc's two tables, which deities.test.ts
-// parses and compares row by row; the doc, not this file, is where a row is
-// argued and sourced. Names are copied as written, never title-cased
-// (`Manannan mac Lir`), and no slug is written down — a deity's is its name and
-// its tradition's (MB.132), derived here and re-derived on every seed
-// (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
+// itself. Transcribed from the seed doc's two tables, which review holds in
+// step with it since MB.225 retired the test that compared them; the doc,
+// not this file, is where a row is argued and sourced. Names are copied as
+// written, never title-cased (`Manannan mac Lir`), and no slug is written
+// down — a deity's is its name and its tradition's (MB.132), derived here and
+// re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 /** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
 export const DEITY_TRADITIONS: SeedDeityTradition[] = [

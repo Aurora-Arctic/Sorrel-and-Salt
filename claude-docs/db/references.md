@@ -333,3 +333,30 @@ to. Link targets are found by the `seed_key` their own seed gave them, so a
 renamed deity keeps its sources, and a link present in any state is not
 written again. `migrate.yml` runs the target after the vocabularies it
 links, and `standard` seeds it inside its own transaction.
+
+### How the compendium seed cites its sources (MB.242)
+
+`src/db/seed/compendium.ts` writes the compendium's entries with their
+sources, through the same reference insert as the sources seed:
+`insertMissingReferences(tx, wanted)` in `src/db/seed/reference-rows.ts`, taken
+out of `sources.ts` unchanged but for being handed the works it wants. Both
+seeds key a work on its rendered citation, so a work the sources seed already
+wrote — the same fields, to the letter — is linked by the compendium, never
+written twice, and a work an admin soft-deleted is neither re-inserted nor
+linked anew.
+
+A shard names a source by a **handle**. The works several shards cite, the
+owner's library books, are declared once in `src/db/seed/compendium/works.ts`
+as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
+web page, are its own `sources`. Each citation on an entry or a form becomes
+one `reference_links` row, `ingredient_id` for the entry and
+`ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
+`s.v. Mugwort`). Every entry cites at least one source of its own, because the
+admin's "unsourced" filter counts the entry's own links and its forms'.
+
+Which fields a citation backs (`supports`) is the guard's to check and is not
+stored: a link says which work supports the row, and the shard doc
+(`claude-docs/db/compendium-seed/<shard>.md`) says which fields each source
+gave. The links are written once, with the entry, as everything beneath an
+entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
+and how a correction lands").
