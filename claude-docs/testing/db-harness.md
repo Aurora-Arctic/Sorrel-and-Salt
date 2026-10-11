@@ -24,9 +24,11 @@ run as a test.
   per worker, and that is not a style choice:** `db-setup.ts` re-clones the
   worker's database `WITH (FORCE)` before every test file, which terminates
   any session still open on it, so a connection shared across files would be
-  killed by the next file's clone. Vitest's default `sequence.hooks` is
-  `stack`, so a call at the top of a file opens before the file's own
-  `beforeAll` (the ones that read seeded ids by name) and closes after its
+  killed by the next file's clone. The sessions it ends include an autovacuum
+  worker's, which the test role may end only because the database image grants
+  it `pg_signal_backend` ([`ci/database-image.md`](../ci/database-image.md)).
+  Vitest's default `sequence.hooks` is `stack`, so a call at the top of a
+  file opens before the file's own `beforeAll` (the ones that read seeded ids by name) and closes after its
   `afterAll` — no reordering needed. It hands the client to a `bind` callback
   rather than returning it so a file's existing `let sql` and every
   `` sql`…` ``, `sql(row)`, `sql(table)`, `sql.begin` and `sql.unsafe` call on

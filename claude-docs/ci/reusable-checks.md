@@ -218,7 +218,20 @@
   `build`'s `/app/.next/cache` entry above and for the same reasons: the
   absolute path, and a lockfile-only restore key. It cannot share `build`'s
   entry, because the two builds write different `distDir`s
-  (`testing/e2e.md`).
+  (`testing/e2e.md`). A pull request restores the entry `staging` saved
+  (MB.234), since GitHub never lets one pull request's run read a cache
+  another pull request saved, only its own, its base branch's and `main`'s.
+  The input `build-only` is how that entry is made: set, the run step adds
+  `--grep-invert . --pass-with-no-tests`, so the servers build and start but
+  no spec runs, and the coverage upload is skipped. Only
+  `.github/workflows/e2e-cache.yml` sets it. On a push to `staging` that
+  touches `src/**`, `public/**`, the Next, TypeScript or Playwright config,
+  the manifests, `Docker/Dockerfile.e2e` or the workflows involved, it calls
+  `build-e2e-image.yml`, `build-db-image.yml` and this workflow, as
+  `pr-gate.yml` does, under the job names `e2e-image`, `db-image` and
+  `warm`, so it publishes no check name the gate also publishes
+  ([Smoke checks](smoke-checks.md)). Its cost is in
+  [Runner budget](runner-budget.md).
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
   `build-image.yml`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,

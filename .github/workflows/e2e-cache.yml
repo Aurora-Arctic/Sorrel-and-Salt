@@ -1,0 +1,68 @@
+name: E2E Build Cache
+
+# Saves the e2e build's cache, /app/.next-e2e/cache, from staging, so every
+# pull request's Playwright job can restore it. GitHub lets a pull request's
+# run read caches saved on its base branch or on main, but never one another
+# pull request saved, and nothing else runs the e2e build on staging.
+# claude-docs/testing/e2e.md is the walkthrough (MB.234).
+#
+# It calls playwright.yml itself, with `build-only`, rather than a job of its
+# own: the same image, path, build directory and environment as a pull
+# request's build, by construction, and the same cache step and key. The job
+# names differ from pr-gate.yml's, so no check name is published twice
+# (claude-docs/ci/smoke-checks.md).
+on:
+  push:
+    branches:
+      - staging
+    # What the e2e build compiles, as pr-gate.yml's `build` filter, and what
+    # it runs under. A spec-only push changes nothing the cache holds.
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'next.config.ts'
+      - 'tsconfig.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'playwright.config.ts'
+      - 'Docker/Dockerfile.e2e'
+      - '.github/workflows/e2e-cache.yml'
+      - '.github/workflows/playwright.yml'
+      - '.github/workflows/build-e2e-image.yml'
+
+# Only the newest staging commit's cache matters.
+concurrency:
+  group: e2e-cache
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # Both find the content-addressed images the merged pull request already
+  # published, and build only if one is missing.
+  e2e-image:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-e2e-image.yml
+
+  db-image:
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-db-image.yml
+
+  warm:
+    needs: [e2e-image, db-image]
+    # playwright.yml declares pull-requests: write for its PR comment, and a
+    # called workflow may not ask for more than its caller grants. With no
+    # pr-number it comments nowhere.
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: write
+    uses: ./.github/workflows/playwright.yml
+    with:
+      image: ${{ needs.e2e-image.outputs.image }}
+      db-image: ${{ needs.db-image.outputs.image }}
+      build-only: true

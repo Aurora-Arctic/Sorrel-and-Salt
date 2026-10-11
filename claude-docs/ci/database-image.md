@@ -19,6 +19,30 @@
   `services:` entry cannot, and it is the budget a test run is held under
   ([`testing/db-harness.md`](../testing/db-harness.md#connections-per-run-mb179)).
   Changing it changes the image's hash, so the PR rebuilds it.
+- **The test role may end an autovacuum worker** (MB.233). The test harness
+  drops and re-clones its databases with `DROP DATABASE ... WITH (FORCE)`,
+  which ends every session still connected first. One of them can be
+  Postgres's autovacuum worker, the background process that analyses a
+  freshly seeded database a minute or so after the seed. That worker runs as
+  no role, and Postgres lets only a superuser or a member of the built-in
+  `pg_signal_backend` role end it, so the init script grants `sorrel` that
+  membership. Without it a drop that lands while the worker is busy fails
+  with `permission denied to terminate process`, as PR #808's Playwright
+  teardown did after every test had passed. The grant cannot end a
+  superuser's session, and this image is CI's and the devcontainer's only,
+  never Neon's.
+
+  **An existing devcontainer database volume keeps its old roles.** The
+  grant is written into the image's data directory at build time, and a
+  `postgres_data` volume made from an earlier image keeps the roles it was
+  made with, so a rebuilt image alone does not bring it. A developer whose
+  local runs fail the same way either recreates the volume with
+  `make docker-rebuild` (`down -v`, which also empties the other named
+  volumes), or keeps it and runs the grant once from the host, as the
+  `postgres` superuser the container's local socket admits without a
+  password:
+  `docker compose -f Docker/docker-compose.yaml exec postgres psql -U postgres -c 'GRANT pg_signal_backend TO sorrel'`.
+
 - **`build-db-image.yml`** — builds and publishes it to GHCR through the
   `build-image` action ([Composite actions](composite-actions.md)), tagged with
   a `hashFiles()` hash of `Docker/Dockerfile.postgres` /

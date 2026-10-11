@@ -227,6 +227,8 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.230 | Playwright: duplicates of Vitest flows go, the build cache warms, the closing measurement                                | Wave 8  | —                      |
 | MB.231 | The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/` | Wave 8  | —                      |
 | MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8  | —                      |
+| MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8  | —                      |
+| MB.234 | The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it                              | Wave 8  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -472,6 +474,8 @@ _Acceptance criteria:_
 - The cache step restores on the second CI run, shown by its log line
 - The closing table of `Run vitest` and `Run Playwright e2e tests` against the baseline is written into `design-decisions/mb.224-plan.md`
 
+_As built:_ the suite went from 79 tests to 56, and `admin.spec.ts` from 29 to 20. `admin.spec.ts` lost its filter flows, the form, planet and deity in-use alerts, the repeated unverified and primary-admin dialog checks, the deity add, edit and delete flow (its accessibility scan moved into the tradition flow) and the signed-out redirect. Elsewhere the compendium to-do filter went, as did the account rename, the invitation refusals, route-protection's email and invitation checks, the entry page's links, the greyed last-used mark, and the `worker-slots` and `mail-transport` harness specs whole. The forms add, edit and delete flow and the zodiac filter flow stay, because nothing else exercises those routes. Three tests that only ran an accessibility scan were folded into the test that loads the same page. Every page title, plain-load heading check and sentence became a role or data assertion, and each scan follows an assertion that waits. The pause notice is an `<output>`, which carries the status role itself. `playwright.yml` restores and saves `/app/.next-e2e/cache` under a key starting `nextjs-e2e`, but the cache never restores: a pull-request run cannot read another pull request's cache, and staging, which runs only the deploy workflow, saves none. The criterion "the cache step restores on the second CI run" is therefore unmet, and the owner decides between removing the step and saving the cache from the staging deploy. The closing measurement is section 8 of [`design-decisions/mb.224-plan.md`](../design-decisions/mb.224-plan.md): the two CI test steps together went from 168 s to 116 s, −52 s, five gold stars.
+
 **MB.231 — The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/`** · 1h
 
 _Story:_ As a developer, I want every file in the repository layer to load in a fixed order, so that a helper is never undefined when another file first runs, and the lint rule that forbids import cycles covers the whole codebase.
@@ -496,6 +500,47 @@ _Acceptance criteria:_
 - No `scripts/*.d.mts` file remains, or each one that does is named in the entry with the TypeScript file that imports its script
 - `npm run pre-commit` passes
 - No doc or comment names a deleted declaration file as present
+
+_As built:_ all six went: `doc-citations`, `doc-overlap`, `repoint-doc-citations`, `split-doc`, `task-board` and `tasks-md`, each `scripts/<name>.d.mts`. Before deleting them, a search of `src/`, `tests/`, `scripts/`, `lint/` and `.github/` found no TypeScript file importing any of the six scripts. The only hits were the declarations naming each other, `task-board.d.mts` importing types from `./tasks-md.mjs`, and a comment in `tests/support/unit-global-setup.ts` that names `doc-citations.mjs` without importing it. `tsconfig.json` keeps `allowJs` off, and its `include` lists `src/`, `tests/` and the Next.js type folders, never `scripts/`, so nothing but the deleted `tests/scripts/` ever read them. No script header pointed at its declaration. Two lines named a deleted file as present and are corrected: the opening comment of `.github/scripts/lib/slowest-files.d.mts`, which cited `scripts/doc-citations.d.mts` as its model, and the count in [`design-decisions/mb.108-plan.md`](../design-decisions/mb.108-plan.md), which now says 11 declarations were there then and that MB.232 removed the last six. MB.224's plan lists this task as a follow-up it found, and MB.103's criterion that `tasks-md.mjs` comes with its `.d.mts` is what that task required at the time; both are records and stay.
+
+**MB.233 — `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`** · 0.5h
+
+_Story:_ As a developer, I want a test run's database drops to succeed whatever Postgres is doing in the background, so that a green suite is not failed by its own teardown.
+
+PR #808's Playwright job (run 38099198158) passed all 79 tests and still failed: its global teardown, `tests/e2e/global-teardown.ts`, drops the seeded e2e template through `dropDatabase()` in `tests/support/seeded-database.ts`, and Postgres refused the drop with `permission denied to terminate process`. The drop is `DROP DATABASE IF EXISTS sorrel_e2e_template WITH (FORCE)`, and `WITH (FORCE)` ends every session still connected to the database before dropping it. One of those can be Postgres's own autovacuum worker, the background process that tidies and analyses a table a while after it is written to, and a freshly seeded template is exactly that. The worker runs as no role, and Postgres lets a role end such a process only if it is a superuser or a member of the built-in `pg_signal_backend` role. The test role, `sorrel`, is created in `Docker/postgres-init/enable-extensions.sql` as `LOGIN CREATEDB` and nothing more, so it may end only its own sessions, and the drop fails whenever it lands while the worker is busy. Every connection the tests open runs as `sorrel`, so the worker is the only session this drop can fail on; the log's `DETAIL` line names `pg_signal_backend` as the missing privilege. The same forced drop runs in three other places, each open to the same race: the per-spec re-clone of a worker's database (`recreateE2eDatabase()`, `tests/e2e/database.ts`), Vitest's re-clone before every test file (`tests/support/db-setup.ts`), and Vitest's teardown drops (`tests/support/db-global-setup.ts`). Several lanes' local runs failed the same way on 2026-10-11.
+
+The fix is one line in the test and dev database image: `GRANT pg_signal_backend TO sorrel;`, with the privileges comment above it saying why. The grant cannot end a superuser's session, and the file builds only the image CI and the devcontainer run, never Neon. Changing `Docker/postgres-init/**` changes the image's content hash, so the PR's own CI rebuilds the image and runs Vitest and Playwright on it, and that run is the proof. No regression test is added: the harness is not tested (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 1), and a test of a role's grant would be one. A devcontainer data volume made before the change keeps its old roles until it is recreated, which `claude-docs/ci/database-image.md` says.
+
+_Acceptance criteria:_
+
+- `Docker/postgres-init/enable-extensions.sql` grants `pg_signal_backend` to the test role, with the comment saying why
+- The PR's CI rebuilds the database image and its Vitest and Playwright jobs pass on it
+- `claude-docs/ci/database-image.md`, the "Database image" section `claude-docs/ci.md` summarises, names the grant and says an existing devcontainer volume needs recreating to pick it up
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.234 — The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it** · 1h
+
+_Story:_ As a maintainer, I want the e2e job's `next build` to start from a warm cache on every pull request, so that the slowest CI step spends its minutes on the tests rather than on rebuilding what staging already built.
+
+MB.230 added a step to `.github/workflows/playwright.yml`, "Cache Next.js e2e build cache", that restores `/app/.next-e2e/cache` before the suite runs and saves it afterwards. That folder is where `next build` keeps Turbopack's on-disk cache, the record of work a later build can skip, and the e2e build writes it because `playwright.config.ts` sets the build directory to `.next-e2e`. The key is `Linux-nextjs-e2e-<lockfile hash>-<source hash>`, with a fallback to any entry for the same lockfile. The step never restored: every run since logs `Cache not found for input keys` and then `Cache saved` (run 38102191294, PR #818, is one). The build and server start before `Running 56 tests` took 24.7 s on that run, cold.
+
+The cause is how GitHub scopes caches. A run can restore a cache saved on its own branch, on the default branch (`main`), or, for a pull request, on its base branch, but never one saved on a sibling branch, and a pull request's run saves under its merge ref (`refs/pull/<n>/merge`), so only re-runs of that same pull request can read it (GitHub Docs, "Dependency caching reference", "Restrictions for accessing a cache", https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching). Every save so far came from a pull request, and `staging` runs only `deploy.yml`, which never builds the e2e app, so no cache exists anywhere a pull request into `staging` can look.
+
+The fix saves the cache from `staging`. A new workflow, `.github/workflows/e2e-cache.yml`, runs on a push to `staging` that touches what the e2e build compiles or runs under (`src/**`, `public/**`, the Next, TypeScript and Playwright configs, the manifests, `Docker/Dockerfile.e2e` and the workflows involved). It calls the same three workflows `pr-gate.yml` does for its Playwright job: `build-e2e-image.yml` and `build-db-image.yml`, which find the content-addressed images the pull request already published, and `playwright.yml` itself, with a new `build-only` input. With `build-only` set, the run step adds `--grep-invert . --pass-with-no-tests` to `npm run e2e`: every test title matches `.`, so no spec runs, but Playwright starts its web servers before it loads any spec, so slot 0's server still runs `npm run build` exactly as a pull request's run does. The coverage upload is skipped, since nothing ran, and `actions/cache` saves the folder under the same key scheme, because it is the same step. Reusing `playwright.yml` rather than writing a second job makes the warm build match the pull request's by construction: the same image, the same `/app` path and build directory, the same job environment and the same `webServer` environment from `playwright.config.ts`. A Turbopack cache built under different settings would be thrown away. The job names (`e2e-image`, `db-image`, `warm`) differ from `pr-gate.yml`'s, so no check name is published twice.
+
+The other shapes were weighed. A job in `deploy.yml` would put the e2e image, a Postgres service and Playwright beside the Vercel deploy, and a failed warm run would turn the deploy red; the deploy's runner has neither the image nor the database. Running the whole Playwright suite on every push to `staging` would spend about 1 minute of tests per push to save a cache the build-only run saves just as well.
+
+Cost: about 2½ GitHub-hosted runner minutes per qualifying push to `staging`. Measured from run 38102191294's jobs: the two image jobs take about 16 s and 31 s when the image already exists, and the warm job about 1½ to 2 minutes (51 s to pull the e2e image and start Postgres and Mailpit, 2 s of checkout, a few seconds to restore about 160 MB, 25 to 40 s to build and boot, and 10 s to save). The repo is public, so GitHub's hosted minutes are free, and no Blacksmith minutes are used.
+
+No test is added: a workflow is harness (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 1). This PR's own run cannot show a restore, because the warm run happens only after the merge, on `staging`. The proof is the first pull-request run after it.
+
+_Acceptance criteria:_
+
+- `e2e-cache.yml` runs on a push to `staging` and saves `/app/.next-e2e/cache` under the key scheme `playwright.yml`'s cache step restores
+- The Playwright job on the first pull request after the merge logs `Cache restored from key`, pasted into the closing comment on the issue
+- The build-and-boot time before `Running N tests` on that run is recorded in this entry against MB.230's cold 24.7 s
+- `claude-docs/testing/e2e.md`, `claude-docs/ci/reusable-checks.md`, `claude-docs/ci.md` and `claude-docs/ci/runner-budget.md` describe the job and its cost
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 

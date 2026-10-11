@@ -293,3 +293,69 @@ _Estimate:_ −20 tests ≈ −30 s summed ≈ **−18 s wall** on 2 workers; ca
 ## 7. Out of scope
 
 Moving Playwright to Blacksmith (the free tier is 40% spent by vitest; `runner-budget.md`); raising `E2E_WORKERS` above cpus/2 on the 4-vCPU runner (an experiment for after L7's measurement); a mechanical guard against copy assertions (owner: review); locator rewrites; `tests/lib/citation.test.ts`; library-message assertions in `app/api/**` and `graphql.spec.ts`; trigger `RAISE EXCEPTION` texts; any change to component copy or behaviour.
+
+## 8. Closing measurement (2026-10-11)
+
+**The measure.** The owner's measure is the seconds cut from CI's two test steps together, `Run vitest` plus `Run Playwright e2e tests`: a gold star per 10 s, 30 s the goal. Both are read from GitHub's step timestamps on a PR-gate run, the workflow every pull request runs. Staging itself runs only the deploy workflow, so there is no staging run to read, and §2's baseline (run 38094344092, MB.212's PR) was a PR-gate run too.
+
+**The all-seven run.** MB.233's PR #818, run 38102191294, is the first CI run whose tree holds all seven lanes: its branch is off staging 2985c061, the merge of #816.
+
+| Step                       | Baseline | All seven lanes | Change                     |
+| -------------------------- | -------- | --------------- | -------------------------- |
+| `Run vitest`               | 55 s     | 54 s            | −1 s                       |
+| `Run Playwright e2e tests` | 113 s    | 62 s            | −51 s                      |
+| Both                       | 168 s    | 116 s           | **−52 s, five gold stars** |
+
+- **Playwright.** Build, server boot and global setup went from about 41 s to 24.7 s: the step started at 01:34:19 and logged "Running 56 tests using 2 workers" at 01:34:44. The tests went from about 72 s for 79 tests to 37 s for 56, logging "56 passed (1.0m)" at 01:35:21. The build cache played no part (see "What did not land").
+- **Vitest.** 3,023 tests passed. Coverage is 98.71% lines, 93% branches, 98.72% functions and 97.6% statements, against the baseline's 98.8 / 93.1 / 98.9 / 97.6 and a threshold of 80% each.
+- **Why the vitest step barely moved.** Every lane's local run fell — the lanes reported 60.9, 59.1, 56.1, 47.9, 49.0 and 46–49 s locally, against §2's 53.4 s CI baseline — and each lane's own PR run read 48 to 56 s. GitHub's free runner is shared and unpinned, and `claude-docs/testing/layer-ownership.md`, "The file budget", already warns that one run on it is a reading, not a measurement. What the lanes cut is the summed test time per file. The step's wall time is bounded by the runner's seven workers and by the cost of importing and transforming each file, which the lanes did not touch.
+
+**The lane PR runs.** For the reader who wants the per-lane picture. Each PR-gate run tests GitHub's merge of the branch into staging as staging stood at that moment, so "Lanes in the tree" says which lanes each run held. The table lists each PR's last successful run.
+
+| PR   | Lane   | Lanes in the tree       | `Run vitest` | `Run Playwright e2e tests` | Playwright tests |
+| ---- | ------ | ----------------------- | ------------ | -------------------------- | ---------------- |
+| #809 | MB.224 | 224                     | 55 s         | 87 s                       | 79               |
+| #810 | MB.225 | 225                     | 52 s         | 77 s                       | 79               |
+| #807 | MB.230 | 230                     | 56 s         | 64 s                       | 56               |
+| #808 | MB.229 | 224, 229, 230           | 53 s         | 87 s                       | 56               |
+| #814 | MB.226 | 224, 225, 226, 229, 230 | 49 s         | 94 s                       | 56               |
+| #815 | MB.228 | 224, 225, 228, 229, 230 | 48 s         | 76 s                       | 56               |
+| #816 | MB.227 | 224, 225, 227, 229, 230 | 55 s         | 71 s                       | 56               |
+| #818 | MB.233 | all seven               | 54 s         | 62 s                       | 56               |
+
+**Slowest files** on #818's run, from the "Slowest files" block of its vitest comment — none over the 10 s budget:
+
+| File                                                            | Tests | Duration |
+| --------------------------------------------------------------- | ----- | -------- |
+| `tests/components/IngredientForm/index.test.tsx`                | 40    | 9.4 s    |
+| `tests/components/IngredientForm/compendium.test.tsx`           | 10    | 2.8 s    |
+| `tests/components/GroupForm/index.test.tsx`                     | 24    | 2.4 s    |
+| `tests/components/Combobox/index.test.tsx`                      | 56    | 2.4 s    |
+| `tests/components/IngredientForm/references.test.tsx`           | 16    | 2.4 s    |
+| `tests/components/UserList/index.test.tsx`                      | 41    | 2.2 s    |
+| `tests/components/IngredientForm/list-field.test.tsx`           | 31    | 2.1 s    |
+| `tests/modules/ingredients/services/compendium-entries.test.ts` | 84    | 1.9 s    |
+| `tests/components/IngredientForm/lookups.test.tsx`              | 17    | 1.9 s    |
+| `tests/modules/identity/services/admin-role.test.ts`            | 28    | 1.9 s    |
+
+`tests/components/IngredientForm/index.test.tsx` read 8.0 s on MB.228's own run (#815) and 9.4 s on #818, against L5's criterion of "under 8 s" and §2's 10.0 s. Neither reading is under 8 s; both are under the 10 s budget and well inside the runner's spread, which "The file budget" puts at 13 s against 30 s for one file on one tree. MB.228's side-by-side local run read 6.2 s against staging's 7.4 s.
+
+**What did not land: the e2e build cache.** The cache step MB.230 added to `playwright.yml` never restored in any run. Every run logged `Cache not found for input keys`, then `Cache saved` after the job. GitHub scopes an Actions cache to the branch that saved it and to that branch's base branch. Every save here came from a pull-request run, whose cache no other pull request can read, and staging runs only the deploy workflow, so no run ever saves a cache that pull requests could inherit. MB.230's criterion "the cache step restores on the second CI run" is therefore unmet as built. **Pending the owner's decision**, and the workflow is unchanged meanwhile:
+
+- remove the step, since it costs a save on every run and restores nothing; or
+- have the staging deploy workflow run the e2e build and save the cache, which every pull request into staging could then restore — about 40 s added to each staging deploy.
+
+**Coverage after.** The 80% threshold held throughout. Totals moved from 98.8 / 93.1 / 98.9 / 97.6 to 98.71 / 93 / 98.72 / 97.6 (lines / branches / functions / statements). The files whose coverage fell are each named in their lane's PR body:
+
+- `src/app/forbidden.tsx` and `src/components/Backdrop/index.tsx` lost their only Vitest test. Playwright still exercises both.
+- `src/components/ImpersonationBanner/index.tsx` and `src/components/ThemeToggle/index.tsx` lost the tests of presentation branches.
+
+`src/app/fonts.ts`, `src/app/invite/[token]/page.tsx` and `src/app/sign-in/page.tsx` read 0% lines, as they did before the lanes.
+
+**Follow-ups minted or named:**
+
+- MB.231 — the repository's import cycle (`select.ts` and `predicates.ts`).
+- MB.232 — the dead hand-written `scripts/*.d.mts` declarations.
+- MB.233 — a forced database drop racing an autovacuum worker, found by #808's run.
+- The registry-driven GraphQL file over the curated vocabulary writes, named in MB.227's entry.
+- The cache decision above.
