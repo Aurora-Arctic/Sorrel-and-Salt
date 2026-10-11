@@ -28,8 +28,8 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
 - **Fresh Ginger carries the uncurated form**, `rhizome` — §5's example of a
   value a member writes before an admin curates it, and the second bucket of
   M4.7a's suggestion list. Since MB.162 the compendium holds only curated
-  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, a
-  different identity, so both rows stand.
+  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, in
+  the other tier, so both rows stand.
 - **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
   same form, different tier, which the two partial unique indexes permit. That
   pair is exactly what M8.3's local-beats-compendium resolution collapses, and
@@ -40,6 +40,12 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
   M4.3a's curated 78 — free text is what lets a member write it. Wave 13
   renders, reorders and prints both kinds of row, and this is its row of the
   second kind.
+
+**W's entries have their variants too (MB.216).** After W's entries,
+`insertMissingVariants` from `standard.ts` writes one variant per entry of its
+form, lower-case as the entries spell it (Hearth Ash is `ash`, House Chamomile
+`flower`), so every linked layer's ingredient has a variant a layer can name
+once MB.217 gives layers one.
 
 Layer order is the position in the `layers` array, never a number written
 beside it: one list, so the stack and its depths cannot disagree, and each jar

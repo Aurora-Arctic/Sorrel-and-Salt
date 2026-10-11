@@ -85,6 +85,17 @@ Entries also carry folk names (M4.4a's child table — "Uña de Gato" on both
 _Uncaria_ rows, which is the ambiguity that table exists to hold) and category
 assignments into §6's vocabulary.
 
+**Every entry's form is a variant (MB.216).** After the entries,
+`insertMissingVariants` writes one `ingredient_variants` row per entry with a
+form, the form and its pick as the entry carries them, which is what migration
+`0062` writes for a database seeded before it. It reads the entries back
+rather than the literals, so `demo`'s coven entries take the same path, and
+keys on the entry and the folded form, the variant's unique index, through
+`insertMissingBy`: a variant an admin removed counts as present and is not
+restored. Every seeded entry carries a form, so every seeded entry has exactly
+one live variant, which `tests/db/seed/demo.test.ts` asserts after a `demo`
+run, `standard` inside it.
+
 ### One transaction, every vocabulary
 
 `standard` is "a populated compendium", and that is all of it: M4.3a's forms

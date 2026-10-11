@@ -227,20 +227,23 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Ten migrations carry findings today, and each has its sidecar:
+Thirteen migrations carry findings today, and each has its sidecar:
 
-| Migration                              | Findings                                                                                                                             |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `0002_solid_marauders.sql`             | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                               |
-| `0017_custom-spell-ingredients.sql`    | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                   |
-| `0025_ingredient-slugs.sql`            | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md)) |
-| `0028_drop-pending-slugs.sql`          | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                            |
-| `0029_spell-layers-soft-delete.sql`    | the `(spell_id, layer_order)` primary key dropped for a surrogate `id`, and two partial unique indexes re-created with the filter    |
-| `0036_drop-ingredient-singles.sql`     | the single `planet`, `zodiac` and `color` columns dropped, the contract half of MB.134's lists (MB.137)                              |
-| `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                     |
-| `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                           |
-| `0039_drop-substitutes-list.sql`       | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes` (MB.141)       |
-| `0048_drop-deities-list.sql`           | `ingredients.deities` dropped, the contract half of MB.167's switch, after a refill into `ingredient_deities` (MB.168)               |
+| Migration                              | Findings                                                                                                                                             |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0002_solid_marauders.sql`             | `DROP CONSTRAINT users_email_unique`, and `created_by` / `updated_by` added `NOT NULL`                                                               |
+| `0017_custom-spell-ingredients.sql`    | the `(spell_id, ingredient_id)` primary key and the `(spell_id, layer_order)` unique index dropped                                                   |
+| `0025_ingredient-slugs.sql`            | `ingredients.slug` set `NOT NULL` with no backfill between, the seed standing in for one (["Ingredient slugs"](ingredient-slugs.md))                 |
+| `0028_drop-pending-slugs.sql`          | the two pending-slug indexes and columns dropped, the contract half of MB.82's change ("Expand/contract")                                            |
+| `0029_spell-layers-soft-delete.sql`    | the `(spell_id, layer_order)` primary key dropped for a surrogate `id`, and two partial unique indexes re-created with the filter                    |
+| `0036_drop-ingredient-singles.sql`     | the single `planet`, `zodiac` and `color` columns dropped, the contract half of MB.134's lists (MB.137)                                              |
+| `0037_drop-element.sql`                | the single `element` column dropped, the contract half of MB.157's list (MB.160)                                                                     |
+| `0038_unknown-carries-formal-name.sql` | `ingredients_nomenclature_declares_canonical_name` dropped and re-added wider under the same name (MB.161)                                           |
+| `0039_drop-substitutes-list.sql`       | `ingredients.substitutes` dropped, the contract half of MB.140's switch, after a refill into `ingredient_substitutes` (MB.141)                       |
+| `0048_drop-deities-list.sql`           | `ingredients.deities` dropped, the contract half of MB.167's switch, after a refill into `ingredient_deities` (MB.168)                               |
+| `0058_drop-old-privilege-ledgers.sql`  | `admin_role_changes` and `workspace_creation_changes` dropped, the contract half of MB.194's one ledger (MB.197)                                     |
+| `0059_drop-old-invitation-tables.sql`  | `workspace_invitations` and `admin_invitations` dropped, the contract half of MB.201's two-tier table (MB.203)                                       |
+| `0061_ingredient-variants.sql`         | `ingredients.identity_key` added `NOT NULL` with no `DEFAULT`, a false positive: a generated column computed from `name`, itself `NOT NULL` (MB.216) |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

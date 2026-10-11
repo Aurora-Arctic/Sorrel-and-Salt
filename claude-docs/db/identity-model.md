@@ -321,3 +321,50 @@ keeps the order chosen, and nothing sorts it.
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
 **Ingredient slugs** has a file of its own: [`ingredient-slugs.md`](ingredient-slugs.md).
+
+**MB.216: the forms table and the identity key, as built.** One form of an
+ingredient is a row of `ingredient_variants`
+(`src/modules/ingredients/schema/ingredient-variants.ts`, migration
+`0061_ingredient-variants.sql`): `ingredient_id`, `form` (text, non-blank by
+`ingredient_variants_form_not_blank`), `form_id` (the curated pick, as on
+`ingredients`), `description`, `safety_notes`, the four lists, and the six
+audit columns, with its own `set_updated_at` trigger.
+`ingredient_variants_form_unique` holds one live row per ingredient and
+`lower(btrim(form))`, the fold `canonical_key` gave the form.
+`ingredient_variants_id_ingredient_id_unique` on `(id, ingredient_id)` is the
+one unique index on a soft-deleted table that is not partial: it is the target
+of the composite foreign keys MB.217 adds, which a partial index cannot be, and
+reserves nothing the primary key does not.
+`tests/db/partial-unique-indexes.test.ts` names it as rule 4's exception and
+fails any other. `ingredient_variants_form_id_idx` (partial) and
+`ingredient_variants_unaccent_trgm` (a trigram index over the folded form and
+description) serve MB.220's in-use reads and MB.218's search. Nothing reads or
+writes the table yet but migration `0062`, the seeds and the test fixtures; it
+is an ingredient's child, so the unscoped finders refuse it at compile time.
+
+`ingredients.identity_key` is `GENERATED ALWAYS AS (lower(coalesce(canonical_name,
+name))) STORED`, built by `identityKeyOf` beside `canonicalKeyOf`: the formal
+name, or the label where there is none, and never the form.
+`ingredients_compendium_identity_key_unique` and
+`ingredients_workspace_identity_key_unique` hold it once per tier, the same
+shape as the `canonical_key` pair, which stays until MB.223 drops it. So since
+`0062` _Valeriana officinalis_ root and leaf are no longer two entries in one
+tier: they are one entry with two variants, and a write of the second as an
+entry of its own is refused by the identity-key index, which the compendium
+and coven services do not map until MB.220.
+
+`0062_ingredient-variants-fill.sql` fills one variant per row with a form,
+soft-deleted rows included: the trimmed form and its pick, stamped as the
+row's last editor. The correspondences stay on the ingredient, since a variant
+adds to its ingredient and never overrides it. A `DO` block then refuses a
+database holding two live rows of one `identity_key` in a tier, with a hint
+naming "Merging a group" in
+[`mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md),
+before the two indexes are created. Run the pre-flight query before
+deploying it; it must return no row:
+`select workspace_id, lower(coalesce(canonical_name, name)), count(*) from
+ingredients where deleted_at is null group by 1, 2 having count(*) > 1`.
+`tests/db/migrations/0062-ingredient-variants-fill.test.ts` re-runs the
+migration's own fill and guard, and retires once `0062` is in production's
+journal (claude-docs/testing/layer-ownership.md, "What a test may assert",
+rule 7).

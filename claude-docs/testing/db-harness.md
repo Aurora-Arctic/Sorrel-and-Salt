@@ -106,7 +106,11 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   catalogue's list would collide on another index first or names a generated
   column (`ingredients.canonical_key`). A new partial unique index fails the
   sweep until it is classified; a schema test keeps only what is particular to
-  its table, such as a slug shared across two groups.
+  its table, such as a slug shared across two groups. A second test reads every unique
+  index on a table carrying `deleted_at` that is _not_ partial and holds the
+  set to its `NOT_PARTIAL` map, each entry with its reason, so rule 4's one
+  exception, `ingredient_variants_id_ingredient_id_unique` (MB.216, the target
+  of MB.217's composite foreign keys), is decided there and any other fails.
 
 - **`tests/db/schema-drift.test.ts` — the schema files against the migrated
   database, once for every table** (MB.226). It imports every
