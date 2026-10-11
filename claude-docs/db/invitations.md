@@ -127,9 +127,18 @@ The finders:
   accept service rejects each with its own message (M7.7), and can only tell
   them apart if it sees them.
 - **`findPendingInvitationsInWorkspace(membership)`**, the members page's
-  pending list (M7.6), and **`findPendingSiteInvitations(admin)`**,
-  `/admin/users`' (MB.70): each tier's pending rows under its own proof.
-  Unordered, since a page sorts the handful it holds. No list of past
+  pending list (M7.6), and **`findPendingSiteInvitations(admin, filter)`**,
+  `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
+  Unordered, since a page sorts the handful it holds. The site tier's takes
+  an optional `SiteInvitationFilter` (MB.115), each part ANDed in SQL:
+  `email`, a fragment of the address matched case-insensitively by the
+  shared `containsText`, its `%` and `_` read literally; and
+  `expiresWithinHours`, which keeps a row only while its `expires_at` falls
+  within that many hours of the database's `now()`, the same clock the
+  pending test reads, so the app's clock never decides an expiry. For
+  example, `{ email: 'FERN', expiresWithinHours: 24 }` finds a pending
+  invitation to `fern.moss@…` that lapses in 23 hours, and not one that
+  lapses in 25. No list of past
   invitations is planned: each pending list is where an invitation is acted
   on, and the privilege ledger holds every acceptance that granted
   something.

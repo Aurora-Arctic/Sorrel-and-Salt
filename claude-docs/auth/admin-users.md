@@ -305,9 +305,12 @@ one is handed a bearer token for the site's highest privilege (story 62).
 email, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
   themselves, by direct call, and the two mutations in front of them carry the
-  `admin` scope as the second check. `listPendingAdminInvitations(session)` is
-  the pending list, newest first, a read the page calls; no GraphQL query
-  lists invitations.
+  `admin` scope as the second check. `listPendingAdminInvitations(session,
+filter)` is the pending list, newest first, a read the page calls; no
+  GraphQL query lists invitations. Its optional filter (MB.115) is
+  `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
+  the invitations lapsing within 24 hours, each narrowed in the
+  repository's SQL ([`db/invitations.md`](../db/invitations.md)).
 - **The token is the mail's alone.** `crypto.randomBytes(32)`, base64url,
   goes to the repository's `insertInvitation(admin, …)`, which stores its
   hash, and to the sender, which mails the link; the row the mutation answers
