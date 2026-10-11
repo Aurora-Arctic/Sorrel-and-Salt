@@ -15,6 +15,7 @@ movable, on dnd-kit.
 | `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit      |
 | `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one     |
 | `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
+| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is         |
 | `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
 | `icons.tsx`        | The chevron and the clear's ×, which every box draws, and a sortable chip's grip  |
 | `index.scss`       | The control, the list, a row, and the entry chip                                  |
@@ -37,6 +38,10 @@ movable, on dnd-kit.
 | `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                                                                                                                                 |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
 | `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                                                                                                                                   |
+| `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
+| `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
+| `placeholder`      | Shown, muted, while the box is empty.                                                                                                                                                                                                                                                          |
+| `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
@@ -211,6 +216,45 @@ jumps to the choice it starts.
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
 focus ring itself, where a suggesting box draws it for its inner text.
+
+## The type-ahead box
+
+`ComboboxTypeahead` (`typeahead.tsx`) is a closed set chosen by typing,
+react-select's single select: the deities' Tradition, the owner's call in
+MB.115, where a select-only box made the admin scroll for one tradition
+among many. It is the typing box above over the set's choices, not a third
+copy of the list: the text is its own, each choice is a row whose value is
+its label and whose `key` is the choice's value, and it passes
+`offerTyped={false}`, `highlightFirst` and `noun="choice"`, so the list
+is "Tradition choices" and holds nothing but choices. It is imported from
+its own file, `@/components/Combobox/typeahead`, since it imports the
+folder's index and the lint refuses an import cycle.
+
+- **Typing narrows the list** to the choices whose label holds the text,
+  whatever its case and wherever in the name. While the text is the chosen
+  label itself, nothing is narrowed: a box holding a choice opens on every
+  choice, as a select does.
+- **The first row is highlighted** as the list opens and narrows; the arrows
+  move, Enter or a click chooses, and Escape closes without choosing. A
+  press on the box opens it, as Downshift's input click does.
+- **Only a choice is ever the value.** Typing reports `''` as soon as the
+  text names no choice in full, and the choice once it does, in any case, so
+  "mockish" typed out chooses Mockish; left, the box reads the choice's own
+  label. Text naming no choice stays in the box, so what was typed is not
+  lost, while the value is none: a required field then shows its error on
+  save, as one never chosen does (`SelectField`, [`field.md`](field.md)).
+- **A pick or a value set from outside writes the choice's label** into the
+  box, unless the text already names it.
+
+| Prop                 | Meaning                                                                           |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it. |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                 |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.        |
+| `choices`            | `{ value, label }` in order; typing narrows them.                                 |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                          |
+| `required`           | `aria-required`, as the field marks it.                                           |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                |
 
 ## The multi-select box
 
@@ -498,7 +542,8 @@ grip's half-glyph width, and the 1px edges.
 `Sortable`, seven planets wrapping onto a second row, each moved by its grip
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
-an edit; `SelectOnly`, the select-only box; and
+an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five
+traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen;
 `CreateRow`, "Add a reference" first whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
@@ -560,6 +605,15 @@ rows as the control wraps them, and drives a move: `moveByKeyboard` waits a task
 each key, since the keyboard sensor listens a task after the lift, and
 `dragByPointer` waits out the 50ms after a drag in which the sensor
 swallows every click, so that it swallows no later test's.
+
+`tests/components/Combobox/typeahead.test.tsx` covers the type-ahead box:
+a required text combobox opening on a press with every choice and no typed
+row; typing narrowing the list in any case and anywhere in the name; the
+first match highlighted, the arrows moving and Enter choosing; a click
+choosing and Escape closing without choosing; a box holding a choice opening
+on every choice; and the value `''` while the text names no choice, the
+choice once it names one in any case, and its label written in as the box
+is left.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

@@ -71,6 +71,20 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * says why. Offered unless said otherwise.
    */
   offerTyped?: boolean;
+  /**
+   * Whether the list opens and narrows with its first row highlighted, so
+   * Enter takes it: a closed set's type-ahead. Free text highlights nothing.
+   */
+  highlightFirst?: boolean;
+  /**
+   * What a row is called, singular: the list's name, its chevron's and its
+   * status's count. "suggestion" unless said; a closed set's are "choice"s.
+   */
+  noun?: string;
+  /** Shown, muted, while the box is empty. */
+  placeholder?: string;
+  /** `aria-required`, as the field marks it. */
+  required?: boolean;
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
   /**
@@ -219,6 +233,32 @@ export interface ComboboxSelectProps {
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
+}
+
+/**
+ * The type-ahead box: a closed set, chosen by typing to narrow the list. The
+ * text is its own; only a choice is ever the value.
+ */
+export interface ComboboxTypeaheadProps {
+  /** The box's id, which a label element's `htmlFor` names. */
+  id: string;
+  /** What the box is called, and its list's name, "Tradition choices". */
+  label: string;
+  /** The id of a label element naming the box. */
+  labelId?: string;
+  /** The chosen value, `''` while the text names no choice. */
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  /** Every choice, in order; typing narrows them to those whose label holds the text. */
+  choices: readonly ComboboxChoice[];
+  /** Shown, muted, while the box is empty, and not itself a choice. */
+  placeholder?: string;
+  required?: boolean;
+  /** The text box, which takes the focus. */
+  inputRef?: Ref<HTMLInputElement>;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }

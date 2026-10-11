@@ -40,7 +40,7 @@ the same shell until its design review (MB.120).
 | `fieldDescription` | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it |
 | `useField`         | `fieldDescription` for a react-hook-form field, its error read by name                                        |
 | `TextField`        | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
-| `SelectField`      | A closed set on Combobox's select-only box, in a react-hook-form form                                         |
+| `SelectField`      | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
 
 ## Props
 
@@ -71,7 +71,11 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 `TextField` adds `name`, `multiline`, `type` (`text`, `date`, `url`),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `format` (a tidy run
 as the field is left) and `autoComplete`. `SelectField` adds `name`,
-`options`, `placeholder`, `deps` and `onChange`. Both are generic over the
+`options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
+draws the set on Combobox's type-ahead box, typed into to narrow it, for a
+set long enough to want a search, the deities' Tradition (MB.115). Its text
+naming no option is no value, so a required one shows its error on save as
+an unchosen one does ([`combobox.md`](combobox.md), "The type-ahead box"). Both are generic over the
 form's values, `TextField<IngredientFormValues>`, so `name` is checked
 against the form's own paths; left out, any string passes.
 
@@ -119,5 +123,6 @@ Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 
 No file of its own: the forms that use it cover it (claude-docs/testing/layer-ownership.md,
 "What a test may assert", rule 5). `tests/components/IngredientForm/` covers
-`TextField` and `SelectField`; the NameForm and EmailForm tests cover the
+`TextField` and `SelectField`, and `tests/components/GroupedValueForm/` its
+`typeahead`; the NameForm and EmailForm tests cover the
 shell around a plain control.

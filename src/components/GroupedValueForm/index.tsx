@@ -245,7 +245,8 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   deity: defineKind({
     noun: 'Deity',
-    group: { label: 'Tradition', placeholder: 'Choose a tradition' },
+    // Typed into to narrow the traditions, the owner's call (MB.115).
+    group: { label: 'Tradition', placeholder: 'Choose a tradition', typeahead: true },
     deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the deity
     // (MB.162), though no entry's address moves: a deity is no part of one.
@@ -445,6 +446,7 @@ const GroupedValueForm = ({
             label={group.label}
             placeholder={group.placeholder}
             options={choices}
+            typeahead={group.typeahead}
             required
           />
         )}

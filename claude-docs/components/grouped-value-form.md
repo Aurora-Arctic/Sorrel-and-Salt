@@ -43,7 +43,10 @@ its three mutation documents, and nothing else:
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
   "Form", "Deity", "Planet", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label` and `placeholder`, what it shows until one is chosen
-  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"); `deleteNote`, what the
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"),
+  and `typeahead` where the field is typed into to narrow the groups rather
+  than picked from the select-only box: the deity's Tradition alone, the
+  owner's call in MB.115; `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (every kind but the category).
 - **Its schema and input**: `schema`, the shared schema the values pass
@@ -199,9 +202,10 @@ there is none.
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
 — `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
 `AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingAZodiacSign`, each in
-the modal and its own iframe, the deities under invented traditions; and
-`PhoneDark` and `PhoneLight`, the category's edit at 375px in each theme,
-where the buttons stack. Renaming in `EditingAForm`, `EditingADeity` or
+the modal and its own iframe, the deities under four invented traditions; `PhoneDark` and `PhoneLight`,
+the category's edit at 375px in each theme, where the buttons stack; and
+`DeityPhoneDark` and `DeityPhoneLight`, the deity's edit at 375px, its
+type-ahead Tradition opening inside the modal. Renaming in `EditingAForm`, `EditingADeity` or
 `EditingAZodiacSign` shows the note. The workshop has no API, so a save answers
 with the generic error.
 
@@ -217,7 +221,9 @@ that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's
 create sending its tradition as `traditionId`, its rename saved under its
-id after the note, a `traditionId` refusal landing beside Tradition, and
+id after the note, its Tradition typed into, the list narrowing and Enter choosing, text
+naming no tradition holding none and refused on Save, a `traditionId`
+refusal landing beside Tradition, and
 its delete refusal. The flat kinds, the planet and the zodiac sign, are rows of
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
