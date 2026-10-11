@@ -243,8 +243,7 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   max-height: min(20rem, var(--combobox-list-room, 20rem));
   margin: 0;
   padding: space(1) 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden auto;
   list-style: none;
   border: 1px solid $text-muted;
 

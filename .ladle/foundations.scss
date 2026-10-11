@@ -283,8 +283,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
   }
 
   .fd-marks {
-    flex-direction: row;
-    flex-wrap: wrap;
+    flex-flow: row wrap;
     gap: space(3) space(5);
   }
 

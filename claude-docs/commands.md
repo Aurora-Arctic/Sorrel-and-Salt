@@ -29,11 +29,48 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 | `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                                         |
 | `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                                            |
 | `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                                     |
-| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint                                                                                                                                                                                                         |
+| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint, then `lint:css`; `lint:fix` is Oxlint's alone                                                                                                                                                          |
+| `npm run lint:css`                                     | Stylelint over `src/**/*.scss` and `.ladle/**/*.scss`, configured below the table                                                                                                                              |
 | `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                                  |
 | `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                                 |
 | `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                                      |
 | `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since `tests/guards/codegen-staleness.test.ts` fails CI on stale files |
+
+**Stylelint** (`.stylelintrc.json`, MB.116) carries one binding rule,
+"only `_variables.scss` may name a raw hue" ([`styling.md`](styling.md),
+"Binding rules"): `color-no-hex` and `color-named: "never"`, cleared for
+`src/scss/_variables.scss` alone. A group colour is a hex on its
+`category_groups` row, set inline from data, so the linter never sees it; a
+hex in a comment is not a colour to it either. It extends
+`stylelint-config-standard-scss`, adjusted where that set fights Prettier or
+the repo's Sass:
+
+- **Configured rather than off**: `selector-class-pattern` takes the repo's
+  BEM names (`block__element--modifier`, each part kebab-case) where the
+  default allows kebab-case only; `scss/at-function-pattern` allows the
+  leading `_` Sass gives a private function (`_assert-theme`);
+  `value-keyword-case` leaves `currentColor` and the font stacks' family
+  names as written; `number-max-precision` is 5, for `$control-height`'s
+  `2.78125rem`, which is exactly 44.5px.
+- **Off, because Prettier owns blank lines and line breaks**:
+  `at-rule-empty-line-before`, `declaration-empty-line-before`,
+  `custom-property-empty-line-before`, `scss/dollar-variable-empty-line-before`
+  and `scss/double-slash-comment-empty-line-before` (a comment sits directly
+  on what it explains, an `@include` directly after a declaration),
+  `scss/operator-no-newline-after` (Prettier breaks a long `@error` string
+  after its `+`), and `scss/comment-no-empty` (a bare `//` is a paragraph
+  break inside a comment).
+- **Off, because the repo writes the other form on purpose**:
+  `color-hex-length` (a brand hex is copied six digits long, as the provider
+  publishes it), `color-function-notation`, `color-function-alias-notation`
+  and `alpha-value-notation` (the two shadows are Sass's `rgba()` with an
+  alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
+  says what they mean), and `media-feature-range-notation` (both notations
+  sit inside the browser baseline; the repo writes `max-width:`).
+- **`ignoreFiles`, for now**: `SignInPanel/index.scss`,
+  `SignInPanel/icons.scss` and `UserList/index.scss` still inline the
+  provider hexes that `brand-color()` replaces. MB.116's sign-in lane moves
+  them onto the map and removes the ignore; nothing else may join it.
 
 ## Tests
 
