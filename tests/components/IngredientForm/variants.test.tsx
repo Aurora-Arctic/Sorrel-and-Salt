@@ -365,8 +365,9 @@ describe('IngredientForm’s variants', () => {
     renderForm({ workspaceId: WORKSPACE_ID });
 
     type(document.body, 'Name', 'Testwort');
-    addVariant('Oil');
+    // The newest first, so Herb is the second.
     addVariant('Herb');
+    addVariant('Oil');
     save();
 
     const herb = control(variant('Herb'), 'Form');
@@ -469,6 +470,20 @@ describe('IngredientForm’s variants', () => {
       expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
       // The New Form box keeps the focus, ready for the next.
       expect(newForm()).toHaveFocus();
+    });
+
+    // MB.115, the owner's call: the box heads the section, the newest variant beneath it.
+    it('lists a variant added beneath the New Form box, ahead of those before it', () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+
+      addVariant('Oil');
+      addVariant('Herb');
+
+      const cards = screen.getAllByRole('group', { name: /^(Oil|Herb)$/ });
+      expect(cards).toEqual([variant('Herb'), variant('Oil')]);
+      expect(
+        newForm().compareDocumentPosition(cards[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
     });
 
     it('opens a closed variant a save finds an error in, its field focused, and sends nothing', async () => {

@@ -57,7 +57,7 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
   const compendium = workspaceId === null;
   const { control, getValues, setValue, setError, clearErrors, getFieldState, trigger } =
     useFormContext<IngredientFormValues>();
-  const { fields, append, remove } = useFieldArray({ control, name: 'variants' });
+  const { fields, prepend, remove } = useFieldArray({ control, name: 'variants' });
   const { field } = useController({ control, name: BOX });
   const { errors, isSubmitted, submitCount } = useFormState({ control, name: [BOX, 'variants'] });
   const listed = useWatch({ control, name: 'variants' });
@@ -125,10 +125,10 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
       return;
     }
     // Not focused by the field array, which would take the new Form box: the
-    // New Form box keeps it, ready for the next. The new variant opens, the
-    // owner's call, closing whichever was.
-    append({ ...EMPTY_VARIANT, form, formLink: link }, { shouldFocus: false });
-    setOpen(fields.length);
+    // New Form box keeps it, ready for the next. The new variant goes first,
+    // just beneath the box, and opens, the owner's call, closing whichever was.
+    prepend({ ...EMPTY_VARIANT, form, formLink: link }, { shouldFocus: false });
+    setOpen(0);
     setValue(BOX, '');
     clearErrors(BOX);
     setAnnouncement(`Added ${form}`);
@@ -163,22 +163,12 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
           Add a form so covens can stock it.
         </p>
       )}
-      {fields.map((row, index) => (
-        <VariantFieldset
-          key={row.id}
-          index={index}
-          workspaceId={workspaceId}
-          open={open === index}
-          onToggle={(opening) => setOpen(opening ? index : null)}
-          onRemove={removeAt}
-        />
-      ))}
       <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox<FormOption>
           id={`${id}-box`}
           label="New Form"
-          // Its label is hidden, as a list box's is, and beneath the cards the
-          // box would otherwise read as one more field of the last (MB.115).
+          // Its label is hidden, as a list box's is: the placeholder says what
+          // it is for, at the head of the section (MB.115).
           placeholder="Add a form"
           value={field.value}
           onChange={(typed) => {
@@ -219,6 +209,17 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
         )}
       </div>
       <FieldError id={errorId} message={error} />
+      {/* The newest first, beneath the box that added it. */}
+      {fields.map((row, index) => (
+        <VariantFieldset
+          key={row.id}
+          index={index}
+          workspaceId={workspaceId}
+          open={open === index}
+          onToggle={(opening) => setOpen(opening ? index : null)}
+          onRemove={removeAt}
+        />
+      ))}
       {/* Labelled, so that it is told from the box's own status region. */}
       <output className="visually-hidden" aria-label="Variants changes">
         {announcement}

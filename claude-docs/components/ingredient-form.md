@@ -514,8 +514,8 @@ as the ingredient's page shows its forms after it (MB.221).
   focus moves to the opened variant's first field, its Form box. A Done at
   the foot of the fields, "Done with Oil", folds it back to its line and
   returns the focus to its Edit; Edit pressed while open folds it too. A
-  variant added from the New Form box opens, closing the one open, while
-  the New Form box keeps the focus for the next, as before. An edit opens
+  variant added from the New Form box opens, first of the cards, closing
+  the one open, while the New Form box keeps the focus for the next. An edit opens
   with every variant closed.
 - **A closed variant's fields stay in the page, hidden**, rather than
   unmounted, so nothing in them is lost by closing it: a box's text, a
@@ -535,9 +535,14 @@ as the ingredient's page shows its forms after it (MB.221).
   place in the values, `variants.1.planets`, so each validates, errs, focuses
   and is held by text left in its box as the ingredient's is. Deities and
   folk names are the plant's, and stay on the ingredient alone.
-- **The New Form box adds one**, a list's box for whole variants, beneath
-  the cards, its label hidden as a list box's is and its placeholder "Add a
-  form" saying what it is for: a pick from
+- **The New Form box adds one**, a list's box for whole variants, at the
+  head of the section (MB.115, the owner's call): under its heading and the
+  compendium's no-form prompt, its error beneath it, and above the cards.
+  A variant it adds goes first, just beneath it, and opens there while the
+  box keeps the focus, so what was added is in view without the focus
+  leaving the box; an edit reopens them in the read's order, by form. Its
+  label is hidden, as a list box's is, its placeholder "Add a form" saying
+  what it is for: a pick from
   the form vocabulary adds a variant carrying the pick, and on a coven Add or
   Enter adds the text typed. A form the ingredient already comes in, folded
   as `ingredient_variants_form_unique` folds it (trimmed, case aside), is
@@ -1115,7 +1120,7 @@ reach until Edit opens it (`aria-expanded`, its region shown, the focus on
 its Form box); Done folding it back with the focus on Edit and what was
 typed kept; one open at a time; a variant added opened, the other closed;
 a save finding an error in a closed variant opening it, its field focused
-(MB.115); a variant added from the New Form box listed as
+(MB.115); a variant added listed first, after the New Form box (MB.115); a variant added from the New Form box listed as
 its own fieldset and sent in `variants`, with no top-level `form`; a
 compendium pick carried into the variant's Form box; a typed compendium form
 refused beside its box, focused, with nothing sent; a variant removed by its

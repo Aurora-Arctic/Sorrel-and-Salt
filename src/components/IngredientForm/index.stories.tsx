@@ -572,12 +572,12 @@ function WhatToTry() {
         </li>
         <li>
           <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
-          repeat is refused at the box. The new variant opens; Done folds it to its summary line,
-          and Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text
-          while it is folded, and it opens on the error. Remove takes a variant out. In a
-          variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
-          oil first, a row for any form of it and one for each form; pick a form, and its pill names
-          it.
+          repeat is refused at the box. The new variant opens first, just beneath the box; Done
+          folds it to its summary line, and Edit opens it again, closing any other. Save with a
+          variant&rsquo;s box holding text while it is folded, and it opens on the error. Remove
+          takes a variant out. In a variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists
+          the Testwort that comes in oil first, a row for any form of it and one for each form; pick
+          a form, and its pill names it.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
