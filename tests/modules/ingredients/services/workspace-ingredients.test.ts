@@ -31,7 +31,7 @@ import {
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
 import {
@@ -1121,6 +1121,67 @@ describe('its forms', () => {
       issues: [{ path: ['variants', 0, 'substitutes', 0, 'substituteVariantId'] }],
     });
     expect(await countIngredients()).toBe(3);
+  });
+
+  // MB.217's narrowed `not_itself`: the same ingredient and the same form.
+  it('lets a form name a sibling form as its substitute, refusing the form itself on that entry', async () => {
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms({ form: 'Testleaf' }, { form: 'Testoil' }),
+    );
+    const [leaf, oil] = await variantRowsOf(sql, created.id);
+    const naming = (form: string) =>
+      withForms(
+        { id: leaf.id, form: 'Testleaf' },
+        {
+          id: oil.id,
+          form: 'Testoil',
+          substitutes: [{ ingredientId: created.id, substituteVariantId: form }],
+        },
+      );
+
+    const attempt = updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      created.id,
+      naming(oil.id),
+    );
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({
+      issues: [{ path: ['variants', 1, 'substitutes', 0] }],
+    });
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, naming(leaf.id));
+    expect((await variantChildrenOf(sql, oil.id)).substitutes).toMatchObject([
+      { substitute_id: created.id, substitute_variant_id: leaf.id },
+    ]);
+  });
+
+  it('keeps a substitute link that names another form of what it links, in place', async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const rootOil = await insertVariant(sql, testroot.id, { form: 'Testoil' }, A.id);
+    const naming = (form: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot.id, substituteVariantId: form }] });
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      naming(testroot.herb),
+    );
+    const leaf = await variantIdOf(sql, created.id, 'Testleaf');
+    const [before] = await sql`
+      select id from ingredient_substitutes where variant_id = ${leaf}`;
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, {
+      ...naming(rootOil),
+      variants: [{ ...naming(rootOil).variants[0], id: leaf }],
+    });
+
+    expect(
+      await sql`
+        select id, substitute_variant_id from ingredient_substitutes
+        where variant_id = ${leaf} and deleted_at is null`,
+    ).toEqual([{ id: before.id, substitute_variant_id: rootOil }]);
   });
 
   it('refuses a form another of its live forms still holds, on that entry, rather than the raw index error', async () => {

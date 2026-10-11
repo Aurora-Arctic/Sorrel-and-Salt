@@ -216,7 +216,7 @@ export async function resolvePicks(
   held: readonly DeityRecord[],
 ): Promise<{
   fields: IngredientFields;
-  children: Pick<IngredientChildren, 'categoryIds' | 'deities' | 'variants'>;
+  children: Required<Pick<IngredientChildren, 'categoryIds' | 'deities' | 'variants'>>;
   issues: ValidationIssue[];
 }> {
   const { deities } = picked;

@@ -327,7 +327,7 @@ async function inCuratedValues(
   });
   return {
     fields: spell(picks.fields),
-    children: { ...picks.children, variants: picks.children.variants?.map(spell) },
+    children: { ...picks.children, variants: picks.children.variants.map(spell) },
   };
 }
 

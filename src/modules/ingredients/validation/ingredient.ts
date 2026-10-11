@@ -34,9 +34,12 @@ import type {
  */
 const textList = z.array(z.string().trim()).nullish();
 
+/** The entries of a list that are not blank, in order. */
+const nonBlank = <T extends string>(list: T[]) => list.filter((entry) => entry !== '');
+
 function withoutBlanks<T extends string>(list: T[] | null | undefined) {
   if (list == null) return list;
-  const entries = list.filter((entry) => entry !== '');
+  const entries = nonBlank(list);
   return entries.length > 0 ? entries : null;
 }
 
@@ -207,9 +210,9 @@ const variant = z
   })
   .transform((value) => ({
     ...value,
-    planets: value.planets.filter((entry) => entry !== ''),
-    zodiacSigns: value.zodiacSigns.filter((entry) => entry !== ''),
-    colors: value.colors.filter((entry) => entry !== ''),
+    planets: nonBlank(value.planets),
+    zodiacSigns: nonBlank(value.zodiacSigns),
+    colors: nonBlank(value.colors),
     substitutes: asSubstitutes(value.substitutes) ?? [],
     references: asReferences(value.references) ?? [],
   }));
