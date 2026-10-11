@@ -11,7 +11,10 @@ export default async function HomePage() {
   const session = await getSession();
 
   return (
-    <main className="welcome-page">
+    // `page-frame` is the layout. `welcome-page` styles nothing: it stays as
+    // the hook Backdrop's `body:has(.welcome-page)` reads to draw its larger
+    // front-door art, so the root layout needs no route awareness.
+    <main className="page-frame welcome-page">
       <Welcome landing={session ? postSignInLanding(session.role) : undefined} />
     </main>
   );

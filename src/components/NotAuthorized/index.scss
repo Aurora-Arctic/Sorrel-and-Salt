@@ -1,27 +1,12 @@
 @use '../../scss/variables' as *;
 
-// The page-level frame, like `.welcome-page`: no AppShell exists yet to
-// center a page.
-.not-authorized-page {
-  // Or the viewport-high frame plus its own padding overflows by the padding
-  // and the page scrolls by 4rem with nothing to scroll to.
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  // Less the top inset, or a page a full screen high scrolls by it.
-  min-height: calc(100dvh - #{$top-inset});
-  padding: 2rem 1rem;
-}
-
-// The reading measure, as `.welcome` has: a heading, a sentence and a link.
+// The page's own column, as `.welcome` is: a head and a link. The frame that
+// centres it and caps it at the reading measure is `.page-frame` on
+// `forbidden.tsx`'s `main` (claude-docs/styling.md, "The page frame").
 .not-authorized {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  width: 100%;
-  max-width: $measure;
-  margin-inline: auto;
+  gap: space(5);
 }
 
 .not-authorized__title,
