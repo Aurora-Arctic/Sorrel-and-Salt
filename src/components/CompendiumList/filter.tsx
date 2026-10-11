@@ -3,7 +3,7 @@
 import { type ReactElement, useId, useMemo, useState, useSyncExternalStore } from 'react';
 import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import FilterForm from '../FilterForm';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { compendiumHref } from './href';
@@ -15,9 +15,9 @@ import type { CompendiumListFilterProps } from './types';
 // filtered list arrives. The form is typed into once hydrated, as the curated
 // lists' group is (the owner's call, MB.115), but the server draws it as a
 // native `<select>`; Classification is a native `<select>` and Without
-// References a checkbox valued `1`. So before hydration the form still
-// submits natively, as `query=&form=&nomenclature=` plus
-// `withoutReferences=1` when ticked, which the page reads as the same
+// References a switch, a native checkbox valued `1`. So before hydration the
+// form still submits natively, as `query=&form=&nomenclature=` plus
+// `withoutReferences=1` when on, which the page reads as the same
 // filter, and a hidden input carries the form after. The list keys this by
 // the filter shown, so a page showing another — Back, say — starts it again
 // from that one.
@@ -133,16 +133,13 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
           ))}
         </select>
       </FieldShell>
-      <label className="checkbox">
-        <input
-          type="checkbox"
-          name="withoutReferences"
-          value="1"
-          checked={draftUnsourced}
-          onChange={(event) => setDraftUnsourced(event.target.checked)}
-        />
-        Without References
-      </label>
+      <SwitchField
+        label="Without References"
+        name="withoutReferences"
+        value="1"
+        checked={draftUnsourced}
+        onChange={setDraftUnsourced}
+      />
     </FilterForm>
   );
 };

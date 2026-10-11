@@ -136,8 +136,11 @@ describe('UserList', () => {
     expect(search).toHaveAttribute('method', 'get');
     expect(within(search).getByLabelText('Name or Email')).toHaveValue('fixturewort');
     expect(within(search).getByLabelText('Name or Email')).toHaveAttribute('name', 'query');
-    expect(within(search).getByLabelText('Needs Approval')).toBeChecked();
-    expect(within(search).getByLabelText('Needs Approval')).toHaveAttribute('name', 'awaiting');
+    expect(within(search).getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
+    expect(within(search).getByRole('switch', { name: 'Needs Approval' })).toHaveAttribute(
+      'name',
+      'awaiting',
+    );
   });
 });
 
@@ -266,7 +269,7 @@ describe('UserList filter', () => {
     render(<UserList {...props({ previousHref: '/admin/users?before=x' })} />);
 
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' Fixture B ' } });
-    fireEvent.click(screen.getByLabelText('Needs Approval'));
+    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
     fireEvent.click(filterButton());
 
     expect(assignMock).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting');
@@ -298,7 +301,7 @@ describe('UserList filter', () => {
     render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
 
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: '' } });
-    fireEvent.click(screen.getByLabelText('Needs Approval'));
+    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
     fireEvent.click(filterButton());
 
     expect(assignMock).toHaveBeenCalledWith('/admin/users');
@@ -330,13 +333,13 @@ describe('UserList filter', () => {
 
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'bo' } });
     fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
-    fireEvent.click(screen.getByLabelText('Needs Approval'));
+    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
     fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
 
     expect(assignMock).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Name or Email')).toHaveValue('');
     expect(screen.getByLabelText('Role')).toHaveValue('');
-    expect(screen.getByLabelText('Needs Approval')).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).not.toBeChecked();
     expect(filterButton()).toBeDisabled();
   });
 
@@ -365,7 +368,7 @@ describe('UserList filter', () => {
     const controls = () => [
       screen.getByLabelText('Name or Email'),
       screen.getByLabelText('Role'),
-      screen.getByLabelText('Needs Approval'),
+      screen.getByRole('switch', { name: 'Needs Approval' }),
       filterButton(),
     ];
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'ada' } });
@@ -382,8 +385,8 @@ describe('UserList filter', () => {
     expect(row).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
     // A press on a field while the page goes changes nothing.
-    fireEvent.click(screen.getByLabelText('Needs Approval'));
-    expect(screen.getByLabelText('Needs Approval')).not.toBeChecked();
+    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).not.toBeChecked();
     fireEvent.submit(row);
     expect(assignMock).toHaveBeenCalledTimes(1);
 

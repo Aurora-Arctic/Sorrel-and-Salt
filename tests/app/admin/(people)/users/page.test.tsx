@@ -149,7 +149,7 @@ describe('the /admin/users page', () => {
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('fixture');
-    expect(screen.getByLabelText('Needs Approval')).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
   });
 
   // A flag by presence: an older link's `awaiting=1` reads as the bare one.

@@ -396,6 +396,16 @@ $rule-medium: 2px;
 // component held its own 3.9rem and kept them equal by hand until MB.115.
 $toggle-corner: 3.9rem;
 
+// The switch's track (MB.115): `$icon-size` high, since a `$glyph-size` thumb
+// rides in it, and this wide, so the thumb travels a little over its own
+// width (the width less the height, 1.25rem) and its side reads at a glance.
+$switch-width: 2.75rem;
+
+// How long a control takes to answer a press with a movement of its own: the
+// switch's thumb sliding (MB.115). Short, so the new state shows before the
+// finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
+$motion-short: 150ms;
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------
