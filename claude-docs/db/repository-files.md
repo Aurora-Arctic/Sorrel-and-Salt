@@ -30,11 +30,12 @@ because the finders beside them build on them, so the language no longer keeps
 them private as it did when the repository was one file. What keeps them inside the folder is a
 `no-restricted-imports` group banning `@/db/repository/*` and
 `**/db/repository/*` everywhere (restated in each override, which replaces
-rather than merges), and `tests/guards/module-boundaries.test.ts`, which
-resolves every import in `src/` and fails any edge into the folder that is
-not its index — the spellings a glob cannot see included. The index itself
-declares nothing and has no `export *`, so what it names _is_ the surface;
-`soft-delete-finder-guard.test.ts` asserts both. Import order is not
+rather than merges), and the `sorrel/module-boundaries` lint rule
+(`lint/sorrel-lint.js`), which resolves every relative import in `src/` and
+fails any edge into the folder that is not its index — the spellings a glob
+cannot see. The index itself declares nothing and has no `export *`, so what
+it names _is_ the surface `soft-delete-finder-guard.test.ts` reads its
+finders from. Import order is not
 load-bearing (["The seed module"](seed-module.md)), and
 `tests/db/repository/index.test.ts` pins that entering the database layer here
 builds `users` with its audit columns.

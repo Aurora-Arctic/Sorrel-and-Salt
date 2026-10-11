@@ -24,16 +24,16 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 
 ## The app
 
-| npm (`make`)                                           | Purpose                                                                                                                                                                                                        |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                                         |
-| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                                            |
-| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                                     |
-| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint                                                                                                                                                                                                         |
-| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                                  |
-| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                                 |
-| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                                      |
-| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since `tests/guards/codegen-staleness.test.ts` fails CI on stale files |
+| npm (`make`)                                           | Purpose                                                                                                                                                                                        |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                         |
+| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                            |
+| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                     |
+| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint                                                                                                                                                                                         |
+| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                  |
+| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                 |
+| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                      |
+| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since CI's `checks / codegen` leg fails on stale files |
 
 ## Tests
 

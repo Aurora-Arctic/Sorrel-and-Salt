@@ -93,7 +93,7 @@ The eleven milestone-anchored passes this namespace originally replaced (M1.29, 
 
 ## The milestone files
 
-The `## M… —` sections that followed the execution order moved to [`tasks/`](tasks/) in MB.143, one file per milestone, and each wave's reasoning to [`waves/`](waves/), linked from its row above. Together with this file they are one document: `scripts/tasks-md.mjs` names them in reading order, so a range in the table (`M3.3 → M3.10`) is the headings between its ends across that sequence, and `tests/guards/tasks-md-sequence.test.ts` fails a file the sequence does not name. Read a task by its `**<ID> — ` heading, to the next heading, and its wave file — never a whole file.
+The `## M… —` sections that followed the execution order moved to [`tasks/`](tasks/) in MB.143, one file per milestone, and each wave's reasoning to [`waves/`](waves/), linked from its row above. Together with this file they are one document: `scripts/tasks-md.mjs` names them in reading order, so a range in the table (`M3.3 → M3.10`) is the headings between its ends across that sequence, so a new milestone file is added to it. Read a task by its `**<ID> — ` heading, to the next heading, and its wave file — never a whole file.
 
 | File                           | Section                                                                                        |
 | ------------------------------ | ---------------------------------------------------------------------------------------------- |

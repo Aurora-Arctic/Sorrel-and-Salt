@@ -29,10 +29,7 @@
   - **`build`'s extras**: the `/app/.next/cache` restore through
     `actions/cache`, `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
-    short-circuits the same way separate steps would. The story gate and the
-    theme-default guard are not here: they run in
-    `tests/guards/workshop-guards.test.ts` on the `vitest` job (MB.38). It
-    posts no PR comment.
+    short-circuits the same way separate steps would. It posts no PR comment.
     - **The cache `path` is the absolute `/app/.next/cache`**, not a
       workspace-relative path: `hashFiles()` reads `$GITHUB_WORKSPACE`, but
       the job's working directory is `/app`.

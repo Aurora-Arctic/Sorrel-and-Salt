@@ -28,9 +28,8 @@ make it hold:
   `tests/support/stories.ts` parses the numbered list between
   "## 10. User stories" and the next section — 52 today, 1–34 and 47–64 — so
   the spec is the one place a story is written down and a story added to §10
-  joins the checklist without a harness edit. `stories.test.ts` pins the
-  rules rather than the list: ids unique and ascending, none in 35–46, and the
-  count equal to the one §10 states for itself in prose.
+  joins the checklist without a harness edit. The harness has no tests of its
+  own (MB.224): a broken checklist is seen by whoever runs it.
 - **A story's status is the state of every suite naming it.** A suite names
   its story in its describe — `describe('Story 12: …')`, at any depth, from
   any file — and `tests/support/story-checklist.ts` folds those states: any
@@ -39,12 +38,11 @@ make it hold:
   interrupted run leaves, reads as failing so it can never look green. A
   suite naming a number §10 does not list is set aside under "Not a v1
   story" rather than counted.
-- **Naming is guarded, not hoped for.** `tests/guards/story-naming.test.ts`
-  reads every `tests/acceptance/*.test.ts(x)` — tracked and untracked, as
-  `slug-rule.test.ts` does, since the file it exists to catch was just
-  written — and fails on a top-level `describe` that names no story or a
-  non-v1 number, or a top-level `it`. A story with a test that names it
-  wrongly would otherwise show as "no test yet" while that test failed.
+- **Naming is held by review.** Every top-level `describe` in
+  `tests/acceptance/` names a v1 story and no top-level `it` stands outside
+  one: a story with a test that names it wrongly shows as "no test yet" while
+  that test fails. MB.224 retired the guard, with the rest of the harness's
+  tests.
 
 **A scaffold names only what typechecks.** A scaffold lands before the thing
 it tests exists, and `npm run typecheck` runs over `tests/` too, so an import

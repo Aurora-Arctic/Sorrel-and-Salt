@@ -57,8 +57,7 @@ A `PickerCategory` is the category's id, name, optional `description` and its
   picked deity reads with its tradition, since the colour alone cannot name
   the group, and its description beneath, the entry's `detail` — "Testward
   (Wards & Fixtures)" over "Keeps a fixture from harm." — both read as its
-  x's description, the owner's call. The chip itself reads the bare name. Never a Sass token by slug:
-  `tests/guards/chip-colour-source.test.ts` fails one.
+  x's description, the owner's call. The chip itself reads the bare name. Never a Sass token by slug.
 - **An error is the box's, and names its entries.** While `errorId` is set
   the box is `aria-invalid` and described by the error, so the form's focus
   after a failed save lands on it, as on every list field; each id in

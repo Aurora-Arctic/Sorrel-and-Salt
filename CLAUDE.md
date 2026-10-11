@@ -90,7 +90,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - **Setup rows go through the raw `postgres` client and the shared inserters, never `withAudit`** (MB.101).
 - Acceptance tests name their story (`describe('Story 12: ...')`), and are tracked apart from the 80% line.
 - **Accessibility is asserted in Playwright** via `@axe-core/playwright`, not `vitest-axe`.
-- Component tests use role and label queries only. No test ids for anything a user can see.
+- Component tests use role and label queries only. No test ids for anything a user can see. A test proves a functional requirement by the state it leaves, never by copy, class or layout; a regression test needs a bug that reached a PR.
 - **No snapshots** except design tokens and the GraphQL SDL.
 - Bug fixes start with a regression test.
 - Authorization tests must assert **direct-id** access is refused, not merely that a row is absent from a list.

@@ -45,16 +45,16 @@ without a page routed to it.
     the page loads and never hot-reloads. The empty string survives the `??`,
     Vite binds every interface, and the browser connects back to the page's own
     hostname. `'0.0.0.0'` would bind the same but is also sent to the browser
-    as the address to connect to. `tests/guards/workshop-guards.test.ts` pins
-    it.
+    as the address to connect to.
   - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
     in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
     the same way a viewer who has never touched the toggle sees the app.
     M0.31 briefly set it to `'auto'` (the control's unset position, letting
     `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
-    confirmed intent, and `tests/guards/workshop-guards.test.ts` pins it.
+    confirmed intent.
 - **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
-  that guard reads, for `tsc` alone: `allowJs` is off, so the
+  the workshop guard read, for `tsc` alone, and read by nothing since MB.224
+  retired that guard: `allowJs` is off, so the
   `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
   editors and nothing else, and the test could not import the config without
   it. Deliberately not `UserConfig` itself — see the `tsconfig` note under
@@ -82,8 +82,8 @@ without a page routed to it.
   the toolbar. It also wraps the frame in the app's `Providers`
   (`src/app/providers.tsx`), so a component that uses TanStack Query
   (`EmailForm`'s `useMutation`) finds the one client the root layout mounts —
-  a story never mounts a `QueryClientProvider` of its own, which
-  `tests/guards/graphql-client.test.ts` would refuse.
+  a story never mounts a `QueryClientProvider` of its own, which would split
+  the cache.
   - **`reducedMotion` pin (MB.1).** `prefers-reduced-motion: reduce` is a real
     OS/browser setting Ladle can't expose a toolbar control for — there's
     nothing to dispatch the way the theme control dispatches `data-theme`. A
@@ -179,28 +179,19 @@ all`: the same rules a client in that scheme applies, nothing re-styled. A
 - `npm run workshop:build` / `make workshop-build` — static build to the
   gitignored `.reports/workshop/`, via `scripts/build-workshop.ts`. See **The build gate**
   below for why the wrapper exists.
-- `tests/guards/workshop-guards.test.ts` (MB.38, MB.66) — the mechanical guards, as
-  ordinary Vitest tests in the `unit` project. One fails if a directory under
-  `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
-  not an Oxlint rule, because Oxlint has no custom-rule API and this is a
-  cross-file filesystem assertion; scoped to `src/components/`, with
-  `.ladle/*.stories.tsx` deliberately out of scope; and proven on a throwaway
-  tree before it is trusted on the real one. Its twin (MB.66) fails if a
-  top-level `src/emails/<name>.tsx` has no sibling `<name>.stories.tsx`, or
-  if `config.mjs` stops globbing them. The last fails if
-  `config.mjs`'s `addons.theme.defaultState` is not `'dark'`. Both were
-  standalone scripts under `scripts/` until MB.38, written that way only
-  because Vitest had not landed yet.
+- **Every component and every email template has its story**, by review:
+  MB.224 retired the guards that held a directory under `src/components/` and
+  a top-level `src/emails/<name>.tsx` to a sibling story, and `config.mjs` to
+  globbing them and opening dark, since a test of the workshop proves no
+  behaviour a user depends on.
 - ⚠️ **`workshop:build` is not a render smoke test.** It cannot catch a story
   that throws, at render time or module-eval time — Ladle code-splits stories
   into browser-only chunks that the static build never executes. The one thing
   it genuinely catches is an unresolvable import.
 - **`tsconfig` does not reach `.ladle/` or `scripts/`.** Oxlint and the build
   are the only checks covering those files; `tsc --noEmit` will not flag them.
-- **Both gates run in CI, and neither in pre-commit.** The guards run with the
-  rest of the suite on the `vitest` job — whose path filter names
-  `.ladle/config.mjs` explicitly, since it is not under `src/**` — and
-  `workshop:build` on `checks.yml`'s `build` leg. Pre-commit is lint,
+- **The gate runs in CI, and not in pre-commit.** `workshop:build` runs on
+  `checks.yml`'s `build` leg. Pre-commit is lint,
   `format:check` and typecheck, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
 
@@ -218,9 +209,7 @@ environment. Production and hotfix previews never carry it.
   from `public/` as it would any static asset; `public/workshop` is
   gitignored. `--base` is what makes Ladle's asset URLs absolute under
   `/workshop/`; drift it from the proxy's prefix and the page ships with every
-  asset 404ing. `tests/guards/workshop-deploy.test.ts` reads the step as data
-  and pins the flags, the staging-only `if:`, and its place before
-  `vercel build`.
+  asset 404ing.
 - **How it is gated: in `src/proxy.ts`, and nowhere else can do it.** Next
   runs the proxy before it serves `public/`, and a static file has no page to
   call `requireSession()`, so the proxy's usual cookie-only check would admit

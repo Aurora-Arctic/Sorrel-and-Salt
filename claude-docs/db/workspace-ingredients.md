@@ -26,8 +26,7 @@ in `src/db/repository/predicates.ts` is the row live and in the compendium or
 a coven one of the proofs names, and `readableIngredientParent` is the same
 test made of a child row's parent, for the folk names, categories, deities,
 substitutes and references, which carry no `workspace_id` of their own. A
-coven ingredient reaches another coven's reader through neither, and
-`tests/guards/soft-delete-finder-guard.test.ts` pins what each holds.
+coven ingredient reaches another coven's reader through neither.
 
 **A delete is soft, and frees what the ingredient held** (M5.3).
 `deleteWorkspaceIngredient` tombstones the row through

@@ -9,8 +9,7 @@ tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
   rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
   acceptance/                 # one describe per user story — make test-stories
-  guards/                     # the mechanical guards
-  scripts/                    # mirror scripts/ and .github/scripts/lib/ — the pure half of a script, imported by its .d.mts
+  guards/                     # the sweeps lint cannot carry (below)
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
   e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
@@ -38,40 +37,51 @@ Three consequences worth knowing before writing a test:
   under `tests/rsc/`, or React's `cache()` is a pass-through and there is
   nothing to watch.
 
-`tests/guards/test-location.test.ts` holds the rule. It is a test rather than
-a lint rule because Oxlint has no custom-rule API and cannot express a
-statement about the tree; it reads the shared listing below — the index plus
-the untracked files git would not ignore — so a test written in `src/` fails
-in the diff that adds it, before it is staged. Until MB.42 it read the index
-alone: CI's container then kept every file deleted since its image was built
-(`checkout-to-app` lays the checkout over `/app` with `cp -a`, which never
-deletes), and an untracked scan reported all of them; the image carries no
-source layer now, which `image-source-layer.test.ts` holds. The failure it
+`tests/guards/test-location.test.ts` holds the rule, in one case: every test
+file sits in exactly one project, evaluated against the config's own globs,
+and every spec under `tests/e2e/`. It reads the shared listing below — the
+index plus the untracked files git would not ignore — so a test written in
+`src/` fails in the diff that adds it, before it is staged. The failure it
 prevents is silent: `include` is scoped to `tests/`, so a misplaced test is
 not a red test, it is a file nothing runs.
 
-**The guards share one scan** (MB.184; [`layer-ownership.md`](layer-ownership.md),
-"The owning layer"). `tests/support/unit-global-setup.ts`, the `unit`
-project's `globalSetup`, runs `git ls-files --cached --others
---exclude-standard` once — the spelling `scripts/doc-citations.mjs` uses, so
-the two sweeps see one tree — drops what is in the index but gone from the
-working tree, and `provide`s the list as `repoFiles`; a guard that
-enumerates files `inject`s it and filters by prefix and extension where it
-used to pass git a pathspec. The same setup writes every lint guard's probes
-(`tests/support/lint-probes/`, one module per guard, each exporting its probe
-tables and a `ProbeSet`), runs oxlint once over all of them under
-`.oxlintrc.json`, and provides the report as `lintDiagnostics` with the
-file list it was pointed at as `lintedFiles`, removing the probes as soon as
-oxlint has read them, so no test in any project finds them on disk and a
-watch session does not leave them in `src/`. A watch rerun takes both scans
-again (`onTestsRerun`), so a file added since the last run is seen. Each guard still opens by asserting it found what it scans — an
-empty listing satisfies every `toEqual([])` — and the lint guards assert
-their probes are in `lintedFiles` and drew a diagnostic.
-`tests/guards/shared-scan.test.ts` holds the setup to what it provides, and
-holds every other test to reading it: a file under `tests/` that imports
-`node:child_process` and names the listing or the linter's binary fails there.
-Reading a file's contents stays in the guard; it is the listing that is
-shared, not the reading.
+**The guards** (MB.224). A rule lint can carry is a lint rule, not a guard
+([`layer-ownership.md`](layer-ownership.md), "What a test may assert", rule
+8): import bans in `.oxlintrc.json`'s `no-restricted-imports` (the database
+client and `drizzle-orm`, `dataloader`, deep module imports, `slugify`,
+`next/cache`, Apollo, and what a validation file may reach) and
+`import/no-cycle`, and the rules a path glob cannot express in
+`lint/sorrel-lint.js`, an oxlint JS plugin: `no-use-server`,
+`service-server-only`, `route-allowlist`, `pagination-helper` and
+`module-boundaries`. Each was proved once, by a probe file `npm run lint`
+rejected in the PR that added it. What stays in `tests/guards/` reads the
+schema, the repository's source, the config or the module graph, which lint
+cannot:
+
+- `pagination.test.ts` — no `Query` field is a bare list, and every
+  connection takes `first` and `after` (CLAUDE.md rule 8).
+- `soft-delete-finder-guard.test.ts` — every finder the repository's index
+  exports filters tombstones, bar the escape hatches each named
+  `…IncludingSoftDeleted` (rule 4).
+- `lint-db-client-boundary.test.ts` and `lint-loader-boundary.test.ts` — the
+  two exemption-count pins, six files and one, plus one probe each that the
+  ban still fires.
+- `test-location.test.ts` — above.
+- `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
+  rules of the two CI scripts that guard production's migrations.
+- `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
+  reaches a CI log.
+
+**The guards share one scan** (MB.184). `tests/support/unit-global-setup.ts`,
+the `unit` project's `globalSetup`, runs `git ls-files --cached --others
+--exclude-standard` once, drops what is in the index but gone from the
+working tree, and `provide`s the list as `repoFiles`. The same setup writes
+the two lint guards' probes (`tests/support/lint-probes/`), runs oxlint once
+over them under `.oxlintrc.json`, and provides the report as
+`lintDiagnostics` with the file list as `lintedFiles`, removing the probes as
+soon as oxlint has read them, so no test finds them on disk. A watch rerun
+takes both scans again (`onTestsRerun`). Each guard still asserts it found
+what it scans — an empty listing satisfies every `toEqual([])`.
 
 - **`unit`** — `environment: 'node'`, `globals: true`. `include`s
   `tests/**/*.test.ts`, excluding every file `db` runs, `tests/rsc/**`,
@@ -114,9 +124,7 @@ shared, not the reading.
   jsdom, jest-dom and React Testing Library together cost a `.ts` guard more
   than its own assertions do — `environment` was a third of CI's worker time
   while every unit file paid it. `tests/guards/test-location.test.ts` holds
-  every test file to exactly one project, evaluated against the config's own
-  globs, since a file in none is a file nothing runs and a file in two runs
-  twice unnoticed.
+  every test file to exactly one project (above).
   - `setupFiles: ['@testing-library/jest-dom/vitest']` registers the jest-dom
     matchers (`toBeInTheDocument`, `toHaveClass`, …); `tests/vitest-env.d.ts`
     (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
@@ -145,11 +153,8 @@ shared, not the reading.
       Vitest merges jsdom's `window` into the global scope;
     - an `afterEach` emptying that `localStorage` (MB.189), as `cleanup()`
       empties the document, so nothing one test stores is there for the next.
-      Until then `vitest-setup.test.tsx`'s "starts empty" passed only because
-      the test before it called `clear()` itself; that test now leaves an item
-      behind, so the hook is the only thing that can empty it.
-    - Covered by `tests/support/vitest-setup.test.tsx`, which asserts each
-      hook's effect directly rather than testing the setup files themselves.
+    - Untested since MB.224: the harness is not a functional requirement, and
+      a broken hook fails the component tests that rely on it.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
@@ -161,7 +166,7 @@ shared, not the reading.
     that threw — `data: null` and one error carrying `extensions.code`, plus
     `fieldErrors` for `VALIDATION`. It builds the body by throwing the matching
     type through the route's own `maskError`, so it cannot drift from what the
-    route sends; its test holds it against a real Yoga instance's answer. It
+    route sends. It
     carries no `path` or `locations`, since it answers for the operation rather
     than for one field, and nothing a form reads is in either.
     A component test wraps its tree in a `QueryClientProvider` holding
@@ -178,7 +183,8 @@ shared, not the reading.
     through to `onUnhandledRequest: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
     override from one test never leaks into the next.
-    Covered by `tests/support/msw/graphql.test.ts`.
+    `tests/support/msw/graphql.test.ts` holds the loud failure, the one harness
+    behaviour a test could otherwise pass without.
 - **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
   `tests/modules/**/*.test.ts`, and `exclude`s the config's `DB_FREE`
   (MB.189): the files under those trees that never reach a database, which
@@ -192,14 +198,9 @@ shared, not the reading.
   (the permission matrix), `tests/modules/identity/services/site-admin.test.ts`
   and `workshop-access.test.ts` (checks that read the session alone), and
   `tests/modules/ingredients/schema/units.test.ts` (the unit vocabulary).
-  They stay where they mirror `src/`, which is why it is a list.
-  `tests/guards/db-project-queries.test.ts` holds every file left in `db` to
-  reaching the database — the harness client (`useTestDatabase`), a
-  `postgres` client of its own, a seeded clone, the repository's probe
-  tables, a fixture user's session (`as-user`), or the repository or
-  connection imported — and asserts that none of `DB_FREE`'s files carries
-  one, so its markers tell the two kinds apart; a database-free file added to
-  `db` fails there until it is named in `DB_FREE`. The `tests/db/**` half is real as of Wave 1
+  They stay where they mirror `src/`, which is why it is a list. A
+  database-free file added to `db` is named in `DB_FREE` by review: it costs
+  a clone, not a failure. The `tests/db/**` half is real as of Wave 1
   (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts

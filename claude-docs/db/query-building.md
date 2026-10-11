@@ -30,15 +30,14 @@ behaviours shape it, and both are load-bearing:
   group verbatim: drop it and the whole database layer would silently lose rule
   2 as the price of being allowed to build queries.
 
-That second failure mode is the one a green test suite would otherwise hide, so
-`lint-db-client-boundary.test.ts` asserts it directly — a probe importing the
-client from inside `src/db` must still draw a diagnostic. The same test covers
-both rules in one oxlint run: every probe is written, linted in a single spawn,
-and the cases partition the diagnostics by filename. The probes live in
-throwaway `__lint-probe__/` directories inside the repo (gitignored, removed in
-`afterAll`) rather than in `tmpdir`, because both rules are scoped by path and
-a file outside the tree matches no `overrides` block — it could only ever prove
-the default tier.
+That second failure mode is the one a green test suite would otherwise hide;
+it was proved by a probe when the override was written, and is held by review
+since MB.224 (lint carries a ban; a test re-running the linter adds nothing).
+`lint-db-client-boundary.test.ts` keeps one probe per rule and the exemption
+pin below. Its probes live in throwaway `__lint-probe__/` directories inside
+the repo (gitignored, removed once linted) rather than in `tmpdir`, because
+both rules are scoped by path and a file outside the tree matches no
+`overrides` block.
 
 **What each rule makes impossible, rather than merely absent:**
 

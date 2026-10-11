@@ -37,8 +37,8 @@ name for `src/graphql/loaders/index.ts` to register, which both update
 mutations clear through `clearIngredientChildren`; and a field in
 `graphql/ingredient-input.ts`'s `ingredientInputFields`, which the four input
 types spread. No service, mutation or input type is edited, and
-`tests/guards/ingredient-child-loaders.test.ts` fails a loader defined
-outside the record or one a mutation clears by hand.
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` proves the
+mutations clear what the record names.
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and

@@ -21,8 +21,8 @@ look like it worked and silently do nothing. Six files carry one:
 | `tests/db/test-database-isolation.test.ts` | The connection _is_ the subject: it asserts `db` points at this worker's `sorrel_test_<n>` clone (M1.9).                                                                                                                                                                        |
 
 That list is pinned by `tests/guards/lint-db-client-boundary.test.ts`, which
-lints deliberate violations written to a temp directory and asserts the exemption
-set is exactly those six. Adding a seventh turns that test red, so it has to be
+asserts the exemption set is exactly those six, and lints one deliberate
+violation per rule written to a throwaway directory. Adding a seventh turns that test red, so it has to be
 argued for in the diff rather than appearing quietly beside an import. The
 violations are written at test time rather than committed as fixtures because
 oxlint skips anything matching the config's `ignorePatterns` even when the

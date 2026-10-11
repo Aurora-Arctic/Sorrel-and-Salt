@@ -67,8 +67,7 @@ rule 1).
 Forbidden()` itself, so its `src/modules/*/graphql/**` and
   `src/modules/*/loaders/**` override refuses a runtime import of
   `Forbidden`, which the statement cannot be written without and which
-  neither directory has another use for. `tests/guards/lint-resolver-session.test.ts`
-  probes it, and that the override restated the transport's other bans.
+  neither directory has another use for.
 - **`definedArgs(args)`** makes each null absent: GraphQL sends null for an
   optional argument or input field, and a service's filter or input takes
   `undefined`. A list passes the fields it names, `definedArgs({ query,

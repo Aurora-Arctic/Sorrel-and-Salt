@@ -866,8 +866,7 @@ new and given an entry to edit, on the same stand-in, which also answers the
 compendium's substitute search and its three writes: a name holding
 "redirect" meets MB.82's question until it is sent again confirmed.
 The original `fetch` is put back on unmount. The TanStack Query client is the
-workshop's global provider's: a second provider would split the cache, which
-`tests/guards/graphql-client.test.ts` refuses. This replaces M5.10's
+workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
 
 ## Testing

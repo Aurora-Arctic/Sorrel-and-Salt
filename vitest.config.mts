@@ -16,9 +16,8 @@ const DB_INCLUDE = ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'];
 // constant — and so run in `unit` rather than wait on a fresh clone of the
 // seeded database before each (MB.189). They stay where they mirror src/,
 // which is why this is a list rather than a directory.
-// tests/guards/db-project-queries.test.ts holds every file left in `db` to a
-// database client of its own or a service reached as a fixture user, so a
-// database-free file added there fails until it is named here.
+// A database-free file added to `db` belongs here: it costs a clone, not a
+// failure, so review is what notices one.
 export const DB_FREE = [
   'tests/modules/**/validation/**',
   'tests/db/audit.test.ts',

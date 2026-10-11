@@ -275,9 +275,7 @@ happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
 per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
-`tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
-source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
-compile time.
+`chip()` refuses a slug at compile time.
 
 `light-dark()` is newer than Next's default browser targets (Safari 16.4), so
 Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
