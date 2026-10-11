@@ -269,6 +269,10 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 Thirty-five traditions and 216 deities, the owner's starting list, with their descriptions, what was left out and why, and the sources the list came from; MB.129 seeds and parses it. [`db/deity-vocabulary-seed.md`](db/deity-vocabulary-seed.md)
 
+## The compendium seed (MB.239 to MB.248)
+
+The compendium's 614 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
+
 ## The standard scenario (M1.22)
 
 Fixture users A to E, workspaces W and X and a compendium awkward on purpose: the fixed cast every authorization test reads against. [`db/standard-scenario.md`](db/standard-scenario.md)
