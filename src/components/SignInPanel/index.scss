@@ -19,9 +19,9 @@
   width: 100%;
 
   // The narrow frame's whole column, and a step more room inside than the
-  // `.panel` default, a step more again below: the card is the one thing on
+  // `.panel` default, two steps more below: the card is the one thing on
   // the page, and the owner asked for it bigger (MB.116, 2026-10-11).
-  padding: space(6) space(6) space(7);
+  padding: space(6) space(6) space(8);
 
   // The lede and the error wrap at the buttons' width instead of widening
   // the column: zero intrinsic width, then stretched to the column.
@@ -49,8 +49,9 @@
   display: grid;
   grid-template-columns: max-content;
   justify-content: center;
-  // Room for the last-used badge, which hangs over its button's top edge.
-  gap: space(6);
+  // Room for the last-used badge, which hangs over its button's top edge,
+  // and no more: the owner asked for the buttons closer (2026-10-11).
+  gap: space(4);
   margin-top: space(4);
 }
 
