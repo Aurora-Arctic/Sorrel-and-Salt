@@ -145,7 +145,7 @@ A value a source gives that is not on the list is left out of the field, and the
 
 An entry's formal name is its identity: two entries may share a label, never a formal name. The rules (plan decision 9):
 
-- **Plants** take the accepted name in Plants of the World Online (POWO), in `Genus species` form, with `subsp.`, `var.` or a quoted cultivar where the entry is one (`Lavandula angustifolia 'Hidcote'`). Where practice does not split a genus into species, the genus alone.
+- **Plants** take the accepted name in Plants of the World Online (POWO), in `Genus species` form, with `subsp.`, `var.` or a quoted cultivar where the entry is one (`Lavandula angustifolia 'Hidcote'`). Where practice does not split a genus into species, the genus alone. Where the candidate list names a group within a genus by its rank, the rank stays in the name (`Rubus subg. Rubus`, `Vaccinium sect. Cyanococcus`), and the guard takes that shape (MB.243).
 - **Fungi** take their binomial, with `nomenclature: 'fungal'`.
 - **Minerals** take `<Species> var. <variety>` where the stone is a variety, as `standard` does (`Quartz var. amethyst`), so amethyst, citrine and rose quartz stay three entries. A rock rather than a mineral species is named as the mineral system names it (`Lapis lazuli`). Mindat is the reference for mineral names.
 - **Metals and salts** take their chemical name, with `nomenclature: 'chemical'` (`Sodium chloride`).
@@ -255,6 +255,12 @@ Paul Beyerl's _A Compendium of Herbal Magick_ and Melody's _Love Is in the Earth
 - Gardner, Zoë, and Michael McGuffin, eds. _American Herbal Products Association's Botanical Safety Handbook_. 2nd ed. Boca Raton, FL: CRC Press, 2013. PDF.
 - Kynes, Sandra. _Herbal Remedies for Beginners: Natural Ways to Treat Ailments_. Woodbury, MN: Llewellyn Publications, 2020. EPUB.
 - Northcote, Lady Rosalind. _The Book of Herbs_. Handbooks of Practical Gardening 12. London: John Lane, The Bodley Head, 1903.
+
+Culpeper, read online, was added to `works.ts` by MB.243 from its own title page, read on 2026-10-11. It is cited as the edition Project Gutenberg transcribes, the 1850 London edition, not the first edition of 1653; its locator is the entry heading, `s.v. Agrimony`.
+
+- Culpeper, Nicholas. _The Complete Herbal_. London: Thomas Kelly, 1850. Project Gutenberg ebook 49513. https://www.gutenberg.org/ebooks/49513.
+
+Grieve's _A Modern Herbal_ is cited page by page, as MB.247 first did: each heading read on botanical.com is a shard source `grieve-<slug of the heading>`, `kind: 'web_page'`, `authors: 'Grieve, M.'`, the heading as `title`, `container: 'A Modern Herbal'`, the page's address and the day it was read. Every lane uses that shape, so two shards citing one page write one `references` row. botanical.com refuses a request without a browser's `User-Agent` and `Accept` headers (HTTP 406 from its firewall); with them it answers.
 
 The sources seed already holds a citation of the first edition, "Cunningham, Scott. _Cunningham's Encyclopedia of Magical Herbs_. St. Paul, MN: Llewellyn Publications, 1985." That is a different edition and stays a different row: the compendium cites the 2012 e-book, the one the lanes read.
 
