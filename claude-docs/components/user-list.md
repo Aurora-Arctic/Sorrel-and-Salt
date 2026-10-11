@@ -152,17 +152,20 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
 - **Approving or granting to an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
-  under its question, in a `.notice--warn`: "This email address has not been
+  under its question, in a quiet warning `Notice`: "This email address has not been
   verified, so nobody has proved who holds it. Approving keeps the account
   rather than letting it lapse." Grant's says the same with "Granting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
-  ledger row keeps the account from the sweep as an approval's does. An approval vouches for whoever holds the address, and the vouching
-  keeps the account from MB.67's sweep of lapsed unverified accounts (MB.204).
+  ledger row keeps the account from the sweep as an approval's does. An
+  approval vouches for whoever holds the address, and the vouching keeps the
+  account from MB.67's sweep of lapsed unverified accounts (MB.204).
   It is a warning, not a refusal: the modal's Approve still approves, since
   M2.9 leaves confirming who someone is to the admin. The modal's Approve is
   `aria-describedby` the warning, so a screen reader reads it as the focus
-  lands there on opening. It is written by hand rather than as a `Notice`,
-  whose `warn` kind is an alert and would be read a second time. A verified
+  lands there on opening. It is quiet, `<Notice kind="warn" quiet>`, so it
+  renders as an `<output>`, a status, with the warning's look: an alert would
+  be read a second time. The `id` the Approve names is the notice's `id`
+  prop, and `.user-list__warning` its layout class. A verified
   user's Approve or Grant, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
 - **The Role cell holds the role's control** (MB.59,
@@ -191,10 +194,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
   which the primitive wraps beneath the heading on a narrow screen. While
   changes are on it shows the button alone; while paused it first says so in
-  a `.notice--warn`: "Admin changes are paused.", on the owner's call. The notice is a plain
-  paragraph, compounded as `.notice.user-list__pause-state` past the
+  a quiet warning `Notice`: "Admin changes are paused.", on the owner's
+  call. Quiet makes it an `<output>`, a status rather than an alert, because
+  it arrives with the page and is read in its order rather than announced.
+  It takes `.user-list__pause-state` as its layout class, compounded past the
   `body .notice` primitive, and is the page's one sentence about the pause.
-  It is written by hand for that reason: `Notice`'s `warn` kind is an alert.
   Then Pause Admin Changes or Resume Admin Changes, both full size and
   `.btn--destructive`, big and red on the owner's call, so the control keeps
   its look as it flips. For the primary admin (`canToggle`) it sends the
