@@ -489,6 +489,8 @@ _Acceptance criteria:_
 - Every caller of the moved predicate imports it from its new home, and `tests/db/repository/` passes unchanged
 - `claude-docs/db/repository-files.md` names where the moved predicate lives
 
+_As built:_ `readableIngredientParent` moved into a file of its own, `src/db/repository/ingredient-parent.ts`, which imports `inTiers` from `predicates.ts` and `existsIn` from `select.ts`. It did not go into `select.ts`, which builds queries for any table and imports no table schema, while this predicate is about the `ingredients` table and its tiers. `predicates.ts` now imports nothing from the folder but types, `ingredients.ts` and `references.ts` import the predicate from its new file, and the index never exported it, so nothing outside the folder changed. The `src/db/repository/*.ts` override is gone from `.oxlintrc.json`, so `import/no-cycle` now covers every file the lint reads, the repository included, and `npm run lint` passes with it. `claude-docs/db/repository-files.md` gives the new file a row, and `modules.md` and `db/workspace-ingredients.md`, which placed the predicate in `predicates.ts`, say where it is now.
+
 **MB.232 — The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them** · 0.5h
 
 _Story:_ As a developer, I want no type declaration in the tree that nothing checks against, so that a reader does not take one for a contract the code keeps.

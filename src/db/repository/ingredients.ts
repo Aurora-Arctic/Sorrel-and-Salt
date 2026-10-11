@@ -9,13 +9,13 @@ import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInTiers, findPageInTiers } from './finders';
+import { readableIngredientParent } from './ingredient-parent';
 import {
   fold,
   foldedWordMatch,
   inCompendium,
   listFolds,
   notSoftDeleted,
-  readableIngredientParent,
   readableInTiers,
 } from './predicates';
 import { citesNothing } from './references';

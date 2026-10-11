@@ -23,7 +23,8 @@ rather than a driver error.
 **Every read that shows a coven ingredient beside the compendium's names both
 tiers in one predicate** (MB.206). `readableInTiers(memberships, ingredients)`
 in `src/db/repository/predicates.ts` is the row live and in the compendium or
-a coven one of the proofs names, and `readableIngredientParent` is the same
+a coven one of the proofs names, and `readableIngredientParent`, in
+`ingredient-parent.ts`, is the same
 test made of a child row's parent, for the folk names, categories, deities,
 substitutes and references, which carry no `workspace_id` of their own. A
 coven ingredient reaches another coven's reader through neither.

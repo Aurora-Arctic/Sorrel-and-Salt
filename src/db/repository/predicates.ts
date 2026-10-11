@@ -1,14 +1,14 @@
 import { and, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import { existsIn } from './select';
 import type { SoftDeletable, WordMatch, WorkspaceScoped } from './types';
 
 // The `where` predicates the finders and the writer share: a proof's workspace,
 // the compendium tier and the two read together, the soft-delete filter, and
 // the text matches — the admin lists' fragment, the fold, and the trigram and
-// accent-folded word matches.
+// accent-folded word matches. Nothing here builds a query: `select.ts` imports
+// this file, so `readableIngredientParent`, built on its `existsIn`, lives in
+// `ingredient-parent.ts`.
 
 /**
  * The proof's own predicate. Built here rather than by the caller: a
@@ -37,9 +37,10 @@ export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TT
  * one of them proves. No proofs is the compendium alone, which is how a
  * signed-out request and an admin's compendium form read. The tier and nothing
  * else: `readableInTiers` adds the row's own tombstone filter, and
- * `readableIngredientParent` reads it through `existsIn`, which adds the
- * parent's, so neither statement reads it twice. Unfiltered by itself only in
- * the spell hatch, whose ingredient may be deleted (M5.3).
+ * `readableIngredientParent` in `ingredient-parent.ts` reads it through
+ * `existsIn`, which adds the parent's, so neither statement reads it twice.
+ * Unfiltered by itself only in the spell hatch, whose ingredient may be
+ * deleted (M5.3).
  */
 export function inTiers<TTable extends PgTable & WorkspaceScoped>(
   memberships: readonly Membership[],
@@ -58,25 +59,6 @@ export function readableInTiers<TTable extends PgTable & WorkspaceScoped>(
   table: TTable,
 ): SQL | undefined {
   return and(inTiers(memberships, table), notSoftDeleted(table));
-}
-
-/**
- * The ingredient `childColumn` names is readable, as `readableInTiers` reads
- * one, and holds `where` too: how a child table with no `workspace_id` of its
- * own takes its parent's tier, so a caller naming another coven's ingredient
- * gets no rows rather than a filter applied after the fetch (rule 7). A
- * correlated `EXISTS`, whose builder ANDs the parent's tombstone filter; `where`
- * reads the parent as `ingredients`, so a child compares its own tier with it.
- */
-export function readableIngredientParent(
-  memberships: readonly Membership[],
-  childColumn: AnyPgColumn,
-  where?: SQL,
-): SQL {
-  return existsIn(
-    ingredients,
-    and(eq(ingredients.id, childColumn), inTiers(memberships, ingredients), where),
-  );
 }
 
 /**

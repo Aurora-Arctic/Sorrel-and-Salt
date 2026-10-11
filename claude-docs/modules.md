@@ -223,8 +223,8 @@ scanned the import graph on every test run):
   `index.ts`, a `schema/*.ts` file or a `validation/*.ts` file; a
   module-to-module edge its `ALLOWED` map does not name; a module importing
   presentation; and an import into `src/db/repository/` other than its index.
-  `import/no-cycle` fails a cycle between files anywhere but inside the
-  repository, whose `select.ts` and `predicates.ts` build on each other.
+  `import/no-cycle` fails a cycle between files anywhere, the repository
+  included since MB.231.
   A type-only import counts exactly like a runtime one: `import type` is
   erased at compile time but couples to the file all the same, and the index
   exports the type too.
@@ -259,8 +259,9 @@ list since MB.224 retired the guard that pinned it.
 
 It holds the predicate, the five builders over it, seventeen functions and the
 writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
-NULL` itself; `inTiers`, `readableInTiers` and `readableIngredientParent`
-beside it, and `findPageInTiers` and `findPageCountInTiers` in `finders.ts`
+NULL` itself; `inTiers` and `readableInTiers` beside it,
+`readableIngredientParent` in `ingredient-parent.ts`, and `findPageInTiers`
+and `findPageCountInTiers` in `finders.ts`
 (MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
