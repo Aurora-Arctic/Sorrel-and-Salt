@@ -399,9 +399,12 @@ export interface FormFieldProps extends LookupFieldProps {
  */
 export type VariantsFieldProps = LookupFieldProps;
 
-/** One variant's fieldset: its place in the list, and how to take it out. */
+/** One variant's group: its place in the list, whether it is the one open, and how to open, close or take it out. */
 export interface VariantFieldsetProps extends VariantsFieldProps {
   index: number;
+  open: boolean;
+  /** Opens it, closing any other, or closes it. */
+  onToggle: (open: boolean) => void;
   onRemove: (index: number) => void;
 }
 

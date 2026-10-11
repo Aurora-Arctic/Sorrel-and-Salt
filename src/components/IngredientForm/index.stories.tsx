@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -568,9 +568,11 @@ function WhatToTry() {
         </li>
         <li>
           <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
-          repeat is refused at the box. Remove takes a variant out. In a variant&rsquo;s Substitute
-          Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in oil first; pick it, and
-          Form of Testwort chooses which of its forms stands in.
+          repeat is refused at the box. The new variant opens; Done folds it to its summary line,
+          and Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text
+          while it is folded, and it opens on the error. Remove takes a variant out. In a
+          variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
+          oil first; pick it, and Form of Testwort chooses which of its forms stands in.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -608,18 +610,18 @@ function WhatToTry() {
         </li>
         <li>
           <strong>References:</strong> focus Reference to list three sources, or type
-          &ldquo;fixture&rdquo;; pick one and it becomes a row beneath the box, with a Locator to
-          fill in. The web page&rsquo;s long address wraps inside its row. A picked source is not
-          offered again.
+          &ldquo;fixture&rdquo;; pick one and it becomes a one-line row beneath the box. Its pencil
+          opens the row to the whole citation, wrapping the web page&rsquo;s long address, and a
+          Locator to fill in; its &times; takes it out. A picked source is not offered again.
         </li>
         <li>
-          <strong>A new reference:</strong> press New Reference, or pick &ldquo;Add a
-          reference&rdquo; from the list, and choose a Kind: each shows only its own fields, the
-          required ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web
-          Page&rsquo;s Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is
-          refused by the server beside Title, and one with &ldquo;refuse&rdquo; in it above the
-          panel&rsquo;s fields. Enter in a field saves the reference, not the ingredient. Save the
-          ingredient with the panel open to see it held.
+          <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the
+          list&rsquo;s last row, and choose a Kind: each shows only its own fields, the required
+          ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s
+          Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is refused by the
+          server beside Title, and one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s
+          fields. Enter in a field saves the reference, not the ingredient. Save the ingredient with
+          the panel open to see it held.
         </li>
         <li>
           <strong>Tidied as you go:</strong> in a new reference, type a Title in quotation marks, an
@@ -678,7 +680,15 @@ export const Blank: Story = () => {
   );
 };
 
-// The entry the edit story opens: a planet listed and a category picked (MB.126).
+/** One of SOURCES as a reference row, cited at `locator`. */
+const cited = (source: (typeof SOURCES)[number], locator = '') => ({
+  value: source.citation,
+  link: { id: source.id, isGlobal: source.isGlobal },
+  locator,
+});
+
+// The entry the edit story opens: a planet listed, a category picked
+// (MB.126), two sources, and two forms, one carrying details of its own.
 const ENTRY = {
   id: '00000000-0000-4000-8000-000000000301',
   values: {
@@ -686,7 +696,8 @@ const ENTRY = {
     name: 'Testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    // Two forms, the second with a safety note of its own (MB.221).
+    // Two forms (MB.221), the first with details of its own and the second
+    // with none, so their summary lines show both (MB.115).
     variants: [
       {
         ...EMPTY_VARIANT,
@@ -698,6 +709,10 @@ const ENTRY = {
           group: 'Plant part',
           description: null,
         },
+        safetyNotes: 'Dry away from damp.',
+        planets: [{ value: 'Mercury' }],
+        categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
+        references: [cited(SOURCES[1], 'pp. 12–19')],
       },
       {
         ...EMPTY_VARIANT,
@@ -709,13 +724,13 @@ const ENTRY = {
           group: 'Plant part',
           description: null,
         },
-        safetyNotes: 'Wash before use.',
       },
     ],
     description: 'A fixture herb, for the workshop.',
     planets: [{ value: 'Mercury' }],
     // Testward, one of the categories the stand-in answers the picker with.
     categoryIds: [CATEGORIES[0].id],
+    references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[2])],
   } satisfies IngredientFormValues,
 };
 
@@ -770,6 +785,16 @@ export const CompendiumEntry: Story = () => {
       <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />
     </>
   );
+};
+
+/** The same entry with its first form open, as its Edit leaves it. */
+export const CompendiumEntryVariantOpen: Story = () => {
+  useCannedApi();
+  // Pressed once it is drawn: which form is open is the form's own state.
+  useEffect(() => {
+    document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]')?.click();
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
 };
 
 // A phone's width, in each theme: the admin's edit, bare, as at desktop.

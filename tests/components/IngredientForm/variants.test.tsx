@@ -45,6 +45,7 @@ import type { FormNode, IngredientNode } from './types';
 const ENTRY_ID = '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93';
 const OIL_ID = '8d2c4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f';
 const HERB_VARIANT_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
+const HERB_FORM_ID = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b';
 
 /** A curated form, Oil, under an invented group. */
 const OIL: FormNode = {
@@ -147,6 +148,36 @@ const newForm = () => control(document.body, 'New Form');
 const variant = (form: string) => screen.getByRole('group', { name: form });
 const noVariant = (form: string) =>
   expect(screen.queryByRole('group', { name: form })).not.toBeInTheDocument();
+
+/** A variant's Edit, which opens and closes it (MB.115). */
+const editOf = (form: string) =>
+  within(variant(form)).getByRole('button', { name: `Edit ${form}` });
+/** Opens a closed variant by its Edit, as a person would before typing in it. */
+const openVariant = (form: string) => {
+  const edit = editOf(form);
+  if (edit.getAttribute('aria-expanded') !== 'true') fireEvent.click(edit);
+  return variant(form);
+};
+/** An entry with two closed forms, Oil and Herb, Oil carrying a colour left in its box. */
+const twoForms = (oil: Partial<IngredientFormValues['variants'][number]> = {}) => ({
+  ...EMPTY_VALUES,
+  name: 'Testwort',
+  nomenclature: 'none' as const,
+  variants: [
+    {
+      ...EMPTY_VARIANT,
+      variantId: HERB_VARIANT_ID,
+      form: 'Oil',
+      formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+      ...oil,
+    },
+    {
+      ...EMPTY_VARIANT,
+      form: 'Herb',
+      formLink: { id: HERB_FORM_ID, name: 'Herb', group: 'Plant part', description: null },
+    },
+  ],
+});
 
 /** Types a form into the New Form box and presses its Add. */
 const addVariant = (form: string) => {
@@ -280,7 +311,7 @@ describe('IngredientForm’s variants', () => {
       },
     });
 
-    const form = control(variant('Oil'), 'Form');
+    const form = control(openVariant('Oil'), 'Form');
     fireEvent.change(form, { target: { value: 'Oyl' } });
     save();
 
@@ -365,7 +396,7 @@ describe('IngredientForm’s variants', () => {
       },
     });
 
-    type(variant('Oil'), 'Description', 'Pressed from the fixture.');
+    type(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
     save();
 
     await waitFor(() => expect(calls).toHaveLength(1));
@@ -378,6 +409,86 @@ describe('IngredientForm’s variants', () => {
         safetyNotes: 'Dilute before use.',
       }),
     ]);
+  });
+
+  // MB.115, the owner's call: each variant one summary line, opened by its
+  // Edit, one at a time, its fields hidden while closed but kept.
+  describe('folded to a line', () => {
+    it('opens an entry with every variant closed, its fields out of reach until Edit opens it', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+
+      const edit = editOf('Oil');
+      expect(edit).toHaveAttribute('aria-expanded', 'false');
+      expect(edit).toHaveAccessibleDescription(/\S/);
+      expect(within(variant('Oil')).queryByRole('textbox', { name: 'Safety Notes' })).toBeNull();
+      expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(edit);
+
+      expect(edit).toHaveAttribute('aria-expanded', 'true');
+      const region = document.getElementById(edit.getAttribute('aria-controls') ?? '');
+      expect(region).toBeVisible();
+      expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
+      // The focus goes into the opened fields, to the first.
+      expect(control(variant('Oil'), 'Form')).toHaveFocus();
+    });
+
+    it('closes on Done, the focus back on its Edit, and keeps what was typed', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+
+      const oil = openVariant('Oil');
+      type(oil, 'Safety Notes', 'Dilute before use.');
+      fireEvent.click(within(oil).getByRole('button', { name: 'Done with Oil' }));
+
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
+      expect(editOf('Oil')).toHaveFocus();
+      expect(within(oil).queryByRole('textbox', { name: 'Safety Notes' })).toBeNull();
+      expect(within(openVariant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
+        'Dilute before use.',
+      );
+    });
+
+    it('keeps one variant open at a time', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+
+      openVariant('Oil');
+      fireEvent.click(editOf('Herb'));
+
+      expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'true');
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('opens a variant as Add Variant adds it, closing the one open', () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+
+      addVariant('Oil');
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+      addVariant('Herb');
+
+      expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'true');
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
+      // The New Form box keeps the focus, ready for the next.
+      expect(newForm()).toHaveFocus();
+    });
+
+    it('opens a closed variant a save finds an error in, its field focused, and sends nothing', async () => {
+      const calls = acceptUpdate();
+      renderForm({
+        workspaceId: null,
+        values: twoForms({ drafts: { ...EMPTY_VARIANT.drafts, colors: 'Fixture Red' } }),
+      });
+      fireEvent.click(editOf('Herb'));
+      type(variant('Herb'), 'Description', 'Dug in autumn.');
+
+      save();
+
+      await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
+      const colour = control(variant('Oil'), 'Colour');
+      expect(colour).toBeInvalid();
+      expect(colour).toHaveFocus();
+      expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'false');
+      expect(calls).toHaveLength(0);
+    });
   });
 
   describe('a variant’s substitutes', () => {

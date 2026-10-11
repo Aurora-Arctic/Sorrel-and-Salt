@@ -187,8 +187,8 @@ export const Sortable: Story = () => {
 
 /** A box with no source yet: it never opens, and Enter adds as Add does. */
 /**
- * A list whose entries can only be picked, the references' (MB.154): its first
- * row makes something new, "Add a reference", whatever is typed, in place of
+ * A list whose entries can only be picked, the references' (MB.154): its last
+ * row makes something new, "New Reference…", whatever is typed, in place of
  * the typed row. Picking it says so beneath the box.
  */
 export const CreateRow: Story = () => {
@@ -203,9 +203,9 @@ export const CreateRow: Story = () => {
         onChange={setValue}
         onPick={setValue}
         suggestions={{ options: NAMES, pending: false }}
-        create={{ label: 'Add a reference', onCreate: () => setMade((count) => count + 1) }}
+        create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
       />
-      {made > 0 && <output className="story-note">Add a reference picked {made}×.</output>}
+      {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
     </>
   );
 };

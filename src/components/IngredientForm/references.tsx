@@ -1,7 +1,15 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { type FocusEvent, type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import {
+  type FocusEvent,
+  type ReactElement,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   get,
   useController,
@@ -16,6 +24,7 @@ import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
 import { FieldError } from '../Field';
+import { EditIcon, RemoveIcon } from './icons';
 import ReferencePanel from './reference-panel';
 import { useLookup } from './suggestions';
 import type {
@@ -28,13 +37,14 @@ import type {
 } from './types';
 import { draftOf, sourceTierOf } from './values';
 
-// The References field (MB.154): a search over the compendium's sources and
-// this coven's, each picked becoming a row beneath the box — the citation
-// whole, as a bibliography reads, its tier, and a locator — and a panel for a
-// source not yet written. Typed text is a search and never an entry, so where
-// a list has Add this has New Reference, and its list's first row is "Add a
-// reference" rather than what was typed. Only each source's id and locator
-// are sent (claude-docs/components/ingredient-form.md, "The references").
+// The References field (MB.154): one search over the compendium's sources and
+// this coven's, each picked becoming a one-line row beneath the box — its
+// citation, cut to the line, and its locator — which its edit opens to the
+// citation whole, its tier and the Locator box; and a panel for a source not
+// yet written. Typed text is a search and never an entry, so the list's last
+// row is "New Reference…", which opens the panel, rather than what was typed
+// (MB.115, the owner's call). Only each source's id and locator are sent
+// (claude-docs/components/ingredient-form.md, "The references").
 
 export const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
@@ -83,13 +93,14 @@ export function ReferencesField({
   const { fields, append, remove } = useFieldArray({ control, name: list });
   const { field } = useController({ control, name: box });
   const panelOpen = useWatch({ control, name: panel });
+  // Each row's locator as typed, for its one-line summary.
+  const rowValues = useWatch({ control, name: list });
   const { errors, isSubmitted } = useFormState({ control, name: [list, box] });
   const queryClient = useQueryClient();
   const id = useId();
   const legendId = `${id}-legend`;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const panelId = `${id}-panel`;
   const boxElement = useRef<HTMLInputElement | null>(null);
   // The box and its button together, which an open list spans (MB.154).
   // Held as state, through its callback ref, so the box is told once it exists.
@@ -97,6 +108,15 @@ export function ReferencesField({
   const [active, setActive] = useState(false);
   // What the last add or removal did, for a screen reader, as a list's says.
   const [announcement, setAnnouncement] = useState('');
+  // The row open to change, by its field-array key: one at a time, the rest
+  // a line each (MB.115). Its Locator takes the focus as it opens.
+  const [openRow, setOpenRow] = useState<string | null>(null);
+  const focusLocator = useRef(false);
+  useEffect(() => {
+    if (openRow === null || !focusLocator.current) return;
+    focusLocator.current = false;
+    document.getElementById(`${id}-${openRow}-locator`)?.focus();
+  }, [openRow, id]);
   const focusBox = () => boxElement.current?.focus();
 
   // A source already listed is not offered again: listing it twice is refused.
@@ -108,6 +128,10 @@ export function ReferencesField({
     return { ...found, options: found.options.filter((option) => !ids.has(option.link.id)) };
   }, [found, listed]);
 
+  // A locator in error is shown, open or not, so its box can take the focus.
+  const locatorErrors = fields.map(
+    (_, index): boolean => get(errors, `${list}.${index}.locator`) !== undefined,
+  );
   const rowErrors = fields.map(
     (_, index): string | undefined =>
       [
@@ -177,8 +201,8 @@ export function ReferencesField({
         <span id={legendId}>References</span>
         <InfoTip id={hintId} label="References">
           Where what this entry says comes from: a book, an article, a web page. Search for one
-          already recorded, or add a new one, and give a locator to point within it: p. 112, chap.
-          13.
+          already recorded, or choose New Reference at the end of the list to write one, and give a
+          locator to point within it: p. 112, chap. 13.
         </InfoTip>
       </legend>
       <div ref={setBoxRow} className="ingredient-form__row">
@@ -196,7 +220,7 @@ export function ReferencesField({
           }}
           suggestions={suggestions}
           listAnchor={boxRow}
-          create={{ label: 'Add a reference', onCreate: openPanel }}
+          create={{ label: 'New Reference…', onCreate: openPanel }}
           inputRef={(element) => {
             field.ref(element);
             boxElement.current = element;
@@ -205,16 +229,6 @@ export function ReferencesField({
           aria-invalid={message ? true : undefined}
           aria-describedby={describedBy}
         />
-        {/* Where a list has Add: opens the panel, as the list's first row does. */}
-        <button
-          type="button"
-          className="btn"
-          aria-expanded={panelOpen}
-          aria-controls={panelOpen ? panelId : undefined}
-          onClick={openPanel}
-        >
-          New Reference
-        </button>
       </div>
       {fields.length > 0 && (
         <ul className="ingredient-form__references">
@@ -222,54 +236,52 @@ export function ReferencesField({
             const citationId = `${id}-${row.id}`;
             const locatorId = `${citationId}-locator`;
             const locatorHintId = `${locatorId}-hint`;
+            const detailId = `${citationId}-detail`;
             const invalid = rowErrors[index] !== undefined;
+            const open = openRow === row.id || locatorErrors[index];
+            const locator = rowValues[index]?.locator.trim() ?? '';
             return (
               <li
                 key={row.id}
-                className={
-                  invalid ? 'ingredient-form__reference is-invalid' : 'ingredient-form__reference'
-                }
+                className={[
+                  'ingredient-form__reference',
+                  open && 'is-open',
+                  invalid && 'is-invalid',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
               >
+                {/* One line: the citation cut at the line's end, its whole
+                    text still the element's for a screen reader and the
+                    pointer's tooltip, then where in it, if anywhere. Open,
+                    the citation reads whole. */}
                 <div className="ingredient-form__source">
-                  <span id={citationId} className="ingredient-form__citation">
+                  <span id={citationId} className="ingredient-form__citation" title={row.value}>
                     {row.value}
                   </span>
-                  <span className="ingredient-form__tier">{sourceTierOf(row.link)}</span>
+                  {!open && locator !== '' && (
+                    <span className="ingredient-form__locator-text">{locator}</span>
+                  )}
                 </div>
-                {/* Read with the source it locates, then what a locator is: a
-                    column of bare "Locator"s is no help to a screen reader. The
-                    tip beside the label, as every field's is. */}
-                <div className="ingredient-form__locator field__label-row">
-                  <label className="field__label" htmlFor={locatorId}>
-                    Locator
-                  </label>
-                  <InfoTip id={locatorHintId} label="Locator">
-                    {LOCATOR_HINT}
-                  </InfoTip>
-                  <input
-                    id={locatorId}
-                    className="input"
-                    aria-describedby={[citationId, locatorHintId, invalid && errorId]
-                      .filter(Boolean)
-                      .join(' ')}
-                    aria-invalid={invalid || undefined}
-                    {...register(`${list}.${index}.locator`, {
-                      // Tidied as it is left, as the server will store it.
-                      onBlur: (event: FocusEvent<HTMLInputElement>) => {
-                        const text = event.target.value;
-                        const formatted = formatLocator(text);
-                        if (formatted !== text) {
-                          setValue(`${list}.${index}.locator`, formatted, { shouldDirty: true });
-                        }
-                      },
-                    })}
-                  />
-                </div>
-                {/* Named for its source, as a list entry's × is, and the
-                    focus goes back to the box, since the pressed × goes. */}
+                {/* Named for its source, as its × is: a column of bare
+                    "Edit"s is no help to a screen reader. */}
                 <button
                   type="button"
-                  className="combobox__entry-remove ingredient-form__remove"
+                  className="ingredient-form__icon-button"
+                  aria-label={`Edit ${row.value}`}
+                  aria-expanded={open}
+                  aria-controls={detailId}
+                  onClick={() => {
+                    focusLocator.current = !open;
+                    setOpenRow(open ? null : row.id);
+                  }}
+                >
+                  <EditIcon />
+                </button>
+                {/* The focus goes back to the box, since the pressed × goes. */}
+                <button
+                  type="button"
+                  className="ingredient-form__icon-button ingredient-form__remove"
                   aria-label={`Remove ${row.value}`}
                   aria-describedby={invalid ? errorId : undefined}
                   onClick={() => {
@@ -277,8 +289,42 @@ export function ReferencesField({
                     focusBox();
                   }}
                 >
-                  <span aria-hidden="true">×</span>
+                  <RemoveIcon />
                 </button>
+                <div id={detailId} className="ingredient-form__reference-detail" hidden={!open}>
+                  <span className="ingredient-form__tier">{sourceTierOf(row.link)}</span>
+                  {/* Read with the source it locates, then what a locator is:
+                      a column of bare "Locator"s is no help to a screen
+                      reader. The tip beside the label, as every field's is. */}
+                  <div className="ingredient-form__locator field__label-row">
+                    <label className="field__label" htmlFor={locatorId}>
+                      Locator
+                    </label>
+                    <InfoTip id={locatorHintId} label="Locator">
+                      {LOCATOR_HINT}
+                    </InfoTip>
+                    <input
+                      id={locatorId}
+                      className="input"
+                      aria-describedby={[citationId, locatorHintId, invalid && errorId]
+                        .filter(Boolean)
+                        .join(' ')}
+                      aria-invalid={invalid || undefined}
+                      {...register(`${list}.${index}.locator`, {
+                        // Tidied as it is left, as the server will store it.
+                        onBlur: (event: FocusEvent<HTMLInputElement>) => {
+                          const text = event.target.value;
+                          const formatted = formatLocator(text);
+                          if (formatted !== text) {
+                            setValue(`${list}.${index}.locator`, formatted, {
+                              shouldDirty: true,
+                            });
+                          }
+                        },
+                      })}
+                    />
+                  </div>
+                </div>
               </li>
             );
           })}
@@ -286,14 +332,12 @@ export function ReferencesField({
       )}
       <FieldError id={errorId} message={message} />
       {panelOpen && (
-        <div id={panelId}>
-          <ReferencePanel
-            workspaceId={workspaceId}
-            summons={summons}
-            onSaved={saved}
-            onCancel={closePanel}
-          />
-        </div>
+        <ReferencePanel
+          workspaceId={workspaceId}
+          summons={summons}
+          onSaved={saved}
+          onCancel={closePanel}
+        />
       )}
       {/* Labelled, so that it is told from the box's own status region. */}
       <output className="visually-hidden" aria-label="References changes">

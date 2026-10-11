@@ -1,7 +1,15 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
@@ -84,6 +92,35 @@ const DeleteCompendiumIngredientDocument = graphql(`
     deleteCompendiumIngredient(id: $id)
   }
 `);
+
+/**
+ * One of the form's titled sections (MB.115, the owner's call): a small
+ * heading over its fields, the sections set further apart than the fields
+ * within one. Unnamed, so it is no landmark: the heading is what a screen
+ * reader moves by. `labelled`, for a section whose one field's label would
+ * repeat its heading, hides that label from the eye alone.
+ */
+function Section({
+  title,
+  labelled = false,
+  children,
+}: {
+  title: string;
+  labelled?: boolean;
+  children: ReactNode;
+}): ReactElement {
+  const id = useId();
+  return (
+    <section
+      className={labelled ? 'ingredient-form__section is-labelled' : 'ingredient-form__section'}
+    >
+      <h3 id={id} className="ingredient-form__section-title">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
 
 /** The path of MB.82's refusal: the write would end another entry's redirect, unless confirmed. */
 const END_REDIRECT = 'endRedirect';
@@ -292,10 +329,11 @@ const IngredientForm = ({
         {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
         {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
         {refusal && <Notice kind="error">{refusal}</Notice>}
-        {/* Warns beneath it of the entries its name resembles (story 16),
+        <Section title="Identity">
+          {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
-        <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />
-        {/* The kind decides the formal name's error, so a change to it
+          <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />
+          {/* The kind decides the formal name's error, so a change to it
             revalidates the formal name. A named kind marks it required;
             Unknown leaves it open and optional. A coven's formal name with no
             kind saves as unknown, so nothing marks the kind there (MB.161);
@@ -303,51 +341,55 @@ const IngredientForm = ({
             name at all, so choosing it empties the field and shuts it, with
             the reason in view rather than in a tip: a shut field that does
             not say why reads as broken. */}
-        <SelectField<IngredientFormValues>
-          name="nomenclature"
-          label="Classification"
-          hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
-          placeholder="Choose a classification"
-          options={NOMENCLATURE_OPTIONS}
-          required={compendium}
-          deps={['canonicalName']}
-          onChange={(value) => {
-            if (value === NAMELESS_KIND) setValue('canonicalName', '');
-          }}
-        />
-        <TextField<IngredientFormValues>
-          name="canonicalName"
-          label="Formal Name"
-          hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
-          note={kind === NAMELESS_KIND ? 'A "none" entry records no formal name.' : undefined}
-          disabled={kind === NAMELESS_KIND}
-          required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
-        />
-        {/* Suggests from this coven and the compendium (M4.7a): the folk
+          <SelectField<IngredientFormValues>
+            name="nomenclature"
+            label="Classification"
+            hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
+            placeholder="Choose a classification"
+            options={NOMENCLATURE_OPTIONS}
+            required={compendium}
+            deps={['canonicalName']}
+            onChange={(value) => {
+              if (value === NAMELESS_KIND) setValue('canonicalName', '');
+            }}
+          />
+          <TextField<IngredientFormValues>
+            name="canonicalName"
+            label="Formal Name"
+            hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
+            note={kind === NAMELESS_KIND ? 'A "none" entry records no formal name.' : undefined}
+            disabled={kind === NAMELESS_KIND}
+            required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
+          />
+          {/* Suggests from this coven and the compendium (M4.7a): the folk
             names in use. The form is each variant's, beneath (MB.221). */}
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={useCommonNameSuggestions}
-          name="folkNames"
-          legend="Folk Names"
-          entry="Folk Name"
-          hint="Other names it goes by. A search finds it by any of them."
-        />
-        <TextField<IngredientFormValues>
-          name="description"
-          label="Description"
-          multiline
-          rows={10}
-        />
-        {/* Several at once, in the order chosen (MB.159); none chosen is
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useCommonNameSuggestions}
+            name="folkNames"
+            legend="Folk Names"
+            entry="Folk Name"
+            hint="Other names it goes by. A search finds it by any of them."
+          />
+        </Section>
+        <Section title="Description" labelled>
+          <TextField<IngredientFormValues>
+            name="description"
+            label="Description"
+            multiline
+            rows={10}
+          />
+        </Section>
+        <Section title="Correspondences">
+          {/* Several at once, in the order chosen (MB.159); none chosen is
             the answer "none", so there is no None to choose. */}
-        <MultiSelectField
-          name="elements"
-          label="Element"
-          placeholder="Choose elements"
-          options={ELEMENT_OPTIONS}
-        />
-        {/* Each list but the colours suggests (MB.131): planets, signs and
+          <MultiSelectField
+            name="elements"
+            label="Element"
+            placeholder="Choose elements"
+            options={ELEMENT_OPTIONS}
+          />
+          {/* Each list but the colours suggests (MB.131): planets, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
@@ -357,67 +399,74 @@ const IngredientForm = ({
             colours and deities keep the order entered, so their entries move
             (MB.170); folk names and substitutes read alphabetically, so
             theirs do not. */}
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={usePlanetSuggestions}
-          name="planets"
-          ordered
-          pickOnly={compendium}
-          legend="Planets"
-          entry="Planet"
-          hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
-        />
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={useZodiacSuggestions}
-          name="zodiacSigns"
-          ordered
-          pickOnly={compendium}
-          legend="Zodiac Signs"
-          entry="Zodiac Sign"
-          hint="The signs it answers to."
-        />
-        <ListField
-          name="colors"
-          ordered
-          legend="Colours"
-          entry="Colour"
-          hint="The colours it corresponds to in a working, not the colour it is."
-        />
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={useDeitySuggestions}
-          name="deities"
-          ordered
-          pickOnly={compendium}
-          legend="Deities"
-          entry="Deity"
-          hint="The gods and spirits it is sacred to."
-        />
-        <LookupListField
-          workspaceId={workspaceId}
-          // Fixed for the form's life, since its tier is, so the hook called is always the same.
-          useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
-          omit={entry?.id}
-          name="substitutes"
-          legend="Substitute Ingredients"
-          entry="Substitute Ingredient"
-          hint="Other ingredients to use in its place when this one is not to hand."
-        />
-        {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
-        <SubstituteForms name="substitutes" />
-        {/* After the lists (MB.126): every live category, picked from chips
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={usePlanetSuggestions}
+            name="planets"
+            ordered
+            pickOnly={compendium}
+            legend="Planets"
+            entry="Planet"
+            hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
+          />
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useZodiacSuggestions}
+            name="zodiacSigns"
+            ordered
+            pickOnly={compendium}
+            legend="Zodiac Signs"
+            entry="Zodiac Sign"
+            hint="The signs it answers to."
+          />
+          <ListField
+            name="colors"
+            ordered
+            legend="Colours"
+            entry="Colour"
+            hint="The colours it corresponds to in a working, not the colour it is."
+          />
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useDeitySuggestions}
+            name="deities"
+            ordered
+            pickOnly={compendium}
+            legend="Deities"
+            entry="Deity"
+            hint="The gods and spirits it is sacred to."
+          />
+        </Section>
+        <Section title="Relations">
+          <LookupListField
+            workspaceId={workspaceId}
+            // Fixed for the form's life, since its tier is, so the hook called is always the same.
+            useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
+            omit={entry?.id}
+            name="substitutes"
+            legend="Substitute Ingredients"
+            entry="Substitute Ingredient"
+            hint="Other ingredients to use in its place when this one is not to hand."
+          />
+          {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
+          <SubstituteForms name="substitutes" />
+          {/* After the lists (MB.126): every live category, picked from chips
             grouped by category group. */}
-        <CategoryField />
-        <TextField<IngredientFormValues>
-          name="safetyNotes"
-          label="Safety Notes"
-          hint="Toxicity, allergies, and anything to take care over when handling or burning it."
-          multiline
-        />
-        {/* Last, as a bibliography is (MB.154): the sources picked, each
+          <CategoryField />
+        </Section>
+        <Section title="Safety">
+          <TextField<IngredientFormValues>
+            name="safetyNotes"
+            label="Safety Notes"
+            hint="Toxicity, allergies, and anything to take care over when handling or burning it."
+            multiline
+          />
+        </Section>
+        <Section title="Sources">
+          {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
-        <ReferencesField workspaceId={workspaceId} />
+          <ReferencesField workspaceId={workspaceId} />
+        </Section>
         {/* After the ingredient's own fields, as the page shows its forms
             after it (MB.215): each form, and what it adds. */}
         <VariantsField workspaceId={workspaceId} />

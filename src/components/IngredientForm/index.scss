@@ -3,10 +3,10 @@
 
 // What the ingredient form draws beyond the form primitives (_primitives.scss)
 // and the Combobox, which own its fields, label rows, notices, buttons, the
-// confirm in place of the saves and Delete set apart: the form's column, a
-// list's spacing, the row a box shares with Add, the duplicate warning's
-// region, the references' rows and the new reference panel, the Variants
-// section, and the substitutes' second pickers.
+// confirm in place of the saves and Delete set apart: the form's column, its
+// titled sections, a list's spacing, the row a box shares with Add, the
+// duplicate warning's region, the references' rows and the new reference
+// panel, the Variants section, and the substitutes' second pickers.
 
 // A column narrower than the measure, as the other forms keep: wide enough
 // for a formal name and a line of description, and no wider, wherever the
@@ -27,6 +27,50 @@
       margin-bottom: space(3);
     }
   }
+}
+
+// The titled sections (MB.115, the owner's call): each a column of its fields
+// at the form's own gap, under a small heading set closer to them than they
+// are to each other, and a step further from the section before than any two
+// fields are, so the sections read as groups. The Variants section's heading
+// is its fieldset's legend, drawn the same.
+.ingredient-form__section {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  min-width: 0;
+
+  // A step on top of the form's gap between sections.
+  & + &,
+  & + .ingredient-form__variants {
+    margin-top: space(4);
+  }
+
+  // The one field's label repeats the heading, so it is the heading the eye
+  // reads, and the label stays the field's name for a screen reader: the
+  // `.visually-hidden` primitive's clip, which a class on the label row
+  // inside Field cannot be given from here.
+  &.is-labelled .field__label-row {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+// The section's heading, at a size off the type scale as a heading's may be:
+// the display face, a step under h4, so it heads its fields without
+// outweighing the dialog's title. Nested, to outweigh typography-base's
+// `body h3`, whose margin would add to the section's gap.
+.ingredient-form .ingredient-form__section-title {
+  margin: 0 0 calc(#{space(3)} - #{space(5)});
+  font-size: 1.25rem;
+  line-height: 1.2;
 }
 
 // A list's box and its Add button, one line; the box grows with its entries.
@@ -71,13 +115,15 @@
 }
 
 // The references (MB.154): rows beneath the search box rather than chips
-// inside it, so a citation reads whole, as a bibliography does. Each row is
-// its source and its × on one line, the locator beneath the source, so the
-// row holds at 320px with no line run sideways.
+// inside it, so a citation can read whole. Each row is one line, closed
+// (MB.115, the owner's call): the citation cut at its end, the locator, and
+// the edit and remove icons; open, the citation wraps whole and the tier and
+// the Locator box sit beneath it, so the row holds at 320px with no line run
+// sideways.
 .ingredient-form__references {
   display: flex;
   flex-direction: column;
-  gap: space(2);
+  gap: space(1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -85,10 +131,10 @@
 
 .ingredient-form__reference {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: space(2);
-  align-items: start;
-  padding: space(2) space(3);
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: space(2) space(1);
+  align-items: center;
+  padding: space(1) space(1) space(1) space(3);
   // A rule a step heavier than a field's 1px edge, so the row reads as a
   // quotation's bar rather than a box.
   border-left: $rule-medium solid $text-muted;
@@ -105,23 +151,87 @@
     border-left-color: $secondary;
   }
 
-  > .ingredient-form__remove {
-    grid-row: 1;
-    grid-column: 2;
-    border-radius: radius('sharp');
+  // Open, the citation's first line sits level with the icons.
+  &.is-open {
+    align-items: start;
+    padding-block: space(2);
   }
 }
 
+// The citation and its locator on one line, the citation giving way.
 .ingredient-form__source {
   display: flex;
-  flex-direction: column;
-  gap: space(1);
+  align-items: baseline;
+  gap: space(2);
   min-width: 0;
 }
 
-// A citation carries an address, which has no break of its own.
 .ingredient-form__citation {
-  overflow-wrap: anywhere;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  // Whole, wrapping anywhere: a citation carries an address, which has no
+  // break of its own.
+  .is-open > .ingredient-form__source > & {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.ingredient-form__locator-text {
+  flex: none;
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// The row's icon buttons: the target WCAG 2.2 asks for, the mark in the
+// muted ink until pointed at, as the combobox's clear is.
+.ingredient-form__icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $icon-size;
+  height: $icon-size;
+  padding: 0;
+  border: 0;
+  border-radius: radius('sharp');
+  background-color: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  @include theme-transition(background-color, color);
+
+  svg {
+    width: $glyph-size;
+    height: $glyph-size;
+  }
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    color: $text-primary;
+  }
+
+  // Remove destroys, so it answers in the wax as a chip's × does.
+  &.ingredient-form__remove:hover,
+  &.ingredient-form__remove:focus-visible {
+    background-color: color-mix(in srgb, $secondary 20%, $surface-card);
+    color: $secondary;
+  }
+}
+
+// What the edit opens beneath the line: the tier, and the Locator box.
+.ingredient-form__reference-detail {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+
+  // Closed is the attribute's, which the display above would otherwise undo.
+  &[hidden] {
+    display: none;
+  }
 }
 
 .ingredient-form__tier {
@@ -133,7 +243,6 @@
 // outweigh the `.field__label-row` primitive it also carries, whose tighter
 // gap is a label's beside its ⓘ, not a label's beside its box.
 .ingredient-form .ingredient-form__locator {
-  grid-column: 1;
   display: flex;
   align-items: center;
   gap: space(2);
@@ -168,28 +277,99 @@
   }
 }
 
-// The Variants section (MB.221): each form a group set off from the
-// ingredient's fields, as the new reference panel is, its legend across the
-// top edge with its Remove at the far end. Padded a step less than the panel,
-// so a form's own lists keep their width on a phone.
+// The Variants section (MB.221): each form a card, one summary line with its
+// Edit and Remove while closed (MB.115), its fields beneath while open.
 .ingredient-form .ingredient-form__variants {
-  gap: space(4);
+  gap: space(3);
+
+  // The legend is the section's heading: as far from the cards as any
+  // section's heading is from its fields.
+  > .ingredient-form__section-head {
+    margin-bottom: space(1);
+  }
+
+  > .ingredient-form__section-head > .ingredient-form__section-title {
+    margin: 0;
+  }
 }
 
 .ingredient-form .ingredient-form__variant {
-  gap: space(4);
-  padding: space(3);
+  gap: 0;
+  padding: space(2) space(2) space(2) space(3);
   border: 1px solid $text-muted;
   border-radius: radius('surface');
+  background-color: $surface-card;
 
-  > .ingredient-form__variant-legend {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: space(2);
-    width: 100%;
-    padding: 0 space(1);
+  // The card an error is in takes the field's error edge, as a field does.
+  &.is-invalid {
+    border-color: $secondary;
   }
+}
+
+// The summary line: the form and what it carries, the buttons at the end,
+// wrapping beneath on a phone rather than squeezing the form's name.
+.ingredient-form__variant-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2);
+}
+
+.ingredient-form__variant-title {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ingredient-form__variant-form {
+  font-weight: 500;
+}
+
+.ingredient-form__variant-group,
+.ingredient-form__variant-summary {
+  color: $text-muted;
+  font-weight: 300;
+}
+
+.ingredient-form__variant-summary {
+  font-size: type-size('caption');
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.ingredient-form__variant-flag {
+  color: $secondary;
+  font-size: type-size('caption');
+  font-weight: 400;
+}
+
+.ingredient-form__variant-actions {
+  display: flex;
+  gap: space(2);
+}
+
+// Open, its fields at the form's own spacing beneath the line, Done at the end.
+.ingredient-form__variant-fields {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  margin-top: space(4);
+  padding: 0 space(1) space(1) 0;
+
+  // Closed is the attribute's, which the display above would otherwise undo.
+  &[hidden] {
+    display: none;
+  }
+}
+
+.ingredient-form__variant-done {
+  display: flex;
+  justify-content: flex-end;
 }
 
 // The second pickers beneath a substitute list, one per linked ingredient in
