@@ -71,10 +71,10 @@ const CompendiumList = ({
                 Name
               </th>
               <th scope="col" {...tableRole('columnheader')}>
-                Classification
+                Formal Name
               </th>
               <th scope="col" {...tableRole('columnheader')}>
-                Formal Name
+                Classification
               </th>
               <th scope="col" {...tableRole('columnheader')}>
                 Form
@@ -90,8 +90,8 @@ const CompendiumList = ({
               // cell's empty name spans the card without one.
               <tr key={entry.id} {...tableRole('row')}>
                 <td {...stackCell('Name')}>{entry.name}</td>
-                <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
                 <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
+                <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
                 <td {...stackCell('Form')}>{entry.forms.length ? entry.forms.join(', ') : NONE}</td>
                 <td {...stackCell('')}>
                   {/* Soft navigation: the page renders again with the modal open.
