@@ -59,8 +59,9 @@ to.
   has to remember it. A component never widens a paragraph past it; running
   text that is not a `p`, such as a long list item or a description, takes
   `max-width: $measure` itself; and a narrower column, as the forms use, is a
-  component's own choice. `Welcome` and `NotAuthorized` size their whole
-  column to it. `tests/e2e/admin.spec.ts` asserts it on a layout wider than
+  component's own choice. A page with no AppShell takes its column from
+  `.page-frame`, which stops at the measure, or at the forms' narrower
+  column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
 - **Browser baseline: Next's default modern targets** — Chrome, Edge and
   Firefox 111, Safari 16.4, "baseline widely available" as of 2025-10-01
@@ -427,11 +428,13 @@ the inset, so it starts below the banner and the page does not scroll by the
 banner's height:
 
 - `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
-- The five pages a full screen high (`Welcome`, `NotAuthorized`,
-  `SignInPanel`, `SignInMethods` and `EmailForm`) take
-  `min-height: calc(100dvh - #{$top-inset})`.
+- Every page a full screen high sits in `.page-frame`, which takes
+  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below):
+  `/`, `/sign-in`, `/account`, `/account/email`, the not-authorized
+  page and the invitation page. A page that needs the full height takes the
+  frame rather than restating the rule.
 
-A new full-height page, or anything new fixed to the top, does the same.
+Anything new fixed to the top offsets by the inset the same way.
 
 ## Corner radius
 
@@ -641,11 +644,33 @@ What each section review (MB.115 to MB.124) designs to:
   not two component rules.
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
+- **A page with no AppShell sits in `.page-frame`**, or
+  `.page-frame--narrow` when its content is a form ("The page frame",
+  above). A page's own row of links is a `ul.link-row`, and each titled
+  section a `.page-frame__section` named by its `h2` through
+  `aria-labelledby`, so a screen reader lists it as a region.
 - **Forms are the field primitives.** An error is a `.field__error` beneath
   its control from either source, and a rule that belongs to no field is a
-  `.notice` above them all.
+  `Notice` above them all ([`components/notice.md`](components/notice.md)).
+  Use the component rather than writing the `.notice` markup: its `kind`
+  picks the role, and the role is what makes a message that arrives late get
+  read out.
+- **A failed request is read by `readGraphqlFailure`**
+  (`src/lib/graphql-failure.ts`). Pass it the names of the fields the form
+  draws its own errors under. It answers either one of those fields and its
+  message, or one sentence for the form's `Notice`: the server's own, or
+  `GENERIC_FAILURE` when the request got no usable answer. A form that places
+  several field errors at once, as the admin forms and `IngredientForm` do,
+  keeps a small reader of its own that falls back to the shared one.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
+- **The copy has one voice.** Speak to the reader as "you", in plain words.
+  A message says what happened in one sentence and what to do in the next.
+  "Please try again." goes only where trying again can help, so a refusal
+  that will refuse again says what to change instead. The same thing keeps
+  the same name everywhere: a "sign-in method", never a "sign-in option", and
+  an email "address". Every label, button and heading is title case
+  (`.claude/rules/components.md`, "Copy").
 - **Prose stops at the measure**; a table or a grid may be as wide as it
   needs.
 - **Both themes, and 375px.** A review signs off in the workshop in both, at

@@ -1,10 +1,11 @@
 'use client';
 
-import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { readGraphqlFailure } from '../../lib/graphql-failure';
+import Notice from '../Notice';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
@@ -53,8 +54,6 @@ const STATES = {
 /** Why the control cannot be used, to an admin who is not the primary one. */
 const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
   const router = useRouter();
   const copy = STATES[paused ? 'paused' : 'open'];
@@ -70,9 +69,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
       router.refresh();
     } catch (error) {
       setSending(false);
-      setFailure(
-        (error instanceof ClientError && error.response.errors?.[0]?.message) || GENERIC_ERROR,
-      );
+      setFailure(readGraphqlFailure(error).alert);
     }
   }
 
@@ -81,7 +78,8 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
       {/* The page's statement that changes are paused, as a warning, on the
           owner's call. A plain paragraph, read in the page's order: the switch
           is remounted by the refresh after a flip, which a live region would
-          not announce either. */}
+          not announce either. So it is hand-written: `Notice kind="warn"`
+          is an alert. */}
       {copy.state && <p className="notice notice--warn user-list__pause-state">{copy.state}</p>}
       {canToggle ? (
         <button
@@ -99,11 +97,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
         // Revoke is (on the owner's call): the notice is the page's one sentence.
         <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
       )}
-      {failure && (
-        <p className="notice notice--error" role="alert">
-          {failure}
-        </p>
-      )}
+      {failure && <Notice kind="error">{failure}</Notice>}
     </div>
   );
 };

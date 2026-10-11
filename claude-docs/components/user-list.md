@@ -148,7 +148,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   action: the control is keyed by its action, so the refreshed row mounts a
   fresh one, without the modal, rather than keeping the busy state. A refusal
   closes the modal, puts the service's message in the row as an alert, and
-  offers the action again. The service is the guard.
+  offers the action again. The service is the guard. The alert is a
+  `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
 - **Approving or granting to an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
   under its question, in a `.notice--warn`: "This email address has not been
@@ -160,7 +161,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   It is a warning, not a refusal: the modal's Approve still approves, since
   M2.9 leaves confirming who someone is to the admin. The modal's Approve is
   `aria-describedby` the warning, so a screen reader reads it as the focus
-  lands there on opening. A verified user's Approve or Grant, and every Revoke, carries
+  lands there on opening. It is written by hand rather than as a `Notice`,
+  whose `warn` kind is an alert and would be read a second time. A verified
+  user's Approve or Grant, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
 - **The Role cell holds the role's control** (MB.59,
   [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
@@ -191,6 +194,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   a `.notice--warn`: "Admin changes are paused.", on the owner's call. The notice is a plain
   paragraph, compounded as `.notice.user-list__pause-state` past the
   `body .notice` primitive, and is the page's one sentence about the pause.
+  It is written by hand for that reason: `Notice`'s `warn` kind is an alert.
   Then Pause Admin Changes or Resume Admin Changes, both full size and
   `.btn--destructive`, big and red on the owner's call, so the control keeps
   its look as it flips. For the primary admin (`canToggle`) it sends the

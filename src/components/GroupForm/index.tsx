@@ -7,10 +7,12 @@ import { type ReactElement, useId, useRef, useState } from 'react';
 import { Controller, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
 import type { GroupColorColumn, ValidationIssue } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
@@ -98,8 +100,6 @@ const DeleteDeityTraditionDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
 type FieldName = (typeof FIELDS)[number];
 
@@ -174,16 +174,22 @@ const COLORS: { column: GroupColorColumn; label: string }[] = [
   { column: 'colorLight', label: 'Light Theme Colour' },
 ];
 
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
+/**
+ * A failed request as issues pathed to the input: every field error of a
+ * VALIDATION refusal, or one sentence from `readGraphqlFailure`. Kept beside
+ * the shared reader rather than replaced by it: that one answers the first
+ * field it finds, and this form places every issue at once and joins the
+ * ones no field holds into its alert.
+ */
 function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
+  if (error instanceof ClientError) {
+    const extensions = error.response.errors?.[0]?.extensions as
+      { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
+    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
+      return extensions.fieldErrors;
+    }
   }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
+  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }
 
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
@@ -471,11 +477,7 @@ const GroupForm = ({
 
   return (
     <form className="form group-form" onSubmit={handleSubmit((input) => send(input))} noValidate>
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
+      {rootError && <Notice kind="error">{rootError}</Notice>}
       <div className="field">
         <label className="field__label" htmlFor={ids('name').control}>
           Name

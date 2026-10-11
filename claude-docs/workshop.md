@@ -22,6 +22,15 @@ without a page routed to it.
   sidebar too. In its own iframe, carrying the global provider and styles, the
   dialog covers the story's frame and nothing else. `Modal` and the category
   form, now `GroupedValueForm`, are the first.
+- **A page component's story renders inside the page's real frame**
+  (MB.116): the `main` its route draws, with the same classes, such as
+  `<main className="page-frame">` for `NotAuthorized` or
+  `page-frame page-frame--narrow` for a form page. A story that drew the
+  component bare would show a column the app never draws, since the frame
+  sets the width and the spacing. Each also has `PhoneDark` and
+  `PhoneLight` stories, `meta = { theme, width: 375 }` as the
+  Foundations page has, so a review sees the page at phone width in both
+  themes without touching the toolbar.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`

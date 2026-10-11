@@ -41,19 +41,34 @@ noun (CLAUDE.md, "Vocabulary").
 
 ## Styling
 
-Layout only — a `.welcome-page` frame that centers the page without an
-AppShell, the same reason `.sign-in-page` exists, and the reading measure, `$measure`.
-The heading and paragraphs take `_typography.scss`'s global rules; the link
-takes `.btn .btn--solid` (`_primitives.scss`), since it is the page's one
-action. It is a `.btn` on an anchor, which needs nothing of its own: `.btn`
-drops the underline and outranks the visited ink ([`styling.md`](../styling.md),
-"Buttons"). Token used: `$measure`.
+The page draws the frame: `src/app/page.tsx`'s `main` is
+`page-frame welcome-page`. `.page-frame` centres the column without an
+AppShell and stops it at the reading measure, `$measure`
+([`styling.md`](../styling.md), "The page frame"). `welcome-page` styles
+nothing; it stays only as the hook `Backdrop` reads,
+`body:has(.welcome-page)`, to draw its art larger on the front door.
+
+The component's own column is a flex column with a `space(5)` gap. The
+heading and the first paragraph are a `.header`, the paragraph a `.lede`,
+as every section head is. The way in sits a further `space(2)` down, so it
+reads as the page's end. The link takes `.btn .btn--solid`, since it is the
+page's one action. It is a `.btn` on an anchor, which needs nothing of its
+own: `.btn` drops the underline and outranks the visited ink
+([`styling.md`](../styling.md), "Buttons"). Function used: `space()`.
+
+**Open for MB.116's sign-off: the lede's size.** `.lede` sets it at body
+size in the muted ink. Before MB.116 it was 1.125rem in the body ink, a step
+above the paragraphs. Both are drawn as stories; the losing one, and the
+`.welcome-proposal--lede-large` rule that draws today's, go at sign-off.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Welcome/index.stories.tsx) —
-`Default` (signed out) and `SignedIn` (the `/coven` landing). Render-only, no
-test ids, no snapshots.
+`Default` (signed out), `SignedIn` (the `/coven` landing), and `PhoneDark`
+and `PhoneLight` at 375px. Each renders inside the page's real
+`main.page-frame.welcome-page` ([`workshop.md`](../workshop.md)).
+`ProposalLedeBody` and `ProposalLedeLarge` draw the open call above side by
+side. Render-only, no test ids, no snapshots.
 
 ## Testing
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useId, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { readGraphqlFailure } from '../../lib/graphql-failure';
+import type { Failure } from '../../lib/types';
 import Modal from '../Modal';
-import type { InviteFailure } from './types';
+import Notice from '../Notice';
 
 // Invite Admin, and the modal it opens: an address and an optional reason,
 // sent as `createAdminInvitation`, which mails the link and answers no link
@@ -21,19 +22,6 @@ const CreateAdminInvitationDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
-// The shape claude-docs/graphql/errors.md, "Errors" describes.
-function failureOf(error: unknown): InviteFailure {
-  if (!(error instanceof ClientError)) return { alert: GENERIC_ERROR };
-  const first = error.response.errors?.[0];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] } | undefined;
-  const issue = extensions?.fieldErrors?.find(({ path }) => path[0] === 'email');
-  if (extensions?.code === 'VALIDATION' && issue) return { field: issue.message };
-  return { alert: first?.message || GENERIC_ERROR };
-}
-
 const InviteForm = (): ReactElement => {
   const router = useRouter();
   const emailId = useId();
@@ -45,7 +33,7 @@ const InviteForm = (): ReactElement => {
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
-  const [failure, setFailure] = useState<InviteFailure>({});
+  const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState<string>();
 
   async function submit(event: FormEvent<HTMLFormElement>, close: () => void) {
@@ -64,7 +52,7 @@ const InviteForm = (): ReactElement => {
       router.refresh();
     } catch (error) {
       setSending(false);
-      setFailure(failureOf(error));
+      setFailure(readGraphqlFailure(error, ['email']));
     }
   }
 
@@ -90,9 +78,9 @@ const InviteForm = (): ReactElement => {
         Invite Admin
       </button>
       {sent && (
-        <output className="notice notice--success admin-invitations__sent">
+        <Notice kind="success" className="admin-invitations__sent">
           Invitation sent to {sent}.
-        </output>
+        </Notice>
       )}
       {open && (
         <Modal title="Invite an Admin" onClose={cancel}>
@@ -102,11 +90,7 @@ const InviteForm = (): ReactElement => {
                 We&apos;ll email them a link that lasts seven days. Only an account that has
                 confirmed this address can accept it.
               </p>
-              {failure.alert && (
-                <p className="notice notice--error" role="alert">
-                  {failure.alert}
-                </p>
-              )}
+              {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
               <div className="field">
                 <label className="field__label" htmlFor={emailId}>
                   Email Address
@@ -128,7 +112,7 @@ const InviteForm = (): ReactElement => {
                 />
                 {failure.field && (
                   <p id={emailErrorId} className="field__error">
-                    {failure.field}
+                    {failure.field.message}
                   </p>
                 )}
               </div>

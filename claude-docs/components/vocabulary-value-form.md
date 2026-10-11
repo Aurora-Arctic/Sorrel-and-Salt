@@ -78,6 +78,13 @@ sits at the far end, the required asterisk is `$secondary`, and the rename
 note sits a step above the actions. Nothing goes further before MB.115's
 design review.
 
+The alert above the fields is a `Notice` ([`notice.md`](notice.md)). The
+form's reader of a failed request, `issuesOf`, stays its own rather than the
+shared `readGraphqlFailure`: the shared one answers only the first field it
+finds, and this form places every field error at once and joins the rest into
+the alert. Everything that is not a `VALIDATION` refusal it takes from the
+shared reader, so its one fallback sentence is `GENERIC_FAILURE` (MB.116).
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/VocabularyValueForm/index.stories.tsx)

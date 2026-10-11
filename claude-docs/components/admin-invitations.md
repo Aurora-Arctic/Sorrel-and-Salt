@@ -40,6 +40,13 @@ user list (the owner's call during MB.59). `.field.admin-invitations__note`
 and `.notice.admin-invitations__sent` are compounded with their primitives,
 which the app scopes as `body .x`. Tokens used: `space()` and `$text-muted`.
 
+The sent confirmation and the modal's refusal are `Notice`s
+([`notice.md`](notice.md)), the confirmation taking
+`admin-invitations__sent` as its `className`. A refused send is read by
+`readGraphqlFailure` with `email` as the one field the form draws an error
+under, so the address's error goes beside it and any other refusal into the
+alert (MB.116).
+
 ## Tests
 
 `tests/components/AdminInvitations/index.test.tsx` covers the list and the
