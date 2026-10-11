@@ -62,15 +62,17 @@
   ([`admin-users.md`](admin-users.md), "The user list").
 - **A tabbed page's own layout runs no guard** (MB.115). Each tabbed page is
   a route group, `src/app/admin/(people)/` and the like, whose `layout.tsx`
-  draws the heading and the tabs and reads nothing, so its `loading.tsx` can
-  show at once when a tab is pressed
-  ([`components/tabbed-page.md`](../components/tabbed-page.md)). That
-  `loading.tsx` puts a `<Suspense>` boundary above each tab's page, which
-  would turn a refusal the page throws into a 200 (above). The 403 still
-  holds, because `src/app/admin/layout.tsx` sits above every such boundary
-  and throws first, before anything streams; a tab's page refusing on its
-  own is a client-side navigation, which has no status to keep.
-  `tests/e2e/admin.spec.ts` asserts the 403 at `/admin/users`, a tab.
+  draws the heading and the tabs and reads nothing
+  ([`components/tabbed-page.md`](../components/tabbed-page.md)). A layout
+  does not re-run on a tab press, so a guard there would add nothing to
+  `src/app/admin/layout.tsx`'s and each tab page's. The tabbed pages add no
+  `loading.tsx` and no other `<Suspense>` boundary: a tab's loading state
+  is the tab row's own, shown only while a pressed tab is on its way. So
+  nothing streams ahead of the guard on a direct request, and a refusal any
+  tab's page throws keeps its 403 with no boundary to turn it into a 200
+  (above); a tab's page refusing during a tab press is a client-side
+  navigation, which has no status to keep. `tests/e2e/admin.spec.ts`
+  asserts the 403 at `/admin/users`, a tab.
 - **No way around `/api/graphql`.** Admin writes are GraphQL mutations like
   every other (CLAUDE.md rule 1): lint's `sorrel/no-use-server` refuses a
   server action and `sorrel/route-allowlist` a route handler beyond the

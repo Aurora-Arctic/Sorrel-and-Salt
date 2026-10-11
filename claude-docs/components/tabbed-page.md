@@ -16,13 +16,16 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 | ---------- | ------------------------------------------------------------------------ |
 | `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories" |
 | `tabs`     | Each tab's `href` and short label ("Groups", "Traditions"), in row order |
-| `children` | The open tab's content, or its loading state                             |
+| `children` | The open tab's content                                                   |
 
-Two more parts are exported beside it:
+One more part is exported beside it, **`TabActions`**: the open tab's own
+action, at the end of the line above its content: Add Category, Add Group,
+Invite Admin, Pause Admin Changes.
 
-- **`TabActions`** — the open tab's own action, at the end of the line above
-  its content: Add Category, Add Group, Invite Admin, Pause Admin Changes.
-- **`TabPanelLoading`** — what the content area shows while a tab loads.
+Inside, `tab-switch.tsx` holds the client parts the tab row and the content
+area share: `TabSwitchProvider`, `TabPanel` (the content area) and
+`useTabSwitch`. `panel-loading.tsx` is `TabPanelLoading`, what the
+content area shows while a pressed tab is on its way.
 
 ## Contracts
 
@@ -35,21 +38,37 @@ Two more parts are exported beside it:
   component: `src/app/admin/(categories)/layout.tsx` around `categories/` and
   `category-groups/`. A layout stays mounted while the address moves between
   its child routes, so the heading and the tab row stay put and only the
-  content beneath swaps. The group's `loading.tsx` renders `TabPanelLoading`
-  in the content area while the pressed tab's page reads, and Next fetches
-  that loading state ahead of time, so it shows at once.
+  content beneath swaps.
+- **A direct request renders the whole page on the server** (the owner's
+  call): a typed address, a bookmark, a refresh or a link from outside the
+  tabs gets the heading, the tabs and the tab's content in the first
+  response, with no loading state streamed ahead of them. So the route
+  groups have no `loading.tsx`, and the tabbed pages add no other
+  `<Suspense>` boundary.
+- **A pressed tab greys the row and shows the loading state** (the owner's
+  call). A plain left click on a tab other than the open one is the tab
+  row's own: `tab-links.tsx` stops the browser following the link and
+  calls `router.push` inside a React transition (`useTransition`) the row
+  and the content area share. Next runs its navigation inside the caller's
+  transition, so it stays pending until the new tab has rendered. Until
+  then the content area shows `TabPanelLoading` in place of the old tab's
+  content, and every tab is `aria-disabled` and ignores a press; the row is
+  `aria-busy`. Both clear when the new tab renders. The pager's soft ends
+  hold their own page the same way ([`pager.md`](pager.md)).
+- **Only a plain press is the row's.** A Ctrl, Cmd, Shift or Alt click and a
+  middle click keep the browser's behaviour, a new tab or window, by the
+  pager's rule (`opensElsewhere`, `src/lib/opens-elsewhere.ts`). The open
+  tab is left to Next's link and shows no loading state. Without JavaScript
+  each tab is a plain link.
 - **The group's layout reads nothing.** No session, no guard, no data: it
   draws only the heading and the tabs, both from `ADMIN_PAGES`
-  (`src/components/AdminNav/sections.ts`). A layout that awaited the session
-  would hold every tab press until it had, instead of showing the loading
-  state (Next's `loading.js` reference, "Good to know"). The guard stays in
+  (`src/components/AdminNav/sections.ts`). A layout does not re-run on a
+  tab press, so a guard there would add nothing; the guard stays in
   `src/app/admin/layout.tsx` and every page
   ([`auth/admin-guard.md`](../auth/admin-guard.md)).
-- **Search parameters do not show the loading state.** Next keys the content
-  by its route without the query string, so a filter, a pager press or a
-  modal's `?edit=` keeps the list in place while the new one reads, as
-  before; only a different tab, a different route, swaps in the loading
-  state.
+- **Only a change of tab shows the loading state.** A filter, a pager press
+  or a modal's `?edit=` link navigates within the tab without the tab row,
+  so the list stays in place while the new one reads, as before.
 - **A nav of links, not a `role="tablist"`.** Each tab navigates to another
   address. A tablist promises arrow-key movement between panels shown in
   place, which these are not. The row is a `nav` named by the page's title,
@@ -57,12 +76,6 @@ Two more parts are exported beside it:
   address by `usePathname()` with the admin nav's rule (`isAtPath` in
   `src/lib/at-path.ts`): the tab's own address or one beneath it. So
   `tab-links.tsx` is the one client part; the rest renders on the server.
-- **The pressed tab shows it is on its way.** Next's `useLinkStatus` reports
-  a link pressed whose address has not moved yet, which happens when its
-  loading state was not fetched ahead (on a slow network, or in `next dev`,
-  which fetches nothing ahead). The tab then shows the buttons' spinner after
-  its label until the address moves; once it has, the tab is marked open and
-  the loading state takes over.
 - **Each tab keeps its own `metadata` title**, set in its `page.tsx`:
   "Category Groups — Admin — Sorrel & Salt" on the Groups tab.
 - **The action belongs to the tab, not the heading**, since it changes from
@@ -81,9 +94,10 @@ Two more parts are exported beside it:
   `$rule-heavy` underline set below the letters. A 1px rule in the muted ink
   runs beneath the row, `space(2)` below the labels, setting it off from the
   content. At a phone's width the row wraps as any `.link-row` does.
-- **The pending spinner** is the `.spinner` primitive at 0.75em, positioned
-  after the label in the gap before the next tab, out of the flow, so no
-  label moves while it shows.
+- **A tab while one is on its way** takes the muted, faded look of a
+  disabled control ([`styling.md`](../styling.md), "Disabled is dashed and
+  faded"): the muted ink at 55% and the not-allowed cursor, with no edge to
+  dash.
 - **The content** is a column `space(5)` apart, as `.list-frame` spaces a
   list's.
 - **`TabActions`** is a wrapping row at the end of the line, and a size
@@ -100,11 +114,12 @@ Two more parts are exported beside it:
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Admin / Tabbed Page`: the People page under the admin nav with its
 Invitations tab open, as `/admin/invitations` draws it. `Default`;
-`PhoneDark` and `PhoneLight` at 375px; `LoadingState` with
-`LoadingPhoneDark` and `LoadingPhoneLight`, the content area showing its
-loading state; and `TabPending`, Privilege Changes pressed with its spinner.
-The workshop's stubs say which address is open and which link is pending
-([`workshop.md`](../workshop.md), ".ladle/"). The admin lists' own stories
+`PhoneDark` and `PhoneLight` at 375px; and `LoadingState` with
+`LoadingPhoneDark` and `LoadingPhoneLight`, a tab on its way: the row
+greyed out over the content area's loading state. The workshop's stub
+router goes nowhere, so those stories provide `TabSwitchContext` above the
+page, holding a tab on its way; the stub `usePathname` says which address is
+open ([`workshop.md`](../workshop.md), ".ladle/"). The admin lists' own stories
 (`UserList`, `AdminInvitations`, `PrivilegeLedger`, `GroupedValueList`'s
 phone pair) sit in their tabbed page too.
 
@@ -113,7 +128,11 @@ phone pair) sit in their tabbed page too.
 `tests/components/TabbedPage/index.test.tsx`, with `usePathname` mocked:
 the heading inside `main`, a link per tab at its own address in order, no
 tablist, the content shown; which tab is open for a given address, its own,
-one beneath it, and none for an address in no tab; and the loading state a
-status. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
+one beneath it, and none for an address in no tab. A press on another tab,
+through the shared `Navigating` helper (`tests/support/navigating.tsx`),
+which holds the navigation pending as Next does, leaves every tab
+`aria-disabled`, a status in the content area with the old content gone,
+and a second press going nowhere; a Ctrl, Cmd or Shift press is not
+intercepted. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
 is current on each of its tabs. How the layout keeps the heading in place is
 Next's, and is the e2e suite's to see.

@@ -1,19 +1,20 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement, ReactNode } from 'react';
 import { WorkshopPathname } from '../../../.ladle/navigation';
-import { WorkshopPendingHref } from '../../../.ladle/UnoptimizedLink';
 import AdminInvitations from '../AdminInvitations';
 import type { AdminInvitationEntry } from '../AdminInvitations/types';
 import AdminNav from '../AdminNav';
 import { ADMIN_PAGES } from '../AdminNav/sections';
-import TabbedPage, { TabPanelLoading } from '.';
+import TabbedPage from '.';
+import { TabSwitchContext } from './tab-switch';
 
 // Render-only; behaviour is asserted in tests/components/TabbedPage. The
 // People page as `/admin/invitations` draws it: the admin layout's frame and
 // nav, the page's heading and its three tabs with Invitations open, and the
 // tab's own content beneath, Invite Admin at the end of its line. The
-// workshop's stubs say which address is open and which tab is on its way
-// (.ladle/navigation.ts, .ladle/UnoptimizedLink.tsx).
+// workshop's stub says which address is open (.ladle/navigation.ts), and
+// a tab switch provided above the page says a tab is on its way, since the
+// stub router goes nowhere.
 export default {
   title: 'Admin / Tabbed Page',
 };
@@ -33,16 +34,16 @@ const INVITATIONS: AdminInvitationEntry[] = [
   },
 ];
 
-const People = ({ pending, children }: { pending?: string; children: ReactNode }): ReactElement => (
+const ON_ITS_WAY = { pending: true, go: () => undefined };
+
+const People = ({ children }: { children: ReactNode }): ReactElement => (
   <WorkshopPathname.Provider value="/admin/invitations">
-    <WorkshopPendingHref.Provider value={pending}>
-      <div className="admin-layout">
-        <AdminNav />
-        <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
-          {children}
-        </TabbedPage>
-      </div>
-    </WorkshopPendingHref.Provider>
+    <div className="admin-layout">
+      <AdminNav />
+      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+        {children}
+      </TabbedPage>
+    </div>
   </WorkshopPathname.Provider>
 );
 
@@ -52,13 +53,14 @@ const Invitations = () => (
   </People>
 );
 
-// The panel while the tab just pressed loads: the heading and the tabs where
-// they were, Invitations already marked open, and the loading state, which
-// fades in after a moment so a quick tab never flashes it.
+// Another tab pressed and on its way: the heading where it was, every
+// tab greyed out and closed to another press, and the panel's loading state
+// in place of the invitations, which fades in after a moment so a quick tab
+// never flashes it.
 const Loading = () => (
-  <People>
-    <TabPanelLoading />
-  </People>
+  <TabSwitchContext.Provider value={ON_ITS_WAY}>
+    <Invitations />
+  </TabSwitchContext.Provider>
 );
 
 export const Default: Story = () => <Invitations />;
@@ -78,12 +80,3 @@ LoadingPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const LoadingPhoneLight: Story = () => <Loading />;
 LoadingPhoneLight.meta = { theme: 'light', width: 375 };
-
-// Privilege Changes pressed before its loading state was fetched ahead: the
-// spinner after its label until the address moves, the open tab and its
-// content as they were.
-export const TabPending: Story = () => (
-  <People pending="/admin/privilege-changes">
-    <AdminInvitations invitations={INVITATIONS} />
-  </People>
-);

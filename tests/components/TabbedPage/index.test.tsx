@@ -1,12 +1,15 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Navigating } from '../../support/navigating';
 
-// The page the test pretends to be on; Next's own hook reads the App
-// Router's state, which a component test does not mount.
+// The page the test pretends to be on, and the router a tab press navigates
+// through; Next's own hooks read the App Router's state, which a component
+// test does not mount.
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => router }));
 
-const { default: TabbedPage, TabPanelLoading } = await import('@/components/TabbedPage');
+const { default: TabbedPage } = await import('@/components/TabbedPage');
 
 // A page in tabs (MB.115): its heading, a nav of links named for the page,
 // one per tab with the open one marked from the address, and the open tab's
@@ -24,6 +27,7 @@ const open = () => hrefs(tabs().filter((link) => link.getAttribute('aria-current
 
 beforeEach(() => {
   pathname.mockReturnValue('/admin/users');
+  router.push.mockReset();
 });
 
 describe('TabbedPage', () => {
@@ -60,13 +64,47 @@ describe('TabbedPage', () => {
     expect(open()).toEqual(expected);
   });
 
-  it('shows its loading state as a status', () => {
+  // Users is open; Invitations is pressed, and Next has not yet rendered it.
+  const renderNavigating = () =>
     render(
-      <TabbedPage title="People" tabs={TABS}>
-        <TabPanelLoading />
-      </TabbedPage>,
+      <Navigating push={router.push}>
+        <TabbedPage title="People" tabs={TABS}>
+          <table aria-label="Users" />
+        </TabbedPage>
+      </Navigating>,
     );
+  const tab = (name: string) =>
+    within(screen.getByRole('navigation', { name: 'People' })).getByRole('link', { name });
+  const panel = () => screen.getByRole('main');
 
-    expect(within(screen.getByRole('main')).getByRole('status')).toBeInTheDocument();
+  it('greys every tab and puts a status in place of the content while a pressed tab is on its way', () => {
+    renderNavigating();
+    // Before the press: every tab can be pressed, and the content shows.
+    expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+    expect(within(panel()).queryByRole('status')).not.toBeInTheDocument();
+
+    fireEvent.click(tab('Invitations'));
+
+    expect(router.push).toHaveBeenCalledWith('/admin/invitations');
+    for (const link of tabs()) expect(link).toHaveAttribute('aria-disabled', 'true');
+    expect(within(panel()).getByRole('status')).toBeInTheDocument();
+    expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
+
+    // A second press while the first is on its way goes nowhere.
+    fireEvent.click(tab('Privilege Changes'));
+    expect(router.push).toHaveBeenCalledTimes(1);
   });
+
+  it.each([['ctrlKey'], ['metaKey'], ['shiftKey']] as const)(
+    'leaves a press with %s to the browser',
+    (key) => {
+      renderNavigating();
+
+      fireEvent.click(tab('Invitations'), { [key]: true });
+
+      expect(router.push).not.toHaveBeenCalled();
+      expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+      expect(within(panel()).getByRole('table', { name: 'Users' })).toBeVisible();
+    },
+  );
 });

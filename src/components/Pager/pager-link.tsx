@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type MouseEvent, type ReactElement, useEffect, useState, useTransition } from 'react';
+import { opensElsewhere } from '../../lib/opens-elsewhere';
 import PagerEndContent from './end-content';
 import type { PagerLinkProps } from './types';
 
@@ -11,11 +12,6 @@ import type { PagerLinkProps } from './types';
 // spinner in its chevron's place and `aria-busy`, only on the end followed.
 // Two components rather than one, so only the soft end asks for the App
 // Router, which a plain end's owner may not mount (claude-docs/components/pager.md).
-
-/** A click the browser takes elsewhere — a new tab or window — leaving this page as it is. */
-function opensElsewhere(event: MouseEvent<HTMLAnchorElement>): boolean {
-  return event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-}
 
 /** A soft end: the page pushed inside a transition, which stays pending until it renders. */
 export const SoftPagerLink = ({ href, label }: PagerLinkProps): ReactElement => {

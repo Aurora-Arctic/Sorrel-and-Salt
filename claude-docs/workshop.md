@@ -131,10 +131,7 @@ without a page routed to it.
   story to import `next/link` (Welcome) rendered blank without it. That was
   also when `vite.config.ts` turned out never to have been loaded: Ladle passes
   `viteConfig` to Vite's loader as given and Vite otherwise looks in the
-  project root, so `config.mjs` now names the file explicitly. It also
-  answers Next's `useLinkStatus`: no link is pending unless a story names one
-  by wrapping itself in `WorkshopPendingHref`, as `TabbedPage`'s `TabPending`
-  does (MB.115).
+  project root, so `config.mjs` now names the file explicitly.
 - **`navigation.ts`** — what `next/navigation` resolves to here, by the same
   alias: a `useRouter` whose every method goes nowhere. Next's own throws with
   no App Router mounted, and the first component to navigate on its own,

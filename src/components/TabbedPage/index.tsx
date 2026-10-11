@@ -1,9 +1,8 @@
 import type { ReactElement } from 'react';
 import TabLinks from './tab-links';
+import { TabPanel, TabSwitchProvider } from './tab-switch';
 import type { TabActionsProps, TabbedPageProps } from './types';
 import './index.scss';
-
-export { default as TabPanelLoading } from './panel-loading';
 
 // A page in tabs (MB.115, on the owner's call): its heading, a row of links,
 // one per tab, and the open tab's content beneath. Each tab is at its own
@@ -12,15 +11,19 @@ export { default as TabPanelLoading } from './panel-loading';
 // swaps only the content beneath (claude-docs/components/tabbed-page.md).
 // The row is a `nav` named for the page, not a `role="tablist"`: each tab is
 // a navigation to another address, not a panel shown in place, and a tablist
-// promises arrow keys it would not have. No client directive: only the
-// links, which must know which tab is open, are a client part.
+// promises arrow keys it would not have. No client directive: the links,
+// which must know which tab is open, and the switch they share with the
+// panel are the client parts; the content passes through them from the
+// server.
 const TabbedPage = ({ title, tabs, children }: TabbedPageProps): ReactElement => (
   <main className="tabbed-page">
     <h1>{title}</h1>
-    <nav aria-label={title} className="tabbed-page__tabs">
-      <TabLinks tabs={tabs} />
-    </nav>
-    <div className="tabbed-page__panel">{children}</div>
+    <TabSwitchProvider>
+      <nav aria-label={title} className="tabbed-page__tabs">
+        <TabLinks tabs={tabs} />
+      </nav>
+      <TabPanel>{children}</TabPanel>
+    </TabSwitchProvider>
   </main>
 );
 

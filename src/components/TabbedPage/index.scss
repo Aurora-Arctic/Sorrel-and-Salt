@@ -17,22 +17,15 @@
 .tabbed-page__row {
   padding-bottom: space(2);
   border-bottom: 1px solid $text-muted;
-
-  a {
-    position: relative;
-  }
 }
 
-// The pressed tab's spinner, after its label in the gap before the next one
-// and out of the flow, so no label moves while it shows. Smaller than a
-// button's 1em, to sit inside the row's gap.
-.tabbed-page__pending {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + #{space(1)});
-  width: 0.75em;
-  height: 0.75em;
-  translate: 0 -50%;
+// Every tab while one is on its way, the muted, faded look a disabled
+// control has (claude-docs/styling.md, "Disabled is dashed and faded"),
+// without a button's edge to dash. `tab-links.tsx` ignores a press meanwhile.
+.tabbed-page__row a[aria-disabled='true'] {
+  color: $text-muted;
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 // The open tab's content, or its loading state: its action, any notice, the
