@@ -3,7 +3,8 @@
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { GripIcon } from './icons';
+import { GripIcon, LinkIcon } from './icons';
+import { useEntrySummary } from './summary';
 import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
@@ -15,7 +16,10 @@ import type { ComboboxEntryProps, EntryHandleProps } from './types';
 // text fits or not (MB.164). Moved here from IngredientForm (MB.133) so that
 // every list draws the same entry (claude-docs/components/combobox.md, "An
 // entry"). In a sortable list the text is the handle the chip moves by, a
-// grip ahead of it (MB.170, "A sortable list").
+// grip ahead of it (MB.170, "A sortable list"). An entry with a summary — a
+// linked substitute — has its text as a button instead, led by a link mark,
+// that opens the summary in a panel beneath the chip (MB.115, "A linked
+// entry's summary"); a typed one stays plain text.
 
 /**
  * A sortable entry's handle: a real button, so it is in the tab order with
@@ -59,20 +63,28 @@ export function ComboboxEntry({
   detail,
   qualifier,
   colors,
+  summary: summarised,
+  note,
   onRemove,
   sortable,
 }: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
   const detailId = useId();
   const qualifierId = useId();
+  // A sortable entry's text is its handle, so it opens nothing.
+  const summary = sortable ? undefined : summarised;
+  const opens = useEntrySummary();
+  // Asked as the tooltip opens: an open summary keeps it shut, saying more.
   const { open, show, hide, hideSoon } = useTip(() => {
     const element = text.current;
     return (
-      Boolean(detail) ||
-      Boolean(qualifier) ||
-      (element !== null && element.scrollWidth > element.clientWidth)
+      !opens.open &&
+      (Boolean(detail) ||
+        Boolean(qualifier) ||
+        (element !== null && element.scrollWidth > element.clientWidth))
     );
   });
+
   // The tooltip runs as wide as its words, past the chip and the control, the
   // owner's call: only being cut off is wrong. Shifted left as it opens by
   // however far it would run off the screen, as far as its own left edge
@@ -123,7 +135,28 @@ export function ComboboxEntry({
       {/* Hover on a wrapper holding the tooltip as well as the text, so the
           pointer can move onto the tooltip without closing it. */}
       <span className="combobox__entry-label" onMouseEnter={show} onMouseLeave={hideSoon}>
-        {sortable ? (
+        {summary ? (
+          // Named by its text, as the x is, and read as the x is; it says
+          // it opens a dialog, and whether that is open.
+          <button
+            type="button"
+            className="combobox__entry-open"
+            {...opens.opener}
+            aria-describedby={describedBy}
+            onClick={() => {
+              hide();
+              opens.opener.onClick();
+            }}
+            onFocus={show}
+            onBlur={(event) => {
+              hide();
+              opens.opener.onBlur(event);
+            }}
+          >
+            <LinkIcon />
+            {textSpan}
+          </button>
+        ) : sortable ? (
           // Named as the x is, for its entry, and read as the x is.
           <EntryHandle
             value={value}
@@ -165,6 +198,22 @@ export function ComboboxEntry({
           )}
         </span>
       </span>
+      {note && <span className="visually-hidden"> ({note})</span>}
+      {/* In the chip, after its button, so the Tab order runs from the text
+          into the panel and on to the x; placed beneath the chip, fixed, so
+          the control never clips it. */}
+      {summary && opens.open && (
+        // A non-modal dialog, opened by its attribute rather than `show()`,
+        // so the browser gives it no Escape of its own: the hook's is the one.
+        <dialog
+          open
+          aria-label={summary.label}
+          className="combobox__entry-summary"
+          {...opens.panel}
+        >
+          {summary.content()}
+        </dialog>
+      )}
       {/* Named for its entry: a column of bare "Remove"s is no help to a
           screen reader. In the tab order, a 24px target, and described by
           the list's error when the error names this entry, then by the

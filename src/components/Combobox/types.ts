@@ -139,6 +139,19 @@ export interface ComboboxEntryProps {
    * with it, its text and x inverted, as the solid-fill rule asks.
    */
   colors?: GroupColors;
+  /**
+   * What the entry opens beside its chip, a linked substitute's summary
+   * (MB.115): its text becomes a button, led by a link mark and underlined,
+   * that opens and shuts a small panel anchored to the chip. Left out of a
+   * sortable entry, whose text is already its handle.
+   */
+  summary?: EntrySummary;
+  /**
+   * What kind of entry it is, read after its text by a screen reader and
+   * never shown: "name only" on a substitute typed rather than linked, which
+   * the eye tells by its want of a link mark.
+   */
+  note?: string;
   onRemove: () => void;
   /**
    * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
@@ -146,6 +159,14 @@ export interface ComboboxEntryProps {
    * never by a list itself.
    */
   sortable?: ReturnType<typeof useSortable>;
+}
+
+/** The panel a linked entry opens: what names it, and what it holds. */
+export interface EntrySummary {
+  /** Names the panel as a dialog: "About Mockwort (Fixtura vulgaris)". */
+  label: string;
+  /** The panel's content, drawn only while it is open, so it may ask the server then. */
+  content: () => ReactNode;
 }
 
 /** A sortable list's wrapping row, measured as a move starts. */

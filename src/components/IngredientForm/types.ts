@@ -32,7 +32,16 @@ interface IngredientFormCallbacks {
   onCancel?: () => void;
   /** Where a near match the duplicate warning names links, when not a coven's ingredient page. */
   duplicateHref?: (match: Duplicate) => string;
+  /**
+   * Where a linked substitute's summary links its entry, opened in a new tab;
+   * undefined for an entry with no page to open. Left out, a summary links
+   * nothing (MB.115).
+   */
+  entryHref?: EntryHref;
 }
+
+/** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */
+export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => string | undefined;
 
 /**
  * Where the form writes. A coven's new ingredient, to the coven named; or,
@@ -336,6 +345,18 @@ export interface ListFieldProps {
   pickOnly?: boolean;
   /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
   action?: LegendAction;
+  /**
+   * The coven a linked substitute's summary reads its entry from, as the
+   * lookups do; null, the default, for the compendium alone (MB.115).
+   */
+  workspaceId?: string | null;
+}
+
+/** A linked substitute's summary: the ingredient and the form of it the entry names, and the coven asking. */
+export interface SubstituteSummaryProps {
+  link: SubstituteLink;
+  variantId?: string;
+  workspaceId: string | null;
 }
 
 /**
@@ -443,7 +464,7 @@ export type UseSuggestions<O extends ComboboxOption = ListOption> = (
 
 /** A list field and the lookup its box suggests from. */
 export interface LookupListFieldProps
-  extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate'> {
+  extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate' | 'workspaceId'> {
   useSuggestions: UseSuggestions;
   /** An ingredient the box never offers: the compendium entry being edited, as its own substitute. */
   omit?: string;

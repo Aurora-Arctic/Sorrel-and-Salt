@@ -11,15 +11,26 @@ import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSortableEntries }
 import type { ComboboxOption } from '../Combobox/types';
 import { FieldError, FieldShell, useField } from '../Field';
 import InfoTip from '../InfoTip';
+import { substituteSummary } from './substitute-summary';
 import type {
   AnyListEntry,
   IngredientFormValues,
   ListFieldProps,
   ListOption,
   MultiSelectFieldProps,
+  SubstituteListEntry,
   SuggestFieldProps,
 } from './types';
-import { addEntry, commitDraft, draftOf, entryDetail, entryText, repeatOf } from './values';
+import {
+  NAME_ONLY,
+  addEntry,
+  commitDraft,
+  draftOf,
+  entryDetail,
+  entryText,
+  holdsSubstitutes,
+  repeatOf,
+} from './values';
 
 // IngredientForm's own fields, on the shared field shell (../Field,
 // claude-docs/components/field.md). Each reads its own error out of the form
@@ -121,7 +132,9 @@ export function MultiSelectField({
  * adds as Add does. An error naming an entry marks that entry and reads out
  * on the box, through the list's one error element. An ordered list's entries
  * move, each by its handle. A repeat is refused at the box, as the save
- * would refuse it, and never suggested (MB.174).
+ * would refuse it, and never suggested (MB.174). A substitute list's linked
+ * entry opens a summary of its ingredient, and a typed one is read as a name
+ * only (MB.115).
  */
 export function ListField({
   name,
@@ -134,6 +147,7 @@ export function ListField({
   ordered,
   pickOnly,
   action,
+  workspaceId = null,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
   const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
@@ -263,19 +277,30 @@ export function ListField({
   // The text and detail are read from the values watched: the field array's
   // rows are a snapshot that an entry's own field — a substitute's form,
   // picked beside the list (MB.221) — does not refresh.
-  const chips = fields.map((row, index) => ({
-    id: row.id,
-    value: entryText(listed[index] ?? row),
-    detail: entryDetail(listed[index] ?? row),
-    errorId: entryErrors[index] && errorId,
-    onRemove: () => {
-      setAnnouncement(`Removed ${entryText(row)}`);
-      remove(index);
-      revalidate();
-      // The pressed x is about to go; the box keeps the focus.
-      focusBox();
-    },
-  }));
+  const substitutes = holdsSubstitutes(name);
+  const chips = fields.map((row, index) => {
+    const entry = listed[index] ?? row;
+    const value = entryText(entry);
+    const linked = substitutes && 'link' in entry && entry.link !== undefined;
+    return {
+      id: row.id,
+      value,
+      detail: entryDetail(entry),
+      // A substitute's link opens its summary; its typed text is a name only.
+      summary: linked
+        ? substituteSummary(entry as SubstituteListEntry, value, workspaceId)
+        : undefined,
+      note: substitutes && !linked ? NAME_ONLY : undefined,
+      errorId: entryErrors[index] && errorId,
+      onRemove: () => {
+        setAnnouncement(`Removed ${entryText(row)}`);
+        remove(index);
+        revalidate();
+        // The pressed x is about to go; the box keeps the focus.
+        focusBox();
+      },
+    };
+  });
   // A move carries the entry's error with it, as the field array moves its
   // errors, and is said by the sortable list itself, so it leaves the
   // list's own announcement alone.

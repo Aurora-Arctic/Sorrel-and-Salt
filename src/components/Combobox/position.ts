@@ -10,12 +10,18 @@ import { useEffect, useState } from 'react';
 // Floating UI, the standard tool, rather than measuring by hand: the flip,
 // the room, and following a scroll or a resize while open are its own. Fixed
 // rather than absolute, so a scrolling ancestor — M8.16's modal — cannot
-// clip it (claude-docs/components/combobox.md, "Where the list opens").
+// clip it (claude-docs/components/combobox.md, "Where the list opens"). An
+// entry's summary opens on the same placement, as wide as its own content
+// rather than its chip (`matchWidth: false`).
 
 /** Space kept between the list and the edge of the screen. */
 const EDGE_PX = 8;
 
-export function useListPosition(isOpen: boolean, anchor?: HTMLElement | null) {
+export function useListPosition(
+  isOpen: boolean,
+  anchor?: HTMLElement | null,
+  { matchWidth = true }: { matchWidth?: boolean } = {},
+) {
   const [control, setControl] = useState<HTMLElement | null>(null);
 
   const { refs, elements, floatingStyles, placement, update } = useFloating({
@@ -30,10 +36,11 @@ export function useListPosition(isOpen: boolean, anchor?: HTMLElement | null) {
       shift({ padding: EDGE_PX }),
       size({
         padding: EDGE_PX,
-        // As wide as what it is anchored to, and no taller than the room it
-        // has: the stylesheet caps it at its own height besides.
+        // As wide as what it is anchored to, unless told not to be, and no
+        // taller than the room it has: the stylesheet caps it at its own
+        // height besides.
         apply({ rects, availableHeight, elements: { floating } }) {
-          floating.style.width = `${rects.reference.width}px`;
+          if (matchWidth) floating.style.width = `${rects.reference.width}px`;
           floating.style.setProperty('--combobox-list-room', `${Math.max(0, availableHeight)}px`);
         },
       }),
