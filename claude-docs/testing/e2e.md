@@ -187,8 +187,26 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   has to come before that step, and Turbopack's persistent cache under it is
   what a warm build reuses. The e2e image is Ubuntu's, whose GNU `tar`
   `actions/cache` needs; Alpine's `testing` stage had to add it (MB.37). It
-  is CI time, not test time: the step's restore line on a second run is the
-  proof it warms.
+  is CI time, not test time.
+- **The cache a pull request restores is saved on `staging`** (MB.234). GitHub
+  lets a run restore caches saved on its own branch, on `main`, or on a pull
+  request's base branch, and a pull request's own run saves under its merge
+  ref, which only that pull request's later runs can read (GitHub Docs,
+  "Dependency caching reference", "Restrictions for accessing a cache"). So
+  MB.230's step, on its own, only ever saved: every run logged
+  `Cache not found for input keys`. `.github/workflows/e2e-cache.yml` fills
+  the gap. On a push to `staging` that touches what the build compiles or
+  runs under, it calls `playwright.yml` with `build-only: true`, which adds
+  `--grep-invert . --pass-with-no-tests` to `npm run e2e`. Every test title
+  matches `.`, so no spec runs, but Playwright starts its `webServer` entries
+  before it loads a spec, so slot 0 still runs `npm run build` and the cache
+  step saves `/app/.next-e2e/cache` from `staging`. Because it is the same
+  workflow, the warm build has the pull request's image, path, build
+  directory and environment, and the same key; a pull request's run then
+  falls back to that entry through the lockfile-only restore key. The proof
+  is a pull request's run logging `Cache restored from key`. It costs about
+  2½ free GitHub-hosted minutes per qualifying push
+  ([`ci/runner-budget.md`](../ci/runner-budget.md)).
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
   `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
   server keeps whatever data cache it has — the compendium read's `unstable_cache`

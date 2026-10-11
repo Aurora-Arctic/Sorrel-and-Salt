@@ -21,15 +21,15 @@ The five actions under `.github/actions/` — `checkout-to-app`, referenced by i
 
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit`, `destructive-ddl` and `migration-order` as one matrix job with `run-*` path-filter inputs, beside `vitest.yml` and its story step, `playwright.yml`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
+`checks.yml` runs `lint`, `format`, `typecheck`, `build`, `audit`, `destructive-ddl` and `migration-order` as one matrix job with `run-*` path-filter inputs, beside `vitest.yml` and its story step, `playwright.yml` with the `build-only` input `e2e-cache.yml` uses to save the e2e build cache from `staging`, the two image builds and `gitflow.yml`'s branch-source rules. [`ci/reusable-checks.md`](ci/reusable-checks.md)
 
 ## Aggregating workflows
 
-`pr-gate.yml` path-filters and calls the reusable checks under one cancellable concurrency group per PR, beside `close-task-on-merge.yml`, the branch rulesets, the rule that a required-check job never carries a job-level `if:`, and the `ubuntu-26.04` pin. [`ci/aggregating-workflows.md`](ci/aggregating-workflows.md)
+`pr-gate.yml` path-filters and calls the reusable checks under one cancellable concurrency group per PR, beside `close-task-on-merge.yml`, `e2e-cache.yml`, which saves the e2e build cache on a push to `staging` so pull requests can restore it, the branch rulesets, the rule that a required-check job never carries a job-level `if:`, and the `ubuntu-26.04` pin. [`ci/aggregating-workflows.md`](ci/aggregating-workflows.md)
 
 ## Runner budget
 
-Only `vitest.yml` runs on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` while every other job stays on GitHub's free `ubuntu-26.04`, with the free-tier sum per organisation and when to move `playwright.yml` too or drop to 4 vCPU. [`ci/runner-budget.md`](ci/runner-budget.md)
+Only `vitest.yml` runs on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` while every other job stays on GitHub's free `ubuntu-26.04`, with the free-tier sum per organisation and when to move `playwright.yml` too or drop to 4 vCPU, and the 2½ free minutes `e2e-cache.yml` spends per push to `staging`. [`ci/runner-budget.md`](ci/runner-budget.md)
 
 ## Smoke checks
 

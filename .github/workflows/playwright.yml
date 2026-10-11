@@ -1,7 +1,8 @@
 name: Playwright E2E
 
 # The Playwright e2e suite against a built and served site. workflow_call
-# only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
+# only, from pr-gate, and from e2e-cache.yml with `build-only`.
+# claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 # Runs in Docker/Dockerfile.e2e's image, not the Alpine `testing` one:
 # Playwright's Chromium has no musl support.
 on:
@@ -36,6 +37,15 @@ on:
         required: false
         type: boolean
         default: true
+      build-only:
+        description: >-
+          Set true to build and start the servers, run no spec, and save the e2e
+          build cache. Only e2e-cache.yml passes it, on a push to staging: a
+          staging cache is the one a pull request's run can restore
+          (claude-docs/testing/e2e.md).
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -114,6 +124,8 @@ jobs:
       # build writes /app; distDir is playwright.config.ts's NEXT_DIST_DIR.
       # Before the run, because slot 0's webServer builds inside it. The
       # image's GNU tar serves actions/cache (claude-docs/testing/e2e.md).
+      # A pull request restores what e2e-cache.yml saved on staging, since
+      # GitHub never lets one pull request read another's cache.
       - name: Cache Next.js e2e build cache
         if: inputs.should-run
         uses: actions/cache@v6
@@ -126,13 +138,18 @@ jobs:
       # The webServer builds and serves; the browser is in the image. The
       # reporters (list, json, html) come from playwright.config.ts under CI:
       # a `--reporter` here would replace them and lose the html report's
-      # output folder.
+      # output folder. Under build-only every title matches `.`, so no spec
+      # runs, but Playwright starts the webServers, and so the build, before
+      # it loads a spec.
       - name: Run Playwright e2e tests
         id: run
         if: inputs.should-run
+        env:
+          E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
         run: |
           set -o pipefail
-          npm run e2e 2>&1 | tee /app/output.log
+          # Unquoted on purpose: two flags, or nothing.
+          npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
 
       - name: Upload Playwright report
         if: failure()
@@ -144,9 +161,9 @@ jobs:
             /app/.reports/test-results/
           retention-days: 7
 
-      # Not failure-only: a coverage report on every run.
+      # Not failure-only: a coverage report on every run that ran a spec.
       - name: Upload coverage artifact
-        if: always() && inputs.should-run
+        if: always() && inputs.should-run && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
           name: playwright-coverage
