@@ -1,8 +1,14 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { hydrateRoot } from 'react-dom/client';
+import { renderToString } from 'react-dom/server';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import CompendiumList from '@/components/CompendiumList';
 import { compendiumHref } from '@/components/CompendiumList/href';
-import type { CompendiumListEntry, CompendiumListProps } from '@/components/CompendiumList/types';
+import type {
+  CompendiumListEntry,
+  CompendiumListFilter,
+  CompendiumListProps,
+} from '@/components/CompendiumList/types';
 import { Navigating } from '../../support/navigating';
 
 // The filter navigates through the App Router; Vitest hoists the mock above the imports.
@@ -35,11 +41,23 @@ const ENTRIES: CompendiumListEntry[] = [
   },
 ];
 
-const NO_FILTER = { query: '', nomenclature: '', withoutReferences: false } as const;
+const NO_FILTER = { query: '', form: '', nomenclature: '', withoutReferences: false } as const;
+
+/** Every filter in use, as a page shows it. */
+const SHOWN: CompendiumListFilter = {
+  query: 'test',
+  form: 'Fixture Oil',
+  nomenclature: 'unknown',
+  withoutReferences: true,
+};
+
+/** The curated forms the Form box offers. */
+const FORMS = [{ name: 'Fixture Oil' }, { name: 'Fixture Powder' }, { name: 'Fixture Resin' }];
 
 const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
   entries: ENTRIES,
   filter: NO_FILTER,
+  forms: FORMS,
   ...overrides,
 });
 
@@ -93,11 +111,17 @@ describe('compendiumHref', () => {
   it('keeps the filter ahead of the cursor and the modal', () => {
     expect(
       compendiumHref(
-        { query: 'test wort', nomenclature: 'unknown', withoutReferences: true, after: 'a' },
+        {
+          query: 'test wort',
+          form: 'Fixture Oil',
+          nomenclature: 'unknown',
+          withoutReferences: true,
+          after: 'a',
+        },
         { edit: 'x' },
       ),
     ).toBe(
-      '/admin/compendium?query=test+wort&nomenclature=unknown&withoutReferences=1&after=a&edit=x',
+      '/admin/compendium?query=test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1&after=a&edit=x',
     );
     expect(compendiumHref({ query: 'test', before: 'b' }, 'new')).toBe(
       '/admin/compendium?query=test&before=b&new',
@@ -108,9 +132,7 @@ describe('compendiumHref', () => {
   });
 
   it('writes no blank filter', () => {
-    expect(compendiumHref({ query: '', nomenclature: '', withoutReferences: false })).toBe(
-      '/admin/compendium',
-    );
+    expect(compendiumHref(NO_FILTER)).toBe('/admin/compendium');
   });
 });
 
@@ -122,13 +144,10 @@ describe('CompendiumList filter', () => {
   });
 
   const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+  const formBox = () => screen.getByRole('combobox', { name: 'Form' });
 
   it('filters by a GET search to the page itself, keeping what was asked', () => {
-    render(
-      <CompendiumList
-        {...props({ filter: { query: 'test', nomenclature: 'unknown', withoutReferences: true } })}
-      />,
-    );
+    render(<CompendiumList {...props({ filter: SHOWN })} />);
 
     // The <search> landmark around it is the e2e spec's to find, as the
     // category list's is: jsdom's role table predates the element.
@@ -138,6 +157,9 @@ describe('CompendiumList filter', () => {
     const name = within(search).getByRole('searchbox', { name: 'Name' });
     expect(name).toHaveValue('test');
     expect(name).toHaveAttribute('name', 'query');
+    expect(within(search).getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
+    // The form goes under its own parameter, by its text, as the select sends it.
+    expect(new FormData(search as HTMLFormElement).get('form')).toBe('Fixture Oil');
     const kind = within(search).getByRole('combobox', { name: 'Classification' });
     expect(kind).toHaveValue('unknown');
     expect(kind).toHaveAttribute('name', 'nomenclature');
@@ -159,12 +181,62 @@ describe('CompendiumList filter', () => {
     expect(kind).toHaveValue('');
   });
 
+  // The owner's call (MB.115), as the curated lists' group filter: typed
+  // into once hydrated, but drawn as a native select by the server, so the
+  // filter works before JavaScript.
+  it('draws the form as a native select on the server, and as a type-ahead once hydrated', async () => {
+    const page = <CompendiumList {...props({ filter: SHOWN })} />;
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(page);
+    document.body.append(container);
+    onTestFinished(() => container.remove());
+
+    const served = within(container).getByRole('combobox', { name: 'Form' });
+    expect(served).toHaveValue('Fixture Oil');
+    expect(served).toHaveAttribute('name', 'form');
+    expect(
+      within(served)
+        .getAllByRole('option')
+        .map((option) => option.getAttribute('value')),
+    ).toEqual(['', ...FORMS.map((form) => form.name)]);
+    expect(served).not.toHaveAttribute('aria-autocomplete');
+
+    const root = await act(async () => hydrateRoot(container, page));
+    onTestFinished(() => act(() => root.unmount()));
+    const hydrated = within(container).getByRole('combobox', { name: 'Form' });
+    expect(hydrated).toHaveAttribute('aria-autocomplete', 'list');
+    expect(hydrated).toHaveValue('Fixture Oil');
+  });
+
+  it('narrows the forms as their name is typed', () => {
+    render(<CompendiumList {...props()} />);
+
+    fireEvent.click(formBox());
+    expect(
+      within(screen.getByRole('listbox', { name: 'Form choices' })).getAllByRole('option'),
+    ).toHaveLength(FORMS.length);
+    fireEvent.change(formBox(), { target: { value: 'POWD' } });
+    expect(
+      within(screen.getByRole('listbox', { name: 'Form choices' })).getAllByRole('option'),
+    ).toHaveLength(1);
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('enables once a form is picked, and disables again when it is cleared', () => {
+    render(<CompendiumList {...props()} />);
+
+    fireEvent.click(formBox());
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Powder' }));
+    expect(formBox()).toHaveValue('Fixture Powder');
+    expect(filterButton()).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Form' }));
+    expect(formBox()).toHaveValue('');
+    expect(filterButton()).toBeDisabled();
+  });
+
   it('is disabled while the form matches the filter shown', () => {
-    render(
-      <CompendiumList
-        {...props({ filter: { query: 'test', nomenclature: 'unknown', withoutReferences: true } })}
-      />,
-    );
+    render(<CompendiumList {...props({ filter: SHOWN })} />);
 
     expect(filterButton()).toBeDisabled();
   });
@@ -208,6 +280,8 @@ describe('CompendiumList filter', () => {
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
       target: { value: ' Test wort ' },
     });
+    fireEvent.change(formBox(), { target: { value: 'oil' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
       target: { value: 'unknown' },
     });
@@ -215,18 +289,15 @@ describe('CompendiumList filter', () => {
     fireEvent.click(filterButton());
 
     expect(router.push).toHaveBeenCalledWith(
-      '/admin/compendium?query=Test+wort&nomenclature=unknown&withoutReferences=1',
+      '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
     );
   });
 
   it('opens the unfiltered list when the filter is cleared', () => {
-    render(
-      <CompendiumList
-        {...props({ filter: { query: 'test', nomenclature: 'unknown', withoutReferences: true } })}
-      />,
-    );
+    render(<CompendiumList {...props({ filter: SHOWN })} />);
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Form' }));
     fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
       target: { value: '' },
     });
@@ -261,15 +332,23 @@ describe('CompendiumList filter', () => {
     });
 
     // Back to an older filter is a soft navigation: the page renders again with it.
-    rerender(
-      <CompendiumList
-        {...props({ filter: { query: 'test', nomenclature: 'unknown', withoutReferences: true } })}
-      />,
-    );
+    rerender(<CompendiumList {...props({ filter: SHOWN })} />);
 
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test');
+    expect(formBox()).toHaveValue('Fixture Oil');
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
     expect(screen.getByRole('checkbox', { name: 'Without References' })).toBeChecked();
+    expect(filterButton()).toBeDisabled();
+  });
+
+  it('starts again from the form shown when the page shows another form alone', () => {
+    const { rerender } = render(<CompendiumList {...props()} />);
+    fireEvent.click(formBox());
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Powder' }));
+
+    rerender(<CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />);
+
+    expect(formBox()).toHaveValue('Fixture Oil');
     expect(filterButton()).toBeDisabled();
   });
 });
@@ -289,6 +368,7 @@ describe('CompendiumList Clear Filters', () => {
   it('links to the unfiltered first page while the page shows any filter', () => {
     for (const filter of [
       { ...NO_FILTER, query: 'test' },
+      { ...NO_FILTER, form: 'Fixture Oil' },
       { ...NO_FILTER, nomenclature: 'unknown' as const },
       { ...NO_FILTER, withoutReferences: true },
     ]) {

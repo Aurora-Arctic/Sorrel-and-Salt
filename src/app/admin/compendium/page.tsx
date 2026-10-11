@@ -5,11 +5,12 @@ import { cache } from 'react';
 import CompendiumList from '../../../components/CompendiumList';
 import { compendiumHref } from '../../../components/CompendiumList/href';
 import type {
+  CompendiumFormChoice,
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../components/CompendiumList/types';
 import PageHeader from '../../../components/PageHeader';
-import { resolveNumberedPage } from '../../../lib/pagination';
+import { allPages, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
 import {
@@ -22,6 +23,7 @@ import {
   NOMENCLATURE_KINDS,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import { listIngredientFormValues } from '@/modules/vocabulary';
 import { pagerHrefs, readListPlace, readOrMissing } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
@@ -39,12 +41,18 @@ export const metadata: Metadata = {
 const readCompendium = cache(
   async (
     query: string,
+    form: string,
     nomenclature: NomenclatureKind | undefined,
     withoutReferences: boolean,
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const filter = { query: query || undefined, nomenclature, withoutReferences };
+    const filter = {
+      query: query || undefined,
+      form: form || undefined,
+      nomenclature,
+      withoutReferences,
+    };
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
     const page = await resolveNumberedPage(
       { after, before },
@@ -69,6 +77,26 @@ const readCompendium = cache(
 );
 
 /**
+ * Every curated form, for the Form box, read page by page: the curated lists
+ * read their few groups as one page of the maximum (`allGroups`,
+ * `value-kinds.ts`), but 84 forms are seeded against `MAX_PAGE_SIZE`'s 100
+ * and an admin adds more as the compendium grows. Two
+ * live forms may share a name in different groups; the filter matches the
+ * text, folded, so that name is one choice. Cached, so the request reads them
+ * once.
+ */
+const readForms = cache(async (): Promise<CompendiumFormChoice[]> => {
+  const forms = await allPages((page) => listIngredientFormValues({}, page));
+  const seen = new Set<string>();
+  return forms.flatMap(({ name }) => {
+    const folded = name.toLocaleLowerCase();
+    if (seen.has(folded)) return [];
+    seen.add(folded);
+    return [{ name }];
+  });
+});
+
+/**
  * What `?edit=` names: the entry there, its values read for the form, or the
  * address it moved to while its old one still redirects, or nothing.
  */
@@ -89,8 +117,9 @@ const isKind = (value: string | undefined): value is NomenclatureKind =>
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
 // wide modal over the list does the writing, opened by the address — `?new`,
 // or `?edit=<slug>` — so it can be linked to and Back closes it, as on the
-// categories page. The list narrows by name, by classification — Unknown is
-// the curation to-do list — and to the entries citing nothing, the second.
+// categories page. The list narrows by name, by form, by classification —
+// Unknown is the curation to-do list — and to the entries citing nothing, the
+// second.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   await requireAdminSession();
   const params: CompendiumSearchParams = await searchParams;
@@ -101,13 +130,17 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const kind = single(params.nomenclature);
   const nomenclature = isKind(kind) ? kind : undefined;
   const withoutReferences = single(params.withoutReferences) === '1';
+  // A form by its text, `?form=Oil`, which the compendium read folds.
+  const form = single(params.form)?.trim() ?? '';
 
-  const [page, edited] = await Promise.all([
-    readCompendium(query, nomenclature, withoutReferences, after, before),
+  const [page, forms, edited] = await Promise.all([
+    readCompendium(query, form, nomenclature, withoutReferences, after, before),
+    readForms(),
     !adding && editSlug ? readEdited(editSlug) : undefined,
   ]);
   const filter: CompendiumListFilter = {
     query,
+    form,
     nomenclature: nomenclature ?? '',
     withoutReferences,
   };
@@ -139,6 +172,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <CompendiumList
         entries={entries}
         filter={filter}
+        forms={forms}
         position={page.position}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />

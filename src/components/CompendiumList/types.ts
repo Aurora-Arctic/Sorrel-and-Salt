@@ -22,6 +22,8 @@ export interface CompendiumListProps {
   entries: readonly CompendiumListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: CompendiumListFilter;
+  /** The curated forms, in name order, which the Form box offers. */
+  forms: readonly CompendiumFormChoice[];
   previousHref?: Route;
   nextHref?: Route;
   /** Where this page stands among them all, for the pager. */
@@ -29,11 +31,22 @@ export interface CompendiumListProps {
 }
 
 /**
- * The list's filter as asked: the name query and a classification, each
- * blank for none, and whether to show only the entries that cite no reference.
+ * One curated form the Form box offers: its name is both what the box shows
+ * and what the address carries, `?form=Oil`, since the compendium filters a
+ * form by its text.
+ */
+export interface CompendiumFormChoice {
+  name: string;
+}
+
+/**
+ * The list's filter as asked: the name query, a form and a classification,
+ * each blank for none, and whether to show only the entries that cite no
+ * reference.
  */
 export interface CompendiumListFilter {
   query: string;
+  form: string;
   nomenclature: NomenclatureKind | '';
   withoutReferences: boolean;
 }
@@ -41,6 +54,7 @@ export interface CompendiumListFilter {
 /** Where the list stands: its filter, and the cursor of the page a modal opens over. */
 export interface CompendiumPlace {
   query?: string;
+  form?: string;
   nomenclature?: NomenclatureKind | '';
   withoutReferences?: boolean;
   after?: string;
@@ -50,5 +64,5 @@ export interface CompendiumPlace {
 /** Which modal the address opens: the empty one, or an entry's by slug. */
 export type CompendiumDialog = 'new' | { edit: string };
 
-/** What the filter form starts from: the page's filter. */
-export type CompendiumListFilterProps = Pick<CompendiumListProps, 'filter'>;
+/** What the filter form starts from: the page's filter, and the forms it offers. */
+export type CompendiumListFilterProps = Pick<CompendiumListProps, 'filter' | 'forms'>;
