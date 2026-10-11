@@ -202,7 +202,7 @@ export function buildPlan(rawBoard, tasksMd) {
       id: c.id,
       title: c.title,
       body: `${task.notes.trimEnd()}\n\nAsana: ${task.permalink_url}\n`,
-      type: c.id.startsWith('MB.') ? 'Bug' : 'Task',
+      type: 'Task',
       labels: [TRACKED_LABEL, ...(/hotfix/i.test(task.name) ? [HOTFIX_LABEL] : [])],
       milestone,
       closed: task.completed || retired,
