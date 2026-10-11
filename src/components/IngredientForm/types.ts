@@ -139,7 +139,7 @@ export interface ReferenceOption extends ComboboxOption {
   link: ReferenceLink;
 }
 
-/** A source saved by the panel, as `createReference` answers it. */
+/** A source saved by the panel, as `createReference` and `updateReference` answer it. */
 export type SavedReference = CreateReferenceMutation['createReference'];
 
 /** Any list's entry: typed text, or a substitute's or a deity's link beside it. */
@@ -378,9 +378,14 @@ export interface ReferenceFieldSpec {
 export interface ReferencePanelProps {
   /** The coven the new source is written to, or null for the compendium's. */
   workspaceId: string | null;
+  /**
+   * The source to edit, opened prefilled with every field it has and saved
+   * through `updateReference` in its tier; absent, the panel writes a new one.
+   */
+  editing?: ReferenceLink | null;
   /** How many times the panel has been asked for: each takes the focus back to Kind. */
   summons: number;
-  /** Called with the source once the server has saved it. */
+  /** Called with the source once the server has saved it, new or edited. */
   onSaved: (reference: SavedReference) => void;
   onCancel: () => void;
 }

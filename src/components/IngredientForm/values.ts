@@ -562,7 +562,7 @@ function boxIssues(
   }
   const search = drafts.references?.trim() ?? '';
   if (panelOpen) {
-    issues.references = { type: 'unsaved', message: 'Save the new reference, or cancel it' };
+    issues.references = { type: 'unsaved', message: 'Save the source, or cancel it' };
   } else if (search !== '') {
     issues.references = {
       type: 'unadded',

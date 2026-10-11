@@ -283,6 +283,15 @@
   font-size: type-size('caption');
 }
 
+// The tier, and Edit Source beside it where the form may change the source:
+// on one line while they fit, the button wrapping beneath at a phone's width.
+.ingredient-form__tier-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(3);
+}
+
 // "Locator" and its box on one line, a page reference's width. Nested, to
 // outweigh the `.field__label-row` primitive it also carries, whose tighter
 // gap is a label's beside its ⓘ, not a label's beside its box.
@@ -312,6 +321,14 @@
 
   .fieldset__legend {
     padding: 0 space(1);
+  }
+
+  // What an edit reaches, or that the source is loading: a caption's ink,
+  // as the tier's, above the fields.
+  .ingredient-form__panel-note {
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
   }
 
   // Its buttons a little further from its fields than they are from each

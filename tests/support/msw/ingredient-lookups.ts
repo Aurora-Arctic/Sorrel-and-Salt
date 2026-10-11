@@ -8,8 +8,12 @@ import type {
   PlanetSuggestionsQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
+  ReferenceQuery,
+  ReferenceQueryVariables,
   ReferenceSuggestionsQuery,
   ReferenceSuggestionsQueryVariables,
+  UpdateReferenceMutation,
+  UpdateReferenceMutationVariables,
 } from '@/gql/graphql';
 import type {
   CorrespondenceNode,
@@ -25,7 +29,8 @@ import { mockGraphQLMutation, mockGraphQLQuery } from './graphql';
 // The ingredient form's lookups answered as /api/graphql answers them, each
 // recording the variables it was asked with: shared by the form's test and
 // the tests of the fields that ask them (MB.181), with the reference panel's
-// `CreateReference` beside them (MB.182). A later answer wins, so a
+// `CreateReference` beside them (MB.182), and the edit's `Reference` and
+// `UpdateReference` (MB.115). A later answer wins, so a
 // test answers a lookup after whatever answered it empty.
 
 /** The coven the form's tests act in. */
@@ -133,6 +138,43 @@ export function acceptReference(citation = 'Mock, Cyril. A Fixture Grimoire. Moc
           citation,
           isGlobal: false,
           ...NEW_REFERENCE_SOURCE,
+        },
+      };
+    },
+  );
+  return calls;
+}
+
+/** Answers `Reference` with this source whole, recording each ask. */
+export function offerReference(source: ReferenceQuery['reference']) {
+  const calls: ReferenceQueryVariables[] = [];
+  mockGraphQLQuery<ReferenceQuery, ReferenceQueryVariables>('Reference', (variables) => {
+    calls.push(variables);
+    return { reference: source };
+  });
+  return calls;
+}
+
+/**
+ * Answers `UpdateReference` with the source as sent, now reading `citation`,
+ * in the tier it was sent to; records each ask.
+ */
+export function acceptReferenceUpdate(citation: string) {
+  const calls: UpdateReferenceMutationVariables[] = [];
+  mockGraphQLMutation<UpdateReferenceMutation, UpdateReferenceMutationVariables>(
+    'UpdateReference',
+    (variables) => {
+      calls.push(variables);
+      const { kind, authors, title, container } = variables.input;
+      return {
+        updateReference: {
+          id: String(variables.id),
+          citation,
+          isGlobal: variables.workspaceId == null,
+          kind,
+          authors: authors ?? null,
+          title,
+          container: container ?? null,
         },
       };
     },

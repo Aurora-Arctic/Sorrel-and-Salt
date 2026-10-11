@@ -10,6 +10,7 @@ import {
   NEW_REFERENCE_ID,
   WORKSPACE_ID,
   acceptReference,
+  offerReference,
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
@@ -406,5 +407,64 @@ describe('ReferencePanel', () => {
 
     expect(onCancel).toHaveBeenCalledOnce();
     expect(calls).toHaveLength(0);
+  });
+
+  // MB.115: the edit saves through the same handling, so a refusal of the
+  // edited source lands beside its field as a new one's does.
+  it('puts a server field error on an edited source beside its field', async () => {
+    offerReference({
+      id: NEW_REFERENCE_ID,
+      kind: 'book',
+      title: 'A Fixture Grimoire',
+      authors: 'Mock, Cyril',
+      container: null,
+      contributors: null,
+      edition: null,
+      volume: null,
+      issue: null,
+      series: null,
+      place: 'Mockford',
+      publisher: null,
+      published: '1999',
+      pages: null,
+      host: null,
+      url: null,
+      modified: null,
+      accessed: null,
+      note: null,
+    });
+    mockGraphQLError('UpdateReference', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['published'], message: 'Give the year it was published' }],
+    });
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <ReferencePanel
+          workspaceId={WORKSPACE_ID}
+          editing={{
+            id: NEW_REFERENCE_ID,
+            isGlobal: false,
+            kind: 'book',
+            authors: 'Mock, Cyril',
+            title: 'A Fixture Grimoire',
+            container: null,
+          }}
+          summons={1}
+          onSaved={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+    const editPanel = () => screen.getByRole('group', { name: 'Edit Source' });
+    const published = await waitFor(() =>
+      within(editPanel()).getByLabelText(labelled('Published')),
+    );
+    expect(published).toHaveValue('1999');
+
+    typeIn(published, '2001');
+    press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+    await waitFor(() => expect(published).toBeInvalid());
+    expect(published).toHaveAccessibleDescription(/\S/);
   });
 });

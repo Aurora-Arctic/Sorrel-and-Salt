@@ -44,8 +44,10 @@ import { draftOf, sourceTierOf } from './values';
 // which its edit opens to the citation whole, its tier and the Locator box; and a panel for a source not
 // yet written. Typed text is a search and never an entry, so the list's last
 // row is "New Reference…", which opens the panel, rather than what was typed
-// (MB.115, the owner's call). Only each source's id and locator are sent
-// (claude-docs/components/ingredient-form.md, "The references").
+// (MB.115, the owner's call). An open row's Edit Source opens the same panel
+// on that source, where the form may change it (MB.115). Only each source's
+// id and locator are sent (claude-docs/components/ingredient-form.md, "The
+// references" and "Editing a source").
 
 export const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
@@ -93,7 +95,8 @@ export function ReferencesField({
   workspaceId,
   at,
 }: LookupFieldProps & SharedFieldProps): ReactElement {
-  const { control, register, setValue, trigger } = useFormContext<IngredientFormValues>();
+  const { control, register, setValue, getValues, trigger } =
+    useFormContext<IngredientFormValues>();
   const list = at ? (`${at}.references` as const) : 'references';
   const box = draftOf(list);
   const panel = at ? (`${at}.referencePanelOpen` as const) : 'referencePanelOpen';
@@ -108,6 +111,7 @@ export function ReferencesField({
   const legendId = `${id}-legend`;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
+  const editSourceId = (row: string) => `${id}-${row}-edit-source`;
   const boxElement = useRef<HTMLInputElement | null>(null);
   // The box and its button together, which an open list spans (MB.154).
   // Held as state, through its callback ref, so the box is told once it exists.
@@ -125,6 +129,16 @@ export function ReferencesField({
     document.getElementById(`${id}-${openRow}-locator`)?.focus();
   }, [openRow, id]);
   const focusBox = () => boxElement.current?.focus();
+  // The source the panel is editing, and the row it was opened from, whose
+  // Edit Source takes the focus back once the panel closes; null, the panel
+  // writes a new source.
+  const [editing, setEditing] = useState<{ row: string; link: ReferenceLink } | null>(null);
+  const focusAfterPanel = useRef<string | null>(null);
+  useEffect(() => {
+    if (panelOpen || focusAfterPanel.current === null) return;
+    document.getElementById(focusAfterPanel.current)?.focus();
+    focusAfterPanel.current = null;
+  }, [panelOpen, openRow]);
   // A source just added opens at once, its Locator focused, since a page is
   // what it most often needs next (MB.115, the owner's call). The field
   // array keys the new row on a later render, so the add says how many rows
@@ -161,7 +175,9 @@ export function ReferencesField({
   const boxError: string | undefined = get(errors, box)?.message;
   const message = [
     ...fields.flatMap((row, index) =>
-      rowErrors[index] ? [`${shortCitationText(row.link)}: ${rowErrors[index]}`] : [],
+      rowErrors[index]
+        ? [`${shortCitationText((rowValues[index] ?? row).link)}: ${rowErrors[index]}`]
+        : [],
     ),
     boxError,
   ]
@@ -188,7 +204,7 @@ export function ReferencesField({
     revalidate();
   };
   const removeAt = (index: number) => {
-    setAnnouncement(`Removed ${shortCitationText(fields[index].link)}`);
+    setAnnouncement(`Removed ${shortCitationText((rowValues[index] ?? fields[index]).link)}`);
     remove(index);
     revalidate();
   };
@@ -196,6 +212,7 @@ export function ReferencesField({
   // Counted, so a request while the panel is open still takes you to it.
   const [summons, setSummons] = useState(0);
   const openPanel = () => {
+    setEditing(null);
     setValue(panel, true);
     setSummons((count) => count + 1);
     revalidate();
@@ -203,10 +220,43 @@ export function ReferencesField({
   const closePanel = () => {
     setValue(panel, false);
     revalidate();
-    focusBox();
+    // An edit cancelled goes back to the row it was opened from.
+    if (editing) {
+      focusAfterPanel.current = editSourceId(editing.row);
+      setOpenRow(editing.row);
+    } else focusBox();
+  };
+  const editSource = (row: string, link: ReferenceLink) => {
+    setEditing({ row, link });
+    setValue(panel, true);
+    setSummons((count) => count + 1);
+    revalidate();
+  };
+  /**
+   * The edited source's new text on every row citing it, the ingredient's
+   * and each variant's. Not marked as a change to the ingredient: the source
+   * is saved already, and the links the form sends are as they were.
+   */
+  const rewriteRows = (citation: string, link: ReferenceLink) => {
+    const lists: (`variants.${number}.references` | 'references')[] = [
+      'references',
+      ...getValues('variants').map((_, index) => `variants.${index}.references` as const),
+    ];
+    for (const name of lists) {
+      getValues(name).forEach((entry, index) => {
+        if (entry.link.id !== link.id) return;
+        setValue(`${name}.${index}.value`, citation);
+        setValue(`${name}.${index}.link`, link);
+      });
+    }
   };
   const saved = ({ citation, ...link }: SavedReference) => {
-    add(citation, link);
+    if (editing) {
+      rewriteRows(citation, link);
+      setAnnouncement(`Saved ${shortCitationText(link)}`);
+      focusAfterPanel.current = editSourceId(editing.row);
+      setOpenRow(editing.row);
+    } else add(citation, link);
     // Closed without handing the focus back to the box: the new row takes it.
     setValue(panel, false);
     revalidate();
@@ -261,7 +311,12 @@ export function ReferencesField({
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
             const locator = rowValues[index]?.locator.trim() ?? '';
-            const name = shortCitationText(row.link);
+            // Read through the values, which an edited source rewrites in place.
+            const entry = rowValues[index] ?? row;
+            const name = shortCitationText(entry.link);
+            // A coven's form edits its own sources; the compendium's are
+            // the admins', and a compendium form's are all the compendium's.
+            const editable = workspaceId === null || !entry.link.isGlobal;
             return (
               <li
                 key={row.id}
@@ -278,15 +333,15 @@ export function ReferencesField({
                     buttons' description, then where in it, if anywhere.
                     Open, the citation reads whole. */}
                 <div className="ingredient-form__source">
-                  <span className="ingredient-form__citation" title={row.value}>
+                  <span className="ingredient-form__citation" title={entry.value}>
                     {open
-                      ? row.value
-                      : renderShortCitation(row.link, locator !== '').map((part, at) =>
+                      ? entry.value
+                      : renderShortCitation(entry.link, locator !== '').map((part, at) =>
                           part.italic ? <i key={at}>{part.text}</i> : part.text,
                         )}
                   </span>
                   <span id={citationId} hidden>
-                    {row.value}
+                    {entry.value}
                   </span>
                   {/* The space is the text's, "Fixture, Herbal, p. 112"; the
                       flex row draws the gap and drops the space. */}
@@ -328,7 +383,29 @@ export function ReferencesField({
                   <RemoveIcon />
                 </button>
                 <div id={detailId} className="ingredient-form__reference-detail" hidden={!open}>
-                  <span className="ingredient-form__tier">{sourceTierOf(row.link)}</span>
+                  {/* Its tier, and beside it the edit of the source itself,
+                      quieter than the row's own controls: it changes the
+                      source for every entry citing it. Named for the source,
+                      as the pencil is. Absent where the source is not this
+                      form's to change, which the tier line then says. */}
+                  <div className="ingredient-form__tier-row">
+                    <span className="ingredient-form__tier">
+                      {sourceTierOf(entry.link)}
+                      {!editable && '. Only the site’s admins can edit it.'}
+                    </span>
+                    {editable && (
+                      <button
+                        type="button"
+                        id={editSourceId(row.id)}
+                        className="btn btn--small btn--quiet"
+                        aria-label={`Edit Source ${name}`}
+                        aria-describedby={citationId}
+                        onClick={() => editSource(row.id, entry.link)}
+                      >
+                        Edit Source
+                      </button>
+                    )}
+                  </div>
                   {/* Read with the source it locates, then what a locator is:
                       a column of bare "Locator"s is no help to a screen
                       reader. The tip beside the label, as every field's is. */}
@@ -370,7 +447,10 @@ export function ReferencesField({
       <FieldError id={errorId} message={message} />
       {panelOpen && (
         <ReferencePanel
+          // A fresh panel for each source edited, and for a new one.
+          key={editing?.link.id ?? 'new'}
           workspaceId={workspaceId}
+          editing={editing?.link}
           summons={summons}
           onSaved={saved}
           onCancel={closePanel}

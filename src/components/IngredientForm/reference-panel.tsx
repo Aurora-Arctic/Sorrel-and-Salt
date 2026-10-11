@@ -1,30 +1,33 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   type KeyboardEvent,
   type ReactElement,
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
 } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import { graphqlRequest } from '../../lib/graphql-client';
+import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
 import { SelectField, TextField } from '../Field';
+import type { ReferenceQuery } from '../../gql/graphql';
 import type {
   ReferenceFieldName,
   ReferenceFieldSpec,
   ReferenceFormValues,
   ReferencePanelProps,
   ReferenceSendInput,
+  SavedReference,
 } from './types';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 
@@ -35,6 +38,9 @@ import { readGraphqlIssues } from '../../lib/graphql-failure';
 // its own react-hook-form, its fields the ingredient form's own, and Enter in
 // one of them saves the source rather than the ingredient
 // (claude-docs/components/ingredient-form.md, "The new reference panel").
+// Opened on a source already recorded, it edits that one instead, prefilled
+// with every field it has, and the change reaches every row citing it
+// (MB.115; the same doc, "Editing a source").
 
 export const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
@@ -46,6 +52,47 @@ export const CreateReferenceDocument = graphql(`
       authors
       title
       container
+    }
+  }
+`);
+
+export const UpdateReferenceDocument = graphql(`
+  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
+    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
+      id
+      citation
+      isGlobal
+      kind
+      authors
+      title
+      container
+    }
+  }
+`);
+
+/** A source whole, which the edit opens on: a row carries only its short form's fields. */
+export const ReferenceDocument = graphql(`
+  query Reference($workspaceId: ID, $id: ID!) {
+    reference(workspaceId: $workspaceId, id: $id) {
+      id
+      kind
+      title
+      authors
+      container
+      contributors
+      edition
+      volume
+      issue
+      series
+      place
+      publisher
+      published
+      pages
+      host
+      url
+      modified
+      accessed
+      note
     }
   }
 `);
@@ -284,6 +331,13 @@ export function toReferenceInput(values: ReferenceFormValues): ReferenceSendInpu
   return { ...input, kind: values.kind as ReferenceKind, title: values.title };
 }
 
+/** A source as the panel edits it: each field as stored, an empty one blank. */
+export function referenceValuesOf(source: ReferenceQuery['reference']): ReferenceFormValues {
+  const values: ReferenceFormValues = { ...EMPTY_REFERENCE, kind: source.kind };
+  for (const name of FIELD_NAMES) values[name] = source[name] ?? '';
+  return values;
+}
+
 const validate = zodResolver(ReferenceInput, undefined, { raw: true });
 
 /** The shared schema as the panel's resolver, over the values as `toReferenceInput` sends them. */
@@ -293,14 +347,72 @@ const referenceResolver: Resolver<ReferenceFormValues, unknown, ReferenceSendInp
   options,
 ) => validate(toReferenceInput(values), context, options as never);
 
-export default function ReferencePanel({
+/**
+ * The panel: a new source, or with `editing`, that source, read whole by id
+ * before its fields are shown, since a row carries only its short form's.
+ */
+export default function ReferencePanel(props: ReferencePanelProps): ReactElement {
+  return props.editing ? (
+    <EditSourcePanel {...props} editing={props.editing} />
+  ) : (
+    <PanelForm {...props} defaults={EMPTY_REFERENCE} />
+  );
+}
+
+/**
+ * The edit's read, then the panel prefilled with it. Kept for no longer than
+ * the panel is open, so an edit opened again reads the source as it now is.
+ * The tier is the source's own: a coven's under its coven, the compendium's
+ * without one, as `updateReference` will write it.
+ */
+function EditSourcePanel({
+  editing,
+  ...props
+}: ReferencePanelProps & { editing: NonNullable<ReferencePanelProps['editing']> }): ReactElement {
+  const legendId = useId();
+  const { data, isError } = useQuery({
+    ...graphqlQuery(ReferenceDocument, {
+      workspaceId: editing.isGlobal ? null : props.workspaceId,
+      id: editing.id,
+    }),
+    gcTime: 0,
+    throwOnError: false,
+  });
+  // Values made once per read, so the form is not handed new defaults each render.
+  const defaults = useMemo(() => data && referenceValuesOf(data.reference), [data]);
+
+  if (defaults) return <PanelForm {...props} editing={editing} defaults={defaults} />;
+  return (
+    <fieldset className="fieldset ingredient-form__panel" aria-labelledby={legendId}>
+      <legend className="fieldset__legend" id={legendId}>
+        Edit Source
+      </legend>
+      {isError ? (
+        <Notice kind="error">This source could not be loaded. Cancel, and try again.</Notice>
+      ) : (
+        <p className="ingredient-form__panel-note" role="status">
+          Loading the source…
+        </p>
+      )}
+      <div className="form__actions">
+        <button type="button" className="btn btn--quiet" onClick={props.onCancel}>
+          Cancel
+        </button>
+      </div>
+    </fieldset>
+  );
+}
+
+function PanelForm({
   workspaceId,
+  editing,
+  defaults,
   summons,
   onSaved,
   onCancel,
-}: ReferencePanelProps): ReactElement {
+}: ReferencePanelProps & { defaults: ReferenceFormValues }): ReactElement {
   const methods = useForm<ReferenceFormValues, unknown, ReferenceSendInput>({
-    defaultValues: EMPTY_REFERENCE,
+    defaultValues: defaults,
     resolver: referenceResolver,
     // As the ingredient form's: the first field marked invalid is focused
     // once every error is drawn, below.
@@ -314,6 +426,7 @@ export default function ReferencePanel({
   } = methods;
   const panel = useRef<HTMLFieldSetElement>(null);
   const legendId = useId();
+  const noteId = useId();
   const kind = useWatch({ control, name: 'kind' });
   const shown = kind === '' ? [] : FIELDS_OF[kind];
 
@@ -332,15 +445,25 @@ export default function ReferencePanel({
       panel.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
   }, [submitCount]);
 
+  // A new source is written to this coven, or the compendium; an edited one
+  // in its own tier, which in a coven's form is the coven's, since only its
+  // own sources offer the edit.
   const mutation = useMutation({
-    mutationFn: (input: ReferenceSendInput) =>
-      graphqlRequest(CreateReferenceDocument, { workspaceId, input }),
+    mutationFn: async (input: ReferenceSendInput): Promise<SavedReference> =>
+      editing
+        ? (
+            await graphqlRequest(UpdateReferenceDocument, {
+              workspaceId: editing.isGlobal ? null : workspaceId,
+              id: editing.id,
+              input,
+            })
+          ).updateReference
+        : (await graphqlRequest(CreateReferenceDocument, { workspaceId, input })).createReference,
   });
 
   const save = async (input: ReferenceSendInput): Promise<void> => {
     try {
-      const { createReference } = await mutation.mutateAsync(input);
-      onSaved(createReference);
+      onSaved(await mutation.mutateAsync(input));
     } catch (error) {
       // A field error beside the field it names, if this kind shows it;
       // anything else above the fields.
@@ -367,21 +490,29 @@ export default function ReferencePanel({
     submit();
   };
 
+  const noun = editing ? 'Source' : 'Reference';
   return (
     <FormProvider {...methods}>
       {/* A group, named by its legend, holding its own save: a save with
           nothing chosen asks for the kind first. Its keydown is the fields'
-          Enter, heard as it bubbles, not a control of its own. */}
+          Enter, heard as it bubbles, not a control of its own. An edit is
+          described by what it will reach. */}
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <fieldset
         ref={panel}
         className="fieldset ingredient-form__panel"
         aria-labelledby={legendId}
+        aria-describedby={editing ? noteId : undefined}
         onKeyDown={onKeyDown}
       >
         <legend className="fieldset__legend" id={legendId}>
-          New Reference
+          {editing ? 'Edit Source' : 'New Reference'}
         </legend>
+        {editing && (
+          <p className="ingredient-form__panel-note" id={noteId}>
+            A change here reaches every entry citing this source.
+          </p>
+        )}
         {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
         <SelectField<ReferenceFormValues>
           name="kind"
@@ -398,7 +529,7 @@ export default function ReferencePanel({
         {/* Held down from the press to the answer, as the ingredient's saves
             are: Save Reference says so with the same spinner, and Cancel
             waits, so a source being written is never left half-added. Save
-            Reference is off until something is entered, and Cancel is quiet,
+            is off until something is entered or changed, and Cancel is quiet,
             the owner's rules for every form (M5.6). */}
         <div className="form__actions">
           <BusyButton
@@ -406,9 +537,9 @@ export default function ReferencePanel({
             onClick={submit}
             disabled={!isDirty || isSubmitting}
             busy={isSubmitting}
-            busyLabel="Saving Reference"
+            busyLabel={`Saving ${noun}`}
           >
-            Save Reference
+            {`Save ${noun}`}
           </BusyButton>
           <button
             type="button"

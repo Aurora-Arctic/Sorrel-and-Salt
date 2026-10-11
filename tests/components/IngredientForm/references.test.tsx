@@ -12,7 +12,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import { ReferencesField } from '@/components/IngredientForm/references';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  ingredientResolver,
+} from '@/components/IngredientForm/values';
 import type {
   CreateWorkspaceIngredientMutation,
   CreateWorkspaceIngredientMutationVariables,
@@ -25,12 +29,14 @@ import {
   NEW_REFERENCE_ID,
   WORKSPACE_ID,
   acceptReference,
+  acceptReferenceUpdate,
   offerDeities,
   offerDuplicates,
   offerForms,
   offerIngredients,
   offerNames,
   offerPlanets,
+  offerReference,
   offerReferences,
   offerSigns,
 } from '../../support/msw/ingredient-lookups';
@@ -485,6 +491,209 @@ describe('ReferencesField', () => {
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
       save();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    });
+  });
+
+  // MB.115: an open row's Edit Source opens the panel on that source whole,
+  // and its save rewrites every row citing it. The rows start listed, the
+  // ingredient's and a variant's citing the same source, as an edit opens them.
+  describe('editing a source', () => {
+    /** NOTES whole, as `reference` answers it. */
+    const NOTES_WHOLE = {
+      id: COVEN_ID,
+      kind: 'article',
+      title: 'Notes on Mockleaf',
+      authors: 'Placeholder, Bram',
+      container: 'Journal of Fixtures',
+      contributors: null,
+      edition: null,
+      volume: '3',
+      issue: null,
+      series: null,
+      place: null,
+      publisher: null,
+      published: '1950',
+      pages: '12–19',
+      host: null,
+      url: null,
+      modified: null,
+      accessed: null,
+      note: null,
+    } as const;
+    const RENAMED_CITATION =
+      'Placeholder, Bram. "Notes on Fixtureleaf." Journal of Fixtures 3 (1950): 12–19.';
+    const RENAMED_SHORT = 'Placeholder, "Notes on Fixtureleaf"';
+
+    const entryOf = ({ citation, ...link }: ReferenceNode) => ({
+      value: citation,
+      link,
+      locator: '',
+    });
+
+    /** The ingredient's references and its one variant's, each citing `sources`, in a form of their own. */
+    function renderListed(sources: ReferenceNode[], workspaceId: string | null = WORKSPACE_ID) {
+      const onSubmit = vi.fn();
+      const Harness = () => {
+        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+          defaultValues: {
+            ...EMPTY_VALUES,
+            name: 'Testwort',
+            references: sources.map(entryOf),
+            variants: [{ ...EMPTY_VARIANT, form: 'Oil', references: sources.map(entryOf) }],
+          },
+          resolver: ingredientResolver,
+        });
+        return (
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <ReferencesField workspaceId={workspaceId} />
+              <ReferencesField workspaceId={workspaceId} at="variants.0" />
+              <button type="submit">Save Ingredient</button>
+            </form>
+          </FormProvider>
+        );
+      };
+      render(
+        <QueryClientProvider client={makeQueryClient()}>
+          <Harness />
+        </QueryClientProvider>,
+      );
+      return onSubmit;
+    }
+
+    const [ingredient, variant] = [0, 1].map(
+      (at) => () => screen.getAllByRole('group', { name: 'References' })[at],
+    );
+    const editPanel = () => within(ingredient()).getByRole('group', { name: 'Edit Source' });
+    const noEditPanel = () =>
+      expect(within(ingredient()).queryByRole('group', { name: 'Edit Source' })).toBeNull();
+    const inEditPanel = (label: string) => within(editPanel()).getByLabelText(labelled(label));
+    /** Opens the ingredient's row for `short` by its pencil, if it is not open. */
+    const openRow = (short: string) => {
+      const pencil = within(ingredient()).getByRole('button', { name: `Edit ${short}` });
+      if (pencil.getAttribute('aria-expanded') !== 'true') press(pencil);
+    };
+    const editSource = (short: string) =>
+      within(ingredient()).queryByRole('button', { name: `Edit Source ${short}` });
+    /** Opens the row and its Edit Source, and waits for the panel to read the source. */
+    async function openEdit(short: string) {
+      openRow(short);
+      press(editSource(short) as HTMLElement);
+      await waitFor(() => expect(inEditPanel('Article Title')).toBeInTheDocument());
+    }
+
+    it('opens the panel on an own source, prefilled with every field it has, read in its coven', async () => {
+      const reads = offerReference(NOTES_WHOLE);
+      renderListed([NOTES]);
+
+      await openEdit(NOTES_SHORT);
+
+      expect(reads).toEqual([{ workspaceId: WORKSPACE_ID, id: COVEN_ID }]);
+      expect(inEditPanel('Article Title')).toHaveValue('Notes on Mockleaf');
+      expect(inEditPanel('Journal')).toHaveValue('Journal of Fixtures');
+      expect(inEditPanel('Authors')).toHaveValue('Placeholder, Bram');
+      expect(inEditPanel('Volume')).toHaveValue('3');
+      expect(inEditPanel('Issue')).toHaveValue('');
+      expect(inEditPanel('Published')).toHaveValue('1950');
+      expect(inEditPanel('Pages')).toHaveValue('12–19');
+      // Nothing to save until something changes.
+      expect(within(editPanel()).getByRole('button', { name: 'Save Source' })).toBeDisabled();
+    });
+
+    it('saves through updateReference by id in its tier, rewriting every row citing it, the focus back on the row', async () => {
+      offerReference(NOTES_WHOLE);
+      const updates = acceptReferenceUpdate(RENAMED_CITATION);
+      const onSubmit = renderListed([NOTES]);
+      await openEdit(NOTES_SHORT);
+
+      typeIn(inEditPanel('Article Title'), 'Notes on Fixtureleaf');
+      press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+      await waitFor(noEditPanel);
+      expect(updates).toEqual([
+        expect.objectContaining({
+          workspaceId: WORKSPACE_ID,
+          id: COVEN_ID,
+          input: expect.objectContaining({ kind: 'article', title: 'Notes on Fixtureleaf' }),
+        }),
+      ]);
+      // The ingredient's row and the variant's both read the new short form.
+      for (const list of [ingredient(), variant()]) {
+        expect(within(list).getByRole('button', { name: `Edit ${RENAMED_SHORT}` })).toBeVisible();
+        expect(within(list).queryByRole('button', { name: `Edit ${NOTES_SHORT}` })).toBeNull();
+      }
+      expect(
+        within(ingredient()).getByRole('status', { name: 'References changes' }),
+      ).not.toBeEmptyDOMElement();
+      expect(editSource(RENAMED_SHORT)).toHaveFocus();
+
+      // The links sent are as they were: the source was saved already.
+      save();
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].references).toEqual([
+        { referenceId: COVEN_ID, locator: '' },
+      ]);
+    });
+
+    it('closes on Cancel, saving nothing, the focus back on the row', async () => {
+      offerReference(NOTES_WHOLE);
+      const updates = acceptReferenceUpdate(RENAMED_CITATION);
+      renderListed([NOTES]);
+      await openEdit(NOTES_SHORT);
+
+      typeIn(inEditPanel('Article Title'), 'Notes on Fixtureleaf');
+      press(within(editPanel()).getByRole('button', { name: 'Cancel' }));
+
+      noEditPanel();
+      expect(updates).toHaveLength(0);
+      expect(editSource(NOTES_SHORT)).toHaveFocus();
+    });
+
+    // Why it could have been offered: the coven's own source, beside it, is.
+    it('offers no edit of a compendium source in a coven’s form', () => {
+      renderListed([HERBAL, NOTES]);
+
+      openRow(NOTES_SHORT);
+      expect(editSource(NOTES_SHORT)).toBeVisible();
+      openRow(HERBAL_SHORT);
+
+      expect(editSource(HERBAL_SHORT)).toBeNull();
+    });
+
+    it('edits a compendium source in the compendium’s form, in the compendium’s tier', async () => {
+      const reads = offerReference({
+        ...NOTES_WHOLE,
+        id: COMPENDIUM_ID,
+        kind: 'book',
+        title: 'The Testwort Herbal',
+        authors: 'Fixture, Ada',
+        container: null,
+        volume: null,
+        pages: null,
+        place: 'Mockford',
+        publisher: 'Fixture Press',
+        published: '1901',
+      });
+      const updates = acceptReferenceUpdate(
+        'Fixture, Ada. The Testwort Herbal. 2nd ed. Mockford: Fixture Press, 1901.',
+      );
+      renderListed([HERBAL], null);
+      openRow(HERBAL_SHORT);
+      press(editSource(HERBAL_SHORT) as HTMLElement);
+      await waitFor(() => expect(inEditPanel('Title')).toHaveValue('The Testwort Herbal'));
+
+      typeIn(inEditPanel('Edition'), '2nd ed.');
+      press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+      await waitFor(noEditPanel);
+      expect(reads).toEqual([{ workspaceId: null, id: COMPENDIUM_ID }]);
+      expect(updates).toEqual([
+        expect.objectContaining({
+          workspaceId: null,
+          id: COMPENDIUM_ID,
+          input: expect.objectContaining({ edition: '2nd ed.', place: 'Mockford' }),
+        }),
+      ]);
     });
   });
 
