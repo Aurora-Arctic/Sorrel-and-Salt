@@ -2,6 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import { impersonateUser } from '../../lib/auth-client';
+import Notice from '../Notice';
 import type { ImpersonateButtonProps } from './types';
 
 // The row's Impersonate (MB.53). Better Auth's endpoint is the guard: it
@@ -39,11 +40,7 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
       >
         Impersonate
       </button>
-      {failed && (
-        <p className="notice notice--error" role="alert">
-          {name} could not be impersonated.
-        </p>
-      )}
+      {failed && <Notice kind="error">{name} could not be impersonated.</Notice>}
     </>
   );
 };

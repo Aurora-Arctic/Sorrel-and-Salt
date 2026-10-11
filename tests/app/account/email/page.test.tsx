@@ -59,9 +59,12 @@ describe('the /account/email page', () => {
   });
 
   // Its own way across, offered to a verified account (MB.88).
-  it('links a verified account to the account page as "Your account"', async () => {
+  it('links a verified account to the account page', async () => {
     await renderPage('user', {});
 
-    expect(screen.getByRole('link', { name: 'Your account' })).toHaveAttribute('href', '/account');
+    expect(screen.getByRole('link', { name: 'Continue to Account' })).toHaveAttribute(
+      'href',
+      '/account',
+    );
   });
 });

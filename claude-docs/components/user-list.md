@@ -65,13 +65,16 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   says Yes or No, which its heading asks, and has no bubble.
   An admin's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
-  logo, on the owner's call: the sign-in page's own mark (`SignInPanel/icons.tsx`)
-  on a small circle of its brand's ground, white for Google and Microsoft,
-  blurple for Discord. Facebook's is `FacebookMark`, Meta's circle filled its
-  own blue with no chip and a white "f", a white disc behind the path's hole,
-  Facebook's standard mark in either theme, on the owner's call (MB.63); the panel's `FacebookIcon`, white
-  over a blue chip, suits its blue button instead. The colours are hex literals
-  as the panel's are. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
+  logo, on the owner's call: the shared provider mark, `ProviderMark`
+  ([`provider-mark.md`](provider-mark.md)), which draws the sign-in page's own
+  mark on a small circle of its brand's ground. Google's and Microsoft's are
+  white, edged in their brand's grey, and Discord's blurple. Facebook's is its
+  own blue circle with a white "f", its standard mark in either theme, on the
+  owner's call (MB.63); the sign-in button's white "f" on a blue chip suits
+  only its blue button. The colours come from the brand map, `$brand-palettes`
+  (MB.116), which the sign-in buttons read too; until then this list kept its
+  own copy of the hexes, and Google's and Microsoft's edge, `#dadce0`, all but
+  vanished on the light page. Each is named by its `SOCIAL_PROVIDERS` label in hidden text and
   in the same tip bubble on hover as the email's mark (`.user-list__hint`). A
   provider the roster no longer has keeps its id as text, so an account linked
   by one since removed still says so; an account with none has an empty cell.
@@ -145,19 +148,25 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   action: the control is keyed by its action, so the refreshed row mounts a
   fresh one, without the modal, rather than keeping the busy state. A refusal
   closes the modal, puts the service's message in the row as an alert, and
-  offers the action again. The service is the guard.
+  offers the action again. The service is the guard. The alert is a
+  `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
 - **Approving or granting to an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
-  under its question, in a `.notice--warn`: "This email address has not been
+  under its question, in a quiet warning `Notice`: "This email address has not been
   verified, so nobody has proved who holds it. Approving keeps the account
   rather than letting it lapse." Grant's says the same with "Granting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
-  ledger row keeps the account from the sweep as an approval's does. An approval vouches for whoever holds the address, and the vouching
-  keeps the account from MB.67's sweep of lapsed unverified accounts (MB.204).
+  ledger row keeps the account from the sweep as an approval's does. An
+  approval vouches for whoever holds the address, and the vouching keeps the
+  account from MB.67's sweep of lapsed unverified accounts (MB.204).
   It is a warning, not a refusal: the modal's Approve still approves, since
   M2.9 leaves confirming who someone is to the admin. The modal's Approve is
   `aria-describedby` the warning, so a screen reader reads it as the focus
-  lands there on opening. A verified user's Approve or Grant, and every Revoke, carries
+  lands there on opening. It is quiet, `<Notice kind="warn" quiet>`, so it
+  renders as an `<output>`, a status, with the warning's look: an alert would
+  be read a second time. The `id` the Approve names is the notice's `id`
+  prop, and `.user-list__warning` its layout class. A verified
+  user's Approve or Grant, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
 - **The Role cell holds the role's control** (MB.59,
   [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
@@ -185,8 +194,10 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
   which the primitive wraps beneath the heading on a narrow screen. While
   changes are on it shows the button alone; while paused it first says so in
-  a `.notice--warn`: "Admin changes are paused.", on the owner's call. The notice is a plain
-  paragraph, compounded as `.notice.user-list__pause-state` past the
+  a quiet warning `Notice`: "Admin changes are paused.", on the owner's
+  call. Quiet makes it an `<output>`, a status rather than an alert, because
+  it arrives with the page and is read in its order rather than announced.
+  It takes `.user-list__pause-state` as its layout class, compounded past the
   `body .notice` primitive, and is the page's one sentence about the pause.
   Then Pause Admin Changes or Resume Admin Changes, both full size and
   `.btn--destructive`, big and red on the owner's call, so the control keeps
@@ -229,7 +240,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 ## Styling
 
 Layout only, until the admin area's design review (MB.115). Its cells are centred on the row rather than on the text's baseline, the
-primitive's rule, since its rows mix text with logo circles, marks and
+primitive's rule, since its rows mix text with provider marks, check marks and
 buttons whose baselines sit at different heights, and the signup date never
 breaks at its hyphens (the owner's review). The filter is a
 wrapping row of the field, the checkbox and the button. The creation cell is
@@ -244,7 +255,9 @@ The confirmation is the
 `.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
 `.data-table` primitive, filling the layout's width and scrolling inside its
 `.data-table-frame` on a narrow screen rather than widening the page: its rows
-are banded and its header carries a hairline, as every admin list's does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Tokens: `space()`, `$text-muted` and `$surface-card`.
+are banded and its header carries a hairline, as every admin list's does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Each provider mark is the `.provider-mark` primitive's circle, held in its
+`.user-list__hint` as a flex box so the circle, not a line of text around it,
+sets the hint's height. Tokens: `space()`, `$text-muted` and `$surface-card`.
 
 ## Stories
 

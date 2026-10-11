@@ -13,6 +13,7 @@ import {
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
@@ -24,7 +25,7 @@ import type {
   ReferencePanelProps,
   ReferenceSendInput,
 } from './types';
-import { issuesOf } from './values';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 
 // The citation sub-form (MB.154): a new source written to this coven without
 // leaving the ingredient form. Inline beneath the References field rather
@@ -306,7 +307,7 @@ export default function ReferencePanel({
       // anything else above the fields.
       const visible = shownFor(kind);
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [field, ...rest] = path;
         if (field === 'kind' && rest.length === 0) setError('kind', { type: 'server', message });
         else if (rest.length === 0 && visible.has(field as ReferenceFieldName)) {
@@ -342,11 +343,7 @@ export default function ReferencePanel({
         <legend className="fieldset__legend" id={legendId}>
           New Reference
         </legend>
-        {errors.root && (
-          <p className="notice notice--error" role="alert">
-            {errors.root.message}
-          </p>
-        )}
+        {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
         <SelectField<ReferenceFormValues>
           name="kind"
           label="Kind"

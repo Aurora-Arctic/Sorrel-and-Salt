@@ -1,10 +1,11 @@
 'use client';
 
-import { ClientError } from 'graphql-request';
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
@@ -21,17 +22,10 @@ const AcceptInvitationDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 /** What accepting grants, by tier; M7.5 adds the workspace's. */
 const GRANTS = {
-  site: 'You have been invited to become an admin of Sorrel & Salt.',
+  site: "You've been invited to be an admin of Sorrel & Salt.",
 } as const;
-
-function messageOf(error: unknown): string {
-  if (!(error instanceof ClientError)) return GENERIC_ERROR;
-  return error.response.errors?.[0]?.message || GENERIC_ERROR;
-}
 
 const Accept = ({
   token,
@@ -51,18 +45,16 @@ const Accept = ({
       router.push(landing);
     } catch (error) {
       setSending(false);
-      setFailure(messageOf(error));
+      // No fields of its own, so the reader always answers with an alert;
+      // the fallback only satisfies its type.
+      setFailure(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
     }
   }
 
   return (
     <>
       <p className="invitation-acceptance__text">{GRANTS[tier]}</p>
-      {failure && (
-        <p className="notice notice--error" role="alert">
-          {failure}
-        </p>
-      )}
+      {failure && <Notice kind="error">{failure}</Notice>}
       <p className="invitation-acceptance__actions">
         <button
           className="btn btn--solid"
@@ -72,7 +64,7 @@ const Accept = ({
           onClick={() => void accept()}
         >
           {sending && <span className="spinner" aria-hidden="true" />}
-          {sending ? 'Accepting' : 'Accept Invitation'}
+          {sending ? 'Accepting Invitation' : 'Accept Invitation'}
         </button>
       </p>
     </>
@@ -85,8 +77,8 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
     {props.status === 'signed-out' && (
       <>
         <p className="invitation-acceptance__text">
-          Someone has invited you to Sorrel &amp; Salt. Sign in with an account that uses the email
-          address the invitation was sent to.
+          You&apos;ve been invited to Sorrel &amp; Salt. Sign in with an account whose email address
+          is the one this invitation was sent to.
         </p>
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>
@@ -97,7 +89,7 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
     )}
     {props.status === 'refused' && (
       <>
-        <p className="notice notice--error">{props.message}</p>
+        <Notice kind="error">{props.message}</Notice>
         {props.emailHref && (
           <p className="invitation-acceptance__actions">
             <a className="btn btn--solid" href={props.emailHref}>

@@ -2,7 +2,7 @@ import type { Story } from '@ladle/react';
 import AdminNav from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
-// no props: every admin sees the same six entries.
+// no props: every admin sees the same entries.
 export default {
   title: 'AdminNav',
 };

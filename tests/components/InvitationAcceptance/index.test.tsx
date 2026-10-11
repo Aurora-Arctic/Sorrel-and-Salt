@@ -43,7 +43,7 @@ describe('InvitationAcceptance', () => {
     rerender(
       <InvitationAcceptance
         status="refused"
-        message="Confirm your email address, then come back to this link to accept the invitation."
+        message="Your email address isn't confirmed yet. Confirm it, then open this link again to accept."
         emailHref="/account/email?next=%2Finvite%2Fabc"
       />,
     );

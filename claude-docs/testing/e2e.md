@@ -30,6 +30,23 @@ never a negative such as `toHaveCount(0)` on something that was never there,
 which passes before the page has rendered anything. A removal of what was
 there — a dialog closing, a table emptied by a filter — does wait.
 
+**One spec per page template also checks the phone width and both themes**
+(MB.116). `assertNoSidewaysScroll(page)` (`tests/e2e/axe.ts`) sets the window
+to 375px, the narrowest width a section signs off at, and fails if the page
+is wider than the window. A theme needs naming, because a Playwright page is
+in the light theme unless a spec says otherwise, while the site's own
+default is dark: a spec that scans once has scanned the light theme only. So
+the Welcome test in `smoke.spec.ts` checks the width and scans in each theme
+in turn, `page.emulateMedia({ colorScheme })` before each scan, and the 403
+test in `admin.spec.ts` checks the width before its scan; the account page
+test in `account.spec.ts` does as the Welcome test does, and the unverified
+account's email page gets a scan and the width check; `sign-in.spec.ts` checks
+the width; `sign-in-configured-providers.spec.ts` and
+`admin/privilege-changes.spec.ts` scan in both themes too. It is one per template rather than one per page
+because the frame decides the width and the surfaces text sits on, and every
+page on a template shares them; the rest of the scans stay single, which
+keeps the run short.
+
 **Each worker slot has a server and a database of its own** (MB.112), as each
 Vitest pool slot has a database. A database each, because each spec file
 reseeds by dropping its database `WITH (FORCE)`, which would cut a sharing

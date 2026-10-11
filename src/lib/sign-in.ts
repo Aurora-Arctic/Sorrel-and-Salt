@@ -112,7 +112,12 @@ function stateExpired(sentence: string) {
   return { state_mismatch: sentence, state_not_found: sentence, state_invalid: sentence };
 }
 
-const DID_NOT_COMPLETE = "Sign-in didn't complete. Please try again.";
+// One sentence for every failure that trying again can fix and that needs
+// no word of its own: a callback that broke partway, and what SignInPanel
+// shows for a pre-redirect failure (a bad request, a network error) that
+// never reaches a `?error=` code at all. Also the fallback for a code the map
+// does not name.
+export const GENERIC_SIGN_IN_ERROR = "We couldn't sign you in. Please try again.";
 
 // Better Auth's own OAuth callback error codes (node_modules/better-auth/dist/
 // oauth2/errors.mjs) plus the ones providers themselves return. Every
@@ -120,39 +125,35 @@ const DID_NOT_COMPLETE = "Sign-in didn't complete. Please try again.";
 // echoing the callback's own error_description, which is provider-controlled
 // text we have not reviewed.
 const ERROR_MESSAGES: Record<string, string> = {
-  access_denied: 'Sign-in was cancelled before it finished.',
-  no_code: DID_NOT_COMPLETE,
-  oauth_provider_not_found: "That sign-in option isn't available right now.",
-  issuer_missing: DID_NOT_COMPLETE,
-  issuer_mismatch: DID_NOT_COMPLETE,
-  invalid_code: 'That sign-in link has expired. Please try again.',
-  nonce_binding_missing: 'That sign-in link has expired. Please try again.',
-  unable_to_get_user_info: "We couldn't retrieve your account details. Please try again.",
-  no_callback_url: DID_NOT_COMPLETE,
+  access_denied:
+    'Signing in was cancelled before it finished. Choose a sign-in method to try again.',
+  no_code: GENERIC_SIGN_IN_ERROR,
+  oauth_provider_not_found: "That sign-in method isn't available right now.",
+  issuer_missing: GENERIC_SIGN_IN_ERROR,
+  issuer_mismatch: GENERIC_SIGN_IN_ERROR,
+  invalid_code: 'That sign-in expired. Please try again.',
+  nonce_binding_missing: 'That sign-in expired. Please try again.',
+  unable_to_get_user_info: "We couldn't get your details from the provider. Please try again.",
+  no_callback_url: GENERIC_SIGN_IN_ERROR,
   // One sentence whatever the cause: a lapsing unverified account holding the
   // address and a provider that never vouches over an existing row share the
   // code, and a sentence naming either would confirm the address is taken.
   account_not_linked:
-    "Sign-in didn't work. If you signed in before with a different provider, sign in that way, then add this one under Account.",
+    "We couldn't sign you in this way. Use the sign-in method you used before, then add this one on your account page.",
   // At a sign-in, only a failed write of the account row. The link flow's
   // own codes land on /account instead (`linkErrorMessage`).
-  unable_to_link_account: DID_NOT_COMPLETE,
+  unable_to_link_account: GENERIC_SIGN_IN_ERROR,
   // No `email_not_found`: a provider that shares no address gets a placeholder
   // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
   // Reached only if a provider ever requires verification; none does today.
   email_not_verified:
-    'Please confirm your email address first: open the link we sent you, or change the address on your email page.',
-  ...stateExpired('That sign-in expired or was started in another tab. Please start again here.'),
+    "Your email address isn't confirmed yet. Open the link we emailed you, or change the address on your email page.",
+  ...stateExpired('That sign-in expired, or was started in another tab. Please start again here.'),
   // A verification link opened from a signed-out browser (src/lib/auth.ts):
   // the link still works, so the sentence says to open it again.
   sign_in_to_verify:
-    'Sign in to the account that asked for this email address, then open the link in the email again.',
+    'That confirmation link needs you to be signed in. Sign in to the account that asked for this email address, then open the link again.',
 };
-
-// Also what SignInPanel shows for a pre-redirect failure (a bad request, a
-// network error) that never reaches a `?error=` code at all — one sentence,
-// not two ways of saying the same thing.
-export const GENERIC_SIGN_IN_ERROR = "Sign-in didn't work. Please try again.";
 
 /** One readable sentence for a callback `?error=` code; `undefined` for none. */
 export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_ERROR);
@@ -164,12 +165,15 @@ export const ACCOUNT_PATH = '/account';
 // vouching inside a link and different addresses allowed, the rest are a
 // failed write or a misconfiguration, and share the generic sentence.
 const LINK_ERROR_MESSAGES: Record<string, string> = {
-  access_denied: 'Adding the sign-in method was cancelled before it finished.',
+  access_denied:
+    'Adding the sign-in method was cancelled before it finished. Press Add to try again.',
   // Only the holder of that provider account can reach this, so saying so
   // reveals nothing they could not learn by signing in with it.
   account_already_linked_to_different_user:
     'That account already signs in to a different Sorrel & Salt account.',
-  ...stateExpired('That expired or was started in another tab. Please start again here.'),
+  ...stateExpired(
+    'Adding the sign-in method took too long, or was started in another tab. Press Add to start again.',
+  ),
 };
 
 /** Also what SignInMethods shows when `/link-social` itself fails, before any redirect. */
@@ -181,15 +185,22 @@ export const linkErrorMessage = messageLookup(LINK_ERROR_MESSAGES, GENERIC_LINK_
 // Better Auth's /unlink-account refusals, by the `code` in its JSON body.
 const UNLINK_ERROR_MESSAGES: Record<string, string> = {
   // The page offers no Remove with one method left; two tabs can still race.
-  FAILED_TO_UNLINK_LAST_ACCOUNT: "Your only sign-in method can't be removed.",
+  FAILED_TO_UNLINK_LAST_ACCOUNT: "Your only sign-in method can't be removed. Add another first.",
   // The endpoint wants a session younger than Better Auth's `freshAge`, a day.
   SESSION_NOT_FRESH:
-    'Removing a sign-in method needs a recent sign-in. Sign in again, then remove it.',
+    'Removing a sign-in method needs a recent sign-in. Sign out and sign back in, then remove it.',
 };
 
 export const GENERIC_UNLINK_ERROR = "That sign-in method couldn't be removed. Please try again.";
 
-/** One readable sentence for a refused `/unlink-account`. */
+const unlinkLookup = messageLookup(UNLINK_ERROR_MESSAGES, GENERIC_UNLINK_ERROR);
+
+/**
+ * One readable sentence for a refused `/unlink-account`. Unlike a callback's
+ * lookup, a missing code still has a sentence: the call was refused either
+ * way, so where `messageLookup` answers `undefined` for no code, this falls
+ * back to the generic one.
+ */
 export function unlinkErrorMessage(code: string | undefined): string {
-  return (code && UNLINK_ERROR_MESSAGES[code]) || GENERIC_UNLINK_ERROR;
+  return unlinkLookup(code) ?? GENERIC_UNLINK_ERROR;
 }

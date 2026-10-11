@@ -26,7 +26,8 @@ const RESOURCES: readonly { href: Route; label: string }[] = [
 
 const AdminNav = (): ReactElement => (
   <nav className="admin-nav" aria-label="Admin">
-    <ul className="admin-nav__list">
+    {/* The `.link-row` primitive: a row of links, not a bulleted list. */}
+    <ul className="link-row">
       {RESOURCES.map(({ href, label }) => (
         <li key={href}>
           {/* Every route is built, so typed routes accept each (M5.6b). */}

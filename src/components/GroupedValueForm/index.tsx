@@ -3,13 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import type { ValidationIssue } from '../../lib/types';
+import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import { ComboboxSelect } from '../Combobox';
+import Notice from '../Notice';
 import { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { DeityInput } from '@/modules/vocabulary/validation/deity';
 import { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
@@ -106,8 +106,6 @@ const DeleteDeityDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const FIELDS = ['name', 'description', 'groupId'] as const;
 type FieldName = (typeof FIELDS)[number];
 
@@ -203,18 +201,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
 };
 
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
-  }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
-}
-
 /** The field an input key names, under the kind's own name for it where it has one. */
 const fieldOf = ({ inputKeys }: GroupedValueFormKind, key: unknown): FieldName | undefined =>
   FIELDS.find((field) => (inputKeys?.[field] ?? field) === key);
@@ -279,7 +265,7 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
       // so Rename Anyway is busy in its place rather than swapped for Save.
       let next: RedirectQuestion | undefined;
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [key, ...rest] = path;
         const field = rest.length === 0 ? fieldOf(spec, key) : undefined;
         if (rest.length === 0 && key === 'endRedirect')
@@ -301,7 +287,7 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setConfirming(false);
-      setAlert(issuesOf(error)[0]?.message ?? GENERIC_ERROR);
+      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 
@@ -418,11 +404,7 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
       onSubmit={handleSubmit((input) => send(input))}
       noValidate
     >
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
+      {rootError && <Notice kind="error">{rootError}</Notice>}
       <div className="field">
         <label className="field__label" htmlFor={ids('name').control}>
           Name

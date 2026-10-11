@@ -313,6 +313,124 @@
     }
   }
 
+  // The centred, full-height frame of a page with no AppShell: Welcome,
+  // sign-in, the account pages, the 403, the invitation. One column, its
+  // children a `space(6)` apart, held below the top inset so a page with the
+  // impersonation banner above it still fits the window.
+  // claude-docs/styling.md, "The page frame".
+  .page-frame {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: space(6);
+    min-height: calc(100dvh - #{$top-inset});
+    padding: space(6) space(4);
+  }
+
+  // The gap alone spaces the column: this outranks `section`'s margins from
+  // layout-base and `.page-header`'s own, which would otherwise stack on it.
+  // `border-box`, so a padded child such as a `.panel` keeps its padding
+  // inside the column rather than growing past it at 375px.
+  .page-frame > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+
+  // Inside `:where()`, so the width and cap carry no specificity and a
+  // component's own narrower column (the sign-in panel's) wins in the app,
+  // where this layer compiles as `body .x` and would otherwise outrank a
+  // single class.
+  :where(.page-frame) > * {
+    width: 100%;
+    max-width: $measure;
+  }
+
+  // The forms' column, for the pages whose content is a form.
+  :where(.page-frame--narrow) > * {
+    max-width: $narrow-column;
+  }
+
+  // A titled section of a framed page: its head, then its content. Clear of
+  // the top inset when the page's own nav jumps to it.
+  .page-frame__section {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+    scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+
+    > h2 {
+      margin: 0;
+    }
+  }
+
+  // The hairline between two sections, in the muted ink a table's header
+  // rule wears; not `hr`'s inset, bevelled default.
+  .page-frame__rule {
+    border: 0;
+    border-top: 1px solid $text-muted;
+  }
+
+  // A wrapping row of links that is not a bulleted list: a page's own nav,
+  // the admin nav. typography-base's ◆ marker would sit against the link
+  // before and hang outside the first, and its list indent and item margins
+  // would offset the row, so all three are cleared.
+  .link-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(2) space(5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      margin: 0;
+    }
+
+    > li::before {
+      content: none;
+    }
+  }
+
+  // A provider's mark on a small circle of its brand's own ground, as its
+  // sign-in button gives it one: the marks are drawn for those grounds,
+  // Discord's white for its blurple. A white ground takes the brand's edge so
+  // it holds 3:1 against the page. Facebook's mark is its own blue circle
+  // with a white "f", so it fills the whole box.
+  // claude-docs/styling.md, "Link rows and provider marks".
+  .provider-mark {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    // The mark's own geometry, a circle sized to sit on a line of text.
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+
+    > svg {
+      width: 0.875rem;
+      height: auto;
+    }
+  }
+
+  @each $brand, $parts in $brand-palettes {
+    .provider-mark--#{$brand} {
+      background-color: brand-color($brand, 'fill');
+
+      @if map.has-key($parts, 'edge') {
+        border: 1px solid brand-color($brand, 'edge');
+      }
+    }
+  }
+
+  .provider-mark--facebook > svg {
+    width: 100%;
+    height: 100%;
+  }
+
   // A table is as wide as its columns: on a narrow screen it scrolls inside
   // its frame rather than widening the page.
   .data-table-frame {

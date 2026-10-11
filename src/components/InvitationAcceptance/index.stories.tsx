@@ -11,7 +11,7 @@ export default {
 
 // Inside the page's own frame, so the workshop shows what the page shows.
 const Page = (props: InvitationAcceptanceProps) => (
-  <main className="invitation-page">
+  <main className="page-frame page-frame--narrow">
     <InvitationAcceptance {...props} />
   </main>
 );
@@ -27,7 +27,7 @@ export const Acceptable: Story = () => (
 export const Unverified: Story = () => (
   <Page
     status="refused"
-    message="Confirm your email address, then come back to this link to accept the invitation."
+    message="Your email address isn't confirmed yet. Confirm it, then open this link again to accept."
     emailHref="/account/email?next=%2Finvite%2Fworkshop"
   />
 );

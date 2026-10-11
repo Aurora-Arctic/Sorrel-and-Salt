@@ -104,6 +104,18 @@ export interface ValidationIssue {
   message: string;
 }
 
+/**
+ * What a failed GraphQL request leaves a form to say, as `readGraphqlFailure`
+ * reads it (src/lib/graphql-failure.ts): under one of the form's own fields,
+ * or in its alert region. Never both.
+ */
+export interface Failure {
+  /** A VALIDATION issue about one of the fields the form named, with that field's name. */
+  field?: { name: string; message: string };
+  /** Everything else, as one readable sentence. */
+  alert?: string;
+}
+
 export type Message = { to: string; subject: string; text: string; html: string };
 
 export type Outgoing = { url: string; headers: Record<string, string>; body: unknown };

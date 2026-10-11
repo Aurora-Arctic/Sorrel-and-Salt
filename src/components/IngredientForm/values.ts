@@ -1,8 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ClientError } from 'graphql-request';
 import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from 'react-hook-form';
-import type { ErrorExtensions } from '../../graphql/types';
-import type { ValidationIssue } from '../../lib/types';
 import {
   CompendiumIngredientInput,
   LocalIngredientInput,
@@ -61,8 +58,6 @@ export const EMPTY_VALUES: IngredientFormValues = {
     references: '',
   },
 };
-
-export const GENERIC_ERROR = "That didn't work. Please try again.";
 
 const isListField = (field: unknown): field is ListFieldName =>
   LIST_FIELDS.includes(field as ListFieldName);
@@ -346,19 +341,3 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
-
-/**
- * What a failed save says, as issues pathed to the input. A `VALIDATION`
- * error's field errors are the server's; anything else is one sentence about
- * the whole form — the refusal's own message, or a generic one when the
- * request never reached an answer.
- */
-export function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as Partial<ErrorExtensions> | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
-  }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
-}

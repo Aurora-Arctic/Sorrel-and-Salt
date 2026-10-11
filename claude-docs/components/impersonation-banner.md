@@ -36,7 +36,8 @@ Layout and motion only, until the admin area's design review (MB.115). The
 motion, the width, the rule and the button size are the owner's calls, made
 during MB.53. It is a wrapping row of the sentence and the button, padded with
 `space()`, on `$surface-card` over a 3px `$secondary` rule. The button is
-`.btn--quiet .btn--small`, and a failure is `.notice--error`.
+`.btn--quiet .btn--small`, and a failure is a `Notice` of the `error` kind
+([`notice.md`](notice.md)).
 
 - **Full width, and never adding to a page's height.**
 - **On a touch screen it sits in the page's flow at the very top**, shown in

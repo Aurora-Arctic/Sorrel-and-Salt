@@ -29,8 +29,9 @@ const MESSAGES: Record<InvitationRefusal, string> = {
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
   expired: 'This invitation has expired. Ask whoever sent it for a new one.',
   'different-address':
-    'This invitation was sent to a different email address. Sign in with the account that uses it.',
-  unverified: 'Confirm your email address, then come back to this link to accept the invitation.',
+    'This invitation was sent to a different email address. Sign in with the account that uses that address.',
+  unverified:
+    "Your email address isn't confirmed yet. Confirm it, then open this link again to accept.",
   paused: "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
 };
 

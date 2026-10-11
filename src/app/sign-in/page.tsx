@@ -21,7 +21,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const configured = configuredProviders();
 
   return (
-    <main className="sign-in-page">
+    <main className="page-frame page-frame--narrow">
       <SignInPanel next={next} error={error} configured={configured} />
     </main>
   );

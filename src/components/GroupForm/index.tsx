@@ -2,15 +2,16 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { Controller, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
-import type { GroupColorColumn, ValidationIssue } from '../../lib/types';
+import type { GroupColorColumn } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
@@ -98,8 +99,6 @@ const DeleteDeityTraditionDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
 type FieldName = (typeof FIELDS)[number];
 
@@ -173,18 +172,6 @@ const COLORS: { column: GroupColorColumn; label: string }[] = [
   { column: 'colorDark', label: 'Dark Theme Colour' },
   { column: 'colorLight', label: 'Light Theme Colour' },
 ];
-
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
-  }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
-}
 
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
@@ -274,7 +261,7 @@ const GroupForm = ({
       onDone();
     } catch (error) {
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [field, ...rest] = path;
         if (rest.length === 0 && isField(field)) setError(field, { type: 'server', message });
         else unplaced.push(message);
@@ -292,7 +279,7 @@ const GroupForm = ({
     } catch (error) {
       // A refused move goes back to the choice, beside the picker that made
       // it; anything else is a refusal naming its remedy (DESIGN.md §7).
-      const issues = issuesOf(error);
+      const issues = readGraphqlIssues(error);
       const onMove = issues.find(({ path }) => path.length === 1 && path[0] === 'moveTo');
       if (onMove && memberCount > 0) {
         setMoveError(onMove.message);
@@ -471,11 +458,7 @@ const GroupForm = ({
 
   return (
     <form className="form group-form" onSubmit={handleSubmit((input) => send(input))} noValidate>
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
+      {rootError && <Notice kind="error">{rootError}</Notice>}
       <div className="field">
         <label className="field__label" htmlFor={ids('name').control}>
           Name

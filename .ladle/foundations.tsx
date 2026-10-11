@@ -1,7 +1,14 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
 import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
 import { chipColors } from '../src/lib/chip-colors';
+import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
+import ProviderMark from '../src/components/ProviderMark';
+import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
+import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
+// The brand buttons' own rules, which only SignInPanel's stylesheet carries.
+import '../src/components/SignInPanel/index.scss';
 import type { SeedCategoryGroup } from '../src/db/seed/types';
+import type { ProviderId } from '../src/lib/types';
 import './foundations.scss';
 
 // Every shared token and primitive at shipping size, in either theme, with no
@@ -66,6 +73,50 @@ function SectionHead({
     </div>
   );
 }
+
+// One provider's sign-in button in one state, with SignInPanel's classes,
+// so the brand section shows the buttons as the page draws them.
+function BrandButton({
+  id,
+  label,
+  state,
+}: {
+  id: ProviderId;
+  label: string;
+  state: 'available' | 'greyed' | 'last-used';
+}): ReactElement {
+  const Mark = PROVIDER_MARKS[id];
+  const noteId = `fd-brand-note-${id}`;
+  const greyed = state === 'greyed';
+  return (
+    <div className="sign-in-panel__provider">
+      <button
+        type="button"
+        className={
+          greyed
+            ? 'btn sign-in-panel__button'
+            : `btn sign-in-panel__button sign-in-panel__button--${id}`
+        }
+        aria-disabled={greyed ? true : undefined}
+        aria-describedby={greyed ? noteId : undefined}
+        aria-label={state === 'last-used' ? `Continue with ${label}, last used` : undefined}
+      >
+        <Mark chip />
+        Continue with {label}
+        {state === 'last-used' && (
+          <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
+        )}
+      </button>
+      {greyed && <ProviderUnavailableNote id={noteId} />}
+    </div>
+  );
+}
+
+const BRAND_STATES = [
+  ['available', 'Available'],
+  ['greyed', 'Unavailable'],
+  ['last-used', 'Last Used'],
+] as const;
 
 function Fields(): ReactElement {
   const id = useId();
@@ -396,6 +447,82 @@ export default function Foundations(): ReactElement {
         <Fields />
       </section>
 
+      <section id="fd-page-frame">
+        <SectionHead eyebrow="_primitives.scss · .page-frame" title="The Page Frame">
+          The centred, full-height column of a page with no AppShell: Welcome, sign-in, the account
+          pages, the not-authorized page and the invitation. Its children stand a{' '}
+          <code>space(6)</code> apart, the gap alone spacing them, and stop at the measure;{' '}
+          <code>--narrow</code> stops them at <code>$narrow-column</code>, the forms' column. A
+          section of a framed page is <code>__section</code>, and the hairline between two is{' '}
+          <code>__rule</code>. Drawn here at a fixed height rather than the window's.
+        </SectionHead>
+        <div className="fd-frames">
+          <div className="fd-frame-stage">
+            <div className="page-frame">
+              <div className="header">
+                <p className="eyebrow">Sorrel &amp; Salt</p>
+                <h2>A Prose Page</h2>
+                <p className="lede">
+                  The plain frame, as Welcome and the not-authorized page use it: a column as wide
+                  as the reading measure.
+                </p>
+              </div>
+              <p>A paragraph beneath the head, a gap below it rather than a margin.</p>
+            </div>
+          </div>
+          <div className="fd-frame-stage">
+            <div className="page-frame page-frame--narrow">
+              <div className="page-header">
+                <h2>A Form Page</h2>
+              </div>
+              <section className="page-frame__section" aria-labelledby="fd-frame-first">
+                <h2 id="fd-frame-first">First Section</h2>
+                <p className="lede">The narrow frame, as the account page uses it.</p>
+              </section>
+              <hr className="page-frame__rule" />
+              <section className="page-frame__section" aria-labelledby="fd-frame-second">
+                <h2 id="fd-frame-second">Second Section</h2>
+                <p className="lede">Each section a named region, the rule between them.</p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="fd-link-row">
+        <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
+          A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
+          list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
+          edge and wraps on a phone rather than overflowing it.
+        </SectionHead>
+        <div className="panel">
+          <nav aria-label="Example Sections">
+            <ul className="link-row">
+              <li>
+                <a href="#fd-link-row" aria-current="true">
+                  Name
+                </a>
+              </li>
+              <li>
+                <a href="#fd-link-row">Email Address</a>
+              </li>
+              <li>
+                <a href="#fd-link-row">Sign-In Methods</a>
+              </li>
+              <li>
+                <a href="#fd-link-row">Categories</a>
+              </li>
+              <li>
+                <a href="#fd-link-row">Ingredient Forms</a>
+              </li>
+              <li>
+                <a href="#fd-link-row">Invitations</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </section>
+
       <section id="fd-groups">
         <SectionHead eyebrow="seed defaults · chipColors()" title="Category-group colours">
           Not a foundation to sign off: each group’s colour pair lives on its{' '}
@@ -425,13 +552,64 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="--badge-*" title="Badges">
           Deliberately not equals. <strong>Safety</strong> is a warning, drawn solid in the
           sealing-wax hue. <strong>Low stock</strong> is an inventory state, the muted ink tinted
-          into the surface. <strong>Last used</strong> is a pointer, solid in the accent.
+          into the surface. <strong>Last Used</strong> is a pointer, solid in the accent.
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
           <span className="badge badge--low-stock">Low stock</span>
-          <span className="badge badge--last-used">Last used</span>
+          <span className="badge badge--last-used">Last Used</span>
         </div>
+      </section>
+
+      <section id="fd-brands">
+        <SectionHead eyebrow="_variables.scss · brand-color()" title="Brand Colours">
+          Each sign-in provider's own button, coloured from <code>$brand-palettes</code> rather than
+          our tokens, since the colours are the provider's. A white button takes its brand's edge,
+          which holds 3:1 against both pages. Hover a button for its hover ground. An unavailable
+          provider drops its brand colour for the dashed, faded <code>.btn</code> and says why
+          beneath it, so the state is never told apart by hue alone.
+        </SectionHead>
+        <div className="panel fd-brands">
+          {BRAND_STATES.map(([state, title]) => (
+            <div className="fd-brand-column" key={state}>
+              <h3>{title}</h3>
+              <div className="sign-in-panel__providers">
+                {SOCIAL_PROVIDERS.map((provider) => (
+                  <BrandButton
+                    key={provider.id}
+                    id={provider.id}
+                    label={provider.label}
+                    state={state}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <ul className="panel fd-brand-parts">
+          {SOCIAL_PROVIDERS.map((provider) => (
+            <li key={provider.id}>
+              <code className="fd-swatch__name">{provider.id}</code>
+              <code className={`fd-brand-part fd-brand-part--${provider.id}`} />
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section id="fd-provider-mark">
+        <SectionHead eyebrow="_primitives.scss · .provider-mark" title="Provider Marks">
+          A provider's mark on a small circle of its brand's ground, for a list of sign-in methods
+          rather than a button: the account page's rows and the admin user list. Decorative, since
+          the provider's name always sits beside it.
+        </SectionHead>
+        <ul className="panel link-row fd-marks">
+          {SOCIAL_PROVIDERS.map((provider) => (
+            <li key={provider.id}>
+              <ProviderMark id={provider.id} />
+              {provider.label}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section id="fd-modal">

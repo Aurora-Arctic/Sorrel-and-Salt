@@ -42,7 +42,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   }
 
   return (
-    <main className="invitation-page">
+    <main className="page-frame page-frame--narrow">
       <InvitationAcceptance {...panel} />
     </main>
   );

@@ -16,9 +16,3 @@ export interface AdminInvitationsProps {
    */
   locked?: string;
 }
-
-/** What the invite form's last send left to say: beside the field, in an alert, or none. */
-export interface InviteFailure {
-  field?: string;
-  alert?: string;
-}

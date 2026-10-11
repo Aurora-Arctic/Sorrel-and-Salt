@@ -1,44 +1,12 @@
 @use '../../scss/variables' as *;
 
-// The page-level frame, like `.sign-in-page`: no AppShell exists yet to
-// center a page, and 32rem keeps one field and a sentence or two inside a
-// comfortable reading measure. A column, so the form and the way to the
-// account page stack.
-.email-page {
-  // Or the viewport-high frame plus its own padding overflows by the padding
-  // and the page scrolls by 4rem with nothing to scroll to.
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: space(5);
-  // Less the top inset, or a page a full screen high scrolls by it.
-  min-height: calc(100dvh - #{$top-inset});
-  padding: space(6) space(4);
-  max-width: 32rem;
-  margin-inline: auto;
-}
-
-.email-page__nav {
-  margin: 0;
-  width: 100%;
-  max-width: 28rem;
-}
-
-// Centred by `.email-page`, in the app and in the workshop alike: the
-// stories render inside the same frame the page does. The field, the
-// notices and the buttons are the form primitives' (_primitives.scss).
+// A column, in the email page's frame or the account page's Email section:
+// either gives it its width (`.page-frame--narrow`). The head, the field, the
+// notices and the buttons are the primitives' (_layout.scss, _primitives.scss).
 .email-form {
   display: flex;
   flex-direction: column;
   gap: space(3);
-  width: 100%;
-  max-width: 28rem;
-}
-
-.email-form__heading {
-  margin: 0;
 }
 
 .email-form__status {
@@ -52,5 +20,9 @@
 }
 
 .email-form__continue {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  justify-content: center;
   margin: 0;
 }
