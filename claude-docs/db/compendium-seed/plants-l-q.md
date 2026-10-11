@@ -1,14 +1,16 @@
-## The plants L to Q (MB.245)
+## The plants L to Q, part 1 (MB.245)
 
-The candidate list's plants and fungi whose labels run from L to Q, the rows [`candidates.md`](candidates.md) gives the shard `plants-l-q`: 104 rows. One of them, **Mugwort** (_Artemisia vulgaris_), is seeded by the pilot (MB.242, [`pilot.md`](pilot.md)) and is not researched again here. The literal is `src/db/seed/compendium/plants-l-q.ts`, which holds **48 entries with 117 forms** beneath them; it is the source of truth, and this doc records where each entry's values come from and what was left out. The rules every entry is written to are the [README](README.md)'s.
+**This is part 1 of the shard.** It holds **48 entries with 117 forms** beneath them: the candidate rows from Lady's Bedstraw to Morning Glory, in the list's order (rows 229 to 276 of [`candidates.md`](candidates.md)). The remaining 55 rows, Moss to Quince (rows 277 to 332, Mugwort aside), follow in a later pull request on the same task, MB.245, which adds them to this literal and this doc. Every page and revision cited here was read during the task, on 2026-10-11.
 
-| Candidate rows | Seeded here | Seeded by the pilot | Left out |
-| -------------: | ----------: | ------------------: | -------: |
-|            104 |          48 |                   1 |        0 |
+The shard `plants-l-q` is the candidate list's plants and fungi whose labels run from L to Q: 104 rows. One of them, **Mugwort** (_Artemisia vulgaris_, row 279), is seeded by the pilot (MB.242, [`pilot.md`](pilot.md)) and is not researched again here. The literal is `src/db/seed/compendium/plants-l-q.ts`; it is the source of truth, and this doc records where each entry's values come from and what was left out. The rules every entry is written to are the [README](README.md)'s.
+
+| Candidate rows | Seeded in part 1 | Seeded by the pilot | Left out | To follow in part 2 |
+| -------------: | ---------------: | ------------------: | -------: | ------------------: |
+|            104 |               48 |                   1 |        0 |                  55 |
 
 ### How the research was done
 
-Helper agents researched three or four entries each, in parallel, to a brief that repeats the README's rules, and returned each batch as a literal fragment with an evidence file giving, for every value, the source, its locator, the file and line where it is stated (a line of the e-book's HTML, a page of a PDF's text, or a line of the Wikipedia revision's wikitext) and a short excerpt. The lead opened at least one book locator and one Wikipedia line from every batch and found each said what the evidence claimed, ran the guard over the assembled shard, and confirmed through the Wikipedia API that all 48 cited revisions exist under the titles cited. Every page and URL cited here was read during the task, on 2026-10-11.
+Helper agents researched three or four entries each, in parallel, to a brief that repeats the README's rules, and returned each batch as a literal fragment with an evidence file giving, for every value, the source, its locator, the file and line where it is stated (a line of the e-book's HTML, a page of a PDF's text, or a line of the Wikipedia revision's wikitext) and a short excerpt. The lane's lead opened at least one book locator and one Wikipedia line from every batch and found each said what the evidence claimed, ran the guard over the assembled shard, and confirmed through the Wikipedia API that all 48 cited revisions exist under the titles cited. Every page and URL cited here was read during the task, on 2026-10-11.
 
 **Plants of the World Online was tried once**, at 07:06 UTC on 2026-10-11 (`powo.science.kew.org/results?q=Galium%20verum`), and answered HTTP 403 with a Cloudflare challenge page, as it had for MB.240 and the pilot. So no formal name here was checked against it; each was checked against the taxobox of the Wikipedia revision cited for it and, where the plant has one, the binomial the _AHPA Botanical Safety Handbook_ heads its monograph with. **No formal name on the candidate list changed**; where a source prints another name, it is recorded under "Formal names" below and that source is not cited for the formal name. Grieve's _A Modern Herbal_ at botanical.com answered the same probe with HTTP 406 unless the request carried a browser's headers; it was not used, since every row here has an entry in Cunningham's or Kynes's encyclopedia, and Culpeper was not used either.
 
@@ -107,7 +109,7 @@ Where a source read prints a different name from the candidate list's, and how i
 - **Lavender.** Cunningham prints "Lavendula officinale or L. vera"; Wikipedia's taxobox and AHPA p. 503 both list _Lavandula vera_ DC. and _L. officinalis_ as synonyms of _Lavandula angustifolia_, so the roster's reading holds. Cunningham is not cited for `canonicalName`.
 - **Larkspur.** Cunningham prints "Delphinium ajacus, D. consolida, D. spp."; Wikipedia lists _Delphinium consolida_ L. as a synonym of _Consolida regalis_, and Kynes heads forking larkspur as _Consolida regalis_ syn. _Delphinum_ [sic] _consolida_. Cunningham's entry also takes in _D. ajacis_ (giant larkspur), which is applied to this entry only as the entry its heading names. Cunningham is not cited for `canonicalName`.
 - **Larch.** Cunningham prints _Larix europaea_, Kynes treats _L. laricina_ and _L. decidua_ (syn. _L. europaea_); the entry is the genus, as the roster says, and Wikipedia's taxobox gives _Larix_.
-- **Leek, for the lead.** Wikipedia's taxobox accepts _Allium ampeloprasum_ and lists Cunningham's _Allium porrum_ L. as a synonym, so the roster's name agrees with the revision read. But Wikipedia also says the species is the source of five vegetables (leek as var. _porrum_, elephant garlic, pearl onion, kurrat, Persian leek). Seeded at species level, the Leek entry takes the identity `allium ampeloprasum`, which a later Elephant Garlic or Pearl Onion entry could not share. The README's rule allows `var.` where the entry is one (`Allium ampeloprasum var. porrum`); the roster's name is kept, as the brief says, and the lead decides. POWO was not consulted (blocked, per the brief).
+- **Leek, for the owner.** Wikipedia's taxobox accepts _Allium ampeloprasum_ and lists Cunningham's _Allium porrum_ L. as a synonym, so the roster's name agrees with the revision read. But Wikipedia also says the species is the source of five vegetables (leek as var. _porrum_, elephant garlic, pearl onion, kurrat, Persian leek). Seeded at species level, the Leek entry takes the identity `allium ampeloprasum`, which a later Elephant Garlic or Pearl Onion entry could not share. The README's rule allows `var.` where the entry is one (`Allium ampeloprasum var. porrum`); the roster's name is kept, as the brief says, and the owner decides. POWO was not consulted (blocked, per the brief).
 
 - **Lemon Verbena, _Aloysia citrodora_.** Wikipedia's taxobox agrees with the roster (_Aloysia citrodora_ Paláu, with _A. triphylla_ and _Lippia citriodora_ as synonyms). AHPA (p. 50) heads its monograph _Aloysia citriodora_ Palau, with an extra "i", and Cunningham prints _Lippia citriodora_, which AHPA marks "nom. illeg.". The roster's spelling is kept and only Wikipedia supports `canonicalName`; POWO was not consulted (blocked).
 - **Lemon, _Citrus × limon_.** Wikipedia and AHPA both print the hybrid sign; Cunningham and Kynes print _Citrus limon_ without it, so neither book supports `canonicalName`.
@@ -115,15 +117,15 @@ Where a source read prints a different name from the candidate list's, and how i
 
 None. Every roster name matches the taxobox of the revision read. Kynes prints Ficaria verna, Pseudognaphalium obtusifolium and Syringa vulgaris; Cunningham prints Syringa vulgaris and, for lettuce, the misprint "Lactuca saliva".
 
-No taxobox disagrees with the roster. Two spelling notes for the lead:
+No taxobox disagrees with the roster. Two spelling notes for the owner:
 
 - **Lime.** Wikipedia's speciesbox gives _Citrus_ × _aurantiifolia_ (Christm.) Swingle, as the roster does. AHPA spells it _Citrus × aurantifolia_ (one i), and Cunningham and Kynes _Citrus aurantifolia_ (no ×, one i), so only Wikipedia is cited for `canonicalName`. Not checked against POWO (blocked).
 - **Linden.** Wikipedia and Kynes give _Tilia_ × _europaea_ (Kynes adds the synonym _T. × vulgaris_). AHPA heads _Tilia vulgaris_ Hayne with _Tilia europaea_ L. as synonym, and Cunningham prints _Tilia europaea_ without ×; neither is cited for `canonicalName`.
 
-- **Liverwort, _Anemone hepatica_.** The Wikipedia revision's taxobox gives _Anemone hepatica_ L., matching the roster, with _Hepatica nobilis_ as a synonym. AHPA's monograph (p. 439) instead heads the entry _Hepatica_ spp., with _Hepatica nobilis_ var. _acuta_ and var. _obtusa_ as the accepted names and _Anemone hepatica_ L. as a synonym of var. _obtusa_; Cunningham prints _Hepatica nobilis_ first and _Anemone hepatica_ as the American plant. The roster's name is kept; AHPA is not cited for the formal name. The lead decides.
+- **Liverwort, _Anemone hepatica_.** The Wikipedia revision's taxobox gives _Anemone hepatica_ L., matching the roster, with _Hepatica nobilis_ as a synonym. AHPA's monograph (p. 439) instead heads the entry _Hepatica_ spp., with _Hepatica nobilis_ var. _acuta_ and var. _obtusa_ as the accepted names and _Anemone hepatica_ L. as a synonym of var. _obtusa_; Cunningham prints _Hepatica nobilis_ first and _Anemone hepatica_ as the American plant. The roster's name is kept; AHPA is not cited for the formal name. The owner decides.
 - No flags for _Glycyrrhiza glabra_, _Lobelia inflata_ or _Arum maculatum_: every source read prints the same binomial.
 
-No taxobox disagrees with the roster. Notes for the lead:
+No taxobox disagrees with the roster. Notes for the owner:
 
 - **Lotus.** Wikipedia's speciesbox, AHPA, Kynes and Cunningham all print _Nelumbo nucifera_ (Cunningham among three synonyms and _Nymphaea lotus_, a different plant).
 - **Magnolia.** Wikipedia and AHPA print _Magnolia virginiana_; Cunningham and Kynes print it abbreviated (_M. virginiana_) inside genus-wide entries that also cover other magnolias, and their correspondences are for magnolia in general. The roster's choice of sweetbay for the label "Magnolia" is kept.
@@ -142,12 +144,12 @@ None. Each revision's taxobox gives the roster's name: _Viscum album_ L., _Aconi
 
 ### What is left out, and why
 
-**Rows.** None: every candidate row researched so far is seeded.
+**Rows.** None: every candidate row in part 1 is seeded. No row of the shard has been left out; the 55 not yet researched are part 2's.
 
 **Values**, entry by entry: powers with no category of that word (the pilot's rule: a power is filed only under the category its own word names, so "money" is not Prosperity and "luck" is nothing), deities with no curated row, colours not on the list, forms not added, named sorts that are to be their own entries (the owner's rule: a sort a source heads as its own entry is its own ingredient, never a form), and weak or unsourced lines.
 
 - **Lady's Bedstraw.**
-  - Cunningham s.v. "Bedstraw, Fragrant" (headed _Galium verum, G. triflorum_): not applied. Its heading names fragrant bedstraw, which Kynes s.v. Bedstraw gives as _G. triflorum_; the brief applies a book entry to the entry its heading names, and Wikipedia's "Galium verum" does not call _G. verum_ fragrant bedstraw. Fragrant Bedstraw: to be its own entry. (Its values: Venus, Water, Love, folk names Cleavers and Madder's Cousin; the lead may decide otherwise, since it prints _G. verum_ first.)
+  - Cunningham s.v. "Bedstraw, Fragrant" (headed _Galium verum, G. triflorum_): not applied. Its heading names fragrant bedstraw, which Kynes s.v. Bedstraw gives as _G. triflorum_; the brief applies a book entry to the entry its heading names, and Wikipedia's "Galium verum" does not call _G. verum_ fragrant bedstraw. Fragrant Bedstraw: to be its own entry. (Its values: Venus, Water, Love, folk names Cleavers and Madder's Cousin; the owner may decide otherwise, since it prints _G. verum_ first.)
   - Kynes's Fragrant Bedstraw (_G. triflorum_, "sweet bedstraw"), within the same heading: a different species, not applied; to be its own entry.
   - Kynes: magical entities (faeries), other associations (Midsummer's Eve and Day): no field.
   - Forms not added: Seed and flower essence (Kynes lists them for sale, with nothing attached).
@@ -177,7 +179,7 @@ None. Each revision's taxobox gives the roster's name: _Viscum album_ L., _Aconi
   - Northcote's Gerard name "ladiesmocks" (a spelling of the label) not added as a folk name.
   - Safety: no safety source read covers it; nothing written.
 
-- **Powers with no category of that word.** Larch: anti-fire (Cunningham); luck, spirituality (Kynes); Kynes's "boost in confidence" spell is a use, not a listed power, so Confidence is not filed. Larkspur: health (Cunningham; not the word "healing"); authority/leadership, awareness, negativity, spirit guides/spirits (Kynes). Lavender: chastity, happiness (Cunningham); awareness, luck, negativity, relationships, see faeries, spirit guides/spirits, spirituality (Kynes). Leek: exorcism (Cunningham). Cunningham's leek text also says leeks are "bitten to break hexes"; that is a magical use, not one of the printed powers, so Hex-Breaking is not filed (left for the lead).
+- **Powers with no category of that word.** Larch: anti-fire (Cunningham); luck, spirituality (Kynes); Kynes's "boost in confidence" spell is a use, not a listed power, so Confidence is not filed. Larkspur: health (Cunningham; not the word "healing"); authority/leadership, awareness, negativity, spirit guides/spirits (Kynes). Lavender: chastity, happiness (Cunningham); awareness, luck, negativity, relationships, see faeries, spirit guides/spirits, spirituality (Kynes). Leek: exorcism (Cunningham). Cunningham's leek text also says leeks are "bitten to break hexes"; that is a magical use, not one of the printed powers, so Hex-Breaking is not filed (left for the owner).
 - **Deities and entities not curated.** Larch: Kynes's faeries and the Salingen are magical entities, not deities. Lavender: Kynes's elves and faeries (entities). None of Kynes's named deities (Apollo, Hecate, Saturn, Vesta) was left out.
 - **Planets that belong to another species.** Lavender: Kynes's "Jupiter (spike)" applies to spike lavender, _L. latifolia_, so only Mercury is kept.
 - **Named sorts, to be their own entries.** Lavender: lavandin (Cunningham's "Lavindin", AHPA's _Lavandula intermedia_, Wikipedia's _L._ × _intermedia_) — to be its own entry; spike lavender (_L. latifolia_, headed separately within Kynes s.v. Lavender) — to be its own entry. Larkspur: giant or garden larkspur (_C. ajacis_, headed separately within Kynes s.v. Larkspur, with the Ajax legend Kynes attaches to it) — to be its own entry. Leek: elephant garlic, pearl onion, kurrat and Persian leek, which Wikipedia names as other cultivated forms of _A. ampeloprasum_ — to be their own entries (see the flag in (d)).
@@ -197,18 +199,18 @@ None. Each revision's taxobox gives the roster's name: _Viscum album_ L., _Aconi
   - Powers with no category of that word: Kynes's emotions, focus, past-life work, relationships, renewal, spirit guides/spirits, spirituality.
   - Deities not curated: Kupala (Kynes). Rhea, named in Kynes's history only as a temple whose priestesses were called Melissae, is not one of her listed deities and is not used.
   - Forms not added: Seed (Kynes lists seeds for sale; nothing attached); Flower (white or pale pink in Wikipedia, nothing attached; the colours are therefore not used); Herb (Cunningham says "the herb"; Leaf covers the part every source names).
-  - Folk names: Theophrastus's "bee-leaf" (a Greek name in translation, not a folk name). "Bee Balm" is kept because Cunningham, Kynes and AHPA all give it, though Wikipedia warns it is also the name of _Monarda_; the lead may want to drop it.
+  - Folk names: Theophrastus's "bee-leaf" (a Greek name in translation, not a folk name). "Bee Balm" is kept because Cunningham, Kynes and AHPA all give it, though Wikipedia warns it is also the name of _Monarda_; the owner may want to drop it.
   - Weak lines: Wikipedia's Middle Ages sentence, tagged "citation needed"; Culpeper's Jupiter-in-Cancer rulership as reported by Wikipedia (Kynes's Jupiter and Cancer are used instead).
 - **Lemon Verbena.**
   - Not in Kynes's _Witches' Encyclopedia_: no heading, and no mention under Aloysia, Lippia or "lemon verbena". No zodiac signs or deities therefore.
   - Powers: Cunningham's "preserve you from dreaming" is a use, not a power, and is in the description only.
   - Forms not added: Flower (purple or white in Wikipedia; nothing attached).
   - Weak lines: Wikipedia's cold-hardiness sentence and garden-history section (Commerson, Dombey, Sibthorp, the 1784 publication), all tagged "citation needed" or "failed verification"; the Inca Kola image caption (uncited caption); the anxiolytic effect in rats (not safety and not lore).
-  - Safety: the Oil form's caution rests on Wikipedia alone. AHPA's monograph covers the leaf only and says nothing of the oil, so no handbook covers that form; the lead may prefer to drop it.
+  - Safety: the Oil form's caution rests on Wikipedia alone. AHPA's monograph covers the leaf only and says nothing of the oil, so no handbook covers that form; the owner may prefer to drop it.
 - **Lemongrass.**
   - Powers with no category of that word: Cunningham's "repel snakes"; Kynes's defense, focus, luck, negativity, sex/sexuality, spirit guides/spirits, spirituality, trust.
-  - Kynes's Lemongrass heading covers two species, East Indian (_Cymbopogon flexuosus_) and West Indian (_C. citratus_); applied to this entry as the heading names it. Her folk names are taken only from the _C. citratus_ line; her description of the plant is not used (it covers both). East Indian Lemongrass is a related species under the same heading, not its own heading, so it is not flagged "to be its own entry"; the lead may decide otherwise.
-  - Forms not added: Leaf (Kynes's cut dried leaves, the Remedies book's "leaves", Wikipedia's dried-leaf tea; AHPA's "herb" is used as the primary form, as the brief prefers AHPA's part used). The lead may prefer Leaf.
+  - Kynes's Lemongrass heading covers two species, East Indian (_Cymbopogon flexuosus_) and West Indian (_C. citratus_); applied to this entry as the heading names it. Her folk names are taken only from the _C. citratus_ line; her description of the plant is not used (it covers both). East Indian Lemongrass is a related species under the same heading, not its own heading, so it is not flagged "to be its own entry"; the owner may decide otherwise.
+  - Forms not added: Leaf (Kynes's cut dried leaves, the Remedies book's "leaves", Wikipedia's dried-leaf tea; AHPA's "herb" is used as the primary form, as the brief prefers AHPA's part used). The owner may prefer Leaf.
   - Safety not used: AHPA's citral and beta-myrcene rat studies (compounds, not the herb); Wikipedia's citronellol blood-pressure finding (not a caution).
   - Weak lines: Wikipedia's medicinal section, tagged "more medical citations needed".
 
@@ -216,7 +218,7 @@ No named sort was folded into any entry as a form.
 
 - **Lesser Celandine.**
   - _Named sort, to be its own entry:_ Greater Celandine (Chelidonium majus), which Kynes's Celandine entry heads beside Lesser Celandine. Its values (Leo, the Sun, dwarfs, the Anglo-Saxon and alchemical lore) are not applied here.
-  - _Shared values applied with a flag for the lead:_ Kynes's Celandine entry does not say which species its elements (earth, fire) and powers belong to. They are unmarked, so they are applied here; but its justice/legal-matters and prophecy powers sit beside lore Kynes gives only to the greater celandine (legal success, predicting the future). The lead may prefer to drop Justice, Legal Matters and Prophecy, or all of the unmarked values.
+  - _Shared values applied with a flag for the owner:_ Kynes's Celandine entry does not say which species its elements (earth, fire) and powers belong to. They are unmarked, so they are applied here; but its justice/legal-matters and prophecy powers sit beside lore Kynes gives only to the greater celandine (legal success, predicting the future). The owner may prefer to drop Justice, Legal Matters and Prophecy, or all of the unmarked values.
   - _Planet Mars:_ Kynes prints "Mars, Sun (greater)"; whether Mars is the lesser's is not stated, so no planet is written.
   - _Powers with no category of that word:_ challenges/obstacles, happiness, hope.
   - _Magical entity:_ faeries (not a deity).
@@ -235,7 +237,7 @@ No named sort was folded into any entry as a form.
   - _Not forms or names:_ cultivar groups (romaine/cos, iceberg, butterhead, celtuce); Cunningham's alternative of cress seed (not a substitute).
 - **Life Everlasting.**
   - _Named sort, to be its own entry:_ Pearly Everlasting (Anaphalis margaritacea), which Kynes heads under Life Everlasting on its own sub-line. Its lore (the Cheyenne uses, Thoreau's phrase) is not applied here.
-  - _Cunningham not cited:_ his LIFE-EVERLASTING heading names Anaphalis spp., Gnaphalium uliginosum and Antennaria dioica, not this species, and the roster gives Kynes only. His values (powers Longevity, Health, Healing; folk names Chafe Weed, Field Balsam, Old Field Balsam, Sweet Scented Life-Everlasting, White Balsam, Indian Posy) are not used. The lead may decide whether his entry applies.
+  - _Cunningham not cited:_ his LIFE-EVERLASTING heading names Anaphalis spp., Gnaphalium uliginosum and Antennaria dioica, not this species, and the roster gives Kynes only. His values (powers Longevity, Health, Healing; folk names Chafe Weed, Field Balsam, Old Field Balsam, Sweet Scented Life-Everlasting, White Balsam, Indian Posy) are not used. The owner may decide whether his entry applies.
   - _Weak lines:_ Wikipedia's maple-syrup scent (tagged "citation needed"); "sweet everlasting" is tagged "cn" there but Kynes gives it too, so it stays; "cliff cudweed" belongs to the Wisconsin populations once called P. saxicola.
   - _Forms not added:_ flower essence (no curated form); Seed (Kynes lists seeds for sale, but nothing is attached to them); Root (one Rappahannock infusion only, not added).
   - _Safety:_ no source read gives a caution; no AHPA monograph; no safety note written.
@@ -250,7 +252,7 @@ No named sort was folded into any entry as a form.
 
 **Lily**
 
-- Powers with no category of that word: Cunningham's breaking love spells; Kynes's changes/transitions, consecrate/bless, death/funeral practices, hope, negativity. Kynes's "love (white)", "peace (white)" and "manifest (Turk's cap)" are each limited to one species; they are applied to the genus entry under the rule that a book entry covering several species goes to the entry its heading names. The lead may prefer to drop Manifestation (Turk's cap only).
+- Powers with no category of that word: Cunningham's breaking love spells; Kynes's changes/transitions, consecrate/bless, death/funeral practices, hope, negativity. Kynes's "love (white)", "peace (white)" and "manifest (Turk's cap)" are each limited to one species; they are applied to the genus entry under the rule that a book entry covering several species goes to the entry its heading names. The owner may prefer to drop Manifestation (Turk's cap only).
 - Deities not curated, or spelt otherwise: Cunningham's "Nepthys" (the curated row is Nephthys; the slug does not fold) and "Kwan Yin" (the curated row is Kuan Yin, which Kynes supplies).
 - Folk names not used: Kynes gives names only for two species inside the entry (Turk's cap lily, _L. superbum_: American tiger lily, swamp lily, turban lily; white or Madonna lily, _L. candidum_: French lily, Juno's rose, meadow lily). They name those species, not the genus, so they are not the genus's folk names. Neither species has its own heading in Kynes or Cunningham, so neither is flagged "to be its own entry"; the owner may still want Madonna lily or tiger lily as entries. AHPA's monograph names Brown's lily, tiger lily and coral lily inside one _Lilium_ spp. heading; it is applied to the genus (as the pilot did with _Usnea_).
 - Forms not added: Kynes's dried "root" worn as a love charm (a lily grows from a bulb, and "root" is not distinguished from it in the text); flower essence (no curated form).
@@ -259,7 +261,7 @@ No named sort was folded into any entry as a form.
 
 **Lily of the Valley**
 
-- Powers with no category of that word: Cunningham's mental powers, happiness (and the "improve the memory" use, not mapped to Memory because it is a use, not a listed power: the lead may decide); Kynes's challenges/obstacles, consecrate/bless, defense, emotions, happiness, luck, skills, spirituality.
+- Powers with no category of that word: Cunningham's mental powers, happiness (and the "improve the memory" use, not mapped to Memory because it is a use, not a listed power: the owner may decide); Kynes's challenges/obstacles, consecrate/bless, defense, emotions, happiness, luck, skills, spirituality.
 - Deities: Cunningham's "Aesculapius" (the Latin name; the curated row is Asclepius, which Kynes supplies).
 - Magical entities and associations not held: Kynes's faeries, Salingen; Beltane.
 - Forms not added: Kynes's powder of dried rhizomes for charms (no curated rhizome form, and Root was not assumed for it); cut dried leaves (nothing attached); flower essence; the berries (described, but no use attached).
@@ -287,7 +289,7 @@ No named sort was folded into any entry as a form.
 - Weak lines: Wikipedia's Viking shields, tagged "Citation needed"; not used.
 - Notable-trees passage (Malmvik, Aysgarth, Murten) not used.
 
-- **Liquorice.** Powers with no category of that word: Kynes's sex/sexuality. ("Bind" was filed under Binding as the verb of that category, as "banish" is Banishing; the lead may overrule.) Deity not curated: Brahma (Kynes). Colours: Kynes's and Wikipedia's flower and seed-pod colours (bluish violet, pale blue, reddish brown), as the flowers and pods are not a form here. Forms: Kynes lists flower essence, seeds and laces for sale but attaches no use to seeds or flower essence; the lace (knot magic) is a confection with no curated form, so its use stays in the description. Folk names not used: AHPA's pharmacopoeial and Ayurvedic names (gan cao, yashtimadhu) and trade names (Russian, Spanish, Turkish licorice), since gan cao is also _G. uralensis_; NCCIH's gan cao, gan zao and Chinese licorice for the same reason; Wikipedia's colloquial "Spanish" and Dutch _zoethout_, which name the sweet and the sticks. Weak lines: Wikipedia's glycyrrhizin sweetness and anethole figures (tagged "citation needed"); Wikipedia's adverse-effects detail beyond what AHPA and NCCIH say. Northcote's "Hedge-hogge Licorice" is Gerard's other kind, not this plant. LiverTox not tried (no page address known without a search).
+- **Liquorice.** Powers with no category of that word: Kynes's sex/sexuality. ("Bind" was filed under Binding as the verb of that category, as "banish" is Banishing; the owner may overrule.) Deity not curated: Brahma (Kynes). Colours: Kynes's and Wikipedia's flower and seed-pod colours (bluish violet, pale blue, reddish brown), as the flowers and pods are not a form here. Forms: Kynes lists flower essence, seeds and laces for sale but attaches no use to seeds or flower essence; the lace (knot magic) is a confection with no curated form, so its use stays in the description. Folk names not used: AHPA's pharmacopoeial and Ayurvedic names (gan cao, yashtimadhu) and trade names (Russian, Spanish, Turkish licorice), since gan cao is also _G. uralensis_; NCCIH's gan cao, gan zao and Chinese licorice for the same reason; Wikipedia's colloquial "Spanish" and Dutch _zoethout_, which name the sweet and the sticks. Weak lines: Wikipedia's glycyrrhizin sweetness and anethole figures (tagged "citation needed"); Wikipedia's adverse-effects detail beyond what AHPA and NCCIH say. Northcote's "Hedge-hogge Licorice" is Gerard's other kind, not this plant. LiverTox not tried (no page address known without a search).
 - **Liverwort.** Folk names not used: AHPA's names for the two North American varieties (American liverleaf, sharp-lobe hepatica, round-lobe hepatica); Wikipedia's Japanese names (yukiwarisō, misumisō), the first kept only in the description. Colours: Wikipedia's flower colours (blue, purple, pink, white) sit in a sentence tagged "citation needed", and the form is the herb, so none is written. Safety: Wikipedia's protoanemonin sentence (uncited; AHPA covers it). Description: Wikipedia's distribution and ecology lines (tagged "citation needed" and "dubious"). Cunningham's heading also names _Peltigera canina_, a different organism; it is mentioned in the description, not folded in, and is a candidate for its own entry if the roster wants it.
 - **Lobelia.** Powers with no category of that word: Cunningham's halting storms; Kynes's hexes. Kynes's entry heads two plants, cardinal flower (_Lobelia cardinalis_) and Indian tobacco; only what she says of Indian tobacco or of both is used, and the Plains Indians' storm lore, which she gives to the cardinal flower, is left out. Cardinal flower is a sub-line of her Lobelia entry, not its own heading, but it is a distinct species and could be its own entry. Forms: Kynes's flower essence and seeds for sale (no use attached); Wikipedia's note that lobeline is most concentrated in the seeds (chemistry, not a caution). Safety: Wikipedia's list of adverse effects and "the root is toxic and can be fatal", since AHPA, Cunningham and Kynes cover the plant. Folk names: Wikipedia's and AHPA's "puke weed", a spacing of Cunningham's Pukeweed.
 - **Lords and Ladies.** Powers with no category of that word: Kynes's sex/sexuality. Other association not held by any field: Beltane. Folk names not used: Wikipedia's "lords-and-ladies" (the label), "cuckoopint" and "wake-robin" (spellings of names kept). Forms: Wikipedia's culinary leaf uses (Turkish tirşik soup, Roma beef stew) were not made a Leaf form; the leaf caution (mistaken for sorrel) is on the entry. Colours: the spathe and spadix colours (pale green, purple, yellow), since they are not a form here. Kynes's phosphorescent-pollen explanation of the Fenland glow is her own gloss and is not repeated.
@@ -297,7 +299,7 @@ No named sort was folded into any entry as a form.
 - Powers with no category of that word: Cunningham's lock-opening; Kynes's awareness, consecrate/bless, defense, growth, sex/sexuality, spirituality.
 - Deities not curated: Kynes's Atum, Brahma, Buddha, Nefertum, Padma. Wikipedia's Shiva (offerings) is in an unreferenced section and was not used.
 - Other associations not held: Kynes's afterlife.
-- Folk names not used: Kynes's American lotus and yellow lotus, which name _Nelumbo lutea_, a second species inside the same Kynes heading (not its own heading, so not flagged "to be its own entry"). Wikipedia's "water lily", which the article itself says more often means Nymphaeaceae. Note for the lead: Cunningham's heading also lists _Nymphaea lotus_, and his folk name "Egyptian Lotus" may belong to that water lily; it is kept because the book prints it under the Lotus heading, which the rule applies to this entry.
+- Folk names not used: Kynes's American lotus and yellow lotus, which name _Nelumbo lutea_, a second species inside the same Kynes heading (not its own heading, so not flagged "to be its own entry"). Wikipedia's "water lily", which the article itself says more often means Nymphaeaceae. Note for the owner: Cunningham's heading also lists _Nymphaea lotus_, and his folk name "Egyptian Lotus" may belong to that water lily; it is kept because the book prints it under the Lotus heading, which the rule applies to this entry.
 - Forms not added: Kynes's flower essence (no curated form); Leaf (Wikipedia's lotus-leaf tea and rice wrapping, but most of those lines are tagged "Citation needed"); Stem (Wikipedia's culinary stems; nothing magical, not needed).
 - Weak lines not used: Wikipedia's Description paragraphs tagged "Citation needed" (seed dormancy, cultivation, national flower in line 28, longevity symbol, chemistry), the unreferenced "Religious" section (offerings to Lakshmi, Vishnu, Shiva, the Buddha; prayer beads), the moon-cake filling line (tagged), and the medical-claims paragraphs.
 - Safety statements not used: AHPA's LD50 values for isolated alkaloids given by injection (p. 595), which concern compounds, not the seed.
@@ -305,7 +307,7 @@ No named sort was folded into any entry as a form.
 **Lovage**
 
 - Powers with no category of that word: Kynes's negativity, relationships, sex/sexuality.
-- Folk names not used: Kynes's "love herb" (singular of Cunningham's "Love Herbs", kept once). Cunningham's "Chinese Lovage" is kept as printed, though AHPA uses "Chinese lovage" for a _Ligusticum_ species (p. 520); the lead may drop it.
+- Folk names not used: Kynes's "love herb" (singular of Cunningham's "Love Herbs", kept once). Cunningham's "Chinese Lovage" is kept as printed, though AHPA uses "Chinese lovage" for a _Ligusticum_ species (p. 520); the owner may drop it.
 - Forms not added: Kynes's flower essence (no curated form); Cunningham's bath sachet names no part, so it sits in the entry description.
 - Northcote: his "Lovage" (indexed at pp. 3, 65, 66; text files 0097–0098) heads _Ligusticum scoticum_ and says Lyte's name applied to _Levisticum officinale_ belongs in modern British books to the Scots plant, so his lore (including the Culpeper quotation on the Sun and Taurus) is not applied to this entry. His Roman-introduction line (file 0023) does not say which lovage, so it is not used either.
 - Weak lines not used: Wikipedia's Netherlands asparagus line, tagged "Better source needed".
@@ -314,7 +316,7 @@ No named sort was folded into any entry as a form.
 **Magnolia**
 
 - Powers with no category of that word: Kynes's sex/sexuality.
-- Folk names not used: Kynes's names for the southern magnolia (bull bay, evergreen magnolia) and the Mexican magnolia, other species inside the same heading. Kynes's "Sweet Bay Magnolia" and Wikipedia's "swampbay" are kept once each as "Sweetbay Magnolia" and "Swamp Bay". Note for the lead: Cunningham's folk names (Blue Magnolia, Cucumber Tree, Swamp Sassafras) are printed under a heading covering three species and may belong to other magnolias; they are kept under the brief's rule that a book entry goes to the entry its heading names.
+- Folk names not used: Kynes's names for the southern magnolia (bull bay, evergreen magnolia) and the Mexican magnolia, other species inside the same heading. Kynes's "Sweet Bay Magnolia" and Wikipedia's "swampbay" are kept once each as "Sweetbay Magnolia" and "Swamp Bay". Note for the owner: Cunningham's folk names (Blue Magnolia, Cucumber Tree, Swamp Sassafras) are printed under a heading covering three species and may belong to other magnolias; they are kept under the brief's rule that a book entry goes to the entry its heading names.
 - Named sorts: Kynes's Mexican magnolia (_M. mexicana_) and southern magnolia (_M. grandiflora_) sit inside her Magnolia heading, not under headings of their own, so they are not flagged "to be its own entry". The owner may still want southern magnolia as an entry.
 - AHPA monographs not applied: _Magnolia officinalis_ bark (pp. 539–540) and the flower bud of _M. biondii_, _M. denudata_ and _M. sprengeri_ (p. 541), other species.
 - Lore not used: Kynes's Aztec name "yoloxochitl" and Mexican "flor de corazón", which most likely concern the Mexican magnolia; the antebellum-South icon line; the "most ancient flowering plant" line.
@@ -335,7 +337,7 @@ No named sort was folded into any entry as a form.
 - **Maize.**
   - Powers with no category of that word: Cunningham's luck; Kynes's consecrate/bless, death/funeral practices, hexes, hope, luck, renewal, trust.
   - Deities not curated: Centéotl (Kynes, marked "maize"); Cunningham's Corn Mother (a figure, not a named curated deity). Amaterasu and Inari are marked "(rice)" by Kynes and are not taken.
-  - Kynes's Grain heading also covers barley, oat, rice, rye and wheat; its lore about those grains, bread and straw is not used. The general (unmarked) correspondences are applied, as the Rice lane did; the lead may decide otherwise.
+  - Kynes's Grain heading also covers barley, oat, rice, rye and wheat; its lore about those grains, bread and straw is not used. The general (unmarked) correspondences are applied, as the Rice lane did; the owner may decide otherwise.
   - Forms not added: the silk (AHPA's stigma, Cunningham's "silk"): no curated form for it, so its safety is stated on the entry. Kynes's boxed cereal, straw, stalks and oils (listed for sale, nothing attached). Cunningham's cornstalks and ears (charms, but no curated form apart from Seed and Whole; not stretched).
   - Colours: Wikipedia's orange, brown, purple and black kernels (other varieties; only the usual yellow and white and Cunningham's red and blue are kept).
   - Safety: Wikipedia's note that maize pollen is an allergen, mostly for farm workers (AHPA covers the plant, so Wikipedia's statement is not used).
@@ -343,8 +345,8 @@ No named sort was folded into any entry as a form.
   - Powers with no category of that word: Cunningham's luck.
   - No Kynes entry: the Witches' Encyclopedia has Maidenhair Fern but no male fern heading. Cunningham's general "Fern" heading is not applied (a separate heading).
   - Formal name: Cunningham prints "Dryopterisfelix-mas" (run together, with "felix"), so he is not cited for the formal name.
-  - Form: AHPA's part is the rhizome, which has no curated form; Root stands for it, as the plants-co-k Couch Grass lane did (b05 of this shard declined to). The lead may decide.
-  - Weak lines: Wikipedia's "worm fern" name and its tapeworm sentence (tagged "citation needed"); "much less abundant in North America" and the hybrids line (tagged "citation needed"). The Description section is tagged "inline citations needed"; its frond facts are used, and the lead may drop them.
+  - Form: AHPA's part is the rhizome, which has no curated form; Root stands for it, as the plants-co-k Couch Grass lane did (this shard declined to for Lily of the Valley's rhizome). The owner may decide.
+  - Weak lines: Wikipedia's "worm fern" name and its tapeworm sentence (tagged "citation needed"); "much less abundant in North America" and the hybrids line (tagged "citation needed"). The Description section is tagged "inline citations needed"; its frond facts are used, and the owner may drop them.
   - Folk names: AHPA's synonym _Aspidium filix-mas_ is a synonym, not a common name (Cunningham's "Aspidium" is kept as his).
 - **Mallow.**
   - Powers with no category of that word: Cunningham's exorcism; Kynes's challenges/obstacles, determination, hexes, nightmares, sex/sexuality, spirit guides/spirits, spirituality. "Nightmares" not mapped to Nightmare Protection under the strict rule.
@@ -358,7 +360,7 @@ No named sort was folded into any entry as a form.
   - Powers with no category of that word: Cunningham's money, health, and exorcism (in Magical Uses); Kynes's authority/leadership, challenges/obstacles, growth, hexes, luck, nightmares, sex/sexuality, spirit guides/spirits.
   - Deities not curated: the Fates (Kynes).
   - Kynes's Autumn Mandrake (_Mandragora autumnalis_), within the same heading: a named related species, to be its own entry. Its folk name womandrake is kept only because Cunningham gives it to mandrake.
-  - Folk names: Kynes's "Mayapple" is not added: it is another roster entry's label (_Podophyllum peltatum_). Cunningham's Raccoon Berry and Wild Lemon are kept as he prints them under Mandrake, but he gives the same two to the May Apple (EoH-8.html:115); the lead may drop them. Cunningham's "Witches' Mannildn" gloss is garbled in the e-book and not used. Wikipedia's "autumn mandrake" is left with the Autumn Mandrake entry.
+  - Folk names: Kynes's "Mayapple" is not added: it is another roster entry's label (_Podophyllum peltatum_). Cunningham's Raccoon Berry and Wild Lemon are kept as he prints them under Mandrake, but he gives the same two to the May Apple (EoH-8.html:115); the owner may drop them. Cunningham's "Witches' Mannildn" gloss is garbled in the e-book and not used. Wikipedia's "autumn mandrake" is left with the Autumn Mandrake entry.
   - Formal name: Cunningham heads the entry "Atropa mandragora, Mandragora officinale"; Wikipedia gives _Atropa mandragora_ as an illegitimate synonym and calls "officinalis" an orthographic error. Cunningham is applied (same heading) but not cited for the formal name.
   - Magical entities (dwarfs, elves) and other associations (Walpurgis): no field.
   - Forms not added: Flower (described, with colours, but nothing attached), Fruit (Kynes's apple-like fruit, Wikipedia's berries: description only), Seed and flower essence (for sale only). So no colour is written: the flowers' violet and the berries' yellow and orange belong to forms not seeded.
@@ -368,7 +370,7 @@ No named sort was folded into any entry as a form.
 - **Maple.**
   - Powers with no category of that word: Cunningham's money; Kynes's loss/sorrow. Kynes prints "release transformation" without a comma; it is read as two powers, Release and Transformation.
   - Colours: Kynes's greenish-yellow flowers and red leaves, Wikipedia's green, yellow, orange or red flowers: they vary by species across the genus, so none is written.
-  - Kynes names two species under the heading, field maple (_Acer campestre_) and sugar maple (_A. saccharum_): not separate headings in Kynes, so they are not split out here; if the lead wants them as their own entries, "to be its own entry". The folk names kept (hedge maple, maplin tree, mazer; bird's eye maple, hard maple) are the ones Kynes gives those two species.
+  - Kynes names two species under the heading, field maple (_Acer campestre_) and sugar maple (_A. saccharum_): not separate headings in Kynes, so they are not split out here; if the owner wants them as their own entries, "to be its own entry". The folk names kept (hedge maple, maplin tree, mazer; bird's eye maple, hard maple) are the ones Kynes gives those two species.
   - Wikipedia's names for the fruit (maple keys, helicopters, whirlybirds), which name the samara, not the plant.
   - Forms: flower essence (Kynes, as sold; nothing attached to it); Sap (folded into Syrup, which is what both sources describe).
   - Kynes's other associations and entities (Mabon, Ostara; fairies, wood folk): no field.
@@ -382,7 +384,7 @@ No named sort was folded into any entry as a form.
 - **Marjoram.**
   - Powers: Cunningham's happiness, health, money; Kynes's death/funeral practices, defence, family and home, focus, happiness, hexes, security.
   - Deities: Kupala (Kynes; no curated row).
-  - From Kynes's joint heading, only oregano's: element fire, planet Mars, oregano's names (shepherd's thyme, wild marjoram), Aeneas's wounds. Kynes's signs (Aries, Gemini, Libra, Virgo) are not marked to one plant, so they are applied to marjoram: the lead may drop them. Kynes spells the binomial "Origanum marjorana", so Kynes is not cited for the formal name.
+  - From Kynes's joint heading, only oregano's: element fire, planet Mars, oregano's names (shepherd's thyme, wild marjoram), Aeneas's wounds. Kynes's signs (Aries, Gemini, Libra, Virgo) are not marked to one plant, so they are applied to marjoram: the owner may drop them. Kynes spells the binomial "Origanum marjorana", so Kynes is not cited for the formal name.
   - Oregano (_Origanum vulgare_), headed jointly by Kynes and given as an alternative by Cunningham: its own entry, Oregano, in this shard.
   - Wikipedia's list of folk medicinal uses (tagged medical citation needed and failed verification) and its laboratory findings; Northcote p. 182 (thunder and milk) is a joint line with wild thyme and left out.
   - Colours: Wikipedia's flower colours (white, pink, red, blue, purple) and Kynes's grey-green leaves are not written on the leaf; only the oil's yellow is.
@@ -394,29 +396,29 @@ No named sort was folded into any entry as a form.
   - Wikipedia's cultivars and varieties: named sorts, not forms; none has its own heading in a book read.
 
 - **Marshmallow.**
-  - Powers with no category of that word: Kynes's challenges/obstacles, determination, hexes, nightmares (not mapped to Nightmare Protection under the strict rule, as batch b08 did for Mallow), sex/sexuality, spirit guides/spirits, spirituality.
+  - Powers with no category of that word: Kynes's challenges/obstacles, determination, hexes, nightmares (not mapped to Nightmare Protection under the strict rule, as Mallow's entry does), sex/sexuality, spirit guides/spirits, spirituality.
   - Deity not curated: Althea (Kynes).
   - Kynes's magical entities (faeries) and other associations (the afterlife, Beltane, Midsummer's Eve): no field.
   - Kynes's Irish, German and Manx lore and the "little round moons" fruit in esbat rituals: written of "mallow" generally, not of marshmallow, so not used.
-  - Kynes applies the Mallow heading's correspondences to both plants it lists; they are used here and also in b08's Mallow. The lead may restrict them to one entry.
+  - Kynes applies the Mallow heading's correspondences to both plants it lists; they are used here and also in Mallow's entry. The owner may restrict them to one entry.
   - Forms not added: Kynes's seeds, tea and flower essence (no use of their own given marshmallow; flower essence has no curated form and is folded into the Flower form's description). The Root form's colour (Wikipedia's whitish yellow outside, white within) is in its description, not `colors`.
   - Colours: Wikipedia's lilac is not on the list (pink kept, on the Flower form).
   - Not used: Cunningham's remark that the altar use is "a popular voodoo practice"; Northcote's Syrian famine quotation and the Job passage (which Northcote, following Smith's Dictionary of the Bible, takes to name _Atriplex halimus_, not a mallow); Wikipedia's phytochemical list.
 - **Masterwort.**
-  - Powers with no category of that word: Kynes's authority/leadership, family and home, negativity, skills, spirit guides/spirits. Kynes's "manifest" is filed as Manifestation by a direct form of the word: the lead may overrule.
+  - Powers with no category of that word: Kynes's authority/leadership, family and home, negativity, skills, spirit guides/spirits. Kynes's "manifest" is filed as Manifestation by a direct form of the word: the owner may overrule.
   - Kynes's other associations (Christmas Eve, New Year's Eve, Twelfth Night): in the description, no field.
   - Forms not added: Leaf (Wikipedia names roots and leaves only together, in Austrian folk medicine); master key oil (a compound oil, not masterwort's own).
   - Not used: Kynes's English culinary use and her picture-amulet spell; Wikipedia's coumarins.
   - Formal name: Cunningham heads it _Imperatoria ostruthium_, the synonym Kynes and Wikipedia both give; Cunningham is not cited for `canonicalName`.
 - **Mayapple.**
   - Powers with no category of that word: Cunningham's money; Kynes's negativity, security. Kynes's "prosperity/money" is filed as Prosperity by its first word.
-  - Substitutes: Cunningham names mayapple as a substitute _for_ mandrake, not the other way round, so it belongs on the Mandrake entry (b08), not here.
+  - Substitutes: Cunningham names mayapple as a substitute _for_ mandrake, not the other way round, so it belongs on the Mandrake entry, where it is written, not here.
   - Forms not added: Kynes's flower essence (no curated form); the powdered root (a Powder form would add nothing the Root form does not hold).
   - Colours: the white flower and the green unripe fruit (the flower is not a form; the fruit's kept colour is the ripe yellow).
   - Not used: Wikipedia's lines tagged "citation needed" (podophyllin's toxicity, settlers' use of the rhizome, posalfilin), its ecology section, and its toxicity lines in the entry's safety note, since AHPA covers the plant (they are used in the description; the Fruit form's caution, which AHPA does not cover, rests on Kynes and Wikipedia); AHPA's Himalayan mayapple monograph; the case histories in AHPA's review details.
 - **Meadow Rue.**
   - Cunningham's "all-around protective amulet" is in the description but not filed as Protection: his Powers line names only Love and Divination.
-  - Forms: no source names the part used (no AHPA monograph, no Kynes heading, Cunningham names none, Wikipedia has no uses section). Whole rests on Cunningham's plant being worn and carried. The lead may prefer another form or to hold the row.
+  - Forms: no source names the part used (no AHPA monograph, no Kynes heading, Cunningham names none, Wikipedia has no uses section). Whole rests on Cunningham's plant being worn and carried. The owner may prefer another form or to hold the row.
   - Colours: Wikipedia's flower colours (white, yellow, pink, pale purple) and leaf colour rest on lines tagged "citation needed", and the flower is not a form, so none is kept.
   - Not used: Wikipedia's description, habitat and moth lines, all tagged "citation needed"; the species list and its common names (species, not names for the genus).
   - Folk names: Wikipedia's "meadow-rue" is the label itself.
@@ -436,7 +438,7 @@ No named sort was folded into any entry as a form.
   - Safety: no handbook covers the plant (AHPA has no _Prosopis_ or _Neltuma_ monograph); the Pod caution is Wikipedia's, said so in the note.
   - Unused lines: Wikipedia's malaria-transmission and Afar "Devil Tree" passages; the "holy tree in ancient India" line, which Wikipedia says is likely a confusion with _Prosopis cineraria_ and is tagged citation needed.
 - **Milk Thistle.**
-  - **Kynes's Thistle correspondences are left out.** Her heading is "Thistle" and covers blessed, milk and Scottish thistle together; the brief applies a book entry to the entry its heading names, and the roster has its own Thistle row (_Carduus_, plants-r-z). Only her Milk Thistle line (formal name, lady thistle) and her sentence on its flowers and leaves are used. Left out from her entry: Fire; Scorpio; Mars; Minerva, Thor, Tyr; banish, courage, healing, protection, release, strength, truth and the rest of her powers. The lead may decide otherwise.
+  - **Kynes's Thistle correspondences are left out.** Her heading is "Thistle" and covers blessed, milk and Scottish thistle together; the brief applies a book entry to the entry its heading names, and the roster has its own Thistle row (_Carduus_, plants-r-z). Only her Milk Thistle line (formal name, lady thistle) and her sentence on its flowers and leaves are used. Left out from her entry: Fire; Scorpio; Mars; Minerva, Thor, Tyr; banish, courage, healing, protection, release, strength, truth and the rest of her powers. The owner may decide otherwise.
   - Power with no category of that word: snake-enraging (Cunningham).
   - Cunningham's heading also prints _Sonchus oleraceus_ (sow thistle), another plant: not used.
   - Northcote p. 97: the thistle's dedication to Thor and its lightning lore concern the thistle in general, beside holy thistle: not used.
@@ -463,7 +465,7 @@ No named sort was folded into any entry as a form.
 **Monkshood.**
 
 - Cunningham's Wolf's Bane heading covers _Aconitum napellus_, _Arnica latifolia_ and _A. montana_. Its correspondences are applied here, the heading's first plant; Arnica is its own row in `plants-a-cn`. The folk name **Leopard's Bane** is left out because Kynes s.v. Arnica gives "leopard's bane" and "wolf's bane" to _Arnica montana_, so it may be Arnica's. "Wolf's Bane" (the heading) is not written separately from Kynes's and Wikipedia's "Wolfsbane".
-- Kynes's astrology line reads "Capricorn, Mars (wolfsbane); Saturn": Capricorn and Mars are read as belonging to wolfsbane (_A. lycoctonum_, which the roster left out), so only Saturn is written. The lead may wish to check this reading.
+- Kynes's astrology line reads "Capricorn, Mars (wolfsbane); Saturn": Capricorn and Mars are read as belonging to wolfsbane (_A. lycoctonum_, which the roster left out), so only Saturn is written. The owner may wish to check this reading.
 - Powers with no category of that word: Cunningham's invisibility; Kynes's consecrate/bless, death/funeral practices, negativity, relationships, skills, support.
 - Deities: Medea (Kynes) is not curated.
 - Colours: the flowers' dark purple to bluish purple (Wikipedia; Kynes's "dark blue-violet") are the flower's, not the seed's or root's, the forms seeded; left out, as the pilot did for Frankincense and Sandalwood.
@@ -484,7 +486,7 @@ No named sort was folded into any entry as a form.
 
 **Morning Glory.**
 
-- Moonflower (_Ipomoea alba_) is named in Kynes's heading "Morning Glory and Moonflower" beside the morning glories: its Moon rulership, its names (moon vine, tropical white morning glory) and its esbat-altar use are left out. **To be its own entry** if the lead decides moonflower should be one; it has no row in `candidates.md`.
+- Moonflower (_Ipomoea alba_) is named in Kynes's heading "Morning Glory and Moonflower" beside the morning glories: its Moon rulership, its names (moon vine, tropical white morning glory) and its esbat-altar use are left out. **To be its own entry** if the owner decides moonflower should be one; it has no row in `candidates.md`.
 - Substitute not written: Cunningham says the morning glory root may be used **for** High John the Conqueror root. That makes morning glory a substitute on High John's entry (`plants-co-k`, _Ipomoea purga_), not the reverse; it is recorded only in the Root form's description.
 - Powers with no category of that word: Cunningham's happiness; Kynes's awareness, changes/transitions, family and home, happiness, loss/sorrow, security. Cunningham's "stop all nightmares" is a use, not a printed power, so Nightmare Protection is not written.
 - Deities: none named (Kynes's "lunar goddesses" is not a name). Magical entities (faeries): no field.
@@ -503,3 +505,5 @@ No named sort was folded into any entry as a form.
 - **Joint headings applied whole.** Where Kynes heads two plants together and a value is tied to neither (Celandine's powers for Lesser Celandine, the Oregano and Marjoram signs for Marjoram, the Grain heading's unmarked values for Maize), the value is applied to the entry the heading names; values she ties to the other plant are left out.
 - **Rhizomes.** No curated form names a rhizome: Male Fern's rhizome is seeded as Root, as `plants-co-k` did for Couch Grass, while Lily of the Valley's rhizome powder was left out. A Rhizome form is the owner's call.
 - **Folk names a book prints under one heading that may belong to a neighbouring plant** are kept as printed (a folk name is only a name): Magnolia's Blue Magnolia, Cucumber Tree and Swamp Sassafras; Lotus's Egyptian Lotus; Lovage's Chinese Lovage; Mandrake's Raccoon Berry and Wild Lemon; Lemon Balm's Bee Balm, which Wikipedia warns also names _Monarda_.
+- **Forms with no curated row**: corn silk, the part AHPA reviews for Maize, whose safety note therefore sits on the entry. It is left out as a form until the form vocabulary holds it.
+- **Substitutions that run the other way** are not written on the entry that stands in: mayapple for mandrake (written on Mandrake) and morning glory root for High John the Conqueror (a row of `plants-co-k`, so it is noted in Morning Glory's Root form only).
