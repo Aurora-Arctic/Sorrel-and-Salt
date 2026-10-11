@@ -9,6 +9,13 @@ import type { SeedCompendiumShard } from '../types';
 export const STONES_AND_METALS: SeedCompendiumShard = {
   name: 'stones-and-metals',
   sources: {
+    'wikipedia-adder-stone': {
+      kind: 'entry',
+      title: 'Adder stone',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Adder_stone&oldid=1378605332',
+      accessed: '2026-10-11',
+    },
     'wikipedia-agate': {
       kind: 'entry',
       title: 'Agate',
@@ -16,11 +23,25 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Agate&oldid=1371907988',
       accessed: '2026-10-11',
     },
+    'wikipedia-aluminium': {
+      kind: 'entry',
+      title: 'Aluminium',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Aluminium&oldid=1379040707',
+      accessed: '2026-10-11',
+    },
     'wikipedia-ametrine': {
       kind: 'entry',
       title: 'Ametrine',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Ametrine&oldid=1369723575',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-antimony': {
+      kind: 'entry',
+      title: 'Antimony',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Antimony&oldid=1375769793',
       accessed: '2026-10-11',
     },
     'wikipedia-aquamarine-gem': {
@@ -49,6 +70,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Blue lace agate',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Blue_lace_agate&oldid=1346967994',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-brass': {
+      kind: 'entry',
+      title: 'Brass',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Brass&oldid=1373585842',
       accessed: '2026-10-11',
     },
     'wikipedia-carnelian': {
@@ -93,6 +121,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Copper&oldid=1374343138',
       accessed: '2026-10-11',
     },
+    'wikipedia-electrum': {
+      kind: 'entry',
+      title: 'Electrum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Electrum&oldid=1373724767',
+      accessed: '2026-10-11',
+    },
     'wikipedia-emerald': {
       kind: 'entry',
       title: 'Emerald',
@@ -105,6 +140,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Fire agate',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Fire_agate&oldid=1353116660',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-flint': {
+      kind: 'entry',
+      title: 'Flint',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Flint&oldid=1375602611',
       accessed: '2026-10-11',
     },
     'wikipedia-gold': {
@@ -128,6 +170,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Jasper&oldid=1369072425',
       accessed: '2026-10-11',
     },
+    'wikipedia-lava': {
+      kind: 'entry',
+      title: 'Lava',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Lava&oldid=1378579913',
+      accessed: '2026-10-11',
+    },
     'wikipedia-lead': {
       kind: 'entry',
       title: 'Lead',
@@ -135,11 +184,25 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Lead&oldid=1377493060',
       accessed: '2026-10-11',
     },
+    'wikipedia-marble': {
+      kind: 'entry',
+      title: 'Marble',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Marble&oldid=1374177890',
+      accessed: '2026-10-11',
+    },
     'wikipedia-mercury-element': {
       kind: 'entry',
       title: 'Mercury (element)',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Mercury_(element)&oldid=1377978254',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-meteorite': {
+      kind: 'entry',
+      title: 'Meteorite',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Meteorite&oldid=1377518350',
       accessed: '2026-10-11',
     },
     'wikipedia-moss-agate': {
@@ -156,11 +219,25 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Onyx&oldid=1369833689',
       accessed: '2026-10-11',
     },
+    'wikipedia-petrified-wood': {
+      kind: 'entry',
+      title: 'Petrified wood',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Petrified_wood&oldid=1377992531',
+      accessed: '2026-10-11',
+    },
     'wikipedia-pietersite': {
       kind: 'entry',
       title: 'Pietersite',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Pietersite&oldid=1345806969',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-pumice': {
+      kind: 'entry',
+      title: 'Pumice',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Pumice&oldid=1379044430',
       accessed: '2026-10-11',
     },
     'wikipedia-quartz': {
@@ -198,6 +275,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Smoky_quartz&oldid=1364718303',
       accessed: '2026-10-11',
     },
+    'wikipedia-steel': {
+      kind: 'entry',
+      title: 'Steel',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Steel&oldid=1379651832',
+      accessed: '2026-10-11',
+    },
     'wikipedia-tigers-eye': {
       kind: 'entry',
       title: "Tiger's eye",
@@ -217,6 +301,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Tourmaline',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Tourmaline&oldid=1379166844',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-witch-bottle': {
+      kind: 'entry',
+      title: 'Witch bottle',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Witch_bottle&oldid=1368142800',
       accessed: '2026-10-11',
     },
   },
@@ -302,6 +393,51 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Aluminium',
+      canonicalName: 'Aluminium',
+      nomenclature: 'chemical',
+      description:
+        'Aluminium, spelt aluminum in North American English, is the chemical element Al, atomic number 13. It is a soft, ductile, non-magnetic metal about a third as dense as steel, and it looks much like silver, both in its colour and in how well it reflects light; in air it quickly forms a thin protective skin of oxide. Cunningham notes that it is a modern metal with no history among earlier peoples, now found in everything from drinks cans to aircraft. He gives it to Mercury and air and calls it projective. He mentions that it is sometimes recommended in place of mercury, the metal traditionally given to that planet, as far less dangerous to use, though he himself distrusts aluminium cookware. Small pieces are carried to sharpen the mind, and its modern link with flight makes it useful in spells for journeys to distant lands. Foil serves for image magic: shaped on the altar into the form of what is needed, charged with visualisation, then smoothed, rinsed, dried and reused each day until the work succeeds. He even counts recycling aluminium as a kind of magic, turning rubbish into money.',
+      elements: ['air'],
+      planets: ['Mercury'],
+      colors: ['silver'],
+      folkNames: ['Aluminum'],
+      substitutes: [
+        {
+          identity: 'mercury',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 151–152',
+          supports: ['elements', 'planets', 'folkNames', 'substitutes', 'description'],
+        },
+        {
+          source: 'wikipedia-aluminium',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          description:
+            'Cunningham carries small pieces of aluminium for mental ability, and uses a sheet of foil, shaped and reshaped on the altar, as a tool of image magic.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 151–152',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-aluminium',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Ametrine',
       canonicalName: 'Quartz var. ametrine',
       nomenclature: 'mineral',
@@ -342,6 +478,46 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-ametrine',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Antimony',
+      canonicalName: 'Antimony',
+      nomenclature: 'chemical',
+      description:
+        'Antimony is the chemical element Sb, atomic number 51, a lustrous grey metal or metalloid. In nature it is found mainly in the sulphide mineral stibnite, and its compounds have been known since ancient times, powdered for medicine and for cosmetics often called by the Arabic name kohl. China once struck coins of it, in Guizhou in 1931, but the issue was soon stopped because the metal proved too soft and too toxic. Cunningham describes it as a white metal and gives it to the Sun and fire, calling it projective. His entry for it is brief and concerned with a single power, protection. He suggests wearing a small piece of antimony to ward off negative vibrations, carrying or wearing it simply to be protected, and adding small bits of it to combinations of protective stones to strengthen what they already do. His entry gives no older lore of the metal and names no deity, herb or stone for it.',
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: ['white', 'grey'],
+      safetyNotes:
+        'Wikipedia states that antimony and many of its compounds are toxic, with effects resembling arsenic poisoning, although antimony is far less toxic than arsenic.',
+      categories: ['Protection'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 152',
+          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-antimony',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'safetyNotes', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 152',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-antimony',
               supports: ['form'],
             },
           ],
@@ -687,6 +863,83 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'hall-crystal-bible',
               locator: 's.v. Agate: Blue Lace Agate',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Brass',
+      nomenclature: 'none',
+      description:
+        "Brass is an alloy of copper and zinc, its proportions varied to change its colour and its mechanical and other properties, though copper usually makes up the larger share, typically about two-thirds. It has been in use since prehistoric times, and it is prized for its bright, golden look, its low melting point and how easily it is worked, which have made it a favourite for door furniture, sculpture and utensils. As an alloy of variable make-up it has no formal name of its own. Cunningham calls it a yellowish gold metal and gives it to the Sun and fire as projective. He says it has long stood in for gold in magic, without all of gold's virtues, and uses it chiefly to draw money: brass bells rung over green candles at sunrise, money-drawing stones laid on a piece of brass during prosperity rituals, and a small piece inscribed with a pentagram and carried to draw wealth. He also records healing charms, a brass ring against stomach cramps and a brass key at the nape of the neck to stop a nosebleed, and calls it protective, worn to guard the body and used to turn negativity back on its sender.",
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: ['yellow', 'gold'],
+      categories: ['Healing', 'Protection', 'Prosperity', 'Wealth'],
+      substitutes: [
+        {
+          identity: 'gold',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 153–154',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'wikipedia-brass',
+          supports: ['colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 153–154',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-brass',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Bell',
+          description:
+            'For a money ritual, Cunningham empowers eight small brass bells and eight green candles at sunrise, sets the candles in a rough square and rings each bell over each candle while visualising.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 154',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Key',
+          description:
+            'Cunningham records an old spell to stop a nosebleed by laying a brass key on the nape of the neck or dropping it down the back.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 154',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Nail',
+          description:
+            'Brass pins turn up in witch bottles: one bottle found buried at a house threshold in Cornwall was analysed and held urine, a little alcohol and a human hair, along with brass pins from the late 1840s.',
+          references: [
+            {
+              source: 'wikipedia-witch-bottle',
               supports: ['form', 'description'],
             },
           ],
@@ -1208,6 +1461,52 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Electrum',
+      nomenclature: 'unknown',
+      description:
+        'Electrum is a natural alloy of gold and silver, usually with traces of copper and other metals, whose colour runs from pale to bright yellow as the share of each metal changes; it has also been made artificially and sold as green gold, though it looks pale yellow rather than green. Its formal name is unsettled because the sources read give it no fixed make-up: Wikipedia defines it by a gold-and-silver mix of varying proportions, and Cunningham uses the word for any mixture of metals, naming gold, silver and platinum. Ancient Egypt used it from the third millennium BC, sometimes to coat the capstones of pyramids and obelisks, and the earliest known metal coins were struck from it. Cunningham writes that natural electrum is rare and was once highly prized in magic, and that mixing metals combines their powers, so a made alloy suits work calling on several planets at once. He retells a tale of an electrum cup that betrayed poison poured into it by throwing off rainbows and sparks, and suggests that a Wiccan honouring both Goddess and God might wear a ring or pendant of silver and gold electrum as a sign of their union. Today it is rarely sold and usually made to order.',
+      colors: ['yellow'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 155–156',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-electrum',
+          supports: ['colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 155–156',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-electrum',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Cunningham suggests a ring or pendant of silver and gold electrum for a Wiccan devoted to the Goddess and God, the two metals standing for the two deities joined.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 156',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Emerald',
       canonicalName: 'Beryl var. emerald',
       nomenclature: 'mineral',
@@ -1331,6 +1630,52 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Flint',
+      canonicalName: 'Flint',
+      nomenclature: 'mineral',
+      description:
+        'Flint is a hard, sedimentary, cryptocrystalline form of quartz, the variety of chert found in chalk and marly limestone, where it occurs mainly as nodules and masses. It can be sandy brown, grey from medium to dark, black, reddish brown or an off-white grey. For most of human history it was the stone for tools and for striking fire. Cunningham, calling flint a term loosely used for opaque quartz, gives it to Mars and fire as a projective stone. He notes that it was among the first things early peoples traded, and that ancient flint blades found across Europe, their origin long forgotten, were called thunderstones and elf-shot and kept as protective amulets. The Irish set flint knives in silver against mischievous fairies, Scandinavians sometimes honoured them as household gods with offerings of beer and melted butter, and Cherokee healers invoked flint before treating the sick. In his magic, ancient flint tools are protective amulets, most potent over a door, and a flint knife or replica is held or laid on the altar in protective rites. He also records flint used in Brazil to divine for gold, water and gemstones, and an American spell that sends a headache away in the sparks struck from it.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      colors: ['brown', 'grey', 'black'],
+      folkNames: [
+        'Thunderstone',
+        'Elf-Shot',
+        'Fairy-Shot',
+        'Elf-Arrow',
+        'Adder-Stone',
+        'Flintstone',
+      ],
+      categories: ['Protection', 'Healing', 'Divination'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 94–95',
+          supports: ['elements', 'planets', 'folkNames', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-flint',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 94–95',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-flint',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Gold',
       canonicalName: 'Gold',
       nomenclature: 'chemical',
@@ -1377,6 +1722,51 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
               source: 'cunningham-crystals',
               locator: 'pp. 157–158',
               supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Holey Stone',
+      nomenclature: 'none',
+      description:
+        "A holey stone is any stone with a hole worn naturally through it, by erosion, wind, waves, sea creatures or other means; it is defined by the hole, not by what it is made of, so it has no formal name. Wikipedia, under the name adder stone, says such stones are usually glassy and most often of flint, that archaeologists have found them in Britain and Egypt, and that they are common on the North Sea and Baltic coasts of northern Germany. British names for them include hag stones, witch stones and fairy stones, and old stories held that they were hardened serpent saliva or came from an adder's sting; Pliny records the Druids prizing a serpent's egg of this kind. Cunningham calls them receptive and gives them to water, linking them with Odin, who in the Eddas slipped through a hole in a rock as a worm to steal the mead of poetry. He records them hung on the bedpost or, in England, tied with red ribbon over the bed against nightmares, worn or hung by the door for protection, and used by English wise women to rub away a child's illness. Looking through one by moonlight is said to show spirits, and in daylight to improve the eyesight.",
+      elements: ['water'],
+      folkNames: [
+        'Holed Stone',
+        'Holy Stone',
+        'Odin Stone',
+        'Adder Stone',
+        'Hag Stone',
+        'Witch Stone',
+        'Fairy Stone',
+      ],
+      deities: ['Odin'],
+      categories: ['Protection', 'Nightmare Protection', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 101–102',
+          supports: ['elements', 'folkNames', 'deities', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-adder-stone',
+          supports: ['folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 101–102',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-adder-stone',
+              supports: ['form'],
             },
           ],
         },
@@ -1437,6 +1827,43 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Lava Stone',
+      nomenclature: 'unknown',
+      description:
+        "Lava is molten rock driven out of a planet or moon onto its surface, at a volcano or through a crack in the crust, usually at 800 to 1,200 degrees Celsius, and the rock it cools into is often called lava as well. Its formal name is unsettled because lava stone is not one rock: Wikipedia describes lavas of differing chemistry, basaltic ones among them, and Cunningham sorts his by their Hawaiian names for texture, rough, chunky a'a and smooth pahoehoe. Cunningham gives lava to Mars and fire, calls it projective, and names the Hawaiian volcano goddess Pele as its deity. He describes lava rocks built into the heiau, the old Hawaiian temples, some of them centres of healing, where people still wrap bluish lava rocks in ti leaves and lay them down to ask for healing. Pele is said to guard her stones jealously, and visitors who take them without an offering and her permission are thought to invite trouble; parcels of rocks are mailed back to the volcano park every day. In magic he uses lava for protection: a small piece carried or set on the altar, a ring of it around a white candle for the household, and a circle of nine or thirteen pieces against psychic attack.",
+      elements: ['fire'],
+      planets: ['Mars'],
+      deities: ['Pele'],
+      categories: ['Protection', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 109–110',
+          supports: ['elements', 'planets', 'deities', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-lava',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 109–110',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-lava',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Lead',
       canonicalName: 'Lead',
       nomenclature: 'chemical',
@@ -1472,6 +1899,45 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-lead',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Marble',
+      canonicalName: 'Marble',
+      nomenclature: 'mineral',
+      description:
+        'Marble is a metamorphic rock of carbonate minerals, most often calcite or dolomite, recrystallised by heat and pressure; it has a crystalline texture and is usually not layered. Pure white marble comes from very clean limestone or dolomite, and the veins and swirls of coloured marbles come from impurities such as clay, sand, iron oxides or chert that were in the original rock. Cunningham describes marble as a carbonate of lime, kin to coral, calcite, limestone, chalk, shells and bone, though each has its own magical uses, and he gives it the folk name nicomar. He assigns it to the Moon and water and calls it receptive. Its chief magical use in his account is protection: an altar made wholly or partly of marble, or topped with a marble slab as some magicians prefer, makes an ideal centre for protective spells, and marble tables and fittings protect a home. A piece may be carried or worn for personal protection, as it was in India. He also uses marble in spells for personal success in a general sense. He names no deity for it.',
+      elements: ['water'],
+      planets: ['Moon'],
+      colors: ['white'],
+      folkNames: ['Nicomar'],
+      categories: ['Protection', 'Success'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 113',
+          supports: ['elements', 'planets', 'folkNames', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-marble',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 113',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-marble',
               supports: ['form'],
             },
           ],
@@ -1527,6 +1993,42 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'wikipedia-mercury-element',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Meteorite',
+      nomenclature: 'unknown',
+      description:
+        'A meteorite is a rock from outer space that has survived its fall to the surface of a planet or moon; on its way down it heats up and glows as a meteor, the brightest of which are called fireballs. Its formal name is unsettled because the word covers several different materials: Wikipedia divides meteorites into stony ones made mostly of silicate minerals, iron ones made largely of iron-nickel metal, and stony-iron ones holding plenty of both, while Cunningham treats them as one stone. Cunningham gives meteorites to fire and calls them projective, belonging to no planet but to the universe. He notes that people have long held them to be gifts of the gods, that some, such as a stone revered in Phrygia as the Great Mother, were worshipped, and that the Babylonians thought them powerful protectors able to remove all evils. He mentions peridot crystals packed inside a cut meteorite he once held, and tiny diamonds found in meteorites that fell in Mexico in 1969. In his practice they serve protection, laid on the altar beside white candles or held in the hand, and a small fragment beneath the pillow is used to encourage conscious astral projection.',
+      elements: ['fire'],
+      folkNames: ['Aerolith', 'Aerolite'],
+      categories: ['Protection'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 167–168',
+          supports: ['elements', 'folkNames', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-meteorite',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 167–168',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-meteorite',
               supports: ['form'],
             },
           ],
@@ -1673,6 +2175,40 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Petrified Wood',
+      nomenclature: 'unknown',
+      description:
+        'Petrified wood is fossil wood in three dimensions: the remains of trees and tree-like plants whose tissue has been replaced by stone through mineralisation, sometimes keeping the original structure of the stem. Its formal name is unsettled because no single mineral makes it up: Wikipedia says the replacing minerals are mostly silica in the form of opal, chalcedony or quartz, and Cunningham says only that the wood was replaced by various minerals. Unlike most plant fossils, which survive as flattened impressions or compressions, it preserves the whole shape of the original wood. Cunningham calls it receptive, a fossil millions of years old, and explains it as ancient trees covered by mineral-rich water that slowly dissolved the wood and left minerals in its place. Its great age, he writes, is why it is carried or used in spells to lengthen life, or to deepen enjoyment of and growth within the life one has, and why it is used to recall past lives. It is carried as a protective amulet for its hardness and strange appearance; once thought to frighten evil away, it is now seen as raising barriers of energy that turn negativity aside. He also records it carried as a charm against drowning.',
+      categories: ['Longevity', 'Healing', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 125',
+          supports: ['categories', 'description'],
+        },
+        {
+          source: 'wikipedia-petrified-wood',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 125',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-petrified-wood',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Pietersite',
       canonicalName: 'Quartz var. pietersite',
       nomenclature: 'mineral',
@@ -1742,6 +2278,43 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'cunningham-crystals',
               locator: 'p. 126',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Pumice',
+      canonicalName: 'Pumice',
+      nomenclature: 'mineral',
+      description:
+        'Pumice is a volcanic rock made of rough, intensely bubbly volcanic glass, sometimes holding crystals, and usually pale. It forms when superheated rock under high pressure is thrown out of a volcano and cools and loses pressure at the same moment, trapping the gas as a froth; ground to powder it is called pumicite. Scoria, a related rock, is darker and denser with larger bubbles. Cunningham describes pumice as light, rough and able to float on water, and notes its use in soaps for scrubbing dirty hands. He gives it to Mercury and air and calls it projective. At one time it was pressed into the hands of women in labour, or worn, to ease the birth. His chief use is a banishing spell: holding the stone in the projective hand, one pours into it the energy behind a problem, whether a habit, a painful emotion, an ailment or an unreturned love, and then throws it into a lake, stream or the sea, where it releases the problem and, by floating, lends strength to rise above it. A basin of water poured onto bare earth will do instead. Placed on the altar or in the home, pumice also serves protective magic as a sponge for negativity.',
+      elements: ['air'],
+      planets: ['Mercury'],
+      categories: ['Banishing', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 126–127',
+          supports: ['elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-pumice',
+          supports: ['canonicalName', 'nomenclature', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 126–127',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-pumice',
               supports: ['form'],
             },
           ],
@@ -2162,6 +2735,54 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-quartz',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Steel',
+      nomenclature: 'none',
+      description:
+        'Steel is an alloy of iron and carbon, usually with other elements, holding up to about 2.14 per cent carbon, which makes it stronger and tougher than pure iron. Strong and cheap to make, it is among the most widely manufactured materials in the world, used for building frames and reinforcing rods, bridges, tools, ships, trains, cars and machines. Like other alloys it has no single formal name. Cunningham gives steel to Mars and fire and calls it projective. He notes that it is a relatively modern metal with little history in magic, though it was once thought to protect against fairies, who could be mischievous. Its uses are mostly protective: small pieces carried to guard against negativity, and a steel ring worn as a protective amulet. For a night free of nightmares, he suggests holding a dull steel knife while visualising it piercing and driving off negativity, then sleeping with it beneath the bed. He also records an American folk belief that a steel ring worn faithfully on the hand prevents rheumatism, and adds wryly that such small rituals are hard to prove.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      categories: ['Protection', 'Nightmare Protection', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 171',
+          supports: ['elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-steel',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 171',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-steel',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Cunningham describes a steel ring worn as a protective amulet, and an American folk belief that one worn faithfully on the hand prevents rheumatism.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 171',
+              supports: ['form', 'description'],
             },
           ],
         },
