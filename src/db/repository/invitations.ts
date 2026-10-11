@@ -1,8 +1,8 @@
-import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { containsText, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
@@ -10,6 +10,7 @@ import type { SiteAdmin } from '@/modules/identity';
 import type {
   AuditWriter,
   InvitationRow,
+  SiteInvitationFilter,
   SiteInvitationValues,
   WorkspaceInvitationValues,
   WriterContext,
@@ -39,7 +40,7 @@ function inTierOf(proof: Membership | SiteAdmin): SQL {
 // Both stamps match only one, so neither overwrites the other or itself. Not
 // the live filter, which the writer ANDs onto every write and each finder
 // below ANDs itself.
-function pendingInvitation(...which: SQL[]) {
+function pendingInvitation(...which: (SQL | undefined)[]) {
   return and(
     ...which,
     isNull(invitations.acceptedAt),
@@ -89,11 +90,28 @@ export async function findPendingInvitationsInWorkspace(
 }
 
 /**
- * The site tier's pending invitations, for `/admin/users` (MB.70). Unordered,
- * as the workspace's are.
+ * The site tier's pending invitations, for `/admin/invitations` (MB.70),
+ * narrowed in SQL by a `SiteInvitationFilter` (MB.115). Unordered, as the workspace's are.
  */
-export async function findPendingSiteInvitations(_admin: SiteAdmin): Promise<InvitationRow[]> {
-  return selectFrom(invitations, and(notSoftDeleted(invitations), pendingInvitation(onSiteTier())));
+export async function findPendingSiteInvitations(
+  _admin: SiteAdmin,
+  { email, expiresWithinHours }: SiteInvitationFilter = {},
+): Promise<InvitationRow[]> {
+  return selectFrom(
+    invitations,
+    and(
+      notSoftDeleted(invitations),
+      pendingInvitation(
+        onSiteTier(),
+        email ? containsText(invitations.email, email) : undefined,
+        // Against the database's clock, as `pendingInvitation`'s own
+        // expiry is, so the two edges of the window read one `now()`.
+        expiresWithinHours === undefined
+          ? undefined
+          : lte(invitations.expiresAt, sql`now() + make_interval(hours => ${expiresWithinHours})`),
+      ),
+    ),
+  );
 }
 
 /**

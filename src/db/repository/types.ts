@@ -676,6 +676,14 @@ export type SiteInvitationValues = Pick<
 /** What a workspace invitation starts with: the same, and the role it grants. */
 export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
 
+/** What the admin invitation list is narrowed by (MB.115). Each part is optional, and absent means no filter. */
+export interface SiteInvitationFilter {
+  /** A substring of the invited address, case-insensitive, its `%` and `_` read literally. */
+  email?: string;
+  /** Only the invitations that lapse within this many hours of the database's `now()`. */
+  expiresWithinHours?: number;
+}
+
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */

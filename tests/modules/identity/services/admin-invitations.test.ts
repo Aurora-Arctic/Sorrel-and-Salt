@@ -230,6 +230,39 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
+  // MB.115: the list's two filters, each in the finder's SQL.
+  const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
+    (await listPendingAdminInvitations(asUser(E), filter)).map(({ email }) => email).sort();
+
+  it('narrows by a fragment of the address, in any case, trimmed', async () => {
+    await sql`
+        insert into invitations (email, token_hash, created_by, updated_by, expires_at)
+        values
+          (${`fern.moss${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${`bracken${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, now() + interval '1 day')
+      `;
+    // Why the second could have been listed: it is pending, as the first is.
+    expect(await listedEmails({})).toEqual([`bracken${DOMAIN}`, `fern.moss${DOMAIN}`]);
+
+    expect(await listedEmails({ email: '  ERN.MO  ' })).toEqual([`fern.moss${DOMAIN}`]);
+  });
+
+  it('narrows to the pending invitations lapsing within 24 hours', async () => {
+    await sql`
+        insert into invitations (email, token_hash, created_by, updated_by, accepted_at, accepted_by, revoked_at, expires_at)
+        values
+          (${`soon${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, null, null, null, now() + interval '23 hours'),
+          (${`later${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, null, null, null, now() + interval '25 hours'),
+          (${`expired${DOMAIN}`}, 'h3', ${E.id}, ${E.id}, null, null, null, now() - interval '1 second'),
+          (${`accepted${DOMAIN}`}, 'h4', ${E.id}, ${E.id}, now(), ${E.id}, null, now() + interval '23 hours'),
+          (${`revoked${DOMAIN}`}, 'h5', ${E.id}, ${E.id}, null, null, now(), now() + interval '23 hours')
+      `;
+    // Why the later one could have been listed: it is pending, as the soon one is.
+    expect(await listedEmails({})).toEqual([`later${DOMAIN}`, `soon${DOMAIN}`]);
+
+    expect(await listedEmails({ expiringSoon: true })).toEqual([`soon${DOMAIN}`]);
+  });
+
   it('refuses a non-admin as Forbidden', async () => {
     await createAdminInvitation(asUser(E), INVITED, undefined, sender());
     expect(await listPendingAdminInvitations(asUser(E))).toHaveLength(1);
