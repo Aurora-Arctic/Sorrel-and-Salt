@@ -1,9 +1,10 @@
-import { GraphQLError, graphql, type GraphQLObjectType, type GraphQLSchema } from 'graphql';
+import { GraphQLError, graphql, type GraphQLSchema } from 'graphql';
 import { complexityFromQuery } from '@pothos/plugin-complexity';
 import { describe, expect, it } from 'vitest';
 import { MAX_COST, createBuilder } from '@/graphql/builder';
 import { createLoaders } from '@/graphql/loaders';
 import { noInvitationSender, noSender } from '../support/email-verification';
+import { InvalidCursor } from '@/lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { Context } from '@/graphql/types';
 import type { Leaf, LeavesData, CountedData } from './types';
@@ -150,7 +151,7 @@ describe('a paged connection', () => {
     );
 
     expect(result.data).toBeNull();
-    expect(result.errors?.map((error) => error.message)).toEqual(['Invalid cursor']);
+    expect(result.errors?.map((error) => error.message)).toEqual([new InvalidCursor().message]);
     expect(requests).toEqual([]);
   });
 
@@ -215,15 +216,6 @@ describe('a paged connection', () => {
       'Argument "first" must be a non-negative integer',
     ]);
   });
-
-  it('shapes the connection as Relay does, non-null throughout', () => {
-    const connection = leafSchema().getQueryType()?.getFields().leaves;
-
-    expect(String(connection?.type)).toBe('QueryLeavesConnection!');
-    expect(connection?.args.map((arg) => arg.name).sort()).toEqual(
-      ['after', 'before', 'first', 'last', 'prefix'].sort(),
-    );
-  });
 });
 
 /**
@@ -254,15 +246,6 @@ function countedSchema(starts: (Cursor | undefined)[] = []): GraphQLSchema {
 }
 
 describe('a paged connection given a count', () => {
-  it('declares totalCount and countBefore, and only then', () => {
-    const counted = countedSchema().getType('QueryLeavesConnection') as GraphQLObjectType;
-    const plain = leafSchema().getType('QueryLeavesConnection') as GraphQLObjectType;
-
-    expect(String(counted.getFields().totalCount?.type)).toBe('Int!');
-    expect(String(counted.getFields().countBefore?.type)).toBe('Int');
-    expect(Object.keys(plain.getFields()).sort()).toEqual(['edges', 'pageInfo']);
-  });
-
   it('counts nothing when neither field is selected', async () => {
     const starts: (Cursor | undefined)[] = [];
 

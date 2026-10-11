@@ -130,6 +130,5 @@ an import error: a service may not import `next/headers`, `better-auth/cookies`,
 and better-auth's `createAccessControl`. The override restates the three
 top-level bans because an override replaces the rule rather than merging
 (`claude-docs/db/query-building.md`).
-`tests/guards/lint-service-session-boundary.test.ts` asserts all of it with
-probe files, in a probe directory of its own so it cannot race
-`lint-db-client-boundary.test.ts`'s.
+Lint carries it; each ban was proved by a probe in the PR that added it
+(MB.224 retired the guard that re-ran the probes).

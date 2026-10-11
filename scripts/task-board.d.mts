@@ -1,5 +1,5 @@
 // Hand-written beside the script: `allowJs` is off, so a test importing the
-// `.mjs` reads its shape from here (the same arrangement as .ladle/config.d.mts).
+// `.mjs` reads its shape from here.
 
 import type { TasksMd } from './tasks-md.mjs';
 

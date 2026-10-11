@@ -17,8 +17,8 @@ FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-noble AS e2e
 WORKDIR /app
 
 # No source layer, as in Dockerfile.node: checkout-to-app's `cp -a` overlays
-# without deleting. tests/guards/image-source-layer.test.ts pins what may be
-# COPY'd.
+# without deleting, so a baked-in tree would let a deleted file survive. A new
+# COPY source is a decision, not a convenience.
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -51,7 +51,6 @@ RUN ln -s vnc.html /usr/share/novnc/index.html
 
 # The one file baked beyond the manifests, so a bare `docker run` has
 # something to exec; the compose bind mount shadows it.
-# image-source-layer.test.ts allows exactly this path.
 COPY Docker/playwright-entrypoint.sh Docker/playwright-entrypoint.sh
 RUN chmod +x Docker/playwright-entrypoint.sh
 

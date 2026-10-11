@@ -62,10 +62,9 @@ an admin adds lands in the same shape as a seeded one.
 
 That is now a repo-wide rule rather than this seed's habit (CLAUDE.md,
 Conventions): `src/lib/slugify.ts` is the only file that may import the
-package or name a slug character class, and `tests/guards/slug-rule.test.ts` is
-the mechanical half — it scans untracked files as well as tracked ones, so a
-second implementation fails in the diff that adds it rather than after it
-ships. The failure it exists to catch is quiet: two slug rules do not collide,
+package or name a slug character class, and a `no-restricted-imports` path in
+`.oxlintrc.json` is the mechanical half: an import of the package anywhere
+else fails `npm run lint` in the diff that adds it. The failure it exists to catch is quiet: two slug rules do not collide,
 they disagree, and the disagreement surfaces only as a lookup that finds
 nothing.
 

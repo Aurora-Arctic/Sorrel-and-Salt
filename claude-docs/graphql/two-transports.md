@@ -36,13 +36,13 @@ resolve: async (_query, { workspaceId }, { session }) =>
   (rule 9), not this.
 - **Mutations are never wrapped, and never run in a page.** A write is not
   memoised, and it reaches the database only through a resolver. There are no
-  server actions, and `tests/guards/no-server-actions.test.ts` fails a
-  `'use server'` directive anywhere under `src/`, because a directive is not an
-  import and no lint rule sees it. There are no bespoke route handlers beyond
+  server actions, and lint's `sorrel/no-use-server` (`lint/sorrel-lint.js`)
+  fails a `'use server'` directive, which no `no-restricted-imports` rule
+  could see. There are no bespoke route handlers beyond
   this one and `/api/auth/*`
   ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)), and
-  `tests/guards/route-handlers.test.ts` fails any other `route` file under
-  `src/app/`, for the same reason: a file is not an import either.
+  lint's `sorrel/route-allowlist` fails any other `route` file under
+  `src/app/`, by its path: a file is not an import either.
 - **Admin is not an exception to either.** `/admin`'s pages read through
   services, and its writes go through this endpoint
   ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").

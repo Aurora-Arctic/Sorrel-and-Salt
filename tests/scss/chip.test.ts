@@ -2,11 +2,11 @@ import { compileString } from 'sass';
 import { describe, expect, it } from 'vitest';
 import { fromRoot } from '../support/paths';
 
-// `chip()` draws its group's colour pair, read inline from the row, rather than
-// a build-time token per slug: an admin's ninth group has no token, and its
-// chip must still look like the other eight (MB.36). The theme picks one of
-// the pair through `light-dark()`, off the `color-scheme` the theme mixins set
-// — claude-docs/styling.md, "Chips, badges and the solid-fill rule".
+// A group colour the write check admits stays legible on every surface its
+// theme draws a chip on, in both states (MB.36; claude-docs/styling.md, "Chips,
+// badges and the solid-fill rule"). One assertion per theme: the functional half
+// of the chip's styling. How the chip looks is its workshop story's, and the
+// axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert").
 
 const SCSS_DIR = fromRoot('src/scss');
 
@@ -39,13 +39,6 @@ function declarations(css: string, selector: string): Record<string, string> {
   );
 }
 
-function chip(args: string): Record<string, string> {
-  return declarations(
-    compile(`@use 'mixins' as m; .probe { @include m.chip(${args}); }`),
-    '.probe',
-  );
-}
-
 // WCAG 2.1 contrast between two hexes.
 function relativeLuminance(hex: string): number {
   const channels = [1, 3, 5]
@@ -59,44 +52,7 @@ function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-describe('MB.36: chip() takes a colour pair, not a slug', () => {
-  it('lets the theme pick the dark or the light colour of the pair it is given', () => {
-    const drawn = chip(`${NINTH.dark}, ${NINTH.light}`);
-    const picked = `light-dark(${NINTH.light}, ${NINTH.dark})`;
-
-    expect(drawn.border).toBe(`1px solid ${picked}`);
-    expect(drawn.color).toBe(picked);
-    expect(drawn['background-color']).toBe('transparent');
-  });
-
-  it('reads the pair from the element by default, where the row puts it', () => {
-    expect(chip('').color).toBe('light-dark(var(--chip-light), var(--chip-dark))');
-  });
-
-  it('refuses a slug, so the old call fails to compile rather than drawing nothing', () => {
-    expect(() => chip(`'protection'`)).toThrow(/colour pair/);
-  });
-
-  it('refuses a state it does not know', () => {
-    expect(() => chip(`$state: loud`)).toThrow(/Unknown chip state "loud"/);
-  });
-});
-
-describe('MB.36: both states keep what M0.8 tuned', () => {
-  const unselected = chip(`${NINTH.dark}, ${NINTH.light}`);
-  const selected = chip(`${NINTH.dark}, ${NINTH.light}, selected`);
-
-  it('keeps one 1px edge and one padding across the two states', () => {
-    expect(selected.border).toBe(unselected.border);
-    expect(selected.border).toMatch(/^1px solid /);
-    expect(selected.padding).toBe(unselected.padding);
-  });
-
-  it('fills the selected chip solid and inverts its label onto the page surface', () => {
-    expect(selected['background-color']).toBe(`light-dark(${NINTH.light}, ${NINTH.dark})`);
-    expect(selected.color).toBe('var(--surface-page)');
-  });
-
+describe('MB.36: a group colour the write check admits is legible on its theme', () => {
   /** The page and card surfaces a theme mixin sets. */
   function surfaces(theme: 'dark' | 'light'): { page: string; card: string } {
     const tokens = declarations(
@@ -121,26 +77,4 @@ describe('MB.36: both states keep what M0.8 tuned', () => {
       expect(contrastRatio(NINTH[theme], card)).toBeGreaterThanOrEqual(4.5);
     },
   );
-
-  // Why the dark check is the card's: a dark colour clearing the dark page can
-  // still read under the floor on a card, which is lighter.
-  it('would admit a dark colour that fails on the card, were it checked against the page', () => {
-    const { page, card } = surfaces('dark');
-    const marginal = '#53858a';
-
-    expect(CHECKED.dark).toBe(card);
-    expect(contrastRatio(marginal, page)).toBeGreaterThanOrEqual(4.5);
-    expect(contrastRatio(marginal, card)).toBeLessThan(4.5);
-  });
-});
-
-describe('MB.36: the class layer draws one chip for every group', () => {
-  const css = compile(`@use 'primitives' as p; .frame { @include p.primitives-base; }`);
-
-  it('emits .chip and .chip.is-selected, reading the pair from the element', () => {
-    expect(declarations(css, '.frame .chip').color).toBe(
-      'light-dark(var(--chip-light), var(--chip-dark))',
-    );
-    expect(declarations(css, '.frame .chip.is-selected').color).toBe('var(--surface-page)');
-  });
 });

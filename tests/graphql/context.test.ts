@@ -48,17 +48,4 @@ describe('the GraphQL request context', () => {
     expect(first.loaders).toBeTypeOf('object');
     expect(second.loaders).not.toBe(first.loaders);
   });
-
-  // Bound to the request, since the change link it mints carries the
-  // request's own host (claude-docs/auth/admin-bootstrap.md, "The email page").
-  it('exposes a verification sender, one per request', async () => {
-    sessionFromHeaders.mockResolvedValue(null);
-
-    const first = await createContext({ request: request() });
-    const second = await createContext({ request: request() });
-
-    expect(first.emailVerification.resend).toBeTypeOf('function');
-    expect(first.emailVerification.requestChange).toBeTypeOf('function');
-    expect(second.emailVerification).not.toBe(first.emailVerification);
-  });
 });

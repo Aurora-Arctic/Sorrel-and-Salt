@@ -30,8 +30,7 @@ RUN set -eux; \
 	sed -ri 's/^echo "sorrel: build-time init complete, not starting postgres"$/\texec "$@"/' /usr/local/bin/docker-entrypoint.sh; \
 	grep -qF 'exec "$@"' /usr/local/bin/docker-entrypoint.sh
 
-# Connection slots, read by tests/guards/db-connection-budget.test.ts as the
-# budget a test run is held under (claude-docs/testing/db-harness.md,
+# Connection slots: the budget a test run is held under (claude-docs/testing/db-harness.md,
 # "Connections per run"). Set here, where every image consumer gets it —
 # compose does not pass a `command:` and a CI service cannot — rather than
 # with `ALTER SYSTEM` at init, which an existing data volume would keep ignoring.

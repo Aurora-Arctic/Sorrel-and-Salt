@@ -114,15 +114,11 @@ bounded by its parent.
 **Cost** is priced at the page each connection will fetch
 (["Protections"](protections.md)).
 
-**The guard.** `tests/guards/pagination.test.ts` fails:
-
-- a `Query` field that returns a bare list;
-- a `*Connection` field without `first` and `after`;
-- a `.connection(` call anywhere in `src/` except `src/graphql/pagination.ts`,
-  untracked files included.
-
-It also proves that the first two checks can fail, by running them against a
-throwaway schema.
+**The guard.** `tests/guards/pagination.test.ts` reads the built schema and
+fails a `Query` field that returns a bare list, and a `*Connection` field
+without `first` and `after`. Lint's `sorrel/pagination-helper`
+(`lint/sorrel-lint.js`) fails a `.connection(` call anywhere but
+`src/graphql/pagination.ts`.
 
 The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
 cursor codec. `tests/graphql/pagination.test.ts` covers the field over the

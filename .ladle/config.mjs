@@ -47,8 +47,8 @@ export default {
   hmrHost: '',
   addons: {
     // The toolbar's theme control, read by the decorator (./components.tsx).
-    // `defaultState` stays `'dark'` — the app's dark-first default — and
-    // tests/guards/workshop-guards.test.ts pins it.
+    // `defaultState` stays `'dark'` — the app's dark-first default, so the
+    // workshop opens as a viewer who never touched the toggle sees the app.
     theme: {
       enabled: true,
       defaultState: 'dark',

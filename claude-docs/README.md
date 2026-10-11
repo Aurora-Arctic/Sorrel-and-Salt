@@ -114,12 +114,12 @@ provenance for a constraint that would otherwise look arbitrary —
   reads — `oxlint-disable`, `@ts-expect-error` and its message, the
   `makefile`'s awk-parsed `## ` lines — are kept whatever their length.
 - **There is no mechanical guard on density**, deliberately: it cannot be
-  measured without penalising exactly the comments above. What is guarded is
-  citation — `tests/guards/doc-citation.test.ts` fails a `claude-docs/` path
-  that does not resolve, or that points into `archive/`, in code, in
-  `CLAUDE.md` and in the markdown under `.claude/`. It also fails a section
-  named through a split summary's index: the cite is the file the section
-  lives in, `claude-docs/db/keyset-pages.md, "Keyset pages"`, never
+  measured without penalising exactly the comments above. Citation is held by
+  review too, since MB.224 retired its guard with the rest of the agent-only
+  tooling's tests: a `claude-docs/` path resolves and never points into
+  `archive/`, in code, in `CLAUDE.md` and in the markdown under `.claude/`, and
+  a section is cited in the file it lives in, not through a split summary's
+  index — `claude-docs/db/keyset-pages.md, "Keyset pages"`, never
   `db.md`'s heading for it.
 
 ## Correcting a doc

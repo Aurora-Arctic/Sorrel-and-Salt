@@ -7,8 +7,7 @@ holds at least one `accounts` row, and has an `updated_at` older than
 `now()` minus the lifetime or a `created_at` older than `now()` minus the
 cap. `accounts` and `sessions` follow by their
 `ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
-of its own; `soft-delete-finder-guard.test.ts`'s pinned export list names this
-function.
+of its own.
 
 It skips a row holding any `user_privilege_changes` row (MB.204), as
 `not(existsIn(...))`, the negation `citesNothing` uses. Such an account is

@@ -213,9 +213,7 @@ queried one that had never been migrated. The first real sign-in failed
 with `column "role" does not exist`, and no CI step could have caught it,
 because CI never connects with Vercel's copy. After a rotation, sign in on
 staging before trusting it. `deploy.yml` and `migrate.yml` select
-between the same two secrets the same way, and
-`tests/guards/ci-secret-environments.test.ts` is what holds those two
-selections together.
+between the same two secrets the same way, and must go on doing so.
 
 **Could be retired, and deliberately is not yet** (MB.47).
 `GET /projects/{id}/connection_uri?branch_id=…` could give every branch its

@@ -61,9 +61,9 @@
   private — `/admin/users` (MB.52) — carries its own service-level assertion
   ([`admin-users.md`](admin-users.md), "The user list").
 - **No way around `/api/graphql`.** Admin writes are GraphQL mutations like
-  every other (CLAUDE.md rule 1): `tests/guards/no-server-actions.test.ts`
-  refuses a server action and `tests/guards/route-handlers.test.ts` a route
-  handler beyond the GraphQL endpoint and `/api/auth/*`.
+  every other (CLAUDE.md rule 1): lint's `sorrel/no-use-server` refuses a
+  server action and `sorrel/route-allowlist` a route handler beyond the
+  GraphQL endpoint and `/api/auth/*` (`lint/sorrel-lint.js`).
 - **Tests.** `tests/lib/request-session.test.ts` covers the three answers and
   the unverified admin; `tests/app/pre-paint-scripts.test.tsx` that a
   browser-rendered page gets no script and no warning;

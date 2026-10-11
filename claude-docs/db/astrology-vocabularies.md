@@ -74,8 +74,8 @@ current workspace only, and since MB.162 every one of those is the
 workspace's. The admin's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
 (MB.162) — since an admin reaches no workspace's ingredients (M6.6); its finder
-joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`, as the
-autofill's does. A value is uncurated when `lower(btrim(value))` matches no
+reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
+as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
 **The member's autofill** has a file of its own: [`member-autofill.md`](member-autofill.md).

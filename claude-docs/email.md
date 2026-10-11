@@ -51,8 +51,7 @@ await send(await verifyEmailMessage({ to, url, providers }));
   not ask for it. Headings keep their
   case in the text part, which the converter would otherwise capitalise.
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
-  a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
-  requires. The frame every mail shares is `src/emails/parts/layout.tsx`
+  a sibling `<name>.stories.tsx`. The frame every mail shares is `src/emails/parts/layout.tsx`
   (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in `parts/types.ts`, and the
   templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the link, the origin and the part. Not in `src/components/`: a mail is
   not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
@@ -101,11 +100,9 @@ does it, so each piece has an email-safe stand-in.
   blend and opacity from `theme.ts`, and writes an opaque PNG per corner per
   theme into `public/email/images/` at twice the display size in
   `src/emails/ornaments.ts`. Re-run `node scripts/email-ornaments.ts` after changing a
-  photograph or the palette; `tests/guards/email-ornaments.test.ts` compares
-  the committed pixels with what the script produces and fails until you do.
-  It allows each channel a step or two of rounding, because libvips takes a
-  different SIMD path on x64 than on arm64 and the two round a few pixels
-  apart, so an image built on either architecture passes on the other.
+  photograph or the palette, and commit what it writes. Two architectures'
+  output differs by a step or two of rounding per channel, because libvips
+  takes a different SIMD path on x64 than on arm64.
   Node runs that script with its own type stripping, so whatever `theme.ts` or
   `ornaments.ts` takes from `./types` must come in by `import type`, which it
   erases.

@@ -26,14 +26,10 @@ shortcut could take:
   `vitest.stories.config.mts` alias it to Next's empty stub, since a test is
   not a client bundle.
 
-`tests/guards/lint-access-boundary.test.ts` lints probes in each of the three
-directories. It asserts that every module under `src/db` draws the boundary's
-diagnostic, and that a type import and a service import draw none. It also
-checks that the restated bans still fire. A runtime import of the client draws
-two diagnostics, rule 2's and the boundary's. oxlint reports each matching
-group, and excluding the client from the boundary group with
-`!**/db/connection` silences the client group as well. So the test counts the
-boundary's message, not every diagnostic.
-`tests/guards/server-only-services.test.ts` walks `src/modules/*/services`, including
-uncommitted files, and fails any module without the marker. A new service
-adopts the marker in its own PR.
+A runtime import of the client from those directories draws two diagnostics,
+rule 2's and the boundary's: oxlint reports each matching group, and excluding
+the client from the boundary group with `!**/db/connection` silences the
+client group as well. Lint carries the boundary itself (MB.224 retired the
+guard that re-ran its probes), and lint's `sorrel/service-server-only`
+(`lint/sorrel-lint.js`) fails any file under `src/modules/*/services` that
+does not open with the marker.

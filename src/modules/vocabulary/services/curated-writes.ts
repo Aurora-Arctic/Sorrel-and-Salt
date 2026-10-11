@@ -22,8 +22,8 @@ import type {
 // edit across the seven services (MB.210). Shared steps rather than a
 // descriptor factory, on the owner's call: each service keeps its own exported
 // functions and JSDoc, and its own `assertSiteAdmin(` and `expireCompendium()`,
-// which tests/guards/compendium-expiry.test.ts reads it for. Internal to the
-// module; the index exports no part of it.
+// so the check and the expiry are read together. Internal to the module; the
+// index exports no part of it.
 
 /**
  * A write that broke the vocabulary's slug index, as a `ValidationError` on

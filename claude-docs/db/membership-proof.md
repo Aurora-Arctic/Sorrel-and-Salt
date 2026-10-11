@@ -98,9 +98,8 @@ not among them: they span no workspace either, but they take the `SiteAdmin`
 proof instead ([`auth/admin-users.md`](../auth/admin-users.md), "The user
 list" and "The privilege ledger").
 
-`tests/guards/soft-delete-finder-guard.test.ts` pins the repository's export
-list (once, since MB.184), so a fifth exception is a decision rather than an
-addition.
+`tests/guards/soft-delete-finder-guard.test.ts` pins the escape hatches, so a
+fifth exception is a decision rather than an addition.
 
 ### Where the proof is weaker than a policy
 

@@ -59,8 +59,8 @@ field by field rather than replacing the page.
 `src/app/providers.tsx` mounts one `QueryClientProvider`, and the root layout
 wraps the page in it — the page only, since the theme toggle and backdrop
 query nothing. A second provider nested lower would split the cache, so an
-invalidation in one tree would miss the other; `tests/guards/graphql-client.test.ts`
-fails a second one, and fails any Apollo package in the lockfile.
+invalidation in one tree would miss the other. An import of an Apollo package
+fails `npm run lint` (`.oxlintrc.json`).
 
 The browser keeps one client for the tab, in a module variable rather than
 `useState`, which React throws away if the first render suspends. A server

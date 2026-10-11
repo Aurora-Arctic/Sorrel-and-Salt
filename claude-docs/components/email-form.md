@@ -135,8 +135,7 @@ workshop shows what `/account/email` shows and nothing is styled for the
 workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider
 (`.ladle/components.tsx` wraps every story in the app's `Providers`), never
-from a story's own `QueryClientProvider` — `tests/guards/graphql-client.test.ts`
-allows exactly one under `src/`. Nothing is mocked, since the component reaches
+from a story's own `QueryClientProvider`: a second would split the cache. Nothing is mocked, since the component reaches
 the network only on submit.
 
 ## Testing
