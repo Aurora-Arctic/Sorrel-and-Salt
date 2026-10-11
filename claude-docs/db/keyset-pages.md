@@ -28,7 +28,7 @@ limit $limit  -- the page plus one
   alike, so the declared type is the one compared: `length(name)::real / 3` is
   `double precision`, and ordered raw against a `real` cursor it would replay
   rows. A descending part is written negated, so one row comparison serves.
-  The compendium search's `[-score, name]` is the first computed key. The
+  The compendium search's `[-score, position, name]` is the first computed key. The
   duplicate lookup's is the same shape over trigram similarity (MB.11), and
   M8.14's `(lower(name), identity_key)` is the next.
 - **Each row comes back with its cursor.** The key is selected as an array of

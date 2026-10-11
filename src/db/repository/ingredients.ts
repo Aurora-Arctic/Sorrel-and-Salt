@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, not, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, not, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -216,8 +216,9 @@ export function findSimilarIngredients(
 /**
  * One page of the compendium under `filter` — the public list, so no proof
  * (claude-docs/db/compendium-read.md, "The compendium read"). A search pages best match first,
- * `(score DESC, name, id)`, and carries each row's score; a list without one
- * pages `(name, id)` with a null score.
+ * `(score DESC, position, name, id)` — among equal scores, the entry whose
+ * field holds the query earliest — and carries each row's score; a list
+ * without one pages `(name, id)` with a null score.
  */
 export function findCompendiumPage(
   filter: IngredientFilter,
@@ -316,9 +317,10 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * What a compendium page and its count share: the filter's arms, and the key
  * with the search's join — built in one place, so the count reads the rows
  * the pages hold in the order they hold them, and the ingredient picker
- * matches as the compendium does. A search keys `[-rank, name]`, the rank
- * being `searchMatch`'s weighted score, negated so one ascending row
- * comparison bounds it; a browse keys `[name]`.
+ * matches as the compendium does. A search keys `[-rank, position, name]`,
+ * the rank being `searchMatch`'s weighted score, negated so one ascending
+ * row comparison bounds it, and the position where its best field holds the
+ * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
 function compendiumList(filter: IngredientFilter): {
   arms: SQL | undefined;
@@ -346,7 +348,11 @@ function compendiumList(filter: IngredientFilter): {
     ),
     order: match
       ? {
-          sort: [{ expression: sql`-${match.score}`, type: 'real' }, ingredients.name],
+          sort: [
+            { expression: sql`-${match.score}`, type: 'real' },
+            { expression: match.position, type: 'integer' },
+            ingredients.name,
+          ],
           wordMatch: true,
           join: match.join,
           carry: { score: match.score },
@@ -376,73 +382,73 @@ const SEARCH_WEIGHTS = {
 } as const;
 
 /**
- * The rows matching a search, as a relation to join and each row's rank. A
- * row matches when the query is word-similar (`<%`) to its label, its formal
- * name, a live folk name, or the form or description of a live variant
- * (MB.218), each side folded through `unaccent_immutable` so the expression
- * indexes of migration 0027 and `ingredient_variants_unaccent_trgm` answer
- * the match; the threshold is the keyset read's (`wordMatch`). The three
- * arms are a `UNION ALL`, for `findSimilarIngredients`'s reason, each
- * scoring what it matched with `word_similarity` — which the index's recheck
- * has just computed — or 1 where the field holds the query verbatim, times
- * that field's `SEARCH_WEIGHTS` entry, and the
- * rank is the best of them, `max … group by id`, so an entry two of whose
- * forms match is still one row. A field only scores where it matched itself,
- * so a weak hit in a heavier field never outranks the field that matched. A plain
- * column, so the order and the page bound read it per matched row rather than
- * a correlated folk-name subquery per compendium row
+ * The rows matching a search, as a relation to join, each row's rank, and
+ * where its best field holds the query. A row matches when the query is
+ * word-similar (`<%`) to its label, its formal name, a live folk name, or the
+ * form or description of a live variant (MB.218), each side folded through
+ * `unaccent_immutable` so the expression indexes of migration 0027 and
+ * `ingredient_variants_unaccent_trgm` answer the match; the threshold is the
+ * keyset read's (`wordMatch`). The five fields are five arms of a `UNION ALL`,
+ * for `findSimilarIngredients`'s reason, one field each, so each arm's
+ * `where` is that field's own indexed match and the position an arm reports
+ * belongs to the field it scored. An arm scores its field's `word_similarity`
+ * — which the index's recheck has just computed — or 1 where the field holds
+ * the query verbatim, times that field's `SEARCH_WEIGHTS` entry, and reports
+ * the character the query starts at (`position`). The rank is the best of an
+ * entry's arms, `max … group by id`, so an entry two of whose forms match is
+ * still one row, and its position is that best arm's, earliest first among
+ * equal arms. A field only scores where it matched itself, so a weak hit in a
+ * heavier field never outranks the field that matched. Plain columns, so the
+ * order and the page bound read them per matched row rather than a
+ * correlated folk-name subquery per compendium row
  * (claude-docs/db/compendium-read.md, "The compendium read"). Blank means no
  * search.
  */
 function searchMatch(
   query: string | undefined,
-): { join: { source: SQL; on: SQL }; score: SQL<number> } | undefined {
+): { join: { source: SQL; on: SQL }; score: SQL<number>; position: SQL<number> } | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
-  const { matches, similarity, contains } = foldedWordMatch(trimmed);
+  const { matches, similarity, contains, position } = foldedWordMatch(trimmed);
   const candidate = alias(ingredients, 'candidate');
   const arms = sql.identifier('arms');
   const matched = sql.identifier('matched');
-  // A field's weighted score where it matched, else null: its word
-  // similarity, or 1 where it holds the query verbatim, since word similarity
-  // scores a fragment inside a longer word by the trigrams it shares. The
-  // weight and the 1 are cast to `real`: `real` times a bare number is
-  // `double precision`, and the rank carried onto the edge is not cast as
-  // the keyset's sort is.
-  const weighted = (text: AnyPgColumn, weight: number) =>
-    sql`case when ${matches(text)} then greatest(${similarity(text)}, case when ${contains(text)} then 1::real end) * ${weight}::real end`;
-  // `greatest` skips nulls, so an entry with no formal name scores on its
-  // label, and a variant with no description on its form.
+  // One field's arm: the entry it belongs to, the field's weighted score —
+  // its word similarity, or 1 where it holds the query verbatim, since word
+  // similarity scores a fragment inside a longer word by the trigrams it
+  // shares — and where it holds the query. The arm's `where` is the field's
+  // match, so every row it reads scored. The weight and the 1 are cast to
+  // `real`: `real` times a bare number is `double precision`, and the rank
+  // carried onto the edge is not cast as the keyset's sort is.
+  const arm = (id: AnyPgColumn, text: AnyPgColumn, weight: number, from: SQLWrapper, live?: SQL) =>
+    sql`select ${id} as id,
+        greatest(${similarity(text)}, case when ${contains(text)} then 1::real end) * ${weight}::real as score,
+        ${position(text)} as position
+      from ${from}
+      where ${and(matches(text), live)}`;
+  const entries = sql`${ingredients} as ${candidate}`;
+  // The position is the best-scoring arm's, not `min(position)`: a weaker
+  // field holding the query earlier — a folk name starting with it, under a
+  // label holding it mid-word — must not move the entry it did not rank.
   const source = sql`(
-    select ${arms}.id, max(${arms}.score) as score from (
-      select ${candidate.id},
-        greatest(
-          ${weighted(candidate.name, SEARCH_WEIGHTS.name)},
-          ${weighted(candidate.canonicalName, SEARCH_WEIGHTS.canonicalName)}
-        ) as score
-      from ${ingredients} as ${candidate}
-      where ${or(matches(candidate.name), matches(candidate.canonicalName))}
+    select ${arms}.id, max(${arms}.score) as score,
+      (array_agg(${arms}.position order by ${arms}.score desc, ${arms}.position))[1] as position
+    from (
+      ${arm(candidate.id, candidate.name, SEARCH_WEIGHTS.name, entries)}
       union all
-      select ${ingredientFolkNames.ingredientId},
-        ${weighted(ingredientFolkNames.name, SEARCH_WEIGHTS.folkName)}
-      from ${ingredientFolkNames}
-      where ${and(matches(ingredientFolkNames.name), notSoftDeleted(ingredientFolkNames))}
+      ${arm(candidate.id, candidate.canonicalName, SEARCH_WEIGHTS.canonicalName, entries)}
       union all
-      select ${ingredientVariants.ingredientId},
-        greatest(
-          ${weighted(ingredientVariants.form, SEARCH_WEIGHTS.form)},
-          ${weighted(ingredientVariants.description, SEARCH_WEIGHTS.description)}
-        )
-      from ${ingredientVariants}
-      where ${and(
-        or(matches(ingredientVariants.form), matches(ingredientVariants.description)),
-        notSoftDeleted(ingredientVariants),
-      )}
+      ${arm(ingredientFolkNames.ingredientId, ingredientFolkNames.name, SEARCH_WEIGHTS.folkName, ingredientFolkNames, notSoftDeleted(ingredientFolkNames))}
+      union all
+      ${arm(ingredientVariants.ingredientId, ingredientVariants.form, SEARCH_WEIGHTS.form, ingredientVariants, notSoftDeleted(ingredientVariants))}
+      union all
+      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}
     ) as ${arms}
     group by ${arms}.id) as ${matched}`;
   return {
     join: { source, on: eq(sql`${matched}.id`, ingredients.id) },
     score: sql<number>`${matched}.score`,
+    position: sql<number>`${matched}.position`,
   };
 }
 
