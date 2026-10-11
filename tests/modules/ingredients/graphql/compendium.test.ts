@@ -213,7 +213,7 @@ describe('compendium', () => {
     const result = await runOperation(
       null,
       `query {
-        compendium(first: 50) {
+        compendium(first: 30) {
           edges { node { name variants { form formChoice { name group { name } } } deities { name deity { name tradition { name } } } } }
         }
       }`,

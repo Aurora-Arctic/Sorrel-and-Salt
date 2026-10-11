@@ -146,11 +146,14 @@ describe('findCompendiumPage', () => {
 
   describe('search', () => {
     beforeEach(async () => {
+      // No forms: the search reaches a form too (MB.218), and the fixture's
+      // default `Testform` would answer a `testoil` query below.
       await add('Fixture Mugwort', {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura mugwortis',
+        variants: [],
       });
-      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'] });
+      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'], variants: [] });
     });
 
     it('matches the display name, case-insensitively', async () => {
@@ -507,13 +510,9 @@ describe('findCompendiumPage', () => {
     });
 
     it('combines with search, under either form', async () => {
-      expect(await namesOf({ query: 'fixture both', form: 'fixture herb' })).toEqual([
-        'Fixture Both',
-      ]);
-      expect(await namesOf({ query: 'fixture both', form: 'fixture oil' })).toEqual([
-        'Fixture Both',
-      ]);
-      expect(await namesOf({ query: 'fixture both', form: 'fixture root' })).toEqual([]);
+      expect(await namesOf({ query: 'both', form: 'fixture herb' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture oil' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture root' })).toEqual([]);
     });
 
     // A search matching both of an entry's forms is still one row, so the
@@ -552,7 +551,8 @@ describe('findCompendiumPage', () => {
     });
 
     beforeEach(async () => {
-      const picked = (form: string, formId?: string) => makeVariant({ form, formId });
+      const picked = (form: string, formId?: string) =>
+        makeVariant(formId === undefined ? { form } : { form, formId });
       await add('Fixture Picked', { variants: [picked('Herb', herb)] });
       // Its first form picks the root; its second picked the herb.
       await add('Fixture Second', { variants: [picked('Root', root), picked('Herb', herb)] });
@@ -1146,7 +1146,9 @@ describe('write.carryDeityRename', () => {
 // A curated form's rename carried onto the compendium's variants picking it
 // (M5.6a, MB.220): the text, in place, and nothing of the entry's address.
 describe('write.carryFormRename', () => {
-  const picked = (form: string, formId?: string) => [makeVariant({ form, formId })];
+  const picked = (form: string, formId?: string) => [
+    makeVariant(formId === undefined ? { form } : { form, formId }),
+  ];
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
   const variantOf = async (id: string) =>
     (await sql`select * from ingredient_variants where id = ${id}`)[0];
