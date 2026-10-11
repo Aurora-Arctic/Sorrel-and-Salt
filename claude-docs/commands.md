@@ -102,9 +102,10 @@ the repo's Sass:
 
 ## The workshop
 
-| npm (`make`)                                                               | Purpose                                                                                                                               |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero |
+| npm (`make`)                                                               | Purpose                                                                                                                                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero                             |
+| `node scripts/review-screenshots.mjs`                                      | A design review's screenshots: each listed page at 375 and 412 wide, both themes, through the remote browser ([`workshop.md`](workshop.md), "Review screenshots") |
 
 ## The local stack (host only)
 
