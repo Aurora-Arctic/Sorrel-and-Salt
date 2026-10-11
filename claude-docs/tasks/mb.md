@@ -10,7 +10,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.4   | Stop destructive-ddl scanning non-migration changed files                                                                | merged  | —                      |
 | MB.5   | Restore `users` FKs on `auditColumns`                                                                                    | merged  | every table            |
 | MB.6   | Spell recipe view page                                                                                                   | Wave 13 | M10.22                 |
-| MB.7   | Application nav shell                                                                                                    | Wave 12 | M8.16, M8.17           |
+| MB.7   | Application nav shell                                                                                                    | Wave 9  | M8.16, M8.17           |
 | MB.8   | Zod schema for spells                                                                                                    | Wave 13 | M10.10                 |
 | MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M8.5, M9.4             |
 | MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.18                  |
@@ -125,7 +125,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
 | MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
 | MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12 | —                      |
-| MB.122 | Design review: the navigation                                                                                            | Wave 12 | —                      |
+| MB.122 | Design review: the navigation                                                                                            | Wave 9  | —                      |
 | MB.123 | Design review: the grimoire                                                                                              | Wave 13 | —                      |
 | MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15 | —                      |
 | MB.125 | Categories on the ingredient writes                                                                                      | Wave 8  | MB.126, M5.5           |
@@ -996,10 +996,12 @@ _Story:_ As a user, I want one persistent navigation frame so that every page is
 
 `AppShell`, added to §9's Components list by this audit. M8.16 and M8.17 require the add and edit modals to be "reachable from the main nav on any page", but no task and no route built an app-wide nav — `WorkspaceSwitcher` (M6.9) and the coven layout (M6.10) do not cover it, and both compendium and ingredient detail sit outside `/coven/` entirely. `/admin` is the other layout it wraps: M5.4's admin layout nests inside it as the coven layout does, and `AdminNav` becomes the admin area's section nav beneath the shell's own.
 
+**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell leaves a place in its nav for them, MB.122 designs that place, and M8.16 and M8.17 fill it.
+
 _Acceptance criteria:_
 
 - Wraps every signed-in page, inside and outside `/coven/`
-- Carries the primary nav, the `WorkspaceSwitcher` and the global add/edit affordances
+- Carries the primary nav and the `WorkspaceSwitcher`, and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
 - The coven layout nests inside it and adds only workspace-scoped chrome
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
@@ -3330,7 +3332,7 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want the navigation to look finished and show me where I am, so that moving around the site is effortless on any screen.
 
-Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control.
+Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control. It moved to Wave 9 with MB.7 (2026-10-11), before the add and edit modals exist, so it designs the place MB.7 leaves for them, and M8.16 and M8.17 build to that design.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
