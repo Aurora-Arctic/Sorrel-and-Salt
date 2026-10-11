@@ -63,8 +63,8 @@ const RoleControl = ({
       title="Grant Admin"
       question={
         <>
-          Make <strong>{name}</strong> an admin? Admins curate the compendium and its lists, and can
-          grant and revoke admin. They will also be able to create covens.
+          Make <strong>{name}</strong> an admin? They will curate the compendium, grant and revoke
+          admin, and create covens.
         </>
       }
       warning={emailVerified ? undefined : unverifiedWarning('Granting')}

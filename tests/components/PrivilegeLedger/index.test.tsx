@@ -88,7 +88,7 @@ describe('PrivilegeLedger', () => {
     it('is a GET form to the page: the search and the privilege select', () => {
       render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
 
-      const form = screen.getByRole('form', { name: 'Filter privilege changes' });
+      const form = screen.getByRole('form', { name: 'Filter Privilege Changes' });
       expect(form).toHaveAttribute('method', 'get');
       expect(form).toHaveAttribute('action', '/admin/privilege-changes');
       const query = screen.getByRole('searchbox', { name: 'Name or Email' });
@@ -147,7 +147,7 @@ describe('PrivilegeLedger', () => {
       vi.stubGlobal('location', { ...window.location, assign });
       render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
 
-      fireEvent.submit(screen.getByRole('form', { name: 'Filter privilege changes' }));
+      fireEvent.submit(screen.getByRole('form', { name: 'Filter Privilege Changes' }));
 
       expect(assign).not.toHaveBeenCalled();
     });

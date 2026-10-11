@@ -7,7 +7,7 @@ import type { LedgerPrivilege, PrivilegeLedgerFilterProps } from './types';
 
 // The filter's fields, in the shared `FilterForm`, as the user list's are
 // (MB.52, MB.53): part of the subject's name or email, and a native privilege
-// `<select>`, so before hydration the form submits natively, "All" as
+// `<select>`, so before hydration the form submits natively, "All Privileges" as
 // `privilege=`, which the page reads as no privilege. Filter is offered only
 // when the fields differ from the filter the page shows, and opens the new
 // filter from the first page as a full load, as the pager's plain anchors
@@ -20,7 +20,7 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
 
   return (
     <FilterForm
-      label="Filter privilege changes"
+      label="Filter Privilege Changes"
       action="/admin/privilege-changes"
       href={() => privilegeLedgerHref({ query: draftQuery.trim(), privilege: draft || undefined })}
       disabled={!changed}
@@ -50,9 +50,9 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
           value={draft}
           onChange={(event) => setDraft(event.target.value as LedgerPrivilege | '')}
         >
-          <option value="">All</option>
+          <option value="">All Privileges</option>
           <option value="admin">Admin</option>
-          <option value="create_workspace">Coven creation</option>
+          <option value="create_workspace">Coven Creation</option>
         </select>
       </div>
     </FilterForm>

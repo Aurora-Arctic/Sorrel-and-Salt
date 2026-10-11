@@ -2,6 +2,7 @@
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { stopImpersonating } from '../../lib/auth-client';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
@@ -39,6 +40,8 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
   }, []);
 
   async function stop() {
+    // `aria-disabled` lets a click through, so a second one is refused here.
+    if (pending) return;
     setPending(true);
     setFailed(false);
     const { error } = await stopImpersonating();
@@ -60,11 +63,22 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
       <p className="impersonation-banner__text">
         You are impersonating <strong>{name}</strong> ({email}).
       </p>
-      <button className="btn btn--quiet btn--small" type="button" disabled={pending} onClick={stop}>
+      {/* Busy until the admin's own page opens (MB.115, a sub-hour fix the
+          owner asked for). `aria-disabled` rather than `disabled`, which
+          would drop the focus to the page and leave a keyboard nowhere. */}
+      <BusyButton
+        className="btn btn--quiet btn--small"
+        aria-disabled={pending || undefined}
+        busy={pending}
+        busyLabel="Stopping"
+        onClick={() => void stop()}
+      >
         Stop Impersonating
-      </button>
+      </BusyButton>
       {failed && (
-        <Notice kind="error">Impersonation could not be stopped. Signing out ends it too.</Notice>
+        <Notice kind="error">
+          Impersonation didn't stop. Please try again, or sign out to end it.
+        </Notice>
       )}
     </aside>
   );
