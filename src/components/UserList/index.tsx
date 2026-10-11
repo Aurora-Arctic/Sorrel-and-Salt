@@ -9,6 +9,7 @@ import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -18,6 +19,24 @@ import './index.scss';
 // (claude-docs/components/user-list.md).
 
 const ROLE_LABELS = { admin: 'Admin', user: 'User' } as const;
+
+/**
+ * The columns, in the owner's order (MB.59): each heading, and the label its
+ * cell carries when the table stacks into cards at phone width
+ * (claude-docs/styling.md, "Tables at phone width"), from one place so the
+ * two cannot drift. Impersonate is apart: it exists only where impersonation
+ * is registered, and its cell is an action that spans the card unlabelled.
+ */
+const COLUMNS = {
+  name: 'Name',
+  email: 'Email',
+  role: 'Role',
+  creation: 'Coven Creation',
+  methods: 'Sign-In Methods',
+  signedUp: 'Signed Up',
+} as const;
+
+const IMPERSONATE = 'Impersonate';
 
 /** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
@@ -88,17 +107,17 @@ const UserRow = ({
   /** Admin changes are paused and the viewer is not the primary admin (MB.63). */
   changesPaused: boolean;
 }): ReactElement => (
-  <tr>
+  <tr {...tableRole('row')}>
     {/* The way into their privilege history (MB.200), then the name, on
         every row: an admin's changes are the ones most worth reading. */}
-    <td>
+    <td {...stackCell(COLUMNS.name)}>
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
         {user.name}
       </span>
     </td>
     {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
-    <td>
+    <td {...stackCell(COLUMNS.email)}>
       <span className="user-list__email">
         <Mark
           value={user.emailVerified}
@@ -113,7 +132,7 @@ const UserRow = ({
         its own: one column rather than a second saying the same thing. The
         primary admin is marked by a crown with a tip, and its Revoke's tip
         says why it cannot be used. */}
-    <td>
+    <td {...stackCell(COLUMNS.role)}>
       <div className="user-list__role">
         <span className="user-list__role-name">
           {user.role === 'admin' ? (
@@ -138,7 +157,7 @@ const UserRow = ({
     </td>
     {/* Whether they may, and beside it the control that changes it (M5.8);
         none on an admin's row, whom the users CHECK holds to the flag (MB.177). */}
-    <td>
+    <td {...stackCell(COLUMNS.creation)}>
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
         {user.role === 'admin' ? null : (
@@ -156,14 +175,14 @@ const UserRow = ({
       </div>
     </td>
     {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
-    <td>
+    <td {...stackCell(COLUMNS.methods)}>
       <span className="user-list__providers">
         {user.providers.map((id) => (
           <ProviderLogo key={id} id={id} />
         ))}
       </span>
     </td>
-    <td>
+    <td {...stackCell(COLUMNS.signedUp)}>
       <time dateTime={user.createdAt.toISOString()}>
         {user.createdAt.toISOString().slice(0, 10)}
       </time>
@@ -171,7 +190,7 @@ const UserRow = ({
     {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
         as acting as someone else is the table's one dangerous control. */}
     {canImpersonate && (
-      <td className="user-list__impersonate">
+      <td className="user-list__impersonate" {...stackCell('')}>
         {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
       </td>
     )}
@@ -188,28 +207,27 @@ const UserList = ({
   canImpersonate = false,
   adminChanges,
 }: UserListProps): ReactElement => (
-  <div className="user-list">
+  <div className="user-list list-frame">
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
 
     {users.length ? (
       <div className="data-table-frame">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Role</th>
-              <th scope="col">Coven Creation</th>
-              <th scope="col">Sign-In Methods</th>
-              <th scope="col">Signed Up</th>
+        <table className="data-table data-table--stack" {...tableRole('table')}>
+          <thead {...tableRole('rowgroup')}>
+            <tr {...tableRole('row')}>
+              {Object.values(COLUMNS).map((heading) => (
+                <th key={heading} scope="col" {...tableRole('columnheader')}>
+                  {heading}
+                </th>
+              ))}
               {canImpersonate && (
-                <th scope="col" className="user-list__impersonate">
-                  Impersonate
+                <th scope="col" className="user-list__impersonate" {...tableRole('columnheader')}>
+                  {IMPERSONATE}
                 </th>
               )}
             </tr>
           </thead>
-          <tbody>
+          <tbody {...tableRole('rowgroup')}>
             {users.map((user) => (
               <UserRow
                 key={user.id}

@@ -8,14 +8,13 @@
 $sticky-column-layer: 1;
 $tip-layer: $sticky-column-layer + 1;
 
-// Layout only, until the admin area's design review (MB.115). The table and
-// the pager are primitives (`.data-table`, `.pager`).
-
-.user-list {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-}
+// The user list's own rules: its cells' alignment, the marks and logos with
+// their tips, the history link, the role and creation cells, the sticky
+// Impersonate column and how it gives way when the table stacks into cards,
+// and the pause beside the page's heading. The column, filter, table and pager
+// are primitives (`.list-frame`, `.filter-row`, `.data-table` with
+// `--stack`, `.pager`); the desktop's look past the tokens awaits the
+// section's sign-off (MB.115, proposal 1d.2).
 
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
@@ -47,18 +46,14 @@ $tip-layer: $sticky-column-layer + 1;
   white-space: normal;
 }
 
-.user-list__search {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: space(3) space(5);
-}
-
 // A yes-or-no column's mark: green for yes, red for no, the colours the
 // accent and the error notices already carry.
 .user-list__mark {
   display: inline-flex;
 
+  // In `em`, not `$glyph-size`: a quarter larger than the text it stands
+  // beside, the address or the heading's question, so it reads at a glance
+  // and follows the text's size rather than a fixed one.
   svg {
     width: 1.25em;
     height: 1.25em;
@@ -125,7 +120,7 @@ $tip-layer: $sticky-column-layer + 1;
   display: inline-flex;
 }
 
-// A 1.5rem icon, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
+// An `$icon-size` box, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
 // is. Its hit area reaches `$control-height`, WCAG 2.5.5's 44px, through a
 // pseudo-element, so the row is no taller for it. Compounded with
 // `.user-list`: the typography's `body a` colours would outrank a lone
@@ -135,8 +130,8 @@ $tip-layer: $sticky-column-layer + 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $icon-size;
+  height: $icon-size;
   border-radius: radius('pill');
   color: $text-muted;
 
@@ -151,8 +146,8 @@ $tip-layer: $sticky-column-layer + 1;
   }
 
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: $glyph-size;
+    height: $glyph-size;
   }
 
   &:hover,
@@ -202,6 +197,7 @@ $tip-layer: $sticky-column-layer + 1;
   position: sticky;
   right: 0;
   z-index: $sticky-column-layer;
+  // A hairline, as the headings' rule is: the red marks it, not the weight.
   border-left: 1px solid $secondary;
   background-color: color-mix(in srgb, $secondary 6%, $surface-page);
   color: $secondary;
@@ -215,6 +211,35 @@ $tip-layer: $sticky-column-layer + 1;
 // ink; scoped past the primitive's own `thead th` rule.
 .user-list .data-table thead th.user-list__impersonate {
   border-bottom-color: $secondary;
+}
+
+// Stacked into cards at phone width (`.data-table--stack`, under the same
+// named container query as the primitive): a card is no scrolling row, so the
+// one-line rule gives way and an address or a reason wraps within the card.
+// The Impersonate cell gives up its sticky place, which would sit over the
+// card's other cells, and stands as the card's foot, its red rule drawn
+// above it rather than down its side, on the card's own ground rather than
+// a tint mixed for a band. claude-docs/styling.md, "Tables at phone width".
+@container data-table (max-width: #{$table-stack-width}) {
+  .user-list .data-table--stack {
+    th,
+    td {
+      white-space: normal;
+    }
+
+    .user-list__impersonate {
+      position: static;
+      padding-top: space(2);
+      border-top: 1px solid $secondary;
+      border-left: 0;
+      background-color: transparent;
+    }
+
+    // Two classes past the banded row's rule above, so the card's ground wins.
+    tbody tr:nth-child(even) .user-list__impersonate {
+      background-color: transparent;
+    }
+  }
 }
 
 // The creation cell: the Yes or No on the left, the control that changes it
@@ -267,14 +292,14 @@ $tip-layer: $sticky-column-layer + 1;
   display: inline-flex;
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target around a 1rem glyph, as InfoTip's
-// button. The muted ink, so it reads as a fact about the row, not a control.
+// `$icon-size`: WCAG 2.2's 24px minimum target around a `$glyph-size`
+// glyph, as InfoTip's button. The muted ink, so it reads as a fact about the row, not a control.
 .user-list__primary-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $icon-size;
+  height: $icon-size;
   padding: 0;
   border: 0;
   border-radius: radius('pill');
@@ -283,8 +308,8 @@ $tip-layer: $sticky-column-layer + 1;
   cursor: help;
 
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: $glyph-size;
+    height: $glyph-size;
   }
 
   &:hover,
@@ -305,8 +330,8 @@ $tip-layer: $sticky-column-layer + 1;
 }
 
 // Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
-// InfoTip's, above the mark or button from its left edge, no wider than 18rem
-// so it stays on a phone. Not `.user-list__tip`, the marks' and logos'
+// InfoTip's, above the mark or button from its left edge, no wider than
+// `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`, the marks' and logos'
 // centred tip, which takes no pointer: these stay open while hovered.
 .user-list__control-tip {
   position: absolute;
@@ -314,7 +339,7 @@ $tip-layer: $sticky-column-layer + 1;
   left: 0;
   z-index: $tip-layer;
   width: max-content;
-  max-width: min(18rem, calc(100vw - #{space(6)}));
+  max-width: min($tip-width, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
   // Its cell keeps to one line; the reason wraps within the bubble.
   white-space: normal;
