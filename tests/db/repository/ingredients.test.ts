@@ -447,6 +447,34 @@ describe('findCompendiumPage', () => {
     it('is no filter when empty', async () => {
       expect(await namesOf({ categoryIds: [] })).toHaveLength(3);
     });
+
+    // A form's pair names the ingredient too (MB.217), so the filter finds
+    // an entry by a category one of its forms adds; the pairs are hard-deleted
+    // and outlive a soft-deleted form, so only a live form's count.
+    it('finds an entry by a category a live form adds, and not by one only a deleted form held', async () => {
+      const live = await add('Fixture Live Form');
+      await insertVariant(sql, live, { form: 'Fixture Oil', categories: ['Cleansing'] }, A.id);
+      const dropped = await add('Fixture Dropped Form');
+      const droppedForm = await insertVariant(
+        sql,
+        dropped,
+        { form: 'Fixture Oil', categories: ['Cleansing'] },
+        A.id,
+      );
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where id = ${droppedForm}`;
+      // Why the dropped form could have counted: its pair is still there.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_categories
+        where variant_id = ${droppedForm} and category_id = ${cleansing}`;
+      expect(count).toBe(1);
+
+      expect(await namesOf({ categoryIds: [cleansing] })).toEqual([
+        'Fixture Both',
+        'Fixture Live Form',
+      ]);
+    });
   });
 
   describe('form', () => {

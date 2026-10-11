@@ -410,7 +410,14 @@ function citesNowhere(): SQL | undefined {
   );
 }
 
-/** One correlated `EXISTS` per id, so an entry must carry every one of them. */
+/**
+ * One correlated `EXISTS` per id, so an entry must carry every one of them,
+ * on itself or on a live form: a variant's pair names the ingredient too
+ * (MB.217), so the union comes for free, but the table is hard-deleted and
+ * its pairs outlive a soft-deleted variant, so the variant's liveness is read
+ * here. Inside the compendium's own list the parent is already the row, so a
+ * plain live-variant `EXISTS` rather than `readableVariantParent`'s tier check.
+ */
 function categoryArms(categoryIds: readonly string[]): SQL[] {
   return categoryIds.map((categoryId) =>
     existsIn(
@@ -418,6 +425,10 @@ function categoryArms(categoryIds: readonly string[]): SQL[] {
       and(
         eq(ingredientCategories.ingredientId, ingredients.id),
         eq(ingredientCategories.categoryId, categoryId),
+        or(
+          isNull(ingredientCategories.variantId),
+          existsIn(ingredientVariants, eq(ingredientVariants.id, ingredientCategories.variantId)),
+        ),
       ),
     ),
   );
