@@ -842,6 +842,8 @@ _Acceptance criteria:_
 - The drift test green with no `PENDING_DROPS` entry for these objects
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
+_As built:_ `0064` drops `canonical_key` before `form`, the reverse of the order `db:generate` wrote, since `canonical_key` is generated from `form` and Postgres refuses to drop a column a generated column reads; the file says so in a comment, and its sidecar names it. `0062-ingredient-variants-fill.test.ts` keeps its guard tests, which read only `identity_key` and still run against the migrated database, and retires its fill tests, which read the dropped `form` column and can no longer run on any migrated database (`testing/layer-ownership.md`, "What a test may assert", rule 7; production not being live, MB.197 and MB.203's ruling counts the staging deploy). `partial-unique-indexes.test.ts` and `ingredients-indexes.test.ts` stop writing the row's `form`, and the two `canonical_key` index rows leave the partial-unique sweep with nothing in their place (rule 3). With the older identity index gone, a compendium write colliding on both the address and the identity meets the address index first, so `compendium.ts`'s branch for an address taken by the entry's own identity twin is reached again.
+
 **MB.235 — Playwright restores the e2e build cache on a pull request and saves it only from `staging`** · 1h
 
 _Story:_ As a maintainer, I want a pull request's Playwright job to stop uploading a build cache that no other run can read, so that those seconds come off the gate's slowest job.
