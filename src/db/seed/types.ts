@@ -203,5 +203,8 @@ export type SeedSourceLink = Pick<
   'referenceId' | 'deityId' | 'deityTraditionId' | 'planetId' | 'zodiacSignId' | 'locator'
 >;
 
-/** A table a seeded source links, found by the `seed_key` its own seed gave each row. */
-export type SourceTargetTable = (typeof SOURCED)[Exclude<SourcedKey, 'ingredientId'>]['table'];
+/** A table a seeded source links, found by the `seed_key` its own seed gave each row: a vocabulary, never an ingredient or its form. */
+export type SourceTargetTable = (typeof SOURCED)[Exclude<
+  SourcedKey,
+  'ingredientId' | 'ingredientVariantId'
+>]['table'];

@@ -197,13 +197,19 @@ async function migrated(name: string) {
     where conrelid = ${name}::regclass and contype = 'c'
   `;
   // An index backing a primary key or unique constraint is the constraint's,
-  // not one the schema file's index list declares.
+  // not one the schema file's index list declares. A foreign key records the
+  // index it points at in `conindid` too, so only the table's own key and
+  // unique constraints count: MB.217's composite keys point at
+  // `ingredient_variants_id_ingredient_id_unique`, a declared index.
   const indexes = await sql<{ name: string; unique: boolean; partial: boolean }[]>`
     select ic.relname as name, i.indisunique as unique, i.indpred is not null as partial
     from pg_index i
     join pg_class ic on ic.oid = i.indexrelid
     where i.indrelid = ${name}::regclass
-      and not exists (select 1 from pg_constraint k where k.conindid = i.indexrelid)
+      and not exists (
+        select 1 from pg_constraint k
+        where k.conindid = i.indexrelid and k.conrelid = i.indrelid and k.contype in ('p', 'u', 'x')
+      )
   `;
 
   return {

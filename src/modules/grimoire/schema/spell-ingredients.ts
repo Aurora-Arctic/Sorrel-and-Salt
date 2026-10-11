@@ -1,7 +1,17 @@
 import { sql } from 'drizzle-orm';
-import { check, integer, numeric, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  check,
+  foreignKey,
+  integer,
+  numeric,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from '../../ingredients/schema/ingredients';
+import { ingredientVariants } from '../../ingredients/schema/ingredient-variants';
 import { inventoryUnit } from '../../ingredients/schema/inventory-items';
 import { QUANTITY_PRECISION, QUANTITY_SCALE } from '../../ingredients/schema/quantities';
 import { spells } from './spells';
@@ -27,6 +37,9 @@ export const spellIngredients = pgTable(
     // Nullable: a custom row has no ingredient. The CHECK below keeps a row
     // from leaving both this and `name` empty.
     ingredientId: uuid('ingredient_id').references(() => ingredients.id),
+    // The form laid (MB.217), set exactly when `ingredient_id` is: a jar may
+    // hold Rosemary herb and Rosemary oil, a custom layer neither.
+    variantId: uuid('variant_id'),
     // The custom row's label and form. Never becomes an `ingredients` row and
     // contributes nothing to derived categories; `form` is meaningful only
     // beside a name, which a CHECK below enforces.
@@ -59,11 +72,14 @@ export const spellIngredients = pgTable(
       table.layerOrder,
     ),
 
-    // One ingredient per jar: wanted at two depths is one row with a note.
-    // A custom row's null `ingredient_id` is nothing to be unique about.
-    uniqueIndex('spell_ingredients_spell_id_ingredient_id_unique')
-      .on(table.spellId, table.ingredientId)
-      .where(sql`${table.ingredientId} is not null and ${table.deletedAt} is null`),
+    // One form per jar (MB.217): wanted at two depths is one row with a note.
+    // A custom row's null `variant_id` collides with nothing in a btree.
+    liveUnique(
+      'spell_ingredients_spell_id_variant_id_unique',
+      table,
+      table.spellId,
+      table.variantId,
+    ),
     // Its mirror over the custom rows, on name alone: a custom row is matched
     // against nothing, so `form` is part of no key.
     uniqueIndex('spell_ingredients_spell_id_custom_name_unique')
@@ -75,6 +91,17 @@ export const spellIngredients = pgTable(
     check('spell_ingredients_ingredient_or_name', sql`num_nonnulls(ingredient_id, name) = 1`),
     // Beside an ingredient id, `form` would shadow half that ingredient's identity.
     check('spell_ingredients_form_only_on_custom', sql`ingredient_id is null or form is null`),
+    // A linked layer names its form, a custom one none. Needed beside the key
+    // below, which MATCH SIMPLE skips whenever either column is null.
+    check(
+      'spell_ingredients_variant_with_ingredient',
+      sql`(ingredient_id is null) = (variant_id is null)`,
+    ),
+    foreignKey({
+      name: 'spell_ingredients_variant_fk',
+      columns: [table.variantId, table.ingredientId],
+      foreignColumns: [ingredientVariants.id, ingredientVariants.ingredientId],
+    }),
     // A blank name would satisfy `num_nonnulls` and name nothing.
     check('spell_ingredients_name_not_blank', sql`name is null or btrim(name) <> ''`),
     check('spell_ingredients_form_not_blank', sql`form is null or btrim(form) <> ''`),

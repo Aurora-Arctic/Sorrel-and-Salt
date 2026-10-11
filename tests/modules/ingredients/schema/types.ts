@@ -7,6 +7,8 @@ export type Inserted = { id: string; canonicalKey: string };
 export interface StockRow {
   workspaceId?: string;
   ingredientId?: string;
+  /** The form held; the ingredient's one seeded variant when left out. */
+  variantId?: string;
   quantity?: string | null;
   unit?: string | null;
   dimension?: string | null;
@@ -21,7 +23,14 @@ export interface Retired {
 }
 
 /** What a test row of `ingredient_substitutes` links or names; both or neither is the CHECK's case. */
-export type SubstituteEntry = { substituteId?: string | null; name?: string | null };
+export type SubstituteEntry = {
+  substituteId?: string | null;
+  name?: string | null;
+  /** The form of the parent the row stands in for (MB.217). */
+  variantId?: string | null;
+  /** The form of the linked ingredient it names (MB.217). */
+  substituteVariantId?: string | null;
+};
 
 /** A test row of `ingredient_deities`: always a name, and a link when picked (MB.165). */
 export type DeityEntry = { deityId?: string | null; name: string; position: number };

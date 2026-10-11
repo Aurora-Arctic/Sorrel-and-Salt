@@ -69,7 +69,8 @@ describe('0062: the fill', () => {
     `;
 
     // The migrated database as the fill met it: no variant yet.
-    await sql`truncate ingredient_variants`;
+    // Cascade: MB.217's tables key on a variant, and their rows go with it here.
+    await sql`truncate ingredient_variants cascade`;
     await sql.unsafe(FILL);
   });
 

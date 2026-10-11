@@ -14,8 +14,12 @@ imports nothing.
   it, which is this row. It is also why `spell_ingredients` (M10.2) references
   `ingredients` rather than this table — a saved spell survives running out of
   something, and M10.21 tests exactly that.
-- **`inventory_items_workspace_id_ingredient_id_unique`** is §5's partial
-  unique index on the pair. It is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
+- **`inventory_items_workspace_id_variant_id_unique`** is §5's partial
+  unique index on the pair, the variant rather than the ingredient since
+  MB.217: a row names the form the jar holds through `variant_id`, NOT NULL,
+  held to its `ingredient_id` by the composite key
+  `inventory_items_variant_fk`, so Rosemary herb and Rosemary oil are two
+  rows of one coven. It is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
   idempotent against it rather than defining the notion again. The predicate is
   load-bearing rather than ceremonial here — story 25 soft-deletes a row and
   calls it recoverable, so without it, throwing a jar out would reserve that
