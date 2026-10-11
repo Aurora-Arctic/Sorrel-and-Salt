@@ -96,6 +96,8 @@ describe('checkCompendium', () => {
       "Fixtura testalis 'Proof'",
       'Fixtura × testalis',
       'Fixturus fixturus domesticus',
+      'Fixtura subg. Fixtura',
+      'Fixtura sect. Probata',
     ])('takes the taxon %s', (name) => {
       const shards = edited((shard) => {
         samplewort(shard).canonicalName = name;
@@ -103,15 +105,17 @@ describe('checkCompendium', () => {
       expect(checkCompendium(shards)).toEqual([]);
     });
 
-    it.each(['fixtura exemplaris', 'Fixtura Exemplaris', 'Fixtura exemplaris L.'])(
-      'refuses %s, which is no taxon’s shape',
-      (name) => {
-        const shards = edited((shard) => {
-          samplewort(shard).canonicalName = name;
-        });
-        expect(checkCompendium(shards)).toHaveLength(1);
-      },
-    );
+    it.each([
+      'fixtura exemplaris',
+      'Fixtura Exemplaris',
+      'Fixtura exemplaris L.',
+      'Fixtura sect. probata',
+    ])('refuses %s, which is no taxon’s shape', (name) => {
+      const shards = edited((shard) => {
+        samplewort(shard).canonicalName = name;
+      });
+      expect(checkCompendium(shards)).toHaveLength(1);
+    });
   });
 
   describe('the closed lists', () => {
