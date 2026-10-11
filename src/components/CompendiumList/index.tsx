@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
 import type { CompendiumListFilter as Filter, CompendiumListProps } from './types';
@@ -54,7 +55,7 @@ const CompendiumList = ({
   nextHref,
   position,
 }: CompendiumListProps): ReactElement => (
-  <div className="list-frame">
+  <ListFrame>
     {/* Keyed by the filter shown, so another one starts the form again from it. */}
     <CompendiumListFilter
       key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
@@ -62,59 +63,63 @@ const CompendiumList = ({
       forms={forms}
     />
 
-    {entries.length ? (
-      <div className="data-table-frame">
-        <table className="data-table data-table--stack" {...tableRole('table')}>
-          <thead {...tableRole('rowgroup')}>
-            <tr {...tableRole('row')}>
-              <th scope="col" {...tableRole('columnheader')}>
-                Name
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                Formal Name
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                Classification
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                Form
-              </th>
-              <th scope="col" {...tableRole('columnheader')}>
-                <span className="visually-hidden">Edit</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody {...tableRole('rowgroup')}>
-            {entries.map((entry) => (
-              // Each cell names its column for the card it becomes; the Edit
-              // cell's empty name spans the card without one.
-              <tr key={entry.id} {...tableRole('row')}>
-                <td {...stackCell('Name')}>{entry.name}</td>
-                <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
-                <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
-                <td {...stackCell('Form')}>{entry.forms.length ? entry.forms.join(', ') : NONE}</td>
-                <td {...stackCell('')}>
-                  {/* Soft navigation: the page renders again with the modal open.
+    <ListBody>
+      {entries.length ? (
+        <div className="data-table-frame">
+          <table className="data-table data-table--stack" {...tableRole('table')}>
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Name
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Formal Name
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Classification
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  Form
+                </th>
+                <th scope="col" {...tableRole('columnheader')}>
+                  <span className="visually-hidden">Edit</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody {...tableRole('rowgroup')}>
+              {entries.map((entry) => (
+                // Each cell names its column for the card it becomes; the Edit
+                // cell's empty name spans the card without one.
+                <tr key={entry.id} {...tableRole('row')}>
+                  <td {...stackCell('Name')}>{entry.name}</td>
+                  <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
+                  <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
+                  <td {...stackCell('Form')}>
+                    {entry.forms.length ? entry.forms.join(', ') : NONE}
+                  </td>
+                  <td {...stackCell('')}>
+                    {/* Soft navigation: the page renders again with the modal open.
                       Named with the formal name too, as two entries can share a
                       label but never a formal name. */}
-                  <Link className="btn btn--small btn--quiet" href={entry.editHref}>
-                    Edit{' '}
-                    <span className="visually-hidden">
-                      {entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
-                    </span>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <p>{emptyText(filter)}</p>
-    )}
+                    <Link className="btn btn--small btn--quiet" href={entry.editHref}>
+                      Edit{' '}
+                      <span className="visually-hidden">
+                        {entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
+                      </span>
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p>{emptyText(filter)}</p>
+      )}
 
-    <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-  </div>
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+    </ListBody>
+  </ListFrame>
 );
 
 export default CompendiumList;

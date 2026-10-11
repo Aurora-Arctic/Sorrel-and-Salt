@@ -1,5 +1,8 @@
 import type { ReactElement } from 'react';
 import type { TabPanelLoadingProps } from './types';
+// Its own stylesheet's import too, so a list's body, which draws it without
+// the tabs (ListFrame), has its shapes wherever it renders.
+import './index.scss';
 
 // What a tab's panel shows while the tab just pressed is on its way
 // (MB.115): the panel renders it in place of the old tab's content, beneath

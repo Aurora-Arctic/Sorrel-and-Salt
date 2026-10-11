@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import LedgerFilterForm from './filter';
@@ -92,34 +93,36 @@ const PrivilegeLedger = ({
   nextHref,
   position,
 }: PrivilegeLedgerProps): ReactElement => (
-  <div className="privilege-ledger list-frame">
+  <ListFrame className="privilege-ledger">
     <LedgerFilterForm filter={filter} />
 
-    {changes.length ? (
-      <div className="data-table-frame">
-        <table className="data-table data-table--stack" {...tableRole('table')}>
-          <thead {...tableRole('rowgroup')}>
-            <tr {...tableRole('row')}>
-              {Object.values(COLUMNS).map((heading) => (
-                <th key={heading} scope="col" {...tableRole('columnheader')}>
-                  {heading}
-                </th>
+    <ListBody>
+      {changes.length ? (
+        <div className="data-table-frame">
+          <table className="data-table data-table--stack" {...tableRole('table')}>
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                {Object.values(COLUMNS).map((heading) => (
+                  <th key={heading} scope="col" {...tableRole('columnheader')}>
+                    {heading}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody {...tableRole('rowgroup')}>
+              {changes.map((change) => (
+                <ChangeRow key={change.id} change={change} />
               ))}
-            </tr>
-          </thead>
-          <tbody {...tableRole('rowgroup')}>
-            {changes.map((change) => (
-              <ChangeRow key={change.id} change={change} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <p>{nothingToShow(filter)}</p>
-    )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p>{nothingToShow(filter)}</p>
+      )}
 
-    <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
-  </div>
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+    </ListBody>
+  </ListFrame>
 );
 
 export default PrivilegeLedger;

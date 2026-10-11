@@ -7,6 +7,7 @@ import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
 import { stackCell, tableRole } from '../../lib/table-roles';
@@ -231,46 +232,48 @@ const UserList = ({
   canImpersonate = false,
   adminChanges,
 }: UserListProps): ReactElement => (
-  <div className="user-list list-frame">
+  <ListFrame className="user-list">
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
 
-    {users.length ? (
-      <div className="data-table-frame">
-        <table className="data-table data-table--stack" {...tableRole('table')}>
-          <thead {...tableRole('rowgroup')}>
-            <tr {...tableRole('row')}>
-              {Object.values(COLUMNS).map((heading) => (
-                <th key={heading} scope="col" {...tableRole('columnheader')}>
-                  {heading}
-                </th>
+    <ListBody>
+      {users.length ? (
+        <div className="data-table-frame">
+          <table className="data-table data-table--stack" {...tableRole('table')}>
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                {Object.values(COLUMNS).map((heading) => (
+                  <th key={heading} scope="col" {...tableRole('columnheader')}>
+                    {heading}
+                  </th>
+                ))}
+                {canImpersonate && (
+                  <th scope="col" className="user-list__impersonate" {...tableRole('columnheader')}>
+                    {IMPERSONATE}
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody {...tableRole('rowgroup')}>
+              {users.map((user) => (
+                <UserRow
+                  key={user.id}
+                  user={user}
+                  canImpersonate={canImpersonate}
+                  // The page's own read of the pause, not a second query: the
+                  // primary admin (`canToggle`) is exempt. The service still refuses.
+                  changesPaused={Boolean(adminChanges?.paused && !adminChanges.canToggle)}
+                />
               ))}
-              {canImpersonate && (
-                <th scope="col" className="user-list__impersonate" {...tableRole('columnheader')}>
-                  {IMPERSONATE}
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody {...tableRole('rowgroup')}>
-            {users.map((user) => (
-              <UserRow
-                key={user.id}
-                user={user}
-                canImpersonate={canImpersonate}
-                // The page's own read of the pause, not a second query: the
-                // primary admin (`canToggle`) is exempt. The service still refuses.
-                changesPaused={Boolean(adminChanges?.paused && !adminChanges.canToggle)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <p>{noMatch({ query, role, awaitingApproval })}</p>
-    )}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p>{noMatch({ query, role, awaitingApproval })}</p>
+      )}
 
-    <Pager previousHref={previousHref} nextHref={nextHref} />
-  </div>
+      <Pager previousHref={previousHref} nextHref={nextHref} />
+    </ListBody>
+  </ListFrame>
 );
 
 export default UserList;

@@ -5,6 +5,7 @@ import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
 import { WorkshopPathname } from '../../../.ladle/navigation';
 import { ADMIN_PAGES } from '../AdminNav/sections';
+import { ListNavigationContext } from '../ListFrame';
 import TabbedPage from '../TabbedPage';
 import { groupedValuesHref } from './href';
 import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
@@ -299,12 +300,12 @@ export const PlanetsEmpty: Story = () => (
   <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
 );
 
-// At a phone's width in each theme, inside the admin layout and the
-// Categories page with its Categories tab open, as the page draws it: the
-// tab's Add button full width beneath the heading, the filter stacked and
-// each row a card. The page and the filter are the real `TabbedPage` and
+// Inside the admin layout and the Categories page with its Categories tab
+// open, as the page draws it; at a phone's width in each theme, the tab's Add
+// button full width beneath the heading, the filter stacked and each row a
+// card. The page and the filter are the real `TabbedPage` and
 // `FilterForm`, so these show what the sign-off settled.
-const Phone = () => (
+const CategoriesPage = () => (
   <WorkshopPathname.Provider value="/admin/categories">
     <div className="admin-layout">
       <TabbedPage
@@ -322,8 +323,29 @@ const Phone = () => (
   </WorkshopPathname.Provider>
 );
 
-export const PhoneDark: Story = () => <Phone />;
+export const PhoneDark: Story = () => <CategoriesPage />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
-export const PhoneLight: Story = () => <Phone />;
+export const PhoneLight: Story = () => <CategoriesPage />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The same page with Filter pressed and the filtered list on its way (MB.115,
+// the owner's call): the filter row greyed and off, and the tabs' skeleton,
+// rows and pager, in place of the list. The workshop's router goes nowhere,
+// so a list navigation provided above the page holds one on its way, as the
+// tabbed page's own Loading stories do.
+const ON_ITS_WAY = { pending: true, go: () => undefined };
+
+const Pending = () => (
+  <ListNavigationContext.Provider value={ON_ITS_WAY}>
+    <CategoriesPage />
+  </ListNavigationContext.Provider>
+);
+
+export const CategoriesPending: Story = () => <Pending />;
+
+export const PendingPhoneDark: Story = () => <Pending />;
+PendingPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PendingPhoneLight: Story = () => <Pending />;
+PendingPhoneLight.meta = { theme: 'light', width: 375 };
