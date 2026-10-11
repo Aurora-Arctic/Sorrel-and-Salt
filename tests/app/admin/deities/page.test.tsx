@@ -135,14 +135,12 @@ describe('the /admin/deities page', () => {
     expect(listDeityTraditions).toHaveBeenCalledWith({ limit: 101, inverted: false });
   });
 
-  it('reads the page after a readable cursor, and the first page for one that is not', async () => {
+  // Which cursor is readable is tests/lib/search-params.test.ts's.
+  it('reads the page after the cursor in the address', async () => {
     const after = encodeCursor({ key: ['Testra'], id: TESTRA.id });
 
     await renderPage({ after });
     expect(lastRequest().after).toEqual({ key: ['Testra'], id: TESTRA.id });
-
-    await renderPage({ after: 'not-a-cursor' });
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
   });
 
   it('says which page of how many, counted from the first row of the page', async () => {

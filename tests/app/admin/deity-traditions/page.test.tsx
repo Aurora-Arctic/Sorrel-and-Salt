@@ -124,7 +124,8 @@ describe('the /admin/deity-traditions page', () => {
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 2');
   });
 
-  it('reads the page after a readable cursor, and the first page for one that is not', async () => {
+  // Which cursor is readable is tests/lib/search-params.test.ts's.
+  it('reads the page after the cursor in the address', async () => {
     const after = encodeCursor({ key: ['Mockish'], id: MOCKISH.id });
 
     await renderPage({ after });

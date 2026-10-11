@@ -8,7 +8,6 @@ import {
   verifiedLanding,
   verifyErrorMessage,
 } from '@/lib/account-email';
-import { UNSAFE_RETURN_PATHS } from '../support/return-paths';
 
 // The page a followed verification link lands on shows a sentence, never the
 // `?error=` code Better Auth or src/lib/auth.ts appended.
@@ -54,11 +53,10 @@ describe("the email page's paths", () => {
   });
 
   // The open-redirect guard runs when the link is built, not only when the
-  // page reads it back: a mailed link never names somewhere else.
+  // page reads it back: a mailed link never names somewhere else. Which paths
+  // leave the site is safeReturnPath's (tests/lib/sign-in.test.ts).
   it('drops a return path that leaves the site, landing as it always has', () => {
-    for (const next of [...UNSAFE_RETURN_PATHS, 'coven', '']) {
-      expect(verifiedLanding(next)).toBe('/account/email?verified');
-    }
+    expect(verifiedLanding('//evil.example')).toBe('/account/email?verified');
   });
 
   // Continue's landing without one is the role's, so an explicit /coven is
