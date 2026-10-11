@@ -18,7 +18,8 @@ import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
-import { CollapsibleSection, Section } from './section';
+import { CollapsibleSection } from './section';
+import { variantSectionSummary } from './summaries';
 import {
   FormField,
   LookupListField,
@@ -34,11 +35,21 @@ import type {
   FormOption,
   IngredientFormValues,
   ListOption,
+  SectionFold,
   VariantFieldsetProps,
+  VariantFolds,
   VariantFormValues,
+  VariantSectionKey,
   VariantsFieldProps,
 } from './types';
-import { EMPTY_VARIANT, formRows, rankForForm, repeatedForm } from './values';
+import {
+  EMPTY_VARIANT,
+  VARIANT_SECTION_KEYS,
+  formRows,
+  rankForForm,
+  repeatedForm,
+  variantSectionsWithErrors,
+} from './values';
 
 // The Variants section (MB.221): the forms an ingredient comes in, each a
 // group of what that form adds to the ingredient — never overrides
@@ -54,7 +65,56 @@ import { EMPTY_VARIANT, formRows, rankForForm, repeatedForm } from './values';
 
 const BOX = 'drafts.variants';
 
-export function VariantsField({ workspaceId, fold }: VariantsFieldProps): ReactElement {
+/** No section open: what a variant the form has not yet seen opens with, as an edit's do. */
+const NONE_OPEN: ReadonlySet<VariantSectionKey> = new Set();
+
+type Folds = readonly ReadonlySet<VariantSectionKey>[];
+
+/** `folds` with each place up to `length` filled, so a later removal keeps every place in step. */
+const padded = (folds: Folds, length: number): ReadonlySet<VariantSectionKey>[] =>
+  Array.from({ length: Math.max(folds.length, length) }, (_, at) => folds[at] ?? NONE_OPEN);
+
+/**
+ * Which of each variant's own sections are open (MB.115): a list beside the
+ * variants, by place, kept in step as the New Form box adds one first and a
+ * Remove takes one out. Held by the form, as its own sections' state is, so
+ * that a save opens the section holding an error and Open All / Close All
+ * reaches each variant's. A variant added here opens with every section open,
+ * as a new entry does; one an edit opened with, past the list's end, with
+ * every one closed, as an edit does.
+ */
+export function useVariantFolds(): VariantFolds {
+  const [folds, setFolds] = useState<Folds>([]);
+  return {
+    isOpen: (index, section) => (folds[index] ?? NONE_OPEN).has(section),
+    toggle: (index, section) =>
+      setFolds((now) => {
+        // An edit's variants are past the list's end until one is touched.
+        const next = padded(now, index + 1);
+        const sections = new Set(next[index]);
+        if (!sections.delete(section)) sections.add(section);
+        next[index] = sections;
+        return next;
+      }),
+    added: () => setFolds((now) => [new Set(VARIANT_SECTION_KEYS), ...now]),
+    removed: (index) => setFolds((now) => now.filter((_, at) => at !== index)),
+    setAll: (open, count) =>
+      setFolds(
+        Array.from({ length: count }, () => (open ? new Set(VARIANT_SECTION_KEYS) : NONE_OPEN)),
+      ),
+    openErring: (erring) => {
+      if (erring.size === 0) return;
+      setFolds((now) =>
+        padded(now, Math.max(...erring.keys()) + 1).map((sections, index) => {
+          const adding = erring.get(index);
+          return adding ? new Set([...sections, ...adding]) : sections;
+        }),
+      );
+    },
+  };
+}
+
+export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps): ReactElement {
   // The compendium holds curated forms alone (MB.162): its box offers those
   // rows and no typed row, and a pick is the only way in.
   const compendium = workspaceId === null;
@@ -132,6 +192,8 @@ export function VariantsField({ workspaceId, fold }: VariantsFieldProps): ReactE
     // just beneath the box, and opens, the owner's call, closing whichever was.
     prepend({ ...EMPTY_VARIANT, form, formLink: link }, { shouldFocus: false });
     setOpen(0);
+    // Every section open, as a new entry opens (MB.115).
+    folds.added();
     setValue(BOX, '');
     clearErrors(BOX);
     setAnnouncement(`Added ${form}`);
@@ -141,6 +203,7 @@ export function VariantsField({ workspaceId, fold }: VariantsFieldProps): ReactE
   const removeAt = (index: number) => {
     setAnnouncement(`Removed ${getValues(`variants.${index}.form`)}`);
     remove(index);
+    folds.removed(index);
     setOpen((current) => {
       if (current === null || current === index) return null;
       return current > index ? current - 1 : current;
@@ -225,6 +288,7 @@ export function VariantsField({ workspaceId, fold }: VariantsFieldProps): ReactE
             open={open === index}
             onToggle={(opening) => setOpen(opening ? index : null)}
             onRemove={removeAt}
+            folds={folds}
           />
         ))}
         {/* Labelled, so that it is told from the box's own status region. */}
@@ -280,6 +344,7 @@ function VariantFieldset({
   open,
   onToggle,
   onRemove,
+  folds,
 }: VariantFieldsetProps): ReactElement {
   const compendium = workspaceId === null;
   const at = `variants.${index}` as const;
@@ -305,14 +370,27 @@ function VariantFieldset({
   const flagId = `${id}-flag`;
   const fieldsId = `${id}-fields`;
   const invalid = get(errors, at) !== undefined;
+  // Its own sections, each a disclosure as the ingredient's are (MB.115),
+  // flagged while one holds an error and opened by a save that finds one.
+  const erring = variantSectionsWithErrors(get(errors, at));
+  const fold = (section: VariantSectionKey): SectionFold => ({
+    open: folds.isOpen(index, section),
+    invalid: erring.has(section),
+    onToggle: () => folds.toggle(index, section),
+  });
+  const summary = (section: VariantSectionKey) => variantSectionSummary(section, variant);
   const editButton = useRef<HTMLButtonElement>(null);
   const fieldsElement = useRef<HTMLDivElement>(null);
-  // Edit takes the focus into the opened fields, to the first; Done back to Edit.
+  // Edit takes the focus into the opened fields, to the first: the Form box
+  // while Identity is open, else Identity's heading, closed, as an edit's
+  // sections open (MB.115). Done takes it back to Edit.
   const focusOnOpen = useRef(false);
   useEffect(() => {
     if (!open || !focusOnOpen.current) return;
     focusOnOpen.current = false;
-    fieldsElement.current?.querySelector<HTMLElement>('input, textarea')?.focus();
+    fieldsElement.current
+      ?.querySelector<HTMLElement>('[aria-expanded="false"], input, textarea')
+      ?.focus();
   }, [open]);
   const done = () => {
     onToggle(false);
@@ -382,122 +460,158 @@ function VariantFieldset({
       >
         {/* The ingredient's sections, in its order and under its names, as
           far as a form's fields go (MB.115, the owner's call): its Form is
-          its identity. A level beneath the Variants heading. */}
-        <Section title="Identity" level={4}>
-          {/* On the compendium the form must be a pick (MB.162). */}
-          <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
-        </Section>
-        <Section title="Description" level={4} labelled>
-          <TextField<IngredientFormValues>
-            name={`${at}.description`}
-            label="Description"
-            hint="What is particular to this form. What every form shares is the ingredient's description."
-            placeholder="What sets this form apart"
-            action={<CopyFromIngredient at={at} field="description" />}
-            multiline
-            // Seven lines, matching the ingredient's Description (MB.115).
-            rows={7}
-          />
-        </Section>
-        <Section title="Correspondences" level={4}>
-          <MultiSelectField
-            name={`${at}.elements`}
-            label="Element"
-            placeholder="Add an element"
-            options={ELEMENT_OPTIONS}
-            action={<CopyFromIngredient at={at} field="elements" />}
-          />
-          <LookupListField
-            workspaceId={workspaceId}
-            useSuggestions={usePlanetSuggestions}
-            name={`${at}.planets`}
-            ordered
-            pickOnly={compendium}
-            legend="Planets"
-            entry="Planet"
-            placeholder="Add a planet"
-            action={(announce) => (
-              <CopyFromIngredient at={at} field="planets" announce={announce} />
-            )}
-          />
-          <LookupListField
-            workspaceId={workspaceId}
-            useSuggestions={useZodiacSuggestions}
-            name={`${at}.zodiacSigns`}
-            ordered
-            pickOnly={compendium}
-            legend="Zodiac Signs"
-            entry="Zodiac Sign"
-            placeholder="Add a sign"
-            action={(announce) => (
-              <CopyFromIngredient at={at} field="zodiacSigns" announce={announce} />
-            )}
-          />
-          <ListField
-            name={`${at}.colors`}
-            ordered
-            legend="Colours"
-            entry="Colour"
-            placeholder="Add a colour"
-            action={(announce) => <CopyFromIngredient at={at} field="colors" announce={announce} />}
-          />
-        </Section>
-        <Section title="Relations" level={4}>
-          <CategoryField
-            at={at}
-            action={(announce) => (
-              <CopyFromIngredient at={at} field="categoryIds" announce={announce} />
-            )}
-          />
-          {/* A form of any ingredient may stand in for a form, this one's
+          its identity. A level beneath the Variants heading, each folding
+          as the ingredient's do, its closed line read as theirs is. */}
+        <div className="ingredient-form__folds">
+          <CollapsibleSection
+            title="Identity"
+            level={4}
+            fold={fold('identity')}
+            summary={summary('identity')}
+          >
+            {/* On the compendium the form must be a pick (MB.162). */}
+            <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Description"
+            level={4}
+            fold={fold('description')}
+            summary={summary('description')}
+            labelled
+          >
+            <TextField<IngredientFormValues>
+              name={`${at}.description`}
+              label="Description"
+              hint="What is particular to this form. What every form shares is the ingredient's description."
+              placeholder="What sets this form apart"
+              action={<CopyFromIngredient at={at} field="description" />}
+              multiline
+              // Seven lines, matching the ingredient's Description (MB.115).
+              rows={7}
+            />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Correspondences"
+            level={4}
+            fold={fold('correspondences')}
+            summary={summary('correspondences')}
+          >
+            <MultiSelectField
+              name={`${at}.elements`}
+              label="Element"
+              placeholder="Add an element"
+              options={ELEMENT_OPTIONS}
+              action={<CopyFromIngredient at={at} field="elements" />}
+            />
+            <LookupListField
+              workspaceId={workspaceId}
+              useSuggestions={usePlanetSuggestions}
+              name={`${at}.planets`}
+              ordered
+              pickOnly={compendium}
+              legend="Planets"
+              entry="Planet"
+              placeholder="Add a planet"
+              action={(announce) => (
+                <CopyFromIngredient at={at} field="planets" announce={announce} />
+              )}
+            />
+            <LookupListField
+              workspaceId={workspaceId}
+              useSuggestions={useZodiacSuggestions}
+              name={`${at}.zodiacSigns`}
+              ordered
+              pickOnly={compendium}
+              legend="Zodiac Signs"
+              entry="Zodiac Sign"
+              placeholder="Add a sign"
+              action={(announce) => (
+                <CopyFromIngredient at={at} field="zodiacSigns" announce={announce} />
+              )}
+            />
+            <ListField
+              name={`${at}.colors`}
+              ordered
+              legend="Colours"
+              entry="Colour"
+              placeholder="Add a colour"
+              action={(announce) => (
+                <CopyFromIngredient at={at} field="colors" announce={announce} />
+              )}
+            />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Relations"
+            level={4}
+            fold={fold('relations')}
+            summary={summary('relations')}
+          >
+            <CategoryField
+              at={at}
+              action={(announce) => (
+                <CopyFromIngredient at={at} field="categoryIds" announce={announce} />
+              )}
+            />
+            {/* A form of any ingredient may stand in for a form, this one's
             other forms included; those in this form, or in its group, are
             offered first (MB.215). Each row is one form of an ingredient, so
             a pick names the form at once and needs no second picker, and a
             link always names one (MB.115, the owner's call). A copy that
             skips the ingredient's substitutes in no such form says so
             beneath the list, with Copy Anyway. */}
-          <LookupListField
-            workspaceId={workspaceId}
-            // Fixed for the form's life, since its tier is, so the hook called is always the same.
-            useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
-            rank={rank}
-            name={`${at}.substitutes`}
-            legend="Substitute Ingredients"
-            entry="Substitute Ingredient"
-            placeholder="Add a substitute"
-            action={(announce) => (
-              <CopyFromIngredient
-                at={at}
-                field="substitutes"
-                announce={announce}
-                onSkip={onSkip}
-                buttonRef={copyButton}
-              />
-            )}
-            after={
-              <SkippedNotice at={at} skipped={skipped} onDone={onDone} copyButton={copyButton} />
-            }
-          />
-        </Section>
-        <Section title="Safety" level={4}>
-          <TextField<IngredientFormValues>
-            name={`${at}.safetyNotes`}
-            label="Safety Notes"
-            hint="What to take care over with this form in particular: an oil diluted, a resin burned."
-            placeholder="Add safety notes"
-            action={<CopyFromIngredient at={at} field="safetyNotes" />}
-            multiline
-          />
-        </Section>
-        <Section title="Sources" level={4}>
-          <ReferencesField
-            workspaceId={workspaceId}
-            at={at}
-            action={(announce) => (
-              <CopyFromIngredient at={at} field="references" announce={announce} />
-            )}
-          />
-        </Section>
+            <LookupListField
+              workspaceId={workspaceId}
+              // Fixed for the form's life, since its tier is, so the hook called is always the same.
+              useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
+              rank={rank}
+              name={`${at}.substitutes`}
+              legend="Substitute Ingredients"
+              entry="Substitute Ingredient"
+              placeholder="Add a substitute"
+              action={(announce) => (
+                <CopyFromIngredient
+                  at={at}
+                  field="substitutes"
+                  announce={announce}
+                  onSkip={onSkip}
+                  buttonRef={copyButton}
+                />
+              )}
+              after={
+                <SkippedNotice at={at} skipped={skipped} onDone={onDone} copyButton={copyButton} />
+              }
+            />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Safety"
+            level={4}
+            fold={fold('safety')}
+            summary={summary('safety')}
+          >
+            <TextField<IngredientFormValues>
+              name={`${at}.safetyNotes`}
+              label="Safety Notes"
+              hint="What to take care over with this form in particular: an oil diluted, a resin burned."
+              placeholder="Add safety notes"
+              action={<CopyFromIngredient at={at} field="safetyNotes" />}
+              multiline
+            />
+          </CollapsibleSection>
+          <CollapsibleSection
+            title="Sources"
+            level={4}
+            fold={fold('sources')}
+            summary={summary('sources')}
+          >
+            <ReferencesField
+              workspaceId={workspaceId}
+              at={at}
+              action={(announce) => (
+                <CopyFromIngredient at={at} field="references" announce={announce} />
+              )}
+            />
+          </CollapsibleSection>
+        </div>
         <div className="ingredient-form__variant-done">
           <button
             type="button"

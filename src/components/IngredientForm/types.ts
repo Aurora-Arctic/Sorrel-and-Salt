@@ -456,6 +456,8 @@ export interface FormFieldProps extends LookupFieldProps {
 export interface VariantsFieldProps extends LookupFieldProps {
   /** Its section's open state, which the form owns, as it does the other six's. */
   fold: SectionFold;
+  /** Which of each variant's own sections are open, which the form owns too. */
+  folds: VariantFolds;
 }
 
 /** One variant's group: its place in the list, whether it is the one open, and how to open, close or take it out. */
@@ -465,6 +467,8 @@ export interface VariantFieldsetProps extends LookupFieldProps {
   /** Opens it, closing any other, or closes it. */
   onToggle: (open: boolean) => void;
   onRemove: (index: number) => void;
+  /** Which of its sections are open, by its place in the list. */
+  folds: VariantFolds;
 }
 
 /** What every lookup asks besides its scope: the settled text, and how many rows. */
@@ -525,7 +529,6 @@ export interface Claimant {
   canonicalName: string | null;
 }
 
-/** One of the form's titled sections: its heading, and the fields beneath it. */
 /** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
 export type SectionKey =
   'identity' | 'description' | 'correspondences' | 'relations' | 'safety' | 'sources' | 'variants';
@@ -541,27 +544,46 @@ export interface SectionFold {
   onToggle: () => void;
 }
 
-/** One of the ingredient's own sections, as a disclosure: its heading the toggle. */
-export interface CollapsibleSectionProps {
+/** A variant's own sections, the ingredient's bar Variants, each folding as the ingredient's do (MB.115). */
+export type VariantSectionKey = Exclude<SectionKey, 'variants'>;
+
+/**
+ * Which of each variant's sections are open, by the variant's place in the
+ * list. The form owns it, as it owns its own sections' state, so that Save
+ * and Open All / Close All reach a variant's sections too. A variant not yet
+ * seen here, as each of an edit's is, has every section closed.
+ */
+export interface VariantFolds {
+  isOpen: (index: number, section: VariantSectionKey) => boolean;
+  toggle: (index: number, section: VariantSectionKey) => void;
+  /** A variant added first in the list, as the New Form box adds one, with every section open. */
+  added: () => void;
+  removed: (index: number) => void;
+  /** Every section of each of `count` variants opened, or closed. */
+  setAll: (open: boolean, count: number) => void;
+  /** Opens, in each variant, the sections the map names, keyed by its place. */
+  openErring: (erring: ReadonlyMap<number, ReadonlySet<VariantSectionKey>>) => void;
+}
+
+/**
+ * A section as a disclosure, its heading the toggle: one of the ingredient's
+ * own, its closed line drawn from `section`, or one of a variant's, a level
+ * beneath, handed its closed line as `summary`.
+ */
+export type CollapsibleSectionProps = CollapsibleSectionBase &
+  ({ section: SectionKey; summary?: never } | { summary: ReactNode; section?: never });
+
+interface CollapsibleSectionBase {
   title: string;
-  /** Which section, so its closed line summarises the right fields. */
-  section: SectionKey;
   fold: SectionFold;
+  /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
+  level?: 3 | 4;
   /** Its one field's label repeats the heading, so the label is hidden from the eye. */
   labelled?: boolean;
   /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
   info?: ReactNode;
   /** The toggle's id, for a group inside that is named by the heading. */
   titleId?: string;
-  children: ReactNode;
-}
-
-export interface SectionProps {
-  title: string;
-  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
-  labelled?: boolean;
-  /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
-  level?: 3 | 4;
   children: ReactNode;
 }
 

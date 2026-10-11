@@ -4,7 +4,15 @@ import type { ReactElement, ReactNode } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { shortCitationText } from '@/lib/short-citation';
 import { NOMENCLATURE_OPTIONS } from './options';
-import type { IngredientFormValues, ListEntry, SectionKey } from './types';
+import type {
+  IngredientElement,
+  IngredientFormValues,
+  ListEntry,
+  ReferenceListEntry,
+  SectionKey,
+  VariantFormValues,
+  VariantSectionKey,
+} from './types';
 
 // What a folded section's line says (MB.115, the owner's call as drawn): what
 // has been entered in it, in its fields' order, parts joined by a middle dot.
@@ -14,7 +22,9 @@ import type { IngredientFormValues, ListEntry, SectionKey } from './types';
 // the safety notes are their own first words, cut by the line's ellipsis. An
 // empty section says so. Each section's summary is a component of its own
 // watching its own fields, so a keystroke re-renders one line, not the form
-// (claude-docs/components/ingredient-form.md, "Sections").
+// (claude-docs/components/ingredient-form.md, "Sections"). A variant's
+// sections read the same way, through the same lines below, from the
+// variant's own values.
 
 const NOTHING = 'Nothing yet';
 
@@ -60,17 +70,17 @@ function IdentitySummary(): ReactNode {
   ]);
 }
 
-function TextSummary({ name }: { name: 'description' | 'safetyNotes' }): ReactNode {
-  const { control } = useFormContext<IngredientFormValues>();
-  return oneLine(useWatch({ control, name })) || NOTHING;
-}
+/** A text field's line: its first words. */
+const textLine = (text: string): ReactNode => oneLine(text) || NOTHING;
 
-function CorrespondencesSummary(): ReactNode {
-  const { control } = useFormContext<IngredientFormValues>();
-  const [elements, planets, zodiacSigns, colors, deities] = useWatch({
-    control,
-    name: ['elements', 'planets', 'zodiacSigns', 'colors', 'deities'],
-  });
+/** Correspondences' line, a variant's having no deities, which are the ingredient's alone. */
+function correspondencesLine(
+  elements: readonly IngredientElement[],
+  planets: readonly ListEntry[],
+  zodiacSigns: readonly ListEntry[],
+  colors: readonly ListEntry[],
+  deities: readonly ListEntry[] = [],
+): ReactNode {
   return joined([
     listPart(elements.map(capitalise), 'elements'),
     listPart(texts(planets), 'planets'),
@@ -80,9 +90,10 @@ function CorrespondencesSummary(): ReactNode {
   ]);
 }
 
-function RelationsSummary(): ReactNode {
-  const { control } = useFormContext<IngredientFormValues>();
-  const [categoryIds, substitutes] = useWatch({ control, name: ['categoryIds', 'substitutes'] });
+function relationsLine(
+  categoryIds: readonly string[],
+  substitutes: readonly ListEntry[],
+): ReactNode {
   if (categoryIds.length === 0 && substitutes.length === 0) return NOTHING;
   // Both said once either is: the pair is the section.
   return joined([
@@ -91,15 +102,37 @@ function RelationsSummary(): ReactNode {
   ]);
 }
 
-function SourcesSummary(): ReactNode {
-  const { control } = useFormContext<IngredientFormValues>();
-  const references = useWatch({ control, name: 'references' });
-  return joined([
+const sourcesLine = (references: readonly ReferenceListEntry[]): ReactNode =>
+  joined([
     listPart(
       references.map((row) => shortCitationText(row.link)),
       'references',
     ),
   ]);
+
+function TextSummary({ name }: { name: 'description' | 'safetyNotes' }): ReactNode {
+  const { control } = useFormContext<IngredientFormValues>();
+  return textLine(useWatch({ control, name }));
+}
+
+function CorrespondencesSummary(): ReactNode {
+  const { control } = useFormContext<IngredientFormValues>();
+  const [elements, planets, zodiacSigns, colors, deities] = useWatch({
+    control,
+    name: ['elements', 'planets', 'zodiacSigns', 'colors', 'deities'],
+  });
+  return correspondencesLine(elements, planets, zodiacSigns, colors, deities);
+}
+
+function RelationsSummary(): ReactNode {
+  const { control } = useFormContext<IngredientFormValues>();
+  const [categoryIds, substitutes] = useWatch({ control, name: ['categoryIds', 'substitutes'] });
+  return relationsLine(categoryIds, substitutes);
+}
+
+function SourcesSummary(): ReactNode {
+  const { control } = useFormContext<IngredientFormValues>();
+  return sourcesLine(useWatch({ control, name: 'references' }));
 }
 
 function VariantsSummary(): ReactNode {
@@ -127,5 +160,40 @@ export function SectionSummary({ section }: { section: SectionKey }): ReactEleme
       return <SourcesSummary />;
     case 'variants':
       return <VariantsSummary />;
+  }
+}
+
+/**
+ * The closed line of a variant's section `section`, read from the variant's
+ * values, which its card already watches. Its Identity is its Form, as the
+ * card's own line reads it, "Dried leaf (Plant part)"; the rest read as the
+ * ingredient's sections of the same name do.
+ */
+export function variantSectionSummary(
+  section: VariantSectionKey,
+  variant: VariantFormValues,
+): ReactNode {
+  switch (section) {
+    case 'identity': {
+      const form = variant.form.trim();
+      const group = variant.formLink?.group;
+      if (form === '') return NOTHING;
+      return group ? `${form} (${group})` : form;
+    }
+    case 'description':
+      return textLine(variant.description);
+    case 'correspondences':
+      return correspondencesLine(
+        variant.elements,
+        variant.planets,
+        variant.zodiacSigns,
+        variant.colors,
+      );
+    case 'relations':
+      return relationsLine(variant.categoryIds, variant.substitutes);
+    case 'safety':
+      return textLine(variant.safetyNotes);
+    case 'sources':
+      return sourcesLine(variant.references);
   }
 }

@@ -4,7 +4,7 @@
 // What the ingredient form draws beyond the form primitives (_primitives.scss)
 // and the Combobox, which own its fields, label rows, notices, buttons, the
 // confirm in place of the saves and Delete set apart: the form's column, its
-// folding sections and a variant's titled ones, a list's spacing, the row a box shares with Add, the
+// folding sections and a variant's, a list's spacing, the row a box shares with Add, the
 // duplicate warning's region, the references' rows and the new reference
 // panel, the Variants section, the substitutes' second pickers, and what a
 // linked substitute's summary holds, inside the Combobox's panel.
@@ -90,12 +90,6 @@
     position: relative;
     z-index: 1;
   }
-}
-
-// Nested, to outweigh the section heading's own margin (below), which sets
-// a variant's heading closer to its fields.
-.ingredient-form .ingredient-form__fold-line .ingredient-form__section-title {
-  margin: 0;
 }
 
 .ingredient-form__fold-toggle {
@@ -198,74 +192,12 @@
   }
 }
 
-// A variant's titled sections (MB.115, the owner's call): each a column of
-// its fields at the form's own gap, under a small heading set closer to them
-// than they are to each other, and a step further from the section before
-// than any two fields are, so the sections read as groups; the card draws
-// them closer still (below).
-// Nested, to outweigh layout-base's bare `body section`, whose gap and
-// margins would otherwise set the spacing in the app.
-.ingredient-form .ingredient-form__section {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-  min-width: 0;
-  margin: 0;
-
-  // Two steps on top of the form's gap between sections.
-  & + .ingredient-form__section {
-    margin-top: space(6);
-  }
-
-  // The one field's label repeats the heading, so it is the heading the eye
-  // reads, and the label stays the field's name for a screen reader: the
-  // `.visually-hidden` primitive's clip, which a class on the label inside
-  // Field cannot be given from here. What else its label row holds, a
-  // variant's tip and its Copy From Ingredient, stays in view on the
-  // heading's line: the field's block is unboxed into the section's grid,
-  // its row beside the heading and the rest of it beneath both.
-  &.is-labelled {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: space(3) space(1);
-
-    > .ingredient-form__section-title {
-      margin: 0;
-    }
-
-    > .field {
-      display: contents;
-    }
-
-    > .field > * {
-      grid-column: 1 / -1;
-    }
-
-    > .field > .field__label-row {
-      grid-column: 2;
-    }
-
-    .field__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
-      padding: 0;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-      border: 0;
-    }
-  }
-}
-
 // The section's heading, at a size off the type scale as a heading's may be:
 // the display face, a step under h4, so it heads its fields without
 // outweighing the dialog's title. Nested, to outweigh typography-base's
-// `body h3`, whose margin would add to the section's gap.
+// `body h3` and `body h4`, whose margins would add to the line's padding.
 .ingredient-form .ingredient-form__section-title {
-  margin: 0 0 calc(#{space(3)} - #{space(5)});
+  margin: 0;
   font-size: 1.25rem;
   line-height: 1.2;
 }
@@ -573,12 +505,13 @@
   gap: space(1);
 }
 
-// Open, its fields at the form's own spacing beneath the line, Done at the end.
+// Open, its sections flush beneath the line, between hairlines, as the
+// ingredient's are, and Done at the end.
 .ingredient-form__variant-fields {
   display: flex;
   flex-direction: column;
-  gap: space(5);
-  margin-top: space(4);
+  gap: space(3);
+  margin-top: space(3);
   padding: 0 space(1) space(1) 0;
 
   // Closed is the attribute's, which the display above would otherwise undo.
@@ -587,24 +520,49 @@
   }
 }
 
-// A variant's sections (MB.115, the owner's call): the ingredient's, under
-// `h4`s a step smaller, and each spacing a step closer, for the narrower card.
+// A variant's sections (MB.115, the owner's calls): the ingredient's folds,
+// under `h4`s a step smaller, and each spacing a step closer, for the
+// narrower card.
 .ingredient-form .ingredient-form__variant-fields {
-  .ingredient-form__section {
+  .ingredient-form__fold-head {
+    padding-block: space(2);
+  }
+
+  .ingredient-form__fold-fields {
     gap: space(4);
-  }
-
-  .ingredient-form__section + .ingredient-form__section {
-    margin-top: space(2);
-  }
-
-  .ingredient-form__section.is-labelled {
-    gap: space(2) space(1);
+    padding-block: space(1) space(3);
   }
 
   .ingredient-form__section-title {
-    margin-bottom: calc(#{space(2)} - #{space(4)});
     font-size: 1.125rem;
+  }
+
+  // Description's label repeats its heading, so the label alone is hidden
+  // from the eye: the rest of its row, the tip and Copy From Ingredient,
+  // stays in view above the box, which the ingredient's own Description,
+  // with neither, has no need of.
+  .ingredient-form__fold-fields.is-labelled {
+    .field__label-row {
+      position: static;
+      width: auto;
+      height: auto;
+      margin: 0;
+      overflow: visible;
+      clip-path: none;
+      white-space: normal;
+    }
+
+    .field__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
   }
 }
 
