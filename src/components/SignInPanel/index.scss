@@ -7,7 +7,13 @@
 // than the default (the owner, at the sign-off). `border-box`, so the padding
 // stays inside the column.
 // Children stretch to the column, and the button grid centres its own.
-.sign-in-panel {
+//
+// Compounded with `.panel`: in the app the primitives compile as `body .panel`,
+// which outranks a lone component class, so a bare `.sign-in-panel` would
+// keep the panel's default padding there while the workshop, whose
+// primitives are scoped with `:where()`, showed this one (the owner caught
+// the difference in the running app, 2026-10-11).
+.sign-in-panel.panel {
   box-sizing: border-box;
   // One `max-content` column, centred, as the button list below is: the
   // column is as wide as the widest button, and the head and the error

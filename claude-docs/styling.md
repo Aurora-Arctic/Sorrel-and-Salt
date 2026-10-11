@@ -618,7 +618,12 @@ does not scroll by its own padding or the banner above it.
   `:where(.ladle-story-frame) .x` (0,1,0), where source order decides. Under
   `:where()` a component's own narrower column, such as the sign-in panel's,
   wins in both. A primitive rule a component must be able to override is
-  wrapped the same way; check it in the app, not only the workshop.
+  wrapped the same way; check it in the app, not only the workshop. The
+  other way round holds too: a component that carries a primitive class
+  and restates one of its properties compounds the two, as the sign-in
+  card's `.sign-in-panel.panel` does for its padding, since a lone
+  component class loses to `body .panel` in the app while the workshop
+  shows it winning.
 - **`.page-frame__section`** is a titled section of a framed page, a
   `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
   `space(4)` clear of the top when the page's own nav jumps to it.
