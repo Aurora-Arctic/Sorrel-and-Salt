@@ -161,7 +161,7 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
       </legend>
       {prompting && (
         <p className="field__hint" id={promptId}>
-          Add at least one form: an entry with none is information only, and no coven can stock it.
+          Add a form so covens can stock it.
         </p>
       )}
       {fields.map((row, index) => (
