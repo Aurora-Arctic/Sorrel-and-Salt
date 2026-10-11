@@ -16,7 +16,7 @@ Route on the `hotfix` label first, then on what the issue itself says:
 | No `hotfix` label, and nothing in the title or body marks it urgent                                         | `create-feature` (`feature/<slug>` off `staging`) |
 | Carries the `hotfix` label; or the title or body calls it a hotfix, or it fixes something already on `main` | `create-hotfix` (`hotfix/<slug>` off `main`)      |
 
-The id prefix does **not** decide this: an `MB.*` id, and the `Bug` issue type, hold ordinary bugfixes and hotfixes alike. The status values step 3 reads are in [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section, and the rest of the board's shape in [`claude-docs/task-tracking.md`](../../../claude-docs/task-tracking.md).
+The id prefix does **not** decide this: an `MB.*` id holds new work, ordinary bugfixes and hotfixes alike, and the `Bug` type says only that the task fixes something, not how it ships. The status values step 3 reads are in [`CLAUDE.md`](../../../CLAUDE.md)'s "GitHub task tracking" section, and the rest of the board's shape in [`claude-docs/task-tracking.md`](../../../claude-docs/task-tracking.md).
 
 ## Steps
 
