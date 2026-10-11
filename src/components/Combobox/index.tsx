@@ -13,6 +13,7 @@ import {
 import { chipColors } from '../../lib/chip-colors';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
+import { chipsRoom } from './room';
 import { useTip } from '../InfoTip/use-tip';
 import type {
   Bucket,
@@ -331,6 +332,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           <span
             className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
             data-value={value}
+            // Beside chips, room for the placeholder, which stays to prompt
+            // for the next entry while nothing is typed.
+            style={chipsRoom(Boolean(entries), placeholder)}
           >
             <input
               className="combobox__input"

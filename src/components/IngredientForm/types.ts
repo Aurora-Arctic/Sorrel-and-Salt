@@ -312,7 +312,7 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
-  /** A short action shown, muted, while the box is empty: "Pick planets". */
+  /** A short action shown, muted, while the box is empty: "Add a planet". */
   placeholder?: string;
   /** What the box suggests; left out for a list with no source, whose box never opens. */
   suggestions?: Suggestions<ListOption>;

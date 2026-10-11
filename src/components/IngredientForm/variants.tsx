@@ -380,7 +380,7 @@ function VariantFieldset({
         <MultiSelectField
           name={`${at}.elements`}
           label="Element"
-          placeholder="Choose elements"
+          placeholder="Add an element"
           options={ELEMENT_OPTIONS}
         />
         <LookupListField
@@ -391,7 +391,7 @@ function VariantFieldset({
           pickOnly={compendium}
           legend="Planets"
           entry="Planet"
-          placeholder="Pick planets"
+          placeholder="Add a planet"
         />
         <LookupListField
           workspaceId={workspaceId}
@@ -401,14 +401,14 @@ function VariantFieldset({
           pickOnly={compendium}
           legend="Zodiac Signs"
           entry="Zodiac Sign"
-          placeholder="Pick signs"
+          placeholder="Add a sign"
         />
         <ListField
           name={`${at}.colors`}
           ordered
           legend="Colours"
           entry="Colour"
-          placeholder="Add colours"
+          placeholder="Add a colour"
         />
         <CategoryField at={at} />
         {/* Any ingredient may stand in for a form, this one's other forms
@@ -422,7 +422,7 @@ function VariantFieldset({
           name={`${at}.substitutes`}
           legend="Substitute Ingredients"
           entry="Substitute Ingredient"
-          placeholder="Pick substitutes"
+          placeholder="Add a substitute"
         />
         <SubstituteForms name={`${at}.substitutes`} />
         <ReferencesField workspaceId={workspaceId} at={at} />

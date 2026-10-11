@@ -106,13 +106,18 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
 // The multi-select's box, in the text's place after the chips: a `div` that
 // is pressed rather than typed in, its placeholder muted as the input's is.
+// Beside chips it keeps the placeholder's room, as the text's slot does.
 .combobox__input--select {
   display: flex;
   align-items: center;
+  min-width: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: pointer;
 
   .is-placeholder {
+    overflow: hidden;
     color: $text-placeholder;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -131,10 +136,12 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // below its content, so a long text gives way inside the control.
 .combobox__text {
   display: grid;
-  // The text's own few letters' room, as `.combobox__input`'s.
+  // The text's own few letters' room, as `.combobox__input`'s, or beside
+  // chips the placeholder's (`--combobox-room`, room.ts), so the prompt for
+  // the next entry shows whole or wraps under the chips; never past the row.
   flex: 1 1 6rem;
   grid-template-columns: minmax(0, 1fr);
-  min-width: 6rem;
+  min-width: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   > .combobox__input {
     grid-area: 1 / 1;

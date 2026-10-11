@@ -5,6 +5,7 @@ import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
+import { chipsRoom } from './room';
 import type { ComboboxChoice, ComboboxMultiSelectProps } from './types';
 
 // A closed set holding several values: the select-only box, on Downshift's
@@ -146,6 +147,7 @@ export function ComboboxMultiSelect({
           )}
           <div
             className="combobox__input combobox__input--select"
+            style={chipsRoom(chosen.length > 0, placeholder)}
             {...getToggleButtonProps(
               getDropdownProps({
                 ref: inputRef,
@@ -159,12 +161,19 @@ export function ComboboxMultiSelect({
           >
             {/* What it holds, read as a select reads its choice: the chips
                 are beside the box, not in it. */}
-            {chosen.length > 0 ? (
+            {chosen.length > 0 && (
               <span className="visually-hidden">
                 {chosen.map((choice) => choice.label).join(', ')}
               </span>
-            ) : (
-              <span className="is-placeholder">{placeholder}</span>
+            )}
+            {/* The placeholder stays after the chips while there is a choice
+                left, prompting for the next (the owner's call at MB.115's
+                review), and goes once every choice is made. Beside chips it
+                is for the eye alone: read, it would sound like a choice. */}
+            {left.length > 0 && (
+              <span className="is-placeholder" aria-hidden={chosen.length > 0 || undefined}>
+                {placeholder}
+              </span>
             )}
           </div>
         </div>

@@ -670,6 +670,25 @@ describe('Combobox', () => {
     });
     afterEach(() => vi.restoreAllMocks());
 
+    // The owner's call at MB.115's review: the prompt for the next entry
+    // stays beside the chips while nothing is typed.
+    it('keeps the placeholder of the box beside its entries', () => {
+      render(
+        <Harness
+          placeholder="Add a fixture"
+          entries={
+            <ul className="combobox__entries">
+              <ComboboxEntry value="Hedge Fixture" onRemove={vi.fn()} />
+            </ul>
+          }
+        />,
+      );
+
+      expect(screen.getByRole('listitem')).toBeInTheDocument();
+      expect(box()).toHaveValue('');
+      expect(box()).toHaveAttribute('placeholder', 'Add a fixture');
+    });
+
     it('has an x named for it, in the tab order, that removes it', () => {
       const onRemove = renderEntries(['Hedge Fixture']);
 
@@ -1085,7 +1104,26 @@ describe('Combobox', () => {
       ).toEqual([expect.stringContaining('Fire'), expect.stringContaining('Earth')]);
       // The box reads what it holds, as a select reads its choice.
       expect(elements()).toHaveTextContent('Fire, Earth');
-      expect(elements()).not.toHaveTextContent('Choose elements');
+    });
+
+    // The owner's call at MB.115's review: a placeholder that went with the
+    // first chip left nothing prompting for the next.
+    it('keeps the placeholder after the chips while a choice is left, for the eye alone, and drops it once none is', () => {
+      render(<MultiHarness />);
+      const prompt = () => within(elements()).queryByText('Choose elements');
+      // Read as the box's text while nothing is chosen.
+      expect(prompt()).not.toHaveAttribute('aria-hidden');
+
+      fireEvent.click(elements());
+      pick('Fire');
+      expect(chosen()).toBe('fire');
+      expect(prompt()).toBeInTheDocument();
+      // Beside a chip it would read as a choice.
+      expect(prompt()).toHaveAttribute('aria-hidden', 'true');
+
+      for (const label of ['Earth', 'Air', 'Water', 'Spirit']) pick(label);
+      expect(chosen()).toBe('fire,earth,air,water,spirit');
+      expect(prompt()).not.toBeInTheDocument();
     });
 
     it('chooses by the keyboard: the arrows open and move, Enter or Space chooses, Escape closes', () => {

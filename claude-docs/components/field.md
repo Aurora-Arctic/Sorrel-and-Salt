@@ -111,7 +111,10 @@ against the form's own paths; left out, any string passes.
   owner's call at MB.115's review). The label stays the accessible name:
   `TextField` and `SelectField` take `placeholder`, and a plain-state
   form sets it on its own control, since `FieldShell` draws none. A
-  `date` field is the exception: the browser draws its own format there.
+  `date` field is the exception: the browser draws its own format there. A
+  box holding several values names one, "Add a planet", and keeps it
+  after the chips while it can take another, prompting for the next
+  ([`combobox.md`](combobox.md)).
 - **A react-hook-form field re-renders for its own error only**: `useField`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would

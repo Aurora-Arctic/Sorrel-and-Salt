@@ -68,9 +68,7 @@ the textarea's name. Inside a variant the fields are not sectioned.
 
 **Every field shows a short action while it is empty**, and what it is for
 sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
-"Contracts"): "Add a name", "Add formal name", "Add folk names", "Describe
-it", "Pick planets", "Pick signs", "Add colours", "Pick deities", "Pick
-categories", "Pick substitutes", "Add safety notes", "Search references" and
+"Contracts"): "Add a name", "Add formal name", "Add a folk name", "Describe it", "Add an element", "Add a planet", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form", and the new reference
 panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
 `ListField` (and so `LookupListField`) and `CategoryPicker` take
@@ -125,7 +123,8 @@ field shows none: the browser draws its own format there.
   list open for the next; once all five are chosen it has nothing to offer
   and does not open. Backspace in the box takes the last. None chosen is
   the answer "none", so there is no None to choose: the box shows the
-  placeholder "Choose elements". It is a field, labelled by its `<label>`
+  placeholder "Add an element", which stays after the chips while an
+  element is left. It is a field, labelled by its `<label>`
   and erring through its one error element, rather than a list's fieldset:
   its values are the enum's strings, `elements: IngredientElement[]`, not a
   `useFieldArray` of entry rows, so it is not one of `LIST_FIELDS`.

@@ -373,7 +373,7 @@ const IngredientForm = ({
             legend="Folk Names"
             entry="Folk Name"
             hint="Other names it goes by. A search finds it by any of them."
-            placeholder="Add folk names"
+            placeholder="Add a folk name"
           />
         </Section>
         <Section title="Description" labelled>
@@ -391,7 +391,7 @@ const IngredientForm = ({
           <MultiSelectField
             name="elements"
             label="Element"
-            placeholder="Choose elements"
+            placeholder="Add an element"
             options={ELEMENT_OPTIONS}
           />
           {/* Each list but the colours suggests (MB.131): planets, signs and
@@ -413,7 +413,7 @@ const IngredientForm = ({
             legend="Planets"
             entry="Planet"
             hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
-            placeholder="Pick planets"
+            placeholder="Add a planet"
           />
           <LookupListField
             workspaceId={workspaceId}
@@ -424,7 +424,7 @@ const IngredientForm = ({
             legend="Zodiac Signs"
             entry="Zodiac Sign"
             hint="The signs it answers to."
-            placeholder="Pick signs"
+            placeholder="Add a sign"
           />
           <ListField
             name="colors"
@@ -432,7 +432,7 @@ const IngredientForm = ({
             legend="Colours"
             entry="Colour"
             hint="The colours it corresponds to in a working, not the colour it is."
-            placeholder="Add colours"
+            placeholder="Add a colour"
           />
           <LookupListField
             workspaceId={workspaceId}
@@ -443,7 +443,7 @@ const IngredientForm = ({
             legend="Deities"
             entry="Deity"
             hint="The gods and spirits it is sacred to."
-            placeholder="Pick deities"
+            placeholder="Add a deity"
           />
         </Section>
         <Section title="Relations">
@@ -460,7 +460,7 @@ const IngredientForm = ({
             legend="Substitute Ingredients"
             entry="Substitute Ingredient"
             hint="Other ingredients to use in its place when this one is not to hand."
-            placeholder="Pick substitutes"
+            placeholder="Add a substitute"
           />
           {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
           <SubstituteForms name="substitutes" />

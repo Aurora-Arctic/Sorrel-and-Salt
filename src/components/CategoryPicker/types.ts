@@ -29,7 +29,7 @@ export interface CategoryPickerProps {
   hint?: string;
   /** The box's name, "Category": what a pick adds. */
   entry: string;
-  /** A short action shown, muted, while the box is empty: "Pick categories". */
+  /** A short action shown, muted, while the box is empty: "Add a category". */
   placeholder?: string;
   /** Every category on offer, in any order: the picker groups and sorts them. */
   categories: readonly PickerCategory[];

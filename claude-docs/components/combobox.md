@@ -40,7 +40,7 @@ movable, on dnd-kit.
 | `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
-| `placeholder`      | Shown, muted, while the box is empty.                                                                                                                                                                                                                                                          |
+| `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
 | `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
@@ -307,7 +307,10 @@ a second way through the chips would be a second tab model for one look.
   combobox a press or a key on them would be the box's too. The box takes
   the text's place after the chips. It reads what it holds, "Air, Fire", in
   visually hidden text, as a select reads its choice, and the placeholder
-  while nothing is chosen. A press on the control's padding or its chevron
+  while nothing is chosen. The placeholder stays after the chips, hidden
+  from a screen reader there, while a choice is left, prompting for the
+  next, and goes once every choice is made (the owner's call at MB.115's
+  review). A press on the control's padding or its chevron
   opens the list as a press on the box does.
 - **An × or the clear leaves the focus in the box**, since the pressed
   button goes; the box is found by its id, since the caller's ref and
@@ -322,7 +325,7 @@ a second way through the chips would be a second tab model for one look.
 | `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's. |
 | `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.    |
 | `choices`            | `{ value, label }` in order; the list offers those not in `values`.                       |
-| `placeholder`        | Shown, muted, while nothing is chosen; never in the list.                                 |
+| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.             |
 | `required`           | `aria-required`, as the field marks it.                                                   |
 | `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                        |
 
@@ -550,7 +553,7 @@ WCAG 2.2's minimum, the `$icon-size` token, around a `$glyph-size` mark; a
 tooltip on a cut-off entry stops at `$tip-width`, capped at the window, as
 InfoTip's does (MB.115). The lengths left raw are the control's own geometry
 and say so in a comment: the 6rem the text keeps before it wraps onto a row
-of its own, the list's 20rem height, the category bar's 3px and 5px, the
+of its own (beside entries, the placeholder's width instead, `--combobox-room` from `room.ts`, in `ch` and never past the row, so the prompt shows whole or wraps under the chips), the list's 20rem height, the category bar's 3px and 5px, the
 grip's half-glyph width, and the 1px edges.
 
 ## Stories

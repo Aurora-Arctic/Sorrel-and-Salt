@@ -607,7 +607,9 @@ The class layer every form is built from, in `_primitives.scss`:
 - **Every text, textarea, select and type-ahead field shows a placeholder,
   a short action of one or two words** ("Add a name", "Describe it", "Choose
   a group", "Search names"), and what the field is for goes in its hint's
-  info tip, never in the placeholder: the owner's call at MB.115's review.
+  info tip, never in the placeholder: the owner's call at MB.115's review. A
+  box of several values keeps its placeholder after its chips, with room for
+  it, while it can take another.
   The label stays its name. The placeholder reads in `$text-placeholder`,
   held at 4.5:1 on the field's ground in both themes by
   `tests/scss/tokens.test.ts`
