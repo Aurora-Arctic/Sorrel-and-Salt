@@ -1,4 +1,4 @@
-import { and, eq, getTableColumns, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { and, eq, getTableColumns, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { applyAudit, publishActor } from '../audit';
 import type { AuditSession, PrivilegeDeclaration } from '../types';
@@ -167,9 +167,9 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
 }
 
 /**
- * `delete`'s predicate: each column of `match` equal to its value, or in its
- * list; `undefined` when a list is empty, since the delete then matches
- * nothing. A match naming no column, or a key that is not one of the table's
+ * `delete`'s predicate: each column of `match` equal to its value, null where
+ * it is `null` (MB.217), or in its list; `undefined` when a list is empty,
+ * since the delete then matches nothing. A match naming no column, or a key that is not one of the table's
  * columns, throws: either would otherwise delete more than was asked.
  */
 function matching<TTable extends PgTable>(
@@ -186,7 +186,8 @@ function matching<TTable extends PgTable>(
     if (!column || value === undefined) {
       throw new Error(`write.delete cannot match on "${key}"`);
     }
-    if (!Array.isArray(value)) conditions.push(eq(column, value));
+    if (value === null) conditions.push(isNull(column));
+    else if (!Array.isArray(value)) conditions.push(eq(column, value));
     else if (value.length === 0) return undefined;
     else conditions.push(inArray(column, value));
   }
