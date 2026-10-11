@@ -20,7 +20,7 @@ import { makeIngredient, makeSpell } from '../support/fixtures';
 // neither of them the one bit rule 4 already withholds: whether the row is
 // even there. `tests/acceptance/README.md` names this file rather than a
 // `describe('Story 19: …')` block, that naming convention being
-// `tests/acceptance/`'s own (story-naming.test.ts).
+// `tests/acceptance/`'s own.
 //
 // This is the per-entity sweep: every entity a coven holds, reached the way a
 // caller reaches it — an ingredient through the ingredients service
