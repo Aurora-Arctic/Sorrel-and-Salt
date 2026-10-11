@@ -104,8 +104,11 @@ against the form's own paths; left out, any string passes.
   in the label.
 - **Every text, select and type-ahead field has a placeholder: a short action,
   never a description.** One or two words, three short ones at most, in
-  sentence case: "Add a name", "Describe it", "Choose a group", "Search
-  names". What the field is for, what to type, examples and limits go in
+  sentence case: "Add a name", "Choose a group", "Search names". A
+  multi-line prose box, a description, may take a fuller one-line prompt
+  for what to write instead, specific to what it describes: "What this
+  category covers", "What sets this form apart". It stays a prompt, never
+  instructions or examples (the owner's call). What the field is for, what to type, examples and limits go in
   `hint`, the info tip beside the label, and never in the placeholder or a
   `note`, which stays for a live state such as why a field is shut (the
   owner's call at MB.115's review). The label stays the accessible name:

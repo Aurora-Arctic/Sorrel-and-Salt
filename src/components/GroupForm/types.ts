@@ -19,6 +19,8 @@ export interface GroupFormKind {
   many: string;
   /** What the move's confirmation says the rows keep. */
   moved: string;
+  /** The Description's placeholder, a one-line prompt for what to write. */
+  describe: string;
   resolver: Resolver<GroupValues>;
   /** Creates the group, or updates the one at `id`. */
   save: (input: GroupValues, id: string | undefined) => Promise<void>;

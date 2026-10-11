@@ -367,7 +367,7 @@ function VariantFieldset({
           name={`${at}.description`}
           label="Description"
           hint="What is particular to this form. What every form shares is the ingredient's description."
-          placeholder="Describe it"
+          placeholder="What sets this form apart"
           multiline
         />
         <TextField<IngredientFormValues>

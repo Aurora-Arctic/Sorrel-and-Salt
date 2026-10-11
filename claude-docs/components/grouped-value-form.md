@@ -43,7 +43,7 @@ its three mutation documents, and nothing else:
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
   "Form", "Deity", "Planet", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label`, `placeholder`, what it shows until one is chosen
-  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, where a reader meets the description; `deleteNote`, what the
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, where a reader meets the description; `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (every kind but the category).
 - **Its schema and input**: `schema`, the shared schema the values pass
@@ -181,7 +181,7 @@ Why a modal on a URL rather than separate pages or intercepted routes:
 
 The form is the shared pieces on the form primitives
 ([`styling.md`](../styling.md), "Form fields"): Name and Description are
-[`TextField`](field.md)s in a `FormProvider`, "Add a name" and "Describe it" their placeholders, the group a `SelectField`, each
+[`TextField`](field.md)s in a `FormProvider`, "Add a name" and the kind's `describe` their placeholders, the group a `SelectField`, each
 with its label row and the `.field__required` asterisk; Save is a
 `BusyButton` in a wrapping `.form__actions` row, with Delete pushed to the far
 end by `.form__aside`; and the confirmation is a `.form__confirm` with its own

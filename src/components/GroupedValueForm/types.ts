@@ -61,6 +61,8 @@ export interface GroupedValueCopy {
   noun: string;
   /** What the description is for, behind its info tip: where a reader meets it. */
   descriptionHint: string;
+  /** The Description's placeholder, a one-line prompt for what to write. */
+  describe: string;
   /** The group field, for a grouped kind; a flat kind has none. */
   group?: GroupedValueGroupField;
   /** What the delete's confirmation says after `Delete "<name>"?`. */
