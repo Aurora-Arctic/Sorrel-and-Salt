@@ -15,4 +15,16 @@ export interface AdminInvitationsProps {
    * paused and they are not the primary admin (MB.63); absent when they may.
    */
   locked?: string;
+  /** Whether the address opens the invite form, `?invite`; never while locked. */
+  inviting?: boolean;
+}
+
+export interface InviteAdminProps {
+  /** Why Invite Admin is locked, while admin changes are paused; absent when it is not. */
+  locked?: string;
+}
+
+export interface InviteFormProps {
+  /** Told the address an invitation was sent to, before the form closes. */
+  onSent: (address: string) => void;
 }

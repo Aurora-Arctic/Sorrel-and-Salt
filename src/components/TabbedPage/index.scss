@@ -2,9 +2,39 @@
 @use '../../scss/mixins' as *;
 
 // A page in tabs (MB.115; claude-docs/components/tabbed-page.md, "Styling"):
-// the heading, the tab row, then the open tab's content.
-.tabbed-page > h1 {
-  margin: 0 0 space(4);
+// the heading and the open tab's action on one line, the `.page-header`
+// primitive's, then the tab row, then the open tab's content. The heading
+// line sits a step closer to the tabs than to a page's content.
+.tabbed-page > .page-header {
+  margin-bottom: space(4);
+}
+
+// The open tab's action, `.page-header`'s one item beside the heading. A
+// tab with none leaves it empty, and an empty item would still take a gap,
+// or a line of its own at a phone's width.
+.tabbed-page__action {
+  display: flex;
+
+  &:empty {
+    display: none;
+  }
+}
+
+// Under the forms' column `.page-header` puts the action on a line of its
+// own and, in the admin area, spans it; the action inside spans it too.
+@container page-header (max-width: #{$narrow-column}) {
+  .admin-layout .tabbed-page__action > * {
+    flex: 1 1 100%;
+  }
+}
+
+// The action while another tab is on its way, faded with the tabs and its
+// colour taken out, so a solid button greys as they do. `inert` keeps it
+// from a press or focus meanwhile.
+.tabbed-page__action[inert] {
+  opacity: 0.55;
+  filter: grayscale(1);
+  cursor: not-allowed;
 }
 
 // The `.link-row` primitive, its open tab marked by weight and the heavy
@@ -28,31 +58,12 @@
   cursor: not-allowed;
 }
 
-// The open tab's content, or its loading state: its action, any notice, the
-// list, a `space(5)` apart, as `.list-frame` spaces a list's.
+// The open tab's content, or its loading state: any notice, then the list,
+// a `space(5)` apart, as `.list-frame` spaces a list's.
 .tabbed-page__panel {
   display: flex;
   flex-direction: column;
   gap: space(5);
-}
-
-// The tab's action at the end of its line. A size container, as
-// `.page-header` is: under the forms' column of its own width, in the admin
-// area, the action spans the line, the owner's call for an admin page's
-// primary action at a phone's width.
-.tabbed-page__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: space(3);
-  container: tabbed-page-actions / inline-size;
-}
-
-@container tabbed-page-actions (max-width: #{$narrow-column}) {
-  .admin-layout .tabbed-page__actions > * {
-    flex-basis: 100%;
-  }
 }
 
 // The loading state, in the muted ink with the buttons' spinner. Faded in

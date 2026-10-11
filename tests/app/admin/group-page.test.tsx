@@ -58,7 +58,7 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-const { GroupPage } = await import('@/app/admin/group-page');
+const { GroupAction, GroupPage } = await import('@/app/admin/group-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -84,8 +84,18 @@ const entry = <T extends { id: string; name: string }>(node: T) => ({
 });
 
 async function renderPage(params: Record<string, string> = {}, kind: GroupKind = 'category') {
-  const page = await GroupPage({ kind, searchParams: Promise.resolve(params) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  // The tab's action beside the heading, and the tab's content, as the
+  // route group's layout puts them on one page.
+  const [action, page] = await Promise.all([
+    GroupAction({ kind, searchParams: Promise.resolve(params) }),
+    GroupPage({ kind, searchParams: Promise.resolve(params) }),
+  ]);
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {action}
+      {page}
+    </QueryClientProvider>,
+  );
 }
 
 beforeEach(() => {

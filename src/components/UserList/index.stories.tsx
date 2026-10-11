@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
-import type { PropsWithChildren } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { ADMIN_PAGES } from '../AdminNav/sections';
-import TabbedPage, { TabActions } from '../TabbedPage';
+import TabbedPage from '../TabbedPage';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
@@ -52,10 +52,12 @@ const USERS: readonly UserListEntry[] = [
 ];
 
 // Inside the admin layout's frame and the People page, its Users tab open
-// (the workshop's address), so the workshop shows what the page shows.
-const Frame = ({ children }: PropsWithChildren) => (
+// (the workshop's address), so the workshop shows what the page shows: the
+// switch on admin changes, where a story gives it, beside the heading as the
+// tab's action.
+const Frame = ({ action, children }: { action?: ReactNode; children: ReactNode }): ReactElement => (
   <div className="admin-layout">
-    <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+    <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs} action={action}>
       {children}
     </TabbedPage>
   </div>
@@ -67,10 +69,7 @@ const Frame = ({ children }: PropsWithChildren) => (
 // Admin Changes each ask first; in the workshop the call reaches no server,
 // so confirming shows the refusal.
 export const Default: Story = () => (
-  <Frame>
-    <TabActions>
-      <PauseControl paused={false} canToggle />
-    </TabActions>
+  <Frame action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );
@@ -155,13 +154,10 @@ export const AdminRoles: Story = () => (
   </Frame>
 );
 
-// MB.63: the switch as the Users tab's action, as /admin/users draws it. Paused, to the primary admin: the warning and a
+// MB.63: the switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
 // usable Resume, and every row's control usable, since the pause exempts it.
 export const AdminChangesPaused: Story = () => (
-  <Frame>
-    <TabActions>
-      <PauseControl paused canToggle />
-    </TabActions>
+  <Frame action={<PauseControl paused canToggle />}>
     <UserList
       users={USERS}
       query=""
@@ -175,10 +171,7 @@ export const AdminChangesPaused: Story = () => (
 // tip, and every Grant, Revoke, Approve and coven-creation Revoke locked with
 // the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
-  <Frame>
-    <TabActions>
-      <PauseControl paused canToggle={false} />
-    </TabActions>
+  <Frame action={<PauseControl paused canToggle={false} />}>
     <UserList
       users={USERS}
       query=""
@@ -191,20 +184,14 @@ export const AdminChangesNotPrimary: Story = () => (
 // At phone width, the list as it ships: every row a card (`.data-table--stack`),
 // each fact led by its column's name, Impersonate across the card's foot.
 export const PhoneDark: Story = () => (
-  <Frame>
-    <TabActions>
-      <PauseControl paused={false} canToggle />
-    </TabActions>
+  <Frame action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
-  <Frame>
-    <TabActions>
-      <PauseControl paused={false} canToggle />
-    </TabActions>
+  <Frame action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );

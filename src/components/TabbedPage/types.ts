@@ -12,17 +12,18 @@ export interface TabbedPageProps {
   title: string;
   /** In their order along the row; the open one is found from the address. */
   tabs: readonly PageTab[];
+  /**
+   * The open tab's one action, at the end of the heading's line: Add
+   * Category, Invite Admin, Pause Admin Changes. The route group's `@action`
+   * slot, so it changes with the tab; nothing for a tab with none.
+   */
+  action?: ReactNode;
   /** The open tab's content. */
   children: ReactNode;
 }
 
 export interface TabLinksProps {
   tabs: readonly PageTab[];
-}
-
-export interface TabActionsProps {
-  /** The tab's own action: an Add link, or a control such as Pause Admin Changes. */
-  children: ReactNode;
 }
 
 /** A tab on its way, shared by the tab row and the panel (`tab-switch.tsx`). */
@@ -34,6 +35,11 @@ export interface TabSwitch {
 }
 
 export interface TabSwitchProviderProps {
+  children: ReactNode;
+}
+
+export interface TabActionProps {
+  /** The open tab's action, which greys out while another tab is on its way. */
   children: ReactNode;
 }
 
