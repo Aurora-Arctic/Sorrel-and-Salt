@@ -137,12 +137,12 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   };
 
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Testwort');
-  await addForm(adding, 'Herb');
   await adding.getByRole('combobox', { name: 'Classification' }).click();
   await adding
     .getByRole('listbox', { name: 'Classification choices' })
     .getByRole('option', { name: 'None' })
     .click();
+  await addForm(adding, 'Herb');
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
 
   // Save Ingredient opens what it saved, at its address.

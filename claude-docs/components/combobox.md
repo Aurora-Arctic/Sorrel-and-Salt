@@ -72,6 +72,12 @@ colour is never the only cue.
   pick through `onPick`; Downshift's own fill-on-select is turned off in the
   state reducer, as are its select-on-blur and its emptying of a closed box on
   Escape. So a blur, Escape and Enter all keep what was typed.
+- **Leaving the box shuts its list for good.** The list is open only while
+  it is wanted and has rows, so a box left while its lookup had none to show
+  still wanted it, and the answer arriving later opened it, which Downshift
+  follows by focusing the box — pulling the focus out of whatever box was in
+  use (found by MB.221's e2e flow). A blur drops that wish; an open list is
+  Downshift's own to close.
 - **Free text is the default.** Nothing is highlighted when the list opens:
   an arrow key or the pointer highlights a row, and only a highlighted row is
   picked by Enter or a click. Typing past the vocabulary is therefore never
