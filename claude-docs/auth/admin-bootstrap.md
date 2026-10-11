@@ -239,7 +239,8 @@ Better Auth itself would link to an unverified row. The page reads
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
 and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
-account page, `/account`, with its `?error=` when it failed.
+account page, `/account`, with `?error=` and `?provider=` when it failed, so
+the page can put the sentence in the row of the provider that failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
 ("Provisional accounts" below). At a sign-in, `unable_to_link_account`

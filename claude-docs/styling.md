@@ -385,7 +385,9 @@ the three the scale uses (500/600/700) are requested.
   mineral and chemical names are set upright; and `.lede`, the muted sentence
   or two saying what the section is for, at body size because it is read.
   Wrapped in `.header`, they are the head of every section on the
-  Foundations page.
+  Foundations page. The `.header` gap alone spaces them: it zeroes its
+  children's margins, because flex margins never collapse and a heading's
+  bottom margin would otherwise add to the gap.
 
 ## Spacing
 
