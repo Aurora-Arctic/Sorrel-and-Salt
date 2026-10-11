@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
@@ -40,18 +40,27 @@ test('shows all three sections, with no accessibility violations', async ({ page
   await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
   await expect(page).toHaveURL(/#account-sign-in-methods$/);
   await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();
+
+  // The other theme once, and the phone's width (claude-docs/styling.md,
+  // "Designing a section").
+  await page.emulateMedia({ colorScheme: 'light' });
+  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
 });
 
-// Two linked, so Remove shows, and a failed link's alert: the page's other markup.
+// Two linked, so Remove shows, and a failed link's alert in its provider's
+// row: the page's other markup.
 test('two linked and a failed link have no accessibility violations', async ({ page }) => {
   await signInAs(page, 'two-methods@account-page.test', ['discord', 'microsoft']);
 
-  await page.goto('/account?error=access_denied');
+  await page.goto('/account?error=access_denied&provider=microsoft');
 
   const main = page.getByRole('main');
   await expect(main.getByRole('button', { name: 'Remove Microsoft' })).toBeVisible();
   // Scoped to <main>: Next portals an empty role="alert" route announcer into <body>.
-  await expect(main.getByRole('alert')).toBeVisible();
+  await expect(
+    main.getByRole('listitem').filter({ hasText: 'Microsoft' }).getByRole('alert'),
+  ).toBeVisible();
   await assertNoAccessibilityViolations(page);
 });
 
@@ -73,6 +82,8 @@ test('sends an unverified account to the email page instead', async ({ page }) =
 
   await page.goto('/account/email?next=%2Faccount');
   await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
 });
 
 // Sign Out beside the heading (added in MB.63's PR, on the owner's call).

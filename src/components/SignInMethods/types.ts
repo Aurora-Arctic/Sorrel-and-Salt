@@ -17,6 +17,12 @@ export interface SignInMethodsProps {
   configured: readonly ProviderId[];
   /** A failed link's callback, from linkErrorMessage and the callback's `?provider=`. */
   error?: SignInMethodError;
+  /**
+   * The session is recent enough for Better Auth to remove a method
+   * (`sessionIsFresh()`). False withholds every Remove and offers Sign In
+   * Again instead. Defaults to true: the refusal is Better Auth's either way.
+   */
+  fresh?: boolean;
 }
 
 /**
@@ -25,11 +31,19 @@ export interface SignInMethodsProps {
  */
 export type ProviderRowState = 'linked' | 'addable' | 'unavailable';
 
+/**
+ * Whether a linked row offers Remove: `offered` while another method is
+ * left and the session is fresh; `last` when it is the only method, which
+ * the row says; `withheld` while the session is too old, which the list
+ * says once above the rows.
+ */
+export type ProviderRemoval = 'offered' | 'last' | 'withheld';
+
 export interface ProviderRowProps {
   provider: SocialProvider;
   state: ProviderRowState;
-  /** Linked only: another method is left, so this one may go. */
-  removable: boolean;
+  /** Linked only: whether this row offers Remove, and if not, why. */
+  removal: ProviderRemoval;
   /** A removal is in flight somewhere in the list, so every Remove waits for it. */
   pending: boolean;
   /** This provider's own failure, shown in its row. */

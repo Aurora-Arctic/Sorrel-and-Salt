@@ -1,23 +1,37 @@
 'use client';
 
-import { type ReactElement, useState } from 'react';
-import { linkSocial, unlinkAccount } from '../../lib/auth-client';
-import { ACCOUNT_PATH, GENERIC_LINK_ERROR, unlinkErrorMessage } from '../../lib/sign-in';
+import { type ReactElement, useId, useState } from 'react';
+import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
+import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import {
+  ACCOUNT_PATH,
+  GENERIC_LINK_ERROR,
+  signInPath,
+  unlinkErrorMessage,
+} from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import Notice from '../Notice';
 import { ProviderRow } from './provider-row';
-import type { SignInMethodError, SignInMethodsProps } from './types';
+import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
 // The account page's list of the ways into this account: each roster
 // provider, linked or addable, removable while another is left. Adding one is
 // Better Auth's /link-social, which leaves for the provider and lands back on
-// the account page; removing one is /unlink-account, answered in place. The
+// the account page; removing one is /unlink-account, answered in place. A
+// session too old for Better Auth to remove one is offered a fresh sign-in
+// in place of every Remove, rather than a press it would refuse. The
 // section's heading and intro are the page's, so the section is a named
 // region like the other two. See claude-docs/components/sign-in-methods.md.
 
-const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): ReactElement => {
+const SignInMethods = ({
+  linked,
+  configured,
+  error,
+  fresh = true,
+}: SignInMethodsProps): ReactElement => {
+  const freshNoteId = useId();
   // Seeded from the server's list; a removal answers in place rather than
   // reloading the page.
   const [accounts, setAccounts] = useState(linked);
@@ -26,6 +40,8 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
   const [alert, setAlert] = useState<SignInMethodError | undefined>(error);
   const [removed, setRemoved] = useState<string>();
   const [pending, setPending] = useState<string>();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutFailed, setSignOutFailed] = useState(false);
 
   const handleAdd = async (providerId: ProviderId): Promise<void> => {
     if (!configured.includes(providerId)) return;
@@ -59,7 +75,22 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
     setRemoved(label);
   };
 
-  const removable = accounts.length > 1;
+  // Sign out, then sign in again landing back here, which makes the session
+  // fresh. The call and its failure are SignOutButton's: a refusal answers
+  // `error` and a dropped connection throws, and either says so.
+  const handleSignInAgain = async (): Promise<void> => {
+    setSigningOut(true);
+    setSignOutFailed(false);
+    const { error: failure } = await signOut().catch((thrown: unknown) => ({ error: thrown }));
+    if (failure) {
+      setSigningOut(false);
+      setSignOutFailed(true);
+      return;
+    }
+    window.location.assign(signInPath(ACCOUNT_PATH));
+  };
+
+  const removal: ProviderRemoval = accounts.length < 2 ? 'last' : fresh ? 'offered' : 'withheld';
   // A failure with no provider it belongs to stays at the head of the list.
   const listAlert = alert && alert.providerId === undefined ? alert.message : undefined;
 
@@ -67,7 +98,28 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
     <div className="sign-in-methods">
       {listAlert && <Notice kind="error">{listAlert}</Notice>}
       {/* At the head of the list, not in a row: the row it was is gone. */}
-      {removed && <Notice kind="success">{removed} was removed.</Notice>}
+      {removed && <Notice kind="success">{removed} was removed from your sign-in methods.</Notice>}
+      {/* Withheld, not only refused: Better Auth would refuse every Remove
+          from this session, so the way to a fresh one is offered instead. */}
+      {removal === 'withheld' && (
+        <div className="sign-in-methods__fresh">
+          <Notice kind="plain" id={freshNoteId}>
+            Removing a sign-in method needs a recent sign-in.
+          </Notice>
+          <button
+            type="button"
+            className="btn"
+            disabled={signingOut}
+            aria-busy={signingOut || undefined}
+            aria-describedby={freshNoteId}
+            onClick={() => void handleSignInAgain()}
+          >
+            {signingOut && <span className="spinner" aria-hidden="true" />}
+            {signingOut ? 'Signing Out' : 'Sign In Again'}
+          </button>
+          {signOutFailed && <Notice kind="error">{GENERIC_FAILURE}</Notice>}
+        </div>
+      )}
       <ul className="sign-in-methods__list">
         {SOCIAL_PROVIDERS.map((provider) => {
           const account = accounts.find((candidate) => candidate.providerId === provider.id);
@@ -78,7 +130,7 @@ const SignInMethods = ({ linked, configured, error }: SignInMethodsProps): React
               state={
                 account ? 'linked' : configured.includes(provider.id) ? 'addable' : 'unavailable'
               }
-              removable={removable}
+              removal={removal}
               pending={pending !== undefined}
               error={alert?.providerId === provider.id ? alert.message : undefined}
               onAdd={() => void handleAdd(provider.id)}

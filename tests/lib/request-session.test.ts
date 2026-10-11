@@ -11,7 +11,10 @@ const listUserAccountsMock = vi.fn();
 let requestHeaders = new Headers();
 
 vi.mock('@/lib/auth', () => ({
-  auth: { api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock } },
+  auth: {
+    api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock },
+    options: {},
+  },
 }));
 vi.mock('next/headers', () => ({ headers: async () => requestHeaders }));
 // Next's own redirect and forbidden throw framework errors the router catches;

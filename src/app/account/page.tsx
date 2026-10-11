@@ -4,7 +4,7 @@ import EmailForm from '../../components/EmailForm';
 import NameForm from '../../components/NameForm';
 import SignInMethods from '../../components/SignInMethods';
 import SignOutButton from '../../components/SignOutButton';
-import { linkedAccounts, requireSession } from '../../lib/request-session';
+import { linkedAccounts, requireSession, sessionIsFresh } from '../../lib/request-session';
 import { linkErrorMessage, postSignInLanding } from '../../lib/sign-in';
 import { isRosterProvider } from '../../lib/social-providers';
 // Server-only — see social-providers-config.ts's own header. Only the
@@ -18,17 +18,21 @@ export const metadata: Metadata = {
 };
 
 // The one account page (MB.88): the name the site shows, the address it
-// writes to, and the ways in, each a section under its own heading, ruled
-// apart and reached from a nav beneath the page's heading (the owner's
-// call). The page owns all three heads, so each section is a region named by
-// its heading. The ids are prefixed so no form's own id can meet them. A link
-// to add a provider lands back here, with `?error=` and `?provider=` when it
-// failed (claude-docs/auth/admin-bootstrap.md, "The account page"). An
-// unverified account never reaches it: `requireSession()` sends it to the
-// email page.
+// writes to, and the ways in, each a section on its own panel under its own
+// heading, reached from a nav beneath the page's heading (the owner's calls,
+// MB.88 and MB.116). The page owns all three heads, so each section is a
+// region named by its heading. The ids are prefixed so no form's own id can
+// meet them. A link to add a provider lands back here, with `?error=` and
+// `?provider=` when it failed (claude-docs/auth/admin-bootstrap.md, "The
+// account page"). An unverified account never reaches it: `requireSession()`
+// sends it to the email page.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
-  const [me, linked] = await Promise.all([getMe(session), linkedAccounts()]);
+  const [me, linked, fresh] = await Promise.all([
+    getMe(session),
+    linkedAccounts(),
+    sessionIsFresh(),
+  ]);
   const linkError = linkErrorMessage(params.error);
   // Which row the failure belongs in; anything not on the roster leaves it
   // at the head of the section.
@@ -60,19 +64,18 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       </nav>
       <section
         id="account-name"
-        className="page-frame__section"
+        className="page-frame__section panel"
         aria-labelledby="account-name-heading"
       >
         <div className="header">
           <h2 id="account-name-heading">Name</h2>
-          <p className="lede">Change your name.</p>
+          <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
         </div>
         <NameForm name={me.name} />
       </section>
-      <hr className="page-frame__rule" />
       <section
         id="account-email"
-        className="page-frame__section"
+        className="page-frame__section panel"
         aria-labelledby="account-email-heading"
       >
         {/* No lede here: the form's own status line says what the section
@@ -90,19 +93,21 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
         />
       </section>
-      <hr className="page-frame__rule" />
       <section
         id="account-sign-in-methods"
-        className="page-frame__section"
+        className="page-frame__section panel"
         aria-labelledby="account-sign-in-methods-heading"
       >
         <div className="header">
           <h2 id="account-sign-in-methods-heading">Sign-In Methods</h2>
-          <p className="lede">Any of these signs you in to this account.</p>
+          <p className="lede">You can sign in to this account with any of these.</p>
         </div>
         <SignInMethods
           linked={linked}
           configured={configuredProviders()}
+          // Better Auth refuses a removal from a session older than a day,
+          // so a stale one is offered a fresh sign-in instead of Remove.
+          fresh={fresh}
           error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
         />
       </section>

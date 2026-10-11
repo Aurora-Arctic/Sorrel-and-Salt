@@ -63,7 +63,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
   return (
     <div className="name-form">
       {alert && <Notice kind="error">{alert}</Notice>}
-      {savedMessage && <Notice kind="success">Saved your name.</Notice>}
+      {savedMessage && <Notice kind="success">Your name was saved.</Notice>}
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>

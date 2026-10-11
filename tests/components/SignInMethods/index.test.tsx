@@ -5,13 +5,17 @@ import { GENERIC_LINK_ERROR, GENERIC_UNLINK_ERROR } from '@/lib/sign-in';
 import type { LinkedAccount, ProviderId } from '@/lib/types';
 
 // Mocked wholesale, as in SignInPanel's test: a link assigns
-// `window.location.href`, which jsdom cannot follow.
+// `window.location.href`, which jsdom cannot follow, and a sign-out's
+// success navigates, as in SignOutButton's.
 const linkSocialMock = vi.fn();
 const unlinkAccountMock = vi.fn();
+const signOutMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({
   linkSocial: (...args: unknown[]) => linkSocialMock(...args),
   unlinkAccount: (...args: unknown[]) => unlinkAccountMock(...args),
+  signOut: () => signOutMock(),
 }));
+const assignMock = vi.fn();
 
 const ALL: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
@@ -30,6 +34,9 @@ describe('SignInMethods', () => {
   afterEach(() => {
     linkSocialMock.mockReset();
     unlinkAccountMock.mockReset();
+    signOutMock.mockReset();
+    assignMock.mockReset();
+    vi.unstubAllGlobals();
   });
 
   it('lists every roster provider, offering the ones not linked', () => {
@@ -55,6 +62,19 @@ describe('SignInMethods', () => {
     });
   });
 
+  it("a failed link's error is in its provider's row", () => {
+    render(
+      <SignInMethods
+        linked={[DISCORD]}
+        configured={ALL}
+        error={{ providerId: 'microsoft', message: GENERIC_LINK_ERROR }}
+      />,
+    );
+
+    expect(within(row('Microsoft')).getByRole('alert')).toBeVisible();
+    expect(within(row('Google')).queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('shows the generic link sentence when the link fails before any redirect', async () => {
     linkSocialMock.mockResolvedValue({ error: { status: 500 } });
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
@@ -77,10 +97,40 @@ describe('SignInMethods', () => {
     expect(linkSocialMock).not.toHaveBeenCalled();
   });
 
-  it('offers no Remove while one provider is linked', () => {
+  it('with one method left, the row says why it cannot go', () => {
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
     expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
+    expect(within(row('Discord')).getByRole('paragraph')).toHaveTextContent(/\S/);
+  });
+
+  // Better Auth would refuse every removal from a session older than its
+  // `freshAge`, so none is offered; the same two linked offer Remove fresh.
+  it('with a stale session and two methods linked, Remove is withheld and Sign In Again is offered', () => {
+    const { unmount } = render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    expect(screen.getAllByRole('button', { name: /^Remove/ })).toHaveLength(2);
+    unmount();
+
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+
+    expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign In Again' })).toHaveAccessibleDescription(/\S/);
+    // Not the last method's reason: neither row is the only one.
+    expect(within(row('Discord')).queryByRole('paragraph')).not.toBeInTheDocument();
+  });
+
+  it('Sign In Again signs out and sends the browser to sign-in with the account page as the return path', async () => {
+    signOutMock.mockResolvedValue({ error: null });
+    vi.stubGlobal('location', { assign: assignMock });
+    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Sign In Again' }));
+
+    await waitFor(() => expect(assignMock).toHaveBeenCalledTimes(1));
+    expect(signOutMock).toHaveBeenCalledTimes(1);
+    const target = new URL(assignMock.mock.calls[0][0] as string, 'http://relative.invalid');
+    expect(target.pathname).toBe('/sign-in');
+    expect(target.searchParams.get('next')).toBe('/account');
   });
 
   it('offers Remove on each once two are linked, and removes by the account row id', async () => {

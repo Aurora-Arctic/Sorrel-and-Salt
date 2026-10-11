@@ -1,3 +1,4 @@
+import type { BetterAuthOptions } from 'better-auth';
 import { headers } from 'next/headers';
 import { forbidden, redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -16,9 +17,27 @@ import type { LinkedAccount } from './types';
 // never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
 // protection").
 
+// Better Auth's own default when `session.freshAge` is unset: a day, in seconds.
+const DEFAULT_FRESH_AGE_SECONDS = 60 * 60 * 24;
+
+/**
+ * Whether Better Auth would still call a session created at `createdAt`
+ * fresh: the check its `/unlink-account` makes, restated so the account page
+ * can withhold Remove rather than offer a press that is refused. A `freshAge`
+ * of 0 turns the check off, as it does in Better Auth.
+ */
+function isFresh(createdAt: Date | string): boolean {
+  // Read through the wide options type: src/lib/auth.ts sets no `session`
+  // today, so its literal type has none, but one set later must count.
+  const options: BetterAuthOptions = auth.options;
+  const freshAge = options.session?.freshAge ?? DEFAULT_FRESH_AGE_SECONDS;
+  if (freshAge === 0) return true;
+  return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
+}
+
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
-  if (!result) return { session: null, emailVerified: false };
+  if (!result) return { session: null, emailVerified: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation (MB.53); the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
@@ -29,6 +48,7 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
+    sessionFresh: isFresh(result.session.createdAt),
   };
 }
 
@@ -48,6 +68,15 @@ const getSessionState = cache(async (): Promise<SessionState> => stateFromHeader
 /** The signed-in user, or `null`. */
 export async function getSession(): Promise<Session | null> {
   return (await getSessionState()).session;
+}
+
+/**
+ * Whether this request's session is recent enough for Better Auth to remove a
+ * sign-in method; `false` with no session. For the account page, after
+ * `requireSession()`, from the same per-request lookup.
+ */
+export async function sessionIsFresh(): Promise<boolean> {
+  return (await getSessionState()).sessionFresh;
 }
 
 /**

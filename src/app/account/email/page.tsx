@@ -11,33 +11,36 @@ export const metadata: Metadata = {
   title: 'Your Email — Sorrel & Salt',
 };
 
-// No AppShell exists yet; the narrow page frame centres the form and the way
-// back to the account page, the forms' column wide.
+// No AppShell exists yet; the narrow page frame centres the form, on a panel
+// as the account page's sections are (the owner's call, MB.116), and below it
+// the way back to the account page, the forms' column wide.
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const me = await getMe(session);
 
   return (
     <main className="page-frame page-frame--narrow">
-      <EmailForm
-        // A placeholder is the row's way of having no address; the form
-        // never shows one (claude-docs/components/email-form.md).
-        email={isPlaceholderEmail(me.email) ? '' : me.email}
-        verified={me.emailVerified}
-        // A followed link lands here with the flag; the row, not the flag,
-        // says whether the address is proved, and a refusal never carries it.
-        confirmed={
-          me.emailVerified && hasVerifiedFlag(params.verified) && params.error === undefined
-        }
-        next={safeReturnPath(params.next)}
-        landing={postSignInLanding(session.role)}
-        error={verifyErrorMessage(params.error)}
-        waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
-      />
+      <div className="panel">
+        <EmailForm
+          // A placeholder is the row's way of having no address; the form
+          // never shows one (claude-docs/components/email-form.md).
+          email={isPlaceholderEmail(me.email) ? '' : me.email}
+          verified={me.emailVerified}
+          // A followed link lands here with the flag; the row, not the flag,
+          // says whether the address is proved, and a refusal never carries it.
+          confirmed={
+            me.emailVerified && hasVerifiedFlag(params.verified) && params.error === undefined
+          }
+          next={safeReturnPath(params.next)}
+          landing={postSignInLanding(session.role)}
+          error={verifyErrorMessage(params.error)}
+          waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
+        />
+      </div>
       {/* An unverified account reaches no other page, so it is offered none. */}
       {me.emailVerified && (
         <p>
-          <Link href="/account">Your account</Link>
+          <Link href="/account">Your Account</Link>
         </p>
       )}
     </main>

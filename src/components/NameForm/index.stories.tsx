@@ -9,14 +9,15 @@ export default {
   title: 'Forms / Name',
 };
 
-// Inside the account page's frame and section, as src/app/account/page.tsx
-// writes them, so the workshop shows what the page shows.
+// Inside the account page's frame and section, on its panel, as
+// src/app/account/page.tsx writes them, so the workshop shows what the page
+// shows.
 const Section = ({ name }: { name: string }) => (
   <main className="page-frame page-frame--narrow">
-    <section className="page-frame__section" aria-labelledby="name-story-heading">
+    <section className="page-frame__section panel" aria-labelledby="name-story-heading">
       <div className="header">
         <h2 id="name-story-heading">Name</h2>
-        <p className="lede">Change your name.</p>
+        <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
       </div>
       <NameForm name={name} />
     </section>
