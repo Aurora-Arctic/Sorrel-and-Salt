@@ -74,7 +74,7 @@ otherwise a `NomenclatureKind`.
 - **No entries reads "No compendium entries yet."**, with no table; a
   filtered list with no rows reads "No compendium entry matches." instead.
 
-**MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 makes the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is then named for the entry's label and formal name rather than its form, since identity is the formal name alone, so the contract above that names an Edit by its form changes with it. An entry with no form is flagged on the admin's to-do list (M8.18) ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 makes the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is then named for the entry's label and formal name rather than its form, since identity is the formal name alone, so the contract above that names an Edit by its form changes with it. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ## Styling
 
