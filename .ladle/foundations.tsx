@@ -379,7 +379,7 @@ export default function Foundations(): ReactElement {
       </header>
 
       <section id="fd-palette">
-        <SectionHead eyebrow="_variables.scss" title="The raw palette">
+        <SectionHead eyebrow="_variables.scss" title="The Raw Palette">
           Eight hand-picked hues — “parchment and iron-gall ink”. Named for the material, not the
           role, because a role can change and a hex can’t. Every runtime token and group colour is a{' '}
           <code>color.adjust()</code> of one of these. Fixed values, so these swatches don’t move
@@ -400,7 +400,7 @@ export default function Foundations(): ReactElement {
       <section id="fd-tokens">
         <SectionHead
           eyebrow="--surface-* / --text-* / --accent-* / --secondary-*"
-          title="Runtime tokens"
+          title="Runtime Tokens"
         >
           The <code>var(--token)</code> layer every component is coloured from, resolved per theme
           by the theme mixins. Every pairing clears WCAG AA against both surfaces of its theme.
@@ -487,7 +487,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-radii">
-        <SectionHead eyebrow="_variables.scss · radius()" title="Corner radius">
+        <SectionHead eyebrow="_variables.scss · radius()" title="Corner Radius">
           Four radii by role, so a button beside a field matches it and a panel holding both reads
           as the thing that holds them.
         </SectionHead>
@@ -565,7 +565,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-fields">
-        <SectionHead eyebrow="_primitives.scss · .form / .field" title="Form fields">
+        <SectionHead eyebrow="_primitives.scss · .form / .field" title="Form Fields">
           Label, an optional hint, the control, and its error beneath it — the resolver’s or the
           server’s, drawn the same. The error edge is a second pixel as well as a colour, and a rule
           that belongs to no one field is a notice above them all. A label with a tip or a required
@@ -724,7 +724,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-groups">
-        <SectionHead eyebrow="seed defaults · chipColors()" title="Category-group colours">
+        <SectionHead eyebrow="seed defaults · chipColors()" title="Category-Group Colours">
           Not a foundation to sign off: each group’s colour pair lives on its{' '}
           <code>category_groups</code> row, which an admin edits, contrast-checked on write. These
           are the eight the seed writes — one rotation of <code>$sorrel</code> offset by half a
@@ -834,7 +834,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-specimen">
-        <SectionHead eyebrow="everything at once" title="An ingredient card">
+        <SectionHead eyebrow="everything at once" title="An Ingredient Card">
           Chips and badges competing for the same eye at shipping size. Foxglove is genuinely deadly
           — which is what the safety badge is for.
         </SectionHead>
