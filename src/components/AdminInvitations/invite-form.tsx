@@ -79,6 +79,7 @@ const InviteForm = ({ onSent }: InviteFormProps): ReactElement => {
               className="input"
               type="email"
               autoComplete="off"
+              placeholder="Add an email"
               aria-required
               {...emailAria}
               value={email}
@@ -95,6 +96,7 @@ const InviteForm = ({ onSent }: InviteFormProps): ReactElement => {
                 className="input"
                 type="text"
                 autoComplete="off"
+                placeholder="Add a reason"
                 {...noteAria}
                 value={note}
                 disabled={sending}

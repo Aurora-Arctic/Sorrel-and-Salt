@@ -75,6 +75,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
             className="input"
             type="text"
             autoComplete="name"
+            placeholder="Add your name"
             value={value}
             onChange={(event) => setValue(event.target.value)}
             {...aria}

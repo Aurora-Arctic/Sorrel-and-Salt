@@ -63,6 +63,7 @@ const GroupedValueListFilter = ({
           className="input"
           type="search"
           name="query"
+          placeholder="Search names"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
         />

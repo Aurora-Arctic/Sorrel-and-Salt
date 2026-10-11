@@ -76,6 +76,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
           className="input"
           type="search"
           name="query"
+          placeholder="Search names"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
         />

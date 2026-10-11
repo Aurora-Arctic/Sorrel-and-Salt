@@ -123,6 +123,7 @@ const ConfirmedAction = ({
                       className="input"
                       type="text"
                       autoComplete="off"
+                      placeholder="Add a reason"
                       {...noteAria}
                       value={note}
                       disabled={sending}

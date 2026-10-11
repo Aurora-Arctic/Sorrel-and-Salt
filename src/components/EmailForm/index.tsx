@@ -174,6 +174,7 @@ const EmailForm = ({
             className="input"
             type="email"
             autoComplete="email"
+            placeholder="Add your email"
             value={value}
             onChange={(event) => setValue(event.target.value)}
             {...aria}

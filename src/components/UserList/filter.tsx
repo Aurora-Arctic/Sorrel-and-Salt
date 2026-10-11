@@ -51,6 +51,7 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
           className="input"
           type="search"
           name="query"
+          placeholder="Search users"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
         />

@@ -41,6 +41,7 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
           className="input"
           type="search"
           name="query"
+          placeholder="Search users"
           value={draftQuery}
           onChange={(event) => setDraftQuery(event.target.value)}
         />
