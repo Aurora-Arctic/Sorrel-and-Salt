@@ -100,9 +100,11 @@ describe('the /admin/users page', () => {
   it('shows each user with the providers read for them', async () => {
     await renderPage();
 
-    const row = screen.getByRole('row', { name: /Listed Fixture 01/ });
-    expect(within(row).getByText('Google')).toBeInTheDocument();
-    // None linked is an empty cell, the fifth.
+    // The providers are the fifth cell; none linked leaves it empty.
+    const linked = within(screen.getByRole('row', { name: /Listed Fixture 01/ })).getAllByRole(
+      'cell',
+    );
+    expect(linked[4]).toHaveTextContent('Google');
     const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
       'cell',
     );

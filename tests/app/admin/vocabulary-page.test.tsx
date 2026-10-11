@@ -77,9 +77,7 @@ beforeEach(() => {
   router.refresh.mockReset();
 });
 
-type VocabularyPageRoute = typeof AdminPlanetsPage;
-
-async function renderRoute(Page: VocabularyPageRoute, params: Record<string, string> = {}) {
+async function renderRoute(Page: typeof AdminPlanetsPage, params: Record<string, string> = {}) {
   const page = await Page({ searchParams: Promise.resolve(params) });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
