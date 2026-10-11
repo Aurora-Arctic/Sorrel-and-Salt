@@ -25,8 +25,6 @@ const USERS_ID = 'users.id';
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-type Nullability = 'required' | 'nullable';
-
 describe('the audit columns', () => {
   it('sit on every audited table and no other, required but for the tombstone, each id referencing users', async () => {
     const columns = await sql<{ table_name: string; column_name: string; is_nullable: string }[]>`
@@ -67,7 +65,7 @@ describe('the audit columns', () => {
             columns: {
               ...stamps,
               ...Object.fromEntries(DELETE_COLUMNS.map((column) => [column, 'nullable'])),
-            } as Record<string, Nullability>,
+            },
             references: Object.fromEntries(AUDIT_IDS.map((column) => [column, USERS_ID])),
           };
 
