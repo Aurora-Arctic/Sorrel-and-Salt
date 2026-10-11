@@ -43,16 +43,21 @@ const lookup = (workspaceId: string | null, name: string) =>
  * held on them, and the two things that move it on — a save's `check`, and
  * `dismiss`. The form owns it, since its save waits on it; `NameField` draws it.
  * A null coven asks about the compendium alone, and `omit` is the entry being
- * edited, which its own name always matches.
+ * edited, which its own name always matches. `opened` is the name the form
+ * opened with: until the name differs from it nothing is asked or held, so an
+ * edit that leaves the name alone never warns (MB.115, the owner's call).
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
   text: string,
   omit?: string,
+  opened = '',
 ): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
-  const name = useDebouncedValue(typed);
+  const unchanged = typed === opened.trim();
+  // The opened name asks nothing, as a blank one does.
+  const name = useDebouncedValue(unchanged ? '' : typed);
   const { data } = useQuery({
     ...lookup(workspaceId, name),
     // A blank name has nothing to resemble, and the server answers it empty.
@@ -76,7 +81,7 @@ export function useDuplicateWarning(
 
   const check = async (value: string): Promise<boolean> => {
     const sending = value.trim();
-    if (sending === '') return false;
+    if (sending === '' || sending === opened.trim()) return false;
     let found: Duplicate[];
     try {
       // The cached answer when the typing had settled; asked now when not, and
@@ -97,7 +102,12 @@ export function useDuplicateWarning(
     setHeldFor(null);
   };
 
-  return { shown, blocking: heldFor === typed && shown.length > 0, check, dismiss };
+  return {
+    shown: unchanged ? [] : shown,
+    blocking: !unchanged && heldFor === typed && shown.length > 0,
+    check,
+    dismiss,
+  };
 }
 
 /** "Cat's Claw (Uncaria tomentosa)": the label alone names five plants. */
@@ -158,7 +168,7 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
               <button
                 ref={ref}
                 type="button"
-                className="btn"
+                className="btn btn--quiet btn--small"
                 aria-describedby={warningId}
                 onClick={dismiss}
               >

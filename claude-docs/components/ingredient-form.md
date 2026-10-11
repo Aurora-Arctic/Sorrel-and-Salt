@@ -590,14 +590,18 @@ the same `useDebouncedValue` the lookups wait on, for the three closest
 entries in the compendium and this coven — on the compendium, the
 compendium's alone, less the entry being edited, which its own name always
 matches. A blank name asks nothing and drops
-the last warning. The threshold is the server's, M4.7's 0.4, so "no warning
+the last warning, and so does the name the form opened with (MB.115, the
+owner's call): an edit warns only once its name has been changed, and a save
+that leaves the name alone is never held, so opening an entry to fix
+something else never asks about its own name's neighbours. The threshold is the server's, M4.7's 0.4, so "no warning
 below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
 The warning sits beneath the field, a `.notice--warn`, the plain box with the red triangle: "Did you mean Cat's
 Claw (Uncaria tomentosa), Cat's Claw (Felis catus) or Mockleaf?", with a
-Create Anyway button. Each match is a link named by its label and its formal
+Create Anyway button, quiet and small (`.btn--quiet.btn--small`, the
+owner's call at MB.115), since it sets a question aside rather than acting. Each match is a link named by its label and its formal
 name, since the label alone can name five plants; one with no formal name
 shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by

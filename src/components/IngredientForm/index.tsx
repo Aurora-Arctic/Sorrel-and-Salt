@@ -159,6 +159,8 @@ const IngredientForm = ({
     workspaceId,
     useWatch({ control, name: 'name' }),
     entry?.id,
+    // The name the form holds as saved: an edit's, and a save's reset moves it on.
+    methods.formState.defaultValues?.name,
   );
   const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });

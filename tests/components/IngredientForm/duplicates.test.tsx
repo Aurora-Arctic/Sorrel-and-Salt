@@ -37,14 +37,21 @@ const MOCKLEAF: DuplicateNode = {
   slug: 'mockleaf',
 };
 
-/** The name field and its warning; a save that the warning does not hold calls `sent` with the name. */
-function renderName() {
+/**
+ * The name field and its warning; a save that the warning does not hold calls
+ * `sent` with the name. `opened` is an edited entry's name, as the form opens with it.
+ */
+function renderName(opened?: string) {
   const sent = vi.fn();
   const Harness = () => {
-    const methods = useForm<IngredientFormValues>({ defaultValues: EMPTY_VALUES });
+    const methods = useForm<IngredientFormValues>({
+      defaultValues: { ...EMPTY_VALUES, name: opened ?? '' },
+    });
     const warning = useDuplicateWarning(
       WORKSPACE_ID,
       useWatch({ control: methods.control, name: 'name' }),
+      undefined,
+      opened,
     );
     return (
       <FormProvider {...methods}>
@@ -112,6 +119,32 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(warning()).toBeEmptyDOMElement();
     await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
     expect(calls).toHaveLength(1);
+  });
+
+  // MB.115, the owner's call: an edit that leaves the name alone asks nothing.
+  it('asks nothing about the name an edit opened with, and lets its save through', async () => {
+    // Answered before the form renders: an edit that asked on opening would ask at once.
+    const calls = offerDuplicates([TOMENTOSA]);
+    const sent = renderName("Cat's Claw");
+
+    settle();
+    save();
+    await settleSave();
+
+    expect(calls).toHaveLength(0);
+    expect(warning()).toBeEmptyDOMElement();
+    expect(sent).toHaveBeenCalledWith("Cat's Claw");
+  });
+
+  it('warns once an edit changes the name', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName('Mockleaf');
+
+    type('Cats Claw');
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
   });
 
   it('names each near match by its label and formal name, linked to the entry', async () => {
