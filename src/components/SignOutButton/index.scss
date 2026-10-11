@@ -7,8 +7,3 @@
   align-items: center;
   gap: space(3);
 }
-
-// Compounded with `.notice`, whose primitive is `body .notice` in the app.
-.notice.sign-out-button__failure {
-  margin: 0;
-}

@@ -189,7 +189,14 @@ const UNLINK_ERROR_MESSAGES: Record<string, string> = {
 
 export const GENERIC_UNLINK_ERROR = "That sign-in method couldn't be removed. Please try again.";
 
-/** One readable sentence for a refused `/unlink-account`. */
+const unlinkLookup = messageLookup(UNLINK_ERROR_MESSAGES, GENERIC_UNLINK_ERROR);
+
+/**
+ * One readable sentence for a refused `/unlink-account`. Unlike a callback's
+ * lookup, a missing code still has a sentence: the call was refused either
+ * way, so where `messageLookup` answers `undefined` for no code, this falls
+ * back to the generic one.
+ */
 export function unlinkErrorMessage(code: string | undefined): string {
-  return (code && UNLINK_ERROR_MESSAGES[code]) || GENERIC_UNLINK_ERROR;
+  return unlinkLookup(code) ?? GENERIC_UNLINK_ERROR;
 }

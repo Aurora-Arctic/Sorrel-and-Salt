@@ -11,13 +11,14 @@ export const metadata: Metadata = {
   title: 'Your Email — Sorrel & Salt',
 };
 
-// No AppShell exists yet; `.email-page` centers the form on its own.
+// No AppShell exists yet; the narrow page frame centres the form and the way
+// back to the account page, the forms' column wide.
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const me = await getMe(session);
 
   return (
-    <main className="email-page">
+    <main className="page-frame page-frame--narrow">
       <EmailForm
         // A placeholder is the row's way of having no address; the form
         // never shows one (claude-docs/components/email-form.md).
@@ -35,7 +36,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
       />
       {/* An unverified account reaches no other page, so it is offered none. */}
       {me.emailVerified && (
-        <p className="email-page__nav">
+        <p>
           <Link href="/account">Your account</Link>
         </p>
       )}

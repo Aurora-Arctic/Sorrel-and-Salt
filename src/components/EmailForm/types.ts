@@ -15,10 +15,3 @@ export interface EmailFormProps {
   /** Inside the account page's Email section (MB.88): no page heading, which the section gives, and never the confirmed view, which stays the email page's. */
   embedded?: boolean;
 }
-
-export interface Failure {
-  /** Lands beside the input: a VALIDATION issue pathed to `email`. */
-  field?: string;
-  /** Lands in the alert region: anything else. */
-  alert?: string;
-}

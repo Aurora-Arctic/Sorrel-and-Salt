@@ -37,12 +37,18 @@ As in EmailForm ([`email-form.md`](email-form.md), "Two error surfaces"), a
 `VALIDATION` issue pathed to `name` lands beneath the input, which references
 it through `aria-describedby` and sets `aria-invalid`. Anything else, such as
 the `FORBIDDEN` a provisional account would meet, goes to the `role="alert"`
-region in the server's words, or to `GENERIC_NAME_ERROR` when there are none.
+region in the server's words, or to `GENERIC_FAILURE` when there are none.
+The reading is the shared `readGraphqlFailure(error, ['name'])`
+(`src/lib/graphql-failure.ts`), and both notices are the `Notice` component
+([`notice.md`](notice.md)).
 
 ## Styling
 
-Tokens only until the account page's design review (MB.117). `.name-form` is
-a column, and the field, notices and button are the form primitives'.
+Designed in the sign-in and account pages' review (MB.116). `.name-form` is
+a column; its width is the account page's `.page-frame--narrow`, and the
+field, notices and button are the form primitives'. The stories (`Prefilled`,
+`LongName`, `PhoneDark`, `PhoneLight`) render inside the page's real frame
+and section.
 
 ## Testing
 

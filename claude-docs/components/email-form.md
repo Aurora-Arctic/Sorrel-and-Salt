@@ -59,12 +59,14 @@ followed.
 A failed mutation rejects with graphql-request's `ClientError`, whose
 `response.errors[0].extensions` carries the code and, for `VALIDATION`, the
 field errors ([`graphql/errors.md`](../graphql/errors.md), "Errors"). The
-component reads that one shape and routes it to one of two places:
+component reads that one shape through the shared reader,
+`readGraphqlFailure(error, ['email'])` in `src/lib/graphql-failure.ts`, and
+routes what it answers to one of two places:
 
-| Error                                                                | Where it lands                                                                                                                                            |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                                 |
-| Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_EMAIL_ERROR` when there is none, or the rejection is not a `ClientError` at all. |
+| Error                                                                | Where it lands                                                                                                                                        |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                             |
+| Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_FAILURE` when there is none, or the rejection is not a `ClientError` at all. |
 
 Both are cleared, along with the last success, when a new submit starts, so
 the page never shows two outcomes at once. The alert element does not exist in
@@ -76,7 +78,10 @@ reasoning as SignInPanel's.
 The submit is disabled only while the value, trimmed and lower-cased, equals
 `email` **and** `verified` is true — a verified, unchanged address has nothing
 to send — and while the mutation is pending. An unverified, unchanged address
-stays submittable: the service resends its link. It is a real `disabled`
+stays submittable: the service resends its link. While the send is in
+flight the button is busy, as NameForm's Save is: it carries `aria-busy` and
+the `.spinner` and reads "Sending Confirmation", the owner's rule for every
+form ([`styling.md`](../styling.md), "Buttons"). It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
 nothing to send is fine to skip in the tab order. `.btn` greys out under
 either, so the component styles neither.
@@ -115,13 +120,17 @@ it then.
 
 Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
 "Form fields"): `.form` and `.form__actions`, one `.field` with its
-`.field__label`, `.input` and `.field__error`, and `.notice--error` /
-`.notice--success` for the alert and the sent message. The status line is a
-`.lede`. Send Confirmation and Continue are each the view's one primary action,
+`.field__label`, `.input` and `.field__error`, and the `Notice` component
+([`notice.md`](notice.md)) for the alert and the sent message. On the email
+page the `<h1>` and the status line are a `.header`, the status line its
+`.lede`; embedded, the status line is a `.lede` on its own, under the
+section's head. Send Confirmation and Continue are each the view's one primary action,
 so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
 itself keeps from underlining or taking the visited ink
-([`styling.md`](../styling.md), "Buttons"). The
-component's own stylesheet is the page frame and the column's layout.
+([`styling.md`](../styling.md), "Buttons"). The width is the page's: `/account/email` is a `.page-frame--narrow`
+([`styling.md`](../styling.md), "The page frame"), and the account page's
+section sits in the same frame. The component's own stylesheet is the
+column's gap and the address's weight.
 
 ## Stories
 
@@ -130,7 +139,8 @@ component's own stylesheet is the page frame and the column's layout.
 `ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
 change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
-Every other story renders inside the page's own `<main className="email-page">`, so the
+`PhoneDark` and `PhoneLight` show the first visit at 375px in each theme.
+Every other story renders inside the page's own `<main className="page-frame page-frame--narrow">`, so the
 workshop shows what `/account/email` shows and nothing is styled for the
 workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider

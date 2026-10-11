@@ -35,8 +35,6 @@ describe('SignInMethods', () => {
   it('lists every roster provider, offering the ones not linked', () => {
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
-    // A section of the account page, under its level-1 "Your Account" (MB.88).
-    expect(screen.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
     // No status text: a linked row is the one without an Add.
     expect(within(row('Discord')).queryByText('Linked')).not.toBeInTheDocument();
@@ -54,7 +52,7 @@ describe('SignInMethods', () => {
     expect(linkSocialMock).toHaveBeenCalledWith({
       provider: 'microsoft',
       callbackURL: '/account',
-      errorCallbackURL: '/account',
+      errorCallbackURL: '/account?provider=microsoft',
     });
   });
 
@@ -130,7 +128,11 @@ describe('SignInMethods', () => {
     unmount();
 
     render(
-      <SignInMethods linked={[DISCORD]} configured={ALL} error="That expired. Start again here." />,
+      <SignInMethods
+        linked={[DISCORD]}
+        configured={ALL}
+        error={{ message: 'That expired. Start again here.' }}
+      />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('That expired. Start again here.');
   });

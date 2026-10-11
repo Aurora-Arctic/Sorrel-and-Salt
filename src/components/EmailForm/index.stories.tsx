@@ -16,7 +16,7 @@ export default {
 // Inside the page's own frame, so the workshop shows what the page shows;
 // nothing here is the workshop's alone.
 const Page = (props: EmailFormProps) => (
-  <main className="email-page">
+  <main className="page-frame page-frame--narrow">
     <EmailForm {...props} />
   </main>
 );
@@ -57,12 +57,23 @@ export const WithError: Story = () => (
 // The account page's Email section (MB.88): the section heads it, so the
 // form has no heading of its own, and it never shows the confirmed view.
 export const Embedded: Story = () => (
-  <main className="account-page">
-    <section className="account-page__section" aria-labelledby="email-story-heading">
-      <h2 id="email-story-heading" className="account-page__section-heading">
-        Email
-      </h2>
+  <main className="page-frame page-frame--narrow">
+    <section className="page-frame__section" aria-labelledby="email-story-heading">
+      <div className="header">
+        <h2 id="email-story-heading">Email</h2>
+      </div>
       <EmailForm embedded email="ada@example.test" verified landing="/coven" />
     </section>
   </main>
 );
+
+// The common first visit at a phone's width, in each theme.
+export const PhoneDark: Story = () => (
+  <Page email="ada@example.test" verified={false} landing="/coven" />
+);
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => (
+  <Page email="ada@example.test" verified={false} landing="/coven" />
+);
+PhoneLight.meta = { theme: 'light', width: 375 };

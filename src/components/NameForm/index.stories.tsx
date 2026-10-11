@@ -9,13 +9,15 @@ export default {
   title: 'Forms / Name',
 };
 
-// Inside the account page's frame and section, as the page shows it.
+// Inside the account page's frame and section, as src/app/account/page.tsx
+// writes them, so the workshop shows what the page shows.
 const Section = ({ name }: { name: string }) => (
-  <main className="account-page">
-    <section className="account-page__section" aria-labelledby="name-story-heading">
-      <h2 id="name-story-heading" className="account-page__section-heading">
-        Name
-      </h2>
+  <main className="page-frame page-frame--narrow">
+    <section className="page-frame__section" aria-labelledby="name-story-heading">
+      <div className="header">
+        <h2 id="name-story-heading">Name</h2>
+        <p className="lede">Change your name.</p>
+      </div>
       <NameForm name={name} />
     </section>
   </main>
@@ -28,3 +30,10 @@ export const Prefilled: Story = () => <Section name="Ada Fixture" />;
 export const LongName: Story = () => (
   <Section name="Adelheid Wilhelmina Fixture-Testwort of the Lower Fixture Coven" />
 );
+
+// At a phone's width, in each theme.
+export const PhoneDark: Story = () => <Section name="Ada Fixture" />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <Section name="Ada Fixture" />;
+PhoneLight.meta = { theme: 'light', width: 375 };
