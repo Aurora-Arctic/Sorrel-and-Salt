@@ -155,11 +155,12 @@ describe('the ingredient fields, on the local variant', () => {
   });
 
   describe('folk names', () => {
+    // Once, at the name, however often it is listed: not again as a repeat.
     it('refuses a name that is also one of its own folk names, whatever the case', () => {
       const result = Schema.safeParse({
         name: 'Testwort',
         nomenclature: 'none',
-        folkNames: ['Fixture Bane', '  testWORT '],
+        folkNames: ['Fixture Bane', '  testWORT ', 'Testwort'],
       });
 
       expect(failedPaths(result)).toEqual([['name']]);
