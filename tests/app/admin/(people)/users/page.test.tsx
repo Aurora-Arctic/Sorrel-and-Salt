@@ -27,6 +27,7 @@ vi.mock('@/modules/identity', () => ({
 }));
 
 const { default: AdminUsersPage } = await import('@/app/admin/(people)/users/page');
+const { default: UsersAction } = await import('@/app/admin/(people)/@action/users/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -45,8 +46,19 @@ const entry = (index: number) => {
   return { node, cursor: { key: [node.name], id: node.id } };
 };
 
+// The tab's action beside the heading, the switch on admin changes, and the
+// tab's content, as the route group's layout puts them on one page.
 async function renderPage(params: Record<string, string> = {}) {
-  render(await AdminUsersPage({ searchParams: Promise.resolve(params) }));
+  const [action, page] = await Promise.all([
+    UsersAction(),
+    AdminUsersPage({ searchParams: Promise.resolve(params) }),
+  ]);
+  render(
+    <>
+      {action}
+      {page}
+    </>,
+  );
 }
 
 function lastRequest(): PageRequest {

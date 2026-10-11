@@ -31,14 +31,18 @@ beforeEach(() => {
 });
 
 describe('TabbedPage', () => {
-  it('heads the page, links each tab at its own address in its order, and shows the content', () => {
+  it("heads the page with the open tab's action, links each tab at its own address in its order, and shows the content", () => {
     render(
-      <TabbedPage title="People" tabs={TABS}>
+      <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
         <table aria-label="Users" />
       </TabbedPage>,
     );
 
     expect(screen.getByRole('main')).toContainElement(screen.getByRole('heading', { level: 1 }));
+    // The action is the page's, beside its heading: neither a tab nor the content.
+    const action = within(screen.getByRole('main')).getByRole('link', { name: 'Pause' });
+    expect(tabs()).not.toContain(action);
+    expect(screen.getByRole('table', { name: 'Users' })).not.toContainElement(action);
     expect(hrefs(tabs())).toEqual(TABS.map(({ href }) => href));
     // A navigation, not in-page panels: no tablist promising arrow keys.
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
@@ -68,7 +72,7 @@ describe('TabbedPage', () => {
   const renderNavigating = () =>
     render(
       <Navigating push={router.push}>
-        <TabbedPage title="People" tabs={TABS}>
+        <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
           <table aria-label="Users" />
         </TabbedPage>
       </Navigating>,
@@ -76,17 +80,22 @@ describe('TabbedPage', () => {
   const tab = (name: string) =>
     within(screen.getByRole('navigation', { name: 'People' })).getByRole('link', { name });
   const panel = () => screen.getByRole('main');
+  // `inert` takes the action out of reach, and out of the accessibility tree
+  // with it, so it is found by its link in the DOM rather than by role.
+  const action = () => screen.getByText('Pause').closest('a');
 
-  it('greys every tab and puts a status in place of the content while a pressed tab is on its way', () => {
+  it('greys every tab and the action and puts a status in place of the content while a pressed tab is on its way', () => {
     renderNavigating();
-    // Before the press: every tab can be pressed, and the content shows.
+    // Before the press: every tab and the action can be pressed, and the content shows.
     expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+    expect(action()?.closest('[inert]')).toBeNull();
     expect(within(panel()).queryByRole('status')).not.toBeInTheDocument();
 
     fireEvent.click(tab('Invitations'));
 
     expect(router.push).toHaveBeenCalledWith('/admin/invitations');
     for (const link of tabs()) expect(link).toHaveAttribute('aria-disabled', 'true');
+    expect(action()?.closest('[inert]')).not.toBeNull();
     expect(within(panel()).getByRole('status')).toBeInTheDocument();
     expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
 

@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement, ReactNode } from 'react';
 import { WorkshopPathname } from '../../../.ladle/navigation';
-import AdminInvitations from '../AdminInvitations';
+import AdminInvitations, { InviteAdmin } from '../AdminInvitations';
 import type { AdminInvitationEntry } from '../AdminInvitations/types';
 import AdminNav from '../AdminNav';
 import { ADMIN_PAGES } from '../AdminNav/sections';
@@ -10,8 +10,9 @@ import { TabSwitchContext } from './tab-switch';
 
 // Render-only; behaviour is asserted in tests/components/TabbedPage. The
 // People page as `/admin/invitations` draws it: the admin layout's frame and
-// nav, the page's heading and its three tabs with Invitations open, and the
-// tab's own content beneath, Invite Admin at the end of its line. The
+// nav, the page's heading with the open tab's Invite Admin at the end of its
+// line, its three tabs with Invitations open, and the tab's own content
+// beneath. The
 // workshop's stub says which address is open (.ladle/navigation.ts), and
 // a tab switch provided above the page says a tab is on its way, since the
 // stub router goes nowhere.
@@ -40,7 +41,11 @@ const People = ({ children }: { children: ReactNode }): ReactElement => (
   <WorkshopPathname.Provider value="/admin/invitations">
     <div className="admin-layout">
       <AdminNav />
-      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+      <TabbedPage
+        title={ADMIN_PAGES.people.label}
+        tabs={ADMIN_PAGES.people.tabs}
+        action={<InviteAdmin />}
+      >
         {children}
       </TabbedPage>
     </div>
@@ -53,8 +58,8 @@ const Invitations = () => (
   </People>
 );
 
-// Another tab pressed and on its way: the heading where it was, every
-// tab greyed out and closed to another press, and the panel's loading state
+// Another tab pressed and on its way: the heading where it was, Invite Admin
+// and every tab greyed out and closed to another press, and the panel's loading state
 // in place of the invitations, which fades in after a moment so a quick tab
 // never flashes it.
 const Loading = () => (
@@ -65,8 +70,8 @@ const Loading = () => (
 
 export const Default: Story = () => <Invitations />;
 
-// At a phone's width in each theme: the nav's disclosure, the tabs wrapping,
-// Invite Admin across the line and each invitation a card.
+// At a phone's width in each theme: the nav's disclosure, Invite Admin across
+// the line beneath the heading, the tabs wrapping and each invitation a card.
 export const PhoneDark: Story = () => <Invitations />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 

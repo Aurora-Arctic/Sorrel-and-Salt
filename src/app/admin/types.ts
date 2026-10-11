@@ -12,6 +12,11 @@ export interface AdminLayoutProps {
   children: ReactNode;
 }
 
+/** A tabbed page's layout (MB.115): the open tab's content, and its action from the `@action` slot. */
+export interface TabbedLayoutProps extends AdminLayoutProps {
+  action: ReactNode;
+}
+
 /**
  * A list page's address as Next hands it over (MB.115, `list-page.ts`): any
  * parameter may come once, several times, or not at all. Each page's own

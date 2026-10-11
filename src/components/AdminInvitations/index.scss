@@ -6,8 +6,8 @@
 // confirmation and the locked controls are the user list's, which bring
 // their own stylesheet (`UserList/controls.scss`).
 
-// Spaced as the tab's panel spaces any other tab's content: its action, then
-// the table or the empty state.
+// Spaced as the tab's panel spaces any other tab's content: the sent notice,
+// then the table or the empty state.
 .admin-invitations {
   display: flex;
   flex-direction: column;
@@ -57,9 +57,7 @@
 }
 
 // Compounded with `.notice`, whose primitive is `body .notice` in the app: a
-// lone class loses to it there. A line of its own beneath Invite Admin, in
-// the tab's action row, which wraps.
+// lone class loses to it there. Above the list, spaced by the section's gap.
 .notice.admin-invitations__sent {
-  flex-basis: 100%;
   margin: 0;
 }

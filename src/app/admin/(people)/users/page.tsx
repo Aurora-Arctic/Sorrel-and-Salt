@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
-import { TabActions } from '../../../../components/TabbedPage';
-import UserList, { PauseControl } from '../../../../components/UserList';
+import UserList from '../../../../components/UserList';
 import { userListHref } from '../../../../components/UserList/href';
 import type { UserListEntry } from '../../../../components/UserList/types';
 import { impersonationEnabled } from '../../../../lib/impersonation';
@@ -10,13 +9,9 @@ import { requireAdminSession } from '../../../../lib/request-session';
 import { single } from '../../../../lib/search-params';
 import type { Session, UserRole } from '../../../../lib/session';
 import type { ConnectionArgs } from '../../../../lib/types';
-import {
-  adminRoleChangePauseState,
-  isPrimaryAdmin,
-  listUsers,
-  providersOf,
-} from '@/modules/identity';
+import { isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
 import { pagerHrefs, readListPlace } from '../../list-page';
+import { readPauseState } from '../pause-state';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -73,30 +68,20 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
 
   const [{ users, pageInfo }, adminChanges] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
-    // The pause on admin changes and whether this admin may flip it (MB.63).
-    adminRoleChangePauseState(session),
+    // The pause on admin changes and whether this admin may flip it (MB.63),
+    // which the switch beside the heading reads too (`@action/users`).
+    readPauseState(session),
   ]);
 
   return (
-    <>
-      {/* The switch on admin changes as the tab's action, where the other
-          admin tabs put theirs (MB.63, on the owner's call; MB.115). Keyed by
-          the state, so the refresh after a flip mounts a fresh switch rather
-          than keeping this one's busy state. */}
-      <TabActions>
-        <PauseControl key={String(adminChanges.paused)} {...adminChanges} />
-      </TabActions>
-      <UserList
-        users={users}
-        query={query}
-        awaitingApproval={awaitingApproval}
-        role={role}
-        canImpersonate={impersonationEnabled()}
-        adminChanges={adminChanges}
-        {...pagerHrefs(pageInfo, (cursor) =>
-          userListHref({ query, awaitingApproval, role }, cursor),
-        )}
-      />
-    </>
+    <UserList
+      users={users}
+      query={query}
+      awaitingApproval={awaitingApproval}
+      role={role}
+      canImpersonate={impersonationEnabled()}
+      adminChanges={adminChanges}
+      {...pagerHrefs(pageInfo, (cursor) => userListHref({ query, awaitingApproval, role }, cursor))}
+    />
   );
 }

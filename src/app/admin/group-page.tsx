@@ -6,7 +6,6 @@ import type { GroupKind } from '../../components/GroupForm/types';
 import GroupList from '../../components/GroupList';
 import { groupsHref } from '../../components/GroupList/href';
 import type { GroupListEntry } from '../../components/GroupList/types';
-import { TabActions } from '../../components/TabbedPage';
 import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import {
@@ -99,6 +98,22 @@ async function readEdited(kind: GroupKind, slug: string) {
 }
 
 /**
+ * The kind's Add, the open tab's action beside the page's heading: its
+ * route group's `@action` slot renders it, so it changes with the tab
+ * (claude-docs/components/tabbed-page.md). It keeps the list's cursor, as
+ * every link on the page does.
+ */
+export async function GroupAction({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
+  await requireAdminSession();
+  const { after, before } = readListPlace(await searchParams);
+  return (
+    <Link className="btn btn--solid" href={groupsHref(kind, { after, before }, 'new')}>
+      {GROUP_KINDS[kind].add}
+    </Link>
+  );
+}
+
+/**
  * A group vocabulary, for an admin to add to, edit and retire. A modal over
  * the list does the writing, opened by the address — `?new`, or
  * `?edit=<slug>` — so it can be linked to and Back closes it
@@ -107,7 +122,7 @@ async function readEdited(kind: GroupKind, slug: string) {
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { after, before, editSlug, adding } = readListPlace(await searchParams);
-  const { noun, add, addTitle, editTitle } = GROUP_KINDS[kind];
+  const { noun, addTitle, editTitle } = GROUP_KINDS[kind];
 
   const [page, choices, edited] = await Promise.all([
     readPage(kind, after, before),
@@ -128,11 +143,6 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
 
   return (
     <>
-      <TabActions>
-        <Link className="btn btn--solid" href={groupsHref(kind, here, 'new')}>
-          {add}
-        </Link>
-      </TabActions>
       {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
       <GroupList
         kind={kind}

@@ -67,7 +67,7 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-const { ValuePage } = await import('@/app/admin/value-page');
+const { ValueAction, ValuePage } = await import('@/app/admin/value-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -97,8 +97,18 @@ async function renderPage(
   params: Record<string, string> = {},
   kind: GroupedValueKind = 'category',
 ) {
-  const page = await ValuePage({ kind, searchParams: Promise.resolve(params) });
-  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+  // The tab's action beside the heading, and the tab's content, as the
+  // route group's layout puts them on one page.
+  const [action, page] = await Promise.all([
+    ValueAction({ kind, searchParams: Promise.resolve(params) }),
+    ValuePage({ kind, searchParams: Promise.resolve(params) }),
+  ]);
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {action}
+      {page}
+    </QueryClientProvider>,
+  );
 }
 
 const lastRequest = (): PageRequest => listCategories.mock.lastCall?.[1] as PageRequest;

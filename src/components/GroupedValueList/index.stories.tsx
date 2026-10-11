@@ -5,7 +5,7 @@ import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
 import { WorkshopPathname } from '../../../.ladle/navigation';
 import { ADMIN_PAGES } from '../AdminNav/sections';
-import TabbedPage, { TabActions } from '../TabbedPage';
+import TabbedPage from '../TabbedPage';
 import { groupedValuesHref } from './href';
 import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
 
@@ -293,18 +293,21 @@ export const PlanetsEmpty: Story = () => (
 
 // At a phone's width in each theme, inside the admin layout and the
 // Categories page with its Categories tab open, as the page draws it: the
-// tab's Add button full width, the filter stacked and each row a card. The
-// page, the action row and the filter are the real `TabbedPage`,
-// `TabActions` and `FilterForm`, so these show what the sign-off settled.
+// tab's Add button full width beneath the heading, the filter stacked and
+// each row a card. The page and the filter are the real `TabbedPage` and
+// `FilterForm`, so these show what the sign-off settled.
 const Phone = () => (
   <WorkshopPathname.Provider value="/admin/categories">
     <div className="admin-layout">
-      <TabbedPage title={ADMIN_PAGES.categories.label} tabs={ADMIN_PAGES.categories.tabs}>
-        <TabActions>
+      <TabbedPage
+        title={ADMIN_PAGES.categories.label}
+        tabs={ADMIN_PAGES.categories.tabs}
+        action={
           <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
             Add Category
           </Link>
-        </TabActions>
+        }
+      >
         <CategoriesFiltered />
       </TabbedPage>
     </div>

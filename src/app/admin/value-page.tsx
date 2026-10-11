@@ -6,7 +6,6 @@ import GroupedValueList from '../../components/GroupedValueList';
 import { groupedValuesHref } from '../../components/GroupedValueList/href';
 import { KINDS } from '../../components/GroupedValueList/kinds';
 import type { GroupedValueListEntry } from '../../components/GroupedValueList/types';
-import { TabActions } from '../../components/TabbedPage';
 import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import { single } from '../../lib/search-params';
@@ -14,7 +13,7 @@ import { pagerHrefs, readListPlace, readOrMissing } from './list-page';
 import MissingNotice from './missing-notice';
 import ValueDialog from './value-dialog';
 import { VALUE_KINDS } from './value-kinds';
-import type { ValuePageProps } from './types';
+import type { ValuePageProps, ValueSearchParams } from './types';
 
 // The page every curated value vocabulary shares (MB.115): the categories
 // (M5.6, MB.178), forms (M5.6a) and deities (MB.132), each filed under a
@@ -46,22 +45,48 @@ const readValues = cache(
 );
 
 /**
- * The kind's groups, then its page under the filter: the group parameter
- * names a group by slug, as `?edit=` names a value, so it is resolved against
- * the groups before the list can be read. A slug no group holds is ignored,
- * as a hand-edited cursor gets the first page.
+ * Where the address puts the list: its filter, cursor and modal, and the
+ * kind's groups. The group parameter names a group by slug, as `?edit=`
+ * names a value, so it is resolved against the groups, which are cached, so
+ * the page and its action read them once. A slug no group holds is ignored,
+ * as a hand-edited cursor gets the first page, and only a group that exists
+ * is kept in the filter, so an unknown slug leaves every link.
  */
-async function readFiltered(
-  kind: GroupedValueKind,
-  query: string,
-  groupSlug: string | undefined,
-  after: string | undefined,
-  before: string | undefined,
-) {
+async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
+  const { query, after, before, editSlug, adding } = readListPlace(params);
+  const groupSpec = KINDS[kind].group;
+  // Blank is no filter: a native submit sends `group=`.
+  const groupParam = groupSpec?.param === 'tradition' ? params.tradition : params.group;
+  const groupSlug = groupSpec ? single(groupParam) || undefined : undefined;
   const groups = (await VALUE_KINDS[kind].readGroups?.()) ?? [];
   const group = groupSlug ? groups.find((each) => each.slug === groupSlug) : undefined;
-  const page = await readValues(kind, query, group?.id, after, before);
-  return { groups, group, page };
+  const filter = { query, group: group?.slug ?? '' };
+  return {
+    filter,
+    here: { ...filter, after, before },
+    after,
+    before,
+    editSlug,
+    adding,
+    groups,
+    group,
+  };
+}
+
+/**
+ * The kind's Add, the open tab's action beside the page's heading: its
+ * route group's `@action` slot renders it, so it changes with the tab
+ * (claude-docs/components/tabbed-page.md). It keeps the list's filter and
+ * cursor, as every link on the page does.
+ */
+export async function ValueAction({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
+  await requireAdminSession();
+  const { here } = await readPlace(kind, await searchParams);
+  return (
+    <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
+      Add {KINDS[kind].label}
+    </Link>
+  );
 }
 
 /**
@@ -73,20 +98,16 @@ async function readFiltered(
  */
 export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   await requireAdminSession();
-  const params = await searchParams;
-  const { query, after, before, editSlug, adding } = readListPlace(params);
-  const { label, noun, group: groupSpec } = KINDS[kind];
-  // Blank is no filter: a native submit sends `group=`.
-  const groupParam = groupSpec?.param === 'tradition' ? params.tradition : params.group;
-  const groupSlug = groupSpec ? single(groupParam) || undefined : undefined;
+  const { filter, here, after, before, editSlug, adding, groups, group } = await readPlace(
+    kind,
+    await searchParams,
+  );
+  const { label, noun } = KINDS[kind];
 
-  const [{ groups, group, page }, edited] = await Promise.all([
-    readFiltered(kind, query, groupSlug, after, before),
+  const [page, edited] = await Promise.all([
+    readValues(kind, filter.query, group?.id, after, before),
     !adding && editSlug ? readOrMissing(() => VALUE_KINDS[kind].getBySlug(editSlug)) : undefined,
   ]);
-  // Only a group that exists is kept, so an unknown slug leaves every link.
-  const filter = { query, group: group?.slug ?? '' };
-  const here = { ...filter, after, before };
   const groupsById = new Map(groups.map((each) => [each.id, each]));
   const values = page.edges.map(({ node }): GroupedValueListEntry => {
     const own = node.groupId ? groupsById.get(node.groupId) : undefined;
@@ -109,11 +130,6 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
 
   return (
     <>
-      <TabActions>
-        <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
-          Add {label}
-        </Link>
-      </TabActions>
       {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
       <GroupedValueList
         kind={kind}
