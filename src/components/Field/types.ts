@@ -61,6 +61,8 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
  */
 export interface TextFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
   name: FieldPath<V>;
+  /** A short action shown, muted, while the field is empty: "Add a name". What the field is for is its `hint`. */
+  placeholder?: string;
   /** A textarea, for prose. */
   multiline?: boolean;
   /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
@@ -91,7 +93,7 @@ export interface SelectOption {
 /** A closed set in a react-hook-form form, whose value is one of its options. */
 export interface SelectFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
   name: FieldPath<V>;
-  /** Shown until a choice is made, and not itself a choice. */
+  /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
   placeholder?: string;
   options: readonly SelectOption[];
   /**

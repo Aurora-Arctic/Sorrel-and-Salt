@@ -17,6 +17,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   hint,
   note,
   required,
+  placeholder,
   multiline,
   rows,
   type,
@@ -48,6 +49,7 @@ export function TextField<V extends FieldValues = FieldValues>({
   const control = {
     id: field.controlId,
     disabled,
+    placeholder,
     autoComplete,
     'aria-required': required || undefined,
     ...aria,

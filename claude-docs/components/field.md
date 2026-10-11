@@ -70,7 +70,7 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 </FieldShell>;
 ```
 
-`TextField` adds `name`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description takes 10), `type` (`text`, `date`, `url`),
+`TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description takes 10), `type` (`text`, `date`, `url`),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `format` (a tidy run
 as the field is left) and `autoComplete`. `SelectField` adds `name`,
 `options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
@@ -102,6 +102,15 @@ against the form's own paths; left out, any string passes.
   be left empty (the owner's call at MB.115's review; [`styling.md`](../styling.md),
   "Form fields"). What a field is for goes in `hint`, behind the info tip, not
   in the label.
+- **Every text, select and type-ahead field has a placeholder: a short action,
+  never a description.** One or two words, three short ones at most, in
+  sentence case: "Add a name", "Describe it", "Choose a group", "Search
+  names". What the field is for, what to type, examples and limits go in
+  `hint`, the info tip beside the label, and never in the placeholder or a
+  `note`, which stays for a live state such as why a field is shut (the
+  owner's call at MB.115's review). The label stays the accessible name:
+  `TextField` and `SelectField` take `placeholder`, and a plain-state
+  form sets it on its own control, since `FieldShell` draws none.
 - **A react-hook-form field re-renders for its own error only**: `useField`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would

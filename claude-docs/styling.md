@@ -604,6 +604,14 @@ The class layer every form is built from, in `_primitives.scss`:
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
   its own design review.
+- **Every text, textarea, select and type-ahead field shows a placeholder,
+  a short action of one or two words** ("Add a name", "Describe it", "Choose
+  a group", "Search names"), and what the field is for goes in its hint's
+  info tip, never in the placeholder: the owner's call at MB.115's review.
+  The label stays its name. The placeholder reads in `$text-placeholder`,
+  held at 4.5:1 on the field's ground in both themes by
+  `tests/scss/tokens.test.ts`
+  ([`components/field.md`](components/field.md), "Contracts").
 - **A field is optional unless it carries the required mark**, so no label
   says "(Optional)": the asterisk, `.field__required`, marks the fields a
   save asks for, and every other field may be left empty (the owner's call at

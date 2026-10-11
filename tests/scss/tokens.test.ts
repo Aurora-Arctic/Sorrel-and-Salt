@@ -137,6 +137,12 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
     row("the open tab's edge on the card", accent, card, 3);
 
+    // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
+    // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is
+    // not yet an answer (WCAG 1.4.3).
+    const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
+    row('the placeholder on the field', placeholder, card, 4.5);
+
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });
 });
