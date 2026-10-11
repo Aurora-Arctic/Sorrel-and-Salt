@@ -215,6 +215,13 @@ describe('checkCompendium', () => {
       expect(checkCompendium(shards)).toHaveLength(1);
     });
 
+    it("refuses a form's link that names no form, as the service does", () => {
+      const shards = edited((shard) => {
+        samplewort(shard).variants[0].substitutes = [{ identity: 'fixtura testalis' }];
+      });
+      expect(checkCompendium(shards)).toHaveLength(1);
+    });
+
     it('refuses an entry standing in for itself', () => {
       const shards = edited((shard) => {
         samplewort(shard).substitutes = [{ identity: 'fixtura exemplaris' }];

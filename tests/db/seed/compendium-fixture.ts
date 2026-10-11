@@ -91,7 +91,7 @@ export const FIXTURE_SHARD: SeedCompendiumShard = {
       variants: [
         {
           form: 'Root',
-          substitutes: [{ identity: 'fixtura testalis' }],
+          substitutes: [{ identity: 'fixtura testalis', form: 'Herb' }],
           references: [
             { source: 'fixture-herbal', locator: 'p. 40', supports: ['form', 'substitutes'] },
           ],

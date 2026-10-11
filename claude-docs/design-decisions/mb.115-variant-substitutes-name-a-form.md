@@ -44,6 +44,11 @@ as it stands.
 - **Copy From Ingredient.** A variant's copy links the same form on each
   substitute, or skips one in no matching form and names it beside Copy
   Anyway, which adds the skipped ones as names only (the owner's calls).
+- **The seed's guard.** `checkSubstitutes` in
+  `src/db/seed/compendium/guard.ts` refuses a variant's link with no form,
+  so a shard cannot seed one. The one seeded before the rule, Almond's Nut
+  form linking Apricot whole, now names Apricot's Seed form, the kernel inside
+  the stone (the owner's call).
 - **Not the database.** No constraint enforces it: the seed writes raw, and
-  one seeded row (Almond's Nut form, linking Apricot whole) predates the rule.
-  A CHECK would need that row settled first, and is not part of this change.
+  the rule holds in the guard and the service. A CHECK across the variant and
+  the substitute's form would be its own task.

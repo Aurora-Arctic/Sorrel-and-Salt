@@ -163,7 +163,7 @@ describe('seedCompendium', () => {
       expect(rows).toEqual([
         { form: null, substitute_id: testwort, named_form: 'Herb', name: null },
         { form: null, substitute_id: null, named_form: null, name: 'Mockroot' },
-        { form: 'Root', substitute_id: testwort, named_form: null, name: null },
+        { form: 'Root', substitute_id: testwort, named_form: 'Herb', name: null },
       ]);
     });
 

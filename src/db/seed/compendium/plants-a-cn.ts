@@ -1728,6 +1728,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           substitutes: [
             {
               identity: 'prunus armeniaca',
+              form: 'Seed',
             },
             {
               name: 'Peach',
