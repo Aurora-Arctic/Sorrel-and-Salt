@@ -120,6 +120,12 @@ catches the write's failure and reads the index off it with
   naming the address and the entry holding it: `Testwort (root) already has
 the address "testwort-root" — change the name, form or formal name`.
 
+`ingredients_compendium_identity_key_unique` (MB.216), the formal name
+alone, is not mapped yet: a write of a second form of one formal name as an
+entry of its own is refused by it and passes through as the raw error until
+MB.220 maps it, a short window on an admin-only write
+([`mb.215-plan.md`](../design-decisions/mb.215-plan.md), "Risks").
+
 Both name the entry through the vocabulary's `describeEntry`, its label
 unquoted as every vocabulary refusal names one, so a list of entries reads as
 one sentence (MB.210).

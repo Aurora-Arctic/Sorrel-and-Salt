@@ -16,6 +16,7 @@ import {
 } from '@/db/repository';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
@@ -394,9 +395,16 @@ describe('the Membership proof (M6.3)', () => {
       // @ts-expect-error — the escape hatch takes the unscoped side too.
       findManyIncludingSoftDeleted(ingredientFolkNames);
 
+    const readVariantsUnscoped = () =>
+      // @ts-expect-error — `ingredient_variants` is an ingredient's child too
+      // (MB.216): a form of a coven's entry is that coven's, so it is read
+      // under its parent's tier or not at all.
+      findMany(ingredientVariants);
+
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readFolkNamesUnscoped).toBeInstanceOf(Function);
     expect(readFolkNamesById).toBeInstanceOf(Function);
     expect(readFolkNamesThroughTheHatch).toBeInstanceOf(Function);
+    expect(readVariantsUnscoped).toBeInstanceOf(Function);
   });
 });

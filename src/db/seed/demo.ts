@@ -10,6 +10,7 @@ import {
   COMPENDIUM_INGREDIENTS,
   WORKSPACE_W_ID,
   identityOf,
+  insertMissingVariants,
   seedStandardContent,
 } from './standard';
 import type {
@@ -205,6 +206,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
+    // W's entries' forms; the compendium's `standard` wrote already.
+    await insertMissingVariants(tx, [...ingredientIds.values()]);
     await insertMissingLayers(tx, ingredientIds);
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
   });

@@ -53,7 +53,7 @@ run as a test.
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
   a test comparing a table against `Object.keys(auditColumns)` passes for any
-  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (twenty-six
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (twenty-seven
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
@@ -79,7 +79,7 @@ run as a test.
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
   file, on the catalogue side** (MB.188, one `it` since MB.225). It asserts
   `AUDITED_TABLES` are exactly the tables the catalogue finds carrying the
-  four stamps, and holds each to its expectation at once: the twenty-four
+  four stamps, and holds each to its expectation at once: the twenty-five
   six-column tables and the two four-column join tables, the stamps `NOT
 NULL`, the delete pair nullable or absent, and each `*_by` referencing
   `users(id)`. It reads `getTableConfig` nowhere. The code side is the
@@ -106,7 +106,11 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   catalogue's list would collide on another index first or names a generated
   column (`ingredients.canonical_key`). A new partial unique index fails the
   sweep until it is classified; a schema test keeps only what is particular to
-  its table, such as a slug shared across two groups.
+  its table, such as a slug shared across two groups. A second test reads every unique
+  index on a table carrying `deleted_at` that is _not_ partial and holds the
+  set to its `NOT_PARTIAL` map, each entry with its reason, so rule 4's one
+  exception, `ingredient_variants_id_ingredient_id_unique` (MB.216, the target
+  of MB.217's composite foreign keys), is decided there and any other fails.
 
 - **`tests/db/schema-drift.test.ts` — the schema files against the migrated
   database, once for every table** (MB.226). It imports every

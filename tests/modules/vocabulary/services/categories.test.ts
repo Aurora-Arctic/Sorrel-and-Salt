@@ -504,10 +504,25 @@ describe('deleteCategory', () => {
       await expect(attempt).rejects.not.toThrow('Testd');
     });
 
+    // Two formal names under one label, since one formal name is one entry
+    // per tier (MB.216); the forms still tell them apart.
     it('tells two entries sharing a label apart by their forms', async () => {
       const id = await seed('Testcraft Namesakes');
-      await fileUnder('Testcraft Namesakes', 'Testwort', null, 'herb');
-      await fileUnder('Testcraft Namesakes', 'Testwort', null, 'root');
+      for (const [canonicalName, form] of [
+        ['Fixtura testalis', 'herb'],
+        ['Fixtura alteralis', 'root'],
+      ]) {
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: 'Testwort',
+            canonicalName,
+            form,
+            categories: ['Testcraft Namesakes'],
+          }),
+          A.id,
+        );
+      }
 
       const attempt = deleteCategory(admin, id);
       await expect(attempt).rejects.toThrow('herb');

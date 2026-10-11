@@ -255,13 +255,15 @@ describe("Story 16: See a warning when the name I'm entering resembles something
   });
 
   it('blocks nothing: a near match is created anyway, and warns the next time', async () => {
+    // A formal name of its own: story 15's entry holds the fixture's in W,
+    // and one formal name is one entry per coven since MB.216.
     const {
       workspaceId: _tier,
       categories: _categories,
       substitutes: _substitutes,
       deities: _deities,
       ...input
-    } = makeIngredient({ name: "Cat's Claw", canonicalName: 'Fixtura testalis' });
+    } = makeIngredient({ name: "Cat's Claw", canonicalName: 'Fixtura felina' });
     // Why this is story 16's case: the name is one the warning names.
     expect((await duplicatesOf(asUser(B), input.name)).length).toBeGreaterThan(0);
 
@@ -270,7 +272,7 @@ describe("Story 16: See a warning when the name I'm entering resembles something
     expect(await duplicatesOf(asUser(B), input.name)).toContainEqual({
       id: created.id,
       name: "Cat's Claw",
-      canonicalName: 'Fixtura testalis',
+      canonicalName: 'Fixtura felina',
     });
   });
 });

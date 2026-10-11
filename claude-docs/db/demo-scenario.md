@@ -28,8 +28,8 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
 - **Fresh Ginger carries the uncurated form**, `rhizome` — §5's example of a
   value a member writes before an admin curates it, and the second bucket of
   M4.7a's suggestion list. Since MB.162 the compendium holds only curated
-  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, a
-  different identity, so both rows stand.
+  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, in
+  the other tier, so both rows stand.
 - **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
   same form, different tier, which the two partial unique indexes permit. That
   pair is exactly what M8.3's local-beats-compendium resolution collapses, and
@@ -46,6 +46,12 @@ beside it: one list, so the stack and its depths cannot disagree, and each jar
 is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
 
 **MB.215: W's ingredients take variants, and Fresh Ginger becomes Ginger.** MB.216 writes a variant beside each of W's ingredients' forms (Hearth Ash's `ash`, House Chamomile's `flower`), so every linked layer in the two jars can name one, and MB.217's migration fills each layer's `variant_id` from its ingredient's one variant. Identity on the formal name alone changes two of the fixtures above. Fresh Ginger and the compendium's Ginger are now one identity, _Zingiber officinale_, in two tiers, which the identity indexes permit, so W's entry shadows the compendium's under M8.3 as Garden Rosemary does; MB.222 renames it Ginger, with an uncurated `rhizome` variant, so it stays the coven's example of a form no admin has curated. Garden Rosemary shadows the compendium's Rosemary on the formal name, whatever forms either holds. MB.222 corrects this section ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
+**W's entries have their variants too (MB.216).** After W's entries,
+`insertMissingVariants` from `standard.ts` writes one variant per entry of its
+form, lower-case as the entries spell it (Hearth Ash is `ash`, House Chamomile
+`flower`), so every linked layer's ingredient has a variant a layer can name
+once MB.217 gives layers one.
 
 ### A jar's stack is seeded whole or not at all
 

@@ -17,6 +17,7 @@ import * as ingredientCategories from '@/modules/ingredients/schema/ingredient-c
 import * as ingredientDeities from '@/modules/ingredients/schema/ingredient-deities';
 import * as ingredientFolkNames from '@/modules/ingredients/schema/ingredient-folk-names';
 import * as ingredientSubstitutes from '@/modules/ingredients/schema/ingredient-substitutes';
+import * as ingredientVariants from '@/modules/ingredients/schema/ingredient-variants';
 import * as ingredients from '@/modules/ingredients/schema/ingredients';
 import * as inventoryItems from '@/modules/ingredients/schema/inventory-items';
 import * as referenceLinks from '@/modules/ingredients/schema/reference-links';
@@ -70,6 +71,7 @@ const MODULES = [
   ingredientDeities,
   ingredientFolkNames,
   ingredientSubstitutes,
+  ingredientVariants,
   ingredients,
   inventoryItems,
   referenceLinks,

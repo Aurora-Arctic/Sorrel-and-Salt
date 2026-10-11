@@ -51,6 +51,10 @@ beforeEach(async () => {
   // `ingredients` also holds the compendium (`workspace_id is null`), which
   // the last describe block needs intact — so only the workspace-scoped rows
   // are cleared, never the whole table.
+  await sql`
+    delete from ingredient_variants
+    where ingredient_id in (select id from ingredients where workspace_id is not null)
+  `;
   await sql`delete from ingredients where workspace_id is not null`;
   await sql`truncate spells cascade`;
 });

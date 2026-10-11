@@ -87,6 +87,17 @@ assignments into §6's vocabulary.
 
 **MB.215: every entry gets a variant, and Rosemary a second.** MB.216 writes one variant beside each seeded entry's form, through `insertMissingBy` keyed `(ingredient_id, lower(form))`, so every entry has exactly one live variant and every seeded spell layer can name one. MB.222 moves the seed onto variants — `SeedIngredient.variants`, and `identityOf` keyed on `(name, canonicalName)` alone — and gives **Rosemary an Oil variant** with its own description and safety note: the new model's awkward case, one entry with two forms, added to the list above. The five Cat's Claws stay five entries, since their formal names differ; the claw from _Felis catus_ never needed its form to be told from the vine. MB.220 re-slugs the seeded entries without their forms on reseed and retires each compendium slug it moves, and MB.222 corrects this section and the entry key below ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+**Every entry's form is a variant (MB.216).** After the entries,
+`insertMissingVariants` writes one `ingredient_variants` row per entry with a
+form, the form and its pick as the entry carries them, which is what migration
+`0062` writes for a database seeded before it. It reads the entries back
+rather than the literals, so `demo`'s coven entries take the same path, and
+keys on the entry and the folded form, the variant's unique index, through
+`insertMissingBy`: a variant an admin removed counts as present and is not
+restored. Every seeded entry carries a form, so every seeded entry has exactly
+one live variant, which `tests/db/seed/demo.test.ts` asserts after a `demo`
+run, `standard` inside it.
+
 ### One transaction, every vocabulary
 
 `standard` is "a populated compendium", and that is all of it: M4.3a's forms
