@@ -39,7 +39,9 @@ id.
   `privilege=`, which the page reads as no privilege. Filter is `disabled`
   while the trimmed query and the dropdown match the filter shown, as the
   user list's is (MB.53), and a submit opens the new filter from the first
-  page as a full load. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
+  page as a full load. Clear Filters, offered while the page shows a query
+  or a privilege, opens `/admin/privilege-changes` with neither, as the
+  same full load ([`filter-form.md`](filter-form.md)). `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's
@@ -89,7 +91,9 @@ icon.
 invented people, each story's rows what its filter would show: every route, a
 note on a role grant and the flag it set at one instant, a deleted subject and
 the seed's actor, unlinked. `PhoneDark` and `PhoneLight` show the page's
-header and every change as a card at 375px, inside the admin layout's frame.
+header and every change as a card at 375px, inside the admin layout's frame,
+and `FilteredPhoneDark` and `FilteredPhoneLight` `OneUserAdminOnly` there, with
+Clear Filters offered.
 Render-only, no test ids, no snapshots.
 
 ## Testing
@@ -97,7 +101,8 @@ Render-only, no test ids, no snapshots.
 `tests/components/PrivilegeLedger/index.test.tsx` covers each row's data,
 the links to the user rows and the people without one, the `<time>`, the
 filter's form, search, dropdown values, disabled and enabled Filter and the
-address it opens, no table when there is nothing to show, and
+address it opens, Clear Filters offered by a query or a privilege and off
+with neither, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.
 `tests/app/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built

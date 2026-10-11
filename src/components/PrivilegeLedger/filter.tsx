@@ -24,6 +24,7 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
       action="/admin/privilege-changes"
       href={() => privilegeLedgerHref({ query: draftQuery.trim(), privilege: draft || undefined })}
       disabled={!changed}
+      shown={[filter.query, filter.privilege]}
       navigation="full"
     >
       <div className="field">

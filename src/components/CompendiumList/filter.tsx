@@ -38,6 +38,7 @@ const CompendiumListFilter = ({ filter }: CompendiumListFilterProps): ReactEleme
         })
       }
       disabled={!changed}
+      shown={[filter.query, filter.nomenclature, filter.withoutReferences]}
       navigation="soft"
     >
       <div className="field">

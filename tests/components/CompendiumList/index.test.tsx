@@ -273,3 +273,62 @@ describe('CompendiumList filter', () => {
     expect(filterButton()).toBeDisabled();
   });
 });
+
+// Clear Filters (MB.115, the owner's call): a link to the unfiltered first
+// page, offered while the page shows a filter and off, not gone, while it
+// shows none. Tested here once for every list, as the filter's spinner is;
+// each other list asserts only which of its values count as a filter.
+describe('CompendiumList Clear Filters', () => {
+  beforeEach(() => {
+    router.push.mockReset();
+  });
+
+  const clearLink = () => screen.getByRole('link', { name: 'Clear Filters' });
+  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+
+  it('links to the unfiltered first page while the page shows any filter', () => {
+    for (const filter of [
+      { ...NO_FILTER, query: 'test' },
+      { ...NO_FILTER, nomenclature: 'unknown' as const },
+      { ...NO_FILTER, withoutReferences: true },
+    ]) {
+      const { unmount } = render(
+        <CompendiumList
+          {...props({ filter, previousHref: compendiumHref({ ...filter, before: 'b' }) })}
+        />,
+      );
+
+      expect(clearLink()).toHaveAttribute('href', '/admin/compendium');
+      expect(clearLink()).not.toHaveAttribute('aria-disabled');
+      unmount();
+    }
+  });
+
+  it('is off while the page shows no filter, whatever the fields hold', () => {
+    render(<CompendiumList {...props()} />);
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'draft' },
+    });
+
+    expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
+    expect(clearLink()).not.toHaveAttribute('href');
+  });
+
+  it('opens the unfiltered list, busy until it arrives', async () => {
+    render(
+      <Navigating push={router.push}>
+        <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />
+      </Navigating>,
+    );
+
+    const busy = clearLink();
+    await act(async () => {
+      fireEvent.click(busy);
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/compendium');
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    expect(filterButton()).not.toHaveAttribute('aria-busy');
+    expect(filterButton()).toBeDisabled();
+  });
+});

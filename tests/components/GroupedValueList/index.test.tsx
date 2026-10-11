@@ -253,5 +253,25 @@ describe('GroupedValueList', () => {
 
       expect(router.push).toHaveBeenCalledWith(path);
     });
+
+    // Clear Filters is CompendiumList's to test; this asserts which of the
+    // list's values count as a filter.
+    it('offers Clear Filters to the unfiltered list while the name or the group is shown', () => {
+      for (const filter of [
+        { query: DEITIES.query, group: '' },
+        { query: '', group: groups[0].slug },
+      ]) {
+        const { unmount } = render(<GroupedValueList {...props({ filter })} />);
+
+        expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute('href', path);
+        unmount();
+      }
+
+      render(<GroupedValueList {...props()} />);
+      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+    });
   });
 });

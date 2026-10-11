@@ -49,6 +49,7 @@ const GroupedValueListFilter = ({
       action={path}
       href={() => groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup })}
       disabled={!changed}
+      shown={[filter.query, filter.group]}
       navigation="soft"
     >
       <FieldShell label="Name" {...query}>

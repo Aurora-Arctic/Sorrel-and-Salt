@@ -41,7 +41,9 @@ otherwise a `NomenclatureKind`.
   starts again from the first page, since the form carries no cursor. It is
   `filter.tsx`, the one client file here, its fields inside the shared
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
-  the Filter button and the soft navigation. M8.10 turns the Name box into its
+  the Filter button, the Clear Filters link and the soft navigation; Clear
+  Filters is offered while the page shows a name, a classification or
+  Without References, and opens `/admin/compendium` with none. M8.10 turns the Name box into its
   typeahead, a picked row opening the entry's `?edit=` modal, with this form
   kept underneath.
 - **Classification offers "Any", valued `""`, then every kind in
@@ -115,7 +117,8 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 [`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx) —
 `OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`, and
 `PhoneDark` and `PhoneLight`, the middle page at 375px with every row a
-card, each inside the admin layout's frame. The filter reaches
+card, and `FilteredPhoneDark` and `FilteredPhoneLight`, `Filtered` at 375px
+with Clear Filters offered, each inside the admin layout's frame. The filter reaches
 `/admin/compendium`, which the workshop does not serve.
 Render-only, no test ids, no snapshots.
 
@@ -126,5 +129,7 @@ links and their names, no table when there are none, the filter form's
 action, method, names, kept values and classification values, the Filter
 button's disabled and enabled states for each control, the address it opens,
 the busy state while the filtered list loads, the reset to the filter shown,
-and `compendiumHref`. It is the one list test of the filter's busy state and
-its reset; paging is Pager's.
+Clear Filters (its address with each control set, off with none set whatever
+the fields hold, and busy while the unfiltered list loads), and
+`compendiumHref`. It is the one list test of the filter's busy state, its
+reset and Clear Filters; paging is Pager's.

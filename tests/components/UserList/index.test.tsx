@@ -303,6 +303,40 @@ describe('UserList filter', () => {
 
     expect(assignMock).toHaveBeenCalledWith('/admin/users');
   });
+
+  // Clear Filters is CompendiumList's to test; this asserts which of the
+  // list's values count as a filter, and its full load.
+  it('offers Clear Filters to the unfiltered list while the query, a role or Needs Approval is shown', () => {
+    for (const filter of [{ query: 'bo' }, { role: 'user' as const }, { awaitingApproval: true }]) {
+      const { unmount } = render(<UserList {...props(filter)} />);
+
+      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+        'href',
+        '/admin/users',
+      );
+      unmount();
+    }
+
+    render(<UserList {...props()} />);
+    expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
+  it('clears the filter as a full load, busy until the page goes', () => {
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(
+      <UserList {...props({ query: 'bo', previousHref: '/admin/users?query=bo&before=x' })} />,
+    );
+    const clear = screen.getByRole('link', { name: 'Clear Filters' });
+
+    fireEvent.click(clear);
+
+    expect(assignMock).toHaveBeenCalledWith('/admin/users');
+    expect(clear).toHaveAttribute('aria-busy', 'true');
+    expect(filterButton()).toBeDisabled();
+  });
 });
 
 // M5.8: a user who may not yet create a coven is approved from their row, and
