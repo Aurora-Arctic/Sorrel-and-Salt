@@ -41,10 +41,11 @@ export function ProviderRow({
           <button
             type="button"
             className="btn btn--destructive btn--small"
+            aria-label={`Remove ${provider.label}`}
             disabled={pending}
             onClick={onRemove}
           >
-            Remove {provider.label}
+            Remove
           </button>
         ) : removal === 'last' ? (
           // Greyed rather than gone, as an unavailable Add is: the reason
@@ -53,10 +54,11 @@ export function ProviderRow({
           <button
             type="button"
             className="btn btn--destructive btn--small"
+            aria-label={`Remove ${provider.label}`}
             aria-disabled="true"
             aria-describedby={reasonId}
           >
-            Remove {provider.label}
+            Remove
           </button>
         ) : null
       ) : (
@@ -65,12 +67,13 @@ export function ProviderRow({
           // Small and quiet, as Remove is small and in the wax: a row's action,
           // not a page's (the owner, 2026-10-11).
           className="btn btn--quiet btn--small"
+          aria-label={`Add ${provider.label}`}
           // Not `disabled`, as on /sign-in: it stays in the tab order.
           aria-disabled={unavailable || undefined}
           aria-describedby={unavailable ? noteId : undefined}
           onClick={onAdd}
         >
-          Add {provider.label}
+          Add
         </button>
       )}
       {unavailable && <ProviderUnavailableNote id={noteId} className="sign-in-methods__line" />}

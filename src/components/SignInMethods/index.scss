@@ -39,6 +39,13 @@
   font-weight: 500;
 }
 
+// The action stays on the row's line, never wrapping under the label: it is
+// one word, and the label gives way first.
+.sign-in-methods__item > .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 // An unavailable provider's mark fades with its greyed Add, by the same
 // 0.55 a disabled `.btn` takes, so the row reads as off as a whole; its note
 // says so in words.
