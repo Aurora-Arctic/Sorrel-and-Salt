@@ -202,9 +202,12 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   same lockfile. The build
   runs inside `npm run e2e` as slot 0's `webServer` command, so the restore
   has to come before that step, and Turbopack's persistent cache under it is
-  what a warm build reuses. The e2e image is Ubuntu's, whose GNU `tar`
+  what a warm build reuses. The e2e image is Debian's, whose GNU `tar`
   `actions/cache` needs; Alpine's `testing` stage had to add it (MB.37). It
-  is CI time, not test time.
+  carries no `zstd`, so the cache is gzip, as it was on the Ubuntu image
+  before MB.237: the compression is part of a cache entry's version, so
+  adding `zstd` would miss every entry saved without it. It is CI time, not
+  test time.
 - **The cache a pull request restores is saved on `staging`** (MB.234). GitHub
   lets a run restore caches saved on its own branch, on `main`, or on a pull
   request's base branch, and a pull request's own run saves under its merge
@@ -274,10 +277,22 @@ does not reuse `build-image.yml`'s shared `testing` image for this — that
 image is Alpine/musl-based and explicitly excludes Playwright's browser/
 system deps (see `Docker/Dockerfile.node`'s header comment; Playwright's
 Chromium build has no official musl support at all). Instead
-`.github/workflows/playwright.yml` runs in a dedicated image
-(`Docker/Dockerfile.e2e`, built `FROM mcr.microsoft.com/playwright:v1.63.0-noble`
-and published by `build-e2e-image.yml`) with browsers already baked in — see
-`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in `e2e` service
-(`make docker-e2e`) builds that same image for local use, so a devcontainer
-session can run the full suite without installing browsers into its own
-Alpine-based image.
+`.github/workflows/playwright.yml` runs in a dedicated image,
+`Docker/Dockerfile.e2e`, published by `build-e2e-image.yml` — see
+`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in
+`e2e` service (`make docker-e2e`) builds that same image for local use, so a
+devcontainer session can run the full suite without installing browsers into
+its own Alpine-based image.
+
+**The e2e image is Debian with Chromium alone** (MB.237). It is built on
+`node:26.6.0-bookworm-slim`, the same Node as `Dockerfile.node`. After
+`npm ci`, the lockfile's own `@playwright/test` runs
+`playwright install --with-deps --only-shell chromium`, so the browser always
+matches the package. `--only-shell` takes the headless shell alone, which is what a
+headless run launches; the `headed` stage adds the full Chromium for
+`playwright-server`'s display. Until MB.237 the image was built on
+Microsoft's `mcr.microsoft.com/playwright` image, which also carries Firefox
+and WebKit and their system libraries, and pulling it was the largest fixed
+cost of every e2e job. The browsers sit in `/ms-playwright`
+(`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
+container job sets `HOME` to a directory the image never saw.

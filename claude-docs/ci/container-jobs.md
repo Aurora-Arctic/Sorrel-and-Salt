@@ -18,8 +18,9 @@ visible from the step that depends on them.
   run over a checkout owned by uid 1000, and git refuses a repository owned by
   another user ("dubious ownership") unless told the directory is safe.
 - **`playwright.yml` passes `options: --ipc=host` instead.** Chromium crashes
-  on the container default 64 MB `/dev/shm`. Microsoft's Playwright base image
-  already runs as root, so `--user root` would add nothing there; Chromium
+  on the container default 64 MB `/dev/shm`. The e2e image runs as root, the
+  `node` base image's default, since `Dockerfile.e2e` never switches user,
+  so `--user root` would add nothing there; Chromium
   under root expects `--no-sandbox`, which `playwright.config.ts` owns if it
   ever launches non-headless — the headless default here does not need it.
 - **Every path a step hands to another step is the absolute `/app` one.**
