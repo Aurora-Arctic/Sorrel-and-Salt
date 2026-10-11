@@ -16,6 +16,7 @@ import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingr
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
+import type { ShortCitationFields } from '@/lib/types';
 
 interface IngredientFormCallbacks {
   /**
@@ -113,16 +114,20 @@ export interface DeityListEntry extends ListEntry {
   link?: DeityLink;
 }
 
-/** A source a reference row links: its id, which is sent, and its tier, which the row says. */
-export interface ReferenceLink {
+/**
+ * A source a reference row links: its id, which is sent, its tier, which the
+ * row says, and the fields its short form is made of, which the row shows.
+ */
+export interface ReferenceLink extends ShortCitationFields {
   id: string;
   /** The compendium's, rather than this coven's own. */
   isGlobal: boolean;
 }
 
 /**
- * One reference (MB.154): the source's citation, which the row reads and is
- * never sent, the source it links, and the locator typed beside it, "p. 112".
+ * One reference (MB.154): the source's citation, which the row is described
+ * by and is never sent, the source it links, and the locator typed beside
+ * it, "p. 112".
  */
 export interface ReferenceListEntry extends ListEntry {
   link: ReferenceLink;

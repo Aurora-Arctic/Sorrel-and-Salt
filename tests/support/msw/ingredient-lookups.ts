@@ -112,6 +112,14 @@ export function offerReferences(nodes: ReferenceNode[]) {
 /** The id `acceptReference` gives the source it saves. */
 export const NEW_REFERENCE_ID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
 
+/** The fields the default new source's short form is made of, "Mock, _Fixture Grimoire_". */
+const NEW_REFERENCE_SOURCE = {
+  kind: 'book',
+  authors: 'Mock, Cyril',
+  title: 'A Fixture Grimoire',
+  container: null,
+} as const;
+
 /** Answers `CreateReference` with a new coven source reading `citation`, recording each ask. */
 export function acceptReference(citation = 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.') {
   const calls: CreateReferenceMutationVariables[] = [];
@@ -119,7 +127,14 @@ export function acceptReference(citation = 'Mock, Cyril. A Fixture Grimoire. Moc
     'CreateReference',
     (variables) => {
       calls.push(variables);
-      return { createReference: { id: NEW_REFERENCE_ID, citation, isGlobal: false } };
+      return {
+        createReference: {
+          id: NEW_REFERENCE_ID,
+          citation,
+          isGlobal: false,
+          ...NEW_REFERENCE_SOURCE,
+        },
+      };
     },
   );
   return calls;

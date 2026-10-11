@@ -18,6 +18,7 @@ import {
   useFormState,
   useWatch,
 } from 'react-hook-form';
+import { renderShortCitation, shortCitationText } from '@/lib/short-citation';
 import { formatLocator } from '@/modules/ingredients/validation/reference-format';
 import { graphql } from '../../gql';
 import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
@@ -39,8 +40,8 @@ import { draftOf, sourceTierOf } from './values';
 
 // The References field (MB.154): one search over the compendium's sources and
 // this coven's, each picked becoming a one-line row beneath the box — its
-// citation, cut to the line, and its locator — which its edit opens to the
-// citation whole, its tier and the Locator box; and a panel for a source not
+// Chicago short form and its locator, described by its whole citation —
+// which its edit opens to the citation whole, its tier and the Locator box; and a panel for a source not
 // yet written. Typed text is a search and never an entry, so the list's last
 // row is "New Reference…", which opens the panel, rather than what was typed
 // (MB.115, the owner's call). Only each source's id and locator are sent
@@ -54,6 +55,10 @@ export const ReferenceSuggestionsDocument = graphql(`
           id
           citation
           isGlobal
+          kind
+          authors
+          title
+          container
         }
       }
     }
@@ -62,10 +67,12 @@ export const ReferenceSuggestionsDocument = graphql(`
 
 /** Each source by its citation, whose it is beneath, in the search's ranked order. */
 const referenceOptions = (data: ReferenceSuggestionsQuery): ReferenceOption[] =>
-  data.referenceSuggestions.edges.map(({ node }) => {
-    const link = { id: node.id, isGlobal: node.isGlobal };
-    return { value: node.citation, note: sourceTierOf(link), key: node.id, link };
-  });
+  data.referenceSuggestions.edges.map(({ node: { citation, ...link } }) => ({
+    value: citation,
+    note: sourceTierOf(link),
+    key: link.id,
+    link,
+  }));
 
 /** The sources the search offers for `text`, once it has settled, while `active`. */
 const useReferenceSuggestions = (workspaceId: string | null, text: string, active: boolean) =>
@@ -144,7 +151,7 @@ export function ReferencesField({
   const boxError: string | undefined = get(errors, box)?.message;
   const message = [
     ...fields.flatMap((row, index) =>
-      rowErrors[index] ? [`${row.value}: ${rowErrors[index]}`] : [],
+      rowErrors[index] ? [`${shortCitationText(row.link)}: ${rowErrors[index]}`] : [],
     ),
     boxError,
   ]
@@ -159,7 +166,7 @@ export function ReferencesField({
   const add = (citation: string, link: ReferenceLink) => {
     // Not focused by the field array, which would take its locator: the box keeps it.
     append({ value: citation, link, locator: '' }, { shouldFocus: false });
-    setAnnouncement(`Added ${citation}`);
+    setAnnouncement(`Added ${shortCitationText(link)}`);
   };
   const pick = (_value: string, option: ReferenceOption | null) => {
     // The list has no typed row, so every pick is a source.
@@ -170,7 +177,7 @@ export function ReferencesField({
     focusBox();
   };
   const removeAt = (index: number) => {
-    setAnnouncement(`Removed ${fields[index].value}`);
+    setAnnouncement(`Removed ${shortCitationText(fields[index].link)}`);
     remove(index);
     revalidate();
   };
@@ -187,8 +194,8 @@ export function ReferencesField({
     revalidate();
     focusBox();
   };
-  const saved = ({ id: savedId, citation, isGlobal }: SavedReference) => {
-    add(citation, { id: savedId, isGlobal });
+  const saved = ({ citation, ...link }: SavedReference) => {
+    add(citation, link);
     closePanel();
     // The new source is one the search can now find.
     void queryClient.invalidateQueries({ queryKey: ['ReferenceSuggestions'] });
@@ -240,6 +247,7 @@ export function ReferencesField({
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
             const locator = rowValues[index]?.locator.trim() ?? '';
+            const name = shortCitationText(row.link);
             return (
               <li
                 key={row.id}
@@ -251,24 +259,38 @@ export function ReferencesField({
                   .filter(Boolean)
                   .join(' ')}
               >
-                {/* One line: the citation cut at the line's end, its whole
-                    text still the element's for a screen reader and the
-                    pointer's tooltip, then where in it, if anywhere. Open,
-                    the citation reads whole. */}
+                {/* One line: the source's short form, its italics real,
+                    the whole citation the pointer's tooltip and its
+                    buttons' description, then where in it, if anywhere.
+                    Open, the citation reads whole. */}
                 <div className="ingredient-form__source">
-                  <span id={citationId} className="ingredient-form__citation" title={row.value}>
+                  <span className="ingredient-form__citation" title={row.value}>
+                    {open
+                      ? row.value
+                      : renderShortCitation(row.link, locator !== '').map((part, at) =>
+                          part.italic ? <i key={at}>{part.text}</i> : part.text,
+                        )}
+                  </span>
+                  <span id={citationId} hidden>
                     {row.value}
                   </span>
+                  {/* The space is the text's, "Fixture, Herbal, p. 112"; the
+                      flex row draws the gap and drops the space. */}
                   {!open && locator !== '' && (
-                    <span className="ingredient-form__locator-text">{locator}</span>
+                    <>
+                      {' '}
+                      <span className="ingredient-form__locator-text">{locator}</span>
+                    </>
                   )}
                 </div>
-                {/* Named for its source, as its × is: a column of bare
-                    "Edit"s is no help to a screen reader. */}
+                {/* Named for its source by its short form, as its × is: a
+                    column of bare "Edit"s is no help to a screen reader.
+                    Each is described by the citation whole. */}
                 <button
                   type="button"
                   className="ingredient-form__icon-button"
-                  aria-label={`Edit ${row.value}`}
+                  aria-label={`Edit ${name}`}
+                  aria-describedby={citationId}
                   aria-expanded={open}
                   aria-controls={detailId}
                   onClick={() => {
@@ -282,8 +304,8 @@ export function ReferencesField({
                 <button
                   type="button"
                   className="ingredient-form__icon-button ingredient-form__remove"
-                  aria-label={`Remove ${row.value}`}
-                  aria-describedby={invalid ? errorId : undefined}
+                  aria-label={`Remove ${name}`}
+                  aria-describedby={[citationId, invalid && errorId].filter(Boolean).join(' ')}
                   onClick={() => {
                     removeAt(index);
                     focusBox();
