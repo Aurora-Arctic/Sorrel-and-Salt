@@ -433,6 +433,21 @@
   }
 }
 
+// A variant field's Copy From Ingredient (MB.115, the owner's call), at the
+// right end of its label row or legend, which span the card for it; on a
+// phone it wraps beneath a long label rather than squeezing it.
+.ingredient-form .ingredient-form__variant-fields {
+  .field__label-row,
+  .fieldset__legend {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+.ingredient-form__copy {
+  margin-left: auto;
+}
+
 .ingredient-form__variant-done {
   display: flex;
   justify-content: flex-end;

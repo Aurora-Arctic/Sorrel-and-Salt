@@ -43,7 +43,7 @@ const CategoriesDocument = graphql(`
  * The Categories field: the picker, on the form's `categoryIds`, or at
  * `at`, a variant's own, which file that form alone (MB.215).
  */
-export function CategoryField({ at }: SharedFieldProps): ReactElement {
+export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   const FIELD = at ? (`${at}.categoryIds` as const) : 'categoryIds';
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name: FIELD });
@@ -92,6 +92,7 @@ export function CategoryField({ at }: SharedFieldProps): ReactElement {
       errorId={message ? errorId : undefined}
       error={<FieldError id={errorId} message={message} />}
       status={isError ? 'The categories could not be loaded.' : undefined}
+      action={action}
     />
   );
 }

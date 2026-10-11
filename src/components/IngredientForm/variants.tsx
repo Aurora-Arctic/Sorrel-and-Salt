@@ -12,6 +12,7 @@ import {
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
+import { CopyFromIngredient } from './copy';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
@@ -385,6 +386,7 @@ function VariantFieldset({
             label="Description"
             hint="What is particular to this form. What every form shares is the ingredient's description."
             placeholder="What sets this form apart"
+            action={<CopyFromIngredient at={at} field="description" />}
             multiline
             // Seven lines, matching the ingredient's Description (MB.115).
             rows={7}
@@ -396,6 +398,7 @@ function VariantFieldset({
             label="Element"
             placeholder="Add an element"
             options={ELEMENT_OPTIONS}
+            action={<CopyFromIngredient at={at} field="elements" />}
           />
           <LookupListField
             workspaceId={workspaceId}
@@ -406,6 +409,9 @@ function VariantFieldset({
             legend="Planets"
             entry="Planet"
             placeholder="Add a planet"
+            action={(announce) => (
+              <CopyFromIngredient at={at} field="planets" announce={announce} />
+            )}
           />
           <LookupListField
             workspaceId={workspaceId}
@@ -416,6 +422,9 @@ function VariantFieldset({
             legend="Zodiac Signs"
             entry="Zodiac Sign"
             placeholder="Add a sign"
+            action={(announce) => (
+              <CopyFromIngredient at={at} field="zodiacSigns" announce={announce} />
+            )}
           />
           <ListField
             name={`${at}.colors`}
@@ -423,10 +432,16 @@ function VariantFieldset({
             legend="Colours"
             entry="Colour"
             placeholder="Add a colour"
+            action={(announce) => <CopyFromIngredient at={at} field="colors" announce={announce} />}
           />
         </Section>
         <Section title="Relations" level={4}>
-          <CategoryField at={at} />
+          <CategoryField
+            at={at}
+            action={(announce) => (
+              <CopyFromIngredient at={at} field="categoryIds" announce={announce} />
+            )}
+          />
           {/* Any ingredient may stand in for a form, this one's other forms
             included, so nothing is left out; those in this form, or in its
             group, are offered first (MB.215). Each row is one form of an
@@ -441,6 +456,9 @@ function VariantFieldset({
             legend="Substitute Ingredients"
             entry="Substitute Ingredient"
             placeholder="Add a substitute"
+            action={(announce) => (
+              <CopyFromIngredient at={at} field="substitutes" announce={announce} />
+            )}
           />
         </Section>
         <Section title="Safety" level={4}>
@@ -449,11 +467,18 @@ function VariantFieldset({
             label="Safety Notes"
             hint="What to take care over with this form in particular: an oil diluted, a resin burned."
             placeholder="Add safety notes"
+            action={<CopyFromIngredient at={at} field="safetyNotes" />}
             multiline
           />
         </Section>
         <Section title="Sources" level={4}>
-          <ReferencesField workspaceId={workspaceId} at={at} />
+          <ReferencesField
+            workspaceId={workspaceId}
+            at={at}
+            action={(announce) => (
+              <CopyFromIngredient at={at} field="references" announce={announce} />
+            )}
+          />
         </Section>
         <div className="ingredient-form__variant-done">
           <button

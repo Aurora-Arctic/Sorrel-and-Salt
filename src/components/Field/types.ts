@@ -51,6 +51,8 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   children: ReactNode;
   /** Beneath the error: what a field adds of its own. */
   after?: ReactNode;
+  /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
+  action?: ReactNode;
   /** A class beside `field` on the block: a filter's type-ahead, `filter-row__typeahead`. */
   className?: string;
 }
@@ -79,6 +81,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   invalid?: boolean;
   /** Drawn beneath the field, after its error: the name's duplicate warning. */
   after?: ReactNode;
+  /** At the right end of the label row: a variant's Copy From Ingredient. */
+  action?: ReactNode;
   /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
   format?: (text: string) => string;
   /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's. */

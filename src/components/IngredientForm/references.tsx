@@ -92,6 +92,7 @@ const IGNORE_ENTER = () => {};
 export function ReferencesField({
   workspaceId,
   at,
+  action,
 }: LookupFieldProps & SharedFieldProps): ReactElement {
   const { control, register, setValue, trigger } = useFormContext<IngredientFormValues>();
   const list = at ? (`${at}.references` as const) : 'references';
@@ -224,6 +225,10 @@ export function ReferencesField({
           already recorded, or choose New Reference at the end of the list to write one, and give a
           locator to point within it: p. 112, chap. 13.
         </InfoTip>
+        {action?.((said) => {
+          setAnnouncement(said);
+          revalidate();
+        })}
       </legend>
       <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox<ReferenceOption>

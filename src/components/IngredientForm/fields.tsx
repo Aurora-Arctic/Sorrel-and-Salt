@@ -91,12 +91,13 @@ export function MultiSelectField({
   placeholder,
   options,
   required,
+  action,
 }: MultiSelectFieldProps): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name });
   const { aria, ...shell } = useField<IngredientFormValues>(name, hint);
   return (
-    <FieldShell label={label} hint={hint} required={required} {...shell}>
+    <FieldShell label={label} hint={hint} required={required} action={action} {...shell}>
       <ComboboxMultiSelect
         id={shell.controlId}
         label={label}
@@ -132,6 +133,7 @@ export function ListField({
   onActivate,
   ordered,
   pickOnly,
+  action,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
   const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
@@ -305,6 +307,10 @@ export function ListField({
             {hint}
           </InfoTip>
         )}
+        {action?.((said) => {
+          setAnnouncement(said);
+          revalidate();
+        })}
       </legend>
       <div ref={setBoxRow} className="ingredient-form__row">
         <Combobox

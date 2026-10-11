@@ -577,7 +577,9 @@ function WhatToTry() {
           variant&rsquo;s box holding text while it is folded, and it opens on the error. Remove
           takes a variant out. In a variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists
           the Testwort that comes in oil first, a row for any form of it and one for each form; pick
-          a form, and its pill names it.
+          a form, and its pill names it. Each of a variant&rsquo;s fields has Copy From Ingredient,
+          shut while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and
+          press it to add what the variant lacks.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what

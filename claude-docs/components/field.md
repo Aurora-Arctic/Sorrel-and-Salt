@@ -59,7 +59,8 @@ Every field takes `FieldProps` (`types.ts`):
 
 `FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
 `hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`
-(drawn beneath the error) and `className`, a class beside `field` on the
+(drawn beneath the error), `action` (a control at the right end of the label
+row, after the tip: an ingredient variant's Copy From Ingredient, MB.115) and `className`, a class beside `field` on the
 block: a filter's type-ahead takes `filter-row__typeahead`
 ([`filter-form.md`](filter-form.md), "Styling").
 
@@ -75,7 +76,7 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 ```
 
 `TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`),
-`disabled`, `deps`, `describedBy`, `invalid`, `after`, `format` (a tidy run
+`disabled`, `deps`, `describedBy`, `invalid`, `after`, `action`, `format` (a tidy run
 as the field is left) and `autoComplete`. `SelectField` adds `name`,
 `options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a

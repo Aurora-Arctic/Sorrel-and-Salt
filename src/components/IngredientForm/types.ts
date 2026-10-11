@@ -16,6 +16,7 @@ import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingr
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
+import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
 
 interface IngredientFormCallbacks {
@@ -289,6 +290,8 @@ export interface MultiSelectFieldProps extends FieldProps {
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
+  /** At the right end of the label row: a variant's Copy From Ingredient. */
+  action?: ReactNode;
 }
 
 /** A text field whose box suggests as it is typed in; picking fills it. */
@@ -331,6 +334,8 @@ export interface ListFieldProps {
    * planets, signs and deities (MB.162).
    */
   pickOnly?: boolean;
+  /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
+  action?: LegendAction;
 }
 
 /**
@@ -400,6 +405,8 @@ export interface LookupFieldProps {
  */
 export interface SharedFieldProps {
   at?: VariantPath;
+  /** A control at the right end of the legend, handed the field's announcer: a variant's Copy From Ingredient. */
+  action?: LegendAction;
 }
 
 /** A variant's Form field, whose text must be a curated pick on the compendium (MB.162). */
@@ -490,4 +497,24 @@ export interface SectionProps {
   /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
   level?: 3 | 4;
   children: ReactNode;
+}
+
+/** A variant's field that its Copy From Ingredient fills from the ingredient's own. */
+export type CopiedField =
+  | 'description'
+  | 'safetyNotes'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'categoryIds'
+  | 'substitutes'
+  | 'references';
+
+/** A variant's Copy From Ingredient, for one of its fields. */
+export interface CopyFromIngredientProps {
+  at: VariantPath;
+  field: CopiedField;
+  /** The field's own live region, where it has one; else the button says what it did through its own. */
+  announce?: Announce;
 }

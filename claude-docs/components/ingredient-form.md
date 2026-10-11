@@ -19,6 +19,7 @@ compendium page wrap it rather than containing their own form.
 | `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                |
 | `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                               |
 | `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                     |
+| `copy.tsx`             | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                       |
 | `section.tsx`          | `Section`, one titled section of the form, the ingredient's at `h3` and a variant's at `h4`                                                                                                            |
 | `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                               |
 | `substitute-forms.tsx` | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                      |
@@ -598,6 +599,50 @@ and `fieldNameOf` places it as it places the ingredient's: on that variant's
 field, its list entry, or its reference row; one on the variant as a whole,
 or on its kept `id`, is its Form box's.
 
+### Copying from the ingredient
+
+A form often says much of what its ingredient says, so each of an open
+variant's fields but its Form has a **Copy From Ingredient** button
+(`copy.tsx`, MB.115, the owner's call): Description, Element, Planets,
+Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes and
+References. The ingredient's own fields have none.
+
+- **Where it sits.** A small quiet button, `.btn--small.btn--quiet`, at the
+  right end of the field's label row or legend, after its tip, through the
+  field's `action` slot: `FieldShell`'s and `TextField`'s
+  ([`field.md`](field.md)), `MultiSelectField`'s, and a legend's on
+  `ListField`, `ReferencesField` and `CategoryPicker`
+  ([`category-picker.md`](category-picker.md)), the last three handing it
+  their announcer. In a variant the label rows and legends span the card
+  and wrap, so on a phone the button drops beneath a long label. In the
+  Description section, whose label is hidden, it shares the heading's line.
+- **Its name** is the visible words first, then the field, "Copy From
+  Ingredient: Planets", so the nine are told apart and the name still
+  starts with what is seen (WCAG 2.5.3). It is a `type="button"`.
+- **Shut while there is nothing to copy**: `disabled` while the
+  ingredient's field, as the form holds it now, is empty, read through
+  `useWatch`, so it opens as soon as the ingredient's field gains a value.
+  `disabled` rather than `aria-disabled`, since a press never empties the
+  ingredient's field, so the focus is never stranded on a shut button.
+- **What it copies, adding and never taking away** (the owner did not say;
+  this is the lane's reading). A list gains the ingredient's entries it
+  lacks, after its own, in the ingredient's order: planets, signs and
+  colours by their text folded as a save folds it, elements and categories
+  by value, references by source, each with its locator. A text box empty
+  takes the ingredient's text; one holding text gains it after a blank
+  line, unless it holds it already, so nothing typed is overwritten.
+  **Substitutes copy "the same form"**: each of the ingredient's linked
+  substitutes links the linked ingredient's form that folds alike to this
+  variant's form, as a variant's form row does, or, where it comes in no
+  such form, the ingredient alone, in any form; a name copies as a name.
+  One already listed, by link or by folded name, is skipped.
+- **After a press** the field shows the result and the form is dirty, so
+  Save opens; once a save has been tried the field is revalidated. A polite
+  announcement says what was copied, "Copied 3 planets from the
+  ingredient", or "Nothing new to copy from the ingredient", through the
+  list's own live region where it has one, else through a hidden `output`
+  beside the button. The focus stays on the button.
+
 ### The form's pick
 
 Two curated forms may share a name, Wax under _Animal_ and Wax under
@@ -1152,7 +1197,14 @@ typed kept; one open at a time; a variant added opened, the other closed;
 a save finding an error in a closed variant opening it, its field focused
 (MB.115); a variant added listed first, after the New Form box (MB.115); an
 open variant's `h4` section headings in the ingredient's order, each field
-in its own section (MB.115); a variant added from the New Form box listed as
+in its own section (MB.115); and copying from the ingredient (MB.115): a
+button per copied field, named for it, a `type="button"`; each shut while
+the ingredient's field is empty and opened as it gains a value; lists
+gaining what they lack after their own, none removed and none repeated,
+the focus kept and Save opened; an empty text box filled and a filled one
+added to after a blank line; and substitutes linking the same form where
+the linked ingredient has one, the ingredient alone where not, and a name
+as a name; a variant added from the New Form box listed as
 its own fieldset and sent in `variants`, with no top-level `form`; a
 compendium pick carried into the variant's Form box; a typed compendium form
 refused beside its box, focused, with nothing sent; a variant removed by its

@@ -56,6 +56,7 @@ const CategoryPicker = ({
   errorId,
   error,
   status,
+  action,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -140,6 +141,7 @@ const CategoryPicker = ({
             {hint}
           </InfoTip>
         )}
+        {action?.(setAnnouncement)}
       </legend>
       <Combobox<CategoryOption>
         id={boxId}
