@@ -11,7 +11,7 @@ import {
 import { A, E, asUser } from '../support/as-user';
 import { curatedDeityId, curatedFormId } from '../support/db/curated-ids';
 import { useTestDatabase } from '../support/db/database';
-import { insertIngredient } from '../support/db/insert-ingredient';
+import { insertIngredient, insertVariant } from '../support/db/insert-ingredient';
 import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
@@ -34,6 +34,7 @@ let oil: string;
 let hecate: { id: string; tradition: string };
 let healing: string;
 let mockwort: string;
+let mockoil: string;
 let book: string;
 
 beforeAll(async () => {
@@ -62,6 +63,8 @@ beforeAll(async () => {
     makeIngredient({ name: 'Mockwort', canonicalName: 'Fixtura mockalis' }),
     A.id,
   );
+  // A form of the substitute, which a substitute may name (MB.215).
+  mockoil = await insertVariant(sql, mockwort, { form: 'Mockoil' }, A.id);
   book = await insertReference(sql, {}, E.id);
 });
 
@@ -95,7 +98,7 @@ const everything = (): CompendiumWrite => ({
       zodiacSigns: ['Virgo'],
       colors: ['Brown'],
       categoryIds: [healing],
-      substitutes: [{ ingredientId: mockwort }, { name: 'Testleaf' }],
+      substitutes: [{ ingredientId: mockwort, substituteVariantId: mockoil }, { name: 'Testleaf' }],
       references: [{ referenceId: book, locator: 'p. 40' }],
     },
     // A form adding nothing but itself, read back as blanks and empty lists.
@@ -198,7 +201,15 @@ describe('entryValues', () => {
           colors: [{ value: 'Brown' }],
           categoryIds: [healing],
           substitutes: expect.arrayContaining([
-            { value: 'Mockwort', link: expect.objectContaining({ id: mockwort }) },
+            {
+              value: 'Mockwort',
+              // Its forms, which the second picker offers, and the one named.
+              link: expect.objectContaining({
+                id: mockwort,
+                variants: expect.arrayContaining([{ id: mockoil, form: 'Mockoil', group: null }]),
+              }),
+              variantId: mockoil,
+            },
             { value: 'Testleaf' },
           ]),
           references: [
