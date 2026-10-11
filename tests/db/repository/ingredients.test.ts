@@ -240,11 +240,11 @@ describe('findCompendiumPage', () => {
         await insertVariant(
           sql,
           mugwortId,
-          { form: 'Testoil', description: 'Pressed from the fixturberry seed' },
+          { form: 'Testoil', description: 'Pressed from the quandleberry seed' },
           A.id,
         );
 
-        expect(await namesOf({ query: 'fixturberry' })).toEqual(['Fixture Mugwort']);
+        expect(await namesOf({ query: 'quandleberry' })).toEqual(['Fixture Mugwort']);
       });
 
       it('answers one row, at its best score, for an entry two of whose variants match', async () => {
