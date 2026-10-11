@@ -24,10 +24,11 @@ the refusal reads as a fact about the account rather than an error. It never
 says _workspace_ (CLAUDE.md, "Vocabulary").
 
 **The way back is a `next/link` to `/`**, the one page every signed-in visitor
-can reach; `/` offers a signed-in visitor the landing. It is an outline
-`.btn`, a target the size of every other page's action, and not a solid one:
-it is the page's only action, but nothing about it is primary. The owner
-chose the button over a plain text link at MB.116's sign-off.
+can reach; `/` offers a signed-in visitor the landing. It is a quiet
+`.btn--quiet`, a target the size of every other page's action, and neither
+solid nor the accent outline: it is the page's only action, but a way back
+changes nothing and nothing about it is primary. The owner chose the button
+over a plain text link at MB.116's sign-off, and quiet over green after.
 
 ## Styling
 

@@ -272,7 +272,7 @@ The owner's calls on the proposals drawn in 1d and the pieces built around them.
 - **A panel behind the three form pages.** `/sign-in`, `/account`'s sections and `/account/email` sit on a `.panel`; `/` and the 403 page stay bare, being prose.
 - **The last-used badge stays in the button's corner**, rather than moving inline at the end of the label.
 - **Microsoft keeps its white face with the darker grey edge**, `#808080` in `$brand-palettes`, in both themes. Microsoft's own dark button in the light theme is not adopted.
-- **The 403 page's way back is a button**: an outline `.btn` anchor to `/`, not a plain text link.
+- **The 403 page's way back is a button**: a `.btn` anchor to `/`, not a plain text link; quiet (`.btn--quiet`), since a way back changes nothing and a secondary action is not green (the owner, 2026-10-11).
 - **Welcome's lede is the shared `.lede` at body size**, in the muted ink, as every section head's is.
 - **The sign-in-methods rows carry no status word**, Remove is `.btn--destructive`, and each row keeps its provider mark.
 - **The unavailable note is at caption size.**
@@ -280,3 +280,11 @@ The owner's calls on the proposals drawn in 1d and the pieces built around them.
 - **`readGraphqlIssues`** joins `readGraphqlFailure` in `src/lib/graphql-failure.ts`: it reads every field error of a refusal at once, for the forms that place each one under its field. GroupForm, GroupedValueForm, VocabularyValueForm and IngredientForm drop their own copies of it.
 - **The account page pre-empts a stale session.** Better Auth refuses to remove a sign-in method on a session older than its freshness window, so the page withholds Remove on such a session and offers Sign In Again instead, rather than letting the request fail.
 - **The copy register**: speak to the reader as "you"; one sentence for what happened and one for what to do; "sign-in" is the noun and adjective and "sign in" the verb; "email address" on a sentence's first mention and "address" after; title case for every label, button and heading.
+
+## Calls on the applied design (2026-10-11, the owner, in the running app)
+
+- **The only sign-in method's Remove is greyed, not gone**: `aria-disabled`, still in the tab order, with "Your only sign-in method" beneath it as its description, so the reason sits under the control it explains.
+- **The sign-in card is bigger**: it fills the narrow column (28rem) rather than its own 22rem, pads itself a step more than `.panel` (`space(6)`) and a step more again below (`space(7)`), and is one centred `max-content` column, so the lede and the error wrap at the buttons' width.
+- **The email page's way on is a quiet "Continue to Account" button (`.btn--quiet`) inside the card**, centred, offered only to a verified account; on the confirmed view it sits beside the solid "Continue".
+- **A page-frame child is `border-box`**: the 375px width check caught the account sections' panels growing past the column by their padding. The fix is in the primitive, so every padded child keeps its padding inside the column.
+- **`assertNoSidewaysScroll` names what overflows** in its failure message, the outermost offenders only.

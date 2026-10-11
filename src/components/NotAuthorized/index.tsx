@@ -16,7 +16,7 @@ const NotAuthorized = (): ReactElement => (
       </p>
     </div>
     <p className="not-authorized__way-back">
-      <Link className="btn" href="/">
+      <Link className="btn btn--quiet" href="/">
         Back to Sorrel &amp; Salt
       </Link>
     </p>

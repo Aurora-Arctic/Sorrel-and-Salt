@@ -141,7 +141,7 @@ const EmailForm = ({
             Continue
           </a>
           {accountPath && (
-            <a className="btn" href={accountPath}>
+            <a className="btn btn--quiet" href={accountPath}>
               Continue to Account
             </a>
           )}
@@ -208,7 +208,7 @@ const EmailForm = ({
           no other page, so it is offered none. */}
       {accountPath && verified && !embedded && (
         <p className="email-form__continue">
-          <a className="btn" href={accountPath}>
+          <a className="btn btn--quiet" href={accountPath}>
             Continue to Account
           </a>
         </p>
