@@ -402,7 +402,9 @@ describe('IngredientForm on the compendium', () => {
           canonicalName: 'Fixtura vulgaris',
           description: null,
           isGlobal: true,
-          variants: [],
+          variants: [
+            { id: '5b6c7d8e-9f0a-4b1c-8d2e-3f4a5b6c7d8e', form: 'Root', formChoice: null },
+          ],
         },
       ]);
 
