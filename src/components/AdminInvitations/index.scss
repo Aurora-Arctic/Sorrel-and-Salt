@@ -1,8 +1,11 @@
 @use '../../scss/variables' as *;
 
-// Layout only, until the admin area's design review (MB.115). The table is the
-// `.data-table` primitive, and the locked controls and the confirmation take
-// the user list's own classes, since they are its components.
+// The admin invitations section's own rules: the section's column, its
+// heading row, the table's one-line cells at desktop width and wrapping ones
+// as cards, the "None given" ink, the Reason field's room and the sent
+// confirmation. The table is the `.data-table` primitive with `--stack`; the
+// confirmation and the locked controls are the user list's, which bring
+// their own stylesheet (`UserList/controls.scss`).
 
 .admin-invitations {
   display: flex;
@@ -25,13 +28,6 @@
   }
 }
 
-// The address's asterisk, hard against its label in the error red, as the
-// vocabulary forms mark a required field. Hidden from the field's name: the
-// input's `aria-required` says it instead.
-.admin-invitations__required {
-  color: $secondary;
-}
-
 .admin-invitations__empty {
   margin: 0;
 }
@@ -51,17 +47,31 @@
   }
 }
 
+// As cards at phone width, under the primitive's own named container query
+// (claude-docs/styling.md, "Tables at phone width"): a card does not scroll,
+// so an address or a reason wraps within it.
+@container data-table (max-width: #{$table-stack-width}) {
+  .admin-invitations .data-table--stack {
+    th,
+    td {
+      white-space: normal;
+    }
+  }
+}
+
 .admin-invitations__none {
   color: $text-muted;
 }
 
 // The Reason field, given the user list's confirmation spacing: a step of room
-// above and 2rem below (the owner's call). Compounded with `.field`, whose
-// primitive is `body .field` in the app.
-.field.admin-invitations__note {
+// above and 2rem below (the owner's call). A wrapper round the field's shell,
+// which takes no class of its own.
+.admin-invitations__note {
   margin-block: space(5) space(6);
 }
 
+// Compounded with `.notice`, whose primitive is `body .notice` in the app: a
+// lone class loses to it there.
 .notice.admin-invitations__sent {
   margin: 0;
 }

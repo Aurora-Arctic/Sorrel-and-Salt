@@ -8,6 +8,7 @@ import { FieldShell, fieldDescription } from '../Field';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
+import './controls.scss';
 
 // A row's action that asks first, in a modal naming the user, shared by the
 // creation control (M5.8) and the role control (MB.59): the modal's confirm

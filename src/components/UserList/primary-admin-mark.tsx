@@ -3,6 +3,7 @@
 import type { ReactElement } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 import { CrownIcon } from './icons';
+import './controls.scss';
 
 // The primary admin's mark beside its role: a crown named "Primary Admin",
 // with a tip saying so that behaves as InfoTip's does, through the same

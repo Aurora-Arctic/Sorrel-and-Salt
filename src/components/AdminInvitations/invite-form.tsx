@@ -6,6 +6,8 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
 import Modal from '../Modal';
 import Notice from '../Notice';
 
@@ -22,12 +24,14 @@ const CreateAdminInvitationDocument = graphql(`
   }
 `);
 
+/** The Reason field's line beneath its label, in view rather than in a tip until the section's sign-off (MB.115, 1d.12). */
+const NOTE_HINT =
+  'Kept with the invitation, and in the record of who changed what once it is accepted.';
+
 const InviteForm = (): ReactElement => {
   const router = useRouter();
   const emailId = useId();
-  const emailErrorId = useId();
   const noteId = useId();
-  const noteHintId = useId();
   const openRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -35,6 +39,11 @@ const InviteForm = (): ReactElement => {
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState<string>();
+  const { aria: emailAria, ...emailField } = fieldDescription({
+    id: emailId,
+    error: failure.field?.message,
+  });
+  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, note: NOTE_HINT });
 
   async function submit(event: FormEvent<HTMLFormElement>, close: () => void) {
     event.preventDefault();
@@ -91,60 +100,45 @@ const InviteForm = (): ReactElement => {
                 confirmed this address can accept it.
               </p>
               {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-              <div className="field">
-                <label className="field__label" htmlFor={emailId}>
-                  Email Address
-                  <span className="admin-invitations__required" aria-hidden="true">
-                    *
-                  </span>
-                </label>
+              <FieldShell label="Email Address" required {...emailField}>
                 <input
-                  id={emailId}
+                  id={emailField.controlId}
                   className="input"
                   type="email"
                   autoComplete="off"
                   aria-required
-                  aria-invalid={failure.field ? true : undefined}
-                  aria-describedby={failure.field ? emailErrorId : undefined}
+                  {...emailAria}
                   value={email}
                   disabled={sending}
                   onChange={(event) => setEmail(event.target.value)}
                 />
-                {failure.field && (
-                  <p id={emailErrorId} className="field__error">
-                    {failure.field.message}
-                  </p>
-                )}
-              </div>
-              <div className="field admin-invitations__note">
-                <label className="field__label" htmlFor={noteId}>
-                  Reason
-                </label>
-                <p id={noteHintId} className="field__hint">
-                  Kept with the invitation, and in the record of who changed what once it is
-                  accepted.
-                </p>
-                <input
-                  id={noteId}
-                  className="input"
-                  type="text"
-                  autoComplete="off"
-                  aria-describedby={noteHintId}
-                  value={note}
-                  disabled={sending}
-                  onChange={(event) => setNote(event.target.value)}
-                />
+              </FieldShell>
+              {/* The wrapper holds the field's room above and below, as the
+                  confirmation's Reason has; the shell takes no class. */}
+              <div className="admin-invitations__note">
+                <FieldShell label="Reason" note={NOTE_HINT} {...noteField}>
+                  <input
+                    id={noteField.controlId}
+                    className="input"
+                    type="text"
+                    autoComplete="off"
+                    {...noteAria}
+                    value={note}
+                    disabled={sending}
+                    onChange={(event) => setNote(event.target.value)}
+                  />
+                </FieldShell>
               </div>
               <div className="modal__actions">
-                <button
+                <BusyButton
                   className="btn btn--solid"
                   type="submit"
                   disabled={sending || email.trim() === ''}
-                  aria-busy={sending || undefined}
+                  busy={sending}
+                  busyLabel="Sending"
                 >
-                  {sending && <span className="spinner" aria-hidden="true" />}
-                  {sending ? 'Sending' : 'Send Invitation'}
-                </button>
+                  Send Invitation
+                </BusyButton>
                 <button className="btn btn--quiet" type="button" disabled={sending} onClick={close}>
                   Cancel
                 </button>

@@ -1,12 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
-
-// The sticky Impersonate column's layer, and every tip's one above it: a
-// tip's lower edge reaches into its own row, whose Impersonate cell comes
-// later in the DOM, so at the same z-index the cell would paint over the
-// tip's corner (fixed in MB.63's PR).
-$sticky-column-layer: 1;
-$tip-layer: $sticky-column-layer + 1;
+@use 'layers' as *;
 
 // The user list's own rules: its cells' alignment, the marks and logos with
 // their tips, the history link, the role and creation cells, the sticky
@@ -252,24 +246,6 @@ $tip-layer: $sticky-column-layer + 1;
   gap: space(2) space(3);
 }
 
-// Approve's warning for an unverified address, given a step more room than a
-// notice's own zero margin leaves between the question and the buttons, so it
-// reads as its own statement. Compounded with `.notice`, whose primitive is
-// `body .notice` in the app: a lone class loses to it there, while the
-// workshop's unweighted frame scope would hide that. Not nested under
-// `.user-list`: the confirmation is a modal, which need not render inside it.
-.notice.user-list__warning {
-  margin-block: space(5);
-}
-
-// The confirmation's Reason field, given the warning's step of room above and
-// 2rem below, so it reads apart from the question and stands clear of
-// the buttons (the owner's call). A wrapper round the field's shell, which
-// takes no class of its own.
-.user-list__note {
-  margin-block: space(5) space(6);
-}
-
 // The role cell: the role and the primary admin's crown on the left, the
 // control that changes it on the right, centred on one line (the owner's
 // call).
@@ -293,7 +269,8 @@ $tip-layer: $sticky-column-layer + 1;
 }
 
 // `$icon-size`: WCAG 2.2's 24px minimum target around a `$glyph-size`
-// glyph, as InfoTip's button. The muted ink, so it reads as a fact about the row, not a control.
+// glyph, as InfoTip's button. The muted ink, so it reads as a fact about the
+// row, not a control.
 .user-list__primary-mark {
   display: inline-flex;
   align-items: center;
@@ -320,40 +297,6 @@ $tip-layer: $sticky-column-layer + 1;
   &:focus-visible {
     @include focus-ring;
   }
-}
-
-// The primary admin's Revoke and the tip saying why it cannot be used, the
-// tip placed against this wrapper.
-.user-list__locked {
-  position: relative;
-  display: inline-flex;
-}
-
-// Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
-// InfoTip's, above the mark or button from its left edge, no wider than
-// `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`, the marks' and logos'
-// centred tip, which takes no pointer: these stay open while hovered.
-.user-list__control-tip {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: $tip-layer;
-  width: max-content;
-  max-width: min($tip-width, calc(100vw - #{space(6)}));
-  margin-bottom: space(1);
-  // Its cell keeps to one line; the reason wraps within the bubble.
-  white-space: normal;
-
-  @include tip-bubble;
-}
-
-// The locked Revoke's, placed against the viewport by its script rather than
-// the cell, so the table's scrolling frame cannot clip it. Its side margin is
-// the gutter the script keeps between it and the screen's edge.
-.user-list__control-tip--fixed {
-  position: fixed;
-  bottom: auto;
-  margin-inline: space(4);
 }
 
 // The pause on admin changes, beside the page's heading as its `.page-header`

@@ -3,13 +3,12 @@
 import { type ReactElement, useId } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import InviteForm from './invite-form';
 import type { AdminInvitationEntry, AdminInvitationsProps } from './types';
-// The locked control's tip and the confirmation's spacing are the user list's.
-import '../UserList/index.scss';
 import './index.scss';
 
 // `/admin/users`' admin invitations (MB.70): Invite Admin, and the pending
@@ -17,7 +16,12 @@ import './index.scss';
 // admin changes are paused both are in view but locked for any admin but the
 // primary one, with the pause as the reason, as the role controls are. The
 // confirmation and the locked control are the user list's own, so the page
-// asks one way (claude-docs/components/admin-invitations.md).
+// asks one way, and each brings its own rules with it
+// (claude-docs/components/admin-invitations.md).
+
+/** The columns: each heading, and the label its cell carries as a card at phone width. */
+const COLUMNS = { email: 'Email', reason: 'Reason', expires: 'Expires' } as const;
+const REVOKE = 'Revoke';
 
 const RevokeAdminInvitationDocument = graphql(`
   mutation RevokeAdminInvitation($id: ID!) {
@@ -80,28 +84,30 @@ const AdminInvitations = ({ invitations, locked }: AdminInvitationsProps): React
         <p className="admin-invitations__empty">No invitations are waiting.</p>
       ) : (
         <div className="data-table-frame">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">Email</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Expires</th>
-                <th scope="col">Revoke</th>
+          <table className="data-table data-table--stack" {...tableRole('table')}>
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                {[...Object.values(COLUMNS), REVOKE].map((heading) => (
+                  <th key={heading} scope="col" {...tableRole('columnheader')}>
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody {...tableRole('rowgroup')}>
               {invitations.map((invitation) => (
-                <tr key={invitation.id}>
-                  <td>{invitation.email}</td>
-                  <td>
+                <tr key={invitation.id} {...tableRole('row')}>
+                  <td {...stackCell(COLUMNS.email)}>{invitation.email}</td>
+                  <td {...stackCell(COLUMNS.reason)}>
                     {invitation.note ?? <span className="admin-invitations__none">None given</span>}
                   </td>
-                  <td>
+                  <td {...stackCell(COLUMNS.expires)}>
                     <time dateTime={invitation.expiresAt.toISOString()}>
                       {inUtc(invitation.expiresAt)}
                     </time>
                   </td>
-                  <td>
+                  {/* An action, so a card's foot with no label of its own. */}
+                  <td {...stackCell('')}>
                     <Revoke invitation={invitation} locked={locked} />
                   </td>
                 </tr>
