@@ -78,8 +78,8 @@ primitives, the table a `.data-table` with `--stack` in its
 of its frame each change is a card, every fact led by its column's name. Its
 own stylesheet keeps the time on one line and holds the note to `$measure`.
 Its look is MB.115's, signed off as it stands; "privilege changes" is the
-ledger's one name everywhere, its heading, its nav entry, its empty state and
-the user list's icon.
+ledger's one name everywhere, its tab, its empty state and the user list's
+icon.
 
 ## Stories
 
@@ -99,6 +99,6 @@ the links to the user rows and the people without one, the `<time>`, the
 filter's form, search, dropdown values, disabled and enabled Filter and the
 address it opens, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.
-`tests/app/admin/privilege-changes/page.test.tsx` covers what the page hands
+`tests/app/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.

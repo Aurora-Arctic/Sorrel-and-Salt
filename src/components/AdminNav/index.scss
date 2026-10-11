@@ -19,9 +19,10 @@
   display: none;
 }
 
-// Under the width at which the area's tables stack into cards, the row would
-// wrap onto four or five lines, so the disclosure takes over: the nav and the
-// tables change shape at the one width.
+// Under the width at which the area's tables stack into cards, the disclosure
+// takes over from the row, the owner's call when the row held eleven links
+// and wrapped onto four or five lines: the nav and the tables change shape at
+// the one width.
 @container admin-nav (max-width: #{$table-stack-width}) {
   .admin-nav__row {
     display: none;

@@ -77,7 +77,7 @@ the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
 the transport's half (MB.186): the default page of 25, the resumed cursor, the
 filters reaching the service, and that the nodes are the same `User` as
 `me`'s; a signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
-`tests/app/admin/users/page.test.tsx` covers the guard running first and the
+`tests/app/admin/(people)/users/page.test.tsx` covers the guard running first and the
 search parameters becoming the filter and the pager's links.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built
 server, with axe.
@@ -267,8 +267,8 @@ the good ones while it is dealt with, and back on. The argument is
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`** every admin sees the control beside the page's
-  heading, and a warning saying changes are paused while they are. The
+- **On `/admin/users`**, the People page's Users tab, every admin sees the
+  control as the tab's action, above the list, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
   Grant and Revoke, and coven creation's Approve and Revoke, are locked the
@@ -368,8 +368,9 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/admin/users`** every admin sees, beneath the list, an Admin
-  Invitations section: Invite Admin, and the pending invitations, each with
+- **On `/admin/invitations`**, the People page's Invitations tab (beneath
+  the user list on `/admin/users` until MB.115), every admin sees Invite
+  Admin, and the pending invitations, each with
   its address, its reason, when it expires and Revoke
   ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
@@ -399,7 +400,8 @@ story 62's acceptance test is in `tests/acceptance/08-email-and-admin.test.ts`.
 Every change to who is an admin and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
 application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
-and MB.200 its page, `/admin/privilege-changes`: the whole ledger, newest
+and MB.200 its page, `/admin/privilege-changes`, now the People page's
+Privilege Changes tab (MB.115): the whole ledger, newest
 first, for the admin who suspects misuse (story 61).
 
 - **One service, two transports.** `listPrivilegeChanges`
@@ -457,7 +459,7 @@ rows. `tests/modules/identity/graphql/privilege-changes.test.ts` holds the
 transport's half: every field, the filters reaching the service, subject and
 actor in one user read per page by query count, and the scope's own refusal.
 A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
-half is `tests/app/admin/privilege-changes/page.test.tsx`, story 61's
+half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
 acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
 the history icon link against the built server, with axe.

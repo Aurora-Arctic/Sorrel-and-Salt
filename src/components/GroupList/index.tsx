@@ -26,7 +26,10 @@ const EMPTY: Record<GroupKind, string> = {
   tradition: 'There are no traditions yet. Add one with Add Tradition.',
 };
 
-/** The table's name, the page's heading: what a screen reader lists it as. */
+/**
+ * The table's name, what a screen reader lists it as: the full name its
+ * tab's short label, "Groups" or "Traditions", stands for (MB.115).
+ */
 const TABLE_NAME: Record<GroupKind, string> = {
   category: 'Category Groups',
   form: 'Form Groups',

@@ -39,8 +39,9 @@ terms.
 
 Everything that tells one kind's list from another's is its entry in
 `kinds.ts`'s `KINDS`, so a new kind is an entry there and nothing else:
-`path`, the page's address; `title`, the page's heading and tab title
-("Zodiac Signs"); `label`, one row in title case, as Add says it ("Zodiac
+`path`, the page's address; `title`, the table's name ("Zodiac Signs"),
+since the heading is now the tabbed page's ("Astrology";
+[`tabbed-page.md`](tabbed-page.md)); `label`, one row in title case, as Add says it ("Zodiac
 Sign", the long form the owner chose at MB.115's sign-off);
 `noun` and `plural`, what a sentence calls one row and several ("category",
 "categories"); and, for a grouped kind only, `group`: its `label`, the
@@ -49,7 +50,7 @@ the filter's first option ("All groups"), and its `param`, the address
 parameter the filter names a group by (`group`). The deity kind calls its
 group a tradition throughout: "Tradition", "All traditions" and
 `tradition`. A flat kind has no `group`, so its table has no group column
-and its filter no group select. The page reads `title` and `label` too. The
+and its filter no group select. The page reads `label` too. The
 list carries the kind as a modifier class, `.grouped-value-list--<kind>`,
 for a rule only one kind's rows need.
 
@@ -99,8 +100,8 @@ for a rule only one kind's rows need.
   stale draft. In the workshop, `next/navigation` is stubbed
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
-  page's Add Category, Add Planet and the rest, on the heading's line in
-  its `PageHeader` and so the page's rather than this component's, is `?new`.
+  page's Add Category, Add Planet and the rest, the tab's action in
+  `TabActions` and so the page's rather than this component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
   `listHref` (`src/lib/list-href.ts`), builds both, the
   pager's links and the filter's submit too. `place` is `{ query, group, after, before }`,
@@ -120,7 +121,7 @@ for a rule only one kind's rows need.
   beside it tells them apart.
 - **An empty list says so and what to do, with no table**: "There are no
   categories yet. Add one with Add Category.", from the kind's `plural`
-  and `label`, which name the page header's Add. A filtered list with no
+  and `label`, which name the tab's Add. A filtered list with no
   rows says what to change instead, from its `noun` and its group's
   `label`: "No category matches that filter. Try another name or group.",
   "…or tradition." for a deity, and "No zodiac sign matches that filter.
@@ -145,13 +146,13 @@ What the list has of its own: a description keeps to `$measure`; and under
 `.grouped-value-list--category`, while the table is wider than
 `$table-stack-width`, the cells take `space(3)` above and below and centre
 their contents, for the chip. As cards they keep the card's own spacing. The
-page's Add is `.btn--solid` in its `PageHeader`, its one primary action, and
+page's Add is `.btn--solid` in its `TabActions`, its one primary action, and
 each row's Edit is `.btn--small.btn--quiet`: a row action that changes
 nothing, small enough to keep the row short. The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
-full width and the Add spans the line under the heading, the sign-off's two
-phone calls, which `FilterForm` and `PageHeader` own
-([`filter-form.md`](filter-form.md), [`page-header.md`](page-header.md)),
+full width and the Add spans its line, the sign-off's two phone calls,
+which `FilterForm` and `TabActions` own
+([`filter-form.md`](filter-form.md), [`tabbed-page.md`](tabbed-page.md)),
 so the list adds no rule for either.
 
 ## Stories
@@ -162,8 +163,8 @@ so the list adds no rule for either.
 deities under invented traditions and slugged by `deitySlug`; for the flat
 kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
-categories page inside `.admin-layout` at 375px: the real `PageHeader`
-with its Add over the filtered list, so they show the stacked filter, the
+categories page inside `.admin-layout` at 375px: the real `TabbedPage`
+with its Categories tab open and its Add over the filtered list, so they show the stacked filter, the
 full-width Add and the rows as cards. The filter
 reaches the admin pages, which the workshop does not serve. Render-only, no
 test ids, no snapshots.

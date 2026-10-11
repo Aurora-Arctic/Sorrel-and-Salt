@@ -213,14 +213,15 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   passes `onSent`, its full load in place of the refresh, and `refusal`, its
   own sentence in place of the service's. Grant warns
   on an unverified address as Approve does, in its own verb (below).
-- **The switch on admin changes sits beside the page's heading** (MB.63,
+- **The switch on admin changes is the Users tab's action** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
-  page draws it as the second child of its `.page-header`, as the other admin
-  pages put their primary action beside their heading, and keys it by the
-  state so the refresh after a flip mounts a fresh one (all on the owner's
-  call). It is one row, `.user-list__pause`, centred with a `space(3)` gap,
-  which the primitive wraps beneath the heading on a narrow screen. While
+  page draws it in `TabActions`, at the end of the line above the list, where
+  the other admin tabs put their primary action
+  ([`tabbed-page.md`](tabbed-page.md)), and keys it by the state so the
+  refresh after a flip mounts a fresh one (all on the owner's call). It is
+  one row, `.user-list__pause`, centred with a `space(3)` gap, which spans
+  the line at a phone's width. While
   changes are on it shows the button alone; while paused it first says so in
   a quiet warning `Notice`: "Admin changes are paused.", on the owner's
   call. Quiet makes it an `<output>`, a status rather than an alert, because
@@ -335,9 +336,10 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx),
-`Admin / Users`, every story inside the admin layout's frame:
+`Admin / Users`, every story inside the admin layout's frame and the
+People page with its Users tab open:
 
-- **States**: `Default`, the page as signed off at MB.115, its header's
+- **States**: `Default`, the page as signed off at MB.115, its tab's
   Pause Admin Changes and each row's Impersonate opening their
   confirmations; `Filtered`; `NoMatch`, with every filter set, so the
   sentence names all three; `WithoutImpersonation`, where impersonation is
@@ -387,7 +389,7 @@ locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Revoke kept on its own reason — which of the two reasons won is told by
 which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
-are presentation; paging is Pager's. `tests/app/admin/users/page.test.tsx` reads the page's
+are presentation; paging is Pager's. `tests/app/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, and `awaiting` read by its presence. `tests/e2e/admin.spec.ts`
 approves and revokes a user against the built server, and grants admin with a

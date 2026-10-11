@@ -4,8 +4,8 @@ import AdminNav, { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
 // no props: every admin sees the same pages. The workshop's `usePathname`
-// stub answers `/admin/users` (.ladle/navigation.ts), so Users is the
-// current page in every story. Each sits in the layout's real frame,
+// stub answers `/admin/users` (.ladle/navigation.ts), the People page's
+// Users tab, so People is the current page in every story. Each sits in the layout's real frame,
 // `.admin-layout`.
 export default {
   title: 'AdminNav',
@@ -15,7 +15,7 @@ const Frame = ({ children }: { children: ReactNode }): ReactElement => (
   <div className="admin-layout">{children}</div>
 );
 
-// Wider than a phone: the wrapping row, Users marked by weight and an
+// Wider than a phone: the wrapping row, People marked by weight and an
 // offset underline.
 export const Default: Story = () => (
   <Frame>

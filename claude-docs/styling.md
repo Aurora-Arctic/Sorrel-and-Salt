@@ -546,7 +546,10 @@ the admin area it then spans the line, so on a phone every admin page's Add
 stretches across the column (the owner's call at MB.115's review, over the
 natural width recommended); elsewhere, as on the account page, it keeps its
 natural width. The markup is the `PageHeader` component's
-([`components/page-header.md`](components/page-header.md)).
+([`components/page-header.md`](components/page-header.md)). A tabbed admin
+page's action sits above the open tab's content instead, in `TabActions`,
+which keeps the same rule: at the end of its line, spanning it under 28rem
+in the admin area ([`components/tabbed-page.md`](components/tabbed-page.md)).
 
 **The admin tables are banded at desktop width, and stack into cards on a
 phone.** Wide, every even body row sits on `$surface-card`, the surface a
@@ -695,7 +698,7 @@ still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive
 rather than AdminNav's own rule because the admin layout and the admin
 components' stories use the class as their frame. Inside it a page header's
-action spans the line at phone width ("Buttons", above).
+action, and a tab's, spans the line at phone width ("Buttons", above).
 
 ## Tables at phone width
 
@@ -822,7 +825,8 @@ What each section review (MB.115 to MB.124) designs to:
 - **Use the shared pieces rather than their markup.** A field is `Field`'s
   `TextField` or `SelectField`, or its `FieldShell` around a control of
   the form's own; a button with a spinner is a `BusyButton`; a list's filter
-  is a `FilterForm`; a page's heading and its action are a `PageHeader`;
+  is a `FilterForm`; a page's heading and its action are a `PageHeader`, and
+  a page in tabs is a `TabbedPage` with each tab's action in `TabActions`;
   and a modal opened by its page's address is a `RouteModal`
   ([`components/modal.md`](components/modal.md)). Each is in
   `claude-docs/components/`.

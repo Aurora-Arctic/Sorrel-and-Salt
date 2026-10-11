@@ -1,9 +1,12 @@
 # PageHeader
 
 `src/components/PageHeader/` — a page's heading with its one primary action
-on the same line, the action at the end: `/admin/categories`' Add Category
+on the same line, the action at the end: `/admin/compendium`'s Add Ingredient
 beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
-`.page-header` row and its heading by hand until MB.115.
+`.page-header` row and its heading by hand until MB.115. Since MB.115's
+tabbed pages, the compendium is the one admin page that renders it: a tabbed
+page's heading is `TabbedPage`'s and its action the tab's, in `TabActions`
+([`tabbed-page.md`](tabbed-page.md)).
 
 ## Props
 
@@ -17,10 +20,9 @@ beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
 ## Contracts
 
 - **One `h1` per page, and this is it** on every page that renders it.
-- **The action is the caller's element.** Most pages pass an Add link to
-  their `?new` address; `/admin/users` passes `PauseControl`, a client
-  component. A page with no action, such as `/admin/privilege-changes`,
-  leaves it out and keeps the same heading.
+- **The action is the caller's element**: an Add link to the page's `?new`
+  address, or a client component of its own. A page with no action leaves it
+  out and keeps the same heading.
 - **Server-safe.** It has no client directive and no hook, so a server page
   renders it directly.
 
@@ -38,7 +40,8 @@ Sign Out at its natural width.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PageHeader/index.stories.tsx),
-`Layout / Page Header`: `WithAnAction`, `HeadingAlone`, and `PhoneDark` and
+`Layout / Page Header`: `WithAnAction` and `HeadingAlone`, the compendium's
+heading, and `PhoneDark` and
 `PhoneLight` with a longer heading at 375px, the action full width beneath
 it. Each sits in `.admin-layout`, the frame that full width keys off.
 

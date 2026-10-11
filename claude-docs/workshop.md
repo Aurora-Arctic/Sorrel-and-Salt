@@ -131,14 +131,18 @@ without a page routed to it.
   story to import `next/link` (Welcome) rendered blank without it. That was
   also when `vite.config.ts` turned out never to have been loaded: Ladle passes
   `viteConfig` to Vite's loader as given and Vite otherwise looks in the
-  project root, so `config.mjs` now names the file explicitly.
+  project root, so `config.mjs` now names the file explicitly. It also
+  answers Next's `useLinkStatus`: no link is pending unless a story names one
+  by wrapping itself in `WorkshopPendingHref`, as `TabbedPage`'s `TabPending`
+  does (MB.115).
 - **`navigation.ts`** — what `next/navigation` resolves to here, by the same
   alias: a `useRouter` whose every method goes nowhere. Next's own throws with
   no App Router mounted, and the first component to navigate on its own,
   the category list's filter (MB.178), now `GroupedValueList`'s, would
   render no story without it. Its `usePathname` answers `/admin/users`
-  whatever the story, so AdminNav's story shows the current-page marker on
-  Users (MB.115); a story that needs another page has no way to say so yet.
+  unless a story wraps itself in `WorkshopPathname` with another address, so
+  AdminNav's stories show the current-page marker on People, and a tabbed
+  page's story can open any tab (MB.115).
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).

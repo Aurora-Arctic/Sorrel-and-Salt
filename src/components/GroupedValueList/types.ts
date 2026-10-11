@@ -15,7 +15,7 @@ export interface GroupedValueListGroup {
 /** How a kind's page is addressed, what it is titled, and what it calls its rows and its groups. */
 export interface GroupedValueListKind {
   path: Route;
-  /** The page's heading and its tab's title: "Zodiac Signs". */
+  /** The table's name, what a screen reader lists it as: "Zodiac Signs". */
   title: string;
   /** One row in title case, as a button says it: "Add Zodiac Sign". */
   label: string;

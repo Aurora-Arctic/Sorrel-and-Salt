@@ -21,8 +21,8 @@ There is no filter. A vocabulary of eight sections, or six, needs none, where th
 
 - **Each Edit is a soft link**, named "Edit <name>" for a screen reader, so the page renders again with the modal open and Back closes it.
 - **The pager is soft**, as every admin list's is, and says "Page X of Y" when the page passes `position`, as each of the three group pages does, counted through `countCategoryGroups`, `countIngredientFormGroups` or `countDeityTraditions` from the page's first row (MB.132). The traditions run to two pages; the category and form groups to one, which the pager still names.
-- **The table is named for its page**, "Category Groups", "Form Groups" or "Deity Traditions", so a screen reader lists it by the heading above it.
-- **An empty list says what to do**, naming the page header's Add: "There are no groups yet. Add one with Add Group.", and for the traditions "There are no traditions yet. Add one with Add Tradition."
+- **The table is named for its page**, "Category Groups", "Form Groups" or "Deity Traditions", the full name its tab's short label, Groups or Traditions, stands for on the tabbed page (MB.115).
+- **An empty list says what to do**, naming the tab's Add: "There are no groups yet. Add one with Add Group.", and for the traditions "There are no traditions yet. Add one with Add Tradition."
 
 ## Styling
 

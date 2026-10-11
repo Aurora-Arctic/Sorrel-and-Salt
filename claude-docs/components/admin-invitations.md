@@ -1,7 +1,8 @@
 # Admin Invitations
 
-`src/components/AdminInvitations/` — the admin invitations section of
-`/admin/users` (MB.70): **Invite Admin**, and the pending invitations, each
+`src/components/AdminInvitations/` — the People page's Invitations tab,
+`/admin/invitations` (MB.70; a section beneath the user list until MB.115
+gave it a tab of its own): **Invite Admin**, and the pending invitations, each
 with its address, its reason, when it expires and **Revoke**. Render-only: the
 page reads the list through `listPendingAdminInvitations` and whether this
 admin is held by the pause, and hands both down. The rules are
@@ -9,6 +10,11 @@ admin is held by the pause, and hands both down. The rules are
 
 ## Contracts
 
+- **A region named "Admin Invitations", with no heading of its own.** The
+  page's `h1`, People, and its open tab already say what it holds
+  ([`tabbed-page.md`](tabbed-page.md)). The name keeps Invite Admin, the
+  sent confirmation and the rows findable as one. Invite Admin is the tab's
+  action, in `TabActions` at the end of the line above the table.
 - **Props.** `invitations`, newest first, each `{ id, email, note, expiresAt }`;
   and `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
   admin changes are paused and this admin is not the primary one, absent
@@ -34,7 +40,8 @@ admin is held by the pause, and hands both down. The rules are
   a spinner and "Sending" while the request is out; Cancel is quiet. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent
   invitation closes the modal, says "Invitation sent to …" beside the button,
-  and refreshes the page, whose re-read lists it. No link is ever shown: the
+  and refreshes the page, whose re-read lists it. The confirmation takes a
+  line of its own beneath the button in the action row. No link is ever shown: the
   mutation answers none.
 - **No invitation waiting is a sentence**: "No admin invitations are
   waiting."
@@ -52,12 +59,12 @@ width"). At desktop width no cell wraps and the table scrolls in its frame, as
 the user list's does (the owner's call during MB.59). Under
 `$table-stack-width` of its frame each invitation is a card, its cells
 wrapping, each led by its column's name, and Revoke across the card's foot
-with no label. Its own stylesheet holds the section's column and its
-`space(7)` of room above, the heading row with Invite Admin at its end, the
+with no label. Its own stylesheet holds the tab's column, its action
+row and the table `space(5)` apart as the tab's content is, the
 muted "None given", the Reason field's wrapper (`.admin-invitations__note`,
 a step of room above and `space(6)` below) and the sent confirmation's
-margin, `.notice.admin-invitations__sent` compounded with its primitive,
-which the app scopes as `body .notice`. The section's look is MB.115's,
+margin and full line, `.notice.admin-invitations__sent` compounded with its
+primitive, which the app scopes as `body .notice`. The section's look is MB.115's,
 signed off as it stands.
 
 The sent confirmation and the modal's refusal are `Notice`s
@@ -70,7 +77,8 @@ alert (MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Admin Invitations`, inside the admin layout's frame: `Pending`,
+`Admin / Admin Invitations`, inside the admin layout's frame and the People
+page with its Invitations tab open: `Pending`,
 `NoneWaiting` and `Paused` (both controls locked with the pause's reason),
 and `PhoneDark`/`PhoneLight`, the invitations as cards at 375px; Invite
 Admin opens the form, its Reason's hint in a tip. Invite and Revoke reach the network only when sent, so a send in the workshop
@@ -83,5 +91,8 @@ empty state; sending, with Send disabled until there is an address, the
 trimmed variables and the refresh; a refused address beside its field;
 Revoke after its confirmation; and both controls locked with the pause's
 reason. The cards at phone width are presentation.
+`tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
+the guard first, the hash never rendered, and the pause locking both
+controls.
 `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.
