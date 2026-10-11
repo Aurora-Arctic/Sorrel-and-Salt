@@ -56,7 +56,9 @@ to.
   number (MB.115): `$wide-column` (the admin area's column, 80rem),
   `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
   48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
-  target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
+  target) around a `$glyph-size` mark (1rem), `$icon-size-large` around
+  `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
+  outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
   button, 2.5rem), `$table-stack-width` (the frame width under which a table
   stacks, 40rem), `$filter-choice-width` (a filter's type-ahead field, 14rem), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
@@ -785,7 +787,9 @@ column's cell names its column in a `data-label` attribute:
       <tr role="row">
         <td role="cell" data-label="Name">Protection</td>
         …
-        <td role="cell" data-label=""><a class="btn btn--small" href="…">Edit</a></td>
+        <td role="cell" data-label="" class="data-table__card-action">
+          <a class="icon-tip__edit" href="…">…</a>
+        </td>
       </tr>
     </tbody>
   </table>
@@ -804,8 +808,16 @@ column's cell names its column in a `data-label` attribute:
   `.visually-hidden` is, so a screen reader still has the column names.
   Each cell is led by its own name instead, drawn from `data-label` by a
   `::before` in the muted ink at the caption size, `space(1)` above its value (half the `space(2)` between cells, so a label sits with its own value). A cell whose `data-label`
-  is empty, an action such as Edit or Impersonate, has no label and spans
+  is empty, an action such as Impersonate, has no label and spans
   the card.
+- **A row's Edit stands at its card's top right**, beside the first line
+  (MB.115, the owner's call). Its cell, label empty, also carries
+  `.data-table__card-action`: a row holding one becomes a two-track grid,
+  `minmax(0, 1fr) auto`, the first cell in the first track, the action in
+  the second on the first row, and every other cell across both beneath.
+  The grid places it, not the markup, so the columns and the keyboard order
+  stay as the desktop has them. UserList places its Impersonate the same
+  way by its own rule, written before this primitive.
 - **A stacking table writes out its roles**: `role="table"`, `rowgroup`,
   `row`, `columnheader` and `cell`. WebKit drops a table's meaning once
   `display` changes on its parts, so a screen reader in Safari would read the
@@ -945,6 +957,8 @@ heavier than the reverse; light reverts to the browser default.
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
+  `icon-button` and `icon-button-edit` (an icon control's square box, and
+  the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
   `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.

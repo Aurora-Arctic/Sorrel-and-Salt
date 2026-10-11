@@ -34,13 +34,17 @@ It follows WCAG 1.4.13, content on hover or focus:
   cancels that.
 - **It closes on Escape, blur, or the pointer leaving both.** Escape is heard
   on the document, since a tip opened by hover has no focus to listen from,
-  and it closes the tip without moving the focus.
+  and it closes the tip without moving the focus. It is marked handled
+  (`preventDefault`) while a tip is open, so the Escape that closes a tip
+  closes nothing else: inside a modal the `<dialog>` would otherwise take
+  it as a close request too, shutting the modal or asking a changed form to
+  discard (MB.115). With the tip shut, Escape is left alone.
 
 **`useTip`** (`use-tip.ts`) holds that behaviour, the open state, the
 handlers and the Escape listener, so another tip beside a control behaves the
 same without being an ⓘ: `UserList`'s history link, the primary admin's
 crown and its locked Revoke use it too ([`user-list.md`](user-list.md),
-MB.200, MB.59), as do Combobox's entry and qualifier tooltips
+MB.200, MB.59), as does [`IconTip`](icon-tip.md), the Edit pencils' tooltip, and Combobox's entry and qualifier tooltips
 ([`combobox.md`](combobox.md)). It takes an optional `canOpen`, asked each
 time the tip would open rather than watched, for a tip that has nothing to
 show at some moments: a Combobox entry whose text fits, a qualifier with no
