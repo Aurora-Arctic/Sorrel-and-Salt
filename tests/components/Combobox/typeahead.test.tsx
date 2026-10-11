@@ -120,6 +120,20 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveValue('Old Testic');
   });
 
+  // The owner's call (MB.115): a press where the hidden clear sits lands on
+  // the indicators' strip, `visibility` passing it through, and enters the
+  // box as a press on the rest of the control does.
+  it('enters the box from a press where its hidden clear sits', () => {
+    render(<Harness initial="" clearable />);
+    const kept = screen
+      .getAllByRole('button', { hidden: true })
+      .find((button) => button.getAttribute('aria-label') === 'Clear Tradition');
+
+    fireEvent.mouseDown(kept!.parentElement!);
+
+    expect(box()).toHaveFocus();
+  });
+
   // The owner's call (MB.115): an empty box keeps its clear's room, so the
   // clear is drawn from the first render, hidden from the tree and the tab
   // order while there is nothing to clear, and offered once there is.

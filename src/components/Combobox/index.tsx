@@ -266,10 +266,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    // The qualifier reads as part of the text, so a press on it does too.
+    // The qualifier reads as part of the text, so a press on it does too;
+    // and so does one where the clear sits hidden, whose room the box keeps
+    // (MB.115, the owner's call): `visibility` passes the press to the
+    // indicators' strip, which is the control's own ground.
     if (
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
+      target.classList.contains('combobox__indicators') ||
       target.closest('.combobox__qualifier')
     ) {
       event.preventDefault();

@@ -113,8 +113,9 @@ colour is never the only cue.
   the caller's and never the form's submit: a list adds the text. Without
   `onCommit`, Enter closes an open list, and on a closed box reaches the form
   as any text box's Enter does.
-- **The control is the box.** A press on its padding, or between the entries,
-  puts the caret in the text, as pressing a plain input would. The control is
+- **The control is the box.** A press on its padding, between the entries,
+  or where a hidden clear keeps its room (MB.115, the owner's call), puts the
+  caret in the text, as pressing a plain input would. The control is
   `role="presentation"`: the box inside it is what a reader and the keyboard
   reach.
 - **The list is announced.** A visually hidden `<output>`, named "Form
