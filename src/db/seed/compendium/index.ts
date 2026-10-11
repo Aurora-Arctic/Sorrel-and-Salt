@@ -2,6 +2,7 @@ import { PILOT } from './pilot';
 import { RESINS_WOODS_AND_OTHER } from './resins-woods-and-other';
 import { PLANTS_L_Q } from './plants-l-q';
 import { PLANTS_CO_K } from './plants-co-k';
+import { PLANTS_R_Z } from './plants-r-z';
 import type { SeedCompendiumShard } from '../types';
 
 // Every shard of the production compendium, in seeding order: a substitute
@@ -12,4 +13,5 @@ export const COMPENDIUM: readonly SeedCompendiumShard[] = [
   RESINS_WOODS_AND_OTHER,
   PLANTS_L_Q,
   PLANTS_CO_K,
+  PLANTS_R_Z,
 ];
