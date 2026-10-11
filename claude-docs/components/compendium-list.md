@@ -84,9 +84,9 @@ different groups, so the page offers each name once, whatever its case.
   while the trimmed query, the form, the classification and the checkbox all match the
   filter the page shows, enabled once any differs. With JavaScript, a submit
   builds the address with `compendiumHref`, and `FilterForm` pushes it as a
-  soft navigation inside a transition: Filter is a `BusyButton`, wearing the
-  `.spinner`, `aria-busy` and the label "Filtering" until the filtered list
-  arrives. The list keys the form by
+  soft navigation inside its `ListFrame`'s transition: the row greyed and
+  off and the tabs' skeleton in place of the table and the pager until the
+  filtered list arrives ([`list-frame.md`](list-frame.md)). The list keys the form by
   the filter shown, so a page showing another starts it again from that one.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
@@ -158,11 +158,15 @@ action, method, names, kept values and classification values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
 its narrowing as a name is typed, its pick and its clear, the Filter
 button's disabled and enabled states for each control, the address it opens,
-the busy state while the filtered list loads, the reset to the filter shown,
+the loading state while the filtered list loads (the list's status, the
+row `aria-busy` and its controls `aria-disabled`, a second press refused,
+the list back once it arrives, and none of it for typing), the reset to the
+filter shown,
 Clear Filters (its address with each control set, off with nothing set,
 every field emptied in place when nothing is applied, a type-ahead's text
-naming no choice too, and busy while the unfiltered list loads), and
-`compendiumHref`. It is the one list test of the filter's busy state, its
+naming no choice too, and the loading state while the unfiltered list
+loads), and `compendiumHref`. It is the one list test of the filter's
+loading state, its
 reset and Clear Filters; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the

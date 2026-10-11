@@ -91,7 +91,8 @@ cited by number in the PR table of the task that applies it.
    A page test holds the guard, its search params reaching the service,
    `?edit`'s `NotFound` against other errors, and its modal's close href.
    `Pager` owns paging, so a list asserts only the hrefs it builds; a filter's
-   spinner and reset are tested once, in `CompendiumList`.
+   loading state and reset are tested once, in `CompendiumList`, its full
+   load in `UserList`.
 7. **A migration's data tests retire** once the migration is in production's
    journal. The shape tests of the tables it leaves stay.
 8. **No guard for a rule lint can carry.** Import bans, `server-only`,

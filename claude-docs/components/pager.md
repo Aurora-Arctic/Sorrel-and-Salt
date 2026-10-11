@@ -41,31 +41,38 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   every render, so a soft navigation is enough, and opening its modal works
   the same way. UserList keeps plain anchors, whose full load also runs the
   admin layout's guard again, as AdminNav does.
-- **The end followed shows its page is on the way** (the owner's call,
-  MB.178): the shared `.spinner` in its chevron's place and `aria-busy`,
-  on that end only. A soft end pushes its page inside a transition, pending
-  until the page renders; a plain end is busy from the click until the
-  browser leaves, and a `pageshow` from the back-forward cache clears it, so
-  Back does not land on a spinning end. A modified or middle click opens the
-  page elsewhere and leaves the end as it is. The live ends are
-  `pager-link.tsx`'s two client components, soft and plain apart so only
-  the soft one asks for the App Router; the disabled end stays a server
-  render, sharing `end-content.tsx` with them.
+- **The end followed puts the list's loading state up** (the owner's call
+  at MB.115's review, replacing MB.178's spinner in the end's chevron): the
+  pager renders inside its list's [`ListFrame`](list-frame.md), and a
+  plain left click opens the end's page through it, as the filter does, so
+  the list's body, this pager included, is the tabs' skeleton and the filter
+  row is off until the page renders. A soft end is `next/link`, so Next
+  still prefetches its page, and its page is pushed inside the frame's
+  transition; a plain end is a bare anchor, its page a full load from the
+  click until the browser leaves, and a `pageshow` from the back-forward
+  cache brings the list back, so Back does not land on a skeleton. A
+  modified or middle click opens the page elsewhere and leaves the list as
+  it is. The live end is `pager-link.tsx`'s one client component; the
+  disabled end stays a server render, sharing `end-content.tsx` with it.
+  `useListNavigation` throws outside a `ListFrame`, so a pager is never
+  drawn without one.
 - **A `nav` named "Pages"**, holding a bare `ul` of the two ends.
 
 ## Styling
 
 Entirely the `.pager` primitive: a centred, wrapping row of two full-size
 `.btn--quiet` buttons, with chevrons at twice the label. Each chevron sits in
-`.pager__mark`, a box a label's em wide that the spinner fills at the
-label's size, so an end is the same size busy or not; the busy rule's
-narrower left padding is put back for the pager's ends. `index.scss` holds
-nothing of its own.
+`.pager__mark`, a box a label's em wide, so either guillemet leaves its
+button the same size. `index.scss` holds nothing of its own.
 
 ## Testing
 
 `tests/components/Pager/index.test.tsx` owns paging for every list: both ends
 linked, the end with no page disabled in place, the position between them,
-nothing for a lone page, and the busy end, its pending soft end through
+nothing for a lone page, and an end followed: a status in place of the list
+and the pager until a soft end's page arrives, through
 `tests/support/navigating.tsx`, which holds a mocked `push` pending as the
-App Router does. A list's own test asserts only the hrefs it builds.
+App Router does until its `arrives` settles; a plain end's full load until
+a `pageshow` from the cache; and a modified click leaving the list be. Each
+renders the pager in a `ListFrame` beneath a table. A list's own test
+asserts only the hrefs it builds.

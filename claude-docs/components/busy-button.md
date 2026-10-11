@@ -34,6 +34,9 @@ among them, and two more.
   form's non-submit action would submit it by accident.
 - **An anchor is not a BusyButton.** `Pager`'s ends are links, and a link
   that navigates is never busy.
+- **A list's navigation is not a BusyButton either.** A filter's Filter and a
+  pager's end put the list's loading state up instead, the tabs' skeleton in
+  place of the list ([`list-frame.md`](list-frame.md)).
 
 ## Styling
 

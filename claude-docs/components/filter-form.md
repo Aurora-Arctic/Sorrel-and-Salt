@@ -5,7 +5,8 @@ supplies, then a Filter button that opens the filtered list from its first
 page, and a Clear Filters link that opens it with no filter. Five admin lists (CompendiumList, GroupedValueList, the flat
 vocabularies' list it has since absorbed, UserList, PrivilegeLedger) each
 wrote this form for themselves until MB.115; three navigated softly with a spinner, two with a
-full page load and none.
+full page load and none. It renders inside its list's
+[`ListFrame`](list-frame.md), which runs its navigation.
 
 ## Props
 
@@ -37,15 +38,35 @@ full page load and none.
   word): the caller works out `disabled` from its own state, and Filter is a
   real `disabled` attribute then, since a submit with nothing to send has
   nothing to do. Enter in a field is refused the same way.
-- **Filter is busy until the list arrives**, as a `BusyButton`
-  ([`busy-button.md`](busy-button.md)) reading "Filtering":
-  - `soft` pushes the address inside a React transition, so the button is
-    busy until the new page has rendered.
+- **While the new list reads, the row is off and the list is a skeleton**
+  (the owner's call at MB.115's review: "Filters should trigger the same
+  type of loading state as tabs"). Filter and Clear Filters navigate
+  through the list's `ListFrame` ([`list-frame.md`](list-frame.md)), whose
+  body shows the tabs' skeleton in place of the table and the pager, its
+  one status, until the new list renders. Meanwhile the form is
+  `aria-busy`, as the tab row is, and every control in it is
+  `aria-disabled`: Filter and Clear Filters by their own props, the
+  caller's fields by a layout effect that marks each `input` (not a
+  hidden one), `select`, `textarea`, `button` and `a[href]` in the form
+  and unmarks it after. `aria-disabled` rather than `disabled`, as the
+  tabs use it, so a focus in a field or on Filter stays where it was rather
+  than falling to the page. The same effect refuses, in the capture phase,
+  every key but Tab, every press, every edit, paste and drop, so nothing in
+  the row changes, and a submit, Enter included, is refused while a list is
+  on its way, so there is no second request.
+  - `soft` pushes the address inside the frame's transition, pending
+    until the new page has rendered.
   - `full` is `window.location.assign`, a whole page load, which runs the
     admin layout's guard again as `Pager`'s plain anchors do
-    ([`pager.md`](pager.md)). The button is busy from the press until the
-    browser leaves, and a `pageshow` from the back-forward cache (the browser
-    restoring a page it kept whole) clears it.
+    ([`pager.md`](pager.md)). The row is off and the skeleton shows from
+    the press until the browser leaves, and a `pageshow` from the
+    back-forward cache (the browser restoring a page it kept whole) brings
+    the list back.
+
+  Neither control shows a spinner of its own any more: the skeleton is the
+  loading state, and its status the one a screen reader hears. Typing in a
+  field navigates nowhere and shows nothing.
+
 - **Clear Filters clears whatever is set** (the owner's calls at MB.115's
   review), after Filter in the row: a filter on the address, or a value in a
   field not yet applied. It is a link, not a submit: its
@@ -55,8 +76,8 @@ full page load and none.
   the row's secondary control, since it changes no data, as the pager's are.
   With JavaScript and a filter shown, a plain left click navigates as
   Filter does, `soft` or `full`, and the fields come back empty with the
-  unfiltered page; the link is busy the same way, a spinner and "Clearing
-  Filters" with `aria-busy`, while Filter is disabled; a click for a new tab
+  unfiltered page; the row is off and the list a skeleton meanwhile, as
+  for Filter; a click for a new tab
   or window is left to the browser. With no filter shown but a field
   holding something, a press empties the fields where they are and
   navigates nowhere: the caller's `onClear` empties its state, and the
@@ -90,6 +111,14 @@ Filter and Clear Filters wrap beneath it, Clear Filters beside Filter or
 under it as the width allows, the owner's call at MB.115's review over a filter
 folded behind a disclosure.
 
+**The row while a list is on its way** is `.filter-row[aria-busy='true']`,
+in the primitives under `body` so it outweighs the fields' own hover in
+the app: every field faded to 55% with its colour taken out
+(`grayscale`) and the not-allowed cursor, as the tab row's tabs are, and a
+field's hover changing nothing. Filter and Clear Filters are left out of the
+fade, since `.btn[aria-disabled='true']` already draws them dashed and
+faded, and faded twice they would all but vanish.
+
 **A type-ahead field takes one width.** A field typed into once hydrated
 and drawn as a native `<select>` before, as the curated lists' Group and
 Tradition are, puts `filter-row__typeahead` on its `.field` block
@@ -111,14 +140,23 @@ either.
 `Forms / Filter Form`: `Default`, a name and a group as a value list's filter
 has them, with `PhoneDark` and `PhoneLight`, Clear Filters off; type a name to
 offer Filter. `Filtered`, with `FilteredPhoneDark` and `FilteredPhoneLight`, a
-page showing a filter, Clear Filters offered.
+page showing a filter, Clear Filters offered. Each sits in a `ListFrame`, whose
+navigation it needs; the workshop's router goes nowhere, so a press shows
+nothing on its way here. The row greyed over a list on its way is
+GroupedValueList's `CategoriesPending`, `PendingPhoneDark` and
+`PendingPhoneLight`.
 
 ## Testing
 
 No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
-assert", rule 6): a filter's spinner and reset are tested once, in
-`CompendiumList`, and each list asserts the address its filter builds.
+assert", rule 6): a filter's loading state and reset are tested once, in
+`CompendiumList`: Filter pressed puts a status in place of the table,
+marks the form `aria-busy` and every control `aria-disabled`, refuses a
+second press or submit, and gives the list back once the page arrives;
+typing does none of it. Each list asserts the address its filter builds.
 Clear Filters is tested there too, its address, its disabled state, its
-busy soft navigation and its in-place emptying, the type-ahead included;
-each other list asserts which of its values offer it and that its fields
-empty in place, and `UserList` its full load.
+soft navigation with the list's status and its in-place emptying, the
+type-ahead included; each other list asserts which of its values offer it
+and that its fields empty in place, and `UserList` its full load: the
+status and the row off from the press, a field press changing nothing, and
+the list back on a `pageshow` from the cache.
