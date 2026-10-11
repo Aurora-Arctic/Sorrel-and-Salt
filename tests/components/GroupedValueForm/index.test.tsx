@@ -91,9 +91,7 @@ const SUBJECT: GroupedValueFormSubject = {
   },
 };
 
-function renderForm(
-  props: Pick<GroupedValueFormProps, 'kind' | 'groups'> & Partial<GroupedValueFormProps>,
-) {
+function renderForm(props: Pick<GroupedValueFormProps, 'kind'> & Partial<GroupedValueFormProps>) {
   const onDone = vi.fn();
   render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -468,5 +466,76 @@ describe('GroupedValueForm, a deity', () => {
 
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(onDone).not.toHaveBeenCalled();
+  });
+});
+
+// MB.95's flat kinds, folded in at MB.115: a planet or a zodiac sign has no
+// group, so the form asks for none and sends none. What every kind shares
+// runs on the category above; each flat kind gets only what it changes, its
+// three mutations (claude-docs/testing/layer-ownership.md, rule 5).
+const FLAT = [
+  { kind: 'planet', type: 'Planet', noun: 'Planet' },
+  { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Sign' },
+] as const;
+
+const FLAT_VALUE = {
+  id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+  name: 'Testwort Star',
+  description: 'A value the test holds',
+};
+
+describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: mutation, noun }) => {
+  it(`creates through create${mutation}, with no group asked for or sent, then is done`, async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation(`Create${mutation}`, (variables) => {
+      calls.push(variables);
+      return { [`create${mutation}`]: { id: FLAT_VALUE.id } };
+    });
+    const onDone = renderForm({ kind });
+
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    type(name(), ' Testwort Star ');
+    type(description(), 'A value the test made');
+    press(`Save ${noun}`);
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([
+      { input: { name: 'Testwort Star', description: 'A value the test made' } },
+    ]);
+  });
+
+  it(`saves an edit whole under its id through update${mutation}`, async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation(`Update${mutation}`, (variables) => {
+      calls.push(variables);
+      return { [`update${mutation}`]: { id: FLAT_VALUE.id } };
+    });
+    const onDone = renderForm({ kind, value: FLAT_VALUE });
+
+    type(name(), 'Testwort Comet');
+    press(`Save ${noun}`);
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([
+      {
+        id: FLAT_VALUE.id,
+        input: { name: 'Testwort Comet', description: 'A value the test holds' },
+      },
+    ]);
+  });
+
+  it(`deletes on confirmation through delete${mutation}, then is done`, async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation(`Delete${mutation}`, (variables) => {
+      calls.push(variables);
+      return { [`delete${mutation}`]: FLAT_VALUE.id };
+    });
+    const onDone = renderForm({ kind, value: FLAT_VALUE });
+
+    press(`Delete ${noun}`);
+    press('Delete');
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ id: FLAT_VALUE.id }]);
   });
 });

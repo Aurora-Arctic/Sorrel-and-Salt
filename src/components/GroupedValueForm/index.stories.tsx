@@ -3,6 +3,7 @@ import Modal from '../Modal';
 import GroupedValueForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueForm.
+// Every kind, the flat planets and signs among them (MB.115).
 // The workshop has no API, so a save answers with the form's generic error.
 // Shown in the modal the admin pages open it in.
 export default {
@@ -94,6 +95,33 @@ export const EditingADeity: Story = () => (
   </Modal>
 );
 
+export const AddingAPlanet: Story = () => (
+  <Modal title="Add Planet" onClose={done}>
+    <GroupedValueForm kind="planet" onDone={done} />
+  </Modal>
+);
+
+// A flat kind has no group field. Rename it to see the note by Save that the
+// rename carries onto the compendium.
+export const EditingASign: Story = () => (
+  <Modal title="Edit Sign" onClose={done}>
+    <GroupedValueForm
+      kind="zodiacSign"
+      value={{
+        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+        name: 'Fixture Ram',
+        description: 'An invented sign, for the workshop.',
+      }}
+      onDone={done}
+    />
+  </Modal>
+);
+
+// At a phone's width in each theme: the modal inset from the screen's edge,
+// and the form under 28rem of its own width, so its buttons stack.
+export const PhoneDark: Story = () => <EditingACategory />;
+export const PhoneLight: Story = () => <EditingACategory />;
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategory.meta = { iframed: true };
@@ -102,3 +130,7 @@ AddingAForm.meta = { iframed: true };
 EditingAForm.meta = { iframed: true };
 AddingADeity.meta = { iframed: true };
 EditingADeity.meta = { iframed: true };
+AddingAPlanet.meta = { iframed: true };
+EditingASign.meta = { iframed: true };
+PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

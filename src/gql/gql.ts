@@ -35,6 +35,12 @@ type Documents = {
     "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateDeityDocument,
     "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateDeityDocument,
     "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": typeof types.DeleteDeityDocument,
+    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
+    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
+    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": typeof types.DeletePlanetDocument,
+    "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
+    "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
+    "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
@@ -57,12 +63,6 @@ type Documents = {
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
     "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": typeof types.ResumeAdminRoleChangesDocument,
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
-    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
-    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
-    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": typeof types.DeletePlanetDocument,
-    "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
-    "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
-    "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
 };
 const documents: Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
@@ -86,6 +86,12 @@ const documents: Documents = {
     "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateDeityDocument,
     "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateDeityDocument,
     "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": types.DeleteDeityDocument,
+    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
+    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
+    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": types.DeletePlanetDocument,
+    "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
+    "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
+    "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
@@ -108,12 +114,6 @@ const documents: Documents = {
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
     "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": types.ResumeAdminRoleChangesDocument,
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": types.SetUserRoleDocument,
-    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
-    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
-    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": types.DeletePlanetDocument,
-    "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
-    "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
-    "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
 };
 
 /**
@@ -217,6 +217,30 @@ export function graphql(source: "\n  mutation DeleteDeity($id: ID!) {\n    delet
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -302,30 +326,6 @@ export function graphql(source: "\n  mutation ResumeAdminRoleChanges {\n    resu
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

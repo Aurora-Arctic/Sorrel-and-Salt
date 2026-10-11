@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
 import Modal from '../../components/Modal';
-import VocabularyValueForm from '../../components/VocabularyValueForm';
+import GroupedValueForm from '../../components/GroupedValueForm';
 import type { VocabularyDialogProps } from './types';
 
 // A flat vocabulary page's modal, opened by its address, as the forms page's
@@ -23,7 +23,11 @@ export default function VocabularyDialog({
   };
   return (
     <Modal title={title} onClose={close}>
-      <VocabularyValueForm vocabulary={vocabulary} value={value} onDone={close} />
+      <GroupedValueForm
+        kind={vocabulary === 'planets' ? 'planet' : 'zodiacSign'}
+        value={value}
+        onDone={close}
+      />
     </Modal>
   );
 }
