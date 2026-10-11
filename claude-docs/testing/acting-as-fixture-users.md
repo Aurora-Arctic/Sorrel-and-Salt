@@ -63,9 +63,6 @@ variables)` posts it to Yoga built on the route's schema and the route's own
 would receive. A fourth argument replaces part of that context (MB.186):
 loaders a test spies on or shares between operations, to read a cache either
 side of a write, or a sender that records what it was asked to mail.
-`runnerOn(schema)` builds the same over a scratch schema, for a field the
-production schema lacks; no test needs one since MB.227 deleted the
-two-transports test, whose claim CLAUDE.md rule 1 and the lint boundary carry.
 A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
 `NOT_FOUND`, `VALIDATION` with its `fieldErrors` — because the wire carries no
 `originalError`, and a test that reads one through bare `graphql()` is watching

@@ -169,12 +169,10 @@ the way:
 **No planner assertion for the vocabularies.** At nineteen, thirteen,
 seventy-eight and 216 rows `planets_trgm`, `zodiac_signs_trgm`,
 `ingredient_forms_trgm` and `deities_trgm` are never chosen over a
-sequential scan, so
-`suggestions-query.test.ts` asserts what the service sends instead: both
-thresholds set in the transaction before the match, `%` and `<%` where a
-`similarity()` comparison could have been, the scope and soft-delete
-predicates, and the fold. It captures the statements as
-`duplicates-plan.test.ts` does. `suggestions.test.ts`,
+sequential scan, and nothing asserts the SQL text either: since MB.227 a
+statement is read only as the precondition of a plan test. The thresholds,
+the scope, the soft-delete filter and the fold are proved by what the
+services answer — `suggestions.test.ts`,
 `form-suggestions.test.ts`, `deity-suggestions.test.ts` and
 `common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
