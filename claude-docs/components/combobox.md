@@ -415,8 +415,9 @@ call.
   keyboard reaches. Escape closes it (WCAG 1.4.13), as do a blur and the
   pointer leaving, after the same 150ms the entry's waits. With no detail
   there is no tooltip. Open on focus, the bubble covers what sits above the
-  control, a field's label; the owner left that to the admin area's design
-  review (MB.115), the keyboard still to reach it.
+  control, a field's label. MB.115's design review offers four placements as
+  proposal stories ("Stories", below), the owner to choose at its sign-off;
+  until then it stays where it is.
 - **The open state is `useTip`**, InfoTip's hook (`../InfoTip/use-tip.ts`),
   shared with `ComboboxEntry`: open while the `canOpen` it is given says there
   is something to show, closed at once on blur and on Escape anywhere in the
@@ -476,8 +477,12 @@ qualifier is the muted ink at the text's size, as a row's note is muted, and its
 their hover as `.btn` does, on `theme-transition` and never under reduced
 motion, and draw it on `:focus-visible` as well as `:hover`, so Tab shows
 which one it has reached (MB.150). Every × and indicator is a 24px target,
-WCAG 2.2's minimum. The owner may restyle any of it at the section's design
-review.
+WCAG 2.2's minimum, the `$icon-size` token, around a `$glyph-size` mark; a
+tooltip on a cut-off entry stops at `$tip-width`, capped at the window, as
+InfoTip's does (MB.115). The lengths left raw are the control's own geometry
+and say so in a comment: the 6rem the text keeps before it wraps onto a row
+of its own, the list's 20rem height, the category bar's 3px and 5px, the
+grip's half-glyph width, and the 1px edges.
 
 ## Stories
 
@@ -488,10 +493,22 @@ review.
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; and
-`MultiSelect`, the multi-select box with two elements chosen; and
+`MultiSelect`, the multi-select box with two elements chosen;
 `CreateRow`, "Add a reference" first whatever is typed, saying beneath the
-box each time it is picked. The suggestions are fixed, so typing filters
-nothing.
+box each time it is picked; and `PhoneDark` and `PhoneLight`, `List` at
+375px. The suggestions are fixed, so typing filters nothing.
+
+MB.115's proposals for the qualifier's tooltip, until its sign-off deletes
+the losers with `proposals.scss`, their story-only stylesheet: each is the
+ingredient form's Form box under a Name field, "Wax" picked under Substance
+with a long detail, the tip held open. `ProposalTipToday` (A: above, from
+the left edge, over the label), `ProposalTipRight` (B: above, from the right
+edge, at most 60% of the control), `ProposalTipCloseOnTyping` (C: placed as
+B, and closing at the first keystroke and when the list opens, reopening on
+focus or hover; behaviour, so described in a note under B's drawing) and
+`ProposalTipBelow` (D: beneath the box, where the list opens), with
+`ProposalTipTodayPhone`, `ProposalTipRightPhone` and `ProposalTipBelowPhone`
+at 375px.
 
 ## Testing
 

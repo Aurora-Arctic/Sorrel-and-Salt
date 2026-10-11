@@ -951,6 +951,14 @@ compendium's substitute search and its three writes: a name holding
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
+`PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. MB.115's
+proposals for the compendium's modal at phone width, until its sign-off
+deletes the losing pair with `proposals.scss`, their story-only stylesheet,
+draw the edit in a static stand-in for the open dialog, `Modal`'s markup
+opened in the page rather than the top layer: `ProposalModalInsetDark` and
+`ProposalModalInsetLight`, today's inset dialog with the page in view on
+every side, and `ProposalModalSheetDark` and `ProposalModalSheetLight`, a
+full-height sheet edge to edge.
 
 ## Testing
 
