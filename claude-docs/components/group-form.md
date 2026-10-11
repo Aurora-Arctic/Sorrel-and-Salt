@@ -33,7 +33,7 @@ Everything that tells one kind from another is its entry in `index.tsx`'s `KINDS
 
 - **A refused move lands beside the picker.** A `VALIDATION` issue at `['moveTo']`, such as a moved form or deity colliding with one already in the target, returns the admin to the choice with the service's sentence under the picker. Any other refusal of the delete shows in the alert notice, and the form stays open with the delete withdrawn.
 - **The sample chip carries the name as typed**, or "Sample" before there is one, so the admin sees the chip they are making.
-- **Save is offered only when there is something to save**, by `isDirty`. From the press to the answer it is busy and says so: "Saving Group" or "Saving Tradition" with the shared `.spinner`. The delete's final button does the same, as "Deleting".
+- **Save is offered only when there is something to save**, by `isDirty`. From the press to the answer it is busy and says so, as a [`BusyButton`](busy-button.md): "Saving Group" or "Saving Tradition" behind the shared `.spinner`. The delete's final button is one too, busy as "Deleting".
 - **Buttons are title case**: Save Group, Cancel, Delete Group, Continue, Keep It, Move and Delete, Back, Delete; a tradition's Save Tradition and Delete Tradition. Save and Continue are solid. Cancel, Keep It and Back are quiet. Delete Group (Delete Tradition), Move and Delete, and Delete are destructive.
 
 ## The pair
@@ -51,7 +51,12 @@ A category group's two colours are one family, the owner's call ([`m5.6b-admin-g
 
 ## Styling
 
-Layout only, on the form primitives, as GroupedValueForm's. The actions wrap, Delete Group sits at the far end, and the required asterisk is `$secondary`. Nothing goes further before MB.115's design review.
+The form has no stylesheet of its own: it is built from the shared pieces and the form primitives ([`../styling.md`](../styling.md), "Form fields").
+
+- **Name and Description are [`TextField`](field.md)s** in a `FormProvider`, each with its label row and required mark. The description's textarea takes the primitive's height rather than three rows of its own.
+- **Each colour is a `FieldShell` around a [`ChipColorField`](chip-color-field.md).** The shell draws the label and its mark and names the hex box; it is handed no error, since ChipColorField draws the refusal itself, between its ratio and its warning.
+- **The move picker is a `FieldShell` around the `ComboboxSelect`**, its error beneath it as any field's is.
+- **The buttons are `.form__actions`**, which wraps, with Delete Group pushed to the far end by `.form__aside`. A question that stands in for them is a `.form__confirm` with its own `.modal__actions` row. Under 28rem of the form's own width, every row stacks, full width.
 
 The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
 failed request is read by the shared `readGraphqlIssues`
@@ -64,8 +69,8 @@ there is none.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx) has five stories: `AddingACategoryGroup`, `EditingACategoryGroup` (three categories held, so Delete Group shows the move), `EditingAFormGroup` (none held), `AddingATradition`, and `EditingATradition` (two deities held, so Delete Tradition shows the move to the other invented tradition). Each sits in the modal and its own iframe.
+[`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx) has seven stories: `AddingACategoryGroup`, `EditingACategoryGroup` (three categories held, so Delete Group shows the move), `EditingAFormGroup` (none held), `AddingATradition`, `EditingATradition` (two deities held, so Delete Tradition shows the move to the other invented tradition), and `PhoneDark` and `PhoneLight`, the category group's edit at 375px in each theme. Each sits in the modal and its own iframe.
 
 ## Testing
 
-`tests/components/GroupForm/index.test.tsx` answers the mutations with MSW in the route's own shape. It covers the kinds' fields, create and update with their variables, the contrast refusal before the request, a server field error placed, the two-step move with its variables, Back and Keep It, no move offered when there is no other group, a `moveTo` refusal beside the picker, and the plain delete. `describe('GroupForm, for a deity tradition')` holds the tradition's own: no colours asked for and a create from the name and description alone, and its deities moved on a confirmed delete. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx`: the guard refusing before any read, the first page of 25 and its "Page X of Y" counted from its first row, every group read for the move, the cursor kept, `?new` opening the modal of the page's kind — with the colours or without — and `?edit=` reading the group by its slug, filling the modal and counting what its delete must move, a slug no group holds an alert and any other failure thrown, and the way back to the page it opened over. How the form behaves once open is this file's. Its fields differ from `GroupedValueForm`'s — no Group picker, two colours — so it is not a row of that form's shared table.
+`tests/components/GroupForm/index.test.tsx` answers the mutations with MSW in the route's own shape. It covers the kinds' fields, create and update with their variables, the contrast refusal before the request, a server field error placed, the two-step move with its variables, Back and Keep It, no move offered when there is no other group, a `moveTo` refusal beside the picker, and the plain delete. `describe('GroupForm, for a deity tradition')` holds the tradition's own: no colours asked for and a create from the name and description alone, and its deities moved on a confirmed delete. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx`: the guard refusing before any read, the first page of 25 and its "Page X of Y" counted from its first row, every group read for the move, the cursor kept, `?new` opening the modal of the page's kind — with the colours or without — and `?edit=` reading the group by its slug, filling the modal and counting what its delete must move, a slug no group holds an alert and any other failure thrown, and the way back to the page it opened over. How the form behaves once open is this file's. Its fields differ from `GroupedValueForm`'s — no Group picker, two colours — so it is not a row of that form's shared table. The shared pieces it is built from, `TextField`, `FieldShell` and `BusyButton`, are tested in their own files.

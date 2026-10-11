@@ -17,7 +17,7 @@
 // (`$table-stack-width` and under) each cell is a block with the card's own
 // padding, which this would double. Under the list's class, which outranks
 // the primitive's `body` scope.
-@container data-table (width > #{$table-stack-width}) {
+@container data-table not (max-width: #{$table-stack-width}) {
   .grouped-value-list--category .data-table td {
     padding-block: space(3);
     vertical-align: middle;

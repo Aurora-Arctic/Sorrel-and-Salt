@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import { listHref } from '../../lib/list-href';
 import type { GroupKind } from '../GroupForm/types';
 import type { GroupsDialog, GroupsPlace } from './types';
 
@@ -14,13 +15,10 @@ const PATHS: Record<GroupKind, string> = {
 };
 
 export function groupsHref(kind: GroupKind, place: GroupsPlace, dialog?: GroupsDialog): Route {
-  const pair = (name: string, value: string) => new URLSearchParams({ [name]: value }).toString();
-  const parts = [
-    ...(['after', 'before'] as const).flatMap((name) => {
-      const value = place[name];
-      return value ? [pair(name, value)] : [];
-    }),
-    ...(dialog === 'new' ? ['new'] : dialog ? [pair('edit', dialog.edit)] : []),
-  ];
-  return (parts.length ? `${PATHS[kind]}?${parts.join('&')}` : PATHS[kind]) as Route;
+  return listHref(PATHS[kind], {
+    after: place.after,
+    before: place.before,
+    new: dialog === 'new',
+    edit: dialog === 'new' ? undefined : dialog?.edit,
+  });
 }

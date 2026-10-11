@@ -15,22 +15,25 @@ There is no filter. A vocabulary of eight sections, or six, needs none, where th
 | `previousHref`, `nextHref` | The pager's links, none at either end                                                                               |
 | `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                   |
 
-`groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's cursor, and `?new` or `?edit=<slug>` for a modal.
+`groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/form-groups?after=c&new`.
 
 ## Contracts
 
 - **Each Edit is a soft link**, named "Edit <name>" for a screen reader, so the page renders again with the modal open and Back closes it.
 - **The pager is soft**, as every admin list's is, and says "Page X of Y" when the page passes `position`, as each of the three group pages does, counted through `countCategoryGroups`, `countIngredientFormGroups` or `countDeityTraditions` from the page's first row (MB.132). The traditions run to two pages; the category and form groups to one, which the pager still names.
+- **The table is named for its page**, "Category Groups", "Form Groups" or "Deity Traditions", so a screen reader lists it by the heading above it.
 - **No groups reads "No groups yet."**, and no traditions "No traditions yet."
 
 ## Styling
 
-Layout only, until MB.115: GroupedValueList's column without its filter row. Its cells take more room than the primitive's, `space(3)` above and below, and centre their contents: a chip and the small Edit button stand taller than a line of text, so on the primitive's baseline they met the band's top edge while the text met its bottom (the owner's call). The description takes the measure.
+The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table a `.data-table.data-table--stack` in a `.data-table-frame`. Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with Edit across the card's foot. The table writes out its roles by spreading `TABLE_ROLES` (`roles.ts`) onto each part, since WebKit drops a table's meaning once its parts change `display`; GroupedValueList spreads the same map.
+
+Its own stylesheet adds two things. The description takes the measure. While it is a table, its cells take `space(3)` above and below and centre their contents: a chip and the small Edit button stand taller than a line of text, so on the primitive's baseline they met the band's top edge while the text met its bottom (the owner's call). As cards, the stack primitive spaces the cells instead.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx) has five stories: `CategoryGroups` (three invented groups in seeded pairs), `FormGroups` with a next page, `Traditions` (two invented traditions), `Empty`, and `TraditionsEmpty` with the traditions' own message.
+[`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx) has seven stories: `CategoryGroups` (three invented groups in seeded pairs), `PhoneDark` and `PhoneLight` (the same in the admin column at 375px, each row a card), `FormGroups` with a next page, `Traditions` (two invented traditions), `Empty`, and `TraditionsEmpty` with the traditions' own message.
 
 ## Testing
 
-`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, and `groupsHref`, `/admin/deity-traditions` included. The chip's colours are presentation, and paging is Pager's. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx` ([`group-form.md`](group-form.md), "Testing").
+`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, and `groupsHref`, `/admin/deity-traditions` included. The chip's colours and the cards are presentation, owned by the stories, and paging is Pager's. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx` ([`group-form.md`](group-form.md), "Testing").

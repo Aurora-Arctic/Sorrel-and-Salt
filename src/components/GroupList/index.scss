@@ -1,19 +1,8 @@
 @use '../../scss/variables' as *;
 
-// Layout only, until the admin area's design review (MB.115):
-// GroupedValueList's shape without the filter. The table, the chip, Edit
-// and the pager are primitives (`.data-table`, `.chip`, `.btn--small`,
-// `.pager`).
-
-.group-list {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
-
-  > p {
-    margin: 0;
-  }
-}
+// What a group list adds to the list primitives (`.list-frame`, `.data-table`
+// with `--stack`, `.chip`, `.btn--small`, `.pager`): the description's
+// measure, and the taller, centred rows a chip needs.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .group-list__description {
@@ -23,9 +12,13 @@
 // More room in a row than the primitive gives, and its contents centred: a
 // chip and a small button stand taller than a line of text, so on the
 // primitive's baseline they sat hard against the band's top edge while the
-// text sat on its bottom (the owner's call). Under the list's class, which
-// outranks the primitive's `body` scope.
-.group-list .data-table td {
-  padding-block: space(3);
-  vertical-align: middle;
+// text sat on its bottom (the owner's call). Both classes, to outrank the
+// primitive's `body` scope. Only while it is a table: as cards, under
+// `$table-stack-width`, the stack primitive spaces each cell, and this would
+// pad every line of the card apart.
+@container data-table not (max-width: #{$table-stack-width}) {
+  .data-table.group-list__table td {
+    padding-block: space(3);
+    vertical-align: middle;
+  }
 }

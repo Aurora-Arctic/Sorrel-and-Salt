@@ -26,6 +26,21 @@ export const CategoryGroups: Story = () => (
   />
 );
 
+// At a phone's width, in the admin column, in each theme: each row a card.
+export const PhoneDark: Story = () => (
+  <div className="admin-layout">
+    <CategoryGroups />
+  </div>
+);
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => (
+  <div className="admin-layout">
+    <CategoryGroups />
+  </div>
+);
+PhoneLight.meta = { theme: 'light', width: 375 };
+
 export const FormGroups: Story = () => (
   <GroupList
     kind="form"

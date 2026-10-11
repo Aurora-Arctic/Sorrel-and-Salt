@@ -80,6 +80,12 @@ export const EditingATradition: Story = () => (
   </Modal>
 );
 
+// At a phone's width, in each theme: the fields, the two pickers and the
+// buttons, which stack under the form's 28rem.
+export const PhoneDark: Story = () => <EditingACategoryGroup />;
+
+export const PhoneLight: Story = () => <EditingACategoryGroup />;
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategoryGroup.meta = { iframed: true };
@@ -87,3 +93,5 @@ EditingACategoryGroup.meta = { iframed: true };
 EditingAFormGroup.meta = { iframed: true };
 AddingATradition.meta = { iframed: true };
 EditingATradition.meta = { iframed: true };
+PhoneDark.meta = { theme: 'dark', width: 375, iframed: true };
+PhoneLight.meta = { theme: 'light', width: 375, iframed: true };
