@@ -233,6 +233,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.236 | Four Playwright workers on the gate's 4-vCPU runner, kept only if measured faster                                        | Wave 8  | —                      |
 | MB.237 | A Chromium-only e2e image on `node:26.6.0-bookworm-slim`                                                                 | Wave 8  | —                      |
 | MB.238 | The `db` project's files that register no mock run without isolation, measured                                           | Wave 8  | —                      |
+| MB.239 | Two tests that depend on the order of the tests in their file                                                            | Wave 8  | —                      |
 | MB.215 | Ingredient variants: the model, the record and the re-scoped tasks                                                       | Wave 8  | MB.216                 |
 | MB.216 | `ingredient_variants`, the fill, and identity on the formal name (schema)                                                | Wave 8  | MB.217                 |
 | MB.217 | A variant beneath stock, layers, categories, substitutes and references (schema)                                         | Wave 8  | MB.218                 |
@@ -919,6 +920,22 @@ _Acceptance criteria:_
 - `Run vitest` wall and the import share before and after are recorded in this entry; merged only if the CI wall is at least 5 s shorter
 - `testing/db-harness.md` or `testing/where-tests-live.md` describes the two projects and what moves a file between them
 - No test is added for the config: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.239 — Two tests that depend on the order of the tests in their file** · 1h
+
+_Story:_ As a developer, I want every test to pass whichever of its siblings ran before it, so that a shuffled or reordered run fails only for a real reason.
+
+MB.238's verification ran Vitest with `--sequence.shuffle`, which shuffles the tests inside a file as well as the files, and two tests failed that pass in file order and fail the same way on the config before MB.238:
+
+- `tests/db/seed/sources.test.ts` seeds the clone once in a `beforeAll` for its first two tests, and its "over a database an admin has edited" block empties the clone in a `beforeEach` and seeds what each test needs. Run after that block, the first two tests read its last test's rows: the Greek source's deities then include "Adonis Renamed". The fix: the first two tests move into their own block seeded in a `beforeEach`, so each reads a fresh seed whichever block ran first.
+- `tests/components/ChipColorField/index.test.tsx` presses Tab and focuses the format toggle, expecting the tooltip that opens on keyboard focus. The tooltip's keyboard listener (zag's `trackFocusVisible`) is attached a microtask after the first tooltip mounts, once per window, and it outlives the render, so every test but the file's first finds it already there. Run first, the test's key press lands before the listener exists and the tooltip never opens. The fix: the test yields a microtask after rendering, so it depends on no earlier mount.
+
+Neither is a bug in the code under test, and CI never shuffles, so no behaviour changes. The proof is the two files under `--sequence.shuffle --sequence.seed=1791696601822`, the seed that exposed both, and in file order.
+
+_Acceptance criteria:_
+
+- Both files pass with seed 1791696601822 under `--sequence.shuffle`, and in file order
+- No new test and no change under `src/`: each fix removes a dependence on sibling order rather than adding an assertion
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
