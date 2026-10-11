@@ -18,7 +18,7 @@ import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
-import { Section } from './section';
+import { CollapsibleSection, Section } from './section';
 import {
   FormField,
   LookupListField,
@@ -54,7 +54,7 @@ import { EMPTY_VARIANT, formRows, rankForForm, repeatedForm } from './values';
 
 const BOX = 'drafts.variants';
 
-export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement {
+export function VariantsField({ workspaceId, fold }: VariantsFieldProps): ReactElement {
   // The compendium holds curated forms alone (MB.162): its box offers those
   // rows and no typed row, and a pick is the only way in.
   const compendium = workspaceId === null;
@@ -149,85 +149,90 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
   };
 
   return (
-    // Named by the legend's text alone, as a list's fieldset is.
-    // Its legend is the section's heading, as the form's other sections have.
-    <fieldset className="fieldset ingredient-form__variants" aria-labelledby={legendId}>
-      <legend className="fieldset__legend field__label-row ingredient-form__section-head">
-        <h3 id={legendId} className="ingredient-form__section-title">
-          Variants
-        </h3>
+    // The last of the ingredient's folding sections, its ⓘ beside the
+    // heading. Inside, a group named by that heading alone, as a list's
+    // fieldset is by its legend: the New Form box and the cards.
+    <CollapsibleSection
+      title="Variants"
+      section="variants"
+      fold={fold}
+      titleId={legendId}
+      info={
         <InfoTip id={hintId} label="Variants">
           The forms it comes in: dried leaf, oil, whole root. Each adds its own description, safety
           notes and lists to the ingredient&rsquo;s, and never takes any away.
         </InfoTip>
-      </legend>
-      {prompting && (
-        <p className="field__hint" id={promptId}>
-          Add a form so covens can stock it.
-        </p>
-      )}
-      <div ref={setBoxRow} className="ingredient-form__row">
-        <Combobox<FormOption>
-          id={`${id}-box`}
-          label="New Form"
-          // Its label is hidden, as a list box's is: the placeholder says what
-          // it is for, at the head of the section (MB.115).
-          placeholder="Add a form"
-          value={field.value}
-          onChange={(typed) => {
-            clearRefusal();
-            field.onChange(typed);
-          }}
-          onFocus={() => setActive(true)}
-          onBlur={field.onBlur}
-          onPick={(value, option) => addForm(value, option?.link ?? null)}
-          onCommit={
-            compendium
-              ? (typed) => {
-                  if (typed.trim() !== '')
-                    refuse('unpicked', `Pick "${typed.trim()}" from the list`);
-                }
-              : (typed) => addForm(typed, null)
-          }
-          suggestions={suggestions}
-          offerTyped={!compendium && !repeatedForm(listed, field.value)}
-          listAnchor={boxRow}
-          inputRef={(element) => {
-            field.ref(element);
-            boxElement.current = element;
-          }}
-          name={field.name}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={describedBy}
-        />
-        {!compendium && (
-          <button
-            type="button"
-            className="btn"
-            aria-label="Add Variant"
-            onClick={() => addForm(getValues(BOX), null)}
-          >
-            Add
-          </button>
+      }
+    >
+      <fieldset className="fieldset ingredient-form__variants" aria-labelledby={legendId}>
+        {prompting && (
+          <p className="field__hint" id={promptId}>
+            Add a form so covens can stock it.
+          </p>
         )}
-      </div>
-      <FieldError id={errorId} message={error} />
-      {/* The newest first, beneath the box that added it. */}
-      {fields.map((row, index) => (
-        <VariantFieldset
-          key={row.id}
-          index={index}
-          workspaceId={workspaceId}
-          open={open === index}
-          onToggle={(opening) => setOpen(opening ? index : null)}
-          onRemove={removeAt}
-        />
-      ))}
-      {/* Labelled, so that it is told from the box's own status region. */}
-      <output className="visually-hidden" aria-label="Variants changes">
-        {announcement}
-      </output>
-    </fieldset>
+        <div ref={setBoxRow} className="ingredient-form__row">
+          <Combobox<FormOption>
+            id={`${id}-box`}
+            label="New Form"
+            // Its label is hidden, as a list box's is: the placeholder says what
+            // it is for, at the head of the section (MB.115).
+            placeholder="Add a form"
+            value={field.value}
+            onChange={(typed) => {
+              clearRefusal();
+              field.onChange(typed);
+            }}
+            onFocus={() => setActive(true)}
+            onBlur={field.onBlur}
+            onPick={(value, option) => addForm(value, option?.link ?? null)}
+            onCommit={
+              compendium
+                ? (typed) => {
+                    if (typed.trim() !== '')
+                      refuse('unpicked', `Pick "${typed.trim()}" from the list`);
+                  }
+                : (typed) => addForm(typed, null)
+            }
+            suggestions={suggestions}
+            offerTyped={!compendium && !repeatedForm(listed, field.value)}
+            listAnchor={boxRow}
+            inputRef={(element) => {
+              field.ref(element);
+              boxElement.current = element;
+            }}
+            name={field.name}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+          />
+          {!compendium && (
+            <button
+              type="button"
+              className="btn"
+              aria-label="Add Variant"
+              onClick={() => addForm(getValues(BOX), null)}
+            >
+              Add
+            </button>
+          )}
+        </div>
+        <FieldError id={errorId} message={error} />
+        {/* The newest first, beneath the box that added it. */}
+        {fields.map((row, index) => (
+          <VariantFieldset
+            key={row.id}
+            index={index}
+            workspaceId={workspaceId}
+            open={open === index}
+            onToggle={(opening) => setOpen(opening ? index : null)}
+            onRemove={removeAt}
+          />
+        ))}
+        {/* Labelled, so that it is told from the box's own status region. */}
+        <output className="visually-hidden" aria-label="Variants changes">
+          {announcement}
+        </output>
+      </fieldset>
+    </CollapsibleSection>
   );
 }
 

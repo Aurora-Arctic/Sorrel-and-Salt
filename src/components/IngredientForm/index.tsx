@@ -15,7 +15,7 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
-import { Section } from './section';
+import { CollapsibleSection } from './section';
 import { SubstituteForms } from './substitute-forms';
 import { EntryHrefContext } from './substitute-summary';
 import { SelectField, TextField } from '../Field';
@@ -37,8 +37,17 @@ import type {
   IngredientFormValues,
   RedirectQuestion,
   SavedIngredient,
+  SectionFold,
+  SectionKey,
 } from './types';
-import { EMPTY_VALUES, compendiumResolver, fieldNameOf, ingredientResolver } from './values';
+import {
+  EMPTY_VALUES,
+  SECTION_KEYS,
+  compendiumResolver,
+  fieldNameOf,
+  ingredientResolver,
+  sectionsWithErrors,
+} from './values';
 import { VariantsField } from './variants';
 import './index.scss';
 
@@ -132,6 +141,45 @@ const IngredientForm = ({
   );
   const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });
+  // An edit saves over the entry, and opens nothing new; a new entry offers
+  // both saves (MB.131).
+  const editing = entry !== undefined;
+
+  // Which of the seven sections are open, several at once, each by its own
+  // heading (MB.115, the owner's calls): a new entry opens with every one
+  // open, as the long form it is; an edit with every one closed, its entry
+  // read at a glance from the summary lines.
+  const [open, setOpen] = useState<ReadonlySet<SectionKey>>(
+    () => new Set(editing ? [] : SECTION_KEYS),
+  );
+  const erring = sectionsWithErrors(errors);
+  // A save held on the duplicate warning is the name's to answer.
+  if (blocking) erring.add('identity');
+  // A save that finds an error in a closed section opens it, every such
+  // section, flagged, so the focus on the first field marked invalid (below)
+  // can reach it. A submit's last update carries its count with every error,
+  // the schema's or the server's, so it is caught here while rendering, and
+  // the section is open in the very commit that draws the error, which is
+  // when that focus runs.
+  const [seenSubmit, setSeenSubmit] = useState(submitCount);
+  if (seenSubmit !== submitCount) {
+    setSeenSubmit(submitCount);
+    if ([...erring].some((key) => !open.has(key))) setOpen(new Set([...open, ...erring]));
+  }
+  const fold = (key: SectionKey): SectionFold => ({
+    open: open.has(key),
+    invalid: erring.has(key),
+    onToggle: () =>
+      setOpen((now) => {
+        const next = new Set(now);
+        if (!next.delete(key)) next.add(key);
+        return next;
+      }),
+  });
+  // Open All / Close All: Close All while any section is open, so a press
+  // from any mix folds the form to its summary lines, the view the sections
+  // are for, and a new entry, all open, offers it at once.
+  const anyOpen = open.size > 0;
 
   // A submit's last update carries its count and every error it found, the
   // resolver's or the server's, so this runs once they are all drawn: the
@@ -249,8 +297,11 @@ const IngredientForm = ({
       // Save Ingredient's page opens what it made, so its form is about to go
       // and keeps its values; Save & Add Another clears for the next one. An
       // edit keeps what it saved, now nothing to save until it changes again.
-      if (next.current === 'another') setSaves((count) => count + 1);
-      else if (entry) reset(getValues());
+      if (next.current === 'another') {
+        setSaves((count) => count + 1);
+        // The next entry is a new one, so every section opens, as for this one.
+        setOpen(new Set(SECTION_KEYS));
+      } else if (entry) reset(getValues());
     } catch (error) {
       // setError, as the resolver's own errors are set: the next submit or an
       // edit to the field clears them the same way. MB.82's refusal is a
@@ -296,10 +347,6 @@ const IngredientForm = ({
     }
   };
 
-  // An edit saves over the entry, and opens nothing new; a new entry offers
-  // both saves (MB.131).
-  const editing = entry !== undefined;
-
   return (
     <FormProvider {...methods}>
       <PanelChangesContext.Provider value={panels.context}>
@@ -327,11 +374,24 @@ const IngredientForm = ({
             {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
             {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
             {refusal && <Notice kind="error">{refusal}</Notice>}
-            <Section title="Identity">
-              {/* Warns beneath it of the entries its name resembles (story 16),
+            {/* The sections flush, between hairlines, under the one control
+              that opens or closes them all, a small quiet button at the end
+              of the line above the first (MB.115, the owner's call). */}
+            <div className="ingredient-form__folds">
+              <div className="ingredient-form__fold-all">
+                <button
+                  type="button"
+                  className="btn btn--small btn--quiet"
+                  onClick={() => setOpen(new Set(anyOpen ? [] : SECTION_KEYS))}
+                >
+                  {anyOpen ? 'Close All' : 'Open All'}
+                </button>
+              </div>
+              <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
+                {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
-              <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />
-              {/* The kind decides the formal name's error, so a change to it
+                <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />
+                {/* The kind decides the formal name's error, so a change to it
             revalidates the formal name. A named kind marks it required;
             Unknown leaves it open and optional. A coven's formal name with no
             kind saves as unknown, so nothing marks the kind there (MB.161);
@@ -339,59 +399,70 @@ const IngredientForm = ({
             name at all, so choosing it empties the field and shuts it, with
             the reason in view rather than in a tip: a shut field that does
             not say why reads as broken. */}
-              <SelectField<IngredientFormValues>
-                name="nomenclature"
-                label="Classification"
-                hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
-                placeholder="Choose a classification"
-                options={NOMENCLATURE_OPTIONS}
-                required={compendium}
-                deps={['canonicalName']}
-                onChange={(value) => {
-                  if (value === NAMELESS_KIND) setValue('canonicalName', '');
-                }}
-              />
-              <TextField<IngredientFormValues>
-                name="canonicalName"
-                label="Formal Name"
-                hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
-                placeholder="Add formal name"
-                note={kind === NAMELESS_KIND ? 'A "none" entry records no formal name.' : undefined}
-                disabled={kind === NAMELESS_KIND}
-                required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
-              />
-              {/* Suggests from this coven and the compendium (M4.7a): the folk
+                <SelectField<IngredientFormValues>
+                  name="nomenclature"
+                  label="Classification"
+                  hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
+                  placeholder="Choose a classification"
+                  options={NOMENCLATURE_OPTIONS}
+                  required={compendium}
+                  deps={['canonicalName']}
+                  onChange={(value) => {
+                    if (value === NAMELESS_KIND) setValue('canonicalName', '');
+                  }}
+                />
+                <TextField<IngredientFormValues>
+                  name="canonicalName"
+                  label="Formal Name"
+                  hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
+                  placeholder="Add formal name"
+                  note={
+                    kind === NAMELESS_KIND ? 'A "none" entry records no formal name.' : undefined
+                  }
+                  disabled={kind === NAMELESS_KIND}
+                  required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
+                />
+                {/* Suggests from this coven and the compendium (M4.7a): the folk
             names in use. The form is each variant's, beneath (MB.221). */}
-              <LookupListField
-                workspaceId={workspaceId}
-                useSuggestions={useCommonNameSuggestions}
-                name="folkNames"
-                legend="Folk Names"
-                entry="Folk Name"
-                hint="Other names it goes by. A search finds it by any of them."
-                placeholder="Add a folk name"
-              />
-            </Section>
-            <Section title="Description" labelled>
-              <TextField<IngredientFormValues>
-                name="description"
-                label="Description"
-                placeholder="What it is, where it comes from and how it is used"
-                multiline
-                // Seven lines, as each variant's Description (MB.115, the owner's call).
-                rows={7}
-              />
-            </Section>
-            <Section title="Correspondences">
-              {/* Several at once, in the order chosen (MB.159); none chosen is
+                <LookupListField
+                  workspaceId={workspaceId}
+                  useSuggestions={useCommonNameSuggestions}
+                  name="folkNames"
+                  legend="Folk Names"
+                  entry="Folk Name"
+                  hint="Other names it goes by. A search finds it by any of them."
+                  placeholder="Add a folk name"
+                />
+              </CollapsibleSection>
+              <CollapsibleSection
+                title="Description"
+                section="description"
+                fold={fold('description')}
+                labelled
+              >
+                <TextField<IngredientFormValues>
+                  name="description"
+                  label="Description"
+                  placeholder="What it is, where it comes from and how it is used"
+                  multiline
+                  // Seven lines, as each variant's Description (MB.115, the owner's call).
+                  rows={7}
+                />
+              </CollapsibleSection>
+              <CollapsibleSection
+                title="Correspondences"
+                section="correspondences"
+                fold={fold('correspondences')}
+              >
+                {/* Several at once, in the order chosen (MB.159); none chosen is
             the answer "none", so there is no None to choose. */}
-              <MultiSelectField
-                name="elements"
-                label="Element"
-                placeholder="Add an element"
-                options={ELEMENT_OPTIONS}
-              />
-              {/* Each list but the colours suggests (MB.131): planets, signs and
+                <MultiSelectField
+                  name="elements"
+                  label="Element"
+                  placeholder="Add an element"
+                  options={ELEMENT_OPTIONS}
+                />
+                {/* Each list but the colours suggests (MB.131): planets, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
@@ -401,84 +472,85 @@ const IngredientForm = ({
             colours and deities keep the order entered, so their entries move
             (MB.170); folk names and substitutes read alphabetically, so
             theirs do not. */}
-              <LookupListField
-                workspaceId={workspaceId}
-                useSuggestions={usePlanetSuggestions}
-                name="planets"
-                ordered
-                pickOnly={compendium}
-                legend="Planets"
-                entry="Planet"
-                hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
-                placeholder="Add a planet"
-              />
-              <LookupListField
-                workspaceId={workspaceId}
-                useSuggestions={useZodiacSuggestions}
-                name="zodiacSigns"
-                ordered
-                pickOnly={compendium}
-                legend="Zodiac Signs"
-                entry="Zodiac Sign"
-                hint="The signs it answers to."
-                placeholder="Add a sign"
-              />
-              <ListField
-                name="colors"
-                ordered
-                legend="Colours"
-                entry="Colour"
-                hint="The colours it corresponds to in a working, not the colour it is."
-                placeholder="Add a colour"
-              />
-              <LookupListField
-                workspaceId={workspaceId}
-                useSuggestions={useDeitySuggestions}
-                name="deities"
-                ordered
-                pickOnly={compendium}
-                legend="Deities"
-                entry="Deity"
-                hint="The gods and spirits it is sacred to."
-                placeholder="Add a deity"
-              />
-            </Section>
-            <Section title="Relations">
-              {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
+                <LookupListField
+                  workspaceId={workspaceId}
+                  useSuggestions={usePlanetSuggestions}
+                  name="planets"
+                  ordered
+                  pickOnly={compendium}
+                  legend="Planets"
+                  entry="Planet"
+                  hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
+                  placeholder="Add a planet"
+                />
+                <LookupListField
+                  workspaceId={workspaceId}
+                  useSuggestions={useZodiacSuggestions}
+                  name="zodiacSigns"
+                  ordered
+                  pickOnly={compendium}
+                  legend="Zodiac Signs"
+                  entry="Zodiac Sign"
+                  hint="The signs it answers to."
+                  placeholder="Add a sign"
+                />
+                <ListField
+                  name="colors"
+                  ordered
+                  legend="Colours"
+                  entry="Colour"
+                  hint="The colours it corresponds to in a working, not the colour it is."
+                  placeholder="Add a colour"
+                />
+                <LookupListField
+                  workspaceId={workspaceId}
+                  useSuggestions={useDeitySuggestions}
+                  name="deities"
+                  ordered
+                  pickOnly={compendium}
+                  legend="Deities"
+                  entry="Deity"
+                  hint="The gods and spirits it is sacred to."
+                  placeholder="Add a deity"
+                />
+              </CollapsibleSection>
+              <CollapsibleSection title="Relations" section="relations" fold={fold('relations')}>
+                {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
             after the lists): every live category, picked from chips grouped by
             category group. */}
-              <CategoryField />
-              <LookupListField
-                workspaceId={workspaceId}
-                // Fixed for the form's life, since its tier is, so the hook called is always the same.
-                useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
-                omit={entry?.id}
-                name="substitutes"
-                legend="Substitute Ingredients"
-                entry="Substitute Ingredient"
-                hint="Other ingredients to use in its place when this one is not to hand."
-                placeholder="Add a substitute"
-              />
-              {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
-              <SubstituteForms name="substitutes" />
-            </Section>
-            <Section title="Safety">
-              <TextField<IngredientFormValues>
-                name="safetyNotes"
-                label="Safety Notes"
-                hint="Toxicity, allergies, and anything to take care over when handling or burning it."
-                placeholder="Add safety notes"
-                multiline
-              />
-            </Section>
-            <Section title="Sources">
-              {/* Last, as a bibliography is (MB.154): the sources picked, each
+                <CategoryField />
+                <LookupListField
+                  workspaceId={workspaceId}
+                  // Fixed for the form's life, since its tier is, so the hook called is always the same.
+                  useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
+                  omit={entry?.id}
+                  name="substitutes"
+                  legend="Substitute Ingredients"
+                  entry="Substitute Ingredient"
+                  hint="Other ingredients to use in its place when this one is not to hand."
+                  placeholder="Add a substitute"
+                />
+                {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
+                <SubstituteForms name="substitutes" />
+              </CollapsibleSection>
+              <CollapsibleSection title="Safety" section="safety" fold={fold('safety')}>
+                <TextField<IngredientFormValues>
+                  name="safetyNotes"
+                  label="Safety Notes"
+                  hint="Toxicity, allergies, and anything to take care over when handling or burning it."
+                  placeholder="Add safety notes"
+                  multiline
+                />
+              </CollapsibleSection>
+              <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
+                {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
-              <ReferencesField workspaceId={workspaceId} />
-            </Section>
-            {/* After the ingredient's own fields, as the page shows its forms
+                <ReferencesField workspaceId={workspaceId} />
+              </CollapsibleSection>
+              {/* After the ingredient's own fields, as the page shows its forms
             after it (MB.215): each form, and what it adds. */}
-            <VariantsField workspaceId={workspaceId} />
+              <VariantsField workspaceId={workspaceId} fold={fold('variants')} />
+            </div>
             {discard.asking ? (
               <DiscardQuestion guard={discard} row="form__actions" />
             ) : question ? (

@@ -451,10 +451,13 @@ export interface FormFieldProps extends LookupFieldProps {
  * New Form box that adds one. On the compendium a form is a pick, and so is
  * every vocabulary box inside a variant.
  */
-export type VariantsFieldProps = LookupFieldProps;
+export interface VariantsFieldProps extends LookupFieldProps {
+  /** Its section's open state, which the form owns, as it does the other six's. */
+  fold: SectionFold;
+}
 
 /** One variant's group: its place in the list, whether it is the one open, and how to open, close or take it out. */
-export interface VariantFieldsetProps extends VariantsFieldProps {
+export interface VariantFieldsetProps extends LookupFieldProps {
   index: number;
   open: boolean;
   /** Opens it, closing any other, or closes it. */
@@ -521,6 +524,36 @@ export interface Claimant {
 }
 
 /** One of the form's titled sections: its heading, and the fields beneath it. */
+/** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
+export type SectionKey =
+  'identity' | 'description' | 'correspondences' | 'relations' | 'safety' | 'sources' | 'variants';
+
+/**
+ * A folding section's state, which the form owns so that Save can open the
+ * sections holding an error and Open All / Close All can reach every one.
+ */
+export interface SectionFold {
+  open: boolean;
+  /** It holds an error: flagged beneath its heading, open or closed. */
+  invalid: boolean;
+  onToggle: () => void;
+}
+
+/** One of the ingredient's own sections, as a disclosure: its heading the toggle. */
+export interface CollapsibleSectionProps {
+  title: string;
+  /** Which section, so its closed line summarises the right fields. */
+  section: SectionKey;
+  fold: SectionFold;
+  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
+  labelled?: boolean;
+  /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
+  info?: ReactNode;
+  /** The toggle's id, for a group inside that is named by the heading. */
+  titleId?: string;
+  children: ReactNode;
+}
+
 export interface SectionProps {
   title: string;
   /** Its one field's label repeats the heading, so the label is hidden from the eye. */

@@ -22,6 +22,7 @@ import type {
   ListOption,
   ReferenceLink,
   ReferenceListEntry,
+  SectionKey,
   SubstituteForm,
   SubstituteLink,
   SubstituteListEntry,
@@ -650,3 +651,54 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
+
+/** The ingredient's sections, in page order: each folds to a summary line (MB.115). */
+export const SECTION_KEYS: readonly SectionKey[] = [
+  'identity',
+  'description',
+  'correspondences',
+  'relations',
+  'safety',
+  'sources',
+  'variants',
+];
+
+/**
+ * The section each top-level value sits in. A box's draft, `drafts.colors`,
+ * sits in its list's section, and `drafts.variants`, the New Form box, in Variants.
+ */
+const SECTION_OF: Readonly<Record<string, SectionKey>> = {
+  name: 'identity',
+  nomenclature: 'identity',
+  canonicalName: 'identity',
+  folkNames: 'identity',
+  description: 'description',
+  elements: 'correspondences',
+  planets: 'correspondences',
+  zodiacSigns: 'correspondences',
+  colors: 'correspondences',
+  deities: 'correspondences',
+  categoryIds: 'relations',
+  substitutes: 'relations',
+  safetyNotes: 'safety',
+  references: 'sources',
+  referencePanelOpen: 'sources',
+  variants: 'variants',
+};
+
+/**
+ * The sections holding an error, the schema's or the server's, by the
+ * first key of each error's path (the list's, for a box's draft). The form's
+ * `root` error names no field, and so no section.
+ */
+export function sectionsWithErrors(errors: FieldErrors<IngredientFormValues>): Set<SectionKey> {
+  const found = new Set<SectionKey>();
+  for (const [key, error] of Object.entries(errors)) {
+    const keys = key === 'drafts' && error ? Object.keys(error) : [key];
+    for (const named of keys) {
+      const section = SECTION_OF[named];
+      if (section) found.add(section);
+    }
+  }
+  return found;
+}

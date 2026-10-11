@@ -4,7 +4,7 @@
 // What the ingredient form draws beyond the form primitives (_primitives.scss)
 // and the Combobox, which own its fields, label rows, notices, buttons, the
 // confirm in place of the saves and Delete set apart: the form's column, its
-// titled sections, a list's spacing, the row a box shares with Add, the
+// folding sections and a variant's titled ones, a list's spacing, the row a box shares with Add, the
 // duplicate warning's region, the references' rows and the new reference
 // panel, the Variants section, the substitutes' second pickers, and what a
 // linked substitute's summary holds, inside the Combobox's panel.
@@ -30,11 +30,178 @@
   }
 }
 
-// The titled sections (MB.115, the owner's call): each a column of its fields
-// at the form's own gap, under a small heading set closer to them than they
-// are to each other, and a step further from the section before than any two
-// fields are, so the sections read as groups. The Variants section's heading
-// is its fieldset's legend, drawn the same.
+// The ingredient's seven sections, each a disclosure (MB.115, the owner's
+// calls): flush, parted by hairlines rather than set on the card ground,
+// since the variant cards and reference rows inside already sit on it and a
+// card in a card reads as nesting the form does not have. Under them all,
+// the one control that opens or closes every section, at the line's end.
+.ingredient-form .ingredient-form__folds {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ingredient-form__fold-all {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: space(1);
+}
+
+// Nested, to outweigh layout-base's bare `body section`, whose gap and
+// margins would otherwise set the spacing in the app. The hairline is the
+// muted ink thinned, so it parts the sections without boxing them.
+.ingredient-form .ingredient-form__fold {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  margin: 0;
+  border-top: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+
+  &:last-child {
+    border-bottom: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+  }
+
+  // A section holding an error takes the field's error edge along its top.
+  &.is-invalid {
+    border-top-color: $secondary;
+  }
+}
+
+// The heading, its summary and its flag: the whole block one target, the
+// toggle's `::after` stretched over it, so a press on the summary or the
+// chevron opens the section too, while the button alone is what a keyboard
+// reaches and what is announced.
+.ingredient-form__fold-head {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  padding-block: space(3);
+}
+
+.ingredient-form__fold-line {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+
+  // Nested, to outweigh the heading's own margin below.
+  .ingredient-form__section-title {
+    margin: 0;
+  }
+
+  // An ⓘ beside the heading, lifted over the toggle's overlay so it is its own target.
+  .info-tip {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.ingredient-form__fold-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::after {
+    @include focus-ring;
+  }
+}
+
+// The chevron at the line's end, down while closed and turned over while
+// open, as the admin menu's is: at once, so there is no motion to reduce.
+.ingredient-form__fold-chevron {
+  display: inline-flex;
+  flex: none;
+  width: $glyph-size;
+  height: $glyph-size;
+  margin-inline-start: auto;
+  color: $text-muted;
+  @include theme-transition(color);
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .is-open > .ingredient-form__fold-head & {
+    rotate: 180deg;
+  }
+
+  .ingredient-form__fold-head:hover & {
+    color: $text-primary;
+  }
+}
+
+// What has been entered, one line in the muted ink at the caption size, cut
+// with an ellipsis when it runs past the column.
+.ingredient-form__fold-summary {
+  display: block;
+  overflow: hidden;
+  color: $text-muted;
+  font-size: type-size('caption');
+  font-weight: 300;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+// An error inside, open or closed, as a variant card flags one.
+.ingredient-form__fold-flag {
+  color: $secondary;
+  font-size: type-size('caption');
+}
+
+// Open, its fields beneath the heading at the form's own gap, as far from the
+// next hairline as the heading is from its own.
+.ingredient-form .ingredient-form__fold-fields {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+  min-width: 0;
+  padding-block: space(1) space(5);
+
+  // Closed is the attribute's, which the display above would otherwise undo.
+  &[hidden] {
+    display: none;
+  }
+
+  // The one field's label repeats the heading, so it is the heading the eye
+  // reads, and the label stays the field's name for a screen reader.
+  &.is-labelled .field__label-row {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+// A variant's titled sections (MB.115, the owner's call): each a column of
+// its fields at the form's own gap, under a small heading set closer to them
+// than they are to each other, and a step further from the section before
+// than any two fields are, so the sections read as groups; the card draws
+// them closer still (below).
 // Nested, to outweigh layout-base's bare `body section`, whose gap and
 // margins would otherwise set the spacing in the app.
 .ingredient-form .ingredient-form__section {
@@ -45,8 +212,7 @@
   margin: 0;
 
   // Two steps on top of the form's gap between sections.
-  & + .ingredient-form__section,
-  & + .ingredient-form__variants {
+  & + .ingredient-form__section {
     margin-top: space(6);
   }
 
@@ -343,16 +509,6 @@
 // Edit and Remove while closed (MB.115), its fields beneath while open.
 .ingredient-form .ingredient-form__variants {
   gap: space(3);
-
-  // The legend is the section's heading: as far from the cards as any
-  // section's heading is from its fields.
-  > .ingredient-form__section-head {
-    margin-bottom: space(1);
-  }
-
-  > .ingredient-form__section-head > .ingredient-form__section-title {
-    margin: 0;
-  }
 }
 
 .ingredient-form .ingredient-form__variant {
