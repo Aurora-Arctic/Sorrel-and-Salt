@@ -2,10 +2,12 @@
 
 `src/components/AdminInvitations/` — the People page's Invitations tab,
 `/admin/invitations` (MB.70; a section beneath the user list until MB.115
-gave it a tab of its own): **Invite Admin**, and the pending invitations, each
-with its address, its reason, when it expires and **Revoke**. Render-only: the
-page reads the list through `listPendingAdminInvitations` and whether this
-admin is held by the pause (`invitations/lock.ts`), and hands both down. The rules are
+gave it a tab of its own): **Invite Admin**, a filter row, and the pending
+invitations it leaves, each with its address, its reason, when it expires and
+**Revoke**. Render-only: the page reads the filter off its address
+(`invitations/filter.ts`), the list through `listPendingAdminInvitations`
+under it, and whether this admin is held by the pause
+(`invitations/lock.ts`), and hands all three down. The rules are
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
 
 ## Contracts
@@ -14,21 +16,43 @@ admin is held by the pause (`invitations/lock.ts`), and hands both down. The rul
   page's `h1`, People, and its open tab already say what it holds
   ([`tabbed-page.md`](tabbed-page.md)). The name keeps the sent
   confirmation and the rows findable as one.
+- **The filter** (`filter.tsx`, MB.115, on the owner's ask: "search the
+  Invitations by email and expires in 24 hrs") is the shared
+  [`FilterForm`](filter-form.md), named "Filter Invitations", inside the
+  list's [`ListFrame`](list-frame.md), as the user list's is. **Email**, a
+  search box, placeholder "Search emails", narrows to the addresses holding
+  what is typed, in any case; **Expires in 24 Hrs**, a `SwitchField`, to
+  the invitations lapsing within the next 24 hours. Both are filtered in the
+  repository's SQL against the database's clock
+  ([`db/invitations.md`](../db/invitations.md)). The address carries them
+  as `?email=fern&expiring`, `expiring` a bare flag read by its presence,
+  so a native submit's `expiring=` reads the same; `href.ts`'s
+  `invitationsHref(filter, invite)` builds every address the tab links to.
+  Filter opens the filtered list as a soft navigation, the row greyed and the
+  list a skeleton until it arrives: the tab has no pager whose plain anchors
+  it must agree with. Clear Filters opens `/admin/invitations`, or empties
+  the fields in place when neither is applied. The list keys the filter by
+  the one shown, so a page showing another starts it again from that one.
+  There is no pager: the list is the handful still pending.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,
   on the owner's call), exported as `InviteAdmin` and drawn by
   `src/app/admin/(people)/@action/invitations/page.tsx`. The heading line
   and the list are rendered apart, so the button can no longer hold the
   form's state: Invite Admin is a link to `/admin/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
-  as a value page's `?new` opens its own. While locked it is the locked
-  control instead, and `?invite` opens nothing.
+  as a value page's `?new` opens its own. Both keep the filter shown: the
+  action's page reads it off the address as the tab's does, so the link is
+  `?email=fern&expiring&invite`, and the form closes back to the tab
+  under it. While locked it is the locked control instead, and `?invite`
+  opens nothing.
 - **Props.** `invitations`, newest first, each `{ id, email, note, expiresAt }`;
+  `filter`, the filter shown, `{ email, expiringSoon }`, none when left out;
   `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
   admin changes are paused and this admin is not the primary one, absent
   otherwise; and `inviting`, whether the address is `?invite`. The page
   sets `locked` from `adminRoleChangePauseState`, paused and not
   `canToggle`, and `inviting` only while not locked. `InviteAdmin` takes
-  `locked` alone.
+  `locked` and the `filter` its link keeps.
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
@@ -61,7 +85,9 @@ admin is held by the pause (`invitations/lock.ts`), and hands both down. The rul
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
 - **No invitation waiting is a sentence**: "No admin invitations are
-  waiting."
+  waiting." Under a filter it names the filters in use, as the user list's
+  and the compendium's do: "No invitation matches “fern” and Expires in 24
+  Hrs. Change or clear the filter to see more."
 - **Four columns**: Email, Reason, Expires and Revoke, the headings and each
   cell's `data-label` from one `COLUMNS` list, the table's roles written out
   so it can stack into cards at phone width.
@@ -76,8 +102,10 @@ width"). At desktop width no cell wraps and the table scrolls in its frame, as
 the user list's does (the owner's call during MB.59). Under
 `$table-stack-width` of its frame each invitation is a card, its cells
 wrapping, each led by its column's name, and Revoke across the card's foot
-with no label. Its own stylesheet holds the tab's column, its action
-row and the table `space(5)` apart as the tab's content is, the
+with no label. The filter row is the `.filter-row` primitive, which stacks at phone
+width: the Email box across the line, the switch, Filter and Clear Filters
+beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet holds the tab's column, the sent
+notice and the list's frame `space(5)` apart as the tab's content is, the
 muted "None given", the Reason field's wrapper (`.admin-invitations__note`,
 a step of room above and `space(6)` below) and the sent confirmation's
 margin and full line, `.notice.admin-invitations__sent` compounded with its
@@ -96,10 +124,13 @@ alert (MB.116).
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
 `Admin / Admin Invitations`, inside the admin layout's frame and the People
 page with its Invitations tab open and Invite Admin beside the heading:
-`Pending`, `NoneWaiting`, `Inviting` (the form open, its Reason's hint in
-a tip), `Paused` (both controls locked with the pause's reason), and
-`PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the heading
-and the invitations as cards at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
+`Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
+applied, Clear Filters offered, one invitation left), `NoMatch` (the
+empty state naming the filter), `Inviting` (the form open, its Reason's
+hint in a tip), `Paused` (both controls locked with the pause's reason),
+`PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the
+heading, the filter row stacked and the invitations as cards at 375px, and
+`FilteredPhoneDark`/`FilteredPhoneLight`, the filter applied at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
 fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests
@@ -110,10 +141,15 @@ until there is an address, the trimmed variables, the close back to the tab
 and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
-Revoke after its confirmation; and both controls locked with the pause's
-reason. The cards at phone width are presentation.
+Revoke after its confirmation; both controls locked with the pause's
+reason; and the filter: the address Filter opens, the email trimmed and the
+switch a bare flag, which values offer Clear Filters, the fields emptied in
+place, and Invite Admin and the form's close keeping the filter. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
-the guard first, the hash never rendered, the form opened by `?invite`,
+the guard first, the hash never rendered, the filter read off the address
+and handed to the service, the form opened by `?invite`,
 and the pause locking both controls and opening nothing.
-`tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
+The filters' SQL is `tests/modules/identity/services/admin-invitations.test.ts`'s:
+a fragment in any case, and the 24-hour window's edges against expired,
+accepted and revoked rows. `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.

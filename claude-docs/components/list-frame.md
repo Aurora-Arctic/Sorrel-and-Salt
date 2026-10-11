@@ -8,7 +8,7 @@ navigate through it, so while the new page reads the list shows the same
 loading state a tabbed page's tabs do ([`tabbed-page.md`](tabbed-page.md)),
 on the owner's call at MB.115's review: "Filters should trigger the same type
 of loading state as tabs." GroupedValueList, CompendiumList, GroupList,
-UserList and PrivilegeLedger each sit in one.
+UserList, PrivilegeLedger and AdminInvitations each sit in one.
 
 ## Parts
 
