@@ -448,7 +448,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-page-frame">
-        <SectionHead eyebrow="_primitives.scss · .page-frame" title="The page frame">
+        <SectionHead eyebrow="_primitives.scss · .page-frame" title="The Page Frame">
           The centred, full-height column of a page with no AppShell: Welcome, sign-in, the account
           pages, the not-authorized page and the invitation. Its children stand a{' '}
           <code>space(6)</code> apart, the gap alone spacing them, and stop at the measure;{' '}
@@ -490,7 +490,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-link-row">
-        <SectionHead eyebrow="_primitives.scss · .link-row" title="Link rows">
+        <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
           A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
           list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
           edge and wraps on a phone rather than overflowing it.
@@ -562,7 +562,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-brands">
-        <SectionHead eyebrow="_variables.scss · brand-color()" title="Brand colours">
+        <SectionHead eyebrow="_variables.scss · brand-color()" title="Brand Colours">
           Each sign-in provider's own button, coloured from <code>$brand-palettes</code> rather than
           our tokens, since the colours are the provider's. A white button takes its brand's edge,
           which holds 3:1 against both pages. Hover a button for its hover ground. An unavailable
@@ -597,7 +597,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-provider-mark">
-        <SectionHead eyebrow="_primitives.scss · .provider-mark" title="Provider marks">
+        <SectionHead eyebrow="_primitives.scss · .provider-mark" title="Provider Marks">
           A provider's mark on a small circle of its brand's ground, for a list of sign-in methods
           rather than a button: the account page's rows and the admin user list. Decorative, since
           the provider's name always sits beside it.
