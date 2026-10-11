@@ -58,23 +58,61 @@ export const FormGroups: Story = () => (
   />
 );
 
+/** Invented traditions as the page lists them, each Edit keeping the search. */
+const traditions = (names: readonly string[], query = '') =>
+  names.map((name) => {
+    const slug = slugify(name);
+    return {
+      id: slug,
+      name,
+      slug,
+      description: 'An invented tradition, for the workshop.',
+      editHref: groupsHref('tradition', { query }, { edit: slug }),
+    };
+  });
+
+// The traditions take a name search (MB.115), empty until one is asked.
 export const Traditions: Story = () => (
   <GroupList
     kind="tradition"
-    groups={['Fixtural', 'Mockish'].map((name) => {
-      const slug = slugify(name);
-      return {
-        id: slug,
-        name,
-        slug,
-        description: 'An invented tradition, for the workshop.',
-        editHref: groupsHref('tradition', {}, { edit: slug }),
-      };
-    })}
+    groups={traditions(['Fixtural', 'Mockish', 'Testwort Rite'])}
+    filter={{ query: '' }}
   />
+);
+
+// Searched by a fragment of the name, Clear offered.
+export const TraditionsSearched: Story = () => (
+  <GroupList
+    kind="tradition"
+    groups={traditions(['Fixtural', 'Fixture Rite'], 'fixtur')}
+    filter={{ query: 'fixtur' }}
+  />
+);
+
+// At a phone's width, searched, in each theme: the Name field across the
+// row, Filter and Clear beneath it, each row a card.
+export const TraditionsSearchedPhoneDark: Story = () => (
+  <div className="admin-layout">
+    <TraditionsSearched />
+  </div>
+);
+TraditionsSearchedPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const TraditionsSearchedPhoneLight: Story = () => (
+  <div className="admin-layout">
+    <TraditionsSearched />
+  </div>
+);
+TraditionsSearchedPhoneLight.meta = { theme: 'light', width: 375 };
+
+// A search matching nothing says what to change.
+export const TraditionsNoMatch: Story = () => (
+  <GroupList kind="tradition" groups={[]} filter={{ query: 'nothing' }} />
 );
 
 export const Empty: Story = () => <GroupList kind="form" groups={[]} />;
 
 // The traditions' empty message names them.
-export const TraditionsEmpty: Story = () => <GroupList kind="tradition" groups={[]} />;
+export const TraditionsEmpty: Story = () => (
+  <GroupList kind="tradition" groups={[]} filter={{ query: '' }} />
+);

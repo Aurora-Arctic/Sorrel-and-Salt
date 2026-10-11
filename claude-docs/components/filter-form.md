@@ -5,7 +5,8 @@ supplies, then a Filter button that opens the filtered list from its first
 page, and a Clear link that opens it with no filter. Five admin lists (CompendiumList, GroupedValueList, the flat
 vocabularies' list it has since absorbed, UserList, PrivilegeLedger) each
 wrote this form for themselves until MB.115; three navigated softly with a spinner, two with a
-full page load and none. It renders inside its list's
+full page load and none. GroupList's name search on the traditions, added at
+MB.115's review, is a sixth user ([`group-list.md`](group-list.md)). It renders inside its list's
 [`ListFrame`](list-frame.md), which runs its navigation.
 
 ## Props

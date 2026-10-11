@@ -141,4 +141,7 @@ tradition)` — `hecate-greek` — as a form's is its name and its group's, so
 
 The deities page lists the curated deities by their tradition's name, then
 their own (`findDeityPage`, the categories' key), narrowed by a name query and
-a tradition.
+a tradition. The traditions page lists the live traditions by name
+(`findGroupPage`, the finder every group vocabulary can page through),
+narrowed by a name query, a case-insensitive fragment matched in SQL, as the
+deities' is (MB.115).

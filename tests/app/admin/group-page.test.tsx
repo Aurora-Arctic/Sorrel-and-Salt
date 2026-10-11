@@ -265,3 +265,64 @@ describe('a group page, for each other kind', () => {
     },
   );
 });
+
+// The traditions' name search (MB.115): the address's query reaches the
+// service's page and count, and every link on the page keeps it; a kind
+// without a search reads none. What the search matches is the finder's,
+// tests/db/repository/vocabularies.test.ts's.
+describe('a group page, searched by name', () => {
+  beforeEach(() => {
+    listDeityTraditions.mockReset();
+    countDeityTraditions.mockReset();
+    listDeityTraditions.mockResolvedValue([entry(MENDING), entry(WARDS)]);
+    countDeityTraditions.mockResolvedValue({ totalCount: 30, countBefore: 0 });
+  });
+
+  it('reads the traditions under ?query=, and keeps it on every link', async () => {
+    // A page more than the 25 shown, so the pager offers Next.
+    const many = Array.from({ length: 26 }, (_, index) =>
+      entry({ ...WARDS, id: `${WARDS.id.slice(0, -2)}${String(index).padStart(2, '0')}` }),
+    );
+    listDeityTraditions.mockImplementation(async (request: PageRequest) =>
+      request.limit === 26 ? many : [entry(WARDS)],
+    );
+
+    await renderPage({ query: ' wort ' }, 'tradition');
+
+    expect(listDeityTraditions).toHaveBeenCalledWith(
+      { limit: 26, inverted: false },
+      { query: 'wort' },
+    );
+    expect(countDeityTraditions).toHaveBeenCalledWith(expect.anything(), { query: 'wort' });
+    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('wort');
+    expect(screen.getAllByRole('link', { name: `Edit ${WARDS.name}` })[0]).toHaveAttribute(
+      'href',
+      `/admin/deity-traditions?query=wort&edit=${WARDS.slug}`,
+    );
+    expect(screen.getByRole('link', { name: 'Add Tradition' })).toHaveAttribute(
+      'href',
+      '/admin/deity-traditions?query=wort&new',
+    );
+    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/^\/admin\/deity-traditions\?query=wort&after=/),
+    );
+  });
+
+  it('reads every tradition for the move picker, whatever the search', async () => {
+    await renderPage({ query: 'wort' }, 'tradition');
+
+    expect(listDeityTraditions).toHaveBeenCalledWith({ limit: 101, inverted: false });
+  });
+
+  it('reads no ?query= on a kind without a search', async () => {
+    await renderPage({ query: 'wort' });
+
+    expect(listCategoryGroups).toHaveBeenCalledWith({ limit: 26, inverted: false });
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Add Group' })).toHaveAttribute(
+      'href',
+      '/admin/category-groups?new',
+    );
+  });
+});
