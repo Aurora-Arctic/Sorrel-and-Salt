@@ -988,6 +988,8 @@ _Acceptance criteria:_
 - Nothing reads or writes the column yet
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
+_As built:_ merged to `staging` on 2026-10-11 in PR #854, built in its own lane while MB.240 minted this entry: migration `0065_ingredients-seed-key`, and the docs naming the column (DESIGN.md §5, `db/identity-model.md`, `db/seed-module.md`, `design-decisions/mb.171-seed-keys.md`).
+
 **MB.242 — `db:seed:compendium`, the guard, CI and a 14-ingredient pilot** · 6h
 
 _Story:_ As a site admin, I want the compendium seeded on staging and production the way the curated vocabularies are, so that every entry arrives sourced and nothing an admin changed is undone.
