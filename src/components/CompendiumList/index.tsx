@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
@@ -98,15 +98,14 @@ const CompendiumList = ({
                     {entry.forms.length ? entry.forms.join(', ') : NONE}
                   </td>
                   <td {...stackCell('')}>
-                    {/* Soft navigation: the page renders again with the modal open.
-                      Named with the formal name too, as two entries can share a
+                    {/* Named with the formal name too, as two entries can share a
                       label but never a formal name. */}
-                    <Link className="btn btn--small btn--quiet" href={entry.editHref}>
-                      Edit{' '}
-                      <span className="visually-hidden">
-                        {entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
-                      </span>
-                    </Link>
+                    <EditLink
+                      href={entry.editHref}
+                      name={
+                        entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name
+                      }
+                    />
                   </td>
                 </tr>
               ))}

@@ -355,6 +355,13 @@ $icon-size: 1.5rem;
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;
 
+// The larger icon control outside a form (MB.115, the owner's call): a list
+// row's Edit pencil, a 2rem square around a 1.25rem mark, so a column of
+// them reads at a glance. A form keeps `$icon-size`, where its pencils sit
+// beside its fields' text.
+$icon-size-large: 2rem;
+$glyph-size-large: 1.25rem;
+
 // A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`
 // so a tip never runs off a phone. InfoTip, Combobox's qualifier tip and the
 // user list's locked-control tip each wrote 18rem.

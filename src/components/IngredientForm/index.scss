@@ -384,25 +384,10 @@
 }
 
 // The row's icon buttons: the target WCAG 2.2 asks for, the mark in the
-// muted ink until pointed at, as the combobox's clear is.
+// muted ink until pointed at, as the combobox's clear is. The 24px box, not
+// a list row's larger one: here they sit beside a field's text.
 .ingredient-form__icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $icon-size;
-  height: $icon-size;
-  padding: 0;
-  border: 0;
-  border-radius: radius('sharp');
-  background-color: transparent;
-  color: $text-muted;
-  cursor: pointer;
-  @include theme-transition(background-color, color);
-
-  svg {
-    width: $glyph-size;
-    height: $glyph-size;
-  }
+  @include icon-button;
 
   &:hover,
   &:focus-visible,
@@ -410,19 +395,10 @@
     color: $text-primary;
   }
 
-  // A variant's pencil and a reference row's, drawn in the accent green, the
-  // owner's call (MB.115): the open way into a row, set apart from its ×. Pointed at,
-  // focused or open, it sits on a tint of its own green, as the × does on
-  // the wax's.
+  // A variant's pencil, a reference row's and its Edit Source, in the
+  // accent green every Edit control wears (MB.115, the owner's call).
   &.ingredient-form__edit {
-    color: $accent;
-  }
-
-  &.ingredient-form__edit:hover,
-  &.ingredient-form__edit:focus-visible,
-  &.ingredient-form__edit[aria-expanded='true'] {
-    background-color: color-mix(in srgb, $accent 20%, $surface-card);
-    color: $accent;
+    @include icon-button-edit;
   }
 
   // Remove destroys, so it answers in the wax as a chip's × does.

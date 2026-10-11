@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { stackCell, tableRole } from '../../lib/table-roles';
@@ -96,10 +96,7 @@ const GroupedValueList = ({
                     </td>
                     {/* No label: an action spans its card on a phone. */}
                     <td {...stackCell('')}>
-                      {/* Soft navigation: the page renders again with the modal open. */}
-                      <Link className="btn btn--small btn--quiet" href={entry.editHref}>
-                        Edit <span className="visually-hidden">{entry.name}</span>
-                      </Link>
+                      <EditLink href={entry.editHref} name={entry.name} />
                     </td>
                   </tr>
                 ))}

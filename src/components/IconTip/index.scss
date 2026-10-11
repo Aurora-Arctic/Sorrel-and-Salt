@@ -1,0 +1,43 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The control and its tip together: the tip's anchor, and the box the
+// pointer may cross onto the tip within. Middle-aligned, so a mark taller
+// than its row's text sits level with it rather than on its baseline.
+.icon-tip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+// A short word, centred above its control: above, as InfoTip's is, so it
+// covers no field beneath; centred, since a word this short overhangs the
+// mark by a few pixels a side and so fits wherever the mark does, even at a
+// phone's edge. One layer up, over the row before. Mounted only while open,
+// so it fades in from its starting style and goes at once.
+// claude-docs/components/icon-tip.md, "Placement".
+.icon-tip__bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  z-index: 1;
+  width: max-content;
+  margin-bottom: space(1);
+  translate: -50% 0;
+
+  @include tip-bubble;
+  @include tip-bubble-open;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+// A list row's Edit link, outside a form: the larger pencil (`$icon-size-large`
+// around `$glyph-size-large`), in the green every Edit control wears. The
+// link's own focus ring, the accent's, from the typography.
+.icon-tip__edit {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-edit;
+}

@@ -42,8 +42,14 @@ export function useTip(canOpen: () => boolean = ALWAYS): Tip {
   useEffect(() => {
     if (!open) return;
     // On the document: a tip opened by hover has no focus to listen from.
+    // Marked handled, so the Escape that closes a tip closes nothing else:
+    // inside a modal the `<dialog>` would take it as a close request too,
+    // shutting the modal or asking a changed form to discard (MB.115; the
+    // same as Combobox/escape.ts). With the tip shut, Escape is left alone.
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') hide();
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      hide();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);

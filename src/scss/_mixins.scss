@@ -191,6 +191,44 @@ $tip-fade: 500ms;
   }
 }
 
+// A square icon control, a pencil or a ×: no text, a WCAG 2.2 target around
+// its mark, in the muted ink until a modifier colours it. `$icon-size`
+// around `$glyph-size` by default; a list row's pencil takes the large pair
+// (claude-docs/components/icon-tip.md, "Styling").
+@mixin icon-button($target: $icon-size, $glyph: $glyph-size) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $target;
+  height: $target;
+  padding: 0;
+  border: 0;
+  border-radius: radius('sharp');
+  background-color: transparent;
+  color: $text-muted;
+  cursor: pointer;
+  @include theme-transition(background-color, color);
+
+  svg {
+    width: $glyph;
+    height: $glyph;
+  }
+}
+
+// An Edit pencil's ink, the owner's call (MB.115): the accent green, set apart
+// from a ×, and pointed at, focused or open, on a tint of its own green, as a
+// × sits on the wax's. Every Edit control wears it, in a form or a list.
+@mixin icon-button-edit {
+  color: $accent;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    background-color: color-mix(in srgb, $accent 20%, $surface-card);
+    color: $accent;
+  }
+}
+
 // Generated from the badge palettes; both theme mixins call this. No group
 // colours: a chip reads its own pair from the row (MB.36).
 @mixin semantic-tokens($theme) {
