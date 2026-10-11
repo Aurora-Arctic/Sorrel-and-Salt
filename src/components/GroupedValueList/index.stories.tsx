@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
-import { TABLE_ROLES as ROLES } from '../GroupList/roles';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import PageHeader from '../PageHeader';
 import Pager from '../Pager';
 import ValueFilter from './filter';
@@ -392,40 +392,32 @@ const FilterDisclosure = () => (
       <ValueFilter kind="deity" filter={DEITY_FILTER} groups={TRADITIONS} />
     </details>
     <div className="data-table-frame">
-      <table className="data-table data-table--stack" aria-label="Deities" {...ROLES.table}>
-        <thead {...ROLES.rowgroup}>
-          <tr {...ROLES.row}>
-            <th scope="col" {...ROLES.columnheader}>
+      <table className="data-table data-table--stack" aria-label="Deities" {...tableRole('table')}>
+        <thead {...tableRole('rowgroup')}>
+          <tr {...tableRole('row')}>
+            <th scope="col" {...tableRole('columnheader')}>
               Name
             </th>
-            <th scope="col" {...ROLES.columnheader}>
+            <th scope="col" {...tableRole('columnheader')}>
               Tradition
             </th>
-            <th scope="col" {...ROLES.columnheader}>
+            <th scope="col" {...tableRole('columnheader')}>
               Description
             </th>
-            <th scope="col" {...ROLES.columnheader}>
+            <th scope="col" {...tableRole('columnheader')}>
               <span className="visually-hidden">Edit</span>
             </th>
           </tr>
         </thead>
-        <tbody {...ROLES.rowgroup}>
+        <tbody {...tableRole('rowgroup')}>
           {FILTERED_DEITIES.map((entry) => (
-            <tr key={entry.id} {...ROLES.row}>
-              <td data-label="Name" {...ROLES.cell}>
-                {entry.name}
-              </td>
-              <td data-label="Tradition" {...ROLES.cell}>
-                {entry.groupName}
-              </td>
-              <td
-                className="grouped-value-list__description"
-                data-label="Description"
-                {...ROLES.cell}
-              >
+            <tr key={entry.id} {...tableRole('row')}>
+              <td {...stackCell('Name')}>{entry.name}</td>
+              <td {...stackCell('Tradition')}>{entry.groupName}</td>
+              <td className="grouped-value-list__description" {...stackCell('Description')}>
                 {entry.description}
               </td>
-              <td data-label="" {...ROLES.cell}>
+              <td {...stackCell('')}>
                 <Link className="btn btn--small btn--quiet" href={entry.editHref}>
                   Edit <span className="visually-hidden">{entry.name}</span>
                 </Link>

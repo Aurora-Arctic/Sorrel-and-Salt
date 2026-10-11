@@ -26,7 +26,7 @@ There is no filter. A vocabulary of eight sections, or six, needs none, where th
 
 ## Styling
 
-The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table a `.data-table.data-table--stack` in a `.data-table-frame`. Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with Edit across the card's foot. The table writes out its roles by spreading `TABLE_ROLES` (`roles.ts`) onto each part, since WebKit drops a table's meaning once its parts change `display`; GroupedValueList spreads the same map.
+The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table a `.data-table.data-table--stack` in a `.data-table-frame`. Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with Edit across the card's foot. The table writes out its roles by spreading `tableRole` and `stackCell` (`src/lib/table-roles.ts`) onto each part, since WebKit drops a table's meaning once its parts change `display`; every admin table spreads the same helper.
 
 Its own stylesheet adds two things. The description takes the measure. While it is a table, its cells take `space(3)` above and below and centre their contents: a chip and the small Edit button stand taller than a line of text, so on the primitive's baseline they met the band's top edge while the text met its bottom (the owner's call). As cards, the stack primitive spaces the cells instead.
 

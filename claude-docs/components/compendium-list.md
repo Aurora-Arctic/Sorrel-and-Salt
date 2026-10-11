@@ -96,8 +96,8 @@ the `.data-table` primitive with the `--stack` modifier: banded on
 desktop width, and each row a card once its frame is under
 `$table-stack-width`, as on a phone ("Tables at phone width" there). So every
 part carries its role written out, `table`, `rowgroup`, `row`,
-`columnheader` and `cell`, spread from `ROLE` since lint refuses a literal
-role it takes for redundant, and every cell names its column in
+`columnheader` and `cell`, spread from `src/lib/table-roles.ts` since lint refuses a
+literal role it takes for redundant, and every cell names its column in
 `data-label`, the Edit cell's empty so it spans the card. Each row's Edit is
 `.btn--small.btn--quiet`, and the pager is `Pager` ([`pager.md`](pager.md)),
 soft. The formal name is plain, not italic: a binomial is italicised, a

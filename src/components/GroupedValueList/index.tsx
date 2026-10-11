@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { TABLE_ROLES as ROLES } from '../GroupList/roles';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
 import { KINDS } from './kinds';
@@ -44,33 +44,35 @@ const GroupedValueList = ({
 
       {values.length ? (
         <div className="data-table-frame">
-          <table className="data-table data-table--stack" aria-label={title} {...ROLES.table}>
-            <thead {...ROLES.rowgroup}>
-              <tr {...ROLES.row}>
-                <th scope="col" {...ROLES.columnheader}>
+          <table
+            className="data-table data-table--stack"
+            aria-label={title}
+            {...tableRole('table')}
+          >
+            <thead {...tableRole('rowgroup')}>
+              <tr {...tableRole('row')}>
+                <th scope="col" {...tableRole('columnheader')}>
                   Name
                 </th>
                 {group && (
-                  <th scope="col" {...ROLES.columnheader}>
+                  <th scope="col" {...tableRole('columnheader')}>
                     {group.label}
                   </th>
                 )}
-                <th scope="col" {...ROLES.columnheader}>
+                <th scope="col" {...tableRole('columnheader')}>
                   Description
                 </th>
-                <th scope="col" {...ROLES.columnheader}>
+                <th scope="col" {...tableRole('columnheader')}>
                   <span className="visually-hidden">Edit</span>
                 </th>
               </tr>
             </thead>
-            <tbody {...ROLES.rowgroup}>
+            <tbody {...tableRole('rowgroup')}>
               {values.map((entry) => (
-                <tr key={entry.id} {...ROLES.row}>
-                  <td data-label="Name" {...ROLES.cell}>
-                    {entry.name}
-                  </td>
+                <tr key={entry.id} {...tableRole('row')}>
+                  <td {...stackCell('Name')}>{entry.name}</td>
                   {group && (
-                    <td data-label={group.label} {...ROLES.cell}>
+                    <td {...stackCell(group.label)}>
                       {/* The group in its own chip, as the category picker shows it. */}
                       {entry.groupColors ? (
                         <span className="chip" style={chipColors(entry.groupColors)}>
@@ -81,15 +83,11 @@ const GroupedValueList = ({
                       )}
                     </td>
                   )}
-                  <td
-                    className="grouped-value-list__description"
-                    data-label="Description"
-                    {...ROLES.cell}
-                  >
+                  <td className="grouped-value-list__description" {...stackCell('Description')}>
                     {entry.description}
                   </td>
                   {/* No label: an action spans its card on a phone. */}
-                  <td data-label="" {...ROLES.cell}>
+                  <td {...stackCell('')}>
                     {/* Soft navigation: the page renders again with the modal open. */}
                     <Link className="btn btn--small btn--quiet" href={entry.editHref}>
                       Edit <span className="visually-hidden">{entry.name}</span>

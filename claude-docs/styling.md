@@ -717,7 +717,9 @@ column's cell names its column in a `data-label` attribute:
   `display` changes on its parts, so a screen reader in Safari would read the
   cards as loose text; the explicit roles put the meaning back. They are the
   roles the elements have already, so nothing else changes, and a jsdom test's
-  `getByRole('cell')` finds a `td` either way.
+  `getByRole('cell')` finds a `td` either way. Every stacking table spreads
+  them from one helper, `src/lib/table-roles.ts`: `tableRole('row')` for a
+  part, and `stackCell(label)` for a cell, which carries its `data-label` too.
 - **The label is written twice.** `content: attr(data-label)` and then
   `content: attr(data-label) / ''`: the second gives the label an empty
   alternative text, so a screen reader, which has the header, does not hear

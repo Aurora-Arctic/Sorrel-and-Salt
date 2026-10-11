@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
@@ -20,19 +21,6 @@ const NONE = '—';
 /** Each kind by the label the filter and the form give it: Botanical, Unknown. */
 const KIND_LABELS = new Map(NOMENCLATURE_OPTIONS.map(({ value, label }) => [value, label]));
 
-// Each part's own role, written out because the table stacks into cards at
-// phone width (`.data-table--stack`), and WebKit drops a table's meaning once
-// `display` changes on its parts (claude-docs/styling.md, "Tables at phone
-// width"). Spread rather than written as `role="table"`, which lint refuses
-// as redundant: it cannot know the stylesheet takes the implicit role away.
-const ROLE = {
-  table: { role: 'table' },
-  rowgroup: { role: 'rowgroup' },
-  row: { role: 'row' },
-  columnheader: { role: 'columnheader' },
-  cell: { role: 'cell' },
-} as const;
-
 const CompendiumList = ({
   entries,
   filter,
@@ -49,44 +37,36 @@ const CompendiumList = ({
 
     {entries.length ? (
       <div className="data-table-frame">
-        <table className="data-table data-table--stack" {...ROLE.table}>
-          <thead {...ROLE.rowgroup}>
-            <tr {...ROLE.row}>
-              <th scope="col" {...ROLE.columnheader}>
+        <table className="data-table data-table--stack" {...tableRole('table')}>
+          <thead {...tableRole('rowgroup')}>
+            <tr {...tableRole('row')}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Name
               </th>
-              <th scope="col" {...ROLE.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Classification
               </th>
-              <th scope="col" {...ROLE.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Formal Name
               </th>
-              <th scope="col" {...ROLE.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Form
               </th>
-              <th scope="col" {...ROLE.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 <span className="visually-hidden">Edit</span>
               </th>
             </tr>
           </thead>
-          <tbody {...ROLE.rowgroup}>
+          <tbody {...tableRole('rowgroup')}>
             {entries.map((entry) => (
               // Each cell names its column for the card it becomes; the Edit
               // cell's empty name spans the card without one.
-              <tr key={entry.id} {...ROLE.row}>
-                <td data-label="Name" {...ROLE.cell}>
-                  {entry.name}
-                </td>
-                <td data-label="Classification" {...ROLE.cell}>
-                  {KIND_LABELS.get(entry.nomenclature)}
-                </td>
-                <td data-label="Formal Name" {...ROLE.cell}>
-                  {entry.canonicalName ?? NONE}
-                </td>
-                <td data-label="Form" {...ROLE.cell}>
-                  {entry.forms.length ? entry.forms.join(', ') : NONE}
-                </td>
-                <td data-label="" {...ROLE.cell}>
+              <tr key={entry.id} {...tableRole('row')}>
+                <td {...stackCell('Name')}>{entry.name}</td>
+                <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
+                <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
+                <td {...stackCell('Form')}>{entry.forms.length ? entry.forms.join(', ') : NONE}</td>
+                <td {...stackCell('')}>
                   {/* Soft navigation: the page renders again with the modal open.
                       Named with the formal name too, as two entries can share a
                       label but never a formal name. */}

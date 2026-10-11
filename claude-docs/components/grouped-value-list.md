@@ -129,8 +129,8 @@ a section"): the root a `.list-frame`; the filter a
 `FieldShell`s around a native input and select and whose Filter is a solid
 `BusyButton`; and the table a `.data-table` in its `.data-table-frame`,
 banded at desktop width, with the `--stack` modifier, its roles written out
-(`TABLE_ROLES`, `src/components/GroupList/roles.ts`, shared with the group
-list) and a `data-label` on every cell, so under `$table-stack-width` of its
+(`tableRole` and `stackCell`, `src/lib/table-roles.ts`, as every admin
+table does) and a `data-label` on every cell, so under `$table-stack-width` of its
 frame each row turns into a card ("Tables at phone width"). The Edit cell's
 `data-label` is empty, so it has no label and spans its card.
 

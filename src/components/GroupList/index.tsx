@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import type { GroupKind } from '../GroupForm/types';
 import Pager from '../Pager';
-import { TABLE_ROLES } from './roles';
+import { stackCell, tableRole } from '../../lib/table-roles';
 import type { GroupListProps } from './types';
 import './index.scss';
 
@@ -35,26 +35,26 @@ const GroupList = ({
       <div className="data-table-frame">
         <table
           className="data-table data-table--stack group-list__table"
-          {...TABLE_ROLES.table}
+          {...tableRole('table')}
           aria-label={TABLE_NAME[kind]}
         >
-          <thead {...TABLE_ROLES.rowgroup}>
-            <tr {...TABLE_ROLES.row}>
-              <th scope="col" {...TABLE_ROLES.columnheader}>
+          <thead {...tableRole('rowgroup')}>
+            <tr {...tableRole('row')}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Name
               </th>
-              <th scope="col" {...TABLE_ROLES.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 Description
               </th>
-              <th scope="col" {...TABLE_ROLES.columnheader}>
+              <th scope="col" {...tableRole('columnheader')}>
                 <span className="visually-hidden">Edit</span>
               </th>
             </tr>
           </thead>
-          <tbody {...TABLE_ROLES.rowgroup}>
+          <tbody {...tableRole('rowgroup')}>
             {groups.map((group) => (
-              <tr key={group.id} {...TABLE_ROLES.row}>
-                <td {...TABLE_ROLES.cell} data-label="Name">
+              <tr key={group.id} {...tableRole('row')}>
+                <td {...stackCell('Name')}>
                   {kind === 'category' && group.colorDark && group.colorLight ? (
                     <span
                       className="chip"
@@ -69,14 +69,10 @@ const GroupList = ({
                     group.name
                   )}
                 </td>
-                <td
-                  {...TABLE_ROLES.cell}
-                  data-label="Description"
-                  className="group-list__description"
-                >
+                <td {...stackCell('Description')} className="group-list__description">
                   {group.description}
                 </td>
-                <td {...TABLE_ROLES.cell} data-label="">
+                <td {...stackCell('')}>
                   {/* Soft navigation: the page renders again with the modal open. */}
                   <Link className="btn btn--small btn--quiet" href={group.editHref}>
                     Edit <span className="visually-hidden">{group.name}</span>
