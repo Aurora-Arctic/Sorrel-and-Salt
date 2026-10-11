@@ -99,6 +99,76 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Aplectrum&oldid=1329531003',
       accessed: '2026-10-11',
     },
+    'wikipedia-apple': {
+      kind: 'entry',
+      title: 'Apple',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Apple&oldid=1378395484',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-arctostaphylos-uva-ursi': {
+      kind: 'entry',
+      title: 'Arctostaphylos uva-ursi',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Arctostaphylos_uva-ursi&oldid=1358701321',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-arnica-montana': {
+      kind: 'entry',
+      title: 'Arnica montana',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Arnica_montana&oldid=1361261909',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-avocado': {
+      kind: 'entry',
+      title: 'Avocado',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Avocado&oldid=1378057135',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-bambusa-vulgaris': {
+      kind: 'entry',
+      title: 'Bambusa vulgaris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Bambusa_vulgaris&oldid=1364829467',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-barley': {
+      kind: 'entry',
+      title: 'Barley',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Barley&oldid=1377470667',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-basil': {
+      kind: 'entry',
+      title: 'Basil',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Basil&oldid=1375753314',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-berberis-vulgaris': {
+      kind: 'entry',
+      title: 'Berberis vulgaris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Berberis_vulgaris&oldid=1378745653',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-callistephus': {
+      kind: 'entry',
+      title: 'Callistephus',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Callistephus&oldid=1364266549',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-cascabela-thevetia': {
+      kind: 'entry',
+      title: 'Cascabela thevetia',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Cascabela_thevetia&oldid=1352558539',
+      accessed: '2026-10-11',
+    },
     'wikipedia-celastrus-scandens': {
       kind: 'entry',
       title: 'Celastrus scandens',
@@ -111,6 +181,76 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Erythronium americanum',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Erythronium_americanum&oldid=1317640579',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-fagus-sylvatica': {
+      kind: 'entry',
+      title: 'Fagus sylvatica',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Fagus_sylvatica&oldid=1377220777',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-ficus-benghalensis': {
+      kind: 'entry',
+      title: 'Ficus benghalensis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ficus_benghalensis&oldid=1373022388',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-fraxinus-excelsior': {
+      kind: 'entry',
+      title: 'Fraxinus excelsior',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Fraxinus_excelsior&oldid=1377214339',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-geum-urbanum': {
+      kind: 'entry',
+      title: 'Geum urbanum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Geum_urbanum&oldid=1367046657',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-laurus-nobilis': {
+      kind: 'entry',
+      title: 'Laurus nobilis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Laurus_nobilis&oldid=1374863417',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-monarda-didyma': {
+      kind: 'entry',
+      title: 'Monarda didyma',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Monarda_didyma&oldid=1333252509',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-panax-ginseng': {
+      kind: 'entry',
+      title: 'Panax ginseng',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Panax_ginseng&oldid=1369794386',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-phaseolus-vulgaris': {
+      kind: 'entry',
+      title: 'Phaseolus vulgaris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Phaseolus_vulgaris&oldid=1372316115',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-populus-tremuloides': {
+      kind: 'entry',
+      title: 'Populus tremuloides',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Populus_tremuloides&oldid=1369889820',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-prunus-armeniaca': {
+      kind: 'entry',
+      title: 'Prunus armeniaca',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Prunus_armeniaca&oldid=1346731742',
       accessed: '2026-10-11',
     },
     'wikipedia-streptocarpus-ionanthus': {
@@ -1114,7 +1254,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           form: 'Nut',
           substitutes: [
             {
-              name: 'Apricot',
+              identity: 'prunus armeniaca',
             },
             {
               name: 'Peach',
@@ -1844,6 +1984,2489 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
               source: 'ahpa-safety',
               locator: 'p. 657',
               supports: ['safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Apple',
+      canonicalName: 'Malus domestica',
+      nomenclature: 'botanical',
+      description:
+        'The orchard apple is a deciduous tree whose round fruit is now grown all over the world. It comes from Central Asia, where the wild species it descends from, Malus sieversii, can still be found, and was cultivated across Eurasia for thousands of years before European colonists carried it to the Americas. In spring it bears five-petalled blossoms, rose-pink as they open and paling to white, and the fruit ripens in late summer or autumn around a core of seed chambers. Grieve records charred apples in the Swiss lake dwellings and the English custom of wassailing orchards with cider at Christmas, and in Norse myth the goddess Iðunn kept the apples that gave the gods their youth. Celtic lore made it a fruit of knowledge, prophecy and the otherworld: Avalon takes its name from the Welsh for apple tree, and a branch bearing bud, blossom and ripe fruit together was a charm for entering the land of the gods. Wiccan altars are heaped with apples at Samhain, when the fruit is counted among the foods of the dead. In magic the apple belongs above all to love: it is halved and shared with a lover, given to the one desired, and its seeds are counted to foretell a marriage. It also serves healing, rubbed on an ailing part and buried while the Moon wanes, and stands for immortality.',
+      elements: ['water', 'air'],
+      planets: ['Venus', 'Jupiter'],
+      zodiacSigns: ['Aquarius', 'Cancer', 'Libra', 'Taurus'],
+      safetyNotes:
+        'The seeds contain amygdalin, which releases cyanide once digested. A few seeds do no harm, but very large amounts can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.',
+      folkNames: [
+        'Fruit of the Gods',
+        'Fruit of the Underworld',
+        'Silver Branch',
+        'Silver Bough',
+        'Tree of Love',
+        'Orchard Apple',
+        'Domestic Apple',
+      ],
+      deities: [
+        'Venus',
+        'Dionysus',
+        'Apollo',
+        'Hera',
+        'Athena',
+        'Aphrodite',
+        'Diana',
+        'Zeus',
+        'Ceres',
+        'Demeter',
+        'Eros',
+        'Freya',
+        'Manannan mac Lir',
+        'Minerva',
+        'Rhiannon',
+      ],
+      categories: [
+        'Love',
+        'Healing',
+        'Abundance',
+        'Ancestor Work',
+        'Binding',
+        'Creativity',
+        'Divination',
+        'Dream Work',
+        'Fertility',
+        'Prosperity',
+        'Strength',
+        'Success',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Apple',
+          supports: [
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Apple',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Apple',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-apple',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          description:
+            "Kynes reads the fruit's colour into a spell: red fruit for love, passion and desire, yellow or gold for success, and green for abundance and prosperity.",
+          colors: ['red', 'yellow', 'gold', 'green'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apple',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Apple',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-apple',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'Cunningham adds apple blossom to sachets, brews and incense for love, and steeps it in melted pink wax, straining it out afterwards, to make candles burned to draw love.',
+          colors: ['white', 'pink'],
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Apple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apple',
+              supports: ['colors'],
+            },
+            {
+              source: 'wikipedia-apple',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Apple wood is made into charms for long life and carved into magical images, and Cunningham counts it an excellent wood for wands, especially for emotional magic and rites of love. Kynes burns a small piece to scent the home and draw abundance.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Apple',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apple',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Apricot',
+      canonicalName: 'Prunus armeniaca',
+      nomenclature: 'botanical',
+      description:
+        'Prunus armeniaca, the apricot most widely grown, is a small tree of eight to twelve metres with oval, finely toothed leaves and white to pinkish five-petalled flowers that open one or two together in early spring, ahead of the leaves. Its fruit, like a small peach, ripens from yellow to orange, often flushed red on the side facing the sun, and holds a single seed inside a hard stone. Genetic studies place its origin in Central Asia; the species name records an older belief that it came from Armenia, which Grieve set aside in favour of northern China and the Himalaya. She dates its arrival in England, from Italy, to the reign of Henry VIII. Apricots have long been dried for keeping and for trade. In China the tree is tied to learning and to medicine: Confucius was said to teach among apricot trees, and the physician Dong Feng took as his only fee that cured patients set apricot trees in his orchard. Kynes records that in north-eastern China the fruit was thought to confer prophecy, and that it is one candidate for the golden apples of Hera’s garden. In magic it is a plant of love: the fruit is eaten to sweeten the temper, its juice goes into love potions, and its flowers suit a handfasting or an anniversary.',
+      elements: ['water'],
+      planets: ['Venus', 'Neptune', 'Sun'],
+      zodiacSigns: ['Taurus'],
+      safetyNotes:
+        'The kernel inside the stone is poisonous. Kynes warns that it is toxic if eaten and can kill, and that in Prunus species both seeds and leaves give rise to cyanide in the gut; Cunningham marks the seeds as not recommended for internal use. The Seed form gives the safety handbook’s detail.',
+      folkNames: [
+        'Umublinkosi',
+        'Xing Ren',
+        'Armenian Plum',
+        'Chinese Apricot',
+        'Apricock',
+        'Chinese Bitter Almond',
+      ],
+      deities: ['Venus', 'Aphrodite'],
+      categories: [
+        'Love',
+        'Harmony',
+        'Creativity',
+        'Divination',
+        'Fertility',
+        'Knowledge',
+        'Peace',
+        'Prophecy',
+        'Purification',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Apricot; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Apricot',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 702',
+          supports: ['canonicalName', 'folkNames'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Apricot',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-prunus-armeniaca',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          colors: ['yellow', 'orange'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apricot',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Apricot',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-prunus-armeniaca',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'Cunningham adds apricot leaves and flowers to love sachets, and Kynes uses the flowers at a handfasting or an anniversary to bring lovers together.',
+          colors: ['white', 'pink'],
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Apricot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apricot',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-prunus-armeniaca',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The kernel inside the stone. Cunningham has the stones carried to attract love. Grieve notes that Eau de Noyaux, a French liqueur, is made from bitter apricot kernels, and that the kernels yield both a fixed oil and an essential oil that contains amygdalin.',
+          safetyNotes:
+            'AHPA safety class 3: the kernel is for use only with a qualified expert overseeing it, and should not be sold loose in bulk or given to children. Bitter kernels hold cyanide-forming glycosides (up to 8% amygdalin); sweet kernels hold very little, and the cautions concern the bitter kind. Fatal and non-fatal poisonings have followed eating apricot kernels: 10 to 20 kernels have been reported as a toxic dose for a child and 40 to 60 for an adult. Symptoms include nausea, vomiting, stomach pain, headache, dizziness, breathlessness and palpitations, and in severe cases coma and death from respiratory failure. Rats fed high-amygdalin kernel had fewer surviving young; safety while nursing is not established. Cunningham marks the seeds as not recommended for internal use.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Apricot; p. 266',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Apricot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 702–704; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The fixed oil pressed from the kernels, which Kynes lists as apricot kernel oil and Grieve says usually went on sale under the name peach kernel oil. Grieve describes it as very like almond oil and used in its place, prized in cosmetics for softening the skin and in soaps and cold creams. In seventeenth-century England apricot oil was used in herbal treatments for tumours, swellings and ulcers.',
+          safetyNotes: 'The oil pressed from apricot kernels contains no cyanogenic glycosides.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Apricot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Apricot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-prunus-armeniaca',
+              supports: ['description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 703',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Arnica',
+      canonicalName: 'Arnica montana',
+      nomenclature: 'botanical',
+      description:
+        'Arnica is an aromatic perennial of the daisy family, about 18 to 60 centimetres tall, with a flat rosette of downy, oval leaves and large orange-yellow flower heads from May to August. It grows across most of Europe on poor, acid ground, above all in alpine meadows up to almost three thousand metres, and never on lime; it is becoming rarer as farming intensifies and wild plants are gathered for sale. It has a long history in European folk medicine, where a tincture of the flowers or the root was applied to sprains, bruises and wounds, although the plant is toxic when swallowed. German custom was to pick it at Midsummer and hang it on houses as a guard against lightning, hail and fire. Hildegard von Bingen linked it with wolves and noted it as an aphrodisiac used in love magic, and the old name leopard’s bane comes from confusing it with a different plant, Doronicum pardalianches. Kynes associates it with water, Saturn and Hecate, and uses it for love, protection, peace and psychic ability: a candle dressed with its oil serves a love spell, its seeds are scattered at the corners of a property to raise a shield of safety, and its energy quietens restless spirits in a home.',
+      elements: ['water'],
+      planets: ['Saturn'],
+      safetyNotes:
+        'AHPA safety class 3 for internal use and 2d for external use: not to be taken by mouth unless a qualified expert oversees it, and never to be applied to broken skin or open wounds. Swallowing it has caused severe poisoning, with fever, racing heart and raised liver enzymes, and deaths have been reported; it irritates the mucous membranes and can cause stomach pain, diarrhoea and vomiting. It contains sesquiterpene lactones that cause allergic contact dermatitis in sensitive people, and people allergic to other plants of the daisy family, sunflower, marigold and feverfew among them, should be cautious. Overdoses have caused miscarriage, and safety while nursing is not established. Kynes adds that long external use can irritate the skin.',
+      folkNames: [
+        'Mountain Arnica',
+        "Leopard's Bane",
+        'Mountain Daisy',
+        'Sneezewort',
+        "Wolf's Bane",
+        'Wolfsblume',
+        'European Arnica',
+        'Mountain Tobacco',
+      ],
+      deities: ['Hecate'],
+      categories: [
+        'Confidence',
+        'Divination',
+        'Love',
+        'Peace',
+        'Protection',
+        'Psychic Work',
+        'Purification',
+      ],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Arnica',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 87–88; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Arnica',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-arnica-montana',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          colors: ['yellow'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 87',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Arnica',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Arnica',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-arnica-montana',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description:
+            'The rhizome, dug in autumn once the leaves have died back and then dried. Grieve gives a tincture of the root as the British Pharmacopoeia preparation, where the United States used the flowers.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Arnica',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-arnica-montana',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 87',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description: 'Kynes dresses a candle with arnica oil for a love spell.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Arnica',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'For protection, Kynes sprinkles the seeds at the corners of a property while picturing their energy forming a dome of safety over it.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Arnica',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Ash',
+      canonicalName: 'Fraxinus excelsior',
+      nomenclature: 'botanical',
+      description:
+        'The common or European ash is a tall deciduous tree of the olive family, native across mainland Europe from the north of Spain to Russia, east to the Caucasus, and throughout Britain and Ireland, where it favours limestone. Its compound leaves carry seven to thirteen toothed leaflets, its winter buds are jet black, and its winged seeds, called keys, hang in bunches until the following spring. Its tough, springy timber has made spears, bows, tool handles and carts, and in Ireland every hurley. In Norse myth the world tree Yggdrasil, which holds up the nine worlds, is an ash. Old superstitions recorded by Grieve used it to charm away warts and, by passing a child through a split sapling, to cure rupture; Cunningham adds that snakes will not cross its wood, and Kynes that where ash, oak and hawthorn grow together the faery realm may be seen. Culpeper places it under the Sun. In magic it is a tree of protection and of the sea: a solar cross carved from its wood guards against drowning, a staff of it over the door keeps harm away, its leaves under the pillow bring prophetic dreams, and ash burned at Yule brings prosperity.',
+      elements: ['fire', 'air', 'earth', 'water'],
+      planets: ['Sun', 'Mercury', 'Neptune', 'Uranus'],
+      zodiacSigns: ['Capricorn', 'Libra', 'Taurus', 'Virgo'],
+      folkNames: [
+        'Nion',
+        'Asktroed',
+        'Jasen Beli',
+        'Freixo',
+        'Common Ash',
+        'English Ash',
+        'European Ash',
+        'Venus of the Woods',
+      ],
+      deities: [
+        'Poseidon',
+        'Thor',
+        'Neptune',
+        'Mars',
+        'Gwydion',
+        'Ares',
+        'Belenus',
+        'Dagda',
+        'Freyr',
+        'Frigg',
+        'Manannan mac Lir',
+        'Minerva',
+        'Odin',
+      ],
+      categories: [
+        'Protection',
+        'Prosperity',
+        'Communication',
+        'Creativity',
+        'Divination',
+        'Dream Work',
+        'Fertility',
+        'Healing',
+        'Inspiration',
+        'Intuition',
+        'Love',
+        'Prophecy',
+        'Strength',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Ash',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Ash',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Ash Tree',
+          supports: ['planets', 'description'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Ash',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-fraxinus-excelsior',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Bark',
+          description:
+            'Cunningham records a garter of green ash bark once worn against the power of sorcerers and conjurers. Grieve describes the bark, taken from the trunk and preferably the root, as bitter and astringent; it was used to tan nets and given in decoction for intermittent fevers.',
+          safetyNotes: 'Cunningham marks the bark as currently recognised as safe.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Ash; p. 266',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-fraxinus-excelsior',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Cunningham puts ash leaves under the pillow for prophetic dreams, scatters them to the four directions to guard a house, carries them to win love, and leaves a few in a bowl of water by the bed overnight to ward off illness. Kynes records leaves bearing an even count of leaflets as lucky in love charms and divination, and on the Isle of Bute lovers ate the leaves of one ash to dream of their future spouses. Grieve notes their laxative use in herbal medicine.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Ash',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-fraxinus-excelsior',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Cunningham carves ash wood into an equal-armed solar cross carried against drowning, hangs a staff of it over the doorposts against harm, makes healing wands from it, and burns it at Yule for prosperity. Kynes keeps a small ash twig nearby for dream work and journeying.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-fraxinus-excelsior',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The winged keys. Kynes notes that a few carried in the pocket were thought lucky, and lays a ring of them round the base of a candle to strengthen a spell. Grieve records that they were once pickled with salt and vinegar and used in place of capers.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Ash',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Asian Ginseng',
+      canonicalName: 'Panax ginseng',
+      nomenclature: 'botanical',
+      description:
+        "Asian ginseng is a herbaceous perennial, thirty to sixty centimetres tall, native to the mountains of the Russian Far East, north-east China and the Korean peninsula. Its leaves are divided like an open hand into three to five toothed leaflets, a single rounded cluster of small flowers stands above them, and the fruits ripen into round red berries. Below ground is a spindle-shaped taproot, usually branching once or twice, which is the part harvested, most often after five or six years of slow growth. The wild plant is protected in Russia and China, so most ginseng sold is farmed. Its species name is read as 'man-herb' or 'forked root', and a French Jesuit writing from China in 1711 reported that the Chinese name meant 'form of man', after the shape of the root. In Asia it has been taken as medicine for thousands of years and was long counted a cure-all. Chinese myth makes it a gift from the gods to a woman longing for a child; Korean legend says it must be dug with a blade of wood, since metal would spoil its virtue; other tales have the plant glowing and roaming at night. In medieval and Renaissance Europe it was prized as an aphrodisiac, the most human-shaped roots fetching the most. In magic it serves fertility, love, healing and protection: a root bound with pink or red ribbon goes into love and fertility spells, or a small piece is carried to draw romance.",
+      elements: ['fire'],
+      planets: ['Sun'],
+      safetyNotes:
+        'AHPA safety class 1 (its interaction class is A): no contraindications are known. Taking it with stimulants is not advised, since susceptible people may become over-stimulated, and red (steamed) ginseng may strengthen the effect of caffeine. A few case reports describe altered blood clotting in people also taking warfarin, though trials in people and rats found no interaction. It may change blood sugar, so people with diabetes should watch their levels and speak to a qualified practitioner first. Allergic reactions have been reported, and high doses or very long use can bring sleeplessness, nervousness and diarrhoea. Its safety while nursing is not established. Kynes says it should not be taken in pregnancy or while breastfeeding; AHPA notes that a British herbal text rules it out in pregnancy while texts on traditional Chinese medicine raise no such concern. Wikipedia calls its use in pregnancy and breastfeeding potentially unsafe and says children should not take it.',
+      folkNames: ['Korean Ginseng', 'Chinese Ginseng', 'Ren Shen'],
+      categories: ['Fertility', 'Healing', 'Love', 'Protection'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Ginseng',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 619–620; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-panax-ginseng',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 619',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Ginseng',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-panax-ginseng',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'Powdered dried root is sold alongside whole and sliced root, and it has a wishing spell of its own: take a handful to a favourite place outdoors, make the wish, and blow the powder away on the wind.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Ginseng',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Aspen',
+      canonicalName: 'Populus tremuloides',
+      nomenclature: 'botanical',
+      description:
+        "Quaking aspen is a deciduous tree of the cooler parts of North America and the most widespread tree on that continent, found from Canada down to the mountains of central Mexico. It grows quickly, with a tall trunk, smooth pale bark marked by black scars, and nearly round leaves on long, flattened stalks, so that the lightest air sets them shivering: the habit behind its names quaking and trembling aspen. In autumn the foliage turns gold or yellow. A stand often rises from one shared root system, every trunk a clone of the rest, and one such colony, Pando, is thought to be the oldest and heaviest organism alive. Its bitter bark was once taken against fevers in place of quinine and Peruvian bark. Aspen lore from Europe and Ireland links the tree with death and with healing: an Irish glossary of about 900 CE describes an aspen rod for measuring a fresh grave, Russians laid one over the grave of a suspected witch, and in northern England a lock of hair was pinned to an aspen as a cure. Its bark, like willow's, holds salicin. In magic it guards against theft, worked into spells or planted in a garden or field, and a leaf held under the tongue is said to make the speaker eloquent. A pressed leaf is kept to draw prosperity, a dried leaf is crumbled and burned to send a hex back, and a twig on the altar helps in reaching the ancestors.",
+      elements: ['air', 'water'],
+      planets: ['Mercury', 'Saturn', 'Venus'],
+      zodiacSigns: ['Aquarius', 'Capricorn', 'Libra'],
+      safetyNotes: 'Cunningham marks it as currently recognised as safe (his health code G).',
+      folkNames: [
+        'Quaking Aspen',
+        'Trembling Aspen',
+        'American Aspen',
+        'Aspen Poplar',
+        'Mountain Aspen',
+        'Golden Aspen',
+        'Quaking Poplar',
+        'Trembling Poplar',
+        'Shivering Tree',
+        'Popple',
+      ],
+      deities: [
+        'Apollo',
+        'Danu',
+        'Frigg',
+        'Gaia',
+        'Hecate',
+        'Morrigan',
+        'Odin',
+        'Persephone',
+        'Tyr',
+        'Zeus',
+      ],
+      categories: [
+        'Ancestor Work',
+        'Communication',
+        'Courage',
+        'Divination',
+        'Healing',
+        'Knowledge',
+        'Peace',
+        'Prosperity',
+        'Protection',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Aspen; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'folkNames',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Aspen',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+          ],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Poplar, Trembling',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-populus-tremuloides',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Aspen',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Aspen',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Bark',
+          description:
+            'The bark is the part herbalists used. Gathered in spring, it tastes bitter and has no smell, and was given as a tonic and for recurring fevers, a substitute for Peruvian bark; Indigenous North Americans and settlers in the American West drew a quinine substitute from it.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Poplar, Trembling',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-populus-tremuloides',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Aster',
+      canonicalName: 'Callistephus chinensis',
+      nomenclature: 'botanical',
+      description:
+        'The China aster is the only species in its genus, a member of the aster family native to China and Korea. It is an annual or biennial with one upright, mostly unbranched stem between twenty centimetres and a metre tall, leaves with serrated edges, and a single large flower head at the top whose rays are reddish purple in the wild. Grown in China for some two thousand years and in Europe from 1728 or earlier, it has been bred into flowers of many colours and heights, single and double, and is now planted worldwide in cottage gardens and for cutting, flowering from late summer into autumn. Greek myth told that asters were born from the tears of Virgo, falling to earth as stardust, and Cunningham writes that the classical Greeks set the flower on temple altars on feast days, holding it sacred to all the gods; they also burned it to drive off snakes and used it against snakebite. In medieval France and Germany its leaves were burned against evil spirits, and in Germany the flower was used, like a daisy, as a love oracle. Love is its chief work in magic: it goes into love sachets, a bloom is carried to win love, and it is grown in a garden while wishing for love. It is also used for clarity, intuition, inspiration, truth and psychic work.',
+      elements: ['water'],
+      planets: ['Venus'],
+      zodiacSigns: ['Sagittarius', 'Virgo'],
+      safetyNotes: 'Cunningham marks it as currently recognised as safe (his health code G).',
+      folkNames: [
+        'China Aster',
+        'Annual Aster',
+        'Powder Puff Aster',
+        'Michaelmas Daisy',
+        'Starwort',
+      ],
+      deities: ['Venus'],
+      categories: [
+        'Love',
+        'Clarity',
+        'Creativity',
+        'Dream Work',
+        'Inspiration',
+        'Intuition',
+        'Protection',
+        'Psychic Work',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Aster; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Aster',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+          ],
+        },
+        {
+          source: 'wikipedia-callistephus',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          colors: ['purple'],
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Aster',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Aster',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-callistephus',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Avens',
+      canonicalName: 'Geum urbanum',
+      nomenclature: 'botanical',
+      description:
+        'Wood avens, or herb bennet, is a downy perennial of the rose family that grows in shady woodland edges, hedgerows and waysides across temperate Eurasia, and has been introduced to North America. Its wiry stems reach up to sixty centimetres and bear small flowers of five bright yellow petals, followed by bristling seed heads whose hooks catch in the fur of passing animals. Freshly dug, the root smells of cloves, because it holds eugenol, the compound found in the spice; it seasoned soups and flavoured ale, was laid among linen to keep moths away, and old physicians named a day in late March for lifting it, when its scent was strongest. Herb bennet is a worn-down form of the Latin herba benedicta, the blessed herb. Medieval Christians saw the Trinity in its three-part leaves and the Five Wounds in its five petals, and thirteenth-century masons carved it on the capitals of columns. Folk belief held that the root put evil spirits and the Devil to flight, so people wore it as an amulet against venomous creatures and mad dogs and hung over doorways. Culpeper set it under Jupiter. Magically, it goes into incenses for exorcism, scattered around a room to cleanse it, used in purification rites and love charms, and kept for abundance and protection.',
+      elements: ['fire'],
+      planets: ['Jupiter'],
+      zodiacSigns: ['Pisces'],
+      safetyNotes: 'Cunningham marks it as not recommended for internal use (his health code X).',
+      folkNames: [
+        'Wood Avens',
+        'Herb Bennet',
+        'Bennet',
+        'Way Bennet',
+        'Blessed Herb',
+        "St. Benedict's Herb",
+        'Herb Bonet',
+        'Clove Root',
+        'Colewort',
+        'City Avens',
+        'Wild Rye',
+        'Goldy Star',
+        'Golden Star',
+        'Gold Star',
+        'Star of the Earth',
+        'Harefoot',
+        "Rams' Foot",
+        'Pesleporis',
+        'Minarta',
+        'Yellow Avens',
+      ],
+      categories: ['Purification', 'Love', 'Abundance', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Avens; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Avens',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+          ],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Avens',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Avens',
+          supports: ['description', 'planets', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-geum-urbanum',
+          supports: ['canonicalName', 'description', 'planets', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Avens',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Avens',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-geum-urbanum',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          colors: ['yellow'],
+          description: 'The small yellow flowers are pressed and dried to make a love charm.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Avens',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-geum-urbanum',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The round, spiky seed heads, burrs that hook onto fur, are gathered and used to turn aside a jinx or other magic sent against you.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Avens',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-geum-urbanum',
+              supports: ['description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Avocado',
+      canonicalName: 'Persea americana',
+      nomenclature: 'botanical',
+      description:
+        "An evergreen of the laurel family, the avocado is native to the Americas and grows nine to twenty metres tall with glossy, lance-shaped leaves and small pale green or yellowish flowers that have no petals. Botanically its fruit is a large berry around a single big seed; by cultivar the skin ripens green, brown, purplish or black over buttery, golden-green flesh. Archaeology shows people in Central and South America eating it thousands of years ago, and in Mesoamerica it was an important food crop, often handed over as tribute. The English name came by way of the Spanish aguacate from the Nahuatl āhuacatl. Kynes relates that the Aztecs, seeing the fruit hang in pairs, also used that word for 'testicle', though the fruit was its first sense and the other a euphemism. Eating avocados was thought to give a man strength and vigour and to heighten his virility, even the scent of the ripening fruit was counted erotic, and the English buccaneer William Dampier wrote that it roused lust. In magic the fruit is eaten to take on that lust and to draw a lover, a tree raised from the stone is kept indoors to bring love into the house, and the stone itself is carried for beauty.",
+      elements: ['water', 'earth'],
+      planets: ['Venus'],
+      zodiacSigns: ['Libra'],
+      safetyNotes:
+        'The leaves, branches and seeds are not for internal use. Some people are allergic to avocado: people allergic to tree pollen can react in the mouth and throat soon after eating it, and in latex-fruit syndrome, linked to latex allergy, the reaction can include hives over the body, stomach pain and vomiting, and is occasionally life-threatening. The leaves, bark, skin and stone can badly harm or kill many animals, among them cats, dogs, horses, cattle, goats, rabbits, birds and fish; the leaves hold a toxin, persin, to which birds seem especially sensitive.',
+      folkNames: [
+        'Alligator Pear',
+        'Avocado Pear',
+        'Butter Pear',
+        'Spanish Pear',
+        'Zaboca',
+        'Ahuacatl',
+      ],
+      categories: [
+        'Love',
+        'Lust',
+        'Abundance',
+        'Fertility',
+        'Healing',
+        'Prosperity',
+        'Strength',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Avocado; p. 266',
+          supports: [
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Avocado',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-avocado',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Avocado',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Avocado',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-avocado',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The stone, or pit, is grown into a plant at home to bring love into the household, and carried about the person to promote beauty.',
+          safetyNotes:
+            'Cunningham marks the seeds as not for internal use. The pit is among the parts of the plant documented as harmful to many animals.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Avocado; p. 266',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-avocado',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Wands cut from avocado wood are held to be strong instruments, fit for any magical purpose.',
+          safetyNotes: 'Cunningham marks the branches as not for internal use.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Avocado; p. 266',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Oil from the rich, fatty fruit is costly to make and goes into salads, dips and cooking, and into cosmetics and soap. In a healing spell, Kynes dresses a green candle with it.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Avocado',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-avocado',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bamboo',
+      canonicalName: 'Bambusa vulgaris',
+      nomenclature: 'botanical',
+      description:
+        'Common bamboo is a towering, woody grass that grows in open clumps. Its native range runs from Bangladesh, India and Sri Lanka through Southeast Asia to the Yunnan province of southern China, and it is now the most widely planted bamboo across the tropics and subtropics. Its culms, or stems, rise ten to twenty metres; in the golden forms they are lemon-yellow with green stripes. It seldom flowers and sets no seed, spreading by its rhizomes and from cuttings instead. The culms are built into shelters, boats, furniture and flutes, and the young shoots are eaten cooked or pickled across Asia. Many Asian cultures held bamboo sacred. In China temple priests cast pieces or sticks of it to read omens, and the sticks later used for fortune telling were also called the Oracle of Kuan Yin; the Chinese burned it and kept it as a charm to repel evil spirits, a power the Tibetans and Indonesians credited it with too. In magic a wish or a pentagram is carved on a length of bamboo that is then buried or planted, a clump grown by the house brings luck to all inside, and a piece hung over the door is lucky because the wood keeps its colour. It is carried, grown or burned as powdered wood to break hexes, a bamboo flute is played to call good spirits, and divination tools are kept in a bamboo box.',
+      elements: ['air'],
+      planets: ['Sun'],
+      safetyNotes:
+        'Cunningham lists bamboo as recognised as safe. The shoots of this species, alone among bamboos, contain taxiphyllin, a highly toxic cyanogenic glycoside that breaks down readily in boiling water; the shoots are eaten cooked or pickled. Eating large amounts of the leaves has caused neurological illness in horses. In Nigeria people drink a leaf infusion to bring on abortion, an effect shown in rabbits.',
+      folkNames: ['Common Bamboo', 'Golden Hawaiian Bamboo', 'Ohe', 'Kauayan-Kiling'],
+      deities: ['Hina', 'Kuan Yin', 'Thoth'],
+      categories: [
+        'Protection',
+        'Hex-Breaking',
+        'Harmony',
+        'Courage',
+        'Divination',
+        'Dream Work',
+        'Love',
+        'Peace',
+        'Strength',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Bamboo; p. 266',
+          supports: ['canonicalName', 'categories', 'folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bamboo',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-bambusa-vulgaris',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Wood',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Bamboo',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bamboo',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Banyan',
+      canonicalName: 'Ficus benghalensis',
+      nomenclature: 'botanical',
+      description:
+        "The banyan is a fig tree whose home is the Indian subcontinent, and it is India's national tree. Like many figs it is a strangler: it begins life as an epiphyte resting on another tree, which in time it wraps round and engulfs. An evergreen that can reach thirty metres, it lets down aerial roots that take hold in the soil and thicken into woody trunks, so that one tree may spread outward over a great area. Indian specimens rank with the world's biggest trees by the ground their crowns cover; Thimmamma Marrimanu in Andhra Pradesh spreads over more than nineteen thousand square metres. Birds such as mynas eat the figs, and seeds that pass through a bird sprout more readily. The tree is sacred in India. Hindus revere it and plant it beside their temples, which are often built close to one. In Theravada Buddhism the Kassapa Buddha is said to have reached enlightenment under a banyan, and Jains hold that Adhinath, the first Tirthankara, did likewise. In Hawaii and across Polynesia it was bound up with Maui's worship. In magic merely sitting under a banyan, or even looking at one, is said to bring good luck, and a couple wed beneath its branches are assured of a happy marriage.",
+      elements: ['air'],
+      planets: ['Jupiter'],
+      safetyNotes: 'Cunningham lists the banyan as recognised as safe.',
+      folkNames: [
+        'Arched Fig',
+        'Indian Fig Tree',
+        'Indian God Tree',
+        'Vada Tree',
+        'Banyan Fig',
+        'Indian Banyan',
+        'Audrey Fig',
+        'Nuga',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Banyan; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'wikipedia-ficus-benghalensis',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Whole',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Banyan',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-ficus-benghalensis',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Barberry',
+      canonicalName: 'Berberis vulgaris',
+      nomenclature: 'botanical',
+      description:
+        "Barberry is a thorny deciduous shrub of up to four metres. It grows wild from southern England across central and southern Europe to north-west Africa and western Asia, and has naturalised in northern Europe and in North America. Its small oval leaves, finely toothed, grow in clusters above three-pronged spines; drooping sprays of yellow flowers open in late spring, and oblong red berries follow, edible but sharply sour. The berries have long gone into jams, jellies and comfits, and in Iran the dried fruit, zereshk, is cooked with rice. Roots and bark were used to dye wool, leather and linen yellow. The shrub hosts wheat stem rust, which bears out the long-held belief of English and French farmers that it spoiled nearby grain, and a medieval French law barred planting it near grain fields. The Greeks, Romans and Egyptians used it as medicine, and Culpeper set it under Mars as a purge for choler. In medieval Europe it was believed to keep evil away, in England felling the bush was thought to break a spell, and Italians called it Holy Thorn, believing Christ's crown of thorns was made from it. In magic a dried root is worn for protection as a talisman, or several are laid around a property to drive off negative energy and draw abundance.",
+      elements: ['earth'],
+      planets: ['Jupiter', 'Mars', 'Venus'],
+      zodiacSigns: ['Scorpio', 'Taurus'],
+      safetyNotes:
+        'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner. The caution rests mainly on the isolated alkaloid berberine, which stimulated the womb in tests on excised mouse tissue and may displace bilirubin and cause jaundice in newborns, though several studies of berberine in pregnant rats and mice found no harm to the unborn young at more than 75 times the usual human dose. Use while nursing is not recommended, and berberine passes into breast milk. Use is cautioned for people with severe or acute liver disease, septic inflammation of the gallbladder, unconjugated hyperbilirubinaemia, intestinal spasm or blockage, or liver cancer. Studies of berberine taken with the drug cyclosporine have given mixed results, one showing raised levels of the drug. Kynes warns that every part of the plant is mildly toxic if eaten.',
+      folkNames: [
+        'Common Barberry',
+        'European Barberry',
+        'Berberry',
+        'Berbery',
+        'Dragon Grape',
+        'Sow Berry',
+        'Pipperidge Bush',
+        'Holy Thorn',
+      ],
+      categories: ['Abundance', 'Clarity', 'Healing', 'Prosperity', 'Protection'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Barberry and Oregon Grape',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 130–131; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Barberry, Common',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Barberry',
+          supports: ['planets', 'description'],
+        },
+        {
+          source: 'wikipedia-berberis-vulgaris',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 130',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Barberry and Oregon Grape',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Bark',
+          description:
+            'The bark of the stems and of the root is the part Grieve names for use. Shaved and dried, it is bitter, turns the saliva yellow when chewed, and with alum dyes linen a fine yellow. Culpeper boiled the inner rind in white wine and took a little each morning to cleanse the body of choler.',
+          safetyNotes:
+            'The root bark holds about 6.1% berberine, against about 0.4% in the woody part of the root.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Barberry, Common',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. Barberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 130',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Berry',
+          description:
+            'The tart red berries are made into jam and jelly in Europe, were once pickled to garnish dishes, and in Iran are dried as zereshk and cooked with rice and chicken. Kynes suggests holding a few while meditating before an important decision, especially a financial one, to see the choice clearly.',
+          references: [
+            {
+              source: 'wikipedia-berberis-vulgaris',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Barberry, Common',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Barberry and Oregon Grape',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Barley',
+      canonicalName: 'Hordeum vulgare',
+      nomenclature: 'botanical',
+      description:
+        "Barley is a cereal of the grass family, grown for its grain in temperate regions all over the world. It was one of the first crops ever domesticated, in the Fertile Crescent in roughly 9000 BC, and had spread across Eurasia by 2000 BC. Each of its spikelets bears a long, slender bristle, which gives the ears their tufted look. Most of today's crop feeds livestock; much of the remainder is malted for brewing beer and distilling whisky, and the grain also goes into soups, stews and bread. The initiates of the Eleusinian Mysteries in Greece drank a preparation of barley and herbs, and Demeter's name may first have meant 'barley-mother', while in English folk song John Barleycorn is a personification of the grain and of the beer brewed from it. Kynes notes that in Palestine children wore barley as an amulet of protection, and that across Europe and the British Isles its grains were used to read the future in love. Cunningham puts the grain, or barley water, into love spells, and scatters it about to ward off evil and negativity.",
+      elements: ['earth'],
+      planets: ['Venus', 'Saturn'],
+      zodiacSigns: ['Virgo'],
+      safetyNotes:
+        'AHPA safety class 1 (the sprouted seed). Allergic reactions to barley, anaphylaxis among them, have been reported, some after drinking beer, and workers handling barley grain dust day to day have developed asthma and contact dermatitis. Barley may lower blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Large doses of sprouted barley are taken to reduce or stop breast milk, so a nursing mother who wishes to continue should avoid them. Safety in pregnancy has not been established, and Cunningham marks the sprouted seed as not to be taken internally while pregnant. Because barley contains gluten, it is unsuitable for people with coeliac disease or other gluten-related disorders.',
+      folkNames: ['Malt', 'Barleycorn', 'Yava'],
+      deities: [
+        'Brigid',
+        'Ceres',
+        'Demeter',
+        'Holda',
+        'Inanna',
+        'Isis',
+        'Lugh',
+        'Osiris',
+        'Persephone',
+      ],
+      categories: [
+        'Love',
+        'Healing',
+        'Protection',
+        'Abundance',
+        'Divination',
+        'Fertility',
+        'Prophecy',
+        'Prosperity',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Barley; p. 266',
+          supports: [
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Grain',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Barley',
+          supports: ['planets'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 445–446; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-barley',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 445',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Grain',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Barley',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-barley',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Stem',
+          description:
+            'Barley straw, the dried stalk, carries a charm of its own in Cunningham: to be rid of toothache, wind a straw about a stone while picturing the pain passing into it, then throw the stone into a river or other running water. Kynes records cereal straw in general used in Germany, Belgium, Ireland and England to foretell and to protect, and laid under the dead at Belgian, French and German funerals so that evil spirits stayed away.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Barley',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Grain',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Water',
+          description:
+            'Barley water is made by boiling the grain in water, a drink and remedy known in medieval times, when Avicenna wrote of it. Culpeper counted it a great nourishment for anyone suffering fevers and heat in the stomach. Cunningham names barley water beside the grain itself for use in love spells.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Barley',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. Barley',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-barley',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Basil',
+      canonicalName: 'Ocimum basilicum',
+      nomenclature: 'botanical',
+      description:
+        "Basil, also called great basil or sweet basil, is a tender herb of the mint family, native to tropical and subtropical parts of Asia and Australasia, ranging from Sri Lanka and India across South-East Asia to northern Australia; in cooler countries it is raised each year as an annual. Its glossy oval leaves grow in opposite pairs on square stems, small white flowers crown the plant in a spike, and a bruised leaf gives off a scent of cloves. The name is usually traced to a Greek word for a king. In India it is sacred to Krishna and Vishnu and kept in Hindu homes, and the Greek, Bulgarian, Serbian, Macedonian and Romanian Orthodox churches use it with holy water. Old European writers quarrelled over it: Parkinson passed on the notion that basil, roughly bruised, would breed scorpions, and Culpeper, reasoning it out for himself, assigned it to Mars and Scorpio. The story of Isabella and her pot of basil kept the plant remembered in poetry. In magic it is first a herb of love and of peace between partners; Cunningham also has it carried in the pocket for wealth, put in a shop's till to draw customers, strewn on floors against evil and added to purification baths, and Kynes records it hung in medieval homes against misfortune and given as a love token in Tudor England.",
+      elements: ['fire'],
+      planets: ['Mars', 'Pluto', 'Venus'],
+      zodiacSigns: ['Aries', 'Leo', 'Scorpio'],
+      safetyNotes:
+        'AHPA safety class 2b: avoid in pregnancy unless a qualified healthcare practitioner is supervising. The caution concerns the larger doses taken as medicine, not the amounts used in cooking. Safety while nursing has not been established, and Kynes advises avoiding therapeutic doses both in pregnancy and while breastfeeding. One allergic reaction to basil is on record. Basil may lower blood sugar, so people with diabetes should monitor theirs and consult a practitioner first. Cunningham codes it, in more than ordinary food amounts, as not to be taken internally in pregnancy or while nursing, and not for internal use by infants and toddlers.',
+      folkNames: [
+        'Albahaca',
+        'American Dittany',
+        'Our Herb',
+        "St. Joseph's Wort",
+        'Sweet Basil',
+        'Witches Herb',
+        'Njilika',
+        'Balanoi',
+        'Feslien',
+        'Common Basil',
+        'French Basil',
+        'Great Basil',
+        'Bacia-Nicola',
+      ],
+      deities: ['Vishnu', 'Erzulie', 'Krishna', 'Lakshmi', 'Venus'],
+      categories: [
+        'Love',
+        'Wealth',
+        'Protection',
+        'Courage',
+        'Divination',
+        'Healing',
+        'Peace',
+        'Prosperity',
+        'Psychic Work',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Basil; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Basil',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Garden Bazil, or Sweet Bazil',
+          supports: ['planets', 'zodiacSigns', 'description'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 11–13',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Basil, Sweet',
+          supports: ['deities', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 599–600; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-remedies',
+          locator: 'pp. 206–207',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-basil',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 599',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-remedies',
+              locator: 'p. 207',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Basil',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Basil',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Kynes lists basil essential oil among the forms on sale. Studies of the oil have found it insecticidal and repellent to insects, with possible toxicity to mosquitoes, and active against many kinds of bacteria and fungi.',
+          safetyNotes:
+            'Estragole, one of the alkenylbenzenes, makes up 70–85% of the essential oil, with safrole as a minor constituent. Rats given the oil by mouth every day for two weeks showed erosion of the stomach lining at 2 g/kg a day and above, and swollen liver cells above 1.5 g/kg.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Basil',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-basil',
+              supports: ['description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 599–600',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            "Kynes lists the dried seeds among the forms of basil on sale. Parkinson, as Northcote quotes him, held that the herb's chief physical virtue was to bring a cheerful and merry heart, and for that the seed was mostly taken in powder.",
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Basil',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'northcote-herbs',
+              locator: 'pp. 11–12',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            "Cunningham gives powdered basil a charm for faithfulness: dust it over a sleeping partner's body, above all over the heart, so that fidelity blesses the relationship.",
+          categories: ['Fidelity'],
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Basil',
+              supports: ['form', 'description', 'categories'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bay Laurel',
+      canonicalName: 'Laurus nobilis',
+      nomenclature: 'botanical',
+      description:
+        "Bay laurel is an aromatic evergreen shrub or tree of the laurel family, native to the Mediterranean. Its leathery, smooth-edged leaves come to a sharp point and are the bay leaves of the kitchen; male and female flowers, small and pale yellow-green, grow on separate plants, and the small berries ripen black. The Greeks called it daphne after the nymph who, in Ovid's version of the myth, was turned into a laurel to escape Apollo, and the tree became the god's own: victors at the Pythian Games won its wreaths, and his priestess at Delphi reputedly chewed the leaves before uttering prophecy. Rome made it a token of victory, and generals sent the Senate news of their triumphs wrapped in its leaves. People long believed lightning would spare the spot where a bay grew, yet in England a withering bay tree foretold a death, and bays were paired with rosemary at weddings and funerals alike. Culpeper placed it under the Sun and Leo as a tree that resists witchcraft. In magic it stands among the chief herbs of protection and purification: Cunningham has it worn against evil, burned at exorcisms, hung to stop poltergeists and set under the pillow for prophetic dreams, while wishes are written on its leaves and burned to bring them about.",
+      elements: ['fire', 'air'],
+      planets: ['Sun'],
+      zodiacSigns: ['Gemini', 'Leo', 'Pisces'],
+      safetyNotes:
+        "AHPA safety class 1. Foods and skin products containing the leaf or its essential oil have caused allergic skin reactions (contact dermatitis), confirmed by patch tests. Safety in pregnancy and while nursing has not been established; Kynes advises avoiding bay in pregnancy and while breastfeeding, and not taking it alongside pain or sedative medication. Cunningham codes it as currently recognised safe. Grieve warns against mistaking the leaves of the poisonous cherry laurel, which now usually takes the name laurel, for bay's.",
+      folkNames: [
+        'Baie',
+        'Bay Tree',
+        'Daphne',
+        'Grecian Laurel',
+        'Laurel',
+        "Laurier d'Apollon",
+        'Laurier Sauce',
+        'Lorbeer',
+        'Noble Laurel',
+        'Roman Laurel',
+        'Sweet Bay',
+        'True Laurel',
+        'True Bay',
+        'Bay',
+      ],
+      deities: [
+        'Apollo',
+        'Ceres',
+        'Faunus',
+        'Eros',
+        'Adonis',
+        'Artemis',
+        'Asclepius',
+        'Bacchus',
+        'Cernunnos',
+        'Diana',
+        'Dionysus',
+        'Gaia',
+        'Helios',
+        'Hermes',
+        'Mars',
+        'Mercury',
+        'Ra',
+        'Vesta',
+      ],
+      categories: [
+        'Protection',
+        'Psychic Work',
+        'Healing',
+        'Purification',
+        'Strength',
+        'Abundance',
+        'Banishing',
+        'Creativity',
+        'Divination',
+        'Dream Work',
+        'Intuition',
+        'Justice',
+        'Legal Matters',
+        'Love',
+        'Peace',
+        'Prophecy',
+        'Prosperity',
+        'Release',
+        'Success',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Bay; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bay',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. The Bay Tree',
+          supports: ['planets', 'zodiacSigns', 'description'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 141–144',
+          supports: ['canonicalName', 'description'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Laurel (Bay)',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 502; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-remedies',
+          locator: 'pp. 207–208',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-laurus-nobilis',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 502',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Bay',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-remedies',
+              locator: 'p. 207',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            "Distilling the leaves gives a greenish-yellow volatile oil used in perfumery, and the berries yield a fixed oil, Oil of Bays, used on sprains and bruises. Kynes lists the essential oil among bay's forms. Grieve cautions that the West Indian oil distilled for bay rum comes from another plant, Pimenta acris, though it too is called oil of bay.",
+          safetyNotes:
+            'The essential oil has caused allergic skin reactions, confirmed by patch tests. Its main component, 1,8-cineole (eucalyptol), makes up 36–46% of the leaf oil. The oral LD50 in rats is 3.95 g/kg.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Laurel (Bay)',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bay',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 502–503',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Be-Still',
+      canonicalName: 'Cascabela thevetia',
+      nomenclature: 'botanical',
+      description:
+        "Be-still is the yellow oleander, a poisonous evergreen shrub or small tree of the dogbane family, native to Mexico and Central America and grown widely for ornament. It is related to the true oleander, from which it takes its common name. Its narrow, glossy leaves resemble a willow's and carry a waxy coat, its long funnel-shaped flowers are usually yellow but sometimes apricot or white, and its deep red-black fruit encloses a single large seed. The genus name comes from Spanish words for a little bell or a rattlesnake's rattle, perhaps in reference to a toxicity likened to rattlesnake venom, and the species name honours André de Thevet, the sixteenth-century French Franciscan who explored Brazil and Guiana. Older works file it under Thevetia peruviana, the name Cunningham uses. In frost-prone gardens it is kept in a pot and brought indoors for the winter. Its single recorded magical use is for luck: Cunningham writes that Sri Lankans call the seeds lucky beans and carry them as charms to draw good fortune.",
+      safetyNotes:
+        'Cunningham marks it as a poison. Every part of the plant is toxic to most vertebrates: it contains cardiac glycosides, chiefly thevetin A and B, which closely resemble the digoxin of foxglove and survive both drying and heating. Poisoning causes stomach upset and effects on the heart, including an abnormally slow heartbeat and abnormally high potassium in the blood. Many accidental and deliberate poisonings of people are recorded, some from Tecojote root supplements.',
+      folkNames: [
+        'Trumpet Flower',
+        'Yellow Oleander',
+        'Flor Del Peru',
+        'Lucky Nut',
+        'Kaneru',
+        'Manjal Arali',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Be-Still',
+          supports: ['folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-cascabela-thevetia',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Be-Still',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-cascabela-thevetia',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bean',
+      canonicalName: 'Phaseolus vulgaris',
+      nomenclature: 'botanical',
+      description:
+        'The common bean, Phaseolus vulgaris, is an annual of the legume family, Fabaceae, whose climbing or bushy vines bear leaves in three leaflets, small white, pink or purple flowers, and pods holding four to eight kidney-shaped seeds in a wide range of colours. Wild plants are native to the Americas, and it was domesticated on two separate occasions, once in Mesoamerica and once in the far south of the Andes, some eight thousand years ago; with maize and squash it formed the Three Sisters of Indigenous American farming. It reached Europe in the Columbian exchange, and Culpeper knew it as the French or kidney bean, a weak climber that fruits only when staked, and set it under Venus. Beans in general carry old lore of harvest and death. Cunningham calls them sacred to harvest goddesses and records Roman offerings of beans and pork to Cardea each first of June and beans shared at Roman funerals; Grieve notes that Italians gave beans to the poor each year on the date of a death. Telling fortunes with beans has its own name, favomancy. In magic a dried bean is carried against negativity and hostile sorcery, shaken in rattles to drive off spirits, rubbed on warts under a waning moon, laid with six others in a circle to draw a lover, and held in open palms while meditating on the truth of a matter.',
+      elements: ['air', 'water'],
+      planets: ['Mercury', 'Saturn', 'Venus'],
+      zodiacSigns: ['Gemini', 'Libra', 'Virgo'],
+      safetyNotes:
+        'Uncooked or undercooked beans hold phytohaemagglutinin, a lectin found at its highest levels in red kidney beans; eating just four or five soaked but uncooked beans can bring on nausea, vomiting and diarrhoea one to three hours later, usually passing within hours. To destroy it, steep dried beans in water for five hours or more, throw the water away, then boil them for thirty minutes; a slow cooker at about 80 °C is not hot enough. Cunningham warns that beans not meant for eating may be poisonous.',
+      folkNames: [
+        'Common Bean',
+        'French Bean',
+        'Kidney Bean',
+        'Haricot',
+        'Navy Bean',
+        'White Kidney Bean',
+        "Poor Man's Meat",
+      ],
+      deities: ['Demeter', 'Cardea', 'Apollo', 'Ceres', 'Dionysus'],
+      categories: [
+        'Protection',
+        'Reconciliation',
+        'Love',
+        'Courage',
+        'Creativity',
+        'Psychic Work',
+        'Strength',
+        'Truth',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Bean',
+          supports: [
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bean',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. French Beans',
+          supports: ['planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Bean, Kidney',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-phaseolus-vulgaris',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bean, Kidney',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Bean',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bean',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-phaseolus-vulgaris',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bearberry',
+      canonicalName: 'Arctostaphylos uva-ursi',
+      nomenclature: 'botanical',
+      description:
+        "Bearberry, Arctostaphylos uva-ursi, is a low evergreen shrub of the heath family, Ericaceae, standing five to thirty centimetres high, whose long trailing stems root as they spread and knit into thick mats. Its small leathery leaves are glossy dark green above and paler below; in May and June drooping clusters of urn-shaped flowers, white to pink, open at the shoot tips and are followed by shiny red berries that bears and other animals eat. It grows right round the northern world, in the far north and on high ground further south, and in Britain mostly on the Scottish hills. Its Greek genus name and its Latin species name both mean the bear's grape. The astringent leaves, rich in tannin and arbutin, are an old remedy for the bladder and urinary tract: the thirteenth-century Welsh Physicians of Myddfai knew them, and in Sweden and Russia they were used to tan leather. Kinnikinnick, an Algonquian word for a smoking mixture, names both the plant and the blends of its dried leaves smoked in North American ceremonies, sometimes with tobacco, to seal a pact or calm a thunderstorm. In magic the leaves go into sachets to raise psychic power, the plant serves protection, intuition and strength, and in hoodoo it is put into mojo bags and candle work.",
+      elements: ['earth'],
+      planets: ['Mars', 'Pluto', 'Venus'],
+      zodiacSigns: ['Scorpio'],
+      safetyNotes:
+        'AHPA safety class 1, interaction class A: no contraindications, other precautions or drug interactions are known, and the handbook found no evidence behind the older warning against use with kidney disorders. The dried leaf holds up to 12 per cent arbutin and related compounds that give rise to hydroquinone. One case of damage to the retina (maculopathy) followed long-term use, and it can turn the urine brownish green. No studies of its safety in pregnancy were found, and its safety while nursing is not established. Kynes warns that large amounts can be toxic and that it is not for use in pregnancy. Cunningham marks it Poison and codes it against internal use in pregnancy, with kidney problems or acidic urine, and for long periods, as liable to upset digestion, and as a gastrointestinal irritant.',
+      folkNames: [
+        'Arberry',
+        "Bear's Grape",
+        'Kinnikinnick',
+        'Mealberry',
+        'Mountain Box',
+        'Mountain Cranberry',
+        'Red Bearberry',
+        'Sagackhomi',
+        'Sandberry',
+        'Uva Ursi',
+        'Bear Whortleberry',
+        "Bear's Bilberry",
+        'Crowberry',
+        'Upland Cranberry',
+        'Fox-Plum',
+        'Hog-Crawberry',
+        'Barren Myrtle',
+      ],
+      categories: ['Psychic Work', 'Intuition', 'Protection', 'Strength'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Uva Ursa; p. 266',
+          supports: ['canonicalName', 'categories', 'folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Uva Ursi',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 79–80; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Bearberry',
+          supports: ['canonicalName', 'description'],
+        },
+        {
+          source: 'wikipedia-arctostaphylos-uva-ursi',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 79',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bearberry',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Uva Ursi',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-arctostaphylos-uva-ursi',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Berry',
+          description:
+            'The berries are small, round and a glossy bright red, with a dry, mealy pulp around a few hard stones. They can be eaten raw but taste of little until boiled and dried, and bears and grouse feed on them. In Iceland a bearberry kept in the pocket was believed to guard its bearer against evil spirits and ghosts.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Uva Ursi',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bearberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-arctostaphylos-uva-ursi',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bee Balm',
+      canonicalName: 'Monarda didyma',
+      nomenclature: 'botanical',
+      description:
+        'Bee balm, Monarda didyma, is a perennial of the mint family, Lamiaceae, native to the east of North America, from Maine, Ontario and Michigan south to northern Georgia, where it grows thickly along stream banks, in damp thickets and in ditches. It stands sixty centimetres to a little over a metre tall on square stems, with paired, toothed leaves that smell of mint when bruised, and through the summer it carries rounded heads of ragged, tubular scarlet flowers whose nectar draws bees and hummingbirds. Its scent recalls the bergamot orange, which is why it is also called bergamot. The genus honours Nicolas Monardes, who in 1569 became the first European to write a description of the plants of the Americas. Many Indigenous nations used it as medicine; the Blackfoot made poultices of it for wounds and skin infections. The people of Oswego brewed its leaves, and the drink caught on among English settlers once the Boston Harbor protest cut off their tea, so it is still known as Oswego tea. In England its flowers were thought unlucky to bring indoors, though a leaf carried in a pocket or purse was believed to bring money. In magic it serves purification, clarity, peace and success.',
+      elements: ['air'],
+      planets: ['Mercury', 'Moon', 'Venus'],
+      zodiacSigns: ['Gemini', 'Virgo'],
+      safetyNotes:
+        'AHPA safety class 2b, interaction class A, in its monograph on Monarda species, this one among them: traditionally used to bring on menstruation, so not to be taken during pregnancy unless a qualified practitioner oversees it. No other precautions, drug interactions or side effects are known, and its safety while nursing has not been conclusively established.',
+      folkNames: [
+        'Scarlet Bee Balm',
+        'Scarlet Bergamot',
+        'Bergamot',
+        'Bergamot Mint',
+        'Gold Melissa',
+        'Indian Nettle',
+        'Monarda',
+        'Oswego Tea',
+        'Oswego Beebalm',
+        'Scarlet Monarda',
+        'Crimson Beebalm',
+        'Eau-de-Cologne Plant',
+      ],
+      categories: ['Clarity', 'Peace', 'Prosperity', 'Purification', 'Success'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bee Balm',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 572–573; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Bergamot',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-monarda-didyma',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 572',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The leaves smell of mint when crushed. Steeped young, they make Oswego tea, once drunk daily across much of the United States. English folk belief held that a leaf kept in a pocket or purse would bring money. Dried leaves are sold cut.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bergamot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bee Balm',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-monarda-didyma',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'The flowers are scarlet, ragged tubular florets massed about thirty to a head above reddish bracts, and full of nectar. They went into posies, yet in England they were held to be bad luck indoors, as likely to bring illness or even death. One or two handfuls of dried flowers in the bath make a purifying soak.',
+          colors: ['red'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bee Balm',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-monarda-didyma',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bergamot',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The essential oil is sold for magical work. A few drops go into a purifying bath, and a dab on the third eye is said to bring clarity and focus before a decision. Grieve reports a claim that scarlet monarda yields an oil much like the thymol-rich oil of its relative Monarda punctata, though weaker in it.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bee Balm',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Bergamot',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Beech',
+      canonicalName: 'Fagus sylvatica',
+      nomenclature: 'botanical',
+      description:
+        "Beech, Fagus sylvatica, the European or common beech, is a big deciduous tree of the family Fagaceae, native across much of Europe and usually twenty-five to thirty-five metres tall, with smooth, silvery-grey bark and a short trunk branching low. Saplings and clipped hedges often hold their dead brown leaves all winter. Its small three-sided nuts, two to each prickly husk, ripen in autumn as mast, fed to park deer in England and to pigs and poultry in France, and pressed for an oil used in cooking and lamps. Grieve traces its name, across the Germanic tongues, to a word meaning either beech or book, since runic tablets, the first books, were made of its wood, and Kynes adds that beech sticks often carried runes. Greeks and Romans counted it a lucky tree: the Romans turned bowls and jugs for libations from it, Bacchus was said to drink from a beech cup, and in Greek legend the oracle of Zeus's grove at Dodona lived in a great beech. Norse people held it sacred as an oracle of Thor, and the Swiss, Germans and Belgians read weather and harvest from it. Culpeper put it under Saturn. In magic a wish is carved on a beech stick and buried, and its wood or leaves are carried to stir creativity.",
+      elements: ['fire', 'water'],
+      planets: ['Saturn', 'Jupiter'],
+      zodiacSigns: ['Gemini', 'Sagittarius', 'Virgo'],
+      folkNames: [
+        'European Beech',
+        'Common Beech',
+        'Bok',
+        'Boke',
+        'Buche',
+        'Buk',
+        'Buke',
+        'Faggio',
+        'Fagos',
+        'Faya',
+        'Haya',
+        'Hetre',
+        'Bog',
+      ],
+      deities: [
+        'Apollo',
+        'Athena',
+        'Bacchus',
+        'Cerridwen',
+        'Diana',
+        'Dionysus',
+        'Freya',
+        'Frigg',
+        'Loki',
+        'Odin',
+        'Thor',
+        'Zeus',
+      ],
+      categories: [
+        'Abundance',
+        'Ancestor Work',
+        'Creativity',
+        'Fertility',
+        'Healing',
+        'Knowledge',
+        'Manifestation',
+        'Prophecy',
+        'Prosperity',
+        'Protection',
+        'Psychic Work',
+        'Transformation',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Beech',
+          supports: ['canonicalName', 'planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Beech',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. The Beech Tree',
+          supports: ['planets', 'description'],
+        },
+        {
+          source: 'grieve-herbal',
+          locator: 's.v. Beech',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-fagus-sylvatica',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Wood',
+          description:
+            'Beech wood is fine and short in the grain and easy to work, finish and glue, and goes into furniture, parquet flooring, mallets, bowls and turned goods; it also ranks among the best firewoods. Magically, a stick carved with a wish is buried and left in the ground, a twig placed where it is plainly seen at home is said to promote stability, and the wood is carried to strengthen creativity.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-fagus-sylvatica',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Culpeper judged beech leaves cooling and binding, laid on hot swellings or boiled into a poultice or an ointment in season. In magic the leaves are placed on a Samhain altar in honour of the ancestors, and carried, like the wood, to strengthen creativity.',
+          references: [
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Beech Tree',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Nut',
+          description:
+            'Beechnuts are small and three-sided, two to a woody, prickly husk. People have eaten them, in times of famine according to Grieve, and they were once ground into flour after soaking had drawn out the tannins. In England they were thought to give wisdom and were kept as amulets; a cluster is offered when seeking abundance, and a few are eaten to sharpen second sight.',
+          safetyNotes:
+            'The nuts contain tannins and alkaloids and are mildly toxic eaten in large amounts. Cunningham does not recommend large amounts of the nut for internal use.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-fagus-sylvatica',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Beech; p. 266',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Fully ripe beechmast holds seventeen to twenty per cent oil, of the kind that does not dry, and Grieve names this oil as the part of the tree used. It was pressed in nineteenth-century England for cooking and lamps, is used on the Continent for cooking and burning, and in Silesia stood in for butter; the pressed cake fed cattle. Beechnut oil is still sold.',
+          references: [
+            {
+              source: 'grieve-herbal',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-fagus-sylvatica',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Beech',
+              supports: ['form', 'description'],
             },
           ],
         },
