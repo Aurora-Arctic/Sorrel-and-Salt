@@ -12,17 +12,20 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop       | What it is                                                               |
-| ---------- | ------------------------------------------------------------------------ |
-| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories" |
-| `tabs`     | Each tab's `href` and short label ("Groups", "Traditions"), in row order |
-| `action`   | Optional: the open tab's one action, beside the heading                  |
-| `children` | The open tab's content                                                   |
+| Prop       | What it is                                                                           |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"             |
+| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions") and `filtered`, in row order |
+| `action`   | Optional: the open tab's one action, beside the heading                              |
+| `children` | The open tab's content                                                               |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
-wrapper), `TabPanel` (the content area) and `useTabSwitch`. `panel-loading.tsx` is `TabPanelLoading`, what the
-content area shows while a pressed tab is on its way.
+wrapper), `TabPanel` (the content area) and `useTabSwitch`.
+`panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
+shows while a pressed tab is on its way. A tab's `filtered`, set in
+`ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
+to draw a filter row.
 
 ## Contracts
 
@@ -73,11 +76,12 @@ content area shows while a pressed tab is on its way.
   calls `router.push` inside a React transition (`useTransition`) the row
   and the content area share. Next runs its navigation inside the caller's
   transition, so it stays pending until the new tab has rendered. Until
-  then the content area shows `TabPanelLoading` in place of the old tab's
-  content, every tab is `aria-disabled` and ignores a press, and the
+  then the content area shows the pressed tab's skeleton, `TabPanelLoading`,
+  in place of the old tab's content, every tab is `aria-disabled` and ignores a press, and the
   action beside the heading is `inert`, out of reach of a press or focus;
   the row is `aria-busy`. All clear when the new tab renders, its action
-  replacing the old one in the same render. The pager's soft ends
+  replacing the old one in the same render, and the new content fades in
+  over the skeleton. The pager's soft ends
   hold their own page the same way ([`pager.md`](pager.md)).
 - **Only a plain press is the row's.** A Ctrl, Cmd, Shift or Alt click and a
   middle click keep the browser's behaviour, a new tab or window, by the
@@ -127,10 +131,35 @@ content area shows while a pressed tab is on its way.
   colour (`grayscale`), so a solid button greys as the tabs do.
 - **The content** is a column `space(5)` apart, as `.list-frame` spaces a
   list's.
-- **The loading state** is the muted ink with the buttons' spinner. It fades
-  in after 150ms, so a tab that loads quickly never flashes it. It fades by
-  opacity rather than `visibility`, so a screen reader still hears the
-  status as it arrives. It is an `<output>`, a status by its tag.
+- **The loading state is a skeleton** of the list it stands in for, on the
+  owner's call, so the page does not snap from one tab to the next: where
+  the pressed tab has a filter, a filter row of the query field, a narrower
+  select and the Filter button, with no Add, which sits beside the heading;
+  then a table's heading over the muted hairline and six rows, every second
+  one banded on the card surface as the admin tables are, their bars of
+  uneven lengths; then the pager's two ends, centred. One skeleton serves
+  every tab; a tab with no filter leaves the row out. It is a size
+  container: under `$table-stack-width` of its own width the heading goes
+  and each row is a card on the card surface, its bars stacked and its
+  action across its foot, as `.data-table--stack`'s cards are; under 28rem
+  the filter's shapes stack full width, as the real filter's fields do.
+- **Its fill** is the muted ink 18% into the card surface, as the combobox's
+  quiet fills are, so both themes carry it on the page and on a card; its
+  shimmer, a band 7% into the card surface, passes across every shape every
+  1.4s. No token was added: both are `color-mix`es of existing tokens, and
+  no text sits on them.
+- **Motion.** The skeleton fades in over 150ms as the press takes the old
+  content away, and the new content fades in over 200ms as it replaces the
+  skeleton (`data-arrived` on the content area, set only after a tab
+  switch, so a direct request's content shows at once). The skeleton is
+  shown at once rather than held back a moment, as the spinner it replaced
+  was: the press has already removed the old content, so a held-back
+  skeleton would leave the panel blank, which is the snap it is there to
+  avoid. Under `prefers-reduced-motion: reduce` there is no shimmer and no
+  fade, only the still shapes.
+- **What a screen reader hears.** The shapes are `aria-hidden`. The one
+  status is a visually hidden `<output>`, a status by its tag, saying the
+  tab is loading, which the shapes already say to the eye.
 
 ## Stories
 
@@ -139,8 +168,10 @@ content area shows while a pressed tab is on its way.
 Invitations tab open and Invite Admin beside the heading, as
 `/admin/invitations` draws it. `Default`; `PhoneDark` and `PhoneLight` at
 375px, Invite Admin across the line beneath the heading; and `LoadingState`
-with `LoadingPhoneDark` and `LoadingPhoneLight`, a tab on its way: the
-action and the row greyed out over the content area's loading state. The workshop's stub
+with `LoadingPhoneDark` and `LoadingPhoneLight`, Users on its way: the
+action and the row greyed out over its skeleton with the filter row, the
+rows as cards at 375px; and `LoadingUnfiltered`, the skeleton without the
+filter row. The workshop's stub
 router goes nowhere, so those stories provide `TabSwitchContext` above the
 page, holding a tab on its way; the stub `usePathname` says which address is
 open ([`workshop.md`](../workshop.md), ".ladle/"). The admin lists' own stories

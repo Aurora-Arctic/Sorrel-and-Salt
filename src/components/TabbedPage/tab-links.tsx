@@ -26,7 +26,8 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
   const { pending, go } = useTabSwitch();
   return (
     <ul className="link-row tabbed-page__row" aria-busy={pending || undefined}>
-      {tabs.map(({ href, label }) => {
+      {tabs.map((tab) => {
+        const { href, label } = tab;
         const open = isAtPath(pathname, href);
         const press = (event: MouseEvent<HTMLAnchorElement>) => {
           if (pending) {
@@ -35,7 +36,7 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
           }
           if (open || opensElsewhere(event)) return;
           event.preventDefault();
-          go(href);
+          go(tab);
         };
         return (
           <li key={href}>

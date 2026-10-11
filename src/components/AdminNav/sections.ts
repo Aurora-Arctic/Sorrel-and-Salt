@@ -5,7 +5,8 @@ import type { AdminPage, AdminSection } from './types';
 // drift (MB.115; claude-docs/components/admin-nav.md). A list shares its page
 // with the group list that organises it, a tab each, as Category Groups
 // organise Categories (M5.6b, MB.132), on the owner's call after the design
-// review. Each href is checked against the built routes (typedRoutes).
+// review. Each href is checked against the built routes (typedRoutes). A
+// tab marked `filtered` opens with a filter, which its loading skeleton draws.
 export const ADMIN_PAGES = {
   compendium: {
     label: 'Compendium',
@@ -16,7 +17,7 @@ export const ADMIN_PAGES = {
     label: 'Categories',
     description: 'The categories an ingredient is filed under, and the groups that colour them.',
     tabs: [
-      { href: '/admin/categories', label: 'Categories' },
+      { href: '/admin/categories', label: 'Categories', filtered: true },
       { href: '/admin/category-groups', label: 'Groups' },
     ],
   },
@@ -25,7 +26,7 @@ export const ADMIN_PAGES = {
     description:
       'The forms an ingredient comes in, and the groups that tell two forms of one name apart.',
     tabs: [
-      { href: '/admin/forms', label: 'Forms' },
+      { href: '/admin/forms', label: 'Forms', filtered: true },
       { href: '/admin/form-groups', label: 'Groups' },
     ],
   },
@@ -33,7 +34,7 @@ export const ADMIN_PAGES = {
     label: 'Deities',
     description: 'The deities an ingredient can be linked with, and the traditions they belong to.',
     tabs: [
-      { href: '/admin/deities', label: 'Deities' },
+      { href: '/admin/deities', label: 'Deities', filtered: true },
       { href: '/admin/deity-traditions', label: 'Traditions' },
     ],
   },
@@ -41,8 +42,8 @@ export const ADMIN_PAGES = {
     label: 'Astrology',
     description: 'The planets and zodiac signs an ingredient can be linked with.',
     tabs: [
-      { href: '/admin/planets', label: 'Planets' },
-      { href: '/admin/zodiac-signs', label: 'Zodiac Signs' },
+      { href: '/admin/planets', label: 'Planets', filtered: true },
+      { href: '/admin/zodiac-signs', label: 'Zodiac Signs', filtered: true },
     ],
   },
   people: {
@@ -50,10 +51,10 @@ export const ADMIN_PAGES = {
     description:
       'Every account and its role, the admin invitations waiting, and who changed which privilege.',
     tabs: [
-      { href: '/admin/users', label: 'Users' },
+      { href: '/admin/users', label: 'Users', filtered: true },
       { href: '/admin/invitations', label: 'Invitations' },
       // Who holds which privilege, and who changed it (MB.200).
-      { href: '/admin/privilege-changes', label: 'Privilege Changes' },
+      { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
     ],
   },
 } as const satisfies Record<string, AdminPage>;

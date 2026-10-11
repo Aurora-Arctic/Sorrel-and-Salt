@@ -5,6 +5,11 @@ import type { ReactNode } from 'react';
 export interface PageTab {
   href: Route;
   label: string;
+  /**
+   * Whether the tab's list opens with a filter, so its loading skeleton
+   * draws a filter row above the table; left out, it draws none.
+   */
+  filtered?: boolean;
 }
 
 export interface TabbedPageProps {
@@ -30,8 +35,10 @@ export interface TabLinksProps {
 export interface TabSwitch {
   /** True from a tab's press until Next has rendered it. */
   pending: boolean;
+  /** The tab last pressed, whose skeleton the panel draws while it is on its way. */
+  target?: PageTab;
   /** Navigates to a tab inside the switch's transition. */
-  go: (href: Route) => void;
+  go: (tab: PageTab) => void;
 }
 
 export interface TabSwitchProviderProps {
@@ -41,6 +48,11 @@ export interface TabSwitchProviderProps {
 export interface TabActionProps {
   /** The open tab's action, which greys out while another tab is on its way. */
   children: ReactNode;
+}
+
+export interface TabPanelLoadingProps {
+  /** Whether to draw a filter row above the table: the pressed tab's `filtered`. */
+  filter?: boolean;
 }
 
 export interface TabPanelProps {
