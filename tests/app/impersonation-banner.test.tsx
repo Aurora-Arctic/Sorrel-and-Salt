@@ -72,12 +72,11 @@ describe('the root layout', () => {
   }
 
   // The layout renders <html>, which a test container cannot hold, so its
-  // tree is searched for the slot rather than rendered.
+  // tree is searched for the slot rather than rendered. One environment each
+  // way: which environments turn it on is tests/lib/impersonation.test.ts's.
   it.each([
     { flag: 'true', target: 'preview', mounted: true },
-    { flag: 'true', target: '', mounted: true },
     { flag: 'true', target: 'production', mounted: false },
-    { flag: '', target: 'preview', mounted: false },
   ])(
     'mounts the slot with the flag "$flag" at VERCEL_ENV="$target": $mounted',
     async ({ flag, target, mounted }) => {

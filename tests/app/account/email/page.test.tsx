@@ -9,7 +9,8 @@ import type { Session } from '@/lib/session';
 // for the role it holds now — a primary admin promoted by that very link
 // included (claude-docs/auth/admin-bootstrap.md, "The email page"). The session and the row
 // are mocked; what they are is tests/lib/request-session.test.ts's and the
-// identity service's.
+// identity service's, and which landing a role gets and which `next` is safe
+// are tests/lib/sign-in.test.ts's.
 
 const requireSession = vi.fn<() => Promise<Session>>();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
@@ -50,13 +51,7 @@ describe('the /account/email page', () => {
     expect(continueLink()).toHaveAttribute('href', '/admin');
   });
 
-  it('continues anyone else to the /coven landing', async () => {
-    await renderPage('user', { verified: '' });
-
-    expect(continueLink()).toHaveAttribute('href', '/coven');
-  });
-
-  // Why the two above could differ: the role, and nothing in the request.
+  // Why the one above could have gone elsewhere: the request's `next`.
   it('continues an admin to the next it was sent with, /coven included', async () => {
     await renderPage('admin', { verified: '', next: '/coven' });
 
@@ -68,11 +63,5 @@ describe('the /account/email page', () => {
     await renderPage('user', {});
 
     expect(screen.getByRole('link', { name: 'Your account' })).toHaveAttribute('href', '/account');
-  });
-
-  it('reads a next that leaves the site as none', async () => {
-    await renderPage('admin', { verified: '', next: '//evil.example' });
-
-    expect(continueLink()).toHaveAttribute('href', '/admin');
   });
 });

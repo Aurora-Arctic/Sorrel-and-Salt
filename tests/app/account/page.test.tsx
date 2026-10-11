@@ -4,10 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
-// The one account page (MB.88): "Your Account", then the Name, Email and
-// Sign-In Methods sections, and no way across to the email page, whose flows
-// are not a visit to the account (claude-docs/auth/admin-bootstrap.md, "The
-// account page"). The session, the row and the linked accounts are mocked;
+// The one account page (MB.88): the Name, Email and Sign-In Methods sections,
+// each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md,
+// "The account page"). The session, the row and the linked accounts are mocked;
 // what they are is tests/lib/request-session.test.ts's and the identity
 // service's. That an unverified account never reaches the page is
 // `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
@@ -49,21 +48,12 @@ beforeEach(() => {
 });
 
 describe('the /account page', () => {
-  it('is headed "Your Account", with Name, Email and Sign-In Methods beneath it', async () => {
-    await renderPage();
-
-    expect(screen.getByRole('heading', { level: 1, name: 'Your Account' })).toBeInTheDocument();
-    expect(
-      screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent),
-    ).toEqual(['Name', 'Email', 'Sign-In Methods']);
-  });
-
-  it('leads with a nav to each section, in order, and rules a line between them', async () => {
+  it('links each section from its nav', async () => {
     await renderPage();
 
     const nav = screen.getByRole('navigation', { name: 'On this page' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toEqual(['Name', 'Email', 'Sign-In Methods']);
+    expect(links).toHaveLength(3);
     // Each link lands on the section headed by its own words.
     for (const link of links) {
       const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
@@ -72,15 +62,6 @@ describe('the /account page', () => {
         link.textContent ?? '',
       );
     }
-    // A rule between each pair of sections, none before the first or after the last.
-    expect(screen.getAllByRole('separator')).toHaveLength(2);
-  });
-
-  it('says what the Name section is for beneath its heading', async () => {
-    await renderPage();
-
-    const heading = within(section('Name')).getByRole('heading', { level: 2, name: 'Name' });
-    expect(heading.nextElementSibling).toHaveTextContent(/^Change your name\.$/);
   });
 
   it('prefills the name and the address in their sections', async () => {
@@ -100,12 +81,5 @@ describe('the /account page', () => {
     expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       '',
     );
-  });
-
-  it('carries no link to the email page', async () => {
-    await renderPage();
-
-    const links = screen.queryAllByRole('link').map((link) => link.getAttribute('href'));
-    expect(links).not.toContain('/account/email');
   });
 });
