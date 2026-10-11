@@ -178,11 +178,11 @@ The page's `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"), which centres the panel
 and holds it clear of the top inset. The panel itself is a `.panel`, the card
 ground (`_primitives.scss`), so the one thing on the page sits on a surface
-of its own, as the owner chose in MB.116. It keeps a narrower column than the
-frame, 22rem: about the button column plus the room the last-used badge hangs
-into, so the error notice above the buttons is never much wider than they
-are. The frame's width rule sits inside `:where()`, so this one class wins it.
-The panel is `border-box`, so the card's padding stays inside the 22rem.
+of its own, as the owner chose in MB.116. It fills the frame's narrow column
+(`$narrow-column`, 28rem) and pads itself a step more than the `.panel`
+default, `space(6)`, since the card is the one thing on the page and the owner
+asked for it bigger at the sign-off. The panel is `border-box`, so the padding
+stays inside the column.
 
 Its children stretch to the column. The head is a `.header`, centred: the
 `h1` and a `.lede` saying what the buttons are for, "Sign in, or create your
