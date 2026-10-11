@@ -1190,7 +1190,8 @@ describe('its forms', () => {
   });
 
   it('writes no form and none of its children on a save that changes nothing', async () => {
-    const source = await insertReference(sql, {}, A.id);
+    // The coven's own source, which a form's links are read back beside (MB.218).
+    const source = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
     const input = (ids: string[] = []) =>
       withForms(
         {

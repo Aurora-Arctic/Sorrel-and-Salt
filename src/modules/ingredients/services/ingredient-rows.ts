@@ -4,6 +4,7 @@ import {
   type ReferenceLinkRow,
   findManyByIds,
   findManyOfIngredients,
+  findManyOfVariants,
   findManyReferences,
   findOneIngredient,
   findReferencesOf,
@@ -455,12 +456,20 @@ async function replaceDeities(
   }
 }
 
-/** The ingredient's own pairs, or one form's: the rows `owner` holds of a child table. */
-function ownedBy<Row extends { variantId: string | null }>(
+/**
+ * The live rows `owner` holds of a child table that names a form (MB.217):
+ * the ingredient's own, which `findManyOfIngredients` keeps to those naming
+ * no form, or one form's, read beneath the form (MB.218). Either is read under
+ * `memberships`, the tier the parent is read in: none for a compendium entry.
+ */
+function heldBy<TTable extends typeof ingredientCategories | typeof ingredientSubstitutes>(
+  memberships: readonly Membership[],
   owner: ChildOwner,
-  rows: readonly Row[],
-) {
-  return rows.filter((row) => row.variantId === owner.variantId);
+  table: TTable,
+): Promise<TTable['$inferSelect'][]> {
+  return owner.variantId === null
+    ? findManyOfIngredients(memberships, table, [owner.ingredientId])
+    : findManyOfVariants(memberships, table, [owner.variantId]);
 }
 
 async function addCategories(
@@ -482,9 +491,8 @@ async function addCategories(
  * nothing. The pairs compared are the ones the owner shows, as
  * `replaceReferenceLinks` compares links, so a pair whose category is
  * soft-deleted is left in place for a restore to return. A form's pairs carry
- * its ingredient too, so the read is the ingredient's, kept to the owner's;
- * the delete names the owner's variant, null for the ingredient's own, so
- * neither touches the other's (MB.217). `memberships` is the tier the parent
+ * its ingredient too, so the delete names the owner's variant, null for the
+ * ingredient's own, and neither touches the other's (MB.217). `memberships` is the tier the parent
  * is read in, as `findManyOfIngredients` takes it: none for a compendium entry.
  */
 async function replaceCategories(
@@ -494,8 +502,9 @@ async function replaceCategories(
   categoryIds: readonly string[],
 ) {
   const { ingredientId, variantId } = owner;
-  const pairs = await findManyOfIngredients(memberships, ingredientCategories, [ingredientId]);
-  const held = ownedBy(owner, pairs).map((pair) => pair.categoryId);
+  const held = (await heldBy(memberships, owner, ingredientCategories)).map(
+    (pair) => pair.categoryId,
+  );
   const shown = new Set((await findManyByIds(categories, held)).map((category) => category.id));
   const listed = new Set(categoryIds);
 
@@ -579,10 +588,8 @@ async function replaceSubstitutes(
   owner: ChildOwner,
   entries: readonly SubstituteEntry[],
 ) {
-  const current = await findManyOfIngredients(memberships, ingredientSubstitutes, [
-    owner.ingredientId,
-  ]);
-  await bringSubstitutesTo(write, memberships, owner, entries, ownedBy(owner, current));
+  const current = await heldBy(memberships, owner, ingredientSubstitutes);
+  await bringSubstitutesTo(write, memberships, owner, entries, current);
 }
 
 /**
