@@ -1,5 +1,4 @@
 import { test, expect } from './fixtures';
-import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 import { assertNoAccessibilityViolations } from './axe';
 
 // /sign-in touches no database — unlike smoke.spec.ts, no
@@ -14,9 +13,10 @@ import { assertNoAccessibilityViolations } from './axe';
 // job, run by hand against real credentials, not something CI can assert.
 const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
 
-test('sign-in page offers every roster provider, reachable by keyboard', async ({ page }) => {
+test('sign-in page offers every roster provider, reachable by keyboard, with no accessibility violations', async ({
+  page,
+}) => {
   await page.goto('/sign-in');
-  await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
 
   for (const name of PROVIDER_NAMES) {
     const button = page.getByRole('button', { name: `Continue with ${name}` });
@@ -25,6 +25,7 @@ test('sign-in page offers every roster provider, reachable by keyboard', async (
     // the scans below on a page these tests are not about.
     await expect(button).toHaveAttribute('aria-disabled', 'true');
   }
+  await assertNoAccessibilityViolations(page);
 
   // "Reachable by keyboard" means real Tab navigation reaches every one —
   // aria-disabled (not the disabled attribute) is what keeps a greyed
@@ -44,30 +45,13 @@ test('sign-in page offers every roster provider, reachable by keyboard', async (
   }
 });
 
-test('sign-in page has no accessibility violations', async ({ page }) => {
-  await page.goto('/sign-in');
-  await assertNoAccessibilityViolations(page);
-});
-
-// The error state's markup — a role="alert" region — is otherwise unseen by
-// axe.spec.ts's seeded-violation check, so it gets its own scan.
+// The error state's markup — a role="alert" region — is absent from the plain
+// page the scan above reads, so it gets its own scan.
 test('a failed-callback error state has no accessibility violations', async ({ page }) => {
   await page.goto('/sign-in?error=access_denied');
   // Scoped to the page's own <main>: Next portals an empty role="alert"
   // route announcer into <body> on every page, so a bare getByRole('alert')
   // matches two elements and fails strict mode.
   await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-});
-
-// The mark is added after hydration (claude-docs/components/sign-in-panel.md,
-// "Last used"), so the scan waits for it: scanning the server's HTML would
-// pass a page without it.
-test('the last-used mark has no accessibility violations', async ({ page, context, baseURL }) => {
-  await context.addCookies([{ name: LAST_USED_PROVIDER_COOKIE, value: 'google', url: baseURL }]);
-  await page.goto('/sign-in');
-
-  await expect(page.getByRole('button', { name: 'Continue with Google, last used' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /last used/i })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 });

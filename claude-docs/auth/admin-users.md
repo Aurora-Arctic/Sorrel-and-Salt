@@ -136,8 +136,7 @@ of W surviving a revoke; and a soft-deleted or unknown user. The transport's
 half is `tests/modules/identity/graphql/workspace-creation.test.ts`, a
 signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s, and
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built server,
-approves an unverified one through the warning, and approves one with a
-reason, read back off the ledger. The note on the ledger, trimmed or none, is
+approving with a reason read back off the ledger. The note on the ledger, trimmed or none, is
 the service test's, and the transport test asserts the actor is the
 session's whatever the request carries.
 

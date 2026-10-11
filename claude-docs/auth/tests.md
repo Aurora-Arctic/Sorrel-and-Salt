@@ -190,8 +190,8 @@
   (MB.113).
   `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
-  its `next`, and `/invite/*` is not redirected; `tests/e2e/smoke.spec.ts` renders `/`
-  signed out. `requireSession()` has no end-to-end test until the first page
+  its `next`; `tests/e2e/invite.spec.ts` renders `/invite/*` signed out, not
+  redirected, and `tests/e2e/smoke.spec.ts` renders `/` signed out. `requireSession()` has no end-to-end test until the first page
   calls it: a forged cookie passes the proxy by design, and only a real page
   can show the database-backed check refusing it. That page's PR adds the test,
   signing in with a `sessions` row plus a signed cookie (the MB.30 recipe,

@@ -69,5 +69,6 @@
   browser-rendered page gets no script and no warning;
   `tests/app/admin/layout.test.tsx` proves the layout
   and the index page each await the guard before rendering;
-  `tests/e2e/admin.spec.ts` asserts the redirect, the 403 with no admin markup
-  anywhere in the document, and the layout, against the built server.
+  `tests/e2e/admin.spec.ts` asserts the 403 with no admin markup anywhere in
+  the document, and the layout, against the built server; the signed-out
+  redirect is `tests/e2e/route-protection.spec.ts`'s.

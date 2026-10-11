@@ -109,6 +109,20 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
+      # The e2e build's cache, as checks.yml's build leg keeps .next/cache:
+      # the absolute /app path, since hashFiles reads $GITHUB_WORKSPACE and the
+      # build writes /app; distDir is playwright.config.ts's NEXT_DIST_DIR.
+      # Before the run, because slot 0's webServer builds inside it. The
+      # image's GNU tar serves actions/cache (claude-docs/testing/e2e.md).
+      - name: Cache Next.js e2e build cache
+        if: inputs.should-run
+        uses: actions/cache@v6
+        with:
+          path: /app/.next-e2e/cache
+          key: ${{ runner.os }}-nextjs-e2e-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-e2e-${{ hashFiles('package-lock.json') }}-
+
       # The webServer builds and serves; the browser is in the image. The
       # reporters (list, json, html) come from playwright.config.ts under CI:
       # a `--reporter` here would replace them and lose the html report's

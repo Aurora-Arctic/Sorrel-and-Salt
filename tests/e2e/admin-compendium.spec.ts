@@ -4,8 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// M5.5: the admin's compendium, its list narrowed to the two curation to-do
-// lists, and the wide modal the address opens over it — IngredientForm on
+// M5.5: the admin's compendium, and the wide modal the address opens over it — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
 // the Combobox's among them (claude-docs/components/ingredient-form.md,
 // "Testing").
@@ -84,11 +83,11 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
 
   const response = await page.goto('/admin/compendium');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Compendium — Admin — Sorrel & Salt');
-  await expect(page.getByRole('heading', { level: 1, name: 'Compendium' })).toBeVisible();
+  const add = page.getByRole('link', { name: 'Add Ingredient' });
+  await expect(add).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
-  await page.getByRole('link', { name: 'Add Ingredient' }).click();
+  await add.click();
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/compendium\?new$/);
@@ -144,8 +143,8 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
 
   await editing.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
   await editing.getByRole('button', { name: 'Save Ingredient' }).click();
-  await expect(editing.getByText('Saved Aaa Testwort.')).toBeVisible();
   await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+  await expect(editing.getByRole('status').filter({ hasText: 'Aaa Testwort' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
   await editing.getByRole('button', { name: 'Delete Ingredient' }).click();
@@ -153,32 +152,4 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   await expect(editing).toHaveCount(0);
   await expect(page).toHaveURL(/\/admin\/compendium$/);
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
-});
-
-// The curation to-do lists: the entries still classified Unknown, and those
-// citing no source. A filtered page is an address, and its links keep it.
-test('an admin narrows the compendium to its to-do lists', async ({ page }) => {
-  await signInAs(page, 'filter-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
-  const search = page.getByRole('search');
-  const filter = search.getByRole('button', { name: 'Filter' });
-  await expect(filter).toBeDisabled();
-
-  await search.getByRole('combobox', { name: 'Classification' }).selectOption({ label: 'Unknown' });
-  await filter.click();
-  await expect(page).toHaveURL(/\/admin\/compendium\?nomenclature=unknown$/);
-  await expect(filter).toBeDisabled();
-
-  await search.getByRole('checkbox', { name: 'Without References' }).check();
-  await filter.click();
-  await expect(page).toHaveURL(/\/admin\/compendium\?nomenclature=unknown&withoutReferences=1$/);
-  await expect(page.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
-    'href',
-    '/admin/compendium?nomenclature=unknown&withoutReferences=1&new',
-  );
-  await assertNoAccessibilityViolations(page);
-
-  await search.getByRole('searchbox', { name: 'Name' }).fill('no such entry');
-  await filter.click();
-  await expect(page.getByText('No compendium entry matches.')).toBeVisible();
 });

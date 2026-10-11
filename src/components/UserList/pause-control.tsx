@@ -79,10 +79,13 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
   return (
     <div className="user-list__pause">
       {/* The page's statement that changes are paused, as a warning, on the
-          owner's call. A plain paragraph, read in the page's order: the switch
-          is remounted by the refresh after a flip, which a live region would
-          not announce either. */}
-      {copy.state && <p className="notice notice--warn user-list__pause-state">{copy.state}</p>}
+          owner's call. An `<output>`, a status by its tag as every notice of
+          a state here is, so it is found by its role rather than its words;
+          the switch is remounted by the refresh after a flip, so it arrives
+          with the page and is read in its order rather than announced. */}
+      {copy.state && (
+        <output className="notice notice--warn user-list__pause-state">{copy.state}</output>
+      )}
       {canToggle ? (
         <button
           className={copy.buttonClass}
