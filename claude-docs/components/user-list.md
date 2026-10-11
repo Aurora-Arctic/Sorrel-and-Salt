@@ -129,13 +129,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the row, and the page stays.
   The endpoint is the guard: the button only puts it where an admin looks.
   The column, heading and cells, has a red rule down its left, and its
-  heading's hairline is red where every other is the muted ink; since
-  MB.115's sign-off it has no tint and no red text, the rule and the wax
-  button saying it. It is sticky at the table's right edge, so on a narrow
+  heading's hairline is red where every other is the muted ink, with a faded
+  red tint and red text (kept at MB.115 on the owner's call). It is sticky at the table's right edge, so on a narrow
   frame the other columns scroll beneath it (on the owner's call, during
   MB.59), until the table stacks into cards at phone width, where it is the
-  card's foot instead (Styling, below). Its ground is therefore opaque, the
-  band it sits on: the page, or a banded row's card. Every tip
+  card's foot instead (Styling, below). Its ground is therefore opaque: the
+  tint mixed into the band it sits on, the page or a banded row's card. Every tip
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
   Impersonate cell comes later in the DOM, and at the same layer the cell
@@ -305,9 +304,11 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   above it (`.user-list__tip`), the history link's, the crown's and a locked
   control's from its left edge, no wider than `$tip-width` capped at the
   window. Each sits one layer above the sticky column (`_layers.scss`).
-- **The Impersonate column** has a 1px red rule down its left and no tint,
-  and is sticky at the table's right edge (above), on an opaque ground: the
-  page, or a banded row's `$surface-card`. The ground stays with the admin
+- **The Impersonate column** has a 1px red rule down its left, red text and
+  a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
+  row's `$surface-card`, since at 6% the dark card leaves the wax label at
+  4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It
+  is sticky at the table's right edge (above). The ground stays with the admin
   column at 80rem, since the seven columns need about 77rem of frame before
   they stop scrolling, so any window narrower than that, above the stacking
   width, still scrolls them beneath it.

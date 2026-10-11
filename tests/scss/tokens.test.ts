@@ -66,6 +66,16 @@ function toHex(value: string, theme: Theme): string {
     .join('')}`;
 }
 
+/** `color-mix(in srgb, a weight, b)` for two hexes, each channel rounded to a byte as the browser does. */
+function mixed(a: string, b: string, weight: number): string {
+  const channels = (hex: string) => [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+  const [from, to] = [channels(a), channels(b)];
+  return `#${from
+    .map((channel, i) => Math.round(channel * weight + to[i] * (1 - weight)))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
 /** Every brand's parts, each read through `brand-color()`, as brand → part → value. */
 function brands(): Record<string, Record<string, string>> {
   const parts = declarations(
@@ -113,6 +123,11 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     // The banner's heavy foot rule, a line rather than text, against the page
     // beneath it.
     row('the banner rule on the page', tokens['--secondary'], page, 3);
+    // The user list's Impersonate column: wax text on a wax tint, 6% over the
+    // page and 5% over a banded row's card (UserList/index.scss).
+    const wax = toHex(tokens['--secondary'], theme);
+    row('--secondary on the Impersonate tint on the page', wax, mixed(wax, page, 0.06), 4.5);
+    row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });

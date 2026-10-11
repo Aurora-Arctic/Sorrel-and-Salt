@@ -197,13 +197,14 @@
   }
 }
 
-// The Impersonate column, heading and cells: a red rule down its left, since
-// it is the one control in the table that acts as someone else. No tint and
-// no red text since MB.115's sign-off: the rule and the wax button say it.
+// The Impersonate column, heading and cells: a red rule down its left, a
+// faded red tint and red text, since it is the one control in the table that
+// acts as someone else (kept at MB.115, on the owner's call after the sign-off).
 //
 // It stays at the table's right edge while the other columns scroll beneath
-// it (the owner's call), so its ground is opaque, the band it sits on: the
-// page, or a banded row's card. Still needed with the admin column at 80rem:
+// it (the owner's call), so its ground is opaque: the tint mixed into the
+// band it sits on, the page or a banded row's card, rather than laid over
+// transparent. Still needed with the admin column at 80rem:
 // the frame stops scrolling only from about 77rem of table, so any window
 // narrower than that, above the stacking width, scrolls it still.
 .user-list__impersonate {
@@ -212,11 +213,14 @@
   z-index: $sticky-column-layer;
   // A hairline, as the headings' rule is: the red marks it, not the weight.
   border-left: 1px solid $secondary;
-  background-color: $surface-page;
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+  color: $secondary;
 }
 
 .user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
-  background-color: $surface-card;
+  // 5% rather than the page's 6%: the dark card is lighter, and at 6% the wax
+  // label falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+  background-color: color-mix(in srgb, $secondary 5%, $surface-card);
 }
 
 // Its heading's hairline red too, where every other column's is the muted
