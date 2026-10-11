@@ -936,9 +936,6 @@ describe('a variant read under its ingredient', () => {
   });
 });
 
-// What a colliding compendium write is refused with names this row, so the
-// finder must read the key `ingredients_compendium_identity_unique` holds,
-// folded as the generated column folds it.
 // The entry a colliding write names (MB.220): keyed on the formal name alone,
 // or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {
@@ -1036,7 +1033,7 @@ describe('write.carryAstrologyRename', () => {
     expect(await rowOf(held)).toMatchObject({
       planets: ['Venus', 'Ares', 'Moon'],
       slug: before.slug,
-      canonical_key: before.canonical_key,
+      identity_key: before.identity_key,
       created_by: A.id,
       updated_by: E.id,
     });

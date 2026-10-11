@@ -252,7 +252,7 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
     toRow: ({ variants: _variants, ...entry }) => ({
       ...entry,
       workspaceId: WORKSPACE_W_ID,
-      slug: ingredientSlug(entry.name, null, entry.canonicalName),
+      slug: ingredientSlug(entry.name, entry.canonicalName),
     }),
   });
 }

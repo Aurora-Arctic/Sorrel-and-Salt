@@ -149,6 +149,6 @@ export function ingredientColumns(fixture: IngredientFixture): Record<string, un
 
   return {
     ...toColumns(row),
-    slug: ingredientSlug(fixture.name, null, fixture.canonicalName),
+    slug: ingredientSlug(fixture.name, fixture.canonicalName),
   };
 }

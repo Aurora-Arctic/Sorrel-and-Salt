@@ -416,10 +416,6 @@ async function refuseCollision(
     );
 
   switch (violatedUniqueIndex(error)) {
-    // The three-part key's index stays in the database until MB.223 drops it,
-    // and refuses nothing the formal name's does not, but Postgres may name
-    // either when both are broken.
-    case 'ingredients_compendium_identity_unique':
     case 'ingredients_compendium_identity_key_unique':
       identity(await findCompendiumEntryByIdentity(fields));
       break;

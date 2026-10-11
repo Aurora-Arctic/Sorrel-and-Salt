@@ -193,15 +193,15 @@ Merge order, and the order PRs are opened in as each task is reviewed: MB.215, M
 
 ## Lane record
 
-One line per lane, kept by lane D and updated by this session as each lane moves (briefed, building, verifying, reviewed, awaiting PR, merged). State as of 2026-10-11, after MB.221 merged.
+One line per lane, kept by lane D and updated by this session as each lane moves (briefed, building, verifying, reviewed, awaiting PR, merged). State as of 2026-10-11, after MB.222 merged.
 
-| Lane | Task                | Branch                                                                                          | Base                              | State                             | Gate                       |
-| ---- | ------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------- | -------------------------- |
-| D    | MB.215              | `feature/mb.215-ingredient-variants`                                                            | `staging`                         | reviewed, merged as #834          | none                       |
-| A    | MB.216, then MB.217 | `feature/mb.216-ingredient-variants-schema`; MB.217 on `feature/mb.217-variant-children-schema` | `staging`                         | reviewed, merged as #835 and #836 | none                       |
-| B    | MB.218              | `feature/mb.218-variants-read-search`                                                           | `staging`                         | reviewed, merged as #837          | none                       |
-| C    | MB.219              | `feature/mb.219-variants-written`                                                               | `staging`                         | reviewed, merged as #838          | none                       |
-| E    | MB.220              | `feature/mb.220-identity-and-form-vocabulary`                                                   | `staging`                         | reviewed, merged as #839          | none                       |
-| F    | MB.221              | `feature/mb.221-ingredient-form-variants`                                                       | `staging`                         | reviewed, merged as #840          | none                       |
-| G    | MB.222              | `feature/mb.222-form-leaves-the-row`                                                            | `staging`                         | building                          | none: E and F have merged  |
-| G    | MB.223              | not cut                                                                                         | `staging`, once MB.222 has merged | not started                       | MB.222 deployed to staging |
+| Lane | Task                | Branch                                                                                          | Base      | State                             | Gate                       |
+| ---- | ------------------- | ----------------------------------------------------------------------------------------------- | --------- | --------------------------------- | -------------------------- |
+| D    | MB.215              | `feature/mb.215-ingredient-variants`                                                            | `staging` | reviewed, merged as #834          | none                       |
+| A    | MB.216, then MB.217 | `feature/mb.216-ingredient-variants-schema`; MB.217 on `feature/mb.217-variant-children-schema` | `staging` | reviewed, merged as #835 and #836 | none                       |
+| B    | MB.218              | `feature/mb.218-variants-read-search`                                                           | `staging` | reviewed, merged as #837          | none                       |
+| C    | MB.219              | `feature/mb.219-variants-written`                                                               | `staging` | reviewed, merged as #838          | none                       |
+| E    | MB.220              | `feature/mb.220-identity-and-form-vocabulary`                                                   | `staging` | reviewed, merged as #839          | none                       |
+| F    | MB.221              | `feature/mb.221-ingredient-form-variants`                                                       | `staging` | reviewed, merged as #840          | none                       |
+| G    | MB.222              | `feature/mb.222-form-leaves-the-row`                                                            | `staging` | reviewed, merged as #846          | none: E and F have merged  |
+| G    | MB.223              | `feature/mb.223-drop-form-and-canonical-key`                                                    | `staging` | building                          | MB.222 deployed to staging |

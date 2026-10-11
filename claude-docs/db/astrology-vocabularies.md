@@ -20,7 +20,7 @@ name it shipped under, since its tag is in the journal.
   form pair is. No group, no colour, no order column, no `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.planets` and
   `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
-  holds `ingredients`' own keys to its workspace and `form_id`, and
+  holds `ingredients`' own keys to its workspace, and
   `tests/db/schema-drift.test.ts` holds the migrated database to the schema
   files (MB.226).
 

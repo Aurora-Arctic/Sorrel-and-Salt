@@ -227,7 +227,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Fourteen migrations carry findings today, and each has its sidecar:
+Fifteen migrations carry findings today, and each has its sidecar:
 
 | Migration                              | Findings                                                                                                                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -245,6 +245,7 @@ Fourteen migrations carry findings today, and each has its sidecar:
 | `0059_drop-old-invitation-tables.sql`  | `workspace_invitations` and `admin_invitations` dropped, the contract half of MB.201's two-tier table (MB.203)                                                                                                                       |
 | `0061_ingredient-variants.sql`         | `ingredients.identity_key` added `NOT NULL` with no `DEFAULT`, a false positive: a generated column computed from `name`, itself `NOT NULL` (MB.216)                                                                                 |
 | `0063_variant-children.sql`            | four unique indexes and three constraints dropped and re-created keyed on the variant or wider in one transaction, under `0029` and `0038`'s precedent, and `inventory_items.variant_id` added `NOT NULL` to an empty table (MB.217) |
+| `0064_drop-form-and-canonical-key.sql` | `ingredients.canonical_key`, `form` and `form_id` dropped with their two CHECKs, the pick's foreign key and three indexes, the contract half of MB.220 and MB.222's switch to `identity_key` and `ingredient_variants` (MB.223)      |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were

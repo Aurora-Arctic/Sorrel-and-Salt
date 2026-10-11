@@ -149,7 +149,7 @@ describe('createWorkspaceIngredient', () => {
       createdBy: user.id,
       updatedBy: user.id,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', null, null));
+    expect(created.slug).toBe(ingredientSlug('Testwort', null));
   });
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
@@ -337,8 +337,8 @@ describe('a collision with another of the coven’s ingredients', () => {
     await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
-      ingredientSlug('Testwort', null, 'Fixtura root'),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
     expect(
@@ -486,8 +486,8 @@ describe('updateWorkspaceIngredient', () => {
     const id = await seed(local({ name: 'Testleaf' }));
     const before = await rowOf(id);
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
-      ingredientSlug('Testwort', null, 'Fixtura root'),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
     await expect(

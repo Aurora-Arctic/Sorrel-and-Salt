@@ -21,7 +21,7 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
     insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
     values (
       ${name},
-      ${ingredientSlug(name, null, canonicalName)},
+      ${ingredientSlug(name, canonicalName)},
       ${canonicalName},
       ${canonicalName === null ? 'none' : 'botanical'},
       ${AUTHOR},

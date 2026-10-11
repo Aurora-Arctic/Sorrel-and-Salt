@@ -587,7 +587,7 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
         ...entry
       }) => ({
         ...entry,
-        slug: ingredientSlug(entry.name, null, entry.canonicalName),
+        slug: ingredientSlug(entry.name, entry.canonicalName),
       }),
     },
   );
@@ -622,7 +622,7 @@ export async function reslugIngredients(
     .where(and(inArray(ingredients.id, ingredientIds), isNull(ingredients.deletedAt)));
 
   for (const { id, workspaceId, name, canonicalName, slug } of rows) {
-    const derived = ingredientSlug(name, null, canonicalName);
+    const derived = ingredientSlug(name, canonicalName);
     if (derived === slug) continue;
     const [holder] = await tx
       .select({ id: ingredients.id })

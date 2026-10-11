@@ -168,7 +168,7 @@ describe('createCompendiumEntry', () => {
       updatedBy: E.id,
       deletedAt: null,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', null, 'Fixtura testalis'));
+    expect(created.slug).toBe(ingredientSlug('Testwort', 'Fixtura testalis'));
   });
 
   it('saves several elements, planets, signs and colours, each in the order entered', async () => {
@@ -740,8 +740,8 @@ describe('a collision with another compendium entry', () => {
     await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
-      ingredientSlug('Testwort', null, 'Fixtura root'),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
     expect(

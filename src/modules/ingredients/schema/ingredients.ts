@@ -54,16 +54,15 @@ export const ingredients = pgTable(
     // and the compendium variant makes the admin answer.
     nomenclature: nomenclatureKind('nomenclature').notNull(),
     // No form: an entry's forms are its variants (`ingredient_variants`,
-    // MB.215). The database still holds `form` and `form_id`, undeclared since
-    // MB.222, until MB.223 drops them (tests/db/schema-drift.test.ts,
-    // `PENDING_DROPS`).
+    // MB.215). MB.222 undeclared the row's `form` and `form_id`, and MB.223
+    // dropped them.
 
     // The formal name alone (MB.216): what the tier-split unique indexes
     // below hold once per tier. GENERATED ALWAYS, so Postgres refuses a direct
     // write — and Drizzle omits generated columns from $inferInsert, so
-    // TypeScript refuses first. The database still holds the three-part key
-    // this replaced, undeclared since MB.220, until MB.223 drops it
-    // (tests/db/schema-drift.test.ts, `PENDING_DROPS`).
+    // TypeScript refuses first. It replaced the three-part `canonical_key`,
+    // the formal name plus the form, which MB.220 undeclared and MB.223
+    // dropped (claude-docs/db/identity-model.md).
     identityKey: text('identity_key').notNull().generatedAlwaysAs(IDENTITY_KEY),
     description: text('description'),
     // A list of the five rather than the single `element` it replaced

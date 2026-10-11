@@ -26,15 +26,11 @@ const WORKSPACE_B = WORKSPACE_X_ID;
 
 /**
  * The shared factory plus this file's author; the audit stamps are never the
- * fixture's. `form` is the row's own column, undeclared since MB.222 and read
- * until MB.223 by the two `canonical_key` indexes, which refuse a second row
- * of one formal name and one form: two rows given different forms here reach
- * the `identity_key` index alone.
+ * fixture's.
  */
-function row(overrides: IngredientOverrides = {}, form?: string): Record<string, unknown> {
+function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
-    ...(form === undefined ? {} : { form }),
     created_by: AUTHOR,
     updated_by: AUTHOR,
   };
@@ -43,9 +39,9 @@ function row(overrides: IngredientOverrides = {}, form?: string): Record<string,
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-async function insert(overrides: IngredientOverrides = {}, form?: string): Promise<Inserted> {
+async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`
-    insert into ingredients ${sql(row(overrides, form))} returning id, identity_key
+    insert into ingredients ${sql(row(overrides))} returning id, identity_key
   `;
   return { id: inserted.id as string, identityKey: inserted.identity_key as string };
 }
@@ -75,23 +71,21 @@ describe('ingredients unique indexes', () => {
     });
 
     // Valerian root and leaf are one entry with two forms (MB.215), so a
-    // second entry of the formal name is refused whatever its form.
-    it('refuses a second entry of one formal name under another form', async () => {
-      const root = await insert(
-        { name: 'Valerian root', canonicalName: 'Valeriana officinalis' },
-        'root',
-      );
+    // second entry of the formal name is refused whatever its label.
+    it('refuses a second entry of one formal name under another label', async () => {
+      const root = await insert({ name: 'Valerian root', canonicalName: 'Valeriana officinalis' });
 
       // Why it could have been admitted: the label and the slug differ, and
       // the same formal name stands in a coven.
-      const leaf = await insert(
-        { workspaceId: WORKSPACE_A, name: 'Valerian leaf', canonicalName: 'Valeriana officinalis' },
-        'leaf',
-      );
+      const leaf = await insert({
+        workspaceId: WORKSPACE_A,
+        name: 'Valerian leaf',
+        canonicalName: 'Valeriana officinalis',
+      });
       expect(leaf.identityKey).toBe(root.identityKey);
 
       const error = await failureOf(
-        insert({ name: 'Valerian leaf', canonicalName: 'Valeriana Officinalis' }, 'leaf'),
+        insert({ name: 'Valerian leaf', canonicalName: 'Valeriana Officinalis' }),
       );
 
       expect(error.code).toBe('23505');
@@ -118,15 +112,15 @@ describe('ingredients unique indexes', () => {
       expect(await liveCount()).toBe(2);
     });
 
-    it('refuses two locals of one workspace sharing a formal name under different forms', async () => {
-      const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' }, 'herb');
+    it('refuses two locals of one workspace sharing a formal name under different labels', async () => {
+      const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
 
       // Why it could have been admitted: the label differs, and the other
       // workspace holds the pair.
-      const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort' }, 'oil');
+      const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort' });
       expect(elsewhere.identityKey).toBe(first.identityKey);
 
-      const error = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }, 'oil'));
+      const error = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
 
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(WORKSPACE_IDENTITY_KEY);

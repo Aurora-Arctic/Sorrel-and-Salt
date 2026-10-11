@@ -19,16 +19,11 @@ export function slugify(name: string): string {
  * declared, so two entries sharing a label are told apart by the name that is
  * their identity rather than by which was added first (`Cat's Claw` /
  * `Uncaria tomentosa` → `cats-claw-uncaria-tomentosa`; no formal name,
- * `graveyard-dirt`). Every caller passes `null` for the form since MB.220, a
- * form being no part of an entry's address since MB.215; the parameter goes
- * with MB.223, once nothing reads the form off the row.
+ * `graveyard-dirt`). A form is no part of an entry's address (MB.215): an
+ * entry's forms are its variants.
  */
-export function ingredientSlug(
-  name: string,
-  form: string | null | undefined,
-  canonicalName: string | null | undefined,
-): string {
-  return slugify([name, form, canonicalName].filter(Boolean).join(' '));
+export function ingredientSlug(name: string, canonicalName: string | null | undefined): string {
+  return slugify([name, canonicalName].filter(Boolean).join(' '));
 }
 
 /**

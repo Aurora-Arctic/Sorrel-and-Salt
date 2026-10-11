@@ -147,9 +147,9 @@ catches the write's failure and reads the index off it with
   formal-name field would point at a box the admin never filled in. The
   message names the holder by its label and formal name, and points at
   adding the form to it: an oil of a plant the compendium holds is a variant
-  of that entry, not an entry beside it. `ingredients_compendium_identity_unique`,
-  on the undeclared three-part key, is mapped the same way until MB.223 drops
-  it, since Postgres may report either.
+  of that entry, not an entry beside it. The three-part key's
+  `ingredients_compendium_identity_unique` was mapped the same way until
+  MB.223 dropped it.
 - `ingredients_compendium_slug_unique` lands on `name`, as the coven's does,
   naming the address and the entry holding it, unless another entry holds
   the identity too: the address index is older than the identity one, so an

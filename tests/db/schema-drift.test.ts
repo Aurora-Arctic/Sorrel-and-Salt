@@ -48,46 +48,7 @@ const PENDING_DROPS: readonly {
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table';
   name: string;
   droppedBy: string;
-}[] = [
-  // The three-part identity key and its two indexes, undeclared since MB.220:
-  // identity is the formal name alone, on `identity_key`.
-  { table: 'ingredients', kind: 'column', name: 'canonical_key', droppedBy: 'MB.223' },
-  {
-    table: 'ingredients',
-    kind: 'index',
-    name: 'ingredients_compendium_identity_unique',
-    droppedBy: 'MB.223',
-  },
-  {
-    table: 'ingredients',
-    kind: 'index',
-    name: 'ingredients_workspace_identity_unique',
-    droppedBy: 'MB.223',
-  },
-  // The row's form and its pick, undeclared since MB.222: an entry's forms are
-  // its variants. Their two CHECKs, the pick's foreign key and its index go too.
-  { table: 'ingredients', kind: 'column', name: 'form', droppedBy: 'MB.223' },
-  { table: 'ingredients', kind: 'column', name: 'form_id', droppedBy: 'MB.223' },
-  { table: 'ingredients', kind: 'check', name: 'ingredients_form_not_blank', droppedBy: 'MB.223' },
-  {
-    table: 'ingredients',
-    kind: 'check',
-    name: 'ingredients_form_id_has_form',
-    droppedBy: 'MB.223',
-  },
-  {
-    table: 'ingredients',
-    kind: 'foreignKey',
-    name: 'ingredients_form_id_ingredient_forms_id_fk',
-    droppedBy: 'MB.223',
-  },
-  {
-    table: 'ingredients',
-    kind: 'index',
-    name: 'ingredients_compendium_form_id_idx',
-    droppedBy: 'MB.223',
-  },
-];
+}[] = [];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(

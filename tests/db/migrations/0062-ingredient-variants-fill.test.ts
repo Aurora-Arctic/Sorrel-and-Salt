@@ -9,8 +9,10 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
 // Rule 7 (claude-docs/testing/layer-ownership.md, "What a test may assert"):
 // migration data tests, retired once `0062` is in production's journal. They
-// re-run the migration's own fill and guard against rows written here, rather
-// than a copy of either; the tables' shape is the schema tests'.
+// re-run the migration's own guard against rows written here, rather than a
+// copy of it; the tables' shape is the schema tests'. The fill's tests retired
+// with MB.223, which dropped the `form` column the fill reads, so no migrated
+// database can run it again.
 
 /** `0062`'s statements, comment lines stripped, as the migrator splits them. */
 const STATEMENTS = readFileSync(
@@ -27,26 +29,17 @@ function statementStarting(prefix: string): string {
   return found;
 }
 
-const FILL = statementStarting('INSERT INTO "ingredient_variants"');
 const GUARD = statementStarting('DO $$');
 
 const AUTHOR = FIXTURE_USERS.A.id;
-const EDITOR = FIXTURE_USERS.B.id;
 
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/**
- * A fresh ingredient under an invented formal name, written by A, with no
- * variant, and the row's own `form` and `form_id` as the fill met them:
- * columns undeclared since MB.222, so written raw.
- */
-async function anIngredient(
-  overrides: Parameters<typeof makeIngredient>[0] = {},
-  { form, formId = null }: { form?: string; formId?: string | null } = {},
-) {
+/** A fresh ingredient under an invented formal name, written by A, with no variant. */
+async function anIngredient(overrides: Parameters<typeof makeIngredient>[0] = {}) {
   const t = crypto.randomUUID().slice(0, 8);
-  const id = await insertIngredient(
+  return insertIngredient(
     sql,
     makeIngredient({
       name: `Testwort ${t}`,
@@ -56,98 +49,7 @@ async function anIngredient(
     }),
     AUTHOR,
   );
-  if (form !== undefined) {
-    await sql`update ingredients set form = ${form}, form_id = ${formId} where id = ${id}`;
-  }
-  return id;
 }
-
-describe('0062: the fill', () => {
-  let padded: string;
-  let picked: string;
-  let formless: string;
-  let deleted: string;
-  let pick: string;
-
-  beforeAll(async () => {
-    [{ id: pick }] = await sql`
-      select id from ingredient_forms where deleted_at is null order by name limit 1
-    `;
-    padded = await anIngredient({ description: 'Kept on the entry.' }, { form: '  Testleaf  ' });
-    picked = await anIngredient(
-      { workspaceId: WORKSPACE_W_ID },
-      { form: 'Testroot', formId: pick },
-    );
-    formless = await anIngredient();
-    deleted = await anIngredient({}, { form: 'Testbark' });
-    // The last editor is B, not the author: the variant is stamped as B.
-    await sql`update ingredients set updated_by = ${EDITOR} where id in ${sql([padded, picked])}`;
-    await sql`
-      update ingredients set deleted_at = now(), deleted_by = ${EDITOR}, updated_by = ${EDITOR}
-      where id = ${deleted}
-    `;
-
-    // The migrated database as the fill met it: no variant yet.
-    // Cascade: MB.217's tables key on a variant, and their rows go with it here.
-    await sql`truncate ingredient_variants cascade`;
-    await sql.unsafe(FILL);
-  });
-
-  it('gives every row with a form exactly one variant, and a row without one none', async () => {
-    const rows = await sql`
-      select i.form is not null as has_form, count(v.id)::int as variants
-      from ingredients i left join ingredient_variants v on v.ingredient_id = i.id
-      group by i.id
-    `;
-
-    // Precondition: both kinds of row are there. Since MB.222 the seed writes
-    // no row's form, so the formed rows are this file's three.
-    expect(rows.filter((row) => row.has_form).length).toBe(3);
-    expect(rows.some((row) => !row.has_form)).toBe(true);
-    expect(rows.filter((row) => row.variants !== (row.has_form ? 1 : 0))).toEqual([]);
-  });
-
-  it("carries the row's trimmed form and its pick, stamped as its last editor, and nothing else", async () => {
-    const variants = await sql`
-      select ingredient_id, form, form_id, description, elements, created_by, updated_by, deleted_at
-      from ingredient_variants where ingredient_id in ${sql([padded, picked, formless, deleted])}
-      order by form
-    `;
-
-    expect(variants).toEqual([
-      {
-        ingredient_id: deleted,
-        form: 'Testbark',
-        form_id: null,
-        description: null,
-        elements: null,
-        created_by: EDITOR,
-        updated_by: EDITOR,
-        deleted_at: null,
-      },
-      {
-        ingredient_id: padded,
-        form: 'Testleaf',
-        form_id: null,
-        description: null,
-        elements: null,
-        created_by: EDITOR,
-        updated_by: EDITOR,
-        deleted_at: null,
-      },
-      {
-        ingredient_id: picked,
-        form: 'Testroot',
-        form_id: pick,
-        description: null,
-        elements: null,
-        created_by: EDITOR,
-        updated_by: EDITOR,
-        deleted_at: null,
-      },
-    ]);
-  });
-});
 
 describe('0062: the guard', () => {
   beforeAll(async () => {
@@ -166,13 +68,8 @@ describe('0062: the guard', () => {
 
   it('refuses two live entries of one formal name in a tier, naming the procedure, and passes once one is deleted', async () => {
     const t = crypto.randomUUID().slice(0, 8);
-    // Different forms on the rows, so the older `canonical_key` index, which
-    // still reads the row's form until MB.223, admits the pair.
-    await anIngredient({ canonicalName: `Fixtura duplex ${t}` }, { form: 'Testleaf' });
-    const second = await anIngredient(
-      { canonicalName: `Fixtura duplex ${t}` },
-      { form: 'Testroot' },
-    );
+    await anIngredient({ canonicalName: `Fixtura duplex ${t}` });
+    const second = await anIngredient({ canonicalName: `Fixtura duplex ${t}` });
 
     const error = await failureOf(sql.unsafe(GUARD));
 

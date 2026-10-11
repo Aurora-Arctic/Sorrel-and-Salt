@@ -16,7 +16,7 @@ const ISSUES = [
 ];
 
 // What a raw database failure looks like: the constraint name is the leak.
-const CONSTRAINT = 'ingredients_workspace_canonical_key_unique';
+const CONSTRAINT = 'ingredients_workspace_identity_key_unique';
 
 const scratch = createBuilder();
 scratch.queryType({
