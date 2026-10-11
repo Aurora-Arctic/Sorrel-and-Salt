@@ -720,7 +720,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       categories: ['Gambling', 'Peace', 'Healing', 'Creativity', 'Prosperity', 'Protection'],
       substitutes: [
         {
-          identity: 'microcline var. amazonite',
+          name: 'Amazonite',
         },
       ],
       references: [
@@ -1878,7 +1878,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           name: 'Green Tourmaline',
         },
         {
-          identity: 'forsterite var. peridot',
+          name: 'Peridot',
         },
       ],
       references: [
