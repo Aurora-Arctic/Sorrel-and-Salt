@@ -29,6 +29,7 @@ const Field = ({
         id={column}
         label={label}
         column={column}
+        placeholder="Add hex"
         value={value}
         onChange={setValue}
         sample="Testwort Wards"

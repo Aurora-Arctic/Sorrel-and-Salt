@@ -53,8 +53,8 @@ A category group's two colours are one family, the owner's call ([`m5.6b-admin-g
 
 The form has no stylesheet of its own: it is built from the shared pieces and the form primitives ([`../styling.md`](../styling.md), "Form fields").
 
-- **Name and Description are [`TextField`](field.md)s** in a `FormProvider`, each with its label row and required mark. The description's textarea takes the primitive's height rather than three rows of its own.
-- **Each colour is a `FieldShell` around a [`ChipColorField`](chip-color-field.md).** The shell draws the label and its mark and names the hex box; it is handed no error, since ChipColorField draws the refusal itself, between its ratio and its warning.
+- **Name and Description are [`TextField`](field.md)s** in a `FormProvider`, each with its label row, required mark and a short placeholder, "Add a name" and "Describe it" ([`field.md`](field.md), "Contracts"). The description's textarea takes the primitive's height rather than three rows of its own.
+- **Each colour is a `FieldShell` around a [`ChipColorField`](chip-color-field.md).** The shell draws the label, its mark and its hint, the info tip saying which theme the colour is for, the hex form, its 4.5:1 floor and the partner it fills, and names the hex box, whose placeholder is "Add hex"; it is handed no error, since ChipColorField draws the refusal itself, between its ratio and its warning.
 - **The move picker is a `FieldShell` around the `ComboboxSelect`**, its error beneath it as any field's is.
 - **The buttons are `.form__actions`**, which wraps, with Delete Group pushed to the far end by `.form__aside`. A question that stands in for them is a `.form__confirm` with its own `.modal__actions` row. Under 28rem of the form's own width, every row stacks, full width.
 

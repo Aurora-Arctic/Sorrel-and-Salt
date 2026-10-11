@@ -205,6 +205,13 @@ const USED_DELETE_NOTE =
 /** What saving a renamed value does, for every kind a compendium entry uses (MB.162). */
 const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses it.';
 
+/**
+ * What a description is for, on the kinds whose suggestions match it as well
+ * as the name (src/modules/vocabulary/services/suggestions.ts).
+ */
+const SEARCHED_DESCRIPTION_HINT =
+  "What it is, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name.";
+
 /** A flat kind's input is its name and description: the group field it never shows is left out. */
 const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, description });
 
@@ -217,7 +224,13 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: 'Category',
-    group: { label: 'Group', placeholder: 'Choose a group' },
+    descriptionHint:
+      "What the category covers. It is shown with the category wherever an ingredient's categories are picked.",
+    group: {
+      label: 'Group',
+      placeholder: 'Choose a group',
+      hint: "The family it is filed under. Its chip wears the group's colours.",
+    },
     // Deleting a category removes nothing of a coven's: an entry filed under
     // it keeps its link and stops reading the category, so the entry stays in
     // its list and only the filter loses the category (the MB.115 sign-off).
@@ -231,7 +244,12 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   form: defineKind({
     noun: 'Form',
-    group: { label: 'Group', placeholder: 'Choose a group' },
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
+    group: {
+      label: 'Group',
+      placeholder: 'Choose a group',
+      hint: "What kind of thing it is. The ingredient form's suggestions list the forms under their groups.",
+    },
     deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the form
     // (MB.162), though no entry's address moves: a form is no part of one
@@ -245,7 +263,13 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   deity: defineKind({
     noun: 'Deity',
-    group: { label: 'Tradition', placeholder: 'Choose a tradition' },
+    descriptionHint:
+      "Who they are, with the other spellings a reader types, such as Hekate. The ingredient form's suggestions match it as well as the name.",
+    group: {
+      label: 'Tradition',
+      placeholder: 'Choose a tradition',
+      hint: 'The people or religion that honours them. A god several honour is filed under one, and the description names the others.',
+    },
     deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the deity
     // (MB.162), though no entry's address moves: a deity is no part of one.
@@ -265,6 +289,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // listing the value (MB.162).
   planet: defineKind({
     noun: 'Planet',
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
     schema: PlanetInput,
@@ -276,6 +301,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   zodiacSign: defineKind({
     // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.
     noun: 'Zodiac Sign',
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
     schema: ZodiacSignInput,
@@ -437,12 +463,26 @@ const GroupedValueForm = ({
         {rootError && <Notice kind="error">{rootError}</Notice>}
         {/* Autofill off: Chrome takes a field named "name" for a person's and
             offers the user's own. */}
-        <TextField<GroupedValueValues> name="name" label="Name" autoComplete="off" required />
-        <TextField<GroupedValueValues> name="description" label="Description" multiline required />
+        <TextField<GroupedValueValues>
+          name="name"
+          label="Name"
+          placeholder="Add a name"
+          autoComplete="off"
+          required
+        />
+        <TextField<GroupedValueValues>
+          name="description"
+          label="Description"
+          hint={spec.descriptionHint}
+          placeholder="Describe it"
+          multiline
+          required
+        />
         {group && (
           <SelectField<GroupedValueValues>
             name="groupId"
             label={group.label}
+            hint={group.hint}
             placeholder={group.placeholder}
             options={choices}
             // Typed into to narrow the groups, the owner's call (MB.115).

@@ -108,6 +108,7 @@ const ChipColorField = ({
   id,
   label,
   column,
+  placeholder,
   value,
   onChange,
   onBlur,
@@ -260,7 +261,7 @@ const ChipColorField = ({
                 value={value}
                 spellCheck={false}
                 autoComplete="off"
-                placeholder="#rrggbb"
+                placeholder={placeholder}
                 onChange={(event) => onChange(event.currentTarget.value)}
                 aria-invalid={invalid}
                 aria-required={required}
