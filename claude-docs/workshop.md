@@ -207,7 +207,10 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
   each page is saved as `<name>-<width>-<theme>.png`.
 - **The theme is `emulateMedia({ colorScheme })`**: a fresh context has no
   stored theme, so the app follows `prefers-color-scheme` as a first visit
-  does.
+  does. A workshop story does not: Ladle sets its configured default, dark,
+  on the document unless the URL carries `theme=`, so the script adds
+  `theme=light` or `theme=dark` to any path with a `story=` parameter. A
+  story whose `meta.theme` is fixed keeps it either way.
 - **`--storage-state <file>`** is a Playwright storage-state file carrying a
   signed-in session's cookies, for a page behind sign-in.
 - **Untested on purpose**: it is a tool the agents running a review use, not
