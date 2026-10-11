@@ -26,7 +26,10 @@ wrapper), `TabPanel` (the content area) and `useTabSwitch`.
 `panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
 shows while a pressed tab is on its way. A tab's `filtered`, set in
 `ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
-to draw a filter row.
+to draw a filter row. A list reuses it, with no filter row, while a filter
+or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
+imports its own stylesheet, `index.scss`, and its shapes are drawn wherever
+it renders.
 
 ## Contracts
 
@@ -87,8 +90,8 @@ to draw a filter row.
   renders, `aria-current` and the pill on it, its action replacing the old
   one in the same render, and the new content fades in over the skeleton.
   A navigation that fails or is abandoned ends the transition, so the pill
-  returns to the open tab. The pager's soft ends
-  hold their own page the same way ([`pager.md`](pager.md)).
+  returns to the open tab. A filter and the pager hold their own list's page
+  the same way ([`list-frame.md`](list-frame.md)).
 - **Only a plain press is the row's.** A Ctrl, Cmd, Shift or Alt click and a
   middle click keep the browser's behaviour, a new tab or window, by the
   pager's rule (`opensElsewhere`, `src/lib/opens-elsewhere.ts`). The open
@@ -100,9 +103,13 @@ to draw a filter row.
   tab press, so a guard there would add nothing; the guard stays in
   `src/app/admin/layout.tsx` and every page
   ([`auth/admin-guard.md`](../auth/admin-guard.md)).
-- **Only a change of tab shows the loading state.** A filter, a pager press
-  or a modal's `?edit=` link navigates within the tab without the tab row,
-  so the list stays in place while the new one reads, as before.
+- **A filter and the pager show the same loading state, within the tab**
+  (the owner's call at MB.115's review). Each list's
+  [`ListFrame`](list-frame.md) puts this skeleton, without its filter row,
+  in place of the list under the filter, and greys the filter row as this
+  greys the tab row, `aria-busy` on it and its controls `aria-disabled`;
+  the tab row stays live. A modal's `?edit=` or `?new` link navigates
+  within the tab with neither, so the list stays in place behind it.
 - **A nav of links, not a `role="tablist"`.** Each tab navigates to another
   address. A tablist promises arrow-key movement between panels shown in
   place, which these are not. The row is a `nav` named by the page's title,
@@ -200,7 +207,8 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   then a table's heading over the muted hairline and six rows, every second
   one banded on the card surface as the admin tables are, their bars of
   uneven lengths; then the pager's two ends, centred. One skeleton serves
-  every tab; a tab with no filter leaves the row out. It is a size
+  every tab, and every list's filter and pager press; a tab with no filter,
+  and a list whose filter row stays, leave the row out. It is a size
   container: under `$table-stack-width` of its own width the heading goes
   and each row is a card on the card surface, its bars stacked and its
   action across its foot, as `.data-table--stack`'s cards are; under 28rem

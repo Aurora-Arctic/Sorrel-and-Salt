@@ -106,10 +106,11 @@ for a rule only one kind's rows need.
   list's is: `disabled` while the trimmed query and the group match the
   filter the page shows, enabled once either differs. With JavaScript, a
   submit builds the address with `groupedValuesHref(kind, { query, group })`
-  and `FilterForm` pushes it as a soft navigation, as the pager's links are, inside a
-  transition: Filter wears the shared `.spinner`, `aria-busy` and the label
-  "Filtering" until the filtered list arrives, the owner's rule for a submit
-  (the user list's full load shows nothing until the page goes). The list
+  and `FilterForm` pushes it as a soft navigation, as the pager's links are, inside
+  its `ListFrame`'s transition: the row greyed and off and the tabs'
+  skeleton in place of the table and the pager until the filtered list
+  arrives, the owner's call at MB.115's review
+  ([`list-frame.md`](list-frame.md)). The list
   keys the form by the filter shown, so a page showing another — Back to an
   older filter, say — starts it again from that one rather than keeping a
   stale draft. In the workshop, `next/navigation` is stubbed
@@ -147,10 +148,10 @@ for a rule only one kind's rows need.
 ## Styling
 
 The list is the list primitives ([`styling.md`](../styling.md), "Designing
-a section"): the root a `.list-frame`; the filter a
+a section"): the root a `.list-frame`, a [`ListFrame`](list-frame.md); the filter a
 [`FilterForm`](filter-form.md), so a `.filter-row` whose fields are
 `FieldShell`s around a native input and select and whose Filter is a solid
-`BusyButton`; and the table a `.data-table` in its `.data-table-frame`,
+button; and the table a `.data-table` in its `.data-table-frame`,
 banded at desktop width (every even row on the card surface, the owner's
 M5.6 call, kept at MB.115's sign-off over a hairline rule), with the
 `--stack` modifier, its roles written out
@@ -182,7 +183,12 @@ kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear Filters offered, the
-full-width Add and the rows as cards. Each kind has four invented groups, so
+full-width Add and the rows as cards. `CategoriesPending`, with
+`PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
+Filter pressed and the list on its way: a `ListNavigationContext` holding
+one pending above the page, since the stub router goes nowhere, so the
+filter row greyed and the tabs' skeleton in place of the list
+([`list-frame.md`](list-frame.md)). Each kind has four invented groups, so
 typing in a story's group filter shows its list narrowing. The filter
 reaches the admin pages, which the workshop does not serve. Render-only, no
 test ids, no snapshots.
@@ -201,7 +207,7 @@ applied, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
 parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page
 and no group written, as rows too, and a flat kind's table and filter drawn
-with no group. The filter's busy state and its reset
+with no group. The filter's loading state and its reset
 are CompendiumList's, paging Pager's, and the category chip's colours
 presentation.
 `tests/app/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services

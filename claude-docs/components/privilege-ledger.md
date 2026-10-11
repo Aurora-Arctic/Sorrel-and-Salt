@@ -33,8 +33,9 @@ id.
   dropdown (`privilege`: All Privileges, Admin or Coven Creation, in title
   case as every label is), both on the owner's call, and a Filter button. It is `filter.tsx`, the one client file here:
   the fields and their state inside the shared `FilterForm`
-  ([`filter-form.md`](filter-form.md)), so Filter is busy, a spinner and
-  "Filtering", until the full load leaves (MB.115). A native
+  ([`filter-form.md`](filter-form.md)), so from the press until the full load
+  leaves the row is greyed and off and the list beneath it is the tabs'
+  skeleton (MB.115; [`list-frame.md`](list-frame.md)). A native
   `<select>`, so before hydration the form still submits, All Privileges as
   `privilege=`, which the page reads as no privilege. Filter is `disabled`
   while the trimmed query and the dropdown match the filter shown, as the

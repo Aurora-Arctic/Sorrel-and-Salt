@@ -37,8 +37,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   since the form carries no cursor. It is `filter.tsx`, a client file: the
   fields and their state, inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)), which holds the form, the Filter
-  button and the full-load navigation, so Filter is busy, a spinner and
-  "Filtering", from the press until the browser leaves (MB.115). Its Clear
+  button and the full-load navigation, so from the press until the browser
+  leaves the row is greyed and off and the list beneath it, table and pager,
+  is the tabs' skeleton (MB.115; [`list-frame.md`](list-frame.md)). Its Clear
   Filters link, offered while the page shows a query, a role or Needs
   Approval, opens `/admin/users` with none as the same full load, and while
   only the fields hold one empties them in place
