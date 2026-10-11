@@ -10,6 +10,8 @@ import { seedCategories } from '@/db/seed/categories';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
+import { seedCompendium } from '@/db/seed/compendium';
+import { COMPENDIUM } from '@/db/seed/compendium/index';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
@@ -136,7 +138,7 @@ describe('resolveScenario', () => {
 // revocable row on /admin/users.
 //
 // Each entry names the tables it is the seed of: the ones it fills from empty.
-// The five that `migrate.yml` runs on staging and production; the dev-only
+// The six that `migrate.yml` runs on staging and production; the dev-only
 // scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = [
   { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
@@ -153,11 +155,40 @@ const SEED_ENTRIES: SeedEntry[] = [
     },
     tables: ['references', 'reference_links'],
   },
+  {
+    // On the production list, after everything it picks from and the sources
+    // it may share a work with (MB.243 moved it off the invented fixture).
+    name: 'the compendium seed, after the vocabularies and sources',
+    run: async (db) => {
+      await seedCategories(db);
+      await seedForms(db);
+      await seedAstrology(db);
+      await seedDeities(db);
+      await seedSources(db);
+      await seedCompendium(db, COMPENDIUM);
+    },
+    tables: [
+      'ingredients',
+      'ingredient_variants',
+      'ingredient_folk_names',
+      'ingredient_deities',
+      'ingredient_categories',
+      'ingredient_substitutes',
+      'references',
+      'reference_links',
+    ],
+  },
 ];
 
 describe('the shape every seed shares', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
+  });
+
+  // Precondition of the compendium entry: an empty list would pass every sweep below by writing nothing.
+  it('runs the compendium seed over a list that holds entries', () => {
+    expect(COMPENDIUM.length).toBeGreaterThan(0);
+    expect(COMPENDIUM.flatMap((shard) => shard.entries).length).toBeGreaterThan(0);
   });
 
   // One run, read three ways: the bootstrap row it inserted, the stamps on

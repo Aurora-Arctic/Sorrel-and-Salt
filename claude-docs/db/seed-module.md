@@ -54,7 +54,7 @@ toRow })` is the same insert for the two callers that link what they insert —
 `standard`'s compendium entries and the sources seed's references — and
 returns `present` with each inserted row's id under its key; `present` is the
 caller's own read, since each decides what present means.
-`requireFrom(map, key, describe)` is a `Map` lookup that throws
+`insertStamped(tx, table, rows)` inserts rows it is told are missing, stamped, 1,000 to a statement under Postgres's 65,535-parameter limit, and the three helpers above insert through it (MB.242), as the compendium seed does directly, having decided presence per entry itself. `requireFrom(map, key, describe)` is a `Map` lookup that throws
 `describe()`'s message rather than handing `undefined` to a NOT NULL column.
 `insertSeedUser(tx, user)`, in `bootstrap-admin.ts`, inserts a user by fixed
 id as the bootstrap user, the bootstrap user itself and `minimal`'s alike.
@@ -102,6 +102,8 @@ group by the group's key, so a renamed group still takes it.
 (MB.242) to key its entries by; the `standard` fixture writes none.
 `0047_refill-seed-keys` keys any bootstrap-created row still unkeyed, one
 seeded between the two deploys. The sources seed keys on it from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
+
+**The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium`, which MB.242 adds to `scripts/db-seed.ts` beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of an admin's edits. The rules its entries are written to are [`compendium-seed/README.md`](compendium-seed/README.md).
 
 **`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
 compendium. The system user is the bootstrap user under the fixed

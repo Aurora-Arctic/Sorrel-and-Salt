@@ -210,14 +210,16 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   why it is worth a named rule rather than a note; `sslmode=require` on its own
   is fine and is what actually requests TLS.
 
-- **The reference seeds (M4.3, M4.3a, MB.93, MB.129, MB.156) are one step inside
+- **The reference seeds (M4.3, M4.3a, MB.93, MB.129, MB.156, MB.242) are one step inside
   `migrate.yml`, not a workflow of their own.** After the migrations, `npm run
 db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   and `npm run db:seed:deities` write DESIGN.md §6's category vocabulary, §5's
   ingredient form, planet and zodiac vocabularies and the deity vocabulary
   into the schema they just created, and `npm run db:seed:sources` then the
-  sources their seed docs record, linked to the rows those seeds wrote, when
-  the `seed-reference` input says so. One step for all five, sharing a gate, a log
+  sources their seed docs record, linked to the rows those seeds wrote, and
+  `npm run db:seed:compendium` last the compendium's entries, which pick from
+  the vocabularies and may cite a work the sources seed wrote, when the
+  `seed-reference` input says so. One step for all six, sharing a gate, a log
   and a summary: a form vocabulary seeded while the categories failed is not a
   state worth reporting separately. It is how any vocabulary reaches staging
   and production at all: deploys are CI-only and there is no shell on either
@@ -236,13 +238,16 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   (`src/db/seed/categories.ts` and the `category-groups.ts` data it reads, `src/db/seed/forms.ts`,
   `src/db/seed/astrology.ts`, `src/db/seed/deities.ts`, `src/db/seed/sources.ts`
   with `src/lib/citation.ts`, whose rendering keys a source, and the deity and
-  astrology seed docs it is transcribed from, the two
-  `*-vocabulary.ts` helpers they write through, `src/db/seed/bootstrap-admin.ts`,
+  astrology seed docs it is transcribed from, `src/db/seed/reference-rows.ts`,
+  which writes its references and the compendium's, `src/db/seed/compendium.ts`
+  and its shards under `src/db/seed/compendium/`, the two
+  `*-vocabulary.ts` helpers they write through, `src/db/seed/idempotent.ts`,
+  which every seed writes through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer
-  — one gate for every vocabulary, so a change to any seed runs all five.
+  — one gate for every vocabulary, so a change to any seed runs all six.
   Every `db:seed:<target>` script has a line in the seed step and its file a
   place in this list, and each helper too: `two-tier-vocabulary.ts` was
-  missing from it until MB.129.
+  missing from it until MB.129, and `idempotent.ts` until MB.242.
   Two things about it are load-bearing. It carries **no job-level `if:`**: a
   skipped dependency skips its dependents, so gating the job on
   `github.event_name == 'push'` would take every hotfix preview deploy down

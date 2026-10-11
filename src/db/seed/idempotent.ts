@@ -70,15 +70,35 @@ export async function insertMissing<TTable extends PgTable, W, K>(
   const present = new Set(await existing(tx));
   const missing = wanted.filter((item) => !present.has(keyOf(item)));
 
-  if (missing.length === 0) return;
+  await insertStamped(tx, table, missing.map(toRow));
+}
 
-  await tx.insert(table).values(
-    missing.map(
+/** Rows per INSERT: a statement binds at most 65,535 parameters, and a row binds one per column. */
+export const INSERT_CHUNK = 1000;
+
+/**
+ * Inserts `rows`, each stamped by the bootstrap user, `INSERT_CHUNK` to a
+ * statement so a seed of any size stays under Postgres's parameter limit, and
+ * returns every inserted row in order. Nothing is checked for presence: that
+ * is the caller's.
+ */
+export async function insertStamped<TTable extends PgTable>(
+  tx: SeedTransaction,
+  table: TTable,
+  rows: readonly Omit<PgInsertValue<TTable>, InsertStamps>[],
+): Promise<TTable['$inferSelect'][]> {
+  const inserted: TTable['$inferSelect'][] = [];
+  for (let start = 0; start < rows.length; start += INSERT_CHUNK) {
+    const chunk = rows.slice(start, start + INSERT_CHUNK).map(
       // `Omit` of a generic loses the row's type for TS; `applyAudit` puts
       // back exactly the four stamps `InsertStamps` took out.
-      (item) => applyAudit('insert', toRow(item), BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
-    ),
-  );
+      (row) => applyAudit('insert', row, BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
+    );
+    inserted.push(
+      ...((await tx.insert(table).values(chunk).returning()) as TTable['$inferSelect'][]),
+    );
+  }
+  return inserted;
 }
 
 /**
@@ -174,14 +194,13 @@ export async function insertMissingReturningIds<
   const missing = wanted.filter((item) => !present.has(keyOf(item)));
   if (missing.length === 0) return present;
 
-  const inserted = (await tx
-    .insert(table)
-    .values(
-      missing.map(
-        (item) => applyAudit('insert', toRow(item), BOOTSTRAP_SESSION) as PgInsertValue<TTable>,
-      ),
-    )
-    .returning()) as (TTable['$inferSelect'] & { id: string })[];
+  const inserted = (await insertStamped(
+    tx,
+    table,
+    missing.map(toRow),
+  )) as (TTable['$inferSelect'] & {
+    id: string;
+  })[];
 
   for (const row of inserted) present.set(keyOfRow(row), row.id);
   return present;

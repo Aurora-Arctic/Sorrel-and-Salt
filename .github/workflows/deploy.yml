@@ -120,6 +120,10 @@ jobs:
             src/db/seed/astrology.ts \
             src/db/seed/deities.ts \
             src/db/seed/sources.ts \
+            src/db/seed/reference-rows.ts \
+            src/db/seed/compendium.ts \
+            src/db/seed/compendium/ \
+            src/db/seed/idempotent.ts \
             src/lib/citation.ts \
             claude-docs/db/deity-vocabulary-seed.md \
             claude-docs/db/astrology-vocabulary-seed.md \

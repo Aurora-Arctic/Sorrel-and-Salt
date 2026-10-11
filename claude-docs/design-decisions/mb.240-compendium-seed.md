@@ -1,0 +1,48 @@
+# MB.240 — A researched, sourced compendium seed
+
+**Status:** decided · **Date:** 2026-10-11 (settled with the owner the same day)
+
+Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium an admin fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
+
+## The problem
+
+Every compendium task so far built the machinery around the compendium: its tables, its admin page, its references. None wrote its real entries. `waves/wave-08.md` said the compendium would be "populated by hand rather than by editing seed files", and the only compendium content in the repo is the `standard` test fixture's 26 entries, which staging and production never run (`db/standard-scenario.md`; `.github/workflows/migrate.yml` seeds the five curated vocabularies and their sources only).
+
+The owner reversed the wave file on 2026-10-11 and asked for "a decently large catalog", researched and sourced, with the research done by agents. The binding rule is the owner's: **"Do not make stuff up. All claims must have sources."** So the problem is not only the size of the list but holding six research lanes to that rule, and keeping a reseed from undoing what an admin later changes.
+
+## The decisions
+
+| Question                                  | Decision                                                                                                                                                                                                                                               |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| How large?                                | 614 entries, keyed by formal name. Forms are extra rows beneath them and do not count. 614 sits between the single-volume herbals the plan's research counted (330 to 400 entries) and Kynes's plant encyclopedia plus a crystal book (550+ and 100+). |
+| How deep?                                 | Cunningham's depth: 100 to 250 words of description per entry, at most 120 per form (a default the owner may change).                                                                                                                                  |
+| What must a value rest on?                | A source the lane read during its task: a page of the owner's book, or a page it fetched. Wikipedia is a valid source beside the others. A value with no source is left out.                                                                           |
+| Is it a scenario?                         | No. It is reference data with its own target, `db:seed:compendium`, run by `migrate.yml` after the five vocabularies and their sources. `standard` is cloned for every db test, so it stays the fixture it is.                                         |
+| What happens on a reseed?                 | Nothing, for an entry already there. The run that inserts an entry writes everything beneath it, and a present entry is skipped with all its children. A correction is made in the admin page and the literal edited to match.                         |
+| How does the seed know an entry it wrote? | `seed_key` on `ingredients` alone (MB.241), the identity key as the seed wrote it. Present also means a live row with that identity or that slug.                                                                                                      |
+| How is it split?                          | Six content shards of 48 to 136 entries, one task, one pull request and one research lane each, after a 14-entry pilot that proves the shape on real data.                                                                                             |
+| Where do the facts live?                  | In the TypeScript literal. Every citation carries `supports`, the fields it backs, and a guard fails any populated field no citation covers. Each shard's doc records its bibliography and one source line per entry, not the entries again.           |
+| How are the books read?                   | The owner's copies, in `/app/.library/`, ignored by git and guarded by a test; `npm run library:text` turns them into text a lane can search. A citation names the edition in hand.                                                                    |
+| What may an entry name?                   | Only the curated values: forms, categories, deities, planets and signs by their seed files' spelling, picked through `seed_key` rather than by name; colours from a closed list.                                                                       |
+
+## What was rejected
+
+- **Compressing the seed.** The plan measured git already packing this repo's seed text 9.5 to 11.8 times, and a gzipped seed doc deflating to the same size again inside git (54,267 to 54,293 bytes). A compressed file is unreviewable, gains nothing over git's own packing, and loses git's delta storage on every edit. The projected size, about 1.2 MB of literal packing to about 0.5 MB, is about 2% of today's `.git` (estimates from the plan).
+- **Git LFS.** It would spend the account's free bandwidth on a problem a hundred times smaller than the one it solves, and put the seed outside a plain clone.
+- **One file per entry.** 614 files and an index importing each. A shard of 100 entries would then be over 100 files in one pull request, against GitHub's 300-files-per-PR limit the plan recorded, and six lanes would each add about a hundred lines to the one index, where with shards each adds one. Shards keep each pull request to one literal and one doc.
+- **The entries repeated in markdown.** The deity seed doc holds each row with its sources at about 1.1 KB per row; at 614 entries that is about 700 KB of markdown nothing checks against the literal (the plan's estimate). The literal is the source of truth, and `supports` is checked by the guard; the doc records which source backs which fields, one line per entry.
+
+## What MB.240 found and built differently
+
+- **The extractor is `scripts/library-text.ts`, not `.mts`.** Every script in `scripts/` is a `.ts` file run by Node's own type stripping under `scripts/package.json`'s `"type": "module"`, so the new one follows them.
+- **One of the owner's nine files is not the book it is named for.** `Master Book Of Herbalism PDF.pdf` is a 34-page summary "Written by Bookey", not Paul Beyerl's text; the README says never to cite it.
+- **One is an excerpt.** `9780738732534.pdf`, Kynes's _Complete Book of Correspondences_, holds 37 pages: the front matter and printed pages 1 to 26. Its plant, mineral and animal chapters are not in it.
+- **The crystal encyclopedia and the 1903 _Book of Herbs_ are OCR text** (a scan read by character recognition), so a spelling is checked against the page.
+- **A PDF's page file is not its printed page.** The offset varies within one book, so the locator is the number printed on the page.
+- **An EPUB arranged by entry is cited by heading** (`s.v. Mugwort`), the precedent [`db/references.md`](../db/references.md) sets; the one arranged otherwise, _Herbal Remedies for Beginners_, carries its own page markers and is cited by them.
+
+## Sources
+
+- The plan's research, reported by three agents on 2026-10-11, with the provenance each figure carries there: [`mb.240-plan.md`](mb.240-plan.md), "What the research found".
+- The books' editions: each file's own title and copyright pages, read on 2026-10-11 and recorded in [`db/compendium-seed/README.md`](../db/compendium-seed/README.md), "The library".
+- The repo's own precedents: `src/db/seed/sources.ts` (Wikipedia as an `entry`), [`mb.171-seed-keys.md`](mb.171-seed-keys.md) (seed keys), [`mb.215-ingredient-variants.md`](mb.215-ingredient-variants.md) (an entry and its forms).
