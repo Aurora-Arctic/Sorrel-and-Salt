@@ -101,6 +101,7 @@ export function ComboboxMultiSelect({
   // Found by its id rather than held in a ref: the caller's ref and
   // Downshift's two already share the box.
   const focusBox = () => document.getElementById(id)?.focus();
+  const empty = chosen.length === 0;
 
   // The control is the box: a press on its padding or its chevron opens the
   // list as a press on the box does. An x and the clear are their own.
@@ -168,22 +169,26 @@ export function ComboboxMultiSelect({
           </div>
         </div>
         <div className="combobox__indicators">
-          {chosen.length > 0 && (
-            <>
-              <button
-                type="button"
-                className="combobox__indicator"
-                aria-label={`Clear ${label}`}
-                onClick={() => {
-                  setSelectedItems([]);
-                  focusBox();
-                }}
-              >
-                <ClearIcon />
-              </button>
-              <span className="combobox__separator" aria-hidden="true" />
-            </>
-          )}
+          {/* Drawn while empty too, hidden, so the control keeps one width
+              whether anything is chosen (MB.115), as the typed box's clear. */}
+          <button
+            type="button"
+            className={empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
+            aria-label={`Clear ${label}`}
+            aria-hidden={empty || undefined}
+            tabIndex={empty ? -1 : undefined}
+            disabled={empty}
+            onClick={() => {
+              setSelectedItems([]);
+              focusBox();
+            }}
+          >
+            <ClearIcon />
+          </button>
+          <span
+            className={empty ? 'combobox__separator is-empty' : 'combobox__separator'}
+            aria-hidden="true"
+          />
           <span className="combobox__indicator" aria-hidden="true">
             <ChevronIcon />
           </span>

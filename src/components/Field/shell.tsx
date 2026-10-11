@@ -41,9 +41,10 @@ export function FieldShell({
   error,
   children,
   after,
+  className,
 }: FieldShellProps): ReactElement {
   return (
-    <div className="field">
+    <div className={className ? `field ${className}` : 'field'}>
       {/* Positioned by the primitive: the hint's tip places itself above its
           nearest positioned ancestor (claude-docs/components/info-tip.md). */}
       <div className="field__label-row">

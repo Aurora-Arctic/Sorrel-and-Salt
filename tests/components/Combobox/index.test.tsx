@@ -1160,8 +1160,14 @@ describe('Combobox', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Clear Element' }));
       expect(chosen()).toBe('');
       expect(elements()).toHaveFocus();
-      // Nothing left to clear.
+      // Nothing left to clear: kept in place for its room (MB.115), but out of
+      // the tree and the tab order.
       expect(screen.queryByRole('button', { name: 'Clear Element' })).not.toBeInTheDocument();
+      expect(
+        screen
+          .getAllByRole('button', { hidden: true })
+          .find((button) => button.getAttribute('aria-label') === 'Clear Element'),
+      ).toHaveAttribute('tabindex', '-1');
     });
 
     it('says what each change did, for a screen reader', () => {

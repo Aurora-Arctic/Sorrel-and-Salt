@@ -81,14 +81,17 @@ export function ComboboxTypeahead({
         if (named && named.label !== text) setText(named.label);
         onBlur?.();
       }}
+      // From the first render, empty or not, so its room is kept while it
+      // is hidden and the box never changes width.
       clear={
-        clearable && (text !== '' || value !== '')
+        clearable
           ? {
               label: `Clear ${label}`,
+              empty: text === '' && value === '',
               onClear: () => {
                 setText('');
                 if (value !== '') onChange('');
-                // The pressed clear goes; the box keeps the focus.
+                // The pressed clear hides; the box keeps the focus.
                 document.getElementById(id)?.focus();
               },
             }

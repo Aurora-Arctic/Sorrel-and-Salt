@@ -120,17 +120,32 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveValue('Old Testic');
   });
 
-  it('clears to no choice from its clear, shown while it holds text or a choice', () => {
-    render(<Harness initial="mockish" clearable />);
+  // The owner's call (MB.115): an empty box keeps its clear's room, so the
+  // clear is drawn from the first render, hidden from the tree and the tab
+  // order while there is nothing to clear, and offered once there is.
+  it('clears to no choice from its clear, offered while it holds text or a choice and kept, hidden, while it does not', () => {
+    render(<Harness initial="" clearable />);
     const clear = () => screen.queryByRole('button', { name: 'Clear Tradition' });
+    // Out of the tree, it has no accessible name to be found by: found among
+    // every button, hidden ones too, by the label it carries.
+    const kept = () =>
+      screen
+        .getAllByRole('button', { hidden: true })
+        .find((button) => button.getAttribute('aria-label') === 'Clear Tradition');
 
+    expect(clear()).not.toBeInTheDocument();
+    expect(kept()).toHaveAttribute('tabindex', '-1');
+
+    type('zz');
+    expect(clear()).toBeInTheDocument();
+    expect(kept()).not.toHaveAttribute('tabindex');
+
+    type('mockish');
     fireEvent.click(clear()!);
     expect(value()).toBeEmptyDOMElement();
     expect(box()).toHaveValue('');
     expect(box()).toHaveFocus();
     expect(clear()).not.toBeInTheDocument();
-
-    type('zz');
-    expect(clear()).toBeInTheDocument();
+    expect(kept()).toHaveAttribute('tabindex', '-1');
   });
 });

@@ -93,7 +93,12 @@ for a rule only one kind's rows need.
   box ([`combobox.md`](combobox.md), "The type-ahead box"), told apart by
   `useSyncExternalStore`'s server snapshot: typing narrows the groups, its
   placeholder reads "All Groups" while blank, and its clear, "Clear Group"
-  ("Clear Tradition"), is the way back to every group. Text naming no group
+  ("Clear Tradition"), is the way back to every group. Both stand at one
+  width, the field's `filter-row__typeahead` class
+  ([`filter-form.md`](filter-form.md), "Styling"), so the swap moves
+  nothing: left to size themselves, the select took its longest option's
+  width and the type-ahead its few letters', and the field shrank as the
+  page hydrated (MB.115). Text naming no group
   is no group, so it filters by none. A hidden input carries the same
   parameter, by slug, so the form's fields are what they were.
 - **Filter is offered only when there is a new filter to apply**, as the user

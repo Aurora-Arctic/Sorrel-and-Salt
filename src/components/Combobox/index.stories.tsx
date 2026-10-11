@@ -128,11 +128,11 @@ export const List: Story = () => {
           </ul>
         )
       }
-      clear={
-        entries.length > 0
-          ? { label: 'Clear Folk Names', onClear: () => setEntries([]) }
-          : undefined
-      }
+      clear={{
+        label: 'Clear Folk Names',
+        onClear: () => setEntries([]),
+        empty: entries.length === 0,
+      }}
     />
   );
 };
@@ -180,9 +180,7 @@ export const Sortable: Story = () => {
           />
         )
       }
-      clear={
-        entries.length > 0 ? { label: 'Clear Planets', onClear: () => setEntries([]) } : undefined
-      }
+      clear={{ label: 'Clear Planets', onClear: () => setEntries([]), empty: entries.length === 0 }}
     />
   );
 };

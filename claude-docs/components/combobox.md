@@ -35,7 +35,7 @@ movable, on dnd-kit.
 | `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                                                                                                                                   |
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                 |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
-| `clear`            | `{ label, onClear }`: a control that empties the list, shown while it holds entries, named "Clear Folk Names".                                                                                                                                                                                 |
+| `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
 | `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                                                                                                                                   |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
@@ -124,6 +124,14 @@ colour is never the only cue.
   the box's state and not on rows arriving after the debounce. The ListField's
   own `<output>` for adds and removals is named "Folk Names changes" so the
   two are told apart.
+- **The clear and its separator always hold their room** (MB.115, the
+  owner's call): drawn from the first render, and while there is nothing to
+  clear (`clear.empty`) hidden by `visibility`, out of the accessibility
+  tree (`aria-hidden`) and the tab order (`tabindex="-1"`, `disabled`),
+  but never out of the layout. So typing, choosing and clearing never change
+  the control's width, which matters wherever the control sizes itself, as
+  in a filter row. A pressed clear hides, so its owner puts the focus back in
+  the box. The multi-select's clear does the same.
 - **The entries sit inside the control**, ahead of the text, each a chip with
   its own × — the owner's call, after react-select's multi-select — with the
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
@@ -248,19 +256,20 @@ folder's index and the lint refuses an import cycle.
 - **A pick or a value set from outside writes the choice's label** into the
   box, unless the text already names it.
 - **With `clearable`, a clear** sits on the control's right before the
-  chevron, as a list's does, while the box holds text or a choice: it empties
-  both and leaves the focus in the box.
+  chevron, as a list's does, offered while the box holds text or a choice and
+  hidden in its place while it does not, so the box keeps one width: it
+  empties both and leaves the focus in the box.
 
-| Prop                 | Meaning                                                                           |
-| -------------------- | --------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it. |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                 |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.        |
-| `choices`            | `{ value, label }` in order; typing narrows them.                                 |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                          |
-| `required`           | `aria-required`, as the field marks it.                                           |
-| `clearable`          | A clear, "Clear Tradition", while it holds text or a choice; it empties both.     |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                |
+| Prop                 | Meaning                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                      |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                                                      |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                             |
+| `choices`            | `{ value, label }` in order; typing narrows them.                                                                      |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                               |
+| `required`           | `aria-required`, as the field marks it.                                                                                |
+| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both. |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                     |
 
 ## The multi-select box
 
@@ -619,8 +628,11 @@ first match highlighted, the arrows moving and Enter choosing; a click
 choosing and Escape closing without choosing; a box holding a choice opening
 on every choice; and the value `''` while the text names no choice, the
 choice once it names one in any case, and its label written in as the box
-is left; and its clear, there only while it holds something, emptying it and
-keeping the focus.
+is left; and its clear, out of the accessibility tree and the tab order while
+the box is empty but still drawn, offered while it holds something, emptying
+it and keeping the focus. The control's width, which jsdom does not lay out,
+was measured in the workshop at MB.115: one width empty, mid-typing, chosen
+and cleared.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 
