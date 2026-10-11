@@ -737,7 +737,7 @@ column's cell names its column in a `data-label` attribute:
 - **The header row is hidden but still read.** It is clipped as
   `.visually-hidden` is, so a screen reader still has the column names.
   Each cell is led by its own name instead, drawn from `data-label` by a
-  `::before` in the muted ink at the caption size. A cell whose `data-label`
+  `::before` in the muted ink at the caption size, `space(1)` above its value (half the `space(2)` between cells, so a label sits with its own value). A cell whose `data-label`
   is empty, an action such as Edit or Impersonate, has no label and spans
   the card.
 - **A stacking table writes out its roles**: `role="table"`, `rowgroup`,

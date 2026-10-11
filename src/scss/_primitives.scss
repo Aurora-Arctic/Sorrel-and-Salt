@@ -638,6 +638,10 @@
         content: attr(data-label);
         content: attr(data-label) / '';
         display: block;
+        // A step from its value, half the gap between cells, so a label sits
+        // with its own value: a row of logos would otherwise touch it (MB.115,
+        // the owner's call).
+        margin-bottom: space(1);
         color: $text-muted;
         font-size: type-size('caption');
         font-weight: 500;
