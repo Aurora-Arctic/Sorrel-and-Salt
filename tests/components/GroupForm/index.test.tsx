@@ -365,9 +365,9 @@ describe('GroupForm, for a category group', () => {
       press('Continue');
       press('Move and Delete');
 
-      const picker = screen.getByRole('combobox', { name: 'Move its 1 category to' });
-      await waitFor(() => expect(picker).toHaveAttribute('aria-invalid', 'true'));
-      expect(picker).toHaveAccessibleDescription(/\S/);
+      const picker = () => screen.getByRole('combobox', { name: 'Move its 1 category to' });
+      await waitFor(() => expect(picker()).toHaveAttribute('aria-invalid', 'true'));
+      expect(picker()).toHaveAccessibleDescription(/\S/);
     });
   });
 

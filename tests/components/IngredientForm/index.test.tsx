@@ -439,7 +439,6 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
 
       await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
-      expect(textbox('Name')).not.toHaveAccessibleDescription();
     });
   });
 

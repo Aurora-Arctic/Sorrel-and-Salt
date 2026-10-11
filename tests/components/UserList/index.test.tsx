@@ -711,7 +711,8 @@ describe('UserList admin changes switch', () => {
     render(<PauseControl paused canToggle={false} />);
 
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
-    expect(resume.previousElementSibling).toHaveTextContent(/\S/);
+    // The locked control wraps the button with its tip; the notice stands before it.
+    expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
     expect(resume).toHaveAttribute('aria-disabled', 'true');
     expect(resume).toHaveAccessibleDescription(/\S/);
     expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();

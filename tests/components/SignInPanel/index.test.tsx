@@ -76,10 +76,11 @@ describe('SignInPanel', () => {
   });
 
   it('shows a passed-in error as an alert, and none without one', () => {
-    const { rerender } = render(<SignInPanel next="/" configured={['google']} />);
+    const { unmount } = render(<SignInPanel next="/" configured={['google']} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    unmount();
 
-    rerender(
+    render(
       <SignInPanel
         next="/"
         error="Sign-in was cancelled before it finished."
