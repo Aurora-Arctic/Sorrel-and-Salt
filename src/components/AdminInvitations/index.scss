@@ -1,31 +1,17 @@
 @use '../../scss/variables' as *;
 
-// The admin invitations section's own rules: the section's column, its
-// heading row, the table's one-line cells at desktop width and wrapping ones
+// The admin invitations tab's own rules: its column, the table's one-line cells at desktop width and wrapping ones
 // as cards, the "None given" ink, the Reason field's room and the sent
 // confirmation. The table is the `.data-table` primitive with `--stack`; the
 // confirmation and the locked controls are the user list's, which bring
 // their own stylesheet (`UserList/controls.scss`).
 
+// Spaced as the tab's panel spaces any other tab's content: its action, then
+// the table or the empty state.
 .admin-invitations {
   display: flex;
   flex-direction: column;
-  gap: space(4);
-  margin-top: space(7);
-}
-
-// The heading and Invite Admin on one line, as a page's heading and its
-// primary action are.
-.admin-invitations__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(3);
-
-  h2 {
-    margin: 0;
-  }
+  gap: space(5);
 }
 
 .admin-invitations__empty {
@@ -71,7 +57,9 @@
 }
 
 // Compounded with `.notice`, whose primitive is `body .notice` in the app: a
-// lone class loses to it there.
+// lone class loses to it there. A line of its own beneath Invite Admin, in
+// the tab's action row, which wraps.
 .notice.admin-invitations__sent {
+  flex-basis: 100%;
   margin: 0;
 }

@@ -6,7 +6,7 @@ import type { GroupKind } from '../../components/GroupForm/types';
 import GroupList from '../../components/GroupList';
 import { groupsHref } from '../../components/GroupList/href';
 import type { GroupListEntry } from '../../components/GroupList/types';
-import PageHeader from '../../components/PageHeader';
+import { TabActions } from '../../components/TabbedPage';
 import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import {
@@ -31,14 +31,14 @@ import type { GroupKindPage, GroupPageProps } from './types';
 // The page every group vocabulary shares (MB.115): the category groups and
 // the form groups (M5.6b) and the deity traditions (MB.132), written once
 // after three routes had each carried a noun-swapped copy. Each route's
-// `page.tsx` keeps its `metadata` and hands its kind and address here. One
+// `page.tsx` keeps its `metadata` and hands its kind and address here; the
+// heading and tabs are its route group's layout's (MB.115). One
 // page of groups through the service GraphQL reads too, paged by the M3.6
 // helper (CLAUDE.md rule 1, rule 8); the writes are the modal's.
 
 /** What tells one group page from another: its copy and its readers. */
 const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
   category: {
-    title: 'Category Groups',
     noun: 'group',
     add: 'Add Group',
     addTitle: 'Add Category Group',
@@ -49,7 +49,6 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
     countMembers: async (groupId) => (await countCategories({ groupId }, undefined)).totalCount,
   },
   form: {
-    title: 'Form Groups',
     noun: 'group',
     add: 'Add Group',
     addTitle: 'Add Form Group',
@@ -61,7 +60,6 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
       (await countIngredientFormValues({ groupId }, undefined)).totalCount,
   },
   tradition: {
-    title: 'Deity Traditions',
     noun: 'tradition',
     add: 'Add Tradition',
     addTitle: 'Add Tradition',
@@ -109,7 +107,7 @@ async function readEdited(kind: GroupKind, slug: string) {
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { after, before, editSlug, adding } = readListPlace(await searchParams);
-  const { title, noun, add, addTitle, editTitle } = GROUP_KINDS[kind];
+  const { noun, add, addTitle, editTitle } = GROUP_KINDS[kind];
 
   const [page, choices, edited] = await Promise.all([
     readPage(kind, after, before),
@@ -129,15 +127,12 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
   const closeHref = groupsHref(kind, here);
 
   return (
-    <main>
-      <PageHeader
-        title={title}
-        action={
-          <Link className="btn btn--solid" href={groupsHref(kind, here, 'new')}>
-            {add}
-          </Link>
-        }
-      />
+    <>
+      <TabActions>
+        <Link className="btn btn--solid" href={groupsHref(kind, here, 'new')}>
+          {add}
+        </Link>
+      </TabActions>
       {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
       <GroupList
         kind={kind}
@@ -167,6 +162,6 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
           memberCount={edited.memberCount}
         />
       )}
-    </main>
+    </>
   );
 }

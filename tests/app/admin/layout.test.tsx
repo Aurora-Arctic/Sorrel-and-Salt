@@ -60,7 +60,7 @@ describe('the /admin page', () => {
 
     const navLinks = within(screen.getByRole('navigation', { name: 'Admin' })).getAllByRole('link');
     const row = navLinks.filter((link) => !link.closest('details'));
-    expect(row).toHaveLength(11);
+    expect(row).toHaveLength(6);
     expect(hrefs(within(screen.getByRole('main')).getAllByRole('link'))).toEqual(hrefs(row));
   });
 

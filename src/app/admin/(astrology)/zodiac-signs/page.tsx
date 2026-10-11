@@ -1,0 +1,12 @@
+import type { Metadata } from 'next';
+import { ValuePage } from '../../value-page';
+import type { ValueRouteProps } from '../../types';
+
+export const metadata: Metadata = {
+  title: 'Zodiac Signs — Admin — Sorrel & Salt',
+};
+
+// The curated zodiac signs (MB.95), in the page shape every curated value shares.
+export default function AdminZodiacSignsPage({ searchParams }: ValueRouteProps) {
+  return ValuePage({ kind: 'zodiacSign', searchParams });
+}

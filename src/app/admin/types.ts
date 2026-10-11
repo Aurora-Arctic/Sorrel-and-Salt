@@ -142,8 +142,6 @@ export interface GroupRow {
 
 /** One group vocabulary's page: its copy and its readers, from `@/modules/vocabulary`. */
 export interface GroupKindPage {
-  /** The page's heading and the table's name: "Category Groups". */
-  title: string;
   /** One group, lower-case, as the missing notice says it: "group". */
   noun: string;
   /** The Add link's label: "Add Group". */

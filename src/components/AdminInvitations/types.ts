@@ -1,4 +1,4 @@
-/** One pending admin invitation, as `/admin/users` lists it (MB.70). */
+/** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
 export interface AdminInvitationEntry {
   id: string;
   email: string;

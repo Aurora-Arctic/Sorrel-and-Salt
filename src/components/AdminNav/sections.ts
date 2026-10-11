@@ -1,95 +1,73 @@
-import type { AdminSection } from './types';
+import type { AdminPage, AdminSection } from './types';
 
-// Every admin page, in its groups: the one list both the nav and the `/admin`
-// index read, so the two cannot drift (MB.115; claude-docs/components/admin-nav.md).
-// A list sits with the group list that organises it, as Category Groups
-// organise Categories (M5.6b, MB.132). Each href is checked against the
-// built routes (typedRoutes).
+// Every admin page, its tabs and its section: the one list the nav, the
+// `/admin` index and each tabbed page's layout read, so the three cannot
+// drift (MB.115; claude-docs/components/admin-nav.md). A list shares its page
+// with the group list that organises it, a tab each, as Category Groups
+// organise Categories (M5.6b, MB.132), on the owner's call after the design
+// review. Each href is checked against the built routes (typedRoutes).
+export const ADMIN_PAGES = {
+  compendium: {
+    label: 'Compendium',
+    description: 'Every ingredient in the shared reference, with its forms and sources.',
+    tabs: [{ href: '/admin/compendium', label: 'Compendium' }],
+  },
+  categories: {
+    label: 'Categories',
+    description: 'The categories an ingredient is filed under, and the groups that colour them.',
+    tabs: [
+      { href: '/admin/categories', label: 'Categories' },
+      { href: '/admin/category-groups', label: 'Groups' },
+    ],
+  },
+  forms: {
+    label: 'Forms',
+    description:
+      'The forms an ingredient comes in, and the groups that tell two forms of one name apart.',
+    tabs: [
+      { href: '/admin/forms', label: 'Forms' },
+      { href: '/admin/form-groups', label: 'Groups' },
+    ],
+  },
+  deities: {
+    label: 'Deities',
+    description: 'The deities an ingredient can be linked with, and the traditions they belong to.',
+    tabs: [
+      { href: '/admin/deities', label: 'Deities' },
+      { href: '/admin/deity-traditions', label: 'Traditions' },
+    ],
+  },
+  astrology: {
+    label: 'Astrology',
+    description: 'The planets and zodiac signs an ingredient can be linked with.',
+    tabs: [
+      { href: '/admin/planets', label: 'Planets' },
+      { href: '/admin/zodiac-signs', label: 'Zodiac Signs' },
+    ],
+  },
+  people: {
+    label: 'People',
+    description:
+      'Every account and its role, the admin invitations waiting, and who changed which privilege.',
+    tabs: [
+      { href: '/admin/users', label: 'Users' },
+      { href: '/admin/invitations', label: 'Invitations' },
+      // Who holds which privilege, and who changed it (MB.200).
+      { href: '/admin/privilege-changes', label: 'Privilege Changes' },
+    ],
+  },
+} as const satisfies Record<string, AdminPage>;
+
 export const ADMIN_SECTIONS: readonly AdminSection[] = [
   {
     name: 'Compendium',
     pages: [
-      {
-        href: '/admin/compendium',
-        label: 'Compendium',
-        description: 'Every ingredient in the shared reference, with its forms and sources.',
-      },
+      ADMIN_PAGES.compendium,
+      ADMIN_PAGES.categories,
+      ADMIN_PAGES.forms,
+      ADMIN_PAGES.deities,
+      ADMIN_PAGES.astrology,
     ],
   },
-  {
-    name: 'Categories',
-    pages: [
-      {
-        href: '/admin/categories',
-        label: 'Categories',
-        description: 'The categories an ingredient is filed under, each in a group.',
-      },
-      {
-        href: '/admin/category-groups',
-        label: 'Category Groups',
-        description: 'The groups categories sit in, and the colours each is drawn in.',
-      },
-    ],
-  },
-  {
-    name: 'Forms',
-    pages: [
-      {
-        href: '/admin/forms',
-        label: 'Forms',
-        description: 'The forms an ingredient comes in, offered as you type a form.',
-      },
-      {
-        href: '/admin/form-groups',
-        label: 'Form Groups',
-        description: 'The groups forms sit in, which tell two forms of one name apart.',
-      },
-    ],
-  },
-  {
-    name: 'Deities',
-    pages: [
-      {
-        href: '/admin/deities',
-        label: 'Deities',
-        description: 'The deities an ingredient can be linked with, each in a tradition.',
-      },
-      {
-        href: '/admin/deity-traditions',
-        label: 'Deity Traditions',
-        description: 'The traditions deities are grouped by.',
-      },
-    ],
-  },
-  {
-    name: 'Astrology',
-    pages: [
-      {
-        href: '/admin/planets',
-        label: 'Planets',
-        description: 'The planets an ingredient can be linked with.',
-      },
-      {
-        href: '/admin/zodiac-signs',
-        label: 'Zodiac Signs',
-        description: 'The signs an ingredient can be linked with.',
-      },
-    ],
-  },
-  {
-    name: 'People',
-    pages: [
-      {
-        href: '/admin/users',
-        label: 'Users',
-        description: 'Every account: its role, whether it can create a coven, and its invitations.',
-      },
-      // Who holds which privilege, and who changed it (MB.200).
-      {
-        href: '/admin/privilege-changes',
-        label: 'Privilege Changes',
-        description: 'Who granted or revoked which privilege, and when.',
-      },
-    ],
-  },
+  { name: 'People', pages: [ADMIN_PAGES.people] },
 ];

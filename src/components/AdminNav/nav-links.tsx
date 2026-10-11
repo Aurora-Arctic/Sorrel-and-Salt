@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useId } from 'react';
+import { isAtPath } from '../../lib/at-path';
 import { ChevronIcon } from '../Combobox/icons';
 import type { AdminPage, AdminSection, NavLinksProps } from './types';
 
@@ -10,12 +11,10 @@ import type { AdminPage, AdminSection, NavLinksProps } from './types';
 // the one client part: only `usePathname()` reads the address, and only in a
 // client component (claude-docs/components/admin-nav.md).
 
-// A link is current on its own page and on any address beneath it, but not on
-// a page whose path merely begins with its letters: a later
-// `/admin/forms-archive` must not mark Forms. Hence the slash, rather than a
-// bare `startsWith(href)`.
-const isCurrent = (pathname: string, href: string): boolean =>
-  pathname === href || pathname.startsWith(`${href}/`);
+// A page is current on any of its tabs: Categories on `/admin/category-groups`
+// too, since that is Categories' Groups tab (MB.115).
+const isCurrent = (pathname: string, page: AdminPage): boolean =>
+  page.tabs.some(({ href }) => isAtPath(pathname, href));
 
 /** The section and page you are on, or null on the index, which is in no section. */
 function locate(
@@ -23,7 +22,7 @@ function locate(
   pathname: string,
 ): { section: AdminSection; page: AdminPage } | null {
   for (const section of sections) {
-    const page = section.pages.find(({ href }) => isCurrent(pathname, href));
+    const page = section.pages.find((each) => isCurrent(pathname, each));
     if (page) return { section, page };
   }
   return null;
@@ -34,11 +33,12 @@ const NavLinks = ({ sections }: NavLinksProps): ReactElement => {
   const groupId = useId();
   const here = locate(sections, pathname);
 
-  const link = ({ href, label }: AdminPage) => (
-    <li key={href}>
+  // A page is linked at its first tab.
+  const link = (page: AdminPage) => (
+    <li key={page.label}>
       {/* Every route is built, so typed routes accept each (M5.6b). */}
-      <Link href={href} aria-current={isCurrent(pathname, href) ? 'page' : undefined}>
-        {label}
+      <Link href={page.tabs[0].href} aria-current={isCurrent(pathname, page) ? 'page' : undefined}>
+        {page.label}
       </Link>
     </li>
   );
@@ -64,7 +64,7 @@ const NavLinks = ({ sections }: NavLinksProps): ReactElement => {
               'Admin Pages'
             ) : (
               <>
-                {/* A section of one page, the compendium, is not named twice. */}
+                {/* A page named as its section is, Compendium or People, is not named twice. */}
                 {here.section.name !== here.page.label && (
                   <span className="admin-nav__section">
                     {here.section.name}

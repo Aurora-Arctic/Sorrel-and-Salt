@@ -6,7 +6,7 @@ import GroupedValueList from '../../components/GroupedValueList';
 import { groupedValuesHref } from '../../components/GroupedValueList/href';
 import { KINDS } from '../../components/GroupedValueList/kinds';
 import type { GroupedValueListEntry } from '../../components/GroupedValueList/types';
-import PageHeader from '../../components/PageHeader';
+import { TabActions } from '../../components/TabbedPage';
 import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import { single } from '../../lib/search-params';
@@ -20,7 +20,7 @@ import type { ValuePageProps } from './types';
 // (M5.6, MB.178), forms (M5.6a) and deities (MB.132), each filed under a
 // group, and the planets and zodiac signs (MB.95), filed under nothing. Each
 // route's `page.tsx` keeps its `metadata` and hands its kind and address
-// here. The page and GraphQL's lists end at the same services, paged by the
+// here; the heading and tabs are its route group's layout's (MB.115). The page and GraphQL's lists end at the same services, paged by the
 // same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through
 // the kind's mutations.
 
@@ -75,7 +75,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
   await requireAdminSession();
   const params = await searchParams;
   const { query, after, before, editSlug, adding } = readListPlace(params);
-  const { title, label, noun, group: groupSpec } = KINDS[kind];
+  const { label, noun, group: groupSpec } = KINDS[kind];
   // Blank is no filter: a native submit sends `group=`.
   const groupParam = groupSpec?.param === 'tradition' ? params.tradition : params.group;
   const groupSlug = groupSpec ? single(groupParam) || undefined : undefined;
@@ -108,15 +108,12 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
   const choices = groups.map(({ id, name }) => ({ id, name }));
 
   return (
-    <main>
-      <PageHeader
-        title={title}
-        action={
-          <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
-            Add {label}
-          </Link>
-        }
-      />
+    <>
+      <TabActions>
+        <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
+          Add {label}
+        </Link>
+      </TabActions>
       {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
       <GroupedValueList
         kind={kind}
@@ -147,6 +144,6 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
           groups={choices}
         />
       )}
-    </main>
+    </>
   );
 }

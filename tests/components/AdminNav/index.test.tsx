@@ -26,13 +26,13 @@ const row = () =>
 const current = (links: HTMLElement[]) =>
   hrefs(links.filter((link) => link.getAttribute('aria-current') === 'page'));
 
+// Each page linked at its first tab (MB.115).
 const SECTIONS = [
-  ['Compendium', ['/admin/compendium']],
-  ['Categories', ['/admin/categories', '/admin/category-groups']],
-  ['Forms', ['/admin/forms', '/admin/form-groups']],
-  ['Deities', ['/admin/deities', '/admin/deity-traditions']],
-  ['Astrology', ['/admin/planets', '/admin/zodiac-signs']],
-  ['People', ['/admin/users', '/admin/privilege-changes']],
+  [
+    'Compendium',
+    ['/admin/compendium', '/admin/categories', '/admin/forms', '/admin/deities', '/admin/planets'],
+  ],
+  ['People', ['/admin/users']],
 ] as const;
 
 beforeEach(() => {
@@ -57,11 +57,12 @@ describe('AdminNav', () => {
   });
 
   it.each([
-    // The index marks none; a page marks its own entry and no sibling whose
-    // path starts the same way; an address beneath a page still marks it.
+    // The index marks none; a page marks its own entry, on any of its tabs
+    // (MB.115); an address beneath a tab still marks it.
     ['/admin', []],
     ['/admin/categories', ['/admin/categories']],
-    ['/admin/category-groups', ['/admin/category-groups']],
+    ['/admin/category-groups', ['/admin/categories']],
+    ['/admin/invitations', ['/admin/users']],
     ['/admin/users/some-user', ['/admin/users']],
   ])(
     'marks only the page you are on at %s as current, in the row and the disclosure',
@@ -83,10 +84,10 @@ describe('AdminNav', () => {
     (menu() as HTMLDetailsElement).open = true;
     expect(menu()).toHaveAttribute('open');
 
-    pathname.mockReturnValue('/admin/privilege-changes');
+    pathname.mockReturnValue('/admin/categories');
     rerender(<AdminNav />);
 
     expect(menu()).not.toHaveAttribute('open');
-    expect(current(within(menu()).getAllByRole('link'))).toEqual(['/admin/privilege-changes']);
+    expect(current(within(menu()).getAllByRole('link'))).toEqual(['/admin/categories']);
   });
 });
