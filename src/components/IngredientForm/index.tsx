@@ -15,7 +15,6 @@ import { ReferencesField } from './references';
 import { ListField, MultiSelectField, SelectField, TextField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
 import {
-  FormField,
   LookupListField,
   useCommonNameSuggestions,
   useCompendiumSubstitutes,
@@ -33,6 +32,7 @@ import type {
   SavedIngredient,
 } from './types';
 import { EMPTY_VALUES, compendiumResolver, fieldNameOf, ingredientResolver } from './values';
+import { VariantsField } from './variants';
 import './index.scss';
 
 // Every property of an ingredient, validated by the shared schema before the
@@ -185,9 +185,11 @@ const IngredientForm = ({
       // The compendium resolver has refused a missing classification, so the
       // input is the compendium's, whose `nomenclature` is required.
       if (entry) {
-        // The update takes the whole entry, every field present (MB.159):
-        // no pick is `""` there, where the create takes null.
-        const whole = { ...input, formId: input.formId ?? '' } as CompendiumIngredientUpdateInput;
+        // The update takes the whole entry, every field present (MB.159),
+        // and its type still declares the top-level form, which the form no
+        // longer has: `""` for each, which the service reads as none and
+        // sets aside for the variants sent (MB.219). MB.222 drops the pair.
+        const whole = { ...input, form: '', formId: '' } as CompendiumIngredientUpdateInput;
         const answer = await graphqlRequest(UpdateCompendiumIngredientDocument, {
           id: entry.id,
           input: whole,
@@ -321,12 +323,8 @@ const IngredientForm = ({
           disabled={kind === NAMELESS_KIND}
           required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
         />
-        {/* Both suggest from this coven and the compendium (M4.7a): the form
-            from the curated vocabulary and the forms in use, the folk names
-            from the names in use. A pick writes the text; a curated form's
-            also links its row, the group shown in the box (MB.169). On the
-            compendium the form must be that pick (MB.162). */}
-        <FormField workspaceId={workspaceId} pickOnly={compendium} />
+        {/* Suggests from this coven and the compendium (M4.7a): the folk
+            names in use. The form is each variant's, beneath (MB.221). */}
         <LookupListField
           workspaceId={workspaceId}
           useSuggestions={useCommonNameSuggestions}
@@ -413,6 +411,9 @@ const IngredientForm = ({
         {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
         <ReferencesField workspaceId={workspaceId} />
+        {/* After the ingredient's own fields, as the page shows its forms
+            after it (MB.215): each form, and what it adds. */}
+        <VariantsField workspaceId={workspaceId} />
         {question ? (
           // MB.82: the address this save takes is another entry's redirect.
           // Asked in place of the saves, so nothing else is pressed until it

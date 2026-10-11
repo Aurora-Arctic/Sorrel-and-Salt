@@ -63,13 +63,14 @@ beforeAll(async () => {
   book = await insertReference(sql, {}, E.id);
 });
 
-/** Testwort with every relation an entry can hold, each curated value as the admin picks it. */
+/**
+ * Testwort with every relation an entry can hold, each curated value as the
+ * admin picks it, and a form holding every relation a form can.
+ */
 const everything = (): CompendiumWrite => ({
   name: 'Testwort',
   nomenclature: 'botanical',
   canonicalName: 'Fixtura testalis',
-  form: 'Herb',
-  formId: herb.id,
   description: 'An invented herb.',
   folkNames: ['Test Root', 'Fixture Leaf'],
   elements: ['spirit', 'air'],
@@ -81,6 +82,21 @@ const everything = (): CompendiumWrite => ({
   safetyNotes: 'Not for eating.',
   references: [{ referenceId: book, locator: 'p. 12' }],
   categoryIds: [healing],
+  variants: [
+    {
+      form: 'Herb',
+      formId: herb.id,
+      description: 'The dried herb.',
+      safetyNotes: 'Not for burning.',
+      elements: ['earth'],
+      planets: ['Saturn'],
+      zodiacSigns: ['Virgo'],
+      colors: ['Brown'],
+      categoryIds: [healing],
+      substitutes: [{ ingredientId: mockwort }, { name: 'Testleaf' }],
+      references: [{ referenceId: book, locator: 'p. 40' }],
+    },
+  ],
 });
 
 async function rowOf(id: string) {
@@ -95,29 +111,48 @@ async function rowOf(id: string) {
  * took away, where comparing the values alone would miss it.
  */
 async function childrenOf(id: string) {
-  const [folkNames, substitutes, deities, references, categories] = await Promise.all([
-    sql`
+  const [folkNames, substitutes, deities, references, categories, variants, variantReferences] =
+    await Promise.all([
+      sql`
       select name from ingredient_folk_names
       where ingredient_id = ${id} and deleted_at is null order by name`,
-    sql`
-      select substitute_id, name from ingredient_substitutes
-      where ingredient_id = ${id} and deleted_at is null order by name`,
-    sql`
+      sql`
+      select substitute_id, name, variant_id is not null as for_form from ingredient_substitutes
+      where ingredient_id = ${id} and deleted_at is null order by variant_id nulls first, name, substitute_id`,
+      sql`
       select deity_id, name from ingredient_deities
       where ingredient_id = ${id} and deleted_at is null order by name`,
-    sql`
+      sql`
       select reference_id, locator from reference_links
       where ingredient_id = ${id} and deleted_at is null order by reference_id`,
-    sql`select category_id from ingredient_categories where ingredient_id = ${id}`,
-  ]);
-  return { folkNames, substitutes, deities, references, categories };
+      sql`
+      select category_id, variant_id from ingredient_categories
+      where ingredient_id = ${id} order by variant_id nulls first`,
+      // `updated_at` is the trigger's, as the row's is.
+      sql`
+      select id, form, form_id, description, safety_notes, elements, planets, zodiac_signs, colors
+      from ingredient_variants where ingredient_id = ${id} and deleted_at is null`,
+      sql`
+      select reference_id, locator from reference_links
+      join ingredient_variants on ingredient_variants.id = reference_links.ingredient_variant_id
+      where ingredient_variants.ingredient_id = ${id} and reference_links.deleted_at is null`,
+    ]);
+  return {
+    folkNames,
+    substitutes,
+    deities,
+    references,
+    categories,
+    variants,
+    variantReferences,
+  };
 }
 
 /** The input the form sends for an edit, as IngredientForm's mutation builds it. */
 function editInput(values: Parameters<typeof toInput>[0]): CompendiumWrite {
-  const input = toInput(values);
-  // The update takes every field present, a pick of no form as `""` (MB.159).
-  return { ...input, formId: input.formId ?? '' } as CompendiumWrite;
+  // The update takes every field present (MB.159), the top-level form
+  // included until MB.222, as `""`: the variants carry the forms.
+  return { ...toInput(values), form: '', formId: '' } as CompendiumWrite;
 }
 
 describe('entryValues', () => {
@@ -134,8 +169,27 @@ describe('entryValues', () => {
       name: 'Testwort',
       nomenclature: 'botanical',
       canonicalName: 'Fixtura testalis',
-      form: 'Herb',
-      formLink: { id: herb.id, name: 'Herb', group: herb.group },
+      variants: [
+        {
+          variantId: expect.any(String),
+          form: 'Herb',
+          formLink: { id: herb.id, name: 'Herb', group: herb.group },
+          description: 'The dried herb.',
+          safetyNotes: 'Not for burning.',
+          elements: ['earth'],
+          planets: [{ value: 'Saturn' }],
+          zodiacSigns: [{ value: 'Virgo' }],
+          colors: [{ value: 'Brown' }],
+          categoryIds: [healing],
+          substitutes: expect.arrayContaining([
+            { value: 'Mockwort', link: expect.objectContaining({ id: mockwort }) },
+            { value: 'Testleaf' },
+          ]),
+          references: [
+            expect.objectContaining({ link: { id: book, isGlobal: true }, locator: 'p. 40' }),
+          ],
+        },
+      ],
       description: 'An invented herb.',
       folkNames: expect.arrayContaining([{ value: 'Test Root' }, { value: 'Fixture Leaf' }]),
       elements: ['spirit', 'air'],
@@ -171,6 +225,7 @@ describe('entryValues', () => {
     });
     expect(values.folkNames).toHaveLength(2);
     expect(values.substitutes).toHaveLength(2);
+    expect(values.variants[0]?.substitutes).toHaveLength(2);
   });
 
   it('opens an edit that, saved untouched, leaves the entry as it was', async () => {
@@ -200,8 +255,7 @@ describe('entryValues', () => {
       name: 'Testbare',
       nomenclature: 'none',
       canonicalName: '',
-      form: '',
-      formLink: null,
+      variants: [],
       folkNames: [],
       elements: [],
       planets: [],

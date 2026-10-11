@@ -80,6 +80,8 @@ export interface SubstituteLink {
  */
 export interface SubstituteListEntry extends ListEntry {
   link?: SubstituteLink;
+  /** The form of the linked ingredient picked, when the substitute is that form alone (MB.215). */
+  variantId?: string;
 }
 
 /**
@@ -159,9 +161,6 @@ export interface IngredientFormValues {
   name: string;
   nomenclature: NomenclatureKind | '';
   canonicalName: string;
-  form: string;
-  /** The curated form picked, while the text is still its name; null for typed text. */
-  formLink: FormLink | null;
   folkNames: ListEntry[];
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
@@ -178,11 +177,53 @@ export interface IngredientFormValues {
   references: ReferenceListEntry[];
   /** The new reference panel is open: a save waits until it is saved or cancelled. */
   referencePanelOpen: boolean;
+  /** The forms it comes in, each with what it adds to the ingredient (MB.215). */
+  variants: VariantFormValues[];
   drafts: Record<DraftName, string>;
 }
 
-/** A box whose text is not yet an entry: a list's, or the references' search. */
-export type DraftName = ListFieldName | 'references';
+/**
+ * A box whose text is not yet an entry: a list's, the references' search, or
+ * the New Form box, whose text is not yet a variant.
+ */
+export type DraftName = IngredientListName | 'references' | 'variants';
+
+/**
+ * One form the ingredient comes in, as the form edits it (DESIGN.md §5,
+ * `ingredient_variants`; MB.215): its form, picked or typed, and what that
+ * form adds to the ingredient — never overrides — with its own boxes.
+ */
+export interface VariantFormValues {
+  /**
+   * The row an edit opened it from, sent back as the input's `id` so a
+   * respelt form keeps its row; absent for a form added here. Not `id`,
+   * which `useFieldArray` keys its rows by.
+   */
+  variantId?: string;
+  form: string;
+  /** The curated form picked, while the text is still its name; null for typed text. */
+  formLink: FormLink | null;
+  description: string;
+  safetyNotes: string;
+  elements: IngredientElement[];
+  planets: ListEntry[];
+  zodiacSigns: ListEntry[];
+  colors: ListEntry[];
+  substitutes: SubstituteListEntry[];
+  categoryIds: string[];
+  references: ReferenceListEntry[];
+  referencePanelOpen: boolean;
+  drafts: Record<VariantDraftName, string>;
+}
+
+/** A variant's lists that take entries in a box: its own planets, signs, colours and substitutes. */
+export type VariantListName = 'planets' | 'zodiacSigns' | 'colors' | 'substitutes';
+
+/** A variant's boxes: its lists', and its references' search. */
+export type VariantDraftName = VariantListName | 'references';
+
+/** Where a variant's fields sit in the form's values: `variants.1`. */
+export type VariantPath = `variants.${number}`;
 
 /** A save the server asked to confirm (MB.82): what it said, and the input to send again. */
 export interface RedirectQuestion {
@@ -193,13 +234,25 @@ export interface RedirectQuestion {
 /** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
 export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
 
-export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
+export type TextFieldName =
+  | 'name'
+  | 'canonicalName'
+  | 'description'
+  | 'safetyNotes'
+  | `${VariantPath}.${'form' | 'description' | 'safetyNotes'}`;
 
-/** A closed set holding several values: an entry's elements. */
-export type MultiSelectFieldName = 'elements';
+/** A closed set holding several values: an entry's elements, or a variant's. */
+export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
 
-export type ListFieldName =
+/** The ingredient's own lists that take entries in a box. */
+export type IngredientListName =
   'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
+
+/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.planets`. */
+export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListName}`;
+
+/** A list's box, as `draftOf` names it: `drafts.planets`, or `variants.1.drafts.planets`. */
+export type DraftPath = `drafts.${DraftName}` | `${VariantPath}.drafts.${VariantDraftName}`;
 
 /** What every field shares: what it is called, and what it is told about it. */
 interface FieldProps {
@@ -358,9 +411,32 @@ export interface LookupFieldProps {
   workspaceId: string | null;
 }
 
-/** The form field's lookup, whose text must be a curated pick on the compendium (MB.162). */
+/**
+ * A field the ingredient and each of its variants both carry: the
+ * references, or the categories. `at` is the variant's place in the values,
+ * left out for the ingredient's own.
+ */
+export interface SharedFieldProps {
+  at?: VariantPath;
+}
+
+/** A variant's Form field, whose text must be a curated pick on the compendium (MB.162). */
 export interface FormFieldProps extends LookupFieldProps {
+  at: VariantPath;
   pickOnly?: boolean;
+}
+
+/**
+ * The Variants section (MB.221): every form the ingredient comes in, and the
+ * New Form box that adds one. On the compendium a form is a pick, and so is
+ * every vocabulary box inside a variant.
+ */
+export type VariantsFieldProps = LookupFieldProps;
+
+/** One variant's fieldset: its place in the list, and how to take it out. */
+export interface VariantFieldsetProps extends VariantsFieldProps {
+  index: number;
+  onRemove: (index: number) => void;
 }
 
 /** What every lookup asks besides its scope: the settled text, and how many rows. */

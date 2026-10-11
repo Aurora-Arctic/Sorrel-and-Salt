@@ -12,7 +12,11 @@ import {
   useSubstituteSuggestions,
 } from '@/components/IngredientForm/suggestions';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  ingredientResolver,
+} from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
 import {
@@ -40,12 +44,15 @@ import type {
 // index.test.tsx's, once per lookup; the box's rows and keys are Combobox's
 // (claude-docs/components/ingredient-form.md, "Testing").
 
-/** `field` in a form of its own, its name given; the submit receives what the form would send. */
-function renderInForm(field: ReactElement) {
+/**
+ * `field` in a form of its own, its name given, and `values` beside; the
+ * submit receives what the form would send.
+ */
+function renderInForm(field: ReactElement, values: Partial<IngredientFormValues> = {}) {
   const onSubmit = vi.fn();
   const Harness = () => {
     const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
-      defaultValues: { ...EMPTY_VALUES, name: 'Testwort' },
+      defaultValues: { ...EMPTY_VALUES, name: 'Testwort', ...values },
       resolver: ingredientResolver,
     });
     return (
@@ -125,7 +132,13 @@ describe('FormField', () => {
     claimants: [{ name: 'Mockleaf', canonicalName: null }],
   };
 
-  const renderField = () => renderInForm(<FormField workspaceId={WORKSPACE_ID} />);
+  // One form, which the Form box writes, as a variant's does.
+  const renderField = () =>
+    renderInForm(<FormField workspaceId={WORKSPACE_ID} at="variants.0" />, {
+      variants: [EMPTY_VARIANT],
+    });
+  /** The one form the save sent. */
+  const sentForm = async (send: () => Promise<IngredientFormInput>) => (await send()).variants?.[0];
   /** Looks up "wax" in the Form box and picks the row named `option`. */
   const pickWax = async (calls: unknown[], option: RegExp) => {
     await lookUp('Form', calls, 'wax');
@@ -195,7 +208,7 @@ describe('FormField', () => {
     expect(box('Form')).toHaveAccessibleDescription(
       expect.stringContaining('Candle and poppet wax.'),
     );
-    expect(await send()).toMatchObject({ form: 'Wax', formId: SUBSTANCE_WAX_ID });
+    expect(await sentForm(send)).toMatchObject({ form: 'Wax', formId: SUBSTANCE_WAX_ID });
   });
 
   it('tells two same-named picks apart, the last pick replacing the first', async () => {
@@ -212,7 +225,7 @@ describe('FormField', () => {
     // A group with no description is the whole of what the box adds; the
     // qualifier's tooltip, and none without a detail, are Combobox's.
     expect(box('Form')).toHaveAccessibleDescription(expect.stringMatching(/\(Animal\)$/));
-    expect((await send()).formId).toBe(ANIMAL_WAX_ID);
+    expect((await sentForm(send))?.formId).toBe(ANIMAL_WAX_ID);
   });
 
   // The owner's call: the text is still the member's to edit, and an edit
@@ -227,7 +240,7 @@ describe('FormField', () => {
 
     expect(group('(Substance)')).not.toBeInTheDocument();
     expect(box('Form')).not.toHaveAccessibleDescription(expect.stringContaining('Substance'));
-    expect(await send()).toMatchObject({ form: 'Wax', formId: null });
+    expect(await sentForm(send)).toMatchObject({ form: 'Wax', formId: '' });
   });
 
   it('records no pick for a form only in use, which has no curated row', async () => {
@@ -238,7 +251,7 @@ describe('FormField', () => {
     fireEvent.click(await screen.findByRole('option', { name: /^Rhizomes/ }));
 
     expect(box('Form')).toHaveValue('Rhizomes');
-    expect(await send()).toMatchObject({ form: 'Rhizomes', formId: null });
+    expect(await sentForm(send)).toMatchObject({ form: 'Rhizomes', formId: '' });
   });
 
   it('takes a value in no vocabulary from its own row, with no warning', async () => {
@@ -249,7 +262,7 @@ describe('FormField', () => {
     fireEvent.click(await screen.findByRole('option', { name: 'Use what you typed: rhizome' }));
 
     expect(box('Form')).toHaveValue('rhizome');
-    expect(await send()).toMatchObject({ form: 'rhizome', formId: null });
+    expect(await sentForm(send)).toMatchObject({ form: 'rhizome', formId: '' });
     expect(box('Form')).not.toBeInvalid();
   });
 });
