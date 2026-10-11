@@ -56,7 +56,10 @@ to its column and the table it keys into, and the five foreign keys, the five
 partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
 A sixth sourced table is one entry there, and the migration `db:generate`
 writes from it drops and re-adds `reference_links_one_row`, which takes an
-`.ack.md` sidecar ([destructive DDL](expand-contract.md)). The repository
+`.ack.md` sidecar ([destructive DDL](expand-contract.md)). MB.217's
+`ingredientVariantId`, a form's own sources beside its ingredient's, was the
+first: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
+and a six-column CHECK, in migration `0063`. The repository
 reads the links of any of them through the registry (MB.208):
 `findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
 column and its table from `SOURCED`. What writes the new links is still code

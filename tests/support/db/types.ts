@@ -16,11 +16,17 @@ export interface CatalogueReads {
 }
 
 export interface ForeignKeyFacts {
-  /** The referencing column, on the table the facts were read from. */
+  /**
+   * The referencing columns joined by `, `: one name for a single-column key,
+   * `variant_id, ingredient_id` for MB.217's composite ones.
+   */
   column: string;
+  /** The referencing columns, in the key's order. */
+  columns: string[];
   /** The constraint name, as Postgres reports it in `constraint_name`. */
   name: string;
-  foreignColumnName: string;
+  /** The referenced columns, in the key's order. */
+  foreignColumnNames: string[];
   foreignTable: PgTable;
 }
 

@@ -8,13 +8,22 @@ import type { SubstituteEntry } from './types';
 
 // DESIGN.md §5's `ingredient_substitutes` (MB.138): one row per substitute,
 // a link to an ingredient or a typed name, never both and never neither.
-const OWN_COLUMNS = ['id', 'ingredient_id', 'substitute_id', 'name'];
+const OWN_COLUMNS = [
+  'id',
+  'ingredient_id',
+  'variant_id',
+  'substitute_id',
+  'substitute_variant_id',
+  'name',
+];
 
 const LINK_INDEX = 'ingredient_substitutes_link_unique';
 const NAME_INDEX = 'ingredient_substitutes_name_unique';
 const CHECK_LINK_OR_NAME = 'ingredient_substitutes_link_or_name';
 const CHECK_NAME_NOT_BLANK = 'ingredient_substitutes_name_not_blank';
 const CHECK_NOT_ITSELF = 'ingredient_substitutes_not_itself';
+const CHECK_FORM_NEEDS_LINK = 'ingredient_substitutes_substitute_variant_has_link';
+const SUBSTITUTE_VARIANT_KEY = 'ingredient_substitutes_substitute_variant_fk';
 
 describe('ingredient_substitutes schema', () => {
   const { byName } = tableFacts(ingredientSubstitutes);
@@ -48,7 +57,9 @@ async function addSubstitute(ingredientId: string, entry: SubstituteEntry): Prom
   const [inserted] = await sql`
     insert into ingredient_substitutes ${sql({
       ingredient_id: ingredientId,
+      variant_id: entry.variantId ?? null,
       substitute_id: entry.substituteId ?? null,
+      substitute_variant_id: entry.substituteVariantId ?? null,
       name: entry.name ?? null,
       created_by: AUTHOR,
       updated_by: AUTHOR,
@@ -159,5 +170,101 @@ describe('ingredient_substitutes table', () => {
 
       await addSubstitute(UNCARIA, { name: name as string });
     });
+  });
+});
+
+// MB.217: a row may stand in for one form of its ingredient (`variant_id`),
+// and a link may name one form of the linked ingredient
+// (`substitute_variant_id`), which must be that ingredient's.
+describe('ingredient_substitutes, by form', () => {
+  let MUGWORT_HERB: string;
+  let MUGWORT_OIL: string;
+  let UNCARIA_BARK: string;
+
+  async function formOf(ingredientId: string): Promise<string> {
+    const [found] = await sql`
+      select id from ingredient_variants where ingredient_id = ${ingredientId} and deleted_at is null
+    `;
+    return found.id as string;
+  }
+
+  beforeAll(async () => {
+    MUGWORT_HERB = await formOf(MUGWORT);
+    UNCARIA_BARK = await formOf(UNCARIA);
+    const [oil] = await sql`
+      insert into ingredient_variants ${sql({
+        ingredient_id: MUGWORT,
+        form: 'Testoil',
+        created_by: AUTHOR,
+        updated_by: AUTHOR,
+      })}
+      returning id
+    `;
+    MUGWORT_OIL = oil.id as string;
+  });
+
+  it("links a form of the linked ingredient, and refuses another ingredient's", async () => {
+    await addSubstitute(UNCARIA, { substituteId: MUGWORT, substituteVariantId: MUGWORT_OIL });
+
+    const error = await failureOf(
+      addSubstitute(ACACIA, { substituteId: UNCARIA, substituteVariantId: MUGWORT_OIL }),
+    );
+
+    // 23503 is foreign_key_violation, named: the composite key refused.
+    expect(error.code).toBe('23503');
+    expect(error.constraint_name).toBe(SUBSTITUTE_VARIANT_KEY);
+  });
+
+  // MATCH SIMPLE skips the key when the link is null, so a CHECK holds it.
+  it('refuses a form with no linked ingredient beside it', async () => {
+    const error = await failureOf(
+      addSubstitute(UNCARIA, { name: 'Testoil', substituteVariantId: MUGWORT_OIL }),
+    );
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CHECK_FORM_NEEDS_LINK);
+  });
+
+  it('refuses a form standing in for itself, and admits a sibling form or another ingredient', async () => {
+    const itself = await failureOf(
+      addSubstitute(MUGWORT, {
+        variantId: MUGWORT_HERB,
+        substituteId: MUGWORT,
+        substituteVariantId: MUGWORT_HERB,
+      }),
+    );
+    await addSubstitute(MUGWORT, {
+      variantId: MUGWORT_HERB,
+      substituteId: MUGWORT,
+      substituteVariantId: MUGWORT_OIL,
+    });
+    await addSubstitute(MUGWORT, {
+      variantId: MUGWORT_HERB,
+      substituteId: UNCARIA,
+      substituteVariantId: UNCARIA_BARK,
+    });
+
+    expect(itself.code).toBe('23514');
+    expect(itself.constraint_name).toBe(CHECK_NOT_ITSELF);
+    const rows = await sql`
+      select substitute_variant_id from ingredient_substitutes
+      where ingredient_id = ${MUGWORT} and variant_id = ${MUGWORT_HERB}
+    `;
+    expect(rows.map((row) => row.substitute_variant_id).sort()).toEqual(
+      [MUGWORT_OIL, UNCARIA_BARK].sort(),
+    );
+  });
+
+  // The form a row stands in for has its own list beside the parent's.
+  it('lists a substitute once per form, beside the same link on the parent', async () => {
+    await addSubstitute(UNCARIA, { substituteId: ACACIA });
+    await addSubstitute(UNCARIA, { variantId: UNCARIA_BARK, substituteId: ACACIA });
+
+    const error = await failureOf(
+      addSubstitute(UNCARIA, { variantId: UNCARIA_BARK, substituteId: ACACIA }),
+    );
+
+    expect(error.code).toBe('23505');
+    expect(error.constraint_name).toBe('ingredient_substitutes_variant_link_unique');
   });
 });

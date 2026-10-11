@@ -340,8 +340,9 @@ describe('a layer removed from a spell', () => {
     await removeLayer(spellId, localId);
 
     await sql`
-      insert into spell_ingredients (spell_id, ingredient_id, layer_order, created_by, updated_by)
-      values (${spellId}, ${localId}, 1, ${B.id}, ${B.id})`;
+      insert into spell_ingredients
+        (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
+      values (${spellId}, ${localId}, ${removed.variantId}, 1, ${B.id}, ${B.id})`;
 
     const layers = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
     expect(layers).toEqual([expect.objectContaining({ ingredientId: localId, layerOrder: 1 })]);

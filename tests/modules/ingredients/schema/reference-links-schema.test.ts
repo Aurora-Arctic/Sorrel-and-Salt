@@ -17,6 +17,7 @@ const SOURCED: [column: string, table: string][] = [
   ['deity_tradition_id', 'deity_traditions'],
   ['planet_id', 'planets'],
   ['zodiac_sign_id', 'zodiac_signs'],
+  ['ingredient_variant_id', 'ingredient_variants'],
 ];
 const COLUMNS = SOURCED.map(([column]) => column);
 
@@ -25,6 +26,7 @@ const OWN_COLUMNS = ['id', 'reference_id', ...COLUMNS, 'locator'];
 const CHECK_ONE_ROW = 'reference_links_one_row';
 const CHECK_LOCATOR_NOT_BLANK = 'reference_links_locator_not_blank';
 const INGREDIENT_INDEX = 'reference_links_ingredient_unique';
+const VARIANT_INDEX = 'reference_links_ingredient_variant_unique';
 
 describe('reference_links schema', () => {
   const { byName } = tableFacts(referenceLinks);
@@ -116,6 +118,19 @@ describe('reference_links table', () => {
       expect(error.constraint_name).toBe(CHECK_ONE_ROW);
     });
 
+    // MB.217: a form's own source sits on the form, never on the form and its ingredient at once.
+    it('refuses a link naming an ingredient and one of its forms', async () => {
+      const error = await failureOf(
+        addLink(SIMEK, {
+          ingredient_id: ROW.ingredient_id,
+          ingredient_variant_id: ROW.ingredient_variant_id,
+        }),
+      );
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(CHECK_ONE_ROW);
+    });
+
     it('refuses a link naming none', async () => {
       const error = await failureOf(addLink(SIMEK, { locator: 'p. 112' }));
 
@@ -148,6 +163,17 @@ describe('reference_links table', () => {
       // 23505 is unique_violation, named: this column's index refused.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(INGREDIENT_INDEX);
+    });
+
+    it('refuses a form citing one reference twice', async () => {
+      await addLink(SIMEK, { ingredient_variant_id: ROW.ingredient_variant_id });
+
+      const error = await failureOf(
+        addLink(SIMEK, { ingredient_variant_id: ROW.ingredient_variant_id, locator: 'p. 9' }),
+      );
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(VARIANT_INDEX);
     });
 
     // Why the refusal above is per reference: a row cites many.

@@ -102,6 +102,35 @@ async function ingredientDeity(linked: boolean): Promise<Row> {
   });
 }
 
+/** A fresh coven ingredient and a form of it (MB.217), for a row keyed on the variant. */
+async function formed(): Promise<{ ingredient_id: string; variant_id: string }> {
+  const ingredientId = await idOf('ingredients', await workspaceIngredient());
+  const variantId = await idOf(
+    'ingredient_variants',
+    stamped({ ingredient_id: ingredientId, form: `Testleaf ${token()}` }),
+  );
+  return { ingredient_id: ingredientId, variant_id: variantId };
+}
+
+/** A category pair, on the parent or on one of its forms (MB.217). */
+async function categoryPair(onForm: boolean): Promise<Row> {
+  const { ingredient_id, variant_id } = await formed();
+  return stamped({
+    ingredient_id,
+    variant_id: onForm ? variant_id : null,
+    category_id: await idOf('categories', await category()),
+  });
+}
+
+/** A substitute row standing in for one form of its ingredient (MB.217). */
+async function formSubstitute(linked: boolean): Promise<Row> {
+  return stamped({
+    ...(await formed()),
+    substitute_id: linked ? await idOf('ingredients', await workspaceIngredient()) : null,
+    name: linked ? null : `Testwort ${token()}`,
+  });
+}
+
 async function substitute(linked: boolean): Promise<Row> {
   return stamped({
     ingredient_id: await idOf('ingredients', await workspaceIngredient()),
@@ -122,9 +151,10 @@ function referenceLink(column: string, target: string, row: () => Promise<Row>) 
 let layer = 0;
 async function spellIngredient(linked: boolean): Promise<Row> {
   const spell = stamped({ workspace_id: WORKSPACE_W_ID, title: `Testwort Ward ${token()}` });
+  const layered = linked ? await formed() : { ingredient_id: null, variant_id: null };
   return stamped({
     spell_id: await idOf('spells', spell),
-    ingredient_id: linked ? await idOf('ingredients', await workspaceIngredient()) : null,
+    ...layered,
     name: linked ? null : `Testwort ${token()}`,
     layer_order: layer++,
   });
@@ -148,6 +178,17 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_deities_link_unique: { row: () => ingredientDeity(true) },
   ingredient_deities_name_unique: { row: () => ingredientDeity(false) },
   ingredient_deities_position_unique: { row: () => ingredientDeity(false) },
+  // The pair, on the parent or on a form: hard-deleted, so partial on the
+  // variant rather than a tombstone (MB.217).
+  ingredient_categories_ingredient_category_unique: {
+    row: () => categoryPair(false),
+    hardDeleted: true,
+  },
+  ingredient_categories_variant_category_unique: {
+    row: () => categoryPair(true),
+    clash: ['ingredient_id', 'variant_id', 'category_id'],
+    hardDeleted: true,
+  },
   ingredient_folk_names_unique: {
     row: async () =>
       stamped({
@@ -161,6 +202,16 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_forms_slug_unique: { row: form },
   ingredient_substitutes_link_unique: { row: () => substitute(true) },
   ingredient_substitutes_name_unique: { row: () => substitute(false) },
+  // A form's own list (MB.217): the clash carries the ingredient, which the
+  // composite key would otherwise refuse first.
+  ingredient_substitutes_variant_link_unique: {
+    row: () => formSubstitute(true),
+    clash: ['ingredient_id', 'variant_id', 'substitute_id'],
+  },
+  ingredient_substitutes_variant_name_unique: {
+    row: () => formSubstitute(false),
+    clash: ['ingredient_id', 'variant_id', 'name'],
+  },
   ingredient_variants_form_unique: { row: variant },
   // `canonical_key` is generated: the clash is its formal name and form under
   // another label, which the label index would otherwise refuse first.
@@ -185,12 +236,9 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   ingredients_workspace_label_unique: { row: workspaceIngredient },
   ingredients_workspace_slug_unique: { row: workspaceIngredient },
-  inventory_items_workspace_id_ingredient_id_unique: {
-    row: async () =>
-      stamped({
-        workspace_id: WORKSPACE_W_ID,
-        ingredient_id: await idOf('ingredients', await workspaceIngredient()),
-      }),
+  inventory_items_workspace_id_variant_id_unique: {
+    row: async () => stamped({ workspace_id: WORKSPACE_W_ID, ...(await formed()) }),
+    clash: ['workspace_id', 'ingredient_id', 'variant_id'],
   },
   // The site tier, a null pair: the index spans both tiers alike (MB.201).
   invitations_token_hash_unique: {
@@ -205,14 +253,20 @@ const ROWS: Record<string, PartialIndexRow> = {
   reference_links_ingredient_unique: {
     row: referenceLink('ingredient_id', 'ingredients', compendiumIngredient),
   },
+  reference_links_ingredient_variant_unique: {
+    row: referenceLink('ingredient_variant_id', 'ingredient_variants', variant),
+  },
   reference_links_planet_unique: { row: referenceLink('planet_id', 'planets', planet) },
   reference_links_zodiac_sign_unique: {
     row: referenceLink('zodiac_sign_id', 'zodiac_signs', zodiacSign),
   },
   references_seed_key_unique: { row: reference },
   spell_ingredients_spell_id_custom_name_unique: { row: () => spellIngredient(false) },
-  spell_ingredients_spell_id_ingredient_id_unique: { row: () => spellIngredient(true) },
   spell_ingredients_spell_id_layer_order_unique: { row: () => spellIngredient(true) },
+  spell_ingredients_spell_id_variant_id_unique: {
+    row: () => spellIngredient(true),
+    clash: ['spell_id', 'ingredient_id', 'variant_id'],
+  },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
   workspaces_slug_unique: {
     row: async () => {
@@ -262,7 +316,7 @@ const outcomeOf = (work: Promise<unknown>) =>
 
 /** One index: a holder, a second live row refused by it, and the same row admitted once the holder is soft-deleted. */
 async function sweep({ index, table, columns }: PartialUniqueIndex) {
-  const { row, clash } = ROWS[index];
+  const { row, clash, hardDeleted } = ROWS[index];
   const holder = await insert(table, await row());
   const shared = (clash ?? columns.filter((column) => column !== 'deleted_at')).map((column) => [
     column,
@@ -271,9 +325,21 @@ async function sweep({ index, table, columns }: PartialUniqueIndex) {
   const second = { ...(await row()), ...Object.fromEntries(shared) };
 
   const refusedBy = await outcomeOf(insert(table, second));
-  await sql`
-    update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${holder.id as string}
-  `;
+  if (hardDeleted) {
+    // No id and no tombstone: the holder is the one row sharing every column the second does.
+    await sql`
+      delete from ${sql(table)}
+      where ${shared.reduce(
+        (where, [column, value], at) =>
+          sql`${where} ${at === 0 ? sql`` : sql`and`} ${sql(column as string)} is not distinct from ${value as string | null}`,
+        sql``,
+      )}
+    `;
+  } else {
+    await sql`
+      update ${sql(table)} set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${holder.id as string}
+    `;
+  }
   const afterDelete = await outcomeOf(insert(table, second));
 
   return { index, refusedBy, afterDelete };

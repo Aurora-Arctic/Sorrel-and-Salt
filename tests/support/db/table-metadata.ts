@@ -62,12 +62,16 @@ export const AUDITED_TABLES = [
 // for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
+// Every column of the key, not the first: a composite key (MB.217) read by
+// its first column alone would pass for a single-column one.
 function foreignKeyFacts(fk: ForeignKey): ForeignKeyFacts {
   const { columns, foreignColumns, foreignTable } = fk.reference();
+  const names = columns.map((column) => column.name);
   return {
-    column: columns[0].name,
+    column: names.join(', '),
+    columns: names,
     name: fk.getName(),
-    foreignColumnName: foreignColumns[0].name,
+    foreignColumnNames: foreignColumns.map((column) => column.name),
     foreignTable,
   };
 }

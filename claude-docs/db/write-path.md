@@ -38,7 +38,9 @@ a named method per tier, with an edit after it rather than in place
   hard-deleted join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
   it can never become the way a soft-deletable row is quietly destroyed. The
   rows are named by column value — `{ ingredientId, categoryId: [...] }`, a
-  list matching by `IN` — since a service may not build an `SQL` predicate
+  list matching by `IN`, `null` matching `IS NULL` (MB.217, so
+  `{ ingredientId, variantId: null, categoryId }` names the parent's own pair
+  and not a form's) — since a service may not build an `SQL` predicate
   (MB.33; MB.125). A list left empty deletes nothing without a statement, and
   a match naming no column throws rather than emptying the table.
 

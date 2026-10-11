@@ -17,6 +17,7 @@ const OWN_COLUMNS = [
   'id',
   'workspace_id',
   'ingredient_id',
+  'variant_id',
   'quantity_on_hand',
   'unit',
   'unit_dimension',
@@ -25,7 +26,8 @@ const OWN_COLUMNS = [
   'acquired_date',
 ];
 
-const HELD_ONCE_INDEX = 'inventory_items_workspace_id_ingredient_id_unique';
+const HELD_ONCE_INDEX = 'inventory_items_workspace_id_variant_id_unique';
+const VARIANT_KEY = 'inventory_items_variant_fk';
 const DIMENSION_CHECK = 'inventory_items_unit_matches_dimension';
 
 describe('inventory_items schema', () => {
@@ -49,6 +51,7 @@ useTestDatabase((client) => (sql = client));
 async function hold({
   workspaceId = COVEN,
   ingredientId = MUGWORT,
+  variantId,
   quantity = '12.5',
   unit = 'g',
   dimension = 'weight',
@@ -58,11 +61,32 @@ async function hold({
 }: StockRow = {}): Promise<string> {
   const [inserted] = await sql`
     insert into inventory_items
-      (workspace_id, ingredient_id, quantity_on_hand, unit, unit_dimension,
+      (workspace_id, ingredient_id, variant_id, quantity_on_hand, unit, unit_dimension,
        low_stock_threshold, source, acquired_date, created_by, updated_by)
-    values (${workspaceId}, ${ingredientId}, ${quantity}, ${unit}::inventory_unit,
+    values (${workspaceId}, ${ingredientId}, ${variantId ?? sql`(${liveVariantOf(ingredientId)})`},
+            ${quantity}, ${unit}::inventory_unit,
             ${dimension}::unit_dimension, ${threshold}, ${source}, ${acquiredDate}::date,
             ${MEMBER}, ${MEMBER})
+    returning id
+  `;
+  return inserted.id as string;
+}
+
+/** The ingredient's seeded variant, the first it was given, as a subquery, for a row that names no other. */
+const liveVariantOf = (ingredientId: string) => sql`
+  select id from ingredient_variants where ingredient_id = ${ingredientId} and deleted_at is null
+  order by created_at, id limit 1
+`;
+
+/** A second form of `ingredientId`, written here: the seed gives each entry one. */
+async function anotherForm(ingredientId: string, form: string): Promise<string> {
+  const [inserted] = await sql`
+    insert into ingredient_variants ${sql({
+      ingredient_id: ingredientId,
+      form,
+      created_by: MEMBER,
+      updated_by: MEMBER,
+    })}
     returning id
   `;
   return inserted.id as string;
@@ -86,14 +110,17 @@ beforeEach(async () => {
 });
 
 describe('inventory_items table', () => {
-  describe('one live row per ingredient per workspace', () => {
+  // MB.217: stock names the form a jar holds, so Mugwort herb and Mugwort
+  // oil are two rows of one coven.
+  describe('one live row per variant per workspace', () => {
     // The pair is unique, not either half: drop a column from the index and
     // one of the admitted rows reddens. A second live row of the pair, and its
     // release on a soft delete, are the partial-unique sweep's.
-    it('refuses a second live row of the pair, and admits either half again', async () => {
+    it('refuses a second live row of the pair, and admits another form, ingredient or coven', async () => {
       await hold();
 
       const error = await failureOf(hold({ quantity: '3', unit: 'kg', dimension: 'weight' }));
+      await hold({ variantId: await anotherForm(MUGWORT, 'Testoil') });
       await hold({ ingredientId: ROSEMARY });
       await hold({ workspaceId: OTHER_COVEN });
 
@@ -101,7 +128,19 @@ describe('inventory_items table', () => {
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(HELD_ONCE_INDEX);
       const [{ count }] = await sql`select count(*)::int as count from inventory_items`;
-      expect(count).toBe(3);
+      expect(count).toBe(4);
+    });
+
+    // Why it could have been admitted: the variant exists and is live, only
+    // another ingredient's.
+    it("refuses another ingredient's variant beside its ingredient", async () => {
+      const [rosemaryHerb] = await liveVariantOf(ROSEMARY);
+
+      const error = await failureOf(hold({ variantId: rosemaryHerb.id as string }));
+
+      // 23503 is foreign_key_violation, named: the composite key refused.
+      expect(error.code).toBe('23503');
+      expect(error.constraint_name).toBe(VARIANT_KEY);
     });
   });
 
