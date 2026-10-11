@@ -8,15 +8,16 @@ import FilterForm from '.';
 // router goes nowhere, so Filter shows its spinner only for as long as the
 // stubbed push takes. The fields are the caller's: a name and a group here, as
 // a value list's are, with Filter offered once either differs from the
-// filter shown.
+// filter shown, and Clear Filters while the filter shown is not blank.
 export default {
   title: 'Forms / Filter Form',
 };
 
 const PATH = '/admin/categories' as Route;
 
-const ValueFilter = () => {
-  const shown = { query: '', group: '' };
+const NO_FILTER = { query: '', group: '' };
+
+const ValueFilter = ({ shown = NO_FILTER }: { shown?: typeof NO_FILTER }) => {
   const [query, setQuery] = useState(shown.query);
   const [group, setGroup] = useState(shown.group);
   return (
@@ -25,6 +26,7 @@ const ValueFilter = () => {
       action={PATH}
       href={() => listHref(PATH, { query: query.trim(), group })}
       disabled={query.trim() === shown.query && group === shown.group}
+      shown={[shown.query, shown.group]}
       navigation="soft"
     >
       <div className="field">
@@ -60,7 +62,8 @@ const ValueFilter = () => {
   );
 };
 
-// Type in Name, or pick a group, to offer Filter.
+// Type in Name, or pick a group, to offer Filter. Clear Filters is off: the
+// filter shown is blank.
 export const Default: Story = () => <ValueFilter />;
 
 export const PhoneDark: Story = () => <ValueFilter />;
@@ -68,3 +71,14 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <ValueFilter />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// A page showing a filter: Clear Filters links to the page itself.
+const FILTER = { query: 'test', group: 'testwort-wards' };
+
+export const Filtered: Story = () => <ValueFilter shown={FILTER} />;
+
+export const FilteredPhoneDark: Story = () => <ValueFilter shown={FILTER} />;
+FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const FilteredPhoneLight: Story = () => <ValueFilter shown={FILTER} />;
+FilteredPhoneLight.meta = { theme: 'light', width: 375 };

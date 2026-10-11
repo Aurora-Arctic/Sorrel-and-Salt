@@ -151,6 +151,26 @@ describe('PrivilegeLedger', () => {
 
       expect(assign).not.toHaveBeenCalled();
     });
+
+    // Clear Filters is CompendiumList's to test; this asserts which of the
+    // ledger's values count as a filter.
+    it('offers Clear Filters to the unfiltered ledger while the query or the privilege is shown', () => {
+      for (const filter of [{ query: 'ada' }, { privilege: 'admin' as const }]) {
+        const { unmount } = render(<PrivilegeLedger changes={[GRANT]} filter={filter} />);
+
+        expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+          'href',
+          '/admin/privilege-changes',
+        );
+        unmount();
+      }
+
+      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+        'aria-disabled',
+        'true',
+      );
+    });
   });
 
   it('draws no table when there is nothing to show', () => {

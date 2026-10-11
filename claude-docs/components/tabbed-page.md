@@ -116,7 +116,11 @@ to draw a filter row.
   heading's line, beneath it under 28rem and spanning that line in the admin
   area, the owner's call for an admin page's primary action at a phone's
   width. The action's wrapper, `.tabbed-page__action`, spans it with its
-  action, and is taken out of the line when a tab has none. The line sits
+  action, and is taken out of the line when a tab has none. An action that
+  wraps its button, the pause's row or a locked control, spans its button
+  in its own stylesheet (`UserList/index.scss`, `controls.scss`), so
+  Pause Admin Changes and a locked Invite Admin span the line as an Add
+  link does. The line sits
   `space(4)` above the tab row, which sits `space(5)` above the content.
 - **The tab row** is the `.link-row` primitive
   ([`styling.md`](../styling.md), "Link rows and provider marks"), so the open

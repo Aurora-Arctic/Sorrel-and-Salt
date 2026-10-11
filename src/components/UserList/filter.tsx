@@ -33,6 +33,7 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
         })
       }
       disabled={!changed}
+      shown={[query, role, awaitingApproval]}
       navigation="full"
     >
       <div className="field">

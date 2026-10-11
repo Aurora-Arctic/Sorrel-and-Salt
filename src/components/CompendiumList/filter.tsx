@@ -60,6 +60,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
         })
       }
       disabled={!changed}
+      shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
       navigation="soft"
     >
       <FieldShell label="Name" {...query}>
