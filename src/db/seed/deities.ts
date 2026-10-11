@@ -42,12 +42,12 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
       'The gods of Sumer, the oldest Mesopotamian record, whose names the later cities carried into their own.',
   },
   {
-    name: 'Akkadian and Babylonian',
+    name: 'Akkadian & Babylonian',
     description:
       'The gods of Akkad, Babylon and Assyria, many of them the Sumerian gods under Akkadian names.',
   },
   {
-    name: 'Canaanite and Phoenician',
+    name: 'Canaanite & Phoenician',
     description: 'The gods of Canaan, Ugarit and the Phoenician cities of the Levant.',
   },
   {
@@ -61,7 +61,7 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
       'The gods of the Norse, the Aesir and the Vanir, as the Eddas and the sagas record them.',
   },
   {
-    name: 'Anglo-Saxon and Continental Germanic',
+    name: 'Anglo-Saxon & Continental Germanic',
     description:
       'The gods and goddesses of the Anglo-Saxons and the continental Germanic peoples, known from Bede, Tacitus and later folklore.',
   },
@@ -76,7 +76,7 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
       'The gods of Wales, the figures of the Mabinogi and Welsh literature honoured as gods today.',
   },
   {
-    name: 'Gaulish and British',
+    name: 'Gaulish & British',
     description:
       'The gods of Gaul and Roman Britain, known from altars, inscriptions and the Romans who named them.',
   },
@@ -121,7 +121,7 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
       'The alusi of the Igbo people of south-eastern Nigeria, the spirits the creator Chukwu set over the earth, the sky, the river and the farm.',
   },
   {
-    name: 'Fon and Ewe',
+    name: 'Fon & Ewe',
     description:
       'The vodun of the Fon and Ewe peoples of Benin and Togo, the Vodun of the old kingdom of Dahomey from which Haitian Vodou grew.',
   },
@@ -612,48 +612,48 @@ export const DEITIES: SeedDeity[] = [
       'Sumerian goddess of love, war, fertility and the morning and evening star, who descended to the underworld; Queen of Heaven.',
   },
 
-  // Akkadian and Babylonian
+  // Akkadian & Babylonian
   {
     name: 'Ishtar',
-    tradition: 'Akkadian and Babylonian',
+    tradition: 'Akkadian & Babylonian',
     description:
       "Akkadian and Babylonian goddess of love, war, fertility and the evening star, Inanna's Akkadian name.",
   },
   {
     name: 'Lilith',
-    tradition: 'Akkadian and Babylonian',
+    tradition: 'Akkadian & Babylonian',
     description:
       'Akkadian and Babylonian night spirit of storms and childbirth, carried into Jewish folklore and honoured as a goddess in modern practice; also Lilitu.',
   },
   {
     name: 'Tammuz',
-    tradition: 'Akkadian and Babylonian',
+    tradition: 'Akkadian & Babylonian',
     description:
       'Akkadian and Babylonian shepherd god of vegetation and its yearly death, consort of Ishtar; Sumerian Dumuzi, consort of Inanna.',
   },
 
-  // Canaanite and Phoenician
+  // Canaanite & Phoenician
   {
     name: 'Anat',
-    tradition: 'Canaanite and Phoenician',
+    tradition: 'Canaanite & Phoenician',
     description:
       'Canaanite goddess of war and fierce protection, sister and consort of Baal; also Anath.',
   },
   {
     name: 'Asherah',
-    tradition: 'Canaanite and Phoenician',
+    tradition: 'Canaanite & Phoenician',
     description:
       'Canaanite mother goddess and consort of El, worshipped at sacred trees and poles; also Athirat.',
   },
   {
     name: 'Astarte',
-    tradition: 'Canaanite and Phoenician',
+    tradition: 'Canaanite & Phoenician',
     description:
       'Phoenician and Canaanite goddess of love, fertility, war and the evening star; also Ashtoreth, Ashtart.',
   },
   {
     name: 'Baal',
-    tradition: 'Canaanite and Phoenician',
+    tradition: 'Canaanite & Phoenician',
     description: 'Canaanite god of storms, rain and the fertility they bring; also Hadad.',
   },
 
@@ -753,28 +753,28 @@ export const DEITIES: SeedDeity[] = [
       'Norse god of law, justice, oaths and war, who gave his hand to bind Fenrir; also Tiw.',
   },
 
-  // Anglo-Saxon and Continental Germanic
+  // Anglo-Saxon & Continental Germanic
   {
     name: 'Berchta',
-    tradition: 'Anglo-Saxon and Continental Germanic',
+    tradition: 'Anglo-Saxon & Continental Germanic',
     description:
       "Continental Germanic and Alpine goddess of spinning, the Twelve Nights and the household's order; also Perchta, Bertha.",
   },
   {
     name: 'Eostre',
-    tradition: 'Anglo-Saxon and Continental Germanic',
+    tradition: 'Anglo-Saxon & Continental Germanic',
     description:
       'Anglo-Saxon goddess of spring and the dawn, named by Bede, whom Easter recalls; also Ostara.',
   },
   {
     name: 'Holda',
-    tradition: 'Anglo-Saxon and Continental Germanic',
+    tradition: 'Anglo-Saxon & Continental Germanic',
     description:
       'Continental Germanic goddess of winter, spinning and the hearth, who shakes snow from her featherbed; also Holle, Hulda.',
   },
   {
     name: 'Nerthus',
-    tradition: 'Anglo-Saxon and Continental Germanic',
+    tradition: 'Anglo-Saxon & Continental Germanic',
     description:
       'Continental Germanic earth goddess of fertility and peace, carried among her people in a wagon, as Tacitus tells.',
   },
@@ -888,33 +888,33 @@ export const DEITIES: SeedDeity[] = [
       'Welsh goddess of horses, birds, sovereignty and the Otherworld, whose birds wake the dead and lull the living.',
   },
 
-  // Gaulish and British
+  // Gaulish & British
   {
     name: 'Belenus',
-    tradition: 'Gaulish and British',
+    tradition: 'Gaulish & British',
     description:
       'Gaulish and British god of light, the Sun and healing springs; also Belenos, Bel.',
   },
   {
     name: 'Cernunnos',
-    tradition: 'Gaulish and British',
+    tradition: 'Gaulish & British',
     description: 'Gaulish horned god of animals, the wild, fertility and wealth; also Kernunnos.',
   },
   {
     name: 'Epona',
-    tradition: 'Gaulish and British',
+    tradition: 'Gaulish & British',
     description:
       'Gaulish goddess of horses, mules and fertility, whose cult Roman soldiers carried across the empire.',
   },
   {
     name: 'Sulis',
-    tradition: 'Gaulish and British',
+    tradition: 'Gaulish & British',
     description:
       'British goddess of the hot springs at Bath, of healing and of curses; Sulis Minerva.',
   },
   {
     name: 'Taranis',
-    tradition: 'Gaulish and British',
+    tradition: 'Gaulish & British',
     description:
       'Gaulish god of thunder and the sky, matched with Jupiter by the Romans and read by scholars as the wheel god.',
   },
@@ -1188,52 +1188,52 @@ export const DEITIES: SeedDeity[] = [
       'Igbo alusi of the yam and its farming, guardian of the farm, honoured at the planting festival; also Ahiajoku, Ahiajioku, Ifejioku.',
   },
 
-  // Fon and Ewe
+  // Fon & Ewe
   {
     name: 'Nana Buluku',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       "Fon and Ewe creator of the world, mother of Mawu and Lisa, who made all things and withdrew; also Nana Buruku, Nana Buku, Nanan-bouclou, Candomble's Nana.",
   },
   {
     name: 'Mawu-Lisa',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       'Fon and Ewe twin creator vodun, Mawu of the Moon, night and gentleness and Lisa of the Sun, day and strength, spoken of as one; also Mawu, Lisa, Mahu.',
   },
   {
     name: 'Sagbata',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       'Fon and Ewe vodun of the earth and of smallpox, who watches over fields and waters and punishes with disease, head of the earth pantheon; also Sakpata, Shapata, Yoruba Sopona.',
   },
   {
     name: 'Xevioso',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       'Fon and Ewe vodun of thunder, lightning and rain, who sends the fertilising rains and strikes liars and thieves with the thunderbolt, shown as a ram with a double axe; also Hevioso, Heviosso, Sogbo, So.',
   },
   {
     name: 'Gu',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       'Fon and Ewe vodun of iron, metalwork, tools and war, twin of Xevioso and counterpart of Yoruba Ogun; also Egu, Gou.',
   },
   {
     name: 'Legba',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       "Fon and Ewe vodun of the crossroads and the gate, messenger between the vodun and the living and divine trickster, youngest child of Mawu-Lisa; Haitian Vodou's Papa Legba, Yoruba Elegba.",
   },
   {
     name: 'Dan',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       'Fon and Ewe serpent vodun of the rainbow, riches and cool breezes, who carried Mawu-Lisa at the creation and coils beneath the earth; also Da, Dan Ayido Hwedo, Aido Hwedo, Haitian Damballah and Ayida Wedo.',
   },
   {
     name: 'Agbe',
-    tradition: 'Fon and Ewe',
+    tradition: 'Fon & Ewe',
     description:
       "Fon and Ewe vodun of the sea and head of its pantheon, beside Sagbata's earth and Xevioso's thunder.",
   },
