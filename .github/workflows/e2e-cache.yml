@@ -8,7 +8,8 @@ name: E2E Build Cache
 #
 # It calls playwright.yml itself, with `build-only`, rather than a job of its
 # own: the same image, path, build directory and environment as a pull
-# request's build, by construction, and the same cache step and key. The job
+# request's build, by construction, and the same cache key; `build-only` is
+# also what lets its save step run, which a pull request's run skips. The job
 # names differ from pr-gate.yml's, so no check name is published twice
 # (claude-docs/ci/smoke-checks.md).
 on:

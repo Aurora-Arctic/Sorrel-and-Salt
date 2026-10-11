@@ -119,16 +119,20 @@ jobs:
         if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # The e2e build's cache, as checks.yml's build leg keeps .next/cache:
-      # the absolute /app path, since hashFiles reads $GITHUB_WORKSPACE and the
+      # The e2e build's cache, restored here and saved only under build-only.
+      # The absolute /app path, since hashFiles reads $GITHUB_WORKSPACE and the
       # build writes /app; distDir is playwright.config.ts's NEXT_DIST_DIR.
       # Before the run, because slot 0's webServer builds inside it. The
       # image's GNU tar serves actions/cache (claude-docs/testing/e2e.md).
       # A pull request restores what e2e-cache.yml saved on staging, since
-      # GitHub never lets one pull request read another's cache.
-      - name: Cache Next.js e2e build cache
+      # GitHub never lets one pull request read another's cache. Restore and
+      # save are split, not one actions/cache step, because that step would
+      # also save on every pull request: 150-240 MB under its merge ref that
+      # no other run can read, uploaded after the tests (MB.235).
+      - name: Restore Next.js e2e build cache
+        id: e2e-cache
         if: inputs.should-run
-        uses: actions/cache@v6
+        uses: actions/cache/restore@v6
         with:
           path: /app/.next-e2e/cache
           key: ${{ runner.os }}-nextjs-e2e-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
@@ -150,6 +154,17 @@ jobs:
           set -o pipefail
           # Unquoted on purpose: two flags, or nothing.
           npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
+
+      # Only e2e-cache.yml's run on staging saves, and only after a build that
+      # succeeded: no always(), since a failed build's cache is not one to
+      # hand on. The key is the restore step's, so both name the same entry,
+      # and an exact hit has nothing new to save.
+      - name: Save Next.js e2e build cache
+        if: inputs.should-run && inputs.build-only && steps.e2e-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: /app/.next-e2e/cache
+          key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
       - name: Upload Playwright report
         if: failure()
