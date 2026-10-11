@@ -18,9 +18,13 @@ export default {
 
 const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
+// Each kind's groups enough to narrow: the group filter is typed into once
+// hydrated (MB.115), so typing in it shows its list narrowing.
 const CATEGORY_GROUPS: readonly GroupedValueGroupOption[] = [
   { slug: 'fixture-healing', name: 'Fixture Healing' },
   { slug: 'fixture-protection', name: 'Fixture Protection' },
+  { slug: 'mock-divination', name: 'Mock Divination' },
+  { slug: 'stub-prosperity', name: 'Stub Prosperity' },
 ];
 
 // Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
@@ -46,6 +50,8 @@ const category = (name: string, groupName: string, description: string) => {
 const FORM_GROUPS: readonly GroupedValueGroupOption[] = [
   { slug: 'fixture-mineral', name: 'Fixture Mineral' },
   { slug: 'fixture-substance', name: 'Fixture Substance' },
+  { slug: 'mock-preparation', name: 'Mock Preparation' },
+  { slug: 'stub-plant-part', name: 'Stub Plant Part' },
 ];
 
 const form = (name: string, groupName: string, description: string) => {
@@ -63,6 +69,8 @@ const form = (name: string, groupName: string, description: string) => {
 const TRADITIONS: readonly GroupedValueGroupOption[] = [
   { slug: 'fixtural', name: 'Fixtural' },
   { slug: 'mockish', name: 'Mockish' },
+  { slug: 'old-testic', name: 'Old Testic' },
+  { slug: 'stubbish', name: 'Stubbish' },
 ];
 
 const deity = (name: string, groupName: string, description: string) => {

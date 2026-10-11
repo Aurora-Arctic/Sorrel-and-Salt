@@ -6,7 +6,7 @@ import type { GroupedValueKind } from '../GroupedValueForm/types';
 export interface GroupedValueListGroup {
   /** The group column's heading and the filter's label: "Group". */
   label: string;
-  /** More than one group, lower-case, for the filter's first option: "All groups". */
+  /** More than one group, title case, for the filter's empty choice: "All Groups". */
   plural: string;
   /** The address parameter the filter names a group by: `group`. */
   param: string;

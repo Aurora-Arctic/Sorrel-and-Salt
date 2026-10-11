@@ -257,6 +257,11 @@ export interface ComboboxTypeaheadProps {
   /** Shown, muted, while the box is empty, and not itself a choice. */
   placeholder?: string;
   required?: boolean;
+  /**
+   * A clear on the control's right, "Clear Tradition", shown while the box
+   * holds text or a choice: a filter's way back to every group.
+   */
+  clearable?: boolean;
   /** The text box, which takes the focus. */
   inputRef?: Ref<HTMLInputElement>;
   'aria-describedby'?: string;
