@@ -30,7 +30,22 @@ Outside the confirmed view the field is always editable, whatever `verified`
 is: this page is how any user changes the address at any later time, not only
 how a first one is confirmed. A verified account that comes back sees neither
 the verified line nor "Continue" — nothing was just proved — but the field,
-prefilled, and "Enter a new address and we'll send it a confirmation link."
+prefilled, and "Enter a new email address and we'll send it a confirmation
+link."
+
+The status line is one sentence per state of the address, each exported
+from `index.tsx` so a test reads the state from the component rather than
+restating its words:
+
+| Constant            | When                                      | Sentence                                                                                |
+| ------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `NO_EMAIL_STATUS`   | No address                                | "No email address yet. Enter the one we should write to."                               |
+| `UNVERIFIED_STATUS` | An address waiting on its link            | "Your email address isn't confirmed yet. Open the link we sent you, or send a new one." |
+| `CHANGE_STATUS`     | A verified account back to change it      | "Enter a new email address and we'll send it a confirmation link."                      |
+| `VERIFIED_STATUS`   | The confirmed view, after a followed link | "Your email address is confirmed. We'll send your emails here."                         |
+
+Each says "email address" at its first mention and "address" after, the
+copy's rule for the word (MB.116).
 
 ## The success message names the typed address
 
@@ -129,7 +144,10 @@ so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
 itself keeps from underlining or taking the visited ink
 ([`styling.md`](../styling.md), "Buttons"). The width is the page's: `/account/email` is a `.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"), and the account page's
-section sits in the same frame. The component's own stylesheet is the
+section sits in the same frame. Both stand the form on a `.panel`, the
+account page's section and the email page's own wrapper round the form, so
+the two pages share one ground (the owner's call, MB.116); the way back to
+the account page sits below the email page's panel. The component's own stylesheet is the
 column's gap and the address's weight.
 
 ## Stories
@@ -140,9 +158,9 @@ column's gap and the address's weight.
 change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
 `PhoneDark` and `PhoneLight` show the first visit at 375px in each theme.
-Every other story renders inside the page's own `<main className="page-frame page-frame--narrow">`, so the
-workshop shows what `/account/email` shows and nothing is styled for the
-workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
+Every other story renders inside the page's own `<main className="page-frame page-frame--narrow">`
+and its `.panel`, so the workshop shows what `/account/email` shows and
+nothing is styled for the workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider
 (`.ladle/components.tsx` wraps every story in the app's `Providers`), never
 from a story's own `QueryClientProvider`: a second would split the cache. Nothing is mocked, since the component reaches
@@ -159,7 +177,7 @@ with no heading and no confirmed view; the status lines, each the one
 rendering of the address's state; the submit disabled for an unchanged
 verified address (case included) and enabled once edited, or when
 unverified; the typed value sent as typed and the status naming it,
-normalised, with `next` beside it, or none; a `VALIDATION` field error
+normalised, with `next` beside it, or none; the busy button while the send is in flight; a `VALIDATION` field error
 marking the input invalid and describing it; a `FORBIDDEN` refusal and a
 send that never reached the server, each as an alert; the last outcome
 cleared on resubmit; the cooldown on the button held from before the send, a

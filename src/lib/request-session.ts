@@ -1,4 +1,3 @@
-import type { BetterAuthOptions } from 'better-auth';
 import { headers } from 'next/headers';
 import { forbidden, redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -17,20 +16,16 @@ import type { LinkedAccount } from './types';
 // never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
 // protection").
 
-// Better Auth's own default when `session.freshAge` is unset: a day, in seconds.
-const DEFAULT_FRESH_AGE_SECONDS = 60 * 60 * 24;
-
 /**
  * Whether Better Auth would still call a session created at `createdAt`
  * fresh: the check its `/unlink-account` makes, restated so the account page
- * can withhold Remove rather than offer a press that is refused. A `freshAge`
- * of 0 turns the check off, as it does in Better Auth.
+ * can withhold Remove rather than offer a press that is refused. The window
+ * is Better Auth's own resolved `freshAge` (a day by default, pinned in
+ * tests/lib/auth.test.ts), not a copy of its default; 0 turns the check off,
+ * as it does there.
  */
-function isFresh(createdAt: Date | string): boolean {
-  // Read through the wide options type: src/lib/auth.ts sets no `session`
-  // today, so its literal type has none, but one set later must count.
-  const options: BetterAuthOptions = auth.options;
-  const freshAge = options.session?.freshAge ?? DEFAULT_FRESH_AGE_SECONDS;
+async function isFresh(createdAt: Date | string): Promise<boolean> {
+  const { freshAge } = (await auth.$context).sessionConfig;
   if (freshAge === 0) return true;
   return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
 }
@@ -48,7 +43,7 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
-    sessionFresh: isFresh(result.session.createdAt),
+    sessionFresh: await isFresh(result.session.createdAt),
   };
 }
 

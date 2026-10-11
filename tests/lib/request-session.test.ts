@@ -13,7 +13,7 @@ let requestHeaders = new Headers();
 vi.mock('@/lib/auth', () => ({
   auth: {
     api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock },
-    options: {},
+    $context: Promise.resolve({ sessionConfig: { freshAge: 24 * 60 * 60 } }),
   },
 }));
 vi.mock('next/headers', () => ({ headers: async () => requestHeaders }));

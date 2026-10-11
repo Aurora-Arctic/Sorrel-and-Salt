@@ -4,8 +4,8 @@
 Sign-In Methods section (MB.88): every way into the account, one row per
 roster provider, linked or addable, and removable while another one is left.
 Server component `src/app/account/page.tsx` reads the session,
-`linkedAccounts()`, `?error=` and `?provider=`, and hands the results down as
-props. This component renders the list and makes the two Better Auth calls.
+`linkedAccounts()`, whether the session is fresh (`sessionIsFresh()`),
+`?error=` and `?provider=`, and hands the results down as props. This component renders the list and makes the two Better Auth calls.
 Why a second provider is added this way and never at sign-in is
 [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Linking a second
 provider".
@@ -18,11 +18,12 @@ page").
 
 ## The props contract
 
-| Prop         | Meaning                                                                                                                                                                                                                                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe.                                                                                                                    |
-| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                                                                                                                                   |
-| `error`      | A failed link, as `{ providerId?, message }` (`SignInMethodError`, `types.ts`). `message` is a readable sentence from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. `providerId` is the provider the link was for, when the callback said and it is on the roster. Shown as an alert on mount. |
+| Prop         | Meaning                                                                                                                                                                                                                                                                                                                    |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe.                                                                                                                     |
+| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                                                                                                                                    |
+| `error`      | A failed link, as `{ providerId?, message }` (`SignInMethodError`, `types.ts`). `message` is a readable sentence from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. `providerId` is the provider the link was for, when the callback said and it is on the roster. Shown as an alert on mount.  |
+| `fresh`      | Whether the session is young enough for Better Auth to remove a method, from `sessionIsFresh()` (`src/lib/request-session.ts`). `false` withholds every Remove and offers Sign In Again ("A stale session signs in again", below). Optional, and `true` when left out, since Better Auth's refusal is the rule either way. |
 
 ## The rows
 
@@ -30,16 +31,21 @@ Each provider is a `ProviderRow` (`provider-row.tsx`), in one of three
 states. Each state is told apart by its control and its words, never by
 colour alone:
 
-| State         | What the row shows                                                                                                                                       |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`      | The provider's mark, its name, and "Remove &lt;Provider&gt;". With one method left there is no Remove, and a line, "Your only sign-in method", says why. |
-| `addable`     | The mark, the name, and "Add &lt;Provider&gt;".                                                                                                          |
-| `unavailable` | The mark, faded with its button, the name, and "Add &lt;Provider&gt;" greyed with `aria-disabled`, over the shared unavailable note.                     |
+| State         | What the row shows                                                                                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linked`      | The provider's mark, its name, and "Remove &lt;Provider&gt;" in the wax (`.btn--destructive`). With one method left there is no Remove, and a line, "Your only sign-in method", says why. From a stale session there is no Remove either, and the line above the list says why. |
+| `addable`     | The mark, the name, and "Add &lt;Provider&gt;".                                                                                                                                                                                                                                 |
+| `unavailable` | The mark, faded with its button, the name, and "Add &lt;Provider&gt;" greyed with `aria-disabled`, over the shared unavailable note.                                                                                                                                            |
 
-`ProviderRow` takes `{ provider, state, removable, pending, error, onAdd,
-onRemove }` (`ProviderRowProps`, `types.ts`). `removable` is whether another
-method is left; `pending` is whether a removal is in flight anywhere in the
-list; `error` is this provider's own failure. The list works out each row's
+No row carries a status word such as "Linked": a linked row is the one with
+Remove or its reason, and an unlinked one has Add (the owner's call, MB.116).
+
+`ProviderRow` takes `{ provider, state, removal, pending, error, onAdd,
+onRemove }` (`ProviderRowProps`, `types.ts`). `removal` (`ProviderRemoval`)
+is whether a linked row offers Remove: `offered` while another method is
+left and the session is fresh, `last` for the only method, and `withheld`
+from a stale session. `pending` is whether a removal is in flight anywhere
+in the list; `error` is this provider's own failure. The list works out each row's
 state and hands it down; the row holds no state of its own.
 
 ## Adding one leaves the page
@@ -62,20 +68,58 @@ Remove: removal needs no credentials.
 
 ## Removing one answers in place
 
-"Remove &lt;Provider&gt;" is rendered only while two or more are linked.
-Better Auth refuses the last one anyway (`allowUnlinkingAll` is pinned off), so
-the rule only keeps the page honest, and the last row says why it has no
-Remove. It calls `unlinkAccount({ accountId })`. On success the row leaves the
-component's own copy of the list, a success notice at the head of the list
-says "&lt;Provider&gt; was removed.", and the provider's Add returns. There is
-no reload, so a list changed in another tab shows only after one. On a refusal
-the error's `code` goes through `unlinkErrorMessage()`:
-`FAILED_TO_UNLINK_LAST_ACCOUNT` (two tabs racing), `SESSION_NOT_FRESH` (the
-session is older than a day: sign in again), or the generic sentence. The
+"Remove &lt;Provider&gt;" is rendered only while two or more are linked and
+the session is fresh. Better Auth refuses the last one anyway
+(`allowUnlinkingAll` is pinned off), so the rule only keeps the page honest,
+and the last row says why it has no Remove. It calls
+`unlinkAccount({ accountId })`. On success the row leaves the component's own
+copy of the list, a success notice at the head of the list says
+"&lt;Provider&gt; was removed from your sign-in methods.", and the provider's
+Add returns. There is no reload, so a list changed in another tab shows only
+after one. On a refusal the error's `code` goes through
+`unlinkErrorMessage()`: `FAILED_TO_UNLINK_LAST_ACCOUNT` (two tabs racing),
+`SESSION_NOT_FRESH` (the session grew stale while the page was open, or in
+another tab: sign in again), or the generic sentence. The
 refusal shows in the row that stayed. While a removal is in flight every
 Remove is `disabled`, so two cannot race to leave none. `.btn` greys out under
 `disabled` as under `aria-disabled`, so the component adds no styling of its
 own for it.
+
+## A stale session signs in again
+
+Better Auth's `/unlink-account` refuses a session older than its `freshAge`
+(a day, pinned in `tests/lib/auth.test.ts`) with `SESSION_NOT_FRESH`. A
+session lasts seven days, so most visits after the first day would meet that
+refusal on every Remove: a button offered, pressed and refused, with a
+sentence telling the reader to do something else. The owner called that
+confusing (MB.116), so the page pre-empts the refusal rather than only
+explaining it:
+
+1. `stateFromHeaders` in `src/lib/request-session.ts` keeps the session's
+   `createdAt` and works out `sessionFresh`, the same check Better Auth
+   makes, against Better Auth's own resolved `freshAge` (`auth.$context`'s
+   `sessionConfig`), where 0 means always fresh. `sessionIsFresh()` reads it
+   from the same per-request lookup as `getSession()`. It sits beside
+   `emailVerified` on `SessionState`, off the service-level `Session`,
+   since a page needs it and no service does.
+2. The account page passes it as `fresh`.
+3. With `fresh` false and two or more methods linked, no row offers Remove.
+   Above the list, a plain `Notice` says "Removing a sign-in method needs a
+   recent sign-in.", and a `.btn` button, Sign In Again, names it in its
+   `aria-describedby`.
+4. Sign In Again calls `signOut()` from `src/lib/auth-client.ts`, as
+   SignOutButton does, busy as "Signing Out" meanwhile
+   ([`sign-out-button.md`](sign-out-button.md)). Its success is a full load
+   of `signInPath('/account')` (`/sign-in?next=%2Faccount`), so the sign-in
+   lands back here with a new, fresh session. Its failure, a refusal or a
+   dropped connection, is `GENERIC_FAILURE` in an error `Notice` beneath the
+   button, which is offered again.
+
+The refusal stays mapped all the same. Freshness is read when the page
+renders, so a page left open past the day, or a second tab, can still press
+a Remove that Better Auth then refuses, and `SESSION_NOT_FRESH`'s sentence
+shows in that row. With one method left nothing changes: there is nothing to
+remove, so no fresh sign-in is offered.
 
 ## Where a message shows
 
@@ -97,16 +141,17 @@ element exists in the DOM without a message. The `Notice` component
 Each row draws its provider's mark (`ProviderMark`,
 [`provider-mark.md`](provider-mark.md)), the circle the admin user list uses
 too. MB.71 named providers in text only, on the owner's call then; MB.116
-draws the mark pending the owner's call again, with the text-only row beside
-it in the workshop (`ProposalMarks`, `ProposalNoMarks`). The mark is
-decorative (`aria-hidden`): the name beside it is what a screen reader reads.
+draws the mark, on the owner's call at its sign-off. The mark is decorative
+(`aria-hidden`): the name beside it is what a screen reader reads.
 
 ## Styling
 
 The section's frame is the page's: `.page-frame--narrow` gives its width,
-`.page-frame__section` its column, and `.header` and `.lede` its head
-([`styling.md`](../styling.md), "The page frame"). `index.scss` styles only
-the list:
+`.page-frame__section` its column, `.panel` its ground, and `.header` and
+`.lede` its head ([`styling.md`](../styling.md), "The page frame"). Each of
+the account page's sections is on its own panel, which parts it from the
+next, so no rule is drawn between them (the owner's call, MB.116).
+`index.scss` styles only the list:
 
 - `.sign-in-methods` and `.sign-in-methods__list` are columns `space(3)`
   apart.
@@ -119,34 +164,37 @@ the list:
   row wide and set to the right, beneath where the control is or would be. A
   row's error `Notice` is a full row wide.
 - An unavailable row's mark fades by the same 0.55 a disabled `.btn` does,
-  so the row reads as off as a whole.
+  so the row reads as off as a whole. Its note keeps the caption size (the
+  owner's call, MB.116).
+- `.sign-in-methods__fresh`, a stale session's line and Sign In Again, is a
+  column `space(2)` apart, the button at its own width.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignInMethods/index.stories.tsx),
-each inside the page's real frame, section and head: `OneLinked`,
-`TwoLinked`, `WithError` (a failed link in Microsoft's row, reading
-`linkErrorMessage` rather than a copied sentence), `SomeUnavailable`, and
-`WholePage`, the whole `/account` page composed with fixture props, since
-the page is a server component. `PhoneDark` and `PhoneLight` show the whole
-page at 375px in each theme, with every row state. The `Proposal…` pairs are
-the owner's open calls (MB.116): `ProposalNoStatus` / `ProposalStatusWord`,
-`ProposalRemoveOutline` / `ProposalRemoveDestructive`, `ProposalMarks` /
-`ProposalNoMarks`, and `ProposalPanelOff` / `ProposalPanelOn`. They go once
-the owner has decided.
+each inside the page's real frame, section, panel and head: `OneLinked`,
+`TwoLinked`, `StaleSession` (the same two from a stale session), `WithError`
+(a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
+copied sentence), `SomeUnavailable`, and `WholePage`, the whole `/account`
+page composed with fixture props, since the page is a server component.
+`PhoneDark` and `PhoneLight` show the whole page at 375px in each theme,
+with every row state.
 
 ## Tests
 
 - `tests/components/SignInMethods/index.test.tsx`: role and label queries
   only, with `@/lib/auth-client` mocked as in SignInPanel's test. It covers
-  the four rows, no status text and Add on the unlinked ones, the link call's
-  arguments, the generic link failure, an unconfigured Add, no Remove with one
-  linked, removal by row id and its message, the survivor losing its Remove,
-  and a mapped and an unmapped refusal.
-- `tests/app/account/page.test.tsx`: the section is a region named
-  "Sign-In Methods".
+  the four rows and Add on the unlinked ones, the link call's arguments, a
+  failed link's alert in its provider's row, the generic link failure, an
+  unconfigured Add, no Remove with one linked and the row's reason line,
+  removal by row id and its message, the survivor losing its Remove, a mapped
+  and an unmapped refusal, Remove withheld and Sign In Again offered from a
+  stale session, and Sign In Again signing out to `/sign-in` with
+  `next=/account`.
+- `tests/app/account/page.test.tsx`: the page's nav reaches each section.
 - `tests/e2e/account.spec.ts`: `/account` signed in through
-  `tests/e2e/session.ts`, axe-scanned with one provider, beside the Name and
-  Email sections, and with two plus a callback error.
+  `tests/e2e/session.ts`, axe-scanned with one provider in both themes and
+  held at 375px without sideways scroll, and with two plus a callback error
+  whose alert is in Microsoft's row.
 - The link and unlink flows themselves are asserted against Better Auth's
   endpoints in `tests/db/account-linking.test.ts`.
