@@ -228,6 +228,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.231 | The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/` | Wave 8  | —                      |
 | MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8  | —                      |
 | MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8  | —                      |
+| MB.234 | The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it                              | Wave 8  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -513,6 +514,30 @@ _Acceptance criteria:_
 - `Docker/postgres-init/enable-extensions.sql` grants `pg_signal_backend` to the test role, with the comment saying why
 - The PR's CI rebuilds the database image and its Vitest and Playwright jobs pass on it
 - `claude-docs/ci/database-image.md`, the "Database image" section `claude-docs/ci.md` summarises, names the grant and says an existing devcontainer volume needs recreating to pick it up
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.234 — The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it** · 1h
+
+_Story:_ As a maintainer, I want the e2e job's `next build` to start from a warm cache on every pull request, so that the slowest CI step spends its minutes on the tests rather than on rebuilding what staging already built.
+
+MB.230 added a step to `.github/workflows/playwright.yml`, "Cache Next.js e2e build cache", that restores `/app/.next-e2e/cache` before the suite runs and saves it afterwards. That folder is where `next build` keeps Turbopack's on-disk cache, the record of work a later build can skip, and the e2e build writes it because `playwright.config.ts` sets the build directory to `.next-e2e`. The key is `Linux-nextjs-e2e-<lockfile hash>-<source hash>`, with a fallback to any entry for the same lockfile. The step never restored: every run since logs `Cache not found for input keys` and then `Cache saved` (run 38102191294, PR #818, is one). The build and server start before `Running 56 tests` took 24.7 s on that run, cold.
+
+The cause is how GitHub scopes caches. A run can restore a cache saved on its own branch, on the default branch (`main`), or, for a pull request, on its base branch, but never one saved on a sibling branch, and a pull request's run saves under its merge ref (`refs/pull/<n>/merge`), so only re-runs of that same pull request can read it (GitHub Docs, "Dependency caching reference", "Restrictions for accessing a cache", https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching). Every save so far came from a pull request, and `staging` runs only `deploy.yml`, which never builds the e2e app, so no cache exists anywhere a pull request into `staging` can look.
+
+The fix saves the cache from `staging`. A new workflow, `.github/workflows/e2e-cache.yml`, runs on a push to `staging` that touches what the e2e build compiles or runs under (`src/**`, `public/**`, the Next, TypeScript and Playwright configs, the manifests, `Docker/Dockerfile.e2e` and the workflows involved). It calls the same three workflows `pr-gate.yml` does for its Playwright job: `build-e2e-image.yml` and `build-db-image.yml`, which find the content-addressed images the pull request already published, and `playwright.yml` itself, with a new `build-only` input. With `build-only` set, the run step adds `--grep-invert . --pass-with-no-tests` to `npm run e2e`: every test title matches `.`, so no spec runs, but Playwright starts its web servers before it loads any spec, so slot 0's server still runs `npm run build` exactly as a pull request's run does. The coverage upload is skipped, since nothing ran, and `actions/cache` saves the folder under the same key scheme, because it is the same step. Reusing `playwright.yml` rather than writing a second job makes the warm build match the pull request's by construction: the same image, the same `/app` path and build directory, the same job environment and the same `webServer` environment from `playwright.config.ts`. A Turbopack cache built under different settings would be thrown away. The job names (`e2e-image`, `db-image`, `warm`) differ from `pr-gate.yml`'s, so no check name is published twice.
+
+The other shapes were weighed. A job in `deploy.yml` would put the e2e image, a Postgres service and Playwright beside the Vercel deploy, and a failed warm run would turn the deploy red; the deploy's runner has neither the image nor the database. Running the whole Playwright suite on every push to `staging` would spend about 1 minute of tests per push to save a cache the build-only run saves just as well.
+
+Cost: about 2½ GitHub-hosted runner minutes per qualifying push to `staging`. Measured from run 38102191294's jobs: the two image jobs take about 16 s and 31 s when the image already exists, and the warm job about 1½ to 2 minutes (51 s to pull the e2e image and start Postgres and Mailpit, 2 s of checkout, a few seconds to restore about 160 MB, 25 to 40 s to build and boot, and 10 s to save). The repo is public, so GitHub's hosted minutes are free, and no Blacksmith minutes are used.
+
+No test is added: a workflow is harness (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 1). This PR's own run cannot show a restore, because the warm run happens only after the merge, on `staging`. The proof is the first pull-request run after it.
+
+_Acceptance criteria:_
+
+- `e2e-cache.yml` runs on a push to `staging` and saves `/app/.next-e2e/cache` under the key scheme `playwright.yml`'s cache step restores
+- The Playwright job on the first pull request after the merge logs `Cache restored from key`, pasted into the closing comment on the issue
+- The build-and-boot time before `Running N tests` on that run is recorded in this entry against MB.230's cold 24.7 s
+- `claude-docs/testing/e2e.md`, `claude-docs/ci/reusable-checks.md`, `claude-docs/ci.md` and `claude-docs/ci/runner-budget.md` describe the job and its cost
 - No test is added: the harness is not tested (layer-ownership.md, rule 1)
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
