@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { tableFacts } from '../../../support/db/table-metadata';
 import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { IngredientOverrides, Inserted } from './types';
 
-// §5's three partial unique indexes. Identity is `canonical_key`, so the
-// compendium is unique on identity and label uniqueness survives only inside
-// a workspace — claude-docs/db/identity-model.md, "The ingredient identity model".
+// §5's five unique indexes, by what each refuses; that each is partial on
+// deleted_at, and frees its slot on a soft delete, is
+// tests/db/partial-unique-indexes.test.ts's. Identity is `canonical_key`, so
+// the compendium is unique on identity and label uniqueness survives only
+// inside a workspace — claude-docs/db/identity-model.md, "The ingredient identity model".
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
@@ -17,38 +17,6 @@ const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
 // claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
 const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
-const DECLARED = [
-  COMPENDIUM_IDENTITY,
-  WORKSPACE_IDENTITY,
-  WORKSPACE_LABEL,
-  COMPENDIUM_SLUG,
-  WORKSPACE_SLUG,
-];
-// §9's, neither unique nor partial; ingredients-trigram.test.ts owns it, and
-// ingredients-unaccent.test.ts its folded twin.
-const TRIGRAM = 'ingredients_trgm';
-const UNACCENT_TRIGRAM = 'ingredients_unaccent_trgm';
-// M5.6a's reverse index on the pick, for the form delete's and rename's reads
-// of the live compendium entries picking a form (MB.167).
-const COMPENDIUM_FORM_PICKS = 'ingredients_compendium_form_id_idx';
-
-describe('ingredients index declarations', () => {
-  const { byIndexName: byName } = tableFacts(ingredients);
-
-  // "Exactly", not "at least": a sixth unique index is what this list exists to catch.
-  it('declares exactly §5’s five unique indexes, the two trigram ones and the pick index', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [...DECLARED, TRIGRAM, UNACCENT_TRIGRAM, COMPENDIUM_FORM_PICKS].sort(),
-    );
-  });
-
-  it('makes all five unique and all five partial', () => {
-    for (const name of DECLARED) {
-      expect(byName[name].config.unique).toBe(true);
-      expect(byName[name].config.where).toBeDefined();
-    }
-  });
-});
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
@@ -64,19 +32,13 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`
     insert into ingredients ${sql(row(overrides))} returning id, canonical_key
   `;
   return { id: inserted.id as string, canonicalKey: inserted.canonical_key as string };
-}
-
-async function softDelete(id: string): Promise<void> {
-  await sql`
-    update ingredients set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
-  `;
 }
 
 async function liveCount(): Promise<number> {
@@ -90,74 +52,6 @@ beforeEach(async () => {
 });
 
 describe('ingredients unique indexes', () => {
-  // The rendered predicate, not "some predicate": a dropped WHERE reserves a
-  // deleted identity forever, and no test below re-uses one without deleting first.
-  describe('catalogue introspection', () => {
-    it('makes the compendium unique on identity, among live compendium rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_IDENTITY);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (canonical_key)');
-    });
-
-    it('makes each workspace unique on identity, among its live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_IDENTITY);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (workspace_id, canonical_key)');
-    });
-
-    it('makes each workspace unique on the folded label, among its live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_LABEL);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
-      // `lower(name)`: Mugwort and mugwort are one label inside a workspace.
-      expect(index?.definition).toContain('USING btree (workspace_id, lower(name))');
-    });
-
-    // The address, unique per tier among live rows: `(slug)` over the
-    // compendium, `(workspace_id, slug)` over the locals — the latter with no
-    // tier predicate, as DESIGN.md §5 writes it, since a null workspace_id
-    // collides with nothing in a btree.
-    it('makes the compendium unique on slug, among live compendium rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (slug)');
-    });
-
-    it('makes each workspace unique on slug, among live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('(deleted_at IS NULL)');
-      expect(index?.definition).toContain('USING btree (workspace_id, slug)');
-    });
-
-    // Not unique: many entries pick one form. Partial on the compendium's live
-    // rows, the only ones the form writes read, since a coven's pick never
-    // blocks a delete or follows a rename.
-    it('indexes form_id over live compendium rows only, not uniquely', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_FORM_PICKS);
-
-      expect(index?.unique).toBe(false);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (form_id)');
-    });
-
-    // A sixth unique index — most likely a label index over the compendium —
-    // is exactly the constraint §5 dropped.
-    it('carries no unique index beyond those five and the primary key', async () => {
-      expect(await catalogue.uniqueIndexNames('ingredients')).toEqual(
-        [...DECLARED, 'ingredients_pkey'].sort(),
-      );
-    });
-  });
-
   describe('the compendium tier', () => {
     // "Cat's Claw" is a vine, a shrub and a claw; uniqueness on lower(name) held one.
     it('holds two entries that share a label but not a formal name', async () => {
@@ -385,71 +279,6 @@ describe('ingredients unique indexes', () => {
 
       expect(await sql`select distinct slug from ingredients`).toHaveLength(1);
       expect(await liveCount()).toBe(3);
-    });
-
-    it('frees a compendium slug on soft delete', async () => {
-      const { id } = await insert({ canonicalName: 'Fixtura testalis' });
-      const blocked = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
-      expect(blocked.constraint_name).toBe(COMPENDIUM_SLUG);
-
-      await softDelete(id);
-      await insert({ canonicalName: 'Fixtura-testalis' });
-
-      expect(await liveCount()).toBe(1);
-    });
-  });
-
-  // Each asserts the collision first, so an index that reserved nothing at all
-  // fails the first half.
-  describe('soft delete releases the reservation', () => {
-    it('frees a compendium identity', async () => {
-      // The identity stated on both rows rather than left to the factory's default.
-      const { id } = await insert({ canonicalName: 'Artemisia vulgaris', form: 'herb' });
-
-      const blocked = await failureOf(
-        insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' }),
-      );
-      expect(blocked.constraint_name).toBe(COMPENDIUM_IDENTITY);
-
-      await softDelete(id);
-      const reborn = await insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' });
-
-      expect(reborn.canonicalKey).toBe('artemisia vulgaris :: herb');
-      expect(await liveCount()).toBe(1);
-    });
-
-    it('frees a workspace identity', async () => {
-      const { id } = await insert({ workspaceId: WORKSPACE_A });
-
-      const blocked = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
-      expect(blocked.constraint_name).toBe(WORKSPACE_IDENTITY);
-
-      await softDelete(id);
-      await insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' });
-
-      expect(await liveCount()).toBe(1);
-    });
-
-    it('frees a workspace label', async () => {
-      const { id } = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
-
-      const blocked = await failureOf(
-        insert({
-          workspaceId: WORKSPACE_A,
-          name: 'Mugwort',
-          canonicalName: 'Artemisia absinthium',
-        }),
-      );
-      expect(blocked.constraint_name).toBe(WORKSPACE_LABEL);
-
-      await softDelete(id);
-      await insert({
-        workspaceId: WORKSPACE_A,
-        name: 'Mugwort',
-        canonicalName: 'Artemisia absinthium',
-      });
-
-      expect(await liveCount()).toBe(1);
     });
   });
 });

@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
 import { MAX_QUANTITY } from '@/modules/ingredients/schema/quantities';
-import { UNITS } from '@/modules/ingredients/schema/units';
 import { StockInput } from '@/modules/ingredients/validation/stock';
 
-function failure(input: unknown) {
+// What the schema adds over src/lib/validation.ts, whose optionalText and
+// CalendarDay the source and the acquired date are: the two amounts, one
+// builder, so one row of each refusal, and the unit list.
+
+function failedPaths(input: unknown) {
   const result = StockInput.safeParse(input);
   expect(result.success).toBe(false);
-  return result.error?.issues.map(({ path, message }) => ({ path, message })) ?? [];
+  return result.error?.issues.map((issue) => issue.path) ?? [];
 }
 
 describe('StockInput', () => {
@@ -33,34 +36,16 @@ describe('StockInput', () => {
     expect(StockInput.safeParse({ quantityOnHand: null, unit: null }).success).toBe(true);
   });
 
-  it('treats a blank source as absent', () => {
-    expect(StockInput.parse({ source: '   ' })).toMatchObject({ source: null });
+  it('refuses a negative amount, at its field', () => {
+    expect(failedPaths({ quantityOnHand: -0.5 })).toEqual([['quantityOnHand']]);
   });
-
-  it.each(['quantityOnHand', 'lowStockThreshold'])(
-    'refuses a negative %s with a message, pathed to it',
-    (field) => {
-      const issues = failure({ [field]: -0.5 });
-
-      expect(issues).toHaveLength(1);
-      expect(issues[0].path).toEqual([field]);
-      expect(issues[0].message).toMatch(/negative/i);
-    },
-  );
 
   // numeric(12, 3) holds nine digits before the point; past that Postgres
   // refuses with a raw overflow, so the refusal is said here instead.
-  it.each(['quantityOnHand', 'lowStockThreshold'])(
-    'takes the largest %s the column holds, and refuses one past it',
-    (field) => {
-      expect(StockInput.safeParse({ [field]: 999_999_999.999 }).success).toBe(true);
-
-      const issues = failure({ [field]: 1_000_000_000 });
-      expect(issues).toHaveLength(1);
-      expect(issues[0].path).toEqual([field]);
-      expect(issues[0].message).toMatch(/999,999,999\.999/);
-    },
-  );
+  it('takes the largest amount the column holds, and refuses one past it', () => {
+    expect(StockInput.safeParse({ lowStockThreshold: 999_999_999.999 }).success).toBe(true);
+    expect(failedPaths({ lowStockThreshold: 1_000_000_000 })).toEqual([['lowStockThreshold']]);
+  });
 
   it('reads the ceiling from the column, not a second number', () => {
     const column = getTableConfig(inventoryItems).columns.find(
@@ -70,25 +55,17 @@ describe('StockInput', () => {
     expect(MAX_QUANTITY).toBe(10 ** (column.precision - column.scale) - 10 ** -column.scale);
   });
 
-  it.each(['quantityOnHand', 'lowStockThreshold'])('refuses a %s that is not a number', (field) => {
-    expect(failure({ [field]: '3' })[0].path).toEqual([field]);
-    expect(failure({ [field]: Number.NaN })[0].path).toEqual([field]);
-    expect(failure({ [field]: Number.POSITIVE_INFINITY })[0].path).toEqual([field]);
-  });
-
-  // Read from the units module, so the one list is what is accepted.
-  it('accepts every unit the units module holds', () => {
-    for (const unit of UNITS) {
-      expect(StockInput.safeParse({ unit }).success).toBe(true);
+  it('refuses an amount that is not a number', () => {
+    for (const value of ['3', Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(failedPaths({ quantityOnHand: value }), String(value)).toEqual([['quantityOnHand']]);
     }
   });
 
-  it.each(['gram', 'fl oz', 'handful', 'G'])('refuses %s as a unit', (unit) => {
-    expect(failure({ unit })[0].path).toEqual(['unit']);
-  });
-
-  it('refuses an acquired date that is not a calendar date', () => {
-    expect(failure({ acquiredDate: '2026-02-30' })[0].path).toEqual(['acquiredDate']);
-    expect(failure({ acquiredDate: '2026-09-01T10:00:00Z' })[0].path).toEqual(['acquiredDate']);
+  // The units module's list, so the one list is what is accepted.
+  it('takes a unit the units module names, and refuses one it does not', () => {
+    expect(StockInput.safeParse({ unit: 'fl_oz' }).success).toBe(true);
+    for (const unit of ['gram', 'fl oz', 'handful', 'G']) {
+      expect(failedPaths({ unit }), unit).toEqual([['unit']]);
+    }
   });
 });

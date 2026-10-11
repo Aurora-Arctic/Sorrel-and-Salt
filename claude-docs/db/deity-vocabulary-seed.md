@@ -5,10 +5,10 @@ The starting list for `deity_traditions` and `deities`
 thirty-five traditions and 216 deities, in the order the two tables below give
 them. The owner asked for a broad list, 100 to 200, across the practices the
 project serves, and that the deities be grouped by tradition; the five
-African traditions added on review carried it past 200. The seed parses
-both tables at test time, as MB.93's parses DESIGN.md §5's, and checks the
-parse itself: thirty-five traditions, 216 deities, every deity's tradition
-one of the thirty-five.
+African traditions added on review carried it past 200. The seed's literal
+transcribes both tables, every deity filed under one of the thirty-five;
+review holds the two in step, and `deities.test.ts` what a re-run leaves of
+an admin's edits (MB.225).
 
 The list lives here rather than in DESIGN.md §5, where the planet and zodiac
 values are, because 216 rows with their descriptions are data, not

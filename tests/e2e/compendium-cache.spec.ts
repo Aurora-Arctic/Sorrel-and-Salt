@@ -29,7 +29,8 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 }) => {
   await signInAs(page, `reader-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
   await page.goto('/admin/compendium');
-  await expect(page.getByRole('heading', { name: 'Compendium', level: 1 })).toBeVisible();
+  const add = page.getByRole('link', { name: 'Add Ingredient' });
+  await expect(add).toBeVisible();
 
   // Renamed underneath the cache to a name that sorts first, so a read of
   // Postgres would put it on the first page.
@@ -42,7 +43,7 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
   );
 
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Compendium', level: 1 })).toBeVisible();
+  await expect(add).toBeVisible();
   await expect(page.getByRole('cell', { name: renamed, exact: true })).toHaveCount(0);
 
   // The control: a filter never read before misses the cache, so it reads
@@ -56,7 +57,8 @@ test('a repeat read of the compendium is answered from the cache, not Postgres',
 test('an admin edit is visible on the next page load', async ({ page }) => {
   await signInAs(page, `writer-${run}@compendium-cache.test`, ['discord'], 'admin', asAdmin);
   await page.goto('/admin/compendium');
-  await expect(page.getByRole('heading', { name: 'Compendium', level: 1 })).toBeVisible();
+  const add = page.getByRole('link', { name: 'Add Ingredient' });
+  await expect(add).toBeVisible();
 
   // The precondition, from the test above: the cached list still hides the rename.
   const renamed = `Aaa Fixture Cached ${run}`;
@@ -64,7 +66,7 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
 
   // Unlike the rename, so the fuzzy duplicate warning does not stop the save.
   const added = 'Aab Testbloom';
-  await page.getByRole('link', { name: 'Add Ingredient' }).click();
+  await add.click();
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill(added);
   await adding.getByRole('combobox', { name: 'Classification' }).click();

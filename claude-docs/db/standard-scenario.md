@@ -71,7 +71,7 @@ the 26 entries carry §5's own hard cases:
   each list is in use. §5's uncurated `rhizome`, a value a member writes
   before an admin curates it and the second bucket of M4.7a's suggestion list,
   is a coven's: `demo` seeds it on W's Fresh Ginger, and Ginger here is
-  `Root`. `seeded-template.test.ts` holds the template to it.
+  `Root`.
 - **Comfrey beside foxglove**, both `Leaf`, both carrying safety notes: §5's
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
@@ -118,11 +118,11 @@ composite key, compendium entries by `(name, canonicalName, form)`, folk names
 by ingredient plus `lower(name)`, assignments by their pair. Nothing already
 present is updated, so a renamed workspace or a retitled entry survives a
 reseed, and an entry an admin soft-deleted stays deleted rather than coming
-back on the next run — asserted by `tests/db/seed/index.test.ts`'s sweep over
-every seed entry point (MB.183), since the partial unique indexes stop only a
-second _live_ row and would let it through. The one row that sweep leaves out
-is a compendium deity pick, which a reseed of `standard` puts back on
-purpose (below).
+back on the next run, since the partial unique indexes stop only a second
+_live_ row and would let it through. `tests/db/seed/index.test.ts`'s sweep
+asserts it of the production seeds this one shares its helpers with; a
+developer scenario has no test of its own (MB.225). The one row a reseed of
+`standard` puts back on purpose is a compendium deity pick (below).
 
 The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
 deliberately: those are the three columns §5's generated expression reads, and
@@ -132,10 +132,6 @@ folded, trimmed and lower-cased as the key folds it: a database seeded before
 MB.162 holds the compendium's forms lower-case, and compose's `db-init`
 reseeds it on every start, so a key on the spelling would insert each entry
 beside itself and fail the scenario on the canonical-key index.
-`tests/db/seed/standard.test.ts` re-cases the forms and reseeds to hold it —
-one of its three tests that write, the others the deity picks below; the rest
-read the clone, which already holds the scenario, and the cast and counts are
-`seeded-template.test.ts`'s.
 Ginger is the exception it cannot cover: its form changed rather than its
 case, so such a database keeps its old `rhizome` row beside the new `Root`
 one until a `db:reset`.
@@ -168,10 +164,7 @@ missing has never done. On an entry with no live pick the end is the literal
 index, so a fresh database is seeded exactly as the literal reads, and a pick
 deleted from the end of its list returns to the position it held.
 
-`tests/db/seed/index.test.ts`'s resurrection sweep therefore lists
-`ingredient_deities` under the demo scenario and leaves it out of the
-standard one, and `tests/db/seed/standard.test.ts` asserts the restoration
-twice: a last pick deleted is live again after the reseed, under a new id at
-the same position; a first pick removed through the service, once the pick
-below has taken its position, is live again at the end of the list, the pick
-below unmoved.
+So a last pick deleted is live again after the reseed, under a new id at the
+same position; a first pick removed through the service, once the pick below
+has taken its position, is live again at the end of the list, the pick below
+unmoved.

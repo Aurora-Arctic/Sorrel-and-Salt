@@ -300,8 +300,8 @@ to`. The form group's say "form" and "forms". A moved form that would take
   collision an index finds inside the transaction, from a race, is read again
   and named the same way.
 - **The rows are moved one at a time** through the writer's `updateById`,
-  not a new writer method: `tests/db/repository/write.test.ts` caps the
-  writer's methods, and a group holds a handful of rows. A deity tradition's
+  not a new writer method: each of the writer's methods is a decision argued
+  for in its own PR, and a group holds a handful of rows. A deity tradition's
   delete moves its deities the same way (MB.132).
 - **The rows are read before the transaction**, through the vocabularies' own
   page readers, so "live" means what their lists mean. One added under the

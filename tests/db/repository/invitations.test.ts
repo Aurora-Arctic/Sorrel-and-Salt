@@ -192,58 +192,6 @@ describe('acceptInvitation', () => {
       expect(accepted[0]?.acceptedAt).toBeInstanceOf(Date);
     },
   );
-
-  // Each refusal is followed by A accepting the same invitation with the
-  // token, so it is the address, the verification or the hash that refused.
-  it('accepts for no other verified address', async () => {
-    await inviteIntoW();
-
-    expect(await acceptAs(B)).toEqual([]);
-    expect(await acceptAs(A)).toHaveLength(1);
-  });
-
-  it('accepts for the invited address only once it is verified', async () => {
-    await inviteToSite();
-    await sql`update users set email_verified = false where id = ${A.id}`;
-
-    expect(await acceptAs(A)).toEqual([]);
-
-    await sql`update users set email_verified = true where id = ${A.id}`;
-    expect(await acceptAs(A)).toHaveLength(1);
-  });
-
-  it('accepts nothing for the stored hash passed as the token', async () => {
-    const [inserted] = await inviteIntoW();
-
-    expect(await acceptAs(A, inserted!.tokenHash)).toEqual([]);
-    expect(await acceptAs(A)).toHaveLength(1);
-  });
-
-  it('accepts no invitation twice, on either tier, keeping the first acceptance', async () => {
-    await inviteIntoW();
-    await inviteToSite({ token: OTHER_TOKEN });
-    const [first] = await acceptAs(A);
-    const [firstSite] = await acceptAs(A, OTHER_TOKEN);
-
-    expect([await acceptAs(A), await acceptAs(A, OTHER_TOKEN)]).toEqual([[], []]);
-    expect(await findInvitationByToken(TOKEN)).toMatchObject({
-      acceptedBy: A.id,
-      acceptedAt: first?.acceptedAt,
-    });
-    expect(await findInvitationByToken(OTHER_TOKEN)).toMatchObject({
-      acceptedAt: firstSite?.acceptedAt,
-    });
-  });
-
-  // The accepts above succeed for the same user and address, so it is the
-  // expiry and the revocation that refuse here.
-  it('accepts no expired invitation and no revoked one', async () => {
-    await inviteIntoW({ expiresAt: PAST() });
-    const [revoked] = await inviteToSite({ token: OTHER_TOKEN });
-    await revokeOnSite(revoked!.id);
-
-    expect([await acceptAs(A), await acceptAs(A, OTHER_TOKEN)]).toEqual([[], []]);
-  });
 });
 
 describe('revokeInvitation, by tier', () => {

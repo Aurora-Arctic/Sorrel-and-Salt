@@ -15,7 +15,7 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 ## Layout
 
 - **A component is a directory**: `src/components/<Name>/` with `index.tsx`, `index.scss` and, where it takes props, a `types.ts` its story imports them from, imported `from '../components/IngredientCard'`. The test is not beside them — it is `tests/components/<Name>/index.test.tsx` (MB.41), importing the component as `@/components/<Name>`.
-- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions; the Ladle workshop discovers components by that file. `tests/guards/workshop-guards.test.ts` catches a missing story (and pins the workshop's dark default), `workshop:build` catches one that fails to bundle; the first runs in CI's `vitest` job, the second on its `build` leg, and pre-commit runs neither — a gate lives in CI, where skipping the local hook cannot skip it. The gate is scoped to `src/components/`; `.ladle/*.stories.tsx` is the one non-component location. Stories carry no test ids and no snapshots (claude-docs/workshop.md).
+- **Every standalone component ships an `index.stories.tsx`** in the same directory — no exceptions; the Ladle workshop discovers components by that file. Review catches a missing story, and `workshop:build` one that fails to bundle, on CI's `build` leg, which pre-commit does not run — a gate lives in CI, where skipping the local hook cannot skip it. `.ladle/*.stories.tsx` is the one non-component location. Stories carry no test ids and no snapshots (claude-docs/workshop.md).
 - **Every standalone component has its doc**, `claude-docs/components/<name>.md` in lower-kebab-case. A component that ships without it is an incomplete task (claude-docs/README.md).
 
 ## Styling

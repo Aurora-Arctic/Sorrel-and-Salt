@@ -168,9 +168,10 @@ when it is not.
 
 **The rotation is the rule; saturation and lightness are the owner's
 hand-tuning.** Each seeded pair is two hexes in `src/db/seed/category-groups.ts`,
-that file is their only source, and `tests/db/seed/categories.test.ts` holds
-both hexes of every pair within 2° of its step (every hue is in fact within
-1.04°) and to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
+that file is their only source. Both hexes of every pair sit within 2° of
+its step (every hue is in fact within 1.04°), which review holds and
+[`db/category-seed.md`](db/category-seed.md) states; `tests/db/seed/categories.test.ts`
+holds each to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
 dark hex also clears the dark card, the harder dark surface, at 4.64:1 or
 better; the closest light hex is Mind & Spirit's, at 4.52:1 on the page. Within a group, the two
 hexes keep one hue to within 0.51°. Across groups they no longer share a
@@ -286,9 +287,7 @@ happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
 per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
-`tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
-source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
-compile time.
+`chip()` refuses a slug at compile time.
 
 `light-dark()` is newer than Next's default browser targets (Safari 16.4), so
 Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets

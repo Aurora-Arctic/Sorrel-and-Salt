@@ -13,9 +13,8 @@ no Neon connection and no host Node-version juggling.
   **Neither stage carries source** (MB.42): the image copies in the two
   manifests, runs `npm ci`, and stops. Source arrives from outside — the
   `..:/app` bind mount in every compose service and the devcontainer, or
-  `checkout-to-app`'s copy in CI — and
-  `tests/guards/image-source-layer.test.ts` allowlists each Dockerfile's
-  `COPY` sources so a source layer cannot come back unnoticed. Until MB.42 a
+  `checkout-to-app`'s copy in CI — and a new `COPY` source is a decision for
+  review, not a convenience. Until MB.42 a
   `COPY . .` followed the dependency layer; the bind mount shadowed it
   everywhere but CI, where a file the repo had deleted survived the copy and
   was linted, typechecked and globbed as if the branch still had it.

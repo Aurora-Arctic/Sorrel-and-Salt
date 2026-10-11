@@ -18,14 +18,12 @@ would need no edit at any call site; nothing passes it today.
     once left every deleted file on disk in every job, and why removing the
     layer beat cleaning up after it, is MB.42's and
     [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
-  - **`tests/guards/image-source-layer.test.ts` is what keeps it that way.**
-    It parses every `COPY`/`ADD` in both Dockerfiles and checks each source
-    against a per-file allowlist — the two manifests, plus
-    `Docker/playwright-entrypoint.sh` for `Dockerfile.e2e`'s `headed` stage. An
-    allowlist rather than a `.` denylist: `COPY src src` is as much a source
-    layer as `COPY . .`, and a new COPY is a decision, not a convenience. The
-    guard runs in CI's `vitest` job, so a source layer re-added tomorrow fails
-    in the diff that adds it rather than on the next PR that deletes a file.
+  - **Review is what keeps it that way.** Each Dockerfile copies an allowlist
+    — the two manifests, plus `Docker/playwright-entrypoint.sh` for
+    `Dockerfile.e2e`'s `headed` stage — and `COPY src src` is as much a
+    source layer as `COPY . .`, so a new COPY is a decision, not a
+    convenience. MB.224 retired the guard that parsed them: a test of the
+    Dockerfile proves no behaviour a user depends on.
     A Dockerfile change also runs on its own PR, because `pr-gate.yml` builds
     the image under a tag hashed from `Dockerfile.node` and
     `package-lock.json`; an edit to this action does not, because every caller

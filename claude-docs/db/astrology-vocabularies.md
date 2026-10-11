@@ -19,8 +19,10 @@ name it shipped under, since its tag is in the journal.
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.planets` and
-  `.zodiac_signs` point none at either table — `astrology-schema.test.ts`
-  asserts both from the schema and by scanning the shipped SQL per statement.
+  `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
+  holds `ingredients`' own keys to its workspace and `form_id`, and
+  `tests/db/schema-drift.test.ts` holds the migrated database to the schema
+  files (MB.226).
 
 **They are `form`'s pattern, and the two lists stay free text.** A member
 writes planets and zodiac signs, so by MB.35's rule each entry is text over a
@@ -55,11 +57,10 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 - **One tier.** Nothing groups a body or a sign, so the seed needs a flat
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
-- **The DESIGN.md table sits outside `forms.test.ts`'s slice.** That test
-  reads every table line between ``**`ingredient_forms`**`` and
-  ``**`ingredient_form_groups`**`` as a form, so §5's planet and zodiac
-  table is placed after the `ingredients.form` paragraph and before
-  `categories`, and MB.93's test slices its own anchors.
+- **The DESIGN.md table sits outside the forms table's run.** §5's planet and
+  zodiac table is placed after the `ingredients.form` paragraph and before
+  `categories`, where a test once parsing the forms' lines would not read it
+  as one; no test parses §5 since MB.225.
 - **`standard` seeds no uncurated planet.** Its compendium's planet values are
   all curated names in title case, which match case-insensitively. MB.94
   decided against one: its tests write their own against an emptied
@@ -74,8 +75,8 @@ current workspace only, and since MB.162 every one of those is the
 workspace's. The admin's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
 (MB.162) — since an admin reaches no workspace's ingredients (M6.6); its finder
-joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`, as the
-autofill's does. A value is uncurated when `lower(btrim(value))` matches no
+reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
+as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
 **The member's autofill** has a file of its own: [`member-autofill.md`](member-autofill.md).

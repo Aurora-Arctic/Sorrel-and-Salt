@@ -74,10 +74,12 @@ test ids, no snapshots.
 
 ## Testing
 
-`tests/components/VocabularyValueList/index.test.tsx` runs every case on
-both vocabularies: the columns and rows, the Edit links, the pager and its
-position, both empty messages, the filter form's action, method and kept
-query, the Filter button's disabled, enabled and busy states, the address it
-opens, and `vocabularyHref`. `tests/app/admin/vocabulary-page.test.tsx`
-covers both pages. `tests/e2e/admin.spec.ts` lists the seeded planets and
-filters the signs by part of a name.
+`tests/components/VocabularyValueList/index.test.tsx` runs the shared
+behaviour on the planets: the rows, the Edit links, no table when there are
+none, the filter form's action, method and kept query, the Filter button's
+disabled and enabled states, and the address it opens. The signs differ only
+in their nouns and their address, which `vocabularyHref`'s test covers for
+both. The filter's busy state and its reset are CompendiumList's, paging
+Pager's. `tests/app/admin/vocabulary-page.test.tsx` covers both pages.
+`tests/e2e/admin.spec.ts` lists the seeded planets and filters the signs by
+part of a name.

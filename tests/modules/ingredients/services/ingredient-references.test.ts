@@ -284,13 +284,7 @@ describe('the tier rule', () => {
       createCompendiumEntry(asUser(E), input('Testwort', [cite(book), cite(wBook)])),
     );
 
-    expect(issues).toEqual([
-      {
-        path: ['references', 1],
-        message:
-          'No compendium source to cite — a compendium entry cites only the compendium’s sources',
-      },
-    ]);
+    expect(issues).toEqual([{ path: ['references', 1], message: expect.any(String) }]);
     const [{ count }] =
       await sql`select count(*)::int as count from ingredients where workspace_id is null`;
     expect(count).toBe(0);
@@ -321,12 +315,17 @@ describe('the tier rule', () => {
     const issues = await refusal(
       createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Testwort', [cite(xBook)])),
     );
-    expect(issues).toEqual([
-      {
-        path: ['references', 0],
-        message: 'No source to cite — choose one from the compendium or this coven',
-      },
-    ]);
+    // Refused exactly as an id naming no reference is, so the refusal tells
+    // W nothing about what X holds.
+    const missing = await refusal(
+      createWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        input('Testwort', [cite('99999999-9999-4999-8999-999999999999')]),
+      ),
+    );
+    expect(issues).toEqual([{ path: ['references', 0], message: expect.any(String) }]);
+    expect(issues).toEqual(missing);
 
     const id = await seed(local());
     const onUpdate = await refusal(

@@ -5,7 +5,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
 import { assertSiteAdmin } from '@/modules/identity';
-import { A, B, C, D, E, asUser } from '../support/as-user';
+import { A, E, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
 import type { AdminWrite, ScopeProbe } from './types';
 
@@ -429,8 +429,6 @@ const OPEN_WRITES = [
 const adminProbe = (field: string): ScopeProbe =>
   ADMIN_WRITES[field].probe ?? MUTATION_PROBES[field];
 
-const NON_ADMINS = [A, B, C, D];
-
 describe('a signed-in non-admin at every admin write', () => {
   // E as the primary admin, so the pause's two writes, which the service
   // allows the primary admin alone (MB.63), admit the admin past the scope.
@@ -449,29 +447,24 @@ describe('a signed-in non-admin at every admin write', () => {
     expect(fields).toEqual([...new Set([...Object.keys(ADMIN_WRITES), ...OPEN_WRITES])].sort());
   });
 
-  it('would hear the service in other words than the scope', () => {
-    // Why a default message is the scope's alone: the service's refusal is
-    // worded, and each resolver's own `Forbidden` is for a null session.
-    expect(() => assertSiteAdmin(asUser(B))).toThrow(Forbidden);
-    expect(() => assertSiteAdmin(asUser(B))).not.toThrow(SCOPE_REFUSAL);
-  });
-
-  it.each(Object.keys(ADMIN_WRITES))('%s admits a site admin past the scope', async (field) => {
+  // The check reads the site role alone, so one non-admin stands for every
+  // one (claude-docs/testing/layer-ownership.md, rule 6): A, who owns a coven
+  // and so holds the most a role of `user` can.
+  it.each(Object.keys(ADMIN_WRITES))('%s refuses a non-admin at the scope', async (field) => {
     const probe = adminProbe(field);
-    const result = await run(asUser(E), probe.source, probe.variables);
 
-    expect(result.errors?.map((error) => error.extensions?.code) ?? []).not.toContain('FORBIDDEN');
-  });
+    // Preconditions: the field admits a site admin past the scope, so the
+    // refusal below is the role's; and the service would refuse in other
+    // words than the scope's default, so the message says which check spoke.
+    const admitted = await run(asUser(E), probe.source, probe.variables);
+    expect(admitted.errors?.map((error) => error.extensions?.code) ?? []).not.toContain(
+      'FORBIDDEN',
+    );
+    expect(() => assertSiteAdmin(asUser(A))).toThrow(Forbidden);
+    expect(() => assertSiteAdmin(asUser(A))).not.toThrow(SCOPE_REFUSAL);
+    expect(asUser(A).role).toBe('user');
 
-  it.each(
-    Object.keys(ADMIN_WRITES).flatMap((field) =>
-      NON_ADMINS.map((user) => [field, user.name, user] as const),
-    ),
-  )('%s refuses %s at the scope', async (field, _name, user) => {
-    expect(asUser(user).role).toBe('user');
-
-    const probe = adminProbe(field);
-    const result = await run(asUser(user), probe.source, probe.variables);
+    const result = await run(asUser(A), probe.source, probe.variables);
 
     expect(result.data).toBeNull();
     expect(result.errors).toHaveLength(1);

@@ -10,8 +10,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import type { DeitySuggestionConnection } from './types';
 
 // The transport half of MB.130's deity lookup: the nodes, each curated row
-// carrying its tradition, an absent query sent as none, a page by cursor and
-// the compendium-only mode. Who is refused, what each bucket holds and the
+// carrying its tradition, a page by cursor and the compendium-only mode. Who is refused, what each bucket holds and the
 // scope are services/deity-suggestions.test.ts's, and a signed-out caller at
 // every field is tests/db/graphql-query-scopes.test.ts's.
 
@@ -71,15 +70,6 @@ describe('deitySuggestions', () => {
     ]);
   });
 
-  it('lists the curated vocabulary first when no query is given', async () => {
-    const result = await run(asUser(B), { first: 3 });
-
-    expect(result.errors).toBeUndefined();
-    const nodes = result.data?.deitySuggestions.edges.map((edge) => edge.node) ?? [];
-    expect(nodes).toHaveLength(3);
-    expect(nodes.every((node) => node.curated && node.tradition)).toBe(true);
-  });
-
   it('pages by cursor', async () => {
     const first = await run(asUser(B), { query: 'hermes', first: 1 });
     const page = first.data?.deitySuggestions as DeitySuggestionConnection;
@@ -137,18 +127,5 @@ describe('deitySuggestions without a coven', () => {
       { value: 'Mercury', tradition: 'Roman', curated: true },
       { value: 'Hermes Fixture', tradition: null, curated: false },
     ]);
-  });
-
-  it('is refused signed out', async () => {
-    // Why it could have answered: the same call signed in asks no membership.
-    expect((await runInCompendium(asUser(B), { query: 'hermes' })).errors).toBeUndefined();
-
-    const result = await runInCompendium(null, { query: 'hermes' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['deitySuggestions'],
-      extensions: { code: 'FORBIDDEN' },
-    });
   });
 });

@@ -56,9 +56,9 @@ Postgres 18 does record each as its own named constraint
 (`spell_categories_spell_id_not_null`) — but a primary key column is implicitly
 non-null regardless, so stripping the declaration leaves an insert omitting
 `spell_id` refused with the same `23502`. It stays because it says what the
-column means and matches its siblings; the schema test asserts the shipped
-behaviour and names which constraint actually produces it, so the next reader
-does not mistake a redundant declaration for a load-bearing one.
+column means and matches its siblings, and `tests/db/schema-drift.test.ts`
+holds the declaration to the catalogue's; this paragraph is what keeps the next
+reader from mistaking a redundant declaration for a load-bearing one.
 
 Every other guard above _was_ verified load-bearing rather than assumed, by
 rebuilding the shipped migration with each stripped in turn: without the

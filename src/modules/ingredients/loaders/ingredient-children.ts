@@ -23,7 +23,6 @@ const byId = { cacheKeyFn: (ref: IngredientKey) => ref.id };
 // Every child loader in one record rather than one export each, so
 // `clearIngredientChildren` is built from it: a loader added here is cleared
 // after every ingredient write without either mutation naming it.
-// tests/guards/ingredient-child-loaders.test.ts fails one defined outside it.
 const CHILD_LOADERS = {
   /** `Ingredient.categories`, batched: the categories of each ingredient loaded in one request. */
   categoriesByIngredient: defineLoader<IngredientKey, CategoryRow[], string>(categoriesOf, byId),

@@ -13,21 +13,21 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The front door, signed out (MB.57): reachable without a redirect, says
-// what the site is and that it is invite-only, and offers the sign-in page.
-// Signed in, it swaps only the way in, for the landing of the visitor's role.
+// The front door, signed out (MB.57): reachable without a redirect, and
+// axe-clean. Signed in, it swaps only the way in, for the landing of the
+// visitor's role; where its links go is tests/app/page.test.tsx's.
 test('the entry page renders signed out, without a redirect', async ({ page }) => {
   await page.goto('/');
 
   expect(new URL(page.url()).pathname).toBe('/');
-  await expect(page.getByRole('heading', { level: 1, name: 'Sorrel & Salt' })).toBeVisible();
-  await expect(page.getByText(/invite-only/i)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   // Nothing on the page is taller than the viewport, so nothing should scroll:
   // a viewport-high frame with its own padding once overflowed by the padding.
   const scrolls = await page.evaluate(
     () => document.documentElement.scrollHeight > document.documentElement.clientHeight,
   );
   expect(scrolls).toBe(false);
+  await assertNoAccessibilityViolations(page);
 });
 
 // The ornaments are imported assets, so they are served under /_next/static
@@ -51,17 +51,8 @@ test("the entry page's backdrop images are served, hashed, under /_next/static",
   }
 });
 
-test('the entry page leads to /sign-in', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('link', { name: 'Sign In' }).click();
-
-  await expect(page).toHaveURL(/\/sign-in$/);
-  await expect(page.getByRole('heading', { name: 'Sign In' })).toBeVisible();
-});
-
 // Signed in, the way in is the landing a sign-in with no return path gets
-// (MB.113): the admin area for an admin, and /coven for anyone else — whose
-// page M2.8 builds, so that one is asserted by its link alone.
+// (MB.113): followed here for an admin, to the admin area.
 test('the entry page continues a signed-in admin to the admin area', async ({ page }) => {
   await signInAs(page, 'an-admin@entry-page.test', ['discord'], 'admin');
   await page.goto('/');
@@ -71,19 +62,6 @@ test('the entry page continues a signed-in admin to the admin area', async ({ pa
 
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
-});
-
-test('the entry page continues anyone else to /coven', async ({ page }) => {
-  await signInAs(page, 'a-member@entry-page.test');
-  await page.goto('/');
-
-  await expect(page.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
-  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-});
-
-test('the entry page has no accessibility violations', async ({ page }) => {
-  await page.goto('/');
-  await assertNoAccessibilityViolations(page);
 });
 
 // Facebook appends `#_=_` to the redirect URI, and a fragment survives every

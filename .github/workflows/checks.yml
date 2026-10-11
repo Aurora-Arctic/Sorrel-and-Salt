@@ -1,6 +1,6 @@
 name: Checks
 
-# One matrix job for lint, format, typecheck, build, destructive-ddl,
+# One matrix job for lint, format, typecheck, codegen, build, destructive-ddl,
 # migration-order and audit, each reporting as `checks / <name>`. workflow_call only, from
 # pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
@@ -114,6 +114,18 @@ jobs:
             command: npm run typecheck
             summarize: .github/scripts/summarize-typecheck.sh
             comment: minimize
+          # Blocking and unfiltered. src/gql/ is committed generated output
+          # (claude-docs/graphql/client-types.md): a document added, changed or
+          # removed without `npm run codegen` leaves it stale, and `status`
+          # sees an added file as well as a changed or deleted one.
+          - name: codegen
+            label: Codegen
+            command: >-
+              npm run codegen &&
+              stale="$(git -c safe.directory='*' status --porcelain -- src/gql)" &&
+              { [ -z "$stale" ] || { printf 'src/gql is stale: run npm run codegen and commit it.\n%s\n' "$stale"; exit 1; }; }
+            summarize: ''
+            comment: minimize
           # The workshop build is chained so a failed app build stops first.
           # No PR comment: the check itself is the report.
           - name: build
@@ -191,7 +203,7 @@ jobs:
             build) flag="$RUN_BUILD" ;;
             destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
             migration-order) flag="$RUN_MIGRATION_ORDER" ;;
-            # format and audit are unfiltered.
+            # format, codegen and audit are unfiltered.
             *) flag=true ;;
           esac
           echo "should-run=${flag:-true}" >> "$GITHUB_OUTPUT"

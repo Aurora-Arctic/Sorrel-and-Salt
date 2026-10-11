@@ -74,23 +74,16 @@ so it landed as the mechanism above plus a guard — and since MB.33 the sweep i
 divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
-repository. It reads every file in `src/db/repository/` as text and asserts:
-the folder builds exactly two `.select(`/`db.query.` calls, both in
-`select.ts`, one inside `selectFrom` and one inside `existsIn`, and
-`existsIn`'s body calls `notSoftDeleted(`, so the subquery's filter is checked
-the way `selectFrom`'s callers are; the index does not re-export either
-builder or the predicates, so no caller can reach an unfiltered read; the index's re-exports
-are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
-export — a new escape hatch, or a finder that reaches the database some other
-way — turns the test red rather than merely going unreviewed; and every
-exported finder other than the escape hatches either calls `notSoftDeleted(...)`
-directly or delegates to one that does. The hatches are a pinned list, each
-named `…IncludingSoftDeleted`, and two last tests hold each decision's
-hatches to skipping one filter. The spell hatches skip the ingredient's alone:
-the spell's `readableSpells`, the layer's `existsIn` and the proof's tier stay
-in the body. The substitute hatch skips the linked ingredient's alone: the
-substitute's own `notSoftDeleted`, the parent's `existsIn` and tier, and the
-link's tier against its parent's stay, and nothing filters the `linked` alias.
+repository, read as text, in two cases (MB.224): every finder the index
+re-exports, other than the escape hatches, either calls `notSoftDeleted(...)`
+directly or delegates to one that does; and the hatches are a pinned list,
+each named `…IncludingSoftDeleted`, so a new one is a decision in the diff.
+The finders are read off the index itself, so a new finder is checked without
+being listed. What each hatch still filters — the spell hatches skip the
+ingredient's tombstone alone, the substitute hatch the linked ingredient's
+alone — is its service's READS table's to prove
+([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
+layer").
 
 A query built _outside_ the repository is the linter's job, not this test's —
 see ["Where queries may be built"](query-building.md). It was this test's until MB.33, by
@@ -124,11 +117,10 @@ nullable link — is still written out, `and ${table.deletedAt} is null` last;
 the seed key's is `seedKeyUnique`, beside `liveUnique`, for the vocabularies
 and `references`.
 
-`tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
-second scratch table (`repository_probe_charms`) carries a unique index with
-the same predicate, and the tests assert a live duplicate name is still
-rejected, while soft-deleting the original row and reinserting the same name
-succeeds — the row that comes back is a new id, and `findMany` sees only it.
+`tests/db/partial-unique-indexes.test.ts` proves the convention rather than
+merely stating it, on every partial unique index the catalogue holds: a
+second live row is still rejected, while soft-deleting the first frees the
+slot.
 
 **`users.email` is also held to lower case** (`users_email_lower_case`,
 migration 0019, MB.60). The unique index is on the raw column, so without it

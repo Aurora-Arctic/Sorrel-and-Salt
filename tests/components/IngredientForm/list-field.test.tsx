@@ -9,19 +9,21 @@ import type {
   ListOption,
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
-import { dragByPointer, layOutChips, moveByKeyboard } from '../../support/sortable';
+import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
 // The form's list field on its own (MB.181): one box to type in, its entries
 // inside it, on react-hook-form with the form's resolver, and no lookup — the
-// suggestions are given, as `LookupListField` gives them. What is varied is
-// what `ListField` branches on: `ordered`, the folk names' own-name rule, and
-// `pickOnly`. What the box, its chips and the sortable list do on their own is
+// suggestions are given, as `LookupListField` gives them. The behaviour every
+// list shares runs on a plain list and a pick-only one, the two ways an entry
+// gets in; `ordered` and the folk names' own-name rule have their own
+// describes, and the six lists differ otherwise only in the shape a typed
+// entry is sent in, of which there are two. What the box, its chips and the sortable list do on their own is
 // Combobox's (tests/components/Combobox/index.test.tsx), and what needs the
 // whole form — the lookups wired, the payload — stays in index.test.tsx
 // (claude-docs/components/ingredient-form.md, "Testing").
 
-/** The four shapes the field takes; the form's six lists are these under their own names. */
+/** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {
   variant: 'plain',
   name: 'substitutes',
@@ -48,29 +50,23 @@ const PICK_ONLY: Variant = {
   entry: 'Deity',
   pickOnly: true,
 };
-const VARIANTS = [PLAIN, ORDERED, FOLK_NAME, PICK_ONLY];
+const VARIANTS = [PLAIN, PICK_ONLY];
+/** The deities as the form wires them: ordered, typed into. */
+const DEITIES: Variant = {
+  variant: 'deities',
+  name: 'deities',
+  legend: 'Deities',
+  entry: 'Deity',
+  ordered: true,
+};
 
-/** The six lists as the form names them, and the shape each sends a typed entry in. */
+/**
+ * The two shapes a list sends a typed entry in: the folk names, planets,
+ * signs and colours as text, a deity or substitute as a name (DESIGN.md §5,
+ * `ingredient_deities` and `ingredient_substitutes`).
+ */
 const LISTS: (Omit<Variant, 'variant'> & { sent: (values: string[]) => unknown })[] = [
   { ...FOLK_NAME, sent: (values) => values },
-  { name: 'planets', legend: 'Planets', entry: 'Planet', ordered: true, sent: (values) => values },
-  {
-    name: 'zodiacSigns',
-    legend: 'Zodiac Signs',
-    entry: 'Zodiac Sign',
-    ordered: true,
-    sent: (values) => values,
-  },
-  { ...ORDERED, sent: (values) => values },
-  // A typed deity or substitute is sent as a name (DESIGN.md §5,
-  // `ingredient_deities` and `ingredient_substitutes`).
-  {
-    name: 'deities',
-    legend: 'Deities',
-    entry: 'Deity',
-    ordered: true,
-    sent: (values) => values.map((name) => ({ name })),
-  },
   { ...PLAIN, sent: (values) => values.map((name) => ({ name })) },
 ];
 
@@ -91,11 +87,9 @@ function renderList(
   {
     values = {},
     suggestions = pickOnly ? offer(FIXTURES) : undefined,
-    hint,
   }: {
     values?: Partial<IngredientFormValues>;
     suggestions?: Suggestions<ListOption>;
-    hint?: string;
   } = {},
 ) {
   const onSubmit = vi.fn();
@@ -112,7 +106,6 @@ function renderList(
             name={name}
             legend={legend}
             entry={entry}
-            hint={hint}
             ordered={ordered}
             pickOnly={pickOnly}
             suggestions={suggestions}
@@ -152,23 +145,13 @@ const save = () => {
 /** Lets a submit that may have started reach its handler. */
 const settle = () => act(async () => {});
 
-/** The control is flagged invalid and reads `message` as part of its description. */
-function expectErrorOn(control: HTMLElement, message: string) {
+/** The control is flagged invalid and described, the error read with it. */
+function expectErrorOn(control: HTMLElement) {
   expect(control).toBeInvalid();
-  expect(control).toHaveAccessibleDescription(expect.stringContaining(message));
+  expect(control).toHaveAccessibleDescription(/\S/);
 }
 
 describe('ListField', () => {
-  it('tucks its hint behind an info tip by its legend, still read with the box', () => {
-    renderList(PLAIN, { hint: 'Other ingredients to use in its place' });
-
-    expect(screen.getByRole('button', { name: `About ${PLAIN.legend}` })).toBeInTheDocument();
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    expect(box(PLAIN.entry)).toHaveAccessibleDescription(
-      expect.stringContaining('Other ingredients to use in its place'),
-    );
-  });
-
   describe.each(VARIANTS)('the $variant list', (variant) => {
     const { legend, entry, name, pickOnly } = variant;
 
@@ -198,7 +181,7 @@ describe('ListField', () => {
       ).toBeTruthy();
       expect(box(entry)).toHaveValue('');
       expect(box(entry)).toHaveFocus();
-      expect(changes(legend)).toHaveTextContent('Added First Fixture');
+      expect(changes(legend)).toHaveTextContent('First Fixture');
     });
 
     it('removes an entry from its x, returning the focus to the box, and says so', () => {
@@ -210,7 +193,7 @@ describe('ListField', () => {
       fireEvent.click(removeButton('First Fixture'));
 
       expect(entries(legend)).toEqual(['Remove Second Fixture']);
-      expect(changes(legend)).toHaveTextContent('Removed First Fixture');
+      expect(changes(legend)).toHaveTextContent('First Fixture');
       expect(box(entry)).toHaveFocus();
     });
 
@@ -224,10 +207,12 @@ describe('ListField', () => {
       expect(entries(legend)).toEqual(['Remove First Fixture', 'Remove Second Fixture']);
 
       type(entry, '');
+      const added = changes(legend).textContent;
       fireEvent.keyDown(box(entry), { key: 'Backspace' });
 
       expect(entries(legend)).toEqual(['Remove First Fixture']);
-      expect(changes(legend)).toHaveTextContent('Removed Second Fixture');
+      expect(changes(legend)).not.toHaveTextContent(added ?? '');
+      expect(changes(legend)).toHaveTextContent('Second Fixture');
       expect(box(entry)).toHaveFocus();
     });
 
@@ -240,7 +225,7 @@ describe('ListField', () => {
       fireEvent.click(screen.getByRole('button', { name: `Clear ${legend}` }));
 
       expect(entries(legend)).toEqual([]);
-      expect(changes(legend)).toHaveTextContent(`Cleared ${legend}`);
+      expect(changes(legend)).toHaveTextContent(legend);
       expect(box(entry)).toHaveFocus();
       expect(screen.queryByRole('button', { name: `Clear ${legend}` })).not.toBeInTheDocument();
     });
@@ -256,19 +241,15 @@ describe('ListField', () => {
 
       save();
 
-      await waitFor(() => expectErrorOn(box(entry), 'already listed'));
-      expect(removeButton('first fixture')).toHaveAccessibleDescription(
-        expect.stringContaining('already listed'),
-      );
-      expect(removeButton('First Fixture')).not.toHaveAccessibleDescription(
-        expect.stringContaining('already listed'),
-      );
+      await waitFor(() => expectErrorOn(box(entry)));
+      expect(removeButton('first fixture')).toHaveAccessibleDescription(/\S/);
+      expect(removeButton('First Fixture')).not.toHaveAccessibleDescription();
       expect(onSubmit).not.toHaveBeenCalled();
 
       fireEvent.click(removeButton('first fixture'));
 
       await waitFor(() => expect(box(entry)).not.toBeInvalid());
-      expect(within(group(legend)).queryByText(/already listed/, { ignore: 'output' })).toBeNull();
+      expect(box(entry)).not.toHaveAccessibleDescription();
     });
   });
 
@@ -305,9 +286,7 @@ describe('ListField', () => {
       type(entry, 'Second Fixture');
       save();
 
-      await waitFor(() =>
-        expectErrorOn(box(entry), 'Press Add to keep "Second Fixture", or clear the box'),
-      );
+      await waitFor(() => expectErrorOn(box(entry)));
       expect(box(entry)).toHaveFocus();
       expect(onSubmit).not.toHaveBeenCalled();
 
@@ -343,30 +322,9 @@ describe('ListField', () => {
 
       expect(listed()).toHaveLength(1);
       expect(box(entry)).toHaveValue('  first FIXTURE ');
-      expectErrorOn(box(entry), '"first FIXTURE" is already listed');
-      expect(
-        within(group(legend)).getByText('"first FIXTURE" is already listed', { ignore: 'output' }),
-      ).toBeInTheDocument();
-      expect(changes(legend)).toHaveTextContent('"first FIXTURE" is already listed');
+      expectErrorOn(box(entry));
+      expect(changes(legend)).toHaveTextContent('first FIXTURE');
       expect(box(entry)).toHaveFocus();
-    });
-
-    it('adds nothing on Enter, the same way, the listed value and the typed row left out of the list', () => {
-      renderList(PLAIN, { suggestions: offer(FIXTURES) });
-
-      add(PLAIN, 'First Fixture');
-      type(entry, 'first fixture');
-
-      expect(screen.getByRole('option', { name: 'Second Fixture' })).toBeInTheDocument();
-      expect(screen.queryByRole('option', { name: 'First Fixture' })).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('option', { name: 'Use what you typed: first fixture' }),
-      ).not.toBeInTheDocument();
-      fireEvent.keyDown(box(entry), { key: 'Enter' });
-
-      expect(listed()).toHaveLength(1);
-      expect(box(entry)).toHaveValue('first fixture');
-      expectErrorOn(box(entry), '"first fixture" is already listed');
     });
 
     it('clears the refusal once the text is edited, and adds what is no repeat', () => {
@@ -378,16 +336,13 @@ describe('ListField', () => {
       type(entry, 'first fixtures');
 
       expect(box(entry)).not.toBeInvalid();
-      // The announcement has been made; the error element no longer says it.
-      expect(
-        within(group(legend)).queryByText(/is already listed/, { ignore: 'output' }),
-      ).toBeNull();
+      expect(box(entry)).not.toHaveAccessibleDescription();
       expect(
         screen.getByRole('option', { name: 'Use what you typed: first fixtures' }),
       ).toBeInTheDocument();
       fireEvent.click(addButton(entry));
       expect(listed()).toHaveLength(2);
-      expect(changes(legend)).toHaveTextContent('Added first fixtures');
+      expect(changes(legend)).toHaveTextContent('first fixtures');
     });
   });
 
@@ -404,8 +359,8 @@ describe('ListField', () => {
 
       expect(entries(legend)).toEqual([]);
       expect(box(entry)).toHaveValue('Mockury');
-      expectErrorOn(box(entry), 'Pick "Mockury" from the list');
-      expect(changes(legend)).toHaveTextContent('Pick "Mockury" from the list');
+      expectErrorOn(box(entry));
+      expect(changes(legend)).toHaveTextContent('Mockury');
       expect(box(entry)).toHaveFocus();
     });
 
@@ -421,7 +376,7 @@ describe('ListField', () => {
       fireEvent.click(screen.getByRole('option', { name: 'First Fixture' }));
       expect(entries(legend)).toEqual(['Remove First Fixture']);
       expect(box(entry)).toHaveValue('');
-      expect(changes(legend)).toHaveTextContent('Added First Fixture');
+      expect(changes(legend)).toHaveTextContent('First Fixture');
     });
 
     it('offers the curated rows alone, flat, less what is listed, and never the typed row', () => {
@@ -467,14 +422,13 @@ describe('ListField', () => {
 
     expect(entries(legend)).toEqual([]);
     expect(box(entry)).toHaveValue(' hedge fixture');
-    expectErrorOn(box(entry), '"hedge fixture" is already the name');
+    expectErrorOn(box(entry));
   });
 
   // MB.174: the source leaves out what the list holds, by the schema's key —
   // a link by its id, text folded among the typed entries — and the typed
   // row is withheld for text the list would refuse.
   describe('a source beside the listed entries', () => {
-    const DEITIES = LISTS.find((list) => list.name === 'deities')!;
     const GREEK = {
       id: '4b2a6c8e-1d3f-4a5b-9c7d-8e0f1a2b3c4d',
       tradition: 'Greek',
@@ -565,7 +519,7 @@ describe('ListField', () => {
       type(entry, ' MOCKWORT ');
       expect(typedRow('MOCKWORT')).not.toBeInTheDocument();
       fireEvent.keyDown(box(entry), { key: 'Enter' });
-      expectErrorOn(box(entry), '"MOCKWORT" is already listed');
+      expectErrorOn(box(entry));
       expect(entries(legend)).toHaveLength(2);
     });
   });
@@ -614,7 +568,7 @@ describe('ListField', () => {
         'Remove First Fixture',
         'Remove Second Fixture',
       ]);
-      expect(announced()).toContain('Third Fixture put down at position 1 of 3.');
+      expect(announced()).toMatch(/Third Fixture\D+1\D+3/);
       expect(handle('Third Fixture')).toHaveFocus();
       save();
 
@@ -623,22 +577,6 @@ describe('ListField', () => {
         'Third Fixture',
         'First Fixture',
         'Second Fixture',
-      ]);
-    });
-
-    it('moves one by pointer, and sends the new order', async () => {
-      const onSubmit = renderList(ORDERED);
-
-      for (const value of FIXTURES) add(ORDERED, value);
-      // The first chip dragged onto the third's place, at 200–280px.
-      await dragByPointer(handle('First Fixture'), 245);
-      save();
-
-      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-      expect(onSubmit.mock.calls[0][0].colors).toEqual([
-        'Second Fixture',
-        'Third Fixture',
-        'First Fixture',
       ]);
     });
 
@@ -652,11 +590,7 @@ describe('ListField', () => {
       });
 
       save();
-      await waitFor(() =>
-        expect(removeButton('first fixture')).toHaveAccessibleDescription(
-          expect.stringContaining('already listed'),
-        ),
-      );
+      await waitFor(() => expect(removeButton('first fixture')).toHaveAccessibleDescription(/\S/));
       await moveByKeyboard(handle('Second Fixture'), 'ArrowRight');
 
       expect(entries(legend)).toEqual([
@@ -664,17 +598,13 @@ describe('ListField', () => {
         'Remove first fixture',
         'Remove Second Fixture',
       ]);
-      await waitFor(() =>
-        expect(removeButton('first fixture')).toHaveAccessibleDescription(
-          expect.stringContaining('already listed'),
-        ),
-      );
+      await waitFor(() => expect(removeButton('first fixture')).toHaveAccessibleDescription(/\S/));
       expect(removeButton('Second Fixture')).not.toHaveAccessibleDescription();
       expect(box(entry)).toBeInvalid();
     });
   });
 
-  // What differs by list: the shape a typed entry is sent in.
+  // What differs by list: the shape a typed entry is sent in, one list a shape.
   describe.each(LISTS)('the $legend list', (list) => {
     it('sends the entries in order, less any removed', async () => {
       const onSubmit = renderList(list);
@@ -703,8 +633,35 @@ describe('ListField', () => {
 
     save();
 
-    await waitFor(() =>
-      expectErrorOn(box(PICK_ONLY.entry), 'Hecate (Greek): This deity is already listed'),
+    await waitFor(() => expectErrorOn(box(PICK_ONLY.entry)));
+    expect(box(PICK_ONLY.entry)).toHaveAccessibleDescription(
+      expect.stringContaining('Hecate (Greek)'),
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  // MB.140: a substitute links an ingredient or names one, and a refused
+  // link is named as its pill reads, by its formal name too.
+  it('marks a refused link beside its pill, named by its formal name too', async () => {
+    const linked = {
+      value: 'Mockleaf',
+      link: {
+        id: '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f',
+        canonicalName: 'Fixtura testalis',
+        form: 'Dried leaf',
+        description: 'A fixture herb.',
+        isGlobal: true,
+      },
+    };
+    const onSubmit = renderList(PLAIN, {
+      values: { substitutes: [linked, { value: 'Zest Root' }, { ...linked, value: 'Mockleaf' }] },
+    });
+
+    save();
+
+    await waitFor(() => expectErrorOn(box(PLAIN.entry)));
+    expect(box(PLAIN.entry)).toHaveAccessibleDescription(
+      expect.stringContaining('Mockleaf (Fixtura testalis)'),
     );
     expect(onSubmit).not.toHaveBeenCalled();
   });

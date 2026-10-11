@@ -39,10 +39,10 @@ and `schema/quantities.ts`, which the tables are built from too, so a closed
 set or a column's shape is written down once, and these in `src/lib/`: `validation.ts`, the shared
 shapes below; `citation.ts`, for the day pattern and the quotation marks the
 reference formatter shares with the renderer; and `contrast.ts` and
-`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. `tests/guards/client-safe-validation.test.ts`
-walks every validation file's imports, however indirect, and fails any that
-reach a package other than `zod`. A table file fails it, because it imports
-`drizzle-orm`, and the guard proves itself against one.
+`group-colors.ts`, the arithmetic `CategoryGroupInput` holds a colour to. A `.oxlintrc.json` override for `src/modules/*/validation/**` and
+`src/lib/validation.ts` fails a runtime import of `server-only`, `postgres`,
+`drizzle-orm`, anything under `src/db` or a service, and `next build` fails a
+client bundle that reaches `server-only` however indirectly.
 
 ## Raising the error
 

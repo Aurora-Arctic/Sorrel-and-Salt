@@ -47,17 +47,6 @@ export function useTestDatabase(bind: (client: postgres.Sql) => void): Catalogue
       `;
       return found as IndexRow | undefined;
     },
-
-    async uniqueIndexNames(table) {
-      const rows = await sql`
-        select c.relname as name
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        where i.indrelid = ${table}::regclass and i.indisunique
-        order by c.relname
-      `;
-      return rows.map((row) => row.name as string);
-    },
   };
 }
 

@@ -43,10 +43,10 @@ are public (MB.80):
 | `vocabulary/services/astrology.ts`, planets and signs | `listAstrologyValues`, `countAstrologyValues`           |
 | `vocabulary/services/deities.ts`                      | `listDeities`, `countDeities`                           |
 
-`tests/guards/compendium-cache.test.ts` lists them, and fails a new call of
-`cachedCompendiumRead` until it is added there, and any import of
-`next/cache` outside the wrapper. The list is the review: adding to it is
-saying the read is the same for every viewer.
+A `no-restricted-imports` path in `.oxlintrc.json` fails any import of
+`next/cache` outside the wrapper. This list is the review: adding a call of
+`cachedCompendiumRead` adds a row here, saying the read is the same for every
+viewer.
 
 Not cached, deliberately:
 
@@ -92,12 +92,11 @@ deities and deity traditions. That is 26 services, and an admin's write
 reaches only these, since the GraphQL mutations over them are its only path
 (CLAUDE.md rule 1).
 
-**The guard is keyed on those two modules, not on every admin mutation.**
-`tests/guards/compendium-expiry.test.ts` reads each exported service in
-`src/modules/ingredients/services/` and `src/modules/vocabulary/services/`,
-and fails one that calls `assertSiteAdmin` without calling
-`expireCompendium`. It first asserts it found the writes it names, so an
-empty scan cannot pass. The identity module's admin writes are outside it by
+**The rule is keyed on those two modules, not on every admin mutation.**
+Every exported service in `src/modules/ingredients/services/` and
+`src/modules/vocabulary/services/` that calls `assertSiteAdmin` calls
+`expireCompendium`; `tests/modules/ingredients/services/compendium-expiry.test.ts`
+and `tests/e2e/compendium-cache.spec.ts` prove the expiry itself. The identity module's admin writes are outside it by
 construction: a user's role, a pause, an admin invitation and a coven-creation
 grant touch nothing the cache holds. A guard over every admin mutation would
 need a list of those exemptions, which each new identity write would have to

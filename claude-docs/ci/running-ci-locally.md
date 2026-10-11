@@ -36,10 +36,8 @@ workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
   The leg reads no `github.event.pull_request.body` (MB.48 retired its
   `pr-body` input), which is what makes the scan provable locally at all:
   `npm run check:destructive-ddl -- --all` reads every acknowledgement from
-  the repository itself and is green. What proves the leg's own
-  gating is `tests/guards/destructive-ddl-check.test.ts` (the rules, the
-  file-list resolution, the branch diff and the per-file sidecar correlation,
-  each asserted to fail with its guard removed) and
+  the repository itself and is green. What proves the leg's rules is
+  `tests/guards/destructive-ddl-check.test.ts` (what counts as destructive) and
   `npm run check:destructive-ddl -- --self-test` (the sidecar gating, against
   the fixtures under `scripts/__fixtures__/destructive-ddl/`).
 - **`act-vitest` / `act-playwright` still do not exist**, even though

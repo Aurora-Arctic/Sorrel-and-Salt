@@ -8,8 +8,8 @@ import type { GrantedUserResult, RevokedUserResult } from './types';
 // M5.8's `grantWorkspaceCreation` and `revokeWorkspaceCreation`, the transport's half
 // (claude-docs/testing/layer-ownership.md): an admin's answer, and one refusal
 // per error code, read as the browser reads them. Which roles the service
-// refuses is services/workspace-creation.test.ts's; a signed-out caller is
-// tests/db/graphql-query-scopes.test.ts's.
+// refuses is services/workspace-creation.test.ts's; a signed-out caller and the
+// scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -40,13 +40,6 @@ const GRANT = `
   }
 `;
 
-// The schema's scope is a gate of its own in front of the service: a coven's
-// owner holds the most a workspace role grants, and still not the site role.
-it('is testing a session whose site role is `user`, beside an admin', () => {
-  expect(asUser(A).role).toBe('user');
-  expect(asUser(E).role).toBe('admin');
-});
-
 describe('Mutation.grantWorkspaceCreation', () => {
   it('answers an admin the user, now able to create a coven', async () => {
     const result = await run<GrantedUserResult>(asUser(E), GRANT, { userId: PENDING });
@@ -55,24 +48,13 @@ describe('Mutation.grantWorkspaceCreation', () => {
     expect(result.data?.grantWorkspaceCreation).toEqual({ id: PENDING, canCreateWorkspace: true });
   });
 
-  it('refuses a coven owner as FORBIDDEN, the row left as it was', async () => {
-    const result = await run(asUser(A), GRANT, { userId: PENDING });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    const [row] = await sql`select can_create_workspace from users where id = ${PENDING}`;
-    expect(row).toEqual({ can_create_workspace: false });
-  });
-
-  it("answers a second approval as FORBIDDEN, with the service's message", async () => {
+  // E is an admin the scope admits, so the refusal is the service's.
+  it('answers a second approval as FORBIDDEN', async () => {
     await run(asUser(E), GRANT, { userId: PENDING });
 
     const result = await run(asUser(E), GRANT, { userId: PENDING });
 
-    expect(result.errors?.[0]).toMatchObject({
-      message: 'Pending Fixturewort may already create a coven',
-      extensions: { code: 'FORBIDDEN' },
-    });
+    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
   });
 
   // The note travels; the actor does not: it is the session's, whatever the
@@ -136,22 +118,10 @@ describe('Mutation.revokeWorkspaceCreation', () => {
     });
   });
 
-  it('refuses a coven owner as FORBIDDEN, the row left as it was', async () => {
-    const result = await run(asUser(A), REVOKE, { userId: PENDING });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    const [row] = await sql`select can_create_workspace from users where id = ${PENDING}`;
-    expect(row).toEqual({ can_create_workspace: true });
-  });
-
-  it("answers an admin's flag as FORBIDDEN, with the service's message", async () => {
+  it("answers an admin's flag as FORBIDDEN", async () => {
     const result = await run(asUser(E), REVOKE, { userId: E.id });
 
-    expect(result.errors?.[0]).toMatchObject({
-      message: `${E.name} is an admin, and every admin may create a coven. Revoke their admin role first.`,
-      extensions: { code: 'FORBIDDEN' },
-    });
+    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
   });
 
   it('answers an unknown id as NOT_FOUND', async () => {

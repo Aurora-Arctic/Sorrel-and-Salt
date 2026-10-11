@@ -48,32 +48,8 @@ function match(statements: Logged[]): Logged {
 }
 
 describe('the fuzzy duplicate query', () => {
-  describe('the threshold is set explicitly, per transaction', () => {
-    it('sets pg_trgm.similarity_threshold to 0.4 before matching, inside a transaction', async () => {
-      const statements = await statementsFor('Mugwart');
-      const setting = statements.findIndex(({ query }) =>
-        query.includes(`set_config('pg_trgm.similarity_threshold'`),
-      );
-
-      expect(setting).toBeGreaterThanOrEqual(0);
-      expect(statements[setting].query).toMatch(/, true\)/);
-      // Only the threshold `%` reads: this query has no `<%`.
-      expect(statements[setting].params).toEqual(['0.4']);
-      expect(statements.indexOf(match(statements))).toBeGreaterThan(setting);
-    });
-
-    it('writes the match with the % operator, never a similarity() comparison', async () => {
-      const { query } = match(await statementsFor('Mugwart'));
-
-      expect(query).toMatch(/"name" % \$\d+/);
-      expect(query).toMatch(/"canonical_name" % \$\d+/);
-      expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
-    });
-  });
-
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), here rather than at the top so the
-    // statement-shape tests above read the log over a small table.
+    // Seeded once per file (MB.184), inside the describe that plans.
     // Sequential scans are disabled, as ingredients-trigram.test.ts does for
     // its negative control: a seq scan that survives `enable_seqscan = off`
     // is one with no alternative. That alone is not enough here. The

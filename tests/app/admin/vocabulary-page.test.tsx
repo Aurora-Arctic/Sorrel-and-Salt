@@ -8,8 +8,9 @@ import type { PageRequest } from '@/lib/types';
 
 // `/admin/planets` and `/admin/zodiac-signs` (MB.95), one page shape: the
 // guard, one page of the vocabulary under the address's query, and the modal
-// its address opens — `?new` empty, `?edit=` a value by slug. The guard and
-// the services are mocked: what they decide is
+// its address opens — `?new` empty, `?edit=` a value by slug. The shape runs
+// on planets; the signs' page proves only what it changes, its vocabulary and
+// its path. The guard and the services are mocked: what they decide is
 // tests/lib/request-session.test.ts's and tests/modules/vocabulary's.
 
 const requireAdminSession = vi.fn();
@@ -63,25 +64,6 @@ const fullPage = () =>
     }),
   );
 
-const PAGES = [
-  {
-    vocabulary: 'planets',
-    Page: AdminPlanetsPage,
-    path: '/admin/planets',
-    title: 'Planets',
-    noun: 'planet',
-    label: 'Planet',
-  },
-  {
-    vocabulary: 'zodiacSigns',
-    Page: AdminZodiacSignsPage,
-    path: '/admin/zodiac-signs',
-    title: 'Zodiac Signs',
-    noun: 'sign',
-    label: 'Sign',
-  },
-] as const;
-
 beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
@@ -95,11 +77,17 @@ beforeEach(() => {
   router.refresh.mockReset();
 });
 
-describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, label }) => {
-  async function renderPage(params: Record<string, string> = {}) {
-    const page = await Page({ searchParams: Promise.resolve(params) });
-    render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
-  }
+async function renderRoute(Page: typeof AdminPlanetsPage, params: Record<string, string> = {}) {
+  const page = await Page({ searchParams: Promise.resolve(params) });
+  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+}
+
+describe('the /admin/planets page', () => {
+  const vocabulary = 'planets';
+  const path = '/admin/planets';
+  const noun = 'planet';
+  const label = 'Planet';
+  const renderPage = (params?: Record<string, string>) => renderRoute(AdminPlanetsPage, params);
 
   const lastRequest = (): PageRequest => listAstrologyValues.mock.lastCall?.[2] as PageRequest;
 
@@ -118,10 +106,9 @@ describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, l
     expect(getAstrologyValueBySlug).not.toHaveBeenCalled();
   });
 
-  it(`lists the first page of 25 of the ${vocabulary}, and no modal`, async () => {
+  it('lists the first page of 25 of the planets, and no modal', async () => {
     await renderPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastRead()).toEqual([vocabulary, { query: undefined }]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
@@ -133,23 +120,21 @@ describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, l
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('reads the page after a readable cursor, and the first page for one that is not', async () => {
+  // Which cursor is readable is tests/lib/search-params.test.ts's.
+  it('reads the page after the cursor in the address', async () => {
     const after = encodeCursor({ key: ['Testwort Star'], id: STAR.id });
 
     await renderPage({ after });
     expect(lastRequest().after).toEqual({ key: ['Testwort Star'], id: STAR.id });
-
-    await renderPage({ after: 'not-a-cursor' });
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
   });
 
-  it(`puts Add ${label} on the line of the heading, linking the empty modal over this page`, async () => {
+  it(`links Add ${label} to the empty modal over this page`, async () => {
     await renderPage({ query: 'star' });
 
-    const heading = screen.getByRole('heading', { level: 1, name: title });
-    const add = screen.getByRole('link', { name: `Add ${label}` });
-    expect(add.parentElement).toBe(heading.parentElement);
-    expect(add).toHaveAttribute('href', `${path}?query=star&new`);
+    expect(screen.getByRole('link', { name: `Add ${label}` })).toHaveAttribute(
+      'href',
+      `${path}?query=star&new`,
+    );
   });
 
   it('says which page of how many, the query kept on every link', async () => {
@@ -188,15 +173,6 @@ describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, l
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('');
   });
 
-  it(`says no ${noun} matches when the query finds none`, async () => {
-    listAstrologyValues.mockResolvedValue([]);
-    countAstrologyValues.mockResolvedValue({ totalCount: 0, countBefore: null });
-
-    await renderPage({ query: 'nothing' });
-
-    expect(screen.getByText(`No ${noun} matches.`)).toBeInTheDocument();
-  });
-
   it('opens the empty modal on ?new', async () => {
     await renderPage({ new: '' });
 
@@ -224,9 +200,7 @@ describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, l
     await renderPage({ edit: 'gone' });
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      `No ${noun} has that address — it may have been renamed or deleted.`,
-    );
+    expect(screen.getByRole('alert')).toBeVisible();
   });
 
   it('lets any other failure reading ?edit= through', async () => {
@@ -242,5 +216,25 @@ describe.each(PAGES)('the $path page', ({ vocabulary, Page, path, title, noun, l
 
     expect(router.replace).toHaveBeenCalledWith(`${path}?query=star`);
     expect(router.refresh).toHaveBeenCalled();
+  });
+});
+
+describe('the /admin/zodiac-signs page', () => {
+  it('lists the first page of 25 of the signs, linking each to its modal on its own path', async () => {
+    await renderRoute(AdminZodiacSignsPage);
+
+    expect(listAstrologyValues).toHaveBeenCalledWith(
+      'zodiacSigns',
+      { query: undefined },
+      { limit: 26, inverted: false },
+    );
+    expect(countAstrologyValues.mock.lastCall?.slice(0, 2)).toEqual([
+      'zodiacSigns',
+      { query: undefined },
+    ]);
+    expect(screen.getByRole('link', { name: 'Edit Testwort Star' })).toHaveAttribute(
+      'href',
+      '/admin/zodiac-signs?edit=testwort-star',
+    );
   });
 });

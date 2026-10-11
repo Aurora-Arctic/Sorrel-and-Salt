@@ -55,11 +55,6 @@ export const AUDITED_TABLES = [
   'zodiac_signs',
 ].sort();
 
-// The ledgers the database keeps append-only, each by a `forbid_rewrite`
-// trigger refusing every update and delete (MB.194). Transcribed for the same
-// reason as the list above: a sweep of the catalogue against itself passes empty.
-export const APPEND_ONLY_TABLES = ['user_privilege_changes'];
-
 // Better Auth's adapter tables that carry an `updated_at` and no audit id;
 // Better Auth's own `$onUpdate` stamps them. `sessions.impersonated_by` is the
 // `admin` plugin's column (MB.53), not an audit id. A real counter-example

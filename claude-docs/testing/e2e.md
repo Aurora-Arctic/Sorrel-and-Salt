@@ -8,6 +8,28 @@ defaults to 8000, `next dev`'s port, which an e2e run keeps clear of).
 and starts its own servers rather than attaching to ones left over on the
 ports.
 
+**A spec proves what only a real server and browser can** (MB.230; rule 9 of
+[`layer-ownership.md`](layer-ownership.md), "What a test may assert"):
+navigation and redirects, server render and status codes, cookies, mail,
+the data cache, the production build's config, a layout a browser measures,
+and one axe scan per page state. It never re-runs a flow a component or
+service test proves wholesale — a second filter or CRUD flow on a page
+template another spec already drives, which compendium entries hold a
+value, a dialog's states — and every admin route keeps its 403 test and one
+flow with its scan, even where a lower layer proves that flow too. It asserts state as Vitest does: a `status`,
+`alert`, `tooltip`, row or description is present, or carries the data the
+action used, and never a page title, a heading on a plain load or a
+sentence. A level-1 heading stays where it identifies the destination a
+navigation reached, or the 403 page.
+
+**`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
+it scans whatever the page holds at that instant. So the last web-first
+assertion before each scan must be one that waits for the state being
+scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
+never a negative such as `toHaveCount(0)` on something that was never there,
+which passes before the page has rendered anything. A removal of what was
+there — a dialog closing, a table emptied by a filter — does wait.
+
 **Each worker slot has a server and a database of its own** (MB.112), as each
 Vitest pool slot has a database. A database each, because each spec file
 reseeds by dropping its database `WITH (FORCE)`, which would cut a sharing
@@ -125,10 +147,12 @@ ignores that spec too
   the background of the request that caused it. The address goes in quoted:
   unquoted, Mailpit's query language splits it at a `+`. A spec that follows
   a mailed link gives its recipient a fresh address, so a retry or a parallel
-  worker cannot read another's message; `tests/e2e/mail-transport.spec.ts`
-  is the example, and sends from the runner because nothing in the app mails
-  yet. Compose and `playwright.yml` both run Mailpit; outside them the helper
-  throws on the unset URL rather than reporting that no mail arrived.
+  worker cannot read another's message; `tests/e2e/admin-invitations.spec.ts`
+  is the example. A spec asserts the recipient and the link, never the
+  subject or body: the wording is the email's own test's, and the link is
+  what the reader follows. Compose and `playwright.yml` both run Mailpit;
+  outside them the helper throws on the unset URL rather than reporting that
+  no mail arrived.
 - **A signed-in browser without a provider** (MB.71). No spec can finish a
   real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
 providers, role, { emailVerified })` writes what a Discord sign-in would leave into the calling
@@ -153,6 +177,16 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
   shares — and can't corrupt — the production build e2e is serving from.
+- **CI restores `.next-e2e/cache` before the build** (MB.230), as
+  `checks.yml`'s `build` leg restores `.next/cache`: `playwright.yml`'s
+  `actions/cache` step, keyed `nextjs-e2e` on the lockfile and the source
+  hashes, falling back to the newest entry for the same lockfile. The build
+  runs inside `npm run e2e` as slot 0's `webServer` command, so the restore
+  has to come before that step, and Turbopack's persistent cache under it is
+  what a warm build reuses. The e2e image is Ubuntu's, whose GNU `tar`
+  `actions/cache` needs; Alpine's `testing` stage had to add it (MB.37). It
+  is CI time, not test time: the step's restore line on a second run is the
+  proof it warms.
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
   `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
   server keeps whatever data cache it has — the compendium read's `unstable_cache`

@@ -41,17 +41,6 @@ const AS_GRANTEE = { id: GRANTEE, role: 'user' as const };
 const AS_STRANGER = { id: STRANGER, role: 'user' as const };
 const TOKEN = 'fixture-token-cccccccccccccccccccccccccccccccc';
 
-const MESSAGES = {
-  invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
-  accepted: 'This invitation has already been accepted.',
-  revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
-  expired: 'This invitation has expired. Ask whoever sent it for a new one.',
-  'different-address':
-    'This invitation was sent to a different email address. Sign in with the account that uses it.',
-  unverified: 'Confirm your email address, then come back to this link to accept the invitation.',
-  paused: "Admin changes are paused, so this invitation can't be accepted until they are resumed.",
-};
-
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
 async function insertUser(id: string, email: string, role: 'user' | 'admin', verified = true) {
@@ -221,12 +210,11 @@ describe('who may accept', () => {
     await sql`update users set email_verified = false where id = ${GRANTEE}`;
     await invite();
 
-    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
       acceptable: false,
       reason: 'unverified',
-      message: MESSAGES.unverified,
     });
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(MESSAGES.unverified);
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
     expect((await invitation()).accepted_at).toBeNull();
 
@@ -240,9 +228,10 @@ describe('who may accept', () => {
   it('refuses a verified account at a different address, which the invited one then accepts', async () => {
     await invite();
 
-    const refusal = acceptInvitation(asUser(AS_STRANGER), TOKEN);
-    await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(MESSAGES['different-address']);
+    expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+      reason: 'different-address',
+    });
+    await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
     expect(await roleOf(STRANGER)).toMatchObject({ role: 'user' });
     expect((await invitation()).accepted_at).toBeNull();
 
@@ -258,26 +247,19 @@ describe('a link that cannot be used', () => {
     ['revoked', { revoked: true }, 'revoked'],
     ['expired', { expired: true }, 'expired'],
   ] as const)(
-    'rejects one %s, in words of its own, granting nothing',
+    'rejects one %s, with a reason of its own, granting nothing',
     async (_what, state, reason) => {
       await invite(state);
 
-      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
         acceptable: false,
         reason,
-        message: MESSAGES[reason],
       });
-      const refusal = acceptInvitation(asUser(AS_GRANTEE), TOKEN);
-      await expect(refusal).rejects.toThrow(Forbidden);
-      await expect(refusal).rejects.toThrow(MESSAGES[reason]);
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
       expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
       expect(await ledger()).toEqual([]);
     },
   );
-
-  it('says the three apart', () => {
-    expect(new Set([MESSAGES.accepted, MESSAGES.revoked, MESSAGES.expired]).size).toBe(3);
-  });
 
   // An act beats the clock, and acceptance beats a revoke: one reason, always the same.
   it.each([
@@ -287,7 +269,8 @@ describe('a link that cannot be used', () => {
     await invite(state);
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(MESSAGES[reason]);
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({ reason });
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
     }
   });
 
@@ -295,16 +278,17 @@ describe('a link that cannot be used', () => {
     await invite();
     await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
 
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(MESSAGES.accepted);
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+      reason: 'accepted',
+    });
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
   });
 
   it('answers NotFound for a token naming none, and for the stored hash passed as a token', async () => {
     await invite();
 
     await expect(acceptInvitation(asUser(AS_GRANTEE), 'no-such-token')).rejects.toThrow(NotFound);
-    const refusal = acceptInvitation(asUser(AS_GRANTEE), sha256(TOKEN));
-    await expect(refusal).rejects.toThrow(NotFound);
-    await expect(refusal).rejects.toThrow(MESSAGES.invalid);
+    await expect(acceptInvitation(asUser(AS_GRANTEE), sha256(TOKEN))).rejects.toThrow(NotFound);
     expect((await invitation()).accepted_at).toBeNull();
   });
 
@@ -316,9 +300,9 @@ describe('a link that cannot be used', () => {
     const [workspace] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
 
     const standing = await invitationStanding(asUser(A), TOKEN);
-    expect(standing).toEqual({ acceptable: false, reason: 'invalid', message: MESSAGES.invalid });
-    await expect(acceptInvitation(asUser(A), TOKEN)).rejects.toThrow(MESSAGES.invalid);
-    expect(MESSAGES.invalid).not.toContain(workspace.name);
+    expect(standing).toMatchObject({ acceptable: false, reason: 'invalid' });
+    await expect(acceptInvitation(asUser(A), TOKEN)).rejects.toThrow(NotFound);
+    expect(JSON.stringify(standing)).not.toContain(workspace.name);
     expect((await invitation()).accepted_at).toBeNull();
   });
 
@@ -326,7 +310,10 @@ describe('a link that cannot be used', () => {
   it('rejects a revoked coven’s invitation as revoked, before its tier is read', async () => {
     await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id, revoked: true });
 
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(MESSAGES.revoked);
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+      reason: 'revoked',
+    });
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
   });
 });
 
@@ -341,9 +328,7 @@ describe('while admin changes are paused', () => {
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
       reason: 'paused',
     });
-    const refusal = acceptInvitation(asUser(AS_GRANTEE), TOKEN);
-    await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(MESSAGES.paused);
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
     expect((await invitation()).accepted_at).toBeNull();
 

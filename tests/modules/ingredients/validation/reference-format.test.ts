@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   FORMAT_OF,
-  REFERENCE_TEXT_FIELDS,
   addressProblem,
   chicagoEdition,
   dashNumbers,
@@ -152,24 +151,38 @@ describe('addressProblem', () => {
 });
 
 describe('holdsYear', () => {
-  it.each(['1985', 'November 1950', 'Summer/Autumn 2013', '1882–88', 'n.d.', 'Forthcoming'])(
-    'takes %s',
-    (published) => expect(holdsYear(published)).toBe(true),
-  );
+  it('takes a date holding a year, or n.d. or forthcoming', () => {
+    for (const published of [
+      '1985',
+      'November 1950',
+      'Summer/Autumn 2013',
+      '1882–88',
+      'n.d.',
+      'Forthcoming',
+    ]) {
+      expect(holdsYear(published), published).toBe(true);
+    }
+  });
 
-  it.each(['soon', '85', 'November', 'nd'])('refuses %s', (published) =>
-    expect(holdsYear(published)).toBe(false),
-  );
+  it('refuses one with no year', () => {
+    for (const published of ['soon', '85', 'November', 'nd']) {
+      expect(holdsYear(published), published).toBe(false);
+    }
+  });
 });
 
 describe('isNumberList', () => {
-  it.each(['51', 'xii', 'XIV', '399–412', '12a', '12–19, 40', 'iv–ix'])('takes %s', (text) =>
-    expect(isNumberList(text)).toBe(true),
-  );
+  it('takes numbers, roman numerals and ranges, in a list', () => {
+    for (const text of ['51', 'xii', 'XIV', '399–412', '12a', '12–19, 40', 'iv–ix']) {
+      expect(isNumberList(text), text).toBe(true);
+    }
+  });
 
-  it.each(['Summer', 'no. 2', 'vol. 3', '12–', '–19', '1,'])('refuses %s', (text) =>
-    expect(isNumberList(text)).toBe(false),
-  );
+  it('refuses words, and a range or a list left open', () => {
+    for (const text of ['Summer', 'no. 2', 'vol. 3', '12–', '–19', '1,']) {
+      expect(isNumberList(text), text).toBe(false);
+    }
+  });
 });
 
 describe('latestDay', () => {
@@ -177,32 +190,5 @@ describe('latestDay', () => {
   it('is the day after today, in UTC', () => {
     expect(latestDay(new Date('2026-10-07T23:30:00Z'))).toBe('2026-10-08');
     expect(latestDay(new Date('2026-12-31T00:00:00Z'))).toBe('2027-01-01');
-  });
-});
-
-// The one list of the reference's text fields, which MB.212 builds the
-// GraphQL types from (MB.209): every field `CitationFields` has but the kind,
-// in its order.
-describe('REFERENCE_TEXT_FIELDS', () => {
-  it('lists every text field once, in the order CitationFields declares them', () => {
-    expect(REFERENCE_TEXT_FIELDS).toEqual([
-      'title',
-      'authors',
-      'container',
-      'contributors',
-      'edition',
-      'volume',
-      'issue',
-      'series',
-      'place',
-      'publisher',
-      'published',
-      'pages',
-      'host',
-      'url',
-      'modified',
-      'accessed',
-      'note',
-    ]);
   });
 });

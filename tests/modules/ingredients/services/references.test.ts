@@ -85,15 +85,12 @@ describe('createReference', () => {
   });
 
   // The same input the admin's write above saves: the proof is what refuses.
-  it.each([
-    ['the coven’s owner', A],
-    ['a member', B],
-    ['a viewer', C],
-    ['a member of another coven', D],
-  ])('refuses a compendium reference to %s, writing nothing', async (_who, user) => {
-    expect(asUser(user).role).toBe('user');
+  // The compendium tier reads the site role alone, so one non-admin — the
+  // coven's owner, the highest workspace role — stands for every one.
+  it('refuses a compendium reference to a non-admin, writing nothing', async () => {
+    expect(asUser(A).role).toBe('user');
 
-    await expect(createReference(asUser(user), null, BOOK)).rejects.toThrow(Forbidden);
+    await expect(createReference(asUser(A), null, BOOK)).rejects.toThrow(Forbidden);
     expect(await sql`select id from "references"`).toHaveLength(0);
   });
 
@@ -173,17 +170,14 @@ describe('updateReference', () => {
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });
 
-  // The precondition is the admin's own replace, above, of the same row shape.
-  it.each([
-    ['the coven’s owner', A],
-    ['a viewer', C],
-    ['a member of another coven', D],
-  ])('refuses %s a compendium reference by direct id, leaving it as it was', async (_who, user) => {
+  // The precondition is the admin's own replace, above, of the same row shape;
+  // the site role alone is read, so the coven's owner stands for every non-admin.
+  it('refuses the coven’s owner a compendium reference by direct id, leaving it as it was', async () => {
     const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
     expect(await rowOf(id)).toMatchObject({ workspace_id: null });
 
     await expect(
-      updateReference(asUser(user), null, id, { ...BOOK, title: 'Hijacked' }),
+      updateReference(asUser(A), null, id, { ...BOOK, title: 'Hijacked' }),
     ).rejects.toThrow(Forbidden);
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });

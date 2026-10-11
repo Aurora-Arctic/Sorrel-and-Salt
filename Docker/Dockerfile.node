@@ -10,9 +10,8 @@
 # has no musl support, and a browser would add half a gigabyte to the image CI
 # and the app share. Neither stage carries source — it arrives from the bind
 # mount or checkout-to-app's `cp -a`, which overlays without deleting, so a
-# baked-in tree would let a deleted file survive.
-# tests/guards/image-source-layer.test.ts allowlists what each Dockerfile may
-# COPY.
+# baked-in tree would let a deleted file survive. A new COPY source is a
+# decision, not a convenience.
 
 # deploy.yml and migrate.yml's setup-node must match: Node 22's npm 10 cannot
 # read this npm-11 lockfile.

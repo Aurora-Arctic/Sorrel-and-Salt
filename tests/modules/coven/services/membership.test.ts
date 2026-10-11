@@ -160,9 +160,9 @@ describe('assertMembership', () => {
   it('rejects an empty permission rather than authorizing vacuously', async () => {
     // Not a Forbidden: an owner would sail through it too, so it is a bug in
     // the caller and reads as one.
-    await expect(assertMembership(asUser(A), WORKSPACE_W_ID, {})).rejects.toThrow(
-      'requires a permission',
-    );
+    const refusal = assertMembership(asUser(A), WORKSPACE_W_ID, {});
+    await expect(refusal).rejects.toThrow('requires a permission');
+    await expect(refusal).rejects.not.toBeInstanceOf(Forbidden);
   });
 });
 

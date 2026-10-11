@@ -25,9 +25,8 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   never be one: story 4's requirement is that a leaked database row cannot be
   redeemed. The token is generated with `crypto.randomBytes`, mailed in the
   link and in no response, and every later read matches a hash against
-  `token_hash`. The schema test pins this as a property of the whole table
-  rather than of one column ("the only column whose name mentions a token is
-  the hash"), so a later `invite_token` reddens it.
+  `token_hash`. The schema test pins the table's exact column set, so a
+  later `invite_token` reddens it.
 - **`invitations_role_invitable`**,
   `role is null or role in ('viewer', 'member')`, is the check DESIGN.md §5
   requires. Written as the allowed set rather than as `role <> 'owner'`

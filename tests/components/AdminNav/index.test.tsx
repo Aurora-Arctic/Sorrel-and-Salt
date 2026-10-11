@@ -6,28 +6,22 @@ import AdminNav from '@/components/AdminNav';
 // resource, and nothing else (claude-docs/components/admin-nav.md).
 
 describe('AdminNav', () => {
-  it('is a navigation landmark named for the admin area', () => {
-    render(<AdminNav />);
-
-    expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
-  });
-
-  it('lists the compendium, categories and their groups, forms and theirs, planets, zodiac signs, deities and their traditions, users, and the privilege ledger, in that order', () => {
+  it('links the compendium, categories and their groups, forms and theirs, planets, zodiac signs, deities and their traditions, users, and the privilege ledger, in that order', () => {
     render(<AdminNav />);
 
     const links = within(screen.getByRole('navigation', { name: 'Admin' })).getAllByRole('link');
-    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['Compendium', '/admin/compendium'],
-      ['Categories', '/admin/categories'],
-      ['Category Groups', '/admin/category-groups'],
-      ['Forms', '/admin/forms'],
-      ['Form Groups', '/admin/form-groups'],
-      ['Planets', '/admin/planets'],
-      ['Zodiac Signs', '/admin/zodiac-signs'],
-      ['Deities', '/admin/deities'],
-      ['Deity Traditions', '/admin/deity-traditions'],
-      ['Users', '/admin/users'],
-      ['Privilege Changes', '/admin/privilege-changes'],
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/admin/compendium',
+      '/admin/categories',
+      '/admin/category-groups',
+      '/admin/forms',
+      '/admin/form-groups',
+      '/admin/planets',
+      '/admin/zodiac-signs',
+      '/admin/deities',
+      '/admin/deity-traditions',
+      '/admin/users',
+      '/admin/privilege-changes',
     ]);
   });
 });

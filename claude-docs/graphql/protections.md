@@ -65,10 +65,10 @@ typo gets no hint. Use `npm run dev` for either.
 The tests: `tests/app/api/graphql/armor.test.ts` drives the real route over a
 throwaway schema that nests without limit and pages without running out of
 rows. The real schema is one field deep, so no query against it can reach a
-depth or cost limit. It runs depth and cost at `development` and at
-`production`, each next to the same query shape just inside the limit, to show
-that the refusal comes from the limit, and prices a variable `first` the same
-as a literal one. `tests/graphql/pagination.test.ts` pins the pricing itself. `route.test.ts`
-checks introspection and suggestions against the real schema in both modes,
-and `tests/e2e/graphql.spec.ts` repeats the production case against
-`next start`.
+depth or cost limit. It runs depth and cost at `production` only, since
+neither limit reads the environment, each next to the same query shape just
+inside the limit, to show that the refusal comes from the limit, and prices a
+variable `first` the same as a literal one. `tests/graphql/pagination.test.ts`
+pins the pricing itself. `route.test.ts` checks that local development answers
+introspection and suggests a misspelt field; that production does neither, and
+serves no IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`.

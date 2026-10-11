@@ -12,8 +12,8 @@ import type { TestConfig } from './types.ts';
 
 /**
  * The most db workers a run opens, whatever the machine: the connection
- * budget tests/guards/db-connection-budget.test.ts holds is arithmetic over
- * this number, not over the cores a developer happens to have (MB.179).
+ * budget (claude-docs/testing/db-harness.md, "Connections per run") is
+ * arithmetic over this number, not over the cores a developer happens to have (MB.179).
  * Twelve clears every machine the suite runs on today, so nothing slows.
  */
 export const DB_WORKER_CAP = 12;

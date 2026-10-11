@@ -1,8 +1,3 @@
-export interface SpellCategoryPair {
-  spellId: string;
-  categoryId: string;
-}
-
 export interface LayerRow {
   spellId?: string;
   ingredientId?: string | null;

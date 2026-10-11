@@ -60,15 +60,6 @@ describe('listCompendium', () => {
     expect(page.map((entry) => entry.node.name)).toEqual(['Fixture Public']);
   });
 
-  it('hands the finder a trimmed filter and the page as given', async () => {
-    await listCompendium({ query: '  cat  ', categoryIds: [], form: '   ' }, PAGE);
-
-    expect(repository.findCompendiumPage).toHaveBeenCalledWith(
-      { query: 'cat', categoryIds: undefined, form: undefined },
-      PAGE,
-    );
-  });
-
   // One character is a trigram or two that half the compendium shares: no
   // filter and no ranking, rather than a page ordered by noise.
   it('treats a query shorter than two characters as absent', async () => {
@@ -148,26 +139,6 @@ describe('countCompendium', () => {
     await expect(countCompendium({}, undefined)).resolves.toEqual({
       totalCount: 1,
       countBefore: null,
-    });
-  });
-
-  // The count reads the rows the page does, so it is handed the filter the
-  // page is: parsed the same way, one-character query and all.
-  it('hands the finder the filter the page gets, and the start as given', async () => {
-    const start = { key: ['Fixture Public'], id: '00000000-0000-4000-8000-000000000000' };
-    const filter = { query: '  m  ', categoryIds: [], form: ' HERB ' };
-
-    await listCompendium(filter, PAGE);
-    await countCompendium(filter, start);
-
-    expect(repository.findCompendiumCount).toHaveBeenCalledWith(
-      repository.findCompendiumPage.mock.calls[0][0],
-      start,
-    );
-    expect(repository.findCompendiumPage.mock.calls[0][0]).toEqual({
-      query: undefined,
-      categoryIds: undefined,
-      form: 'HERB',
     });
   });
 

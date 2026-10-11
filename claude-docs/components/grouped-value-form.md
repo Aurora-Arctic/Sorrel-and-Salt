@@ -194,16 +194,13 @@ with the generic error.
 ## Testing
 
 `tests/components/GroupedValueForm/index.test.tsx`, with the mutations
-answered by MSW in the route's own shape. The nine tests every kind shares —
-autofill, the required marks, the save rules, the schema's refusal, the busy
-Save, the slug refusal, Cancel and the confirmed delete — are rows of
-`tests/support/grouped-value-form.tsx`, run for each subject in the file's
-`SUBJECTS`, so a new kind is a subject there — its noun, its group label and
-the schema's refusals, its groups, a value, its create and delete answers and
-a slug clash — beside its `KINDS` entry (MB.189); the deity is the third.
-What only one kind does stays under that kind's describe: the category's
-and the form's empty and filled starts, their create and update with their
-variables, their confirmations and their delete refusals; the form kind's
+answered by MSW in the route's own shape. The seven tests every kind shares —
+the save rules, the schema's refusal, the busy Save, the slug refusal, Cancel
+and the confirmed delete — are rows of `tests/support/grouped-value-form.tsx`,
+run once, on the category: a kind shares that code path, so another kind's
+run would prove nothing more (MB.189). What only one kind does stays under
+that kind's describe: the category's and the form's create and update with
+their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, its rename note, and the redirect
 question sent again with `endRedirect` and withdrawn by an edit or Keep
 Editing; and, under `describe('GroupedValueForm, a deity')`, the deity's
@@ -217,7 +214,6 @@ without a read, `?edit=` reading the value by its slug and filling the modal
 from it, a slug no value holds an alert and any other failure thrown, and
 the modal closing back to the page, filter and cursor included, that it
 opened over. What the modal shows once open is this file's. `tests/e2e/admin.spec.ts`
-adds, renames and deletes a category and a form through the real server — no
-spec drives the deities yet — and
-is refused deleting Protection, which seeded compendium entries are filed
-under, and Root, which seeded compendium entries pick.
+adds, renames and deletes a category and a form through the real server, adds
+a deity under a new tradition and moves it when the tradition goes, and is
+refused deleting Protection, which seeded compendium entries are filed under.

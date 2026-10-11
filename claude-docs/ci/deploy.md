@@ -62,11 +62,10 @@ nothing and this workflow is the only path.
   preview pull and `migrate.yml`'s `git-branch` input, which stays **required**
   of every caller even though production ignores it: a caller that cannot name
   its branch cannot be trusted with preview either.
-  `tests/guards/vercel-pull-git-branch.test.ts` is the guard. It sweeps every
-  workflow and checks both halves — the flag present on preview, absent on
-  production, and each arm's `if:` naming the same target its command does —
-  so the next `vercel pull` added on either side fails in the diff that adds
-  it.
+  A new `vercel pull` on either side keeps both halves — the flag present on
+  preview, absent on production, and each arm's `if:` naming the same target
+  its command does. Review holds it: MB.224 retired the workflow guards, since
+  a test of CI YAML proves no behaviour a user depends on.
 
 - **The `deploy` step passes `--meta githubDeployment=1 --meta
 githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
@@ -133,9 +132,8 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   per deployment and which no static secret can name. `deploy.yml` makes the
   same choice and writes the result **into the pulled dotfile**, because
   `vercel build` reads the file and a step-level `env:` would not reach the
-  Next build. `tests/guards/ci-secret-environments.test.ts` holds the two
-  selections together: choosing differently would migrate one database and
-  serve another.
+  Next build. The two selections must stay together: choosing differently would
+  migrate one database and serve another.
 
 - **Both jobs assert the pulled environment before using it** (MB.46), via
   `scripts/assert-pulled-env.ts`. It does two things. It **asserts** the keys
@@ -160,8 +158,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   which variables survived. MB.46 tells the outage that showed it. Key names are not secret —
   `claude-docs/secrets.md` enumerates them — and that no value is ever printed
   is asserted in `tests/guards/pulled-env-assertion.test.ts` rather than
-  intended. The same file sweeps the workflow directory, so a `vercel pull`
-  added without an assertion beside it fails in the diff that adds it.
+  intended. A `vercel pull` is added with an assertion beside it.
 
   A build that issues no query still needs `DATABASE_URL` and
   `BETTER_AUTH_SECRET` real: `next build`
@@ -190,9 +187,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   database — it parses the URL without issuing a query — so failing a deploy
   on a momentary blip would swap one outage for another; what the warning buys is
   that a deploy about to serve 500s says so at build time.
-  `tests/guards/database-probe.test.ts` asserts the two apart, and sweeps the
-  workflow directory so a job that migrates or builds without probing first
-  fails in the diff that adds it.
+  A job that migrates or builds probes first.
 
   **In `migrate` it reads the resolved URL, not the pulled file**, and that is
   the point rather than a detail: on `staging` and `main` `DATABASE_URL` comes
@@ -245,10 +240,9 @@ db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   `*-vocabulary.ts` helpers they write through, `src/db/seed/bootstrap-admin.ts`,
   `src/lib/slugify.ts`, `scripts/db-seed.ts`) and hands `migrate` the answer
   — one gate for every vocabulary, so a change to any seed runs all five.
-  `tests/guards/reference-seed-wiring.test.ts` holds every `db:seed:<target>`
-  script to a line in the seed step and its file to this list, and each
-  helper to the list too: `two-tier-vocabulary.ts` was missing from it until
-  MB.129.
+  Every `db:seed:<target>` script has a line in the seed step and its file a
+  place in this list, and each helper too: `two-tier-vocabulary.ts` was
+  missing from it until MB.129.
   Two things about it are load-bearing. It carries **no job-level `if:`**: a
   skipped dependency skips its dependents, so gating the job on
   `github.event_name == 'push'` would take every hotfix preview deploy down

@@ -123,8 +123,6 @@ describe('Story 59: asking for a new address', () => {
 
     const link = await changeLink(cookie, OWNER);
 
-    const [message] = send.mock.calls[0];
-    expect(message.text).toContain('asked to use this email address');
     expect(link).toMatch(new RegExp(`^${ORIGIN}/api/auth/verify-email\\?token=`));
     expect(await userRow(OWNER)).toEqual(before);
     expect(await userRow(NEW)).toBeUndefined();

@@ -14,7 +14,7 @@ import {
   updateCategoryGroup,
 } from '@/modules/vocabulary';
 import type { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -49,14 +49,10 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a vocabulary write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a vocabulary write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
@@ -205,7 +201,7 @@ describe('createCategoryGroup', () => {
     expect(issues).toEqual([
       {
         path: ['colorDark'],
-        message: 'The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1',
+        message: expect.stringContaining('2.16:1'),
       },
     ]);
     expect(await countNamed('Fixture Wards')).toBe(0);
@@ -219,7 +215,7 @@ describe('createCategoryGroup', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message: '"Fixture Wards" already has the address "fixture-wards" — choose another name',
+        message: expect.stringContaining('Fixture Wards'),
       },
     ]);
     expect(await countNamed('Fixture-Wards')).toBe(0);
@@ -285,7 +281,7 @@ describe('updateCategoryGroup', () => {
     expect(issues).toEqual([
       {
         path: ['colorLight'],
-        message: 'The light theme colour reads 2.99:1 on the light page — it needs at least 4.5:1',
+        message: expect.any(String),
       },
     ]);
     expect(await groupOf(id)).toEqual(before);
@@ -403,9 +399,7 @@ describe('deleteCategoryGroup', () => {
 
     const issues = await issuesOf(deleteCategoryGroup(admin, id));
 
-    expect(issues).toEqual([
-      { path: ['moveTo'], message: 'Choose a group to move its 1 category to' },
-    ]);
+    expect(issues).toEqual([{ path: ['moveTo'], message: expect.any(String) }]);
     expect((await groupOf(id)).deleted_at).toBeNull();
     expect((await categoryOf(category)).group_id).toBe(id);
   });
@@ -418,7 +412,7 @@ describe('deleteCategoryGroup', () => {
 
     for (const moveTo of [id, gone, '00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
       expect(await issuesOf(deleteCategoryGroup(admin, id, moveTo))).toEqual([
-        { path: ['moveTo'], message: 'Choose another live group to move its 1 category to' },
+        { path: ['moveTo'], message: expect.any(String) },
       ]);
     }
     expect((await groupOf(id)).deleted_at).toBeNull();

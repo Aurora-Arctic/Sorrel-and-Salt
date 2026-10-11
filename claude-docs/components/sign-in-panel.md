@@ -243,7 +243,7 @@ assigning `window.location.href`, which jsdom cannot follow
 (`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
 client). The rest of the module is the real one, so the last-used read is the
 client plugin's own, against jsdom's `document.cookie`. Covers: every roster
-provider renders as a native `<button>` by accessible name; a click calls
+provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
 explicit `/coven`;
@@ -263,10 +263,10 @@ CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in
 for the other:
 
-| Spec                                             | Server state                                | Covers                                                                                                                                                                                                                            |
-| ------------------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the unavailable note's text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
-| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme           |
+| Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                                           |
+| ------------------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the unavailable note's text, Facebook's transparent chip) and the error state. The last-used badge is the configured spec's and `tests/components/SignInPanel/index.test.tsx`'s |
+| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme                                          |
 
 **The configured scan exists because the greyed one could not see the brand
 colours**: an unavailable button drops its brand class, so a CI with no

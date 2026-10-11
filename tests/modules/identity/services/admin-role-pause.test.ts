@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden } from '@/lib/errors';
+import { ADMIN_CHANGES_PAUSED_REFUSAL as PAUSED_REFUSAL } from '@/lib/primary-admin';
 import {
   adminRoleChangePauseState,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
   setUserRole,
 } from '@/modules/identity';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { PauseRow } from './types';
@@ -29,9 +30,6 @@ const OTHER_ADMIN = '00000000-0000-0000-0000-0000000000a2';
 const GRANTEE = '00000000-0000-0000-0000-0000000000a3';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
-
-const PAUSED_REFUSAL = 'Admin changes are paused by the primary admin.';
-const NOT_PRIMARY_REFUSAL = 'Only the primary admin may pause or resume admin changes';
 
 async function insertUser(id: string, local: string, role: 'user' | 'admin'): Promise<void> {
   await asManualFix(sql, async (tx) => {
@@ -110,10 +108,10 @@ describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
 
   // E is a live admin who may grant, as the last line proves, so the refusal
   // is the primary admin's alone.
-  it('refuses a non-primary admin with an explaining Forbidden, writing nothing', async () => {
-    await expect(pauseAdminRoleChanges(asUser(E))).rejects.toThrow(NOT_PRIMARY_REFUSAL);
+  it('refuses a non-primary admin as Forbidden, writing nothing', async () => {
+    await expect(pauseAdminRoleChanges(asUser(E))).rejects.toThrow(Forbidden);
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
-    await expect(resumeAdminRoleChanges(asUser(E))).rejects.toThrow(NOT_PRIMARY_REFUSAL);
+    await expect(resumeAdminRoleChanges(asUser(E))).rejects.toThrow(Forbidden);
 
     expect(await pauses()).toEqual([
       { created_by: PRIMARY, updated_by: PRIMARY, ended_by: null, ended: false },
@@ -127,21 +125,18 @@ describe('pauseAdminRoleChanges and resumeAdminRoleChanges', () => {
   it('refuses every caller while the variable names no one', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `nobody${DOMAIN}`);
 
-    await expect(pauseAdminRoleChanges(asUser(AS_PRIMARY))).rejects.toThrow(NOT_PRIMARY_REFUSAL);
+    await expect(pauseAdminRoleChanges(asUser(AS_PRIMARY))).rejects.toThrow(Forbidden);
     expect(await pauses()).toEqual([]);
   });
 
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call', async (_who, user) => {
-    expect(user.role).toBe('user');
+  // The site role is read first, so one non-admin stands for every one: A
+  // owns a coven, which no workspace role turns into a site role.
+  it('refuses a non-admin as Forbidden by direct call', async () => {
+    expect(A.role).toBe('user');
 
-    await expect(pauseAdminRoleChanges(asUser(user))).rejects.toThrow(Forbidden);
-    await expect(resumeAdminRoleChanges(asUser(user))).rejects.toThrow(Forbidden);
-    await expect(adminRoleChangePauseState(asUser(user))).rejects.toThrow(Forbidden);
+    await expect(pauseAdminRoleChanges(asUser(A))).rejects.toThrow(Forbidden);
+    await expect(resumeAdminRoleChanges(asUser(A))).rejects.toThrow(Forbidden);
+    await expect(adminRoleChangePauseState(asUser(A))).rejects.toThrow(Forbidden);
     expect(await pauses()).toEqual([]);
   });
 

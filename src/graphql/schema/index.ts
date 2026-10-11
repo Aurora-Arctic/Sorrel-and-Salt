@@ -2,7 +2,7 @@ import { builder } from '../builder';
 import './audit';
 // Each module registers its types and fields as its index loads, so importing
 // the index is the registration; `@/modules/<name>/graphql` is internal and a
-// deep import of it fails lint and tests/guards/module-boundaries.test.ts.
+// deep import of it fails lint (`no-restricted-imports`, `sorrel/module-boundaries`).
 import '@/modules/identity';
 import '@/modules/coven';
 import '@/modules/vocabulary';

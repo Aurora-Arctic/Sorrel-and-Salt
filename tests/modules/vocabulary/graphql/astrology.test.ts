@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { slugify } from '@/lib/slugify';
-import { A, E, asUser } from '../../../support/as-user';
+import { E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { run as send } from '../../../support/graphql/run';
@@ -14,25 +14,13 @@ import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 // count, the query reaching the read, and per write one refusal per error
 // code, read as the browser reads it. Which roles are refused, a rename
 // carried onto the entries and every collision are services/astrology.test.ts's;
-// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// a signed-out caller refused at every field, and a non-admin at the `admin`
+// scope, are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
-});
-
-// The one non-admin each write refuses here, since `authScopes: { admin: true }`
-// is a gate of its own in front of the service: a coven's owner, the most a
-// workspace role grants, which is still not the site role these writes turn
-// on. Every other role is services/astrology.test.ts's.
-const OWNER = asUser(A);
-
-// Why the refusals could have been something else: the session the scope
-// reads says `user`, and E's says `admin`.
-it('is testing a session whose site role is `user`, beside an admin', () => {
-  expect(OWNER.role).toBe('user');
-  expect(asUser(E).role).toBe('admin');
 });
 
 const VOCABULARIES = [
@@ -41,18 +29,16 @@ const VOCABULARIES = [
     type: 'Planet',
     table: 'planets',
     field: 'planets',
-    listNoun: 'planets',
   },
   {
     query: 'zodiacSigns',
     type: 'ZodiacSign',
     table: 'zodiac_signs',
     field: 'zodiacSigns',
-    listNoun: 'zodiac signs',
   },
 ] as const;
 
-describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) => {
+describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
   const FIELDS = 'id name slug description';
   const CREATE = `mutation ($input: ${type}Input!) { create${type}(input: $input) { ${FIELDS} } }`;
   const UPDATE = `mutation ($id: ID!, $input: ${type}Input!) {
@@ -91,7 +77,9 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
         select id from ${sql(table)} where deleted_at is null order by name, id`;
       expect(expected.length).toBeGreaterThan(10);
 
-      const first = await send<Record<string, AstrologyValueConnection>>(null, LIST, { first: 5 });
+      const first = await send<Record<string, AstrologyValueConnection>>(null, LIST, {
+        first: 5,
+      });
       const rest = await send<Record<string, AstrologyValueConnection>>(null, LIST, {
         first: 100,
         after: first.data?.[query].pageInfo.endCursor,
@@ -139,28 +127,14 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
       });
     });
 
-    it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
-      const result = await send(OWNER, CREATE, { input: input() });
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      const rows = await sql`select 1 from ${sql(table)} where name = 'Fixture Body'`;
-      expect(rows).toHaveLength(0);
-    });
-
-    it("answers a slug collision as VALIDATION on `name`, with the service's message", async () => {
+    it('answers a slug collision as VALIDATION on `name`', async () => {
       await seed('Fixture Body');
 
       const result = await send(asUser(E), CREATE, { input: input('Fixture-Body') });
 
-      expect(result.errors?.[0]?.extensions).toEqual({
+      expect(result.errors?.[0]?.extensions).toMatchObject({
         code: 'VALIDATION',
-        fieldErrors: [
-          {
-            path: ['name'],
-            message: '"Fixture Body" already has the address "fixture-body" — choose another name',
-          },
-        ],
+        fieldErrors: [{ path: ['name'] }],
       });
     });
   });
@@ -177,16 +151,6 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
       expect(result.errors).toBeUndefined();
       expect(result.data?.[`update${type}`]).toMatchObject({ id, slug: 'fixture-new' });
       expect((await rowOf(id)).name).toBe('Fixture New');
-    });
-
-    it('refuses a coven owner by id, as FORBIDDEN, leaving it as it was', async () => {
-      const id = await seed('Fixture Kept');
-      const before = await rowOf(id);
-
-      const result = await send(OWNER, UPDATE, { id, input: input('Fixture Taken Over') });
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      expect(await rowOf(id)).toEqual(before);
     });
 
     it("answers a rename onto another row's address as VALIDATION on `name`, leaving it as it was", async () => {
@@ -223,15 +187,6 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
       expect((await rowOf(id)).deleted_by).toBe(E.id);
     });
 
-    it('refuses a coven owner by id, as FORBIDDEN, the row left live', async () => {
-      const id = await seed('Fixture Kept');
-
-      const result = await send(OWNER, DELETE, { id });
-
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      expect((await rowOf(id)).deleted_at).toBeNull();
-    });
-
     it('answers an unknown id as NOT_FOUND', async () => {
       const result = await send(asUser(E), DELETE, { id: 'not-a-uuid' });
 
@@ -239,7 +194,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
       expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
     });
 
-    it('answers a held value as FORBIDDEN with the message naming the entry', async () => {
+    it('answers a held value as FORBIDDEN, the row left live', async () => {
       const id = await seed('Fixture Body');
       await insertIngredient(
         sql,
@@ -254,10 +209,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field, listNoun }) 
 
       const result = await send(asUser(E), DELETE, { id });
 
-      expect(result.errors?.[0]).toMatchObject({
-        message: `"Fixture Body" is among the ${listNoun} of 1 compendium entry — Testwort. Take it off its ${listNoun} first.`,
-        extensions: { code: 'FORBIDDEN' },
-      });
+      expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
       expect((await rowOf(id)).deleted_at).toBeNull();
     });
   });

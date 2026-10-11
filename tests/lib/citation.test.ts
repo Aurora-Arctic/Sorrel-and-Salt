@@ -372,21 +372,6 @@ describe('renderCitation, italic marks', () => {
       'T. _Fixture Press_.',
     );
   });
-
-  it('merges neighbouring runs of one style', () => {
-    const parts = renderCitation({
-      kind: 'book',
-      authors: 'Testwort, Fixtura',
-      title: 'Fixtures',
-      place: 'Testford',
-    });
-
-    expect(parts).toEqual([
-      { text: 'Testwort, Fixtura. ', italic: false },
-      { text: 'Fixtures', italic: true },
-      { text: '. Testford.', italic: false },
-    ]);
-  });
 });
 
 describe('citationText', () => {

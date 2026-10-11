@@ -169,24 +169,23 @@ one over `(workspace_id, canonical_key)` for the same reason: without
 `NULLS NOT DISTINCT`, every compendium row's null `workspace_id` would be
 distinct from every other's and the single index would reserve nothing there.
 
-**The predicates are asserted from the catalogue, not just the behaviour**
-(`tests/modules/ingredients/schema/ingredients-indexes.test.ts`, which applies `0005` and `0006` into
-the worker clone the same way described above). Each index's
-`pg_get_expr(indpred, indrelid)` is pinned to its rendered predicate and its
-`pg_get_indexdef` to its key columns, and one test asserts the table carries
-no fourth unique index. Behaviour alone could not catch a dropped
-`WHERE deleted_at IS NULL`: no collision test re-uses an identity without
-soft-deleting first, so every one of them would stay green while the
-reservation silently widened to forever. Verified by mutation — dropping the
-predicate reddens six tests, dropping the label index five, and keying the
-compendium on `lower(name)` instead of `canonical_key` four.
+**The predicates are asserted by behaviour, once for every table.**
+`tests/db/partial-unique-indexes.test.ts` reads each partial unique index
+from the catalogue and proves a second live row refused and a soft-deleted
+holder's slot freed, which is what catches a dropped `WHERE deleted_at IS
+NULL`; `tests/db/schema-drift.test.ts` holds each index's name and
+partiality to the schema file's. What stays in
+`tests/modules/ingredients/schema/ingredients-indexes.test.ts` is what each
+index refuses that the others do not: identity in the compendium, identity
+and the folded label per workspace, and the slug per tier (MB.226).
 
 **`ingredients.form` is `text`, and deliberately not a foreign key to
 `ingredient_forms`.** To a coven the curated table is an autofill vocabulary,
 not a constraint: a foreign key would force identity to key on a surrogate id
 and make an uncurated value like `rhizome` unwritable until an admin curates
-it first. M4.2a asserts the absence of that foreign key by test, since it's
-the property the whole free-text design rests on. **A pick is recorded beside
+it first. `ingredients-schema.test.ts` asserts the table's own foreign keys
+are its workspace and `form_id` and nothing else, since that is the property
+the whole free-text design rests on. **A pick is recorded beside
 the text** (MB.165): `ingredients.form_id`, a nullable foreign key to
 `ingredient_forms`, set only when a member picked a curated row, never
 resolved from typed text, and held to a `form` by

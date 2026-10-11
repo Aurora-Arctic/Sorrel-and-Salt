@@ -22,14 +22,23 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   user row rather than a letter for the same reason — there is no mapping in
   the middle to fall out of step, and a user a test creates mid-run acts
   through the same helper.
-- **It never touches the database.** Whether A exists is
-  `tests/db/seeded-template.test.ts`'s claim, made against the real rows every
-  `db` file is cloned from (MB.183); re-proving it here would cost a second
-  migrate-and-seed harness to assert something already asserted.
-- **`tests/support/as-user.test.ts` loops over `FIXTURE_USERS` rather than naming
-  five cases**, so a sixth fixture user is covered the day it is added. It
-  also carries a `@ts-expect-error` compile assertion that an id alone cannot
-  make a session — the role has to come off the row.
+- **It never touches the database.** Whether A exists is the seed's, which is
+  reviewed rather than tested since MB.225 ([`layer-ownership.md`](layer-ownership.md),
+  "What a test may assert", rule 1): every `db` file is cloned from the rows
+  it inserts, so a missing user fails the first test that acts as one.
+- **An id alone cannot make a session** — the role has to come off the row.
+  `tests/support/as-user.type-check.ts` holds that as a `@ts-expect-error`
+  compile assertion, which `npm run typecheck` reads and nothing runs (MB.224).
+- **One non-admin stands for every one where the check reads the site role
+  alone.** A refusal that `assertSiteAdmin` or the `admin` scope decides is
+  asserted once, as A — an owner, the highest workspace role, and still no
+  site role — with its precondition (A's role is `user`, and E's same call
+  succeeds), never as A, B, C and D in turn: the four would fail in the same
+  diff for the same reason (MB.227). A refusal that turns on a workspace role
+  keeps a fixture per role it distinguishes.
+
+What any of these tests may assert at all — state, never copy — is
+[`layer-ownership.md`](layer-ownership.md)'s "What a test may assert".
 
 **Assert the type, never the message.** `Forbidden` and `NotFound`
 (`src/lib/errors.ts`) exist so a refusal test survives a reworded message, and
@@ -37,21 +46,15 @@ so the two refusals stay distinguishable — see
 `claude-docs/auth/service-session.md` for why a route needs to know which one
 happened.
 
-`tests/lib/errors.test.ts` proves the assertion style can actually fail, which is
-the only thing that makes it worth writing. Three of its cases assert that an
-_inner_ expectation rejects:
-
-```ts
-const silentNoOp = async (): Promise<string[]> => [];
-
-await expect(expect(silentNoOp()).rejects.toThrow(Forbidden)).rejects.toThrow();
-```
-
-That is the bug the pair exists to catch — a service that checks nothing and
-answers an unauthorized read with an empty list or an unauthorized write with a
-success. Both look like success to a caller, and only an assertion that
-demands a rejection tells them apart. A `NotFound` is held to the same
-standard: it does not satisfy a test written for a `Forbidden`.
+`tests/lib/errors.test.ts` holds what the style rests on: `Forbidden` and
+`NotFound` are distinct `Error` classes that name themselves, and a bare
+`Forbidden` carries the sentinel message `'Forbidden'`. A refusal that must
+explain itself — a spell narrowed from `workspace` to `private` — is asserted
+as the class and as a message other than `new Forbidden().message`, never by
+its words. What the style catches is a service that checks nothing and answers
+an unauthorized read with an empty list or an unauthorized write with a
+success: only an assertion that demands a rejection tells those from success,
+and a `NotFound` does not satisfy one written for a `Forbidden`.
 
 **Over GraphQL, assert the code, never the type.** A resolver test runs its
 operation through `tests/support/graphql/run.ts` (MB.185): `run(session, query,
@@ -60,11 +63,10 @@ variables)` posts it to Yoga built on the route's schema and the route's own
 would receive. A fourth argument replaces part of that context (MB.186):
 loaders a test spies on or shares between operations, to read a cache either
 side of a write, or a sender that records what it was asked to mail.
-`runnerOn(schema)` builds the same over a scratch schema, for a field the
-production schema lacks; only `tests/modules/coven/services/two-transports.test.ts`
-needs one. A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
+A refusal is read off `errors[0].extensions.code` — `FORBIDDEN`,
 `NOT_FOUND`, `VALIDATION` with its `fieldErrors` — because the wire carries no
 `originalError`, and a test that reads one through bare `graphql()` is watching
 the service, a second copy of its test. Which roles are refused is the service
 test's; a GraphQL file keeps one refusal per error code per field, with its
-precondition ([`layer-ownership.md`](layer-ownership.md), "The owning layer").
+precondition, and reads `extensions.code` without the message beside it
+([`layer-ownership.md`](layer-ownership.md), "The owning layer").

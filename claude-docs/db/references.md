@@ -229,7 +229,7 @@ admin's later edit of a seeded source is.
 
 `renderCitation(ref): CitationPart[]` in `src/lib/citation.ts` (MB.153), pure
 and client-safe, beside `slugify`: the page, the picker, the service's sort
-and the seed's test all call it. Each part is `{ text, italic }`. `citation`
+call it. Each part is `{ text, italic }`. `citation`
 on the wire is the parts joined, plain — `citationText` — and a surface that
 shows italics renders the parts itself. `byCitation` compares two plain
 citations in bibliography order, the sort `referencesOf` files by. A field
@@ -246,7 +246,7 @@ word is not a mark, so `_Internet Encyclopedia of Ukraine_` is italic and
 `Greek_Mythology` in a URL is not; `url` is never parsed, and a marked span
 inside a field the kind already italicises renders roman. A test joins the
 parts back with `_` around the italic ones, which is the seed doc's own
-Markdown, so the seed's and the page's tests compare strings. A roman span
+Markdown, so a test compares strings. A roman span
 inside an italic field has no spelling in that form, and no source needs one.
 
 Each part ends in a period unless it already carries one ("Smith, William,
@@ -287,9 +287,12 @@ drops each missing piece with its punctuation.
 as compendium-tier rows: the deity doc's "Sources" and the astrology doc's.
 The categories and the forms are the project's own design and cite nothing.
 `SOURCES` is a literal, each entry a reference's fields and the rows it
-supports, and `sources.test.ts` parses both docs and compares them with it
-through the renderer, citation by citation, so a doc edited without the
-literal, or the reverse, fails there. The docs hold one shape the parse reads:
+supports, transcribed from both docs; review holds the two in step, since
+MB.225 retired the test that parsed the docs and compared them through the
+renderer. `sources.test.ts` keeps the seed's behaviour: compendium rows keyed
+by citation, a tradition's source reaching every deity under it, and what a
+re-run leaves of an admin's edits. The docs hold one shape the literal
+transcribes:
 
 - **The deity doc.** The bullets before the first tradition chose which
   deities to list and link nothing, the owner's call. Each tradition's own

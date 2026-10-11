@@ -8,6 +8,12 @@ last added in M1.14, so `.github/scripts/summarize-playwright.mjs` has an
 istanbul-style `coverage-summary.json` to build the PR comment's coverage
 table from — same shape Vitest's own `json-summary` reporter emits).
 
+**What the 80% threshold is for.** The 80% threshold exists partly to prevent
+test bloat and to keep tests on functional requirements; a copy, class or
+memorial test adds no coverage of behaviour and is not written
+([`layer-ownership.md`](layer-ownership.md), "What a test may assert"). It
+stays at 80% while the suite's own figure falls toward 90% (MB.224).
+
 **JS coverage only — CSS is deliberately never collected** (M1.14). Playwright's
 `page.coverage.startCSSCoverage()` reports raw bundled-stylesheet byte ranges
 with no sourcemap path back to Sass — unlike JS (see below), Next's CSS

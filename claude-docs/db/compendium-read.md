@@ -25,8 +25,8 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
   needs; `compendium-search-query.test.ts` proves by `EXPLAIN` that the
   statement the finder sends reaches both (below), and
-  `ingredients-unaccent.test.ts` keeps the declarations, the wrapper and the
-  fold (MB.184). The three matches are a `UNION ALL`, the
+  `ingredients-unaccent.test.ts` keeps the two indexes' expressions, the
+  wrapper's volatility and the fold (MB.184, MB.226). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope.
 - **The score is the row's best word similarity** across the three, and it is
@@ -59,8 +59,8 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   its keyset `wordMatch` when there is a query, and `selectFrom` then reads the
   page in a transaction that sets `pg_trgm.word_similarity_threshold` with
   `set_config(…, true)` first — the similarity branch's shape, on the keyset
-  branch. `compendium-search-query.test.ts` reads the statements sent: the
-  setting before the match, and no transaction for a page with no query.
+  branch. `tests/db/repository/ingredients.test.ts` proves it by the rows
+  found: a typo scoring exactly 0.5, below pg_trgm's own 0.6, is matched.
 - **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
   per id, so an entry must carry every one. OR is M8.12's argument to add.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
@@ -92,8 +92,8 @@ soft-delete guard read each exported finder, and both take the filter's arms
 and the key from one private `compendiumList(filter)`, so the count reads
 exactly the rows the pages hold. On a search that means the join and the 0.5:
 counted at the server's 0.6, `mugwrot` (0.5 to Mugwort) would count none of
-the rows its pages list. `compendium-search-query.test.ts` reads the one
-statement sent, after the setting, with no order and no limit.
+the rows its pages list. `tests/db/repository/ingredients.test.ts` counts a
+search whose every match scores between 0.5 and 0.6.
 
 **The service treats a query shorter than two characters as absent**
 (`MIN_QUERY_LENGTH` in `validation/compendium-filter.ts`, counted in composed
@@ -160,8 +160,8 @@ workspace_id = <the proof's>`.
 - **The plan is the compendium search's.** The scope is read on
   `ingredients` after the match has joined, so the statement still starts
   from both expression indexes. `compendium-search-query.test.ts` runs it
-  over the same ~20,000 rows and asserts it, and asserts the threshold is set
-  before the match and the proof's workspace is in the statement.
+  over the same ~20,000 rows and asserts it; that the scope holds is
+  `ingredient-suggestions.test.ts`'s, by the rows it answers.
 - **No local-beats-compendium suppression yet.** A coven entry and the
   compendium entry it shadows are both offered until M8.3 builds the
   suppression, which applies here as it does to every workspace result.

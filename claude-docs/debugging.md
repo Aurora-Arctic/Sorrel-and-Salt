@@ -140,8 +140,7 @@ Two alternatives were not taken:
   module's `graphql/` files for a development-only benefit.
 
 A CLI `--server-fast-refresh` overrides the config, so no `dev` script passes
-it. `tests/guards/dev-server-fast-refresh.test.ts` fails if the setting is
-removed.
+it.
 
 ## Test debugging
 

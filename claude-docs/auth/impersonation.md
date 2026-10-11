@@ -119,8 +119,9 @@ name and address, and carries Stop Impersonating, at the top of every page
 ### Tests
 
 - `tests/lib/impersonation.test.ts`: the gate in every combination, the
-  mounted set against the allowlist, the endpoints absent wherever the gate is
-  shut, and the declined ban columns. That an admin target is refused is the
+  mounted set against the allowlist where the gate is open, the endpoints
+  absent where it is shut (one environment each way, the gate's matrix
+  covering the rest), and the declined ban columns. That an admin target is refused is the
   db file's, through the endpoint, not a pin of `allowImpersonatingAdmins`
   (MB.188).
 - `tests/db/impersonation.test.ts`: through `auth.handler`, a non-admin is
@@ -131,6 +132,6 @@ name and address, and carries Stop Impersonating, at the top of every page
 - `tests/db/repository/write.test.ts`: `app.impersonated_by`, and a write
   under an impersonation stamped as the user acted as — the session above is
   B's, so that is the write stamped B.
-- `tests/modules/identity/schema/auth-schema.test.ts`: the column and its
-  foreign key.
+- `tests/db/schema-drift.test.ts`: the column and its foreign key, against
+  the schema file (MB.226).
 - The component, page and layout tests: the control and the banner.

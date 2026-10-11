@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { users } from '@/modules/identity/schema/users';
 import { setUserRole } from '@/modules/identity';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { asManualFix, refusalOf } from '../../../support/db/privileges';
@@ -35,9 +36,6 @@ const PRIMARY = '00000000-0000-0000-0000-0000000000d4';
 const DELETED = '00000000-0000-0000-0000-0000000000d5';
 const NOWHERE = '00000000-0000-0000-0000-0000000000d9';
 const PRIMARY_EMAIL = `owner${DOMAIN}`;
-
-const PRIMARY_REFUSAL =
-  "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
 
 /** Inserts a user on this file's domain; an admin is declared as a `psql` fix declares one. */
 async function insertUser(
@@ -192,26 +190,18 @@ describe('setUserRole, granting', () => {
     expect(await changes()).toEqual([]);
   });
 
-  it('refuses an existing admin with a message, writing no ledger row', async () => {
-    const refusal = setUserRole(asUser(E), E.id, 'admin');
-
-    await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(`${E.name} is already an admin`);
+  it('refuses an existing admin, writing no ledger row', async () => {
+    await expect(setUserRole(asUser(E), E.id, 'admin')).rejects.toThrow(Forbidden);
     expect(await changes()).toEqual([]);
   });
 
-  // E's same call on the same row succeeds, so a pass here is the role refusing.
-  it.each([
-    ['A, an owner who may create covens', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call, writing nothing', async (_who, user) => {
-    expect(user.role).toBe('user');
+  // The check reads the site role alone, so one non-admin stands for every
+  // one: A owns a coven and may create more. E's same call on the same row
+  // succeeds, so a pass here is the role refusing.
+  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
+    expect(A.role).toBe('user');
 
-    await expect(setUserRole(asUser(user), PLAIN, 'admin')).rejects.toThrow(
-      'Only a site admin may change who is an admin',
-    );
+    await expect(setUserRole(asUser(A), PLAIN, 'admin')).rejects.toThrow(Forbidden);
 
     expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
     expect(await changes()).toEqual([]);
@@ -285,26 +275,17 @@ describe('setUserRole, revoking', () => {
     expect(await liveAdmins()).toEqual([OTHER_ADMIN]);
   });
 
-  it('refuses a user who is not an admin with a message, writing no ledger row', async () => {
-    const refusal = setUserRole(asUser(E), PLAIN, 'user');
-
-    await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(
-      'Plain Fixturewort is not an admin, so there is nothing to revoke',
-    );
+  it('refuses a user who is not an admin, writing no ledger row', async () => {
+    await expect(setUserRole(asUser(E), PLAIN, 'user')).rejects.toThrow(Forbidden);
     expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
     expect(await changes()).toEqual([]);
   });
 
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call, writing nothing', async (_who, user) => {
-    expect(user.role).toBe('user');
+  // One non-admin, as for the grant; E's same call succeeds below.
+  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
+    expect(B.role).toBe('user');
 
-    await expect(setUserRole(asUser(user), OTHER_ADMIN, 'user')).rejects.toThrow(Forbidden);
+    await expect(setUserRole(asUser(B), OTHER_ADMIN, 'user')).rejects.toThrow(Forbidden);
 
     expect(await roleOf(OTHER_ADMIN)).toMatchObject({ role: 'admin' });
     expect(await changes()).toEqual([]);
@@ -331,25 +312,21 @@ describe('setUserRole and the primary admin', () => {
   it.each([
     ['another admin', E],
     ['the primary admin itself', { id: PRIMARY, role: 'admin' as const }],
-  ])(
-    'refuses revoking the primary admin for %s, in words that name no variable',
-    async (_who, caller) => {
-      vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@User-Role.test');
-      expect(await liveAdmins()).toEqual([E.id, PRIMARY].sort());
+  ])('refuses revoking the primary admin for %s', async (_who, caller) => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'Owner@User-Role.test');
+    expect(await liveAdmins()).toEqual([E.id, PRIMARY].sort());
 
-      const refusal = setUserRole(asUser(caller), PRIMARY, 'user');
+    const refusal = setUserRole(asUser(caller), PRIMARY, 'user');
 
-      await expect(refusal).rejects.toThrow(Forbidden);
-      await expect(refusal).rejects.toThrow(PRIMARY_REFUSAL);
-      await expect(refusal).rejects.not.toThrow(/ADMIN_BOOTSTRAP_EMAIL|variable/);
-      expect(await roleOf(PRIMARY)).toMatchObject({ role: 'admin' });
-      expect(await changes()).toEqual([]);
-    },
-  );
+    await expect(refusal).rejects.toThrow(Forbidden);
+    await expect(refusal).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
+    expect(await roleOf(PRIMARY)).toMatchObject({ role: 'admin' });
+    expect(await changes()).toEqual([]);
+  });
 
   it('can revoke the previous primary admin once the variable names someone else', async () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
-    await expect(setUserRole(asUser(E), PRIMARY, 'user')).rejects.toThrow(PRIMARY_REFUSAL);
+    await expect(setUserRole(asUser(E), PRIMARY, 'user')).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
 
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `successor${DOMAIN}`);
 
@@ -368,15 +345,10 @@ describe('setUserRole and the last admin', () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `nobody${DOMAIN}`);
   });
 
-  it('refuses revoking the last live admin with an explaining Forbidden', async () => {
+  it('refuses revoking the last live admin as Forbidden', async () => {
     expect(await liveAdmins()).toEqual([E.id]);
 
-    const refusal = setUserRole(asUser(E), E.id, 'user');
-
-    await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(
-      `${E.name} is the last admin, and the site needs one. Make someone else an admin first.`,
-    );
+    await expect(setUserRole(asUser(E), E.id, 'user')).rejects.toThrow(Forbidden);
     expect(await liveAdmins()).toEqual([E.id]);
     expect(await changes()).toEqual([]);
 

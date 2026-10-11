@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 import postgres from 'postgres';
-import { sql as dsql } from 'drizzle-orm';
-import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { namedWrites } from '@/db/table-marks';
 import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 
@@ -25,22 +24,6 @@ export const herbs = pgTable('repository_probe_herbs', {
   privilegeNote: text('privilege_note'),
   ...auditColumns,
 });
-
-// Built `WHERE deleted_at IS NULL`: a plain unique index would fail the reuse
-// test below for a reason unrelated to the repository.
-export const charms = pgTable(
-  'repository_probe_charms',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    name: text('name').notNull(),
-    ...auditColumns,
-  },
-  (table) => [
-    uniqueIndex('repository_probe_charms_name_unique')
-      .on(table.name)
-      .where(dsql`${table.deletedAt} is null`),
-  ],
-);
 
 // The join-table shape: four stamps, a composite key, no delete columns (MB.34).
 export const pairs = pgTable(
@@ -129,18 +112,6 @@ export function useProbeTables() {
       )
     `;
     await sql`
-      create table repository_probe_charms (
-        id uuid primary key default gen_random_uuid(),
-        name text not null,
-        created_at timestamp not null default now(),
-        created_by uuid not null,
-        updated_at timestamp not null default now(),
-        updated_by uuid not null,
-        deleted_at timestamp,
-        deleted_by uuid
-      )
-    `;
-    await sql`
       create table repository_probe_pairs (
         herb_id uuid not null,
         charm_id uuid not null,
@@ -177,16 +148,10 @@ export function useProbeTables() {
         deleted_by uuid
       )
     `;
-    await sql`
-      create unique index repository_probe_charms_name_unique
-        on repository_probe_charms (name)
-        where deleted_at is null
-    `;
   });
 
   afterAll(async () => {
     await sql`drop table if exists repository_probe_herbs`;
-    await sql`drop table if exists repository_probe_charms`;
     await sql`drop table if exists repository_probe_pairs`;
     await sql`drop table if exists repository_probe_jars`;
     await sql`drop table if exists repository_probe_tinctures`;
@@ -195,7 +160,6 @@ export function useProbeTables() {
 
   beforeEach(async () => {
     await sql`truncate repository_probe_herbs`;
-    await sql`truncate repository_probe_charms`;
     await sql`truncate repository_probe_pairs`;
     await sql`truncate repository_probe_jars`;
     await sql`truncate repository_probe_tinctures`;

@@ -90,9 +90,8 @@ tip's position and width stay its own.
 ## Testing
 
 `tests/components/InfoTip/index.test.tsx`, in the `dom` project, with fake
-timers for the close delay: closed at first with its text still describing the
-button and a field; opened by hover and closed a moment after the pointer
-leaves; kept open while the pointer is on the tip; opened by focus and closed
-by blur; shut while the field it describes has focus, which still reads its
-text; opened by a tap that a second tap does not
-shut; closed by Escape from anywhere.
+timers for the close delay: closed at first, and shut while the field it
+describes has focus, its text still describing the button and the field;
+opened by hover, kept open while the pointer is on the tip, and closed a
+moment after it leaves; opened by focus and closed by blur; opened by a tap
+that a second tap does not shut; closed by Escape from anywhere.

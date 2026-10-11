@@ -35,14 +35,17 @@ vi.mock('@/graphql/schema', async () => {
   return { schema: scratch.toSchema() };
 });
 
-async function loadRoute(nodeEnv: string) {
+// Staging and every preview run at NODE_ENV=production, and the depth and cost
+// limits read no environment (src/graphql/armor.ts), so one environment is
+// the whole of their behaviour.
+async function loadRoute() {
   vi.resetModules();
-  vi.stubEnv('NODE_ENV', nodeEnv);
+  vi.stubEnv('NODE_ENV', 'production');
   return import('@/app/api/graphql/route');
 }
 
-async function query(nodeEnv: string, source: string, variables?: Record<string, unknown>) {
-  const { POST } = await loadRoute(nodeEnv);
+async function query(source: string, variables?: Record<string, unknown>) {
+  const { POST } = await loadRoute();
   const response = await POST(
     new Request(ENDPOINT, {
       method: 'POST',
@@ -72,21 +75,19 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-// Staging and every preview run at NODE_ENV=production, local development
-// without it: the limits hold in both.
-describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (nodeEnv) => {
+describe('graphql-armor', () => {
   describe('depth', () => {
     // The precondition: the schema answers seven levels, so a refusal one
     // level further is the limit and not a schema that stops short.
     it('answers a query seven levels deep', async () => {
-      const result = await query(nodeEnv, nested(7));
+      const result = await query(nested(7));
 
       expect(result.errors).toBeUndefined();
       expect(JSON.stringify(result.data)).toContain('"name":"node"');
     });
 
     it('refuses a query nested past seven', async () => {
-      const result = await query(nodeEnv, nested(8));
+      const result = await query(nested(8));
 
       expect(result.data).toBeUndefined();
       expect(result.errors?.map((e) => e.message)).toEqual([
@@ -105,7 +106,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
 
     // The same shape, cheaper: a refusal below is the price, not the shape.
     it('answers a composed query within the limit', async () => {
-      const result = await query(nodeEnv, paged('(first: 10)'));
+      const result = await query(paged('(first: 10)'));
 
       expect(result.errors).toBeUndefined();
     });
@@ -113,7 +114,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
     // Seven levels and no aliases, so neither the depth nor the alias limit
     // is what refuses it.
     it('refuses an expensive composed query', async () => {
-      const result = await query(nodeEnv, paged('(first: 100)'));
+      const result = await query(paged('(first: 100)'));
 
       expect(result.data).toBeNull();
       expect(result.errors?.map((e) => e.message)).toEqual(refusal);
@@ -121,7 +122,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
 
     // graphql-armor's cost check priced `first: $n` at one row, whatever $n held.
     it('refuses it when the page size is a variable', async () => {
-      const result = await query(nodeEnv, `query ($n: Int) ${paged('(first: $n)')}`, { n: 100 });
+      const result = await query(`query ($n: Int) ${paged('(first: $n)')}`, { n: 100 });
 
       expect(result.data).toBeNull();
       expect(result.errors?.map((e) => e.message)).toEqual(refusal);
@@ -129,7 +130,7 @@ describe.each(['development', 'production'])('graphql-armor at NODE_ENV=%s', (no
 
     // And refused a literal past the maximum that the server clamps and answers.
     it('answers a single page asking for more than the maximum', async () => {
-      const result = await query(nodeEnv, '{ nodes(first: 1000) { edges { node { name } } } }');
+      const result = await query('{ nodes(first: 1000) { edges { node { name } } } }');
 
       expect(result.errors).toBeUndefined();
       expect((result.data as { nodes: { edges: unknown[] } }).nodes.edges).toHaveLength(100);

@@ -64,7 +64,8 @@ nothing of its own.
 
 ## Testing
 
-`tests/components/Pager/index.test.tsx`, its pending soft end through
+`tests/components/Pager/index.test.tsx` owns paging for every list: both ends
+linked, the end with no page disabled in place, the position between them,
+nothing for a lone page, and the busy end, its pending soft end through
 `tests/support/navigating.tsx`, which holds a mocked `push` pending as the
-App Router does. Each list's own test checks that the
-list passes its pages through.
+App Router does. A list's own test asserts only the hrefs it builds.

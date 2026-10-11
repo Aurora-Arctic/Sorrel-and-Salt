@@ -9,8 +9,7 @@ name: Migrate
 # mid-migration; it reports separately so a failed seed is not read as a
 # failed migration. `environment` and `git-branch` come from deploy.yml's
 # resolved target, and the two workflows must resolve DATABASE_URL
-# identically — tests/guards/vercel-pull-git-branch.test.ts and
-# tests/guards/ci-secret-environments.test.ts hold them to it. Production
+# identically, or one database is migrated and another served. Production
 # alone snapshots before migrating; preview databases are disposable.
 on:
   workflow_call:
@@ -86,7 +85,7 @@ jobs:
 
       # Two pulls, one per target: `--git-branch` resolves the branch-scoped
       # DATABASE_URL on preview and production rejects the flag. Two steps so
-      # tests/guards/vercel-pull-git-branch.test.ts reads the condition as data.
+      # each arm's condition names the target its command is legal on.
       - name: Pull Vercel environment (preview)
         if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'preview'
         run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
@@ -156,8 +155,8 @@ jobs:
           echo "Resolved DATABASE_URL from $source"
 
       # `drizzle-kit migrate` swallows the driver error and exits 1, so connect
-      # first for a cause. Reads the RESOLVED value, whichever source won
-      # (tests/guards/database-probe.test.ts). Fatal here, advisory in deploy.yml.
+      # first for a cause. Reads the RESOLVED value, whichever source won,
+      # since that is what migrates. Fatal here, advisory in deploy.yml.
       - name: Probe the database
         if: steps.guard.outputs.enabled == 'true'
         env:

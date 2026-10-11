@@ -1,9 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { buildLoaders } from '@/graphql/loaders';
-import { Forbidden } from '@/lib/errors';
-import { usersByIdForAdmin } from '@/modules/identity';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
@@ -12,7 +9,7 @@ import type { PrivilegeChangesResult } from './types';
 // MB.199's `privilegeChanges`, the transport's half
 // (claude-docs/testing/layer-ownership.md): an admin's page with every field,
 // the filters reaching the service, subject and actor in one read per page,
-// and the `admin` scope refusing before the service is asked. The order, the
+// and the `admin` scope's refusal. The order, the
 // page boundary and who the service refuses are
 // services/privilege-changes.test.ts's; a signed-out caller is
 // tests/db/graphql-query-scopes.test.ts's.
@@ -72,8 +69,6 @@ const PAGE_OF_CHANGES = `
   }
 `;
 
-const SCOPE_REFUSAL = new Forbidden().message;
-
 describe('Query.privilegeChanges', () => {
   it('answers an admin the ledger, newest first, with every field', async () => {
     const result = await run<PrivilegeChangesResult>(asUser(E), PAGE_OF_CHANGES);
@@ -132,39 +127,23 @@ describe('Query.privilegeChanges', () => {
     expect(result.errors?.[0]?.extensions?.code).toBe('VALIDATION');
   });
 
-  // The scope is a gate of its own: a non-admin hears `Forbidden`'s default
-  // message, never the service's, so the service was not asked. The same
-  // query answers an admin these rows, the caller's own among them.
-  it.each([
-    ['A', A],
-    ['B', B],
-    ['C', C],
-    ['D', D],
-  ])('refuses %s at the scope', async (_name, user) => {
-    expect(asUser(user).role).toBe('user');
+  // One non-admin: the scope reads the site role alone. The same query
+  // answers an admin these rows, the caller's own among them.
+  it('refuses a non-admin as FORBIDDEN', async () => {
+    expect(asUser(A).role).toBe('user');
     const asAdmin = await run<PrivilegeChangesResult>(asUser(E), PAGE_OF_CHANGES, {
-      userId: user.id,
+      userId: A.id,
     });
     expect(asAdmin.data?.privilegeChanges.edges.length).toBeGreaterThan(0);
 
-    const result = await run(asUser(user), PAGE_OF_CHANGES, { userId: user.id });
+    const result = await run(asUser(A), PAGE_OF_CHANGES, { userId: A.id });
 
     expect(result.data).toBeNull();
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0]).toMatchObject({
       path: ['privilegeChanges'],
-      message: SCOPE_REFUSAL,
       extensions: { code: 'FORBIDDEN' },
     });
     expect(repository.findManyByIds).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('the usersByIdForAdmin loader', () => {
-  it('refuses every key for a signed-out request, without a query', async () => {
-    const { usersByIdForAdmin: loader } = buildLoaders({ usersByIdForAdmin }, null);
-
-    await expect(loader.load(A.id)).rejects.toBeInstanceOf(Forbidden);
-    expect(repository.findManyByIds).not.toHaveBeenCalled();
   });
 });

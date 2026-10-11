@@ -16,8 +16,7 @@
   so the image's contents depend on nothing under `src/`. Its `CMD` starts
   the server with `max_connections=200` (MB.179): the one setting every
   consumer of the image reads, since compose passes no `command:` and a CI
-  `services:` entry cannot, and `tests/guards/db-connection-budget.test.ts`
-  reads it there as the budget a test run is held under
+  `services:` entry cannot, and it is the budget a test run is held under
   ([`testing/db-harness.md`](../testing/db-harness.md#connections-per-run-mb179)).
   Changing it changes the image's hash, so the PR rebuilds it.
 - **`build-db-image.yml`** — builds and publishes it to GHCR through the

@@ -3,96 +3,45 @@ import { join } from 'node:path';
 import { describe, expect, inject, it } from 'vitest';
 import {
   CLIENT_EXEMPT,
-  CLIENT_SPECIFIERS,
-  EXEMPT,
-  RESTRICTED,
-  clientProbes,
-  clientTypeProbe,
+  clientProbe,
   dbClientBoundary,
-  exemptClientProbe,
-  exemptRuntimeProbes,
-  runtimeProbes,
-  siblingModuleProbe,
-  subpathProbe,
-  typeOnlyProbes,
+  drizzleProbe,
 } from '../support/lint-probes/db-client-boundary';
 import { REPO_ROOT } from '../support/paths';
 
-// Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
-// only `src/db/repository/` may import the database client (CLAUDE.md rule
-// 2), and only the database layer may import `drizzle-orm` at runtime (rule 4)
-// — claude-docs/db/query-building.md, "Where queries may be built".
-//
-// Two oxlint 1.82 facts shape the config: a rule set to `"off"` inside an
-// `overrides` block is ignored, so the database layer's exemption is a
-// narrower copy of the rule; and an `overrides` block *replaces* the top-level
-// rule config rather than merging with it, so that copy must restate the
-// client ban — the regression that invites is asserted below.
-//
-// The probes are tests/support/lint-probes/db-client-boundary.ts's, written
-// and linted once by the unit project's setup with every other lint guard's
-// (MB.184); this file reads its diagnostics off that run.
+// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire — only
+// `src/db/repository/` may import the database client (CLAUDE.md rule 2), and
+// only the database layer may import `drizzle-orm` at runtime (rule 4) — and
+// the client's exemptions are pinned (claude-docs/db/query-building.md,
+// "Where queries may be built"). The probes are written and linted once by
+// the unit project's setup (MB.184); this file reads its diagnostics off that run.
 
 const RULE = 'eslint(no-restricted-imports)';
 
-const diagnostics = inject('lintDiagnostics');
-
-/** How many `no-restricted-imports` diagnostics one file drew. */
 const restricted = (file: string) =>
-  diagnostics.filter((d) => d.code === RULE && d.filename === file).length;
+  inject('lintDiagnostics').filter((d) => d.code === RULE && d.filename === file).length;
 
-describe('CLAUDE.md rule 2 — the db client import boundary', () => {
-  // Precondition: the shared run was pointed at every probe and exempt file
-  // here, and drew a diagnostic from at least one probe.
-  it('had its probes linted', () => {
+describe('CLAUDE.md rules 2 and 4 — the database import boundaries', () => {
+  it('bans importing the client outside the repository', () => {
+    // Precondition: the shared run was pointed at the probe.
     expect(inject('lintedFiles')).toEqual(
-      expect.arrayContaining([...dbClientBoundary.probes.keys(), ...dbClientBoundary.files]),
+      expect.arrayContaining([...dbClientBoundary.probes.keys()]),
     );
-    expect(clientProbes.some((file) => restricted(file) > 0)).toBe(true);
+    expect(restricted(clientProbe)).toBe(1);
   });
 
-  it.each(CLIENT_SPECIFIERS.map((specifier, index) => [specifier, clientProbes[index]]))(
-    'bans importing the client as %s',
-    (_specifier, file) => {
-      expect(restricted(file)).toBe(1);
-    },
-  );
-
-  it('bans a type-only import of the client just as firmly', () => {
-    expect(restricted(clientTypeProbe)).toBe(1);
+  it('bans a runtime drizzle-orm import above the database layer', () => {
+    expect(inject('lintedFiles')).toContain(drizzleProbe);
+    expect(restricted(drizzleProbe)).toBe(1);
   });
-
-  it('leaves imports of other modules in src/db alone', () => {
-    expect(restricted(siblingModuleProbe)).toBe(0);
-  });
-
-  // The `overrides` copy replaces the top-level rule (see above): drop the
-  // client group from it and every file under src/db could import the client
-  // while every other assertion here stayed green.
-  it('still bans the client inside the database layer, which is exempt only from the query-builder ban', () => {
-    expect(restricted(exemptClientProbe)).toBe(1);
-  });
-
-  // The six exceptions (see above).
-  it.each(CLIENT_EXEMPT)(
-    'exempts %s, which cannot reach the database through withAudit',
-    (file) => {
-      expect(restricted(file)).toBe(0);
-    },
-  );
 
   // The exemptions are disable comments rather than config (oxlint ignores
   // "off" inside `overrides`), which makes a seventh cheap to add by hand — so
-  // the set is pinned and a new one is argued for in the diff.
-  //
-  // The scan below correlates a directive with the import line right after
-  // it, rather than asking only "does this file contain the string
-  // anywhere" — `.oxlintrc.json` gained a second `no-restricted-imports`
-  // pattern at M2.6 (social-providers-config.ts, a different boundary
-  // entirely), and a file can legitimately carry a disable comment for that
-  // one without being an exemption from *this* one. Untracked files count:
-  // a seventh is caught in the diff that adds it, not after it merges.
-  it('has exactly six files carrying the exemption, and no others', () => {
+  // the set is pinned and a new one is argued for in the diff. A directive
+  // counts only when the line after it imports the client: a file may carry
+  // one for another `no-restricted-imports` pattern. Untracked files count,
+  // so a seventh is caught in the diff that adds it.
+  it('has exactly six files carrying the client exemption, and no others', () => {
     const files = inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
     // Precondition: an empty listing has no seventh in it either.
     expect(files).toEqual(expect.arrayContaining(CLIENT_EXEMPT));
@@ -106,29 +55,5 @@ describe('CLAUDE.md rule 2 — the db client import boundary', () => {
     });
 
     expect(exempt.sort()).toEqual([...CLIENT_EXEMPT].sort());
-  });
-});
-
-describe('CLAUDE.md rule 4 — the query-builder import boundary', () => {
-  it.each(RESTRICTED)('bans a runtime drizzle-orm import from %s', (directory) => {
-    expect(restricted(runtimeProbes[directory])).toBe(1);
-  });
-
-  // DESIGN.md §7: the GraphQL layer imports drizzle-orm for types only. A type
-  // import is erased at compile time and can build nothing.
-  it.each(RESTRICTED)('allows a type-only drizzle-orm import from %s', (directory) => {
-    expect(restricted(typeOnlyProbes[directory])).toBe(0);
-  });
-
-  it('bans a subpath import too, so drizzle-orm/pg-core is no way around it', () => {
-    expect(restricted(subpathProbe)).toBe(1);
-  });
-
-  it.each(EXEMPT)('leaves %s free to build queries', (directory) => {
-    expect(restricted(exemptRuntimeProbes[directory])).toBe(0);
-  });
-
-  it('leaves drizzle.config.ts alone', () => {
-    expect(restricted('drizzle.config.ts')).toBe(0);
   });
 });

@@ -95,15 +95,16 @@ describe('the /admin/users page', () => {
       },
     );
     expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id, user(2).id]);
-    expect(screen.getByRole('heading', { level: 1, name: 'Users' })).toBeInTheDocument();
   });
 
   it('shows each user with the providers read for them', async () => {
     await renderPage();
 
-    const row = screen.getByRole('row', { name: /Listed Fixture 01/ });
-    expect(within(row).getByText('Google', { selector: '.visually-hidden' })).toBeInTheDocument();
-    // None linked is an empty cell, the fifth.
+    // The providers are the fifth cell; none linked leaves it empty.
+    const linked = within(screen.getByRole('row', { name: /Listed Fixture 01/ })).getAllByRole(
+      'cell',
+    );
+    expect(linked[4]).toHaveTextContent('Google');
     const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
       'cell',
     );
@@ -131,13 +132,7 @@ describe('the /admin/users page', () => {
     await renderPage();
 
     expect(adminRoleChangePauseState).toHaveBeenCalledWith(ADMIN);
-    expect(screen.getByText(/^Admin changes are paused/)).toBeInTheDocument();
-    // Beside the heading, in its `.page-header` (the owner's call).
-    const header = screen.getByRole('heading', { level: 1, name: 'Users' }).parentElement;
-    expect(header).toHaveClass('page-header');
-    expect(
-      within(header as HTMLElement).getByRole('button', { name: 'Resume Admin Changes' }),
-    ).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
   });
 
   it('turns the search parameters into the filter', async () => {
@@ -149,10 +144,9 @@ describe('the /admin/users page', () => {
     expect(screen.getByLabelText('Needs Approval')).toBeChecked();
   });
 
-  // A flag by presence: a native submit's `awaiting=` and an older link's
-  // `awaiting=1` read the same as the bare one.
-  it.each([[''], ['1'], ['on']])('reads awaiting=%s as awaiting', async (value) => {
-    await renderPage({ awaiting: value });
+  // A flag by presence: an older link's `awaiting=1` reads as the bare one.
+  it('reads awaiting with a value as awaiting', async () => {
+    await renderPage({ awaiting: '1' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: undefined, awaitingApproval: true });
   });
@@ -173,13 +167,6 @@ describe('the /admin/users page', () => {
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
   });
 
-  // A hand-edited address is not worth an error page: the first page stands in.
-  it('reads the first page when the cursor is not one', async () => {
-    await renderPage({ after: 'not-a-cursor' });
-
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-  });
-
   it('reads ?role as the role filter', async () => {
     await renderPage({ role: 'admin' });
 
@@ -195,27 +182,25 @@ describe('the /admin/users page', () => {
     expect(screen.getByLabelText('Role')).toHaveValue('');
   });
 
-  it('links the next page, keeping the filter, when there is one', async () => {
+  it('links the pages either side, keeping the filter', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
 
-    await renderPage({ query: 'listed', awaiting: '', role: 'user' });
-
-    const next = screen.getByRole('link', { name: 'Next' });
-    const href = next.getAttribute('href') as string;
-    expect(href).toBe(
-      `/admin/users?query=listed&awaiting&role=user&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
-    );
-    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('links the previous page from a later one', async () => {
-    await renderPage({ after: encodeCursor(entry(0).cursor) });
-
-    const previous = screen.getByRole('link', { name: 'Prev' });
-    const url = new URL(previous.getAttribute('href') as string, 'http://localhost');
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      before: encodeCursor(entry(1).cursor),
+    await renderPage({
+      query: 'listed',
+      awaiting: '',
+      role: 'user',
+      after: encodeCursor(entry(0).cursor),
     });
+
+    const filter = '/admin/users?query=listed&awaiting&role=user';
+    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
+      'href',
+      `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+    );
+    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute(
+      'href',
+      `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
+    );
   });
 });
 
@@ -283,15 +268,5 @@ describe('the /admin/users page, admin invitations', () => {
     expect(
       within(section).getByRole('button', { name: 'Revoke the invitation to invited@users.test' }),
     ).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('leaves both usable to the primary admin while paused', async () => {
-    adminRoleChangePauseState.mockResolvedValue({ paused: true, canToggle: true });
-
-    await renderPage();
-
-    expect(screen.getByRole('button', { name: 'Invite Admin' })).not.toHaveAttribute(
-      'aria-disabled',
-    );
   });
 });

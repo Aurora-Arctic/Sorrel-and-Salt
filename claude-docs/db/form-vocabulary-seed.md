@@ -30,8 +30,8 @@ for a made or found object, Substance for what has neither shape nor flow. A
 powdered mineral is therefore a `powder`, and the ingredient's name says what it
 was. The first cut of this vocabulary grouped by process instead — organism
 part, preparation, matter — which named a group after a verb and put 21 of its
-29 rows in one section; `forms.test.ts` now asserts no group holds more than
-half the list, so that failure cannot come back quietly.
+29 rows in one section; review keeps any group from holding more than half
+the list.
 
 **There is no `Other`.** A value that fits no form is typed as free text on a
 coven's ingredient — `ingredients.form` is text, not a foreign key — and
@@ -60,10 +60,9 @@ changes after insert (MB.171), so the seed still keys a form by its name
 ([`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md)).
 
 **The descriptions are the criterion, not decoration.** §5's argument for the
-non-blank CHECK is that a curated value exists to explain itself. So
-`forms.test.ts` asserts more than that the column is filled: the descriptions are
-pairwise distinct, so a row copied from the one above it fails rather than
-reading fine in review.
+non-blank CHECK is that a curated value exists to explain itself, so the
+descriptions are pairwise distinct: a row copied from the one above it
+explains nothing.
 
 **One row per kind of thing, not one per word.** `salve` and `balm` are one
 `ointment`, and `tincture`, `infusion` and `hydrosol` are one `concoction` — each
@@ -87,10 +86,8 @@ dropdown's job, the clauses read as instructions rather than descriptions, and
 the test pushed toward padding a line to keep it passing. Where two forms are
 genuinely close, the group headers and the words themselves carry it.
 
-**The vocabulary is asserted against §5's own table**, parsed out of DESIGN.md
-at test time — group by group, so the test checks not merely that a form is
-present but that it is filed where §5 files it. The parse is itself checked
-(the six group names, the twelve MB.28 originals, the seventeen additions) so a
-parse that matched nothing cannot make the comparisons vacuous. That is the
-same tactic `categories.test.ts` uses on §6's table, for the same reason: a
-transcribed copy is exactly what rots.
+**The vocabulary is §5's own table**, group by group, each form filed where
+§5 files it. Holding the literal to the table is review's: MB.225 retired the
+test that parsed DESIGN.md to compare them, since a test of a doc's wording
+proves no behaviour. `forms.test.ts` keeps what a re-run leaves of an admin's
+edits.

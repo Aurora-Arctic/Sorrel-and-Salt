@@ -58,8 +58,8 @@ deletions too: `demo` passes `restoreDeletedDeityPicks: false`, so the one
 row a reseed of `standard` puts back, a compendium deity pick an admin
 deleted, stays deleted here, since a person explores this scenario
 (claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
-pick back; demo does not"). `tests/db/seed/index.test.ts`'s resurrection
-sweep holds it, listing `ingredient_deities` among the demo scenario's tables.
+pick back; demo does not"). A developer scenario, so no test holds it
+(MB.225).
 
 Every other seeded row stands on its own, so "insert what is missing" is well
 defined per row. A layer does not — its identity is a depth in a sequence, and
@@ -76,6 +76,5 @@ included, since a tombstone is a layer the jar has had, and a jar a member
 emptied has been edited rather than left unstocked. What that gives up is a
 demo jar healing itself after someone empties it, which `make db-reset` (M1.24)
 does properly anyway; what it buys is that a reseed over an edited grimoire is
-a no-op rather than an error. `demo.test.ts` asserts it for the edited jar, the
-emptied one and the reordered one, and the first and last were checked to fail
-without the rule.
+a no-op rather than an error. A developer scenario, so no test holds it
+(MB.225).

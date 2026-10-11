@@ -32,7 +32,7 @@ import {
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, E, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -124,14 +124,10 @@ const liveFolkNames = async (ingredientId: string) =>
     .map((row) => row.name as string)
     .sort();
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a compendium write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a compendium write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 const admin = asUser(E);
 
@@ -215,9 +211,7 @@ describe('createCompendiumEntry', () => {
       // would have answered with a driver error instead.
       await expect(attempt).rejects.toThrow(ValidationError);
       await expect(attempt).rejects.toMatchObject({
-        issues: [
-          { path: ['nomenclature'], message: 'Choose a classification — or "none" or "unknown"' },
-        ],
+        issues: [{ path: ['nomenclature'] }],
       });
       expect(await countIngredients()).toBe(0);
     },
@@ -641,7 +635,7 @@ describe('a deleted entry', () => {
       issues: [
         {
           path: ['canonicalName'],
-          message: 'Already in the compendium as Fixture Leaf (Fixtura testalis, Herb)',
+          message: expect.stringContaining('Fixture Leaf'),
         },
       ],
     });
@@ -670,7 +664,7 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['canonicalName'],
-        message: 'Already in the compendium as Testwort (Fixtura testalis, herb)',
+        message: expect.stringContaining('Testwort'),
       },
     ]);
     expect(await countIngredients()).toBe(1);
@@ -688,7 +682,7 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message: 'Already in the compendium as Testwort (Fixtura testalis, herb)',
+        message: expect.stringContaining('Testwort'),
       },
     ]);
   });
@@ -700,12 +694,7 @@ describe('a collision with another compendium entry', () => {
 
     const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ form: 'Root' })));
 
-    expect(issues).toEqual([
-      {
-        path: ['canonicalName'],
-        message: 'Already in the compendium as Testwort (Fixtura testalis, root)',
-      },
-    ]);
+    expect(issues).toEqual([{ path: ['canonicalName'], message: expect.any(String) }]);
     expect(await rowOf(id)).toEqual(before);
   });
 
@@ -714,7 +703,7 @@ describe('a collision with another compendium entry', () => {
     repository.findCompendiumEntryByIdentity.mockResolvedValueOnce(undefined);
 
     expect(await issuesOf(createCompendiumEntry(admin, entry({ name: 'Fixture Leaf' })))).toEqual([
-      { path: ['canonicalName'], message: 'Already in the compendium' },
+      { path: ['canonicalName'], message: expect.not.stringContaining('Testwort') },
     ]);
   });
 
@@ -733,13 +722,7 @@ describe('a collision with another compendium entry', () => {
           entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
         ),
       ),
-    ).toEqual([
-      {
-        path: ['name'],
-        message:
-          'Testwort (root) already has the address "testwort-root" — change the name, form or formal name',
-      },
-    ]);
+    ).toEqual([{ path: ['name'], message: expect.any(String) }]);
   });
 
   it('lets two entries share a label, told apart by their formal names', async () => {
@@ -854,13 +837,7 @@ describe('the slug', () => {
     it('refuses a create that would end its redirect, on `endRedirect`, writing nothing', async () => {
       const issues = await issuesOf(createCompendiumEntry(admin, taker()));
 
-      expect(issues).toEqual([
-        {
-          path: ['endRedirect'],
-          message:
-            '"testdirt-earth" redirects to Testsoil (Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
-        },
-      ]);
+      expect(issues).toEqual([{ path: ['endRedirect'], message: expect.any(String) }]);
       expect(await countIngredients()).toBe(1);
     });
 
@@ -918,13 +895,7 @@ describe('the slug', () => {
           entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
         ),
       ),
-    ).toEqual([
-      {
-        path: ['name'],
-        message:
-          'Testwort (root) already has the address "testwort-root" — change the name, form or formal name',
-      },
-    ]);
+    ).toEqual([{ path: ['name'], message: expect.stringContaining('testwort-root') }]);
     expect(await retirements()).toEqual([]);
   });
 

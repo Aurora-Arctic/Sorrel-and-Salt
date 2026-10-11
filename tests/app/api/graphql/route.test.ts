@@ -101,15 +101,8 @@ describe('/api/graphql', () => {
     expect(html).not.toContain('0.0.0.0');
   });
 
-  // Every deploy, staging and hotfix previews included, runs at
-  // NODE_ENV=production, so this is the staging case.
-  it('serves no IDE in production', async () => {
-    const { GET } = await loadRoute('production');
-    const response = await GET(browserGet());
-
-    expect(response.headers.get('content-type') ?? '').not.toMatch(/^text\/html/);
-    await expect(response.text()).resolves.not.toMatch(/altair|graphiql/i);
-  });
+  // Production's half — no IDE, no introspection, no suggestion — is
+  // tests/e2e/graphql.spec.ts's, against the production build every deploy runs.
 
   // What the IDE runs for its docs pane and autocompletion.
   const introspection = '{ __schema { queryType { name } } }';
@@ -121,19 +114,6 @@ describe('/api/graphql', () => {
     await expect(response.json()).resolves.toEqual({
       data: { __schema: { queryType: { name: 'Query' } } },
     });
-  });
-
-  it('refuses introspection in production', async () => {
-    const { POST } = await loadRoute('production');
-    const response = await POST(post({ query: introspection }));
-
-    const result = await response.json();
-    expect(result.data).toBeUndefined();
-    // One error for each introspection field the query names.
-    expect(result.errors.length).toBeGreaterThan(0);
-    for (const error of result.errors) {
-      expect(error.message).toMatch(/^GraphQL introspection has been disabled/);
-    }
   });
 
   // `__type` names one type rather than the whole schema, and is refused too.
@@ -152,16 +132,6 @@ describe('/api/graphql', () => {
 
     const result = await response.json();
     expect(result.errors[0].message).toContain('Did you mean "ok"?');
-  });
-
-  it('suggests no field in production', async () => {
-    const { POST } = await loadRoute('production');
-    const response = await POST(post({ query: '{ ko }' }));
-
-    const result = await response.json();
-    // Still refused, and still says why: only the suggestion is gone.
-    expect(result.errors[0].message).toMatch(/^Cannot query field "ko" on type "Query"\./);
-    expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
   });
 
   // The schema's first mutation is refused signed out by its scope, before its

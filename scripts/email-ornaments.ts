@@ -6,7 +6,7 @@
 // colour, with the blend and opacity the site's theme gives it, and flattened
 // to an opaque PNG. A mail client supports neither `mix-blend-mode` nor WebP
 // reliably, so the blend happens here. Re-run it after changing a photograph
-// or the palette; tests/guards/email-ornaments.test.ts fails until you do.
+// or the palette, and commit what it writes.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import sharp from 'sharp';

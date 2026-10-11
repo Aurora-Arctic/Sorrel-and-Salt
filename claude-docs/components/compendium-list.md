@@ -97,9 +97,10 @@ Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/CompendiumList/index.test.tsx` covers the columns and rows,
-the em dash for a missing formal name and form, the Edit links and their
-names, the pager, both empty messages, the filter form's action, method,
-names, kept values and classification options, the Filter button's disabled
-and enabled states for each control, the address it opens, the pending
-state, and `compendiumHref`.
+`tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit
+links and their names, no table when there are none, the filter form's
+action, method, names, kept values and classification values, the Filter
+button's disabled and enabled states for each control, the address it opens,
+the busy state while the filtered list loads, the reset to the filter shown,
+and `compendiumHref`. It is the one list test of the filter's busy state and
+its reset; paging is Pager's.

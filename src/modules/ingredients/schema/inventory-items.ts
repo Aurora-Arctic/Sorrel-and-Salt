@@ -9,7 +9,8 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // Both enums are stocked from `./units.ts`, so a unit added there reaches
 // the database, the converter and the form in one edit; nothing in this file
-// may spell a unit out (inventory-items-schema.test.ts checks the source text).
+// may spell a unit out (inventory-items-schema.test.ts holds the database's enums
+// equal to the module's lists, and the CHECK to every unit's dimension).
 export const inventoryUnit = pgEnum('inventory_unit', UNITS);
 
 export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);

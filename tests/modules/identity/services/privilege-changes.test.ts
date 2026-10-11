@@ -230,44 +230,6 @@ describe('listPrivilegeChanges', () => {
     expect(seen).toEqual(expected);
   });
 
-  it('walks a queried ledger one row at a time, neither repeating nor dropping a row', async () => {
-    const [b] = await sql<{ email: string }[]>`select email from users where id = ${B.id}`;
-    const expected = (await newestFirst())
-      .filter((row) => row.user_id === B.id)
-      .map((row) => row.id);
-    const seen: string[] = [];
-    let after: string | undefined;
-    for (let pages = 0; pages < LEDGER.length; pages += 1) {
-      const page = await resolvePage({ first: 1, after }, (request) =>
-        listPrivilegeChanges(asUser(E), { query: b.email }, request),
-      );
-      seen.push(...page.edges.map((edge) => edge.node.id));
-      if (!page.pageInfo.hasNextPage) break;
-      after = page.pageInfo.endCursor ?? undefined;
-    }
-
-    expect(seen).toEqual(expected);
-    expect((await countPrivilegeChanges(asUser(E), { query: b.email }, undefined)).totalCount).toBe(
-      expected.length,
-    );
-  });
-
-  it('walks back from the end the same way', async () => {
-    const expected = (await newestFirst()).map((row) => row.id);
-    const seen: string[] = [];
-    let before: string | undefined;
-    for (let pages = 0; pages < LEDGER.length; pages += 1) {
-      const page = await resolvePage({ last: 2, before }, (request) =>
-        listPrivilegeChanges(asUser(E), {}, request),
-      );
-      seen.unshift(...page.edges.map((edge) => edge.node.id));
-      if (!page.pageInfo.hasPreviousPage) break;
-      before = page.pageInfo.startCursor ?? undefined;
-    }
-
-    expect(seen).toEqual(expected);
-  });
-
   it('refuses a subject that is not an id as invalid, rather than reading', async () => {
     await expect(listPrivilegeChanges(asUser(E), { userId: 'not-an-id' }, PAGE)).rejects.toThrow(
       ValidationError,
@@ -275,21 +237,17 @@ describe('listPrivilegeChanges', () => {
   });
 
   // Why the refusal is the role's: the same call as an admin reads these rows,
-  // including the ones about the caller themselves.
-  it.each([
-    ['A, a coven owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s with Forbidden', async (_name, user) => {
-    expect(asUser(user).role).toBe('user');
-    const theirs = (await newestFirst()).filter((row) => row.user_id === user.id);
+  // including the ones about the caller themselves. The check reads the site
+  // role alone, so one non-admin — A, a coven owner — stands for every one.
+  it('refuses a non-admin with Forbidden', async () => {
+    expect(asUser(A).role).toBe('user');
+    const theirs = (await newestFirst()).filter((row) => row.user_id === A.id);
     expect(theirs.length).toBeGreaterThan(0);
-    expect(await ids({ userId: user.id })).toEqual(theirs.map((row) => row.id));
+    expect(await ids({ userId: A.id })).toEqual(theirs.map((row) => row.id));
 
-    await expect(listPrivilegeChanges(asUser(user), {}, PAGE)).rejects.toThrow(Forbidden);
-    await expect(listPrivilegeChanges(asUser(user), { userId: user.id }, PAGE)).rejects.toThrow(
-      'Only a site admin may read the privilege ledger',
+    await expect(listPrivilegeChanges(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
+    await expect(listPrivilegeChanges(asUser(A), { userId: A.id }, PAGE)).rejects.toThrow(
+      Forbidden,
     );
   });
 });

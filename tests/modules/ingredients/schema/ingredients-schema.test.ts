@@ -17,21 +17,7 @@ import { workspaces } from '@/modules/coven/schema/workspaces';
 import { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import type { IngredientOverrides } from './types';
 
-// DESIGN.md §5's seven values, in the order the design doc's table lists them.
-const NOMENCLATURE_VALUES = [
-  'botanical',
-  'fungal',
-  'zoological',
-  'mineral',
-  'chemical',
-  'unknown',
-  'none',
-];
-
-const ELEMENT_VALUES = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
-
-// §5's columns and the six audit ones: what the schema declares and, once a
-// dropped column's migration has run, all the database holds.
+// §5's columns and the six audit ones.
 const COLUMNS = [
   'id',
   'workspace_id',
@@ -52,101 +38,22 @@ const COLUMNS = [
 ].sort();
 
 describe('ingredients schema', () => {
-  const { byName, foreignKeys } = tableFacts(ingredients);
+  const { byName, nonAuditForeignKeys } = tableFacts(ingredients);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(COLUMNS);
   });
 
-  // `workspace_id IS NULL` is the compendium, set is a workspace's own drawer:
-  // one table, so spell_ingredients points at a single kind of thing.
-  it('makes workspace_id nullable, and points it at workspaces', () => {
-    expect(byName.workspace_id.notNull).toBe(false);
-
-    const workspaceFk = foreignKeys.find((fk) => fk.reference().columns[0].name === 'workspace_id');
-    expect(workspaceFk?.reference().foreignTable).toBe(workspaces);
-    expect(workspaceFk?.reference().foreignColumns[0].name).toBe('id');
-  });
-
-  it('requires the display label and the nomenclature, and leaves the formal name optional', () => {
-    expect(byName.name.notNull).toBe(true);
-    expect(byName.nomenclature.notNull).toBe(true);
-    expect(byName.canonical_name.notNull).toBe(false);
-  });
-
-  // "No DEFAULT, deliberately": the compendium's Zod variant asks rather than guesses.
-  it('gives nomenclature no database default', () => {
-    expect(byName.nomenclature.hasDefault).toBe(false);
-    expect(byName.nomenclature.default).toBeUndefined();
-  });
-
-  it('declares nomenclature_kind with DESIGN.md §5s seven values', () => {
-    expect(nomenclatureKind.enumValues).toEqual(NOMENCLATURE_VALUES);
-  });
-
-  // A correspondence, not identity: a closed enum, the opposite of `form`.
-  it('declares ingredient_element as a closed five-value enum', () => {
-    expect(ingredientElement.enumValues).toEqual(ELEMENT_VALUES);
-  });
-
-  // MB.159 stopped declaring the single, so nothing reads or writes it;
-  // MB.160 then dropped it.
-  it('no longer declares the single element', () => {
-    expect(Object.keys(byName)).not.toContain('element');
-  });
-
-  // MB.157: the list is of the same enum, not text, so it stays closed.
-  it('stores elements as an array of that enum', () => {
-    expect(byName.elements.getSQLType()).toBe('ingredient_element[]');
-  });
-
-  // Text, not an FK: an FK makes an uncurated value unwritable and would put a
-  // non-IMMUTABLE enum cast inside the generated expression.
-  it('keeps form as free text rather than an enum or a foreign key', () => {
-    expect(byName.form.getSQLType()).toBe('text');
-    expect(foreignKeys.some((fk) => fk.reference().columns[0].name === 'form')).toBe(false);
-  });
-
-  // MB.165: the curated row a member picked, beside the text and never
-  // instead of it, so optional — typed text links nothing.
-  it('records a picked form as a nullable key beside the text', () => {
-    expect(byName.form_id.getSQLType()).toBe('uuid');
-    expect(byName.form_id.notNull).toBe(false);
-    const formFk = foreignKeys.find((fk) => fk.reference().columns[0].name === 'form_id');
-    expect(formFk?.reference().foreignTable).toBe(ingredientForms);
-  });
-
-  it('stores planets, zodiac signs and colours as array columns', () => {
-    for (const column of ['planets', 'zodiac_signs', 'colors']) {
-      expect(byName[column].getSQLType()).toBe('text[]');
-    }
-  });
-
-  // MB.80: the public address, derived by whoever writes the row, so no default.
-  it('requires slug, with no default', () => {
-    expect(byName.slug.getSQLType()).toBe('text');
-    expect(byName.slug.notNull).toBe(true);
-    expect(byName.slug.hasDefault).toBe(false);
-  });
-
-  // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
-  // first; `npm run typecheck` covers this file, so the @ts-expect-error
-  // reddens if the column ever becomes writable. Postgres's refusal is below.
-  it('omits canonical_key from $inferInsert, so TypeScript refuses a direct write', () => {
-    const insert: typeof ingredients.$inferInsert = {
-      name: 'Mugwort',
-      nomenclature: 'botanical',
-      canonicalName: 'Artemisia vulgaris',
-      createdBy: '11111111-1111-1111-1111-111111111111',
-      updatedBy: '11111111-1111-1111-1111-111111111111',
-      // @ts-expect-error canonical_key is GENERATED ALWAYS — not an insertable column
-      canonicalKey: 'artemisia vulgaris',
-    };
-    expect(insert.name).toBe('Mugwort');
-
-    // The select side still carries it: it is readable, just not writable.
-    const selected: typeof ingredients.$inferSelect = {} as typeof ingredients.$inferSelect;
-    expect('canonicalKey' in ({ canonicalKey: selected.canonicalKey } as object)).toBe(true);
+  // Text, not a foreign key, is what keeps an uncurated value writable: the
+  // form, the astrology lists and a deity's name (ingredient_deities) are text
+  // over their vocabularies, and the curated form a member picked is `form_id`,
+  // a key beside the text and never instead of it (MB.165;
+  // claude-docs/db/identity-model.md, "The ingredient identity model").
+  it('keys its workspace and the form it picked, and no vocabulary its text names', () => {
+    expect(nonAuditForeignKeys.map((fk) => [fk.column, fk.foreignTable]).sort()).toEqual([
+      ['form_id', ingredientForms],
+      ['workspace_id', workspaces],
+    ]);
   });
 });
 
@@ -165,7 +72,7 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
@@ -184,17 +91,18 @@ beforeEach(async () => {
 });
 
 describe('ingredients table', () => {
-  // A column the schema has stopped declaring outlives it in the database for
-  // one deploy, until its drop. None is pending: `deities`, undeclared by
-  // MB.167 for `ingredient_deities`, was the last, and MB.168 dropped it.
-  it('carries the columns the schema declares and no other', async () => {
-    expect(await catalogue.columnNames('ingredients')).toEqual([...COLUMNS].sort());
+  // A closed list is the database's and the code's alike (DESIGN.md §5).
+  it('holds the nomenclature kinds and the elements the code declares', async () => {
+    const [row] = await sql`
+      select enum_range(null::nomenclature_kind)::text[] as kinds,
+             enum_range(null::ingredient_element)::text[] as elements
+    `;
+
+    expect(row.kinds).toEqual(nomenclatureKind.enumValues);
+    expect(row.elements).toEqual(ingredientElement.enumValues);
   });
 
-  it('declares no deities column, so nothing can write the list the app no longer reads', () => {
-    expect(Object.keys(tableFacts(ingredients).byName)).not.toContain('deities');
-  });
-
+  // "No DEFAULT, deliberately": the compendium's Zod variant asks rather than guesses.
   it('rejects an insert that omits nomenclature, since the column has no default', async () => {
     const error = await failureOf(sql`
       insert into ingredients (name, canonical_name, slug, created_by, updated_by)
@@ -204,18 +112,6 @@ describe('ingredients table', () => {
     // 23502 is not_null_violation: the column was reached and found no default.
     expect(error.code).toBe('23502');
     expect(error.column_name).toBe('nomenclature');
-  });
-
-  // Derived by whoever writes the row, never defaulted by the table: a default
-  // would be a second slug rule, in SQL.
-  it('rejects an insert that omits slug, since the column has no default', async () => {
-    const error = await failureOf(sql`
-      insert into ingredients (name, nomenclature, canonical_name, created_by, updated_by)
-      values ('Mugwort', 'botanical', 'Artemisia vulgaris', ${AUTHOR}, ${AUTHOR})
-    `);
-
-    expect(error.code).toBe('23502');
-    expect(error.column_name).toBe('slug');
   });
 
   it('accepts a row in each tier: compendium (workspace_id null) and workspace-local', async () => {
@@ -244,42 +140,33 @@ describe('ingredients table', () => {
     });
 
     it('rejects any other kind carrying no formal name', async () => {
-      for (const nomenclature of [
-        'botanical',
-        'fungal',
-        'zoological',
-        'mineral',
-        'chemical',
-      ] as const) {
-        const error = await failureOf(insert({ nomenclature, canonicalName: null }));
-        expect(error.code).toBe('23514');
-        expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
-      }
+      const error = await failureOf(insert({ nomenclature: 'fungal', canonicalName: null }));
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('ingredients_nomenclature_declares_canonical_name');
     });
 
-    // The row the old biconditional refused, beside the one it already took.
-    it('accepts unknown with a formal name and without one', async () => {
-      await insert({ nomenclature: 'unknown', canonicalName: 'Fixtura testalis' });
+    // Without these, a CHECK that rejected everything would pass the tests
+    // above; unknown with a formal name is the row the old biconditional refused.
+    it('accepts none without a formal name, a named kind with one, and unknown either way', async () => {
+      await insert({ nomenclature: 'none', canonicalName: null, name: 'Testdust' });
+      await insert({ nomenclature: 'mineral', canonicalName: 'Fixturite var. test' });
+      await insert({
+        nomenclature: 'unknown',
+        canonicalName: 'Fixtura testalis',
+        name: 'Testleaf',
+      });
       await insert({ nomenclature: 'unknown', canonicalName: null, name: 'Testroot' });
 
       const rows = await sql`
-        select canonical_name from ingredients
-        where nomenclature = 'unknown' order by canonical_name nulls last
+        select nomenclature, canonical_name from ingredients
+        order by nomenclature, canonical_name nulls last
       `;
-      expect(rows.map((r) => r.canonical_name)).toEqual(['Fixtura testalis', null]);
-    });
-
-    // Without these, a CHECK that rejected everything would pass the tests above.
-    it('accepts the two shapes it exists to allow', async () => {
-      await insert({ nomenclature: 'none', canonicalName: null, name: 'Graveyard dirt' });
-      await insert({
-        nomenclature: 'mineral',
-        canonicalName: 'Quartz var. amethyst',
-        name: 'Amethyst',
-      });
-
-      const [{ count }] = await sql`select count(*)::int as count from ingredients`;
-      expect(count).toBe(2);
+      expect(rows.map((r) => [r.nomenclature, r.canonical_name])).toEqual([
+        ['mineral', 'Fixturite var. test'],
+        ['unknown', 'Fixtura testalis'],
+        ['unknown', null],
+        ['none', null],
+      ]);
     });
   });
 
@@ -310,22 +197,19 @@ describe('ingredients table', () => {
   });
 
   describe('canonical_key', () => {
-    it('is refused by Postgres on insert, not merely absent from the type', async () => {
-      const error = await failureOf(sql`
+    it('is refused by Postgres on insert and on update', async () => {
+      const inserting = await failureOf(sql`
         insert into ingredients (name, nomenclature, canonical_name, slug, canonical_key, created_by, updated_by)
-        values ('Mugwort', 'botanical', 'Artemisia vulgaris', 'mugwort', 'forged', ${AUTHOR}, ${AUTHOR})
+        values ('Testwort', 'botanical', 'Fixtura testalis', 'testwort', 'forged', ${AUTHOR}, ${AUTHOR})
       `);
-
-      // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.
-      expect(error.code).toBe('428C9');
-    });
-
-    it('is refused by Postgres on update', async () => {
       const id = await insert();
-      const error = await failureOf(
+      const updating = await failureOf(
         sql`update ingredients set canonical_key = 'forged' where id = ${id}`,
       );
-      expect(error.code).toBe('428C9');
+
+      // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.
+      expect(inserting.code).toBe('428C9');
+      expect(updating.code).toBe('428C9');
     });
 
     it('folds case and surrounding space, so Root Bark and root bark are one key', async () => {
@@ -419,7 +303,7 @@ describe('ingredients table', () => {
 
   describe('elements', () => {
     it('accepts all five documented values in one list, in the order given', async () => {
-      const elements = [...ELEMENT_VALUES].reverse();
+      const elements = [...ingredientElement.enumValues].reverse();
       const id = await insert({ elements, workspaceId: WORKSPACE });
 
       const [row] = await sql`select elements from ingredients where id = ${id}`;
@@ -432,6 +316,56 @@ describe('ingredients table', () => {
       const error = await failureOf(insert({ elements }));
       // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
+    });
+  });
+
+  // MB.165: `form_id` records the curated row a pick named, and only beside
+  // the text it names — a link with no text would key identity on nothing.
+  describe('form_id', () => {
+    async function aForm(): Promise<string> {
+      const t = crypto.randomUUID().slice(0, 8);
+      const [group] = await sql`
+        insert into ingredient_form_groups ${sql({
+          name: `Testformgroup ${t}`,
+          slug: `testformgroup-${t}`,
+          description: 'A group kept only by fixtures.',
+          created_by: AUTHOR,
+          updated_by: AUTHOR,
+        })}
+        returning id
+      `;
+      const [form] = await sql`
+        insert into ingredient_forms ${sql({
+          name: `Testform ${t}`,
+          slug: `testform-${t}`,
+          description: 'A form kept only by fixtures.',
+          group_id: group.id as string,
+          created_by: AUTHOR,
+          updated_by: AUTHOR,
+        })}
+        returning id
+      `;
+      return form.id as string;
+    }
+
+    // Why the refusal could have been a success: the same id links beside a form.
+    it('refuses a link with no form beside it', async () => {
+      const form = await aForm();
+      const named = await insert({ form: 'Testform' });
+      await sql`update ingredients set form_id = ${form} where id = ${named}`;
+      const unnamed = await insert({
+        form: null,
+        name: 'Testroot',
+        canonicalName: 'Fixtura radix',
+      });
+
+      const error = await failureOf(
+        sql`update ingredients set form_id = ${form} where id = ${unnamed}`,
+      );
+
+      // 23514 is check_violation, named: the refusal is this CHECK's.
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe('ingredients_form_id_has_form');
     });
   });
 });

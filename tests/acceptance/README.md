@@ -21,8 +21,9 @@ Story 19 is covered by the workspace-isolation suite (M6.6),
 `tests/db/workspace-isolation.test.ts`: the per-entity sweep of a coven's
 ingredients and grimoire, refused to a member of another coven and to a site
 admin through the services a caller reaches them by, with the refusal the same
-for a real id and a made-up one (MB.187). Numbers 35–46 belong to v2 and are not reused; `tests/guards/story-naming.test.ts` rejects a
-top-level `describe` that names one of them, or none at all.
+for a real id and a made-up one (MB.187). Numbers 35–46 belong to v2 and are
+not reused, and every top-level `describe` here names a v1 story — held by
+review since MB.224 retired the guard that checked it.
 
 These files run under the `acceptance` project in `vitest.stories.config.mts`
 — node, against the seeded per-worker database, the same harness as

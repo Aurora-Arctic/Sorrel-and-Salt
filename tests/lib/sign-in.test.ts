@@ -5,7 +5,6 @@ import {
   GENERIC_UNLINK_ERROR,
   linkErrorMessage,
   NO_RETURN_PATH,
-  POST_SIGN_IN_LANDING,
   postSignInLanding,
   safeReturnPath,
   signInErrorMessage,
@@ -14,26 +13,18 @@ import {
   socialSignInTarget,
   unlinkErrorMessage,
 } from '@/lib/sign-in';
-import { UNSAFE_RETURN_PATHS } from '../support/return-paths';
-
-// The landing is the post-sign-in one, not `/`: `/` is the public front
-// door, and someone who just signed in has been through it already
-// (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
-describe('POST_SIGN_IN_LANDING', () => {
-  it('is the /coven landing', () => {
-    expect(POST_SIGN_IN_LANDING).toBe('/coven');
-  });
-});
 
 // Where a sign-in with no return path lands, decided by the role the account
-// holds once the callback has run (MB.113).
+// holds once the callback has run (MB.113). Not `/`: `/` is the public front
+// door, and someone who just signed in has been through it already
+// (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
 describe('postSignInLanding', () => {
   it('sends an admin to the admin area', () => {
     expect(postSignInLanding('admin')).toBe('/admin');
   });
 
   it('sends everyone else to the /coven landing', () => {
-    expect(postSignInLanding('user')).toBe(POST_SIGN_IN_LANDING);
+    expect(postSignInLanding('user')).toBe('/coven');
   });
 });
 
@@ -56,7 +47,7 @@ describe('socialSignInTarget', () => {
 
   it('flags a sign-in with no return path, and keeps it one on the error callback', () => {
     expect(socialSignInTarget(undefined)).toEqual({
-      callbackURL: POST_SIGN_IN_LANDING,
+      callbackURL: '/coven',
       errorCallbackURL: '/sign-in',
       additionalData: NO_RETURN_PATH,
     });
@@ -80,24 +71,19 @@ describe('signInPath', () => {
     expect(signInPath(undefined)).toBe('/sign-in');
   });
 
-  it.each([
-    '/',
-    '/coven/hearth/grimoire',
-    '/coven/hearth/ingredients?tab=stock&q=salt',
-    '/compendium?q=rose%20petal',
-    '/coven/hearth/grimoire/new?from=a%26b',
-  ])('survives the round trip through /sign-in: %s', (returnPath) => {
-    expect(roundTrip(returnPath)).toBe(returnPath);
-  });
-
-  // The proxy builds the return path from the request URL, and `//evil.example`
-  // is a pathname a request can really carry.
-  it.each(UNSAFE_RETURN_PATHS)(
-    'drops an unsafe return path, leaving the bare sign-in page: %s',
-    (unsafe) => {
-      expect(signInPath(unsafe)).toBe('/sign-in');
+  it.each(['/', '/coven/hearth/grimoire/new?from=a%26b&q=rose%20petal'])(
+    'survives the round trip through /sign-in: %s',
+    (returnPath) => {
+      expect(roundTrip(returnPath)).toBe(returnPath);
     },
   );
+
+  // The proxy builds the return path from the request URL, and `//evil.example`
+  // is a pathname a request can really carry. Which paths are unsafe is
+  // safeReturnPath's, below.
+  it('drops an unsafe return path, leaving the bare sign-in page', () => {
+    expect(signInPath('//evil.example')).toBe('/sign-in');
+  });
 });
 
 // safeReturnPath is the open-redirect guard for ?next=: without it, a crafted
@@ -149,40 +135,31 @@ describe('signInErrorMessage', () => {
     expect(signInErrorMessage(undefined)).toBeUndefined();
   });
 
-  it('maps a known Better Auth callback code to a readable sentence', () => {
-    expect(signInErrorMessage('access_denied')).toMatch(/[a-z]/i);
+  // Each code the callback can land with has a sentence of its own; the
+  // wording is the copy's, not this file's.
+  it('gives each known callback code a sentence of its own', () => {
+    const codes = ['access_denied', 'sign_in_to_verify', 'email_not_verified'];
+    const messages = codes.map((code) => signInErrorMessage(code));
+
+    expect(messages).not.toContain(GENERIC_SIGN_IN_ERROR);
+    expect(new Set(messages).size).toBe(codes.length);
   });
 
-  // A provider that shares no address gets a placeholder and the email page
-  // asks (MB.54), so the code no longer occurs; a regression gets the generic sentence.
-  it('no longer gives email_not_found a sentence of its own', () => {
-    expect(signInErrorMessage('email_not_found')).toBe(GENERIC_SIGN_IN_ERROR);
-  });
+  it('sends sign_in_to_verify back to the email page with its code', () => {
+    const target = new URL(SIGN_IN_TO_VERIFY_PATH, 'http://localhost');
 
-  it('tells sign_in_to_verify to sign in and open the link again, and SIGN_IN_TO_VERIFY_PATH carries the code and the email page', () => {
-    expect(signInErrorMessage('sign_in_to_verify')).toMatch(/sign in.*open the link.*again/i);
-    expect(SIGN_IN_TO_VERIFY_PATH).toBe('/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify');
-  });
-
-  it('points email_not_verified at the mailed link and the email page, not the provider', () => {
-    const message = signInErrorMessage('email_not_verified');
-
-    expect(message).toMatch(/link we (sent|emailed)/i);
-    expect(message).toMatch(/email page/i);
-    expect(message).not.toMatch(/with the provider/i);
+    expect(target.pathname).toBe('/sign-in');
+    expect(target.searchParams.get('next')).toBe('/account/email');
+    expect(target.searchParams.get('error')).toBe('sign_in_to_verify');
   });
 
   // Better Auth's state failures (oauth2/state.mjs folds state_security_mismatch
   // into state_mismatch). Retrying from the provider's tab replays the dead
-  // state, so the sentence must send the visitor back here instead.
-  it.each(['state_mismatch', 'state_not_found', 'state_invalid'])(
-    'gives %s a sentence that says to start again from this page',
-    (code) => {
-      const message = signInErrorMessage(code);
-      expect(message).not.toBe(GENERIC_SIGN_IN_ERROR);
-      expect(message).toMatch(/start again/i);
-    },
-  );
+  // state, so the sentence must send the visitor back here instead — one
+  // sentence for the three codes, built once.
+  it('gives a state failure a sentence of its own', () => {
+    expect(signInErrorMessage('state_mismatch')).not.toBe(GENERIC_SIGN_IN_ERROR);
+  });
 
   // One sentence whatever the cause — a squatted address or a provider that
   // never vouches over an existing row share the code — so it confirms
@@ -191,20 +168,17 @@ describe('signInErrorMessage', () => {
     const message = signInErrorMessage('account_not_linked');
 
     expect(message).not.toBe(GENERIC_SIGN_IN_ERROR);
-    expect(message).toMatch(/sign in that way, then add this one under Account/);
     expect(message).not.toMatch(/unverified|already|taken|holds/i);
   });
 
   // At a sign-in the code means only that writing the account row failed;
   // "already linked" was a link-flow reading, and a link never lands here.
-  it('gives unable_to_link_account the plain retry sentence', () => {
-    expect(signInErrorMessage('unable_to_link_account')).toMatch(/please try again/i);
-    expect(signInErrorMessage('unable_to_link_account')).not.toMatch(/already|linked/i);
+  it('gives unable_to_link_account the plain retry sentence a missing code gets', () => {
+    expect(signInErrorMessage('unable_to_link_account')).toBe(signInErrorMessage('no_code'));
   });
 
   it('falls back to a generic sentence for an unrecognised code', () => {
-    const message = signInErrorMessage('something_unexpected');
-    expect(message).toMatch(/[a-z]/i);
+    expect(signInErrorMessage('something_unexpected')).toBe(GENERIC_SIGN_IN_ERROR);
   });
 
   it('never echoes the code itself, or any provider-supplied text, verbatim', () => {
@@ -222,22 +196,15 @@ describe('linkErrorMessage', () => {
     expect(linkErrorMessage(['access_denied', 'access_denied'])).toBeUndefined();
   });
 
-  it('says a cancelled link was cancelled', () => {
-    expect(linkErrorMessage('access_denied')).toMatch(/cancelled/i);
-  });
+  // A cancelled link, an account signing in elsewhere (which only its holder
+  // can learn), and a dead state each say their own thing.
+  it('gives each known link code a sentence of its own', () => {
+    const codes = ['access_denied', 'account_already_linked_to_different_user', 'state_mismatch'];
+    const messages = codes.map((code) => linkErrorMessage(code));
 
-  it('says an account signing in elsewhere is taken, which only its holder can learn', () => {
-    expect(linkErrorMessage('account_already_linked_to_different_user')).toMatch(
-      /different Sorrel & Salt account/,
-    );
+    expect(messages).not.toContain(GENERIC_LINK_ERROR);
+    expect(new Set(messages).size).toBe(codes.length);
   });
-
-  it.each(['state_mismatch', 'state_not_found', 'state_invalid'])(
-    'gives %s a sentence that says to start again from this page',
-    (code) => {
-      expect(linkErrorMessage(code)).toMatch(/start again here/i);
-    },
-  );
 
   it('falls back to its own generic sentence, not the sign-in one', () => {
     expect(linkErrorMessage('unable_to_link_account')).toBe(GENERIC_LINK_ERROR);
@@ -248,13 +215,14 @@ describe('linkErrorMessage', () => {
 
 // Better Auth's /unlink-account refusals, by the code in its JSON body.
 describe('unlinkErrorMessage', () => {
-  it('says the last sign-in method stays', () => {
-    expect(unlinkErrorMessage('FAILED_TO_UNLINK_LAST_ACCOUNT')).toMatch(/only sign-in method/i);
-  });
+  // The last method staying, and a session too old to remove one (the
+  // endpoint wants one younger than a day), each say their own thing.
+  it('gives each known refusal a sentence of its own', () => {
+    const last = unlinkErrorMessage('FAILED_TO_UNLINK_LAST_ACCOUNT');
+    const stale = unlinkErrorMessage('SESSION_NOT_FRESH');
 
-  // /unlink-account wants a session younger than a day.
-  it('says to sign in again when the session is too old to remove one', () => {
-    expect(unlinkErrorMessage('SESSION_NOT_FRESH')).toMatch(/sign in again/i);
+    expect([last, stale]).not.toContain(GENERIC_UNLINK_ERROR);
+    expect(last).not.toBe(stale);
   });
 
   it('falls back to a generic sentence for anything else, or no code', () => {

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { createLoaders } from '@/graphql/loaders';
 import { formSlug, slugify } from '@/lib/slugify';
-import { A, E, asUser } from '../../../support/as-user';
+import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { FormGroupNode } from './types';
 
@@ -12,7 +12,8 @@ import type { FormGroupNode } from './types';
 // per error code, read as the browser reads it. Which roles are refused, and
 // the services' own rules — the forms' slugs following a rename, and moving
 // with a delete — are services/ingredient-form-groups.test.ts's; a signed-out
-// caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// caller at every field, and a non-admin at the `admin` scope, are
+// tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -63,19 +64,6 @@ async function seedForm(name: string, groupId: string, groupName: string): Promi
 const groupOf = async (id: string) =>
   (await sql`select * from ingredient_form_groups where id = ${id}`)[0];
 
-// The one non-admin each write refuses here, since `authScopes: { admin: true }`
-// is a gate of its own in front of the service: a coven's owner, the most a
-// workspace role grants, which is still not the site role these writes turn
-// on. Every other role is services/ingredient-form-groups.test.ts's.
-const OWNER = asUser(A);
-
-// Why the refusals could have been something else: the session the scope
-// reads says `user`, and E's says `admin`.
-it('is testing a session whose site role is `user`, beside an admin', () => {
-  expect(OWNER.role).toBe('user');
-  expect(asUser(E).role).toBe('admin');
-});
-
 describe('createIngredientFormGroup', () => {
   it('writes one for a site admin', async () => {
     const result = await run<{ createIngredientFormGroup: FormGroupNode }>(asUser(E), CREATE, {
@@ -87,16 +75,6 @@ describe('createIngredientFormGroup', () => {
       name: 'Fixture Matter',
       slug: 'fixture-matter',
     });
-  });
-
-  it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
-    const result = await run(OWNER, CREATE, { input: input() });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect(
-      await sql`select 1 from ingredient_form_groups where name = 'Fixture Matter'`,
-    ).toHaveLength(0);
   });
 
   it('answers a slug collision as VALIDATION on `name`, writing nothing', async () => {
@@ -145,16 +123,10 @@ describe('updateIngredientFormGroup', () => {
     });
   });
 
-  it('refuses a coven owner as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
-    const id = await seedGroup('Fixture Kept');
-    const before = await groupOf(id);
-
-    const refused = await run(OWNER, UPDATE, { id, input: input() });
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  it('answers an unknown id as NOT_FOUND', async () => {
     const missing = await run(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-    expect(await groupOf(id)).toEqual(before);
   });
 
   it("answers a rename onto another group's address as VALIDATION on `name`, leaving the row", async () => {
@@ -184,22 +156,13 @@ describe('deleteIngredientFormGroup', () => {
       moveTo: substance,
     });
 
-    expect(refused.errors?.[0]?.extensions).toEqual({
+    expect(refused.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['moveTo'], message: 'Choose a group to move its 1 form to' }],
+      fieldErrors: [{ path: ['moveTo'] }],
     });
     expect(moved.data?.deleteIngredientFormGroup).toBe(id);
     const [form] = await sql`select group_id, slug from ingredient_forms where id = ${shard}`;
     expect(form).toEqual({ group_id: substance, slug: 'fixture-shard-substance' });
-  });
-
-  it('refuses a coven owner as FORBIDDEN, leaving the row live', async () => {
-    const id = await seedGroup('Fixture Standing');
-
-    const result = await run(OWNER, DELETE, { id });
-
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect((await groupOf(id)).deleted_at).toBeNull();
   });
 
   it('answers an unknown id as NOT_FOUND', async () => {

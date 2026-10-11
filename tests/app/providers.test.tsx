@@ -1,36 +1,21 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
+import { render } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import Providers from '@/app/providers';
 import { shouldRetry } from '@/lib/graphql-client';
 
-const seen: unknown[] = [];
+const seen: QueryClient[] = [];
 const lastTwo = () => seen.slice(-2);
 
 function Probe() {
-  const client = useQueryClient();
-  seen.push(client);
-  return (
-    <p>
-      retry is {client.getDefaultOptions().queries?.retry === shouldRetry ? 'ours' : 'not ours'}
-    </p>
-  );
+  seen.push(useQueryClient());
+  return null;
 }
 
 describe('Providers', () => {
-  it("hands its children a query client carrying the client's defaults", () => {
-    render(
-      <Providers>
-        <Probe />
-      </Providers>,
-    );
-
-    expect(screen.getByText('retry is ours')).toBeInTheDocument();
-  });
-
-  it('keeps one client in the browser across mounts, so the cache outlives a render', () => {
+  it("keeps one client in the browser across mounts, carrying the client's defaults", () => {
     const first = render(
       <Providers>
         <Probe />
@@ -46,6 +31,7 @@ describe('Providers', () => {
     expect(seen.length).toBeGreaterThanOrEqual(2);
     const [before, after] = lastTwo();
     expect(after).toBe(before);
+    expect(after?.getDefaultOptions().queries?.retry).toBe(shouldRetry);
   });
 
   it('builds a fresh client per server render, so one request never serves another', () => {

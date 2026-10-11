@@ -14,7 +14,7 @@ import type { ClientOptions } from './types';
 // read for `max` is undocumented and hands a string to `Array()`, which makes
 // any value a pool of one (claude-docs/testing/db-harness.md, "Connections per run").
 
-/** The most connections one client under test may open. Read by tests/guards/db-connection-budget.test.ts. */
+/** The most connections one client under test may open, one term of the run's connection budget. */
 export const TEST_POOL_MAX = 4;
 
 function bounded(first?: string | ClientOptions, second?: ClientOptions) {

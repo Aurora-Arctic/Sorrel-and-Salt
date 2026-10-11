@@ -5,11 +5,11 @@ import { suggestCommonNames } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
-// The statement suggestCommonNames actually sends, read and planned, as
-// duplicates-plan.test.ts reads findPossibleDuplicates': a `similarity() > n`
-// written by mistake returns the same rows, so only the SQL and the plan tell
-// them apart. Unlike the vocabularies, both tables here grow with use, so the
-// plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
+// The statement suggestCommonNames actually sends, planned, as
+// duplicates-plan.test.ts plans findPossibleDuplicates': its results look the
+// same whether or not the trigram indexes are reachable, so the plan is the
+// only evidence. Unlike the vocabularies, both tables here grow with use, so
+// the plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -47,44 +47,8 @@ function match(statements: Logged[]): Logged {
 }
 
 describe('the common-name suggestion query', () => {
-  it('sets both thresholds before matching, inside a transaction', async () => {
-    const statements = await statementsFor('mugwort');
-    const setting = statements.findIndex(({ query }) =>
-      query.includes(`set_config('pg_trgm.similarity_threshold'`),
-    );
-
-    expect(setting).toBeGreaterThanOrEqual(0);
-    expect(statements[setting].query).toMatch(/, true\)/);
-    expect(statements[setting].params).toEqual(['0.4', '0.6']);
-    expect(statements.indexOf(match(statements))).toBeGreaterThan(setting);
-  });
-
-  it('matches a display name and a folk name with % and <%, never a similarity() comparison', async () => {
-    const { query } = match(await statementsFor('mugwort'));
-
-    expect(query).toMatch(/"ingredients"\."name" % \$\d+/);
-    expect(query).toMatch(/\$\d+ <% "ingredients"\."name"/);
-    expect(query).toMatch(/"ingredient_folk_names"\."name" % \$\d+/);
-    expect(query).toMatch(/\$\d+ <% "ingredient_folk_names"\."name"/);
-    expect(query).not.toMatch(/"canonical_name" %|<% "\w+"\."canonical_name"/);
-    expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
-  });
-
-  // CLAUDE.md rule 7: the scope and the tombstones are in the statement.
-  it('reads the compendium tier and the proof’s workspace, live rows only', async () => {
-    const { query, params } = match(await statementsFor('mugwort'));
-
-    expect(query).toMatch(
-      /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
-    );
-    expect(params).toContain(WORKSPACE_W_ID);
-    expect(query).toMatch(/"ingredients"\."deleted_at" is null/);
-    expect(query).toMatch(/"ingredient_folk_names"\."deleted_at" is null/);
-  });
-
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), here rather than at the top so the
-    // statement-shape tests above read the log over a small table. As in
+    // Seeded once per file (MB.184), inside the describe that plans. As in
     // duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams,
     // and enough rows that the planner's choice is between the GIN probe and
     // a walk of a partial unique index, not a foregone one. The display-name

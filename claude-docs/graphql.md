@@ -97,7 +97,7 @@ In [`graphql/schema.md`](graphql/schema.md#the-sdl-snapshot).
 
 ## Client types
 
-`npm run codegen` runs graphql-codegen's `client-preset` over the committed SDL and every `graphql()` call to write `src/gql/`, one `TypedDocumentNode` per document and no hooks, and `tests/guards/codegen-staleness.test.ts` fails output that differs from a fresh run. [`graphql/client-types.md`](graphql/client-types.md)
+`npm run codegen` runs graphql-codegen's `client-preset` over the committed SDL and every `graphql()` call to write `src/gql/`, one `TypedDocumentNode` per document and no hooks, and CI's `checks / codegen` leg fails output that differs from a fresh run. [`graphql/client-types.md`](graphql/client-types.md)
 
 ## The client
 

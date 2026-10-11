@@ -68,9 +68,8 @@ limit $limit  -- the page plus one
   The cursor is the only client text in a page query, so a data exception
   there can only come from it.
 - The query goes through the private `selectFrom`, which has an overload that
-  adds the key column, the order and the limit. The one-builder invariant of
-  `soft-delete-finder-guard.test.ts` therefore holds. `findPageInWorkspace` is
-  one of that guard's `SCOPED_FINDERS`.
+  adds the key column, the order and the limit. The one-builder invariant therefore holds, and `findPageInWorkspace` ANDs the
+  proof's workspace like every scoped finder.
 
 **A keyset list can be counted as well as paged** (MB.105), for a
 connection's `totalCount` and `countBefore` (claude-docs/graphql/pagination.md,
