@@ -21,7 +21,7 @@ export default function CompendiumDialog({
 }: CompendiumDialogProps): ReactElement {
   const router = useRouter();
   return (
-    <RouteModal title={title} closeHref={compendiumHref(place)} size="wide">
+    <RouteModal title={title} closeHref={compendiumHref(place)}>
       {(done) => (
         <IngredientForm
           // A fresh form per entry, inside the one modal: Save Ingredient's move

@@ -10,8 +10,8 @@
 
 // A column narrower than the measure, as the other forms keep: wide enough
 // for a formal name and a line of description, and no wider, wherever the
-// form is put. A dialog's column, the width the form reads at in the default
-// modal, kept in the wide one too, whose extra width is the panels' room.
+// form is put. A dialog's column, the width the form reads at in the modal
+// the compendium opens it in, which is no wider (MB.115, the owner's call).
 .ingredient-form {
   width: 100%;
   max-width: $dialog-column;

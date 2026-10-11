@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// M5.5: the admin's compendium, and the wide modal the address opens over it — IngredientForm on
+// M5.5: the admin's compendium, and the modal the address opens over it — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
 // the Combobox's among them (claude-docs/components/ingredient-form.md,
 // "Testing").

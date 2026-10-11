@@ -829,7 +829,7 @@ Ingredient replaces the address with the saved entry's `?edit=`, at the
 slug its name now spells; Save & Add Another stays on `?new`; a delete,
 Cancel and the modal's close replace it with the list's, filter and cursor
 kept; and each refreshes, so the list re-reads. A near match opens its own
-modal over the same list. Why a wide modal, and `?edit=` after a save:
+modal over the same list. Why a modal, and `?edit=` after a save:
 [`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md).
 
 ## One error element, two sources
@@ -940,8 +940,9 @@ closed set's box and its muted placeholder are the combobox's.
 
 The component's own stylesheet holds what is the form's alone. Its column
 is at most `$dialog-column` (32rem), narrower than the measure as the other
-forms keep, and kept in the wide modal, whose extra width is the panels'
-room. It lays out the row a list's box shares with Add, and sets a list's
+forms keep, and the compendium's modal is the default one, no wider than the
+form: everything, the panels included, sits inside this column, so the wide
+modal M5.5 chose only drew an empty strip beside it (MB.115, the owner's call). It lays out the row a list's box shares with Add, and sets a list's
 legend and its box a step further apart than a single field's label and
 control. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap

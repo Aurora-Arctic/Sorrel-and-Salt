@@ -117,8 +117,10 @@ out of reach.
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
 
 `size="wide"` adds `.modal-dialog--wide`, a 48rem column (`$dialog-column-wide`), for a long form that the default column
-would crowd. M5.5's compendium form is its first owner, and M8.16's
-IngredientForm modal its next. It changes only the width; the dialog scrolls
+would crowd. Nothing uses it since MB.115: the compendium form, its first
+owner, went back to the default column on the owner's call, since the form
+caps itself at that width and the wide modal only drew empty space beside it.
+M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the dialog scrolls
 within the viewport's height either way.
 
 ## Testing
