@@ -50,5 +50,5 @@ a column, and the field, notices and button are the form primitives'.
 which answers in the route's own error shape. It covers the prefill, nothing
 to save until a real change, the save and its new baseline, the busy button,
 and both error surfaces. The page around it is
-`tests/app/account/page.test.tsx`, and the browser, axe included, is
-`tests/e2e/account.spec.ts`.
+`tests/app/account/page.test.tsx`, and `tests/e2e/account.spec.ts` scans
+the page holding it with axe in a real browser.

@@ -210,7 +210,6 @@ without a read, `?edit=` reading the value by its slug and filling the modal
 from it, a slug no value holds an alert and any other failure thrown, and
 the modal closing back to the page, filter and cursor included, that it
 opened over. What the modal shows once open is this file's. `tests/e2e/admin.spec.ts`
-adds, renames and deletes a category and a form through the real server — no
-spec drives the deities yet — and
-is refused deleting Protection, which seeded compendium entries are filed
-under, and Root, which seeded compendium entries pick.
+adds, renames and deletes a category and a form through the real server, adds
+a deity under a new tradition and moves it when the tradition goes, and is
+refused deleting Protection, which seeded compendium entries are filed under.

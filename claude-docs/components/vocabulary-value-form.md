@@ -93,5 +93,4 @@ fields, the schema's refusal in the vocabulary's noun, create, update and
 delete with their variables, server field errors placed, the save rules, the
 rename note, and the delete's confirmation and refusal. The pages' half is
 `tests/app/admin/vocabulary-page.test.tsx`. `tests/e2e/admin.spec.ts` adds,
-renames and deletes a planet through the real server, and is refused
-deleting the Sun, which seeded compendium entries list.
+renames and deletes a planet through the real server.
