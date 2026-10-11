@@ -156,3 +156,70 @@ export const ProposalNavJumpMenu: Story = () => (
   </Frame>
 );
 ProposalNavJumpMenu.meta = { width: 375 };
+
+// MB.115's open call on the `/admin` index (1d.9). The page is a server
+// component behind the guard, so both are its markup copied here.
+
+// A: today's heading and paragraph, its copy corrected in MB.115.
+export const ProposalIndexToday: Story = () => (
+  <Frame>
+    <AdminNav />
+    <main>
+      <h1>Admin</h1>
+      <p>
+        Here you curate what every coven reads from: the compendium, its categories, and the
+        vocabularies of forms, planets, zodiac signs and deities, with the groups that organise
+        categories, forms and deities. You also manage who uses the site, and can see who changed
+        whose privileges.
+      </p>
+    </main>
+  </Frame>
+);
+
+// B's one line per page, beside the nav's own groups (C, above).
+const DESCRIPTIONS: Readonly<Record<string, string>> = {
+  Compendium: 'Every ingredient in the shared reference, with its forms and sources.',
+  Categories: 'The categories an ingredient is filed under, each in a group.',
+  'Category Groups': 'The groups categories sit in, and the colours each is drawn in.',
+  Forms: 'The forms an ingredient comes in, offered as you type a form.',
+  'Form Groups': 'The groups forms sit in, which tell two forms of one name apart.',
+  Planets: 'The planets an ingredient can be linked with.',
+  'Zodiac Signs': 'The signs an ingredient can be linked with.',
+  Deities: 'The deities an ingredient can be linked with, each in a tradition.',
+  'Deity Traditions': 'The traditions deities are grouped by.',
+  Users: 'Every account: its role, whether it can create a coven, and its invitations.',
+  'Privilege Changes': 'Who granted or revoked which privilege, and when.',
+};
+
+const IndexContents = (): ReactElement => (
+  <Frame>
+    <AdminNav />
+    <main>
+      <h1>Admin</h1>
+      <p className="lede">
+        Here you curate what every coven reads from, and manage who uses the site. Pick a page
+        below, or from the row above on any admin page.
+      </p>
+      {GROUPS.map(({ name, links }) => (
+        <section key={name} className="page-frame__section" aria-labelledby={`admin-index-${name}`}>
+          <h2 id={`admin-index-${name}`}>{name}</h2>
+          <ul className="admin-index-proposal__list">
+            {links.map(({ href, label }) => (
+              <li key={href}>
+                <a href={href}>{label}</a>
+                <span className="admin-index-proposal__description">{DESCRIPTIONS[label]}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  </Frame>
+);
+
+// B (recommended): a lede, then a table of contents in the nav's three
+// groups, each link with a line saying what its page is for.
+export const ProposalIndexContents: Story = () => <IndexContents />;
+
+export const ProposalIndexContentsPhone: Story = () => <IndexContents />;
+ProposalIndexContentsPhone.meta = { width: 375 };

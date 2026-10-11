@@ -73,7 +73,11 @@ losers with `proposals.scss`, their story-only stylesheet:
 `ProposalNavWrapPill` (the same row, the marker a pill on the card
 surface), `ProposalNavScroll` (one row scrolling sideways),
 `ProposalNavGrouped` (three captioned rows: Compendium, Vocabularies,
-People) and `ProposalNavJumpMenu` (a select). Render-only, no test ids,
+People) and `ProposalNavJumpMenu` (a select). The `/admin` index's two, beside
+the nav it sits under: `ProposalIndexToday`, the page's heading and
+paragraph, and `ProposalIndexContents` with its `ProposalIndexContentsPhone`,
+a lede and a table of contents in the same three groups, each link with a
+line saying what its page is for. Render-only, no test ids,
 no snapshots.
 
 ## Testing
