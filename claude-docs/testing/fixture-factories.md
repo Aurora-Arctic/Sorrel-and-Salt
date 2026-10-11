@@ -60,10 +60,9 @@ the same kind, `makeSpell()`'s default custom layer is Fixture Ash, and
 the seeded world, so the rule binds a factory's own defaults and not a name a
 test states (`.claude/rules/testing.md`, "Fixtures"). `makeSpell()` still lands in W — `workspaceId` is a reference,
 not an insert, and a fixture spell and a seeded spell belong in the same
-coven. `ingredient.test.ts` and `workspace.test.ts` also check the defaults
-against `COMPENDIUM_INGREDIENTS` and `FIXTURE_WORKSPACES`, read from
-`src/db/seed/standard` rather than copied — a backstop rather than the
-mechanism.
+coven. No test checks the defaults against the seed (MB.224 retired the
+factories' own tests): a clash fails the first test that inserts one, at the
+partial unique index.
 
 ### Overrides merge; arrays replace
 

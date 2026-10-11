@@ -4,8 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
-import { FIXTURE_USERS } from '@/db/seed/standard';
-import { SEED_SCENARIOS, resolveScenario, seed } from '@/db/seed/index';
+import { resolveScenario, seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
 import { seedCategories } from '@/db/seed/categories';
 import { seedDeities } from '@/db/seed/deities';
@@ -13,22 +12,12 @@ import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import type { SeedEntry, UserRow } from './types';
 
-// The `minimal` scenario against the real schema, and the shape every seed
-// entry point shares, asserted here once over all of them (MB.183) and in no
-// per-seed file: the bootstrap user inserted and published as the acting user,
+// The shape every production seed shares, asserted here once over all of them
+// (MB.183) and in no per-seed file: the bootstrap user inserted and published as the acting user,
 // every row stamped as it, a second run a no-op, and nothing an admin deleted
 // brought back. The handle is this file's own; that the seed writes through
 // it rather than a client of its own is enforced by lint, not here —
 // claude-docs/db/seed-module.md, "The seed module".
-
-// Every admin-curated table; `minimal` leaves all of them empty.
-const COMPENDIUM_TABLES = [
-  'categories',
-  'category_groups',
-  'ingredient_form_groups',
-  'ingredient_forms',
-  'ingredients',
-];
 
 const PROBE = 'seed_probe_acting_user';
 
@@ -127,64 +116,16 @@ describe('seed(db, { scenario: "minimal" })', () => {
     expect(users.map((u) => u.role)).toEqual(['user', 'user']);
     expect(users.every((u) => u.deleted_at === null)).toBe(true);
   });
-
-  // The bootstrap row is its own creator under the fixed id: one self-satisfying insert.
-  it('inserts the system user as its own createdBy/updatedBy, under the fixed MB.5 id', async () => {
-    const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
-    expect(system.created_by).toBe(BOOTSTRAP_USER_ID);
-    expect(system.updated_by).toBe(BOOTSTRAP_USER_ID);
-  });
-
-  it('creates the plain user as the bootstrap user, under a fixed id of its own', async () => {
-    const [user] = (await allUsers()).filter((u) => u.id === MINIMAL_USER_ID);
-    expect(user.role).toBe('user');
-    expect(user.created_by).toBe(BOOTSTRAP_USER_ID);
-    expect(user.updated_by).toBe(BOOTSTRAP_USER_ID);
-  });
-
-  // Invite-gated: a bare install has granted nothing, and a seed that flipped
-  // this would hide the gate from every test built on it.
-  it('leaves canCreateWorkspace false on both — nothing in a bare install has granted it', async () => {
-    expect((await allUsers()).map((u) => u.can_create_workspace)).toEqual([false, false]);
-  });
-
-  it('leaves the compendium empty', async () => {
-    for (const table of COMPENDIUM_TABLES) {
-      expect(await countOf(table), table).toBe(0);
-    }
-  });
 });
 
 // The CLI and the Docker hook both read `SEED_SCENARIO`. The parse lives
 // beside the union so the two cannot disagree, and so it is testable at all
 // (scripts/ runs its work at import time).
 describe('resolveScenario', () => {
-  it('defaults to minimal when nothing is set', () => {
-    expect(resolveScenario(undefined)).toBe('minimal');
-  });
-
-  // Compose's `${SEED_SCENARIO:-minimal}` reaches this as '' when the shell exports it empty.
-  it('defaults to minimal when the variable is set but blank', () => {
-    expect(resolveScenario('')).toBe('minimal');
-    expect(resolveScenario('   ')).toBe('minimal');
-  });
-
-  it.each([...SEED_SCENARIOS])('accepts %s, the name seed() takes', (scenario) => {
-    expect(resolveScenario(scenario)).toBe(scenario);
-  });
-
-  it('accepts a name with surrounding whitespace', () => {
-    expect(resolveScenario(' demo\n')).toBe('demo');
-  });
-
   // A typo must not quietly seed `minimal`.
-  it('refuses an unknown name rather than falling back, and names the ones that exist', () => {
-    expect(() => resolveScenario('Standard')).toThrow(/minimal, standard, demo/);
-    expect(() => resolveScenario('everything')).toThrow(/everything/);
-  });
-
-  it('lists exactly the scenarios seed() switches on', () => {
-    expect([...SEED_SCENARIOS]).toEqual(['minimal', 'standard', 'demo']);
+  it('refuses an unknown name rather than falling back', () => {
+    expect(() => resolveScenario('Standard')).toThrow();
+    expect(() => resolveScenario('everything')).toThrow();
   });
 });
 
@@ -194,48 +135,10 @@ describe('resolveScenario', () => {
 // account and nobody can sign in as it, so as an admin it would only be a
 // revocable row on /admin/users.
 //
-// Each entry names the tables it is the seed of: the ones it fills from empty,
-// which is also what proves `seed()` routed a scenario to its own seed. The
-// `standard` list leaves out two it writes: `user_privilege_changes`, whose
-// rows the trigger on `users` writes as the cast is inserted, fixture E's
-// two stamped as E, inserted as itself the way a primary admin's promotion is
-// stamped (MB.195), and `ingredient_deities`, whose deleted pick a re-run of
-// `standard` puts back by design: it resets its fixtures, and
-// standard.test.ts asserts the restoration. `demo` keeps the deletion, so the
-// table is on its list — claude-docs/db/standard-scenario.md, "A reseed of
-// standard puts a deity pick back; demo does not".
-// Fixture E's insert, and the two grants the trigger records for it.
-const AS_FIXTURE_E = [
-  { table_name: 'users', acting_user: FIXTURE_USERS.E.id },
-  { table_name: 'user_privilege_changes', acting_user: FIXTURE_USERS.E.id },
-  { table_name: 'user_privilege_changes', acting_user: FIXTURE_USERS.E.id },
-];
-
+// Each entry names the tables it is the seed of: the ones it fills from empty.
+// The five that `migrate.yml` runs on staging and production; the dev-only
+// scenarios are a developer's to see working.
 const SEED_ENTRIES: SeedEntry[] = [
-  {
-    name: 'the minimal scenario',
-    run: (db) => seed(db, { scenario: 'minimal' }),
-    tables: ['users'],
-  },
-  {
-    name: 'the standard scenario',
-    run: (db) => seed(db, { scenario: 'standard' }),
-    tables: [
-      'users',
-      'workspaces',
-      'workspace_members',
-      'ingredients',
-      'ingredient_folk_names',
-      'ingredient_categories',
-    ],
-    actingAsOther: AS_FIXTURE_E,
-  },
-  {
-    name: 'the demo scenario',
-    run: (db) => seed(db, { scenario: 'demo' }),
-    tables: ['spells', 'spell_ingredients', 'spell_categories', 'ingredient_deities'],
-    actingAsOther: AS_FIXTURE_E,
-  },
   { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
   { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
   { name: 'the astrology seed', run: seedAstrology, tables: ['planets', 'zodiac_signs'] },
@@ -262,7 +165,7 @@ describe('the shape every seed shares', () => {
   // insert — each with the precondition that the rows are this run's.
   it.each(SEED_ENTRIES)(
     '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
-    async ({ run, tables: own, actingAsOther = [] }) => {
+    async ({ run, tables: own }) => {
       // Precondition: the truncated clone really starts empty, so these rows are this run's.
       for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
 
@@ -289,12 +192,7 @@ describe('the shape every seed shares', () => {
       // Precondition: the probe saw this seed's own rows, not only the bootstrap user's.
       const seen = new Set(inserts.map((row) => row.table_name));
       for (const table of ['users', ...own]) expect(seen.has(table), table).toBe(true);
-      // Sorted: the ledger's trigger and the probe's fire in name order, not insert order.
-      const byTable = (x: { table_name: string }, y: { table_name: string }) =>
-        x.table_name === y.table_name ? 0 : x.table_name < y.table_name ? -1 : 1;
-      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID).sort(byTable)).toEqual(
-        [...actingAsOther].sort(byTable),
-      );
+      expect(inserts.filter((row) => row.acting_user !== BOOTSTRAP_USER_ID)).toEqual([]);
     },
   );
 

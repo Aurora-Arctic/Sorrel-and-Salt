@@ -1,10 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import {
-  findCompendiumCount,
-  findCompendiumPage,
-  findIngredientSuggestions,
-} from '@/db/repository';
+import { findCompendiumPage, findIngredientSuggestions } from '@/db/repository';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
 import { B, asUser } from '../../support/as-user';
@@ -12,13 +8,11 @@ import { useTestDatabase } from '../../support/db/database';
 import type { PageRequest } from '@/lib/types';
 import type { Logged } from '../../support/db/types';
 
-// The statements a compendium search sends, read off the connection: `<%`
-// means "word-similar by pg_trgm.word_similarity_threshold", whose default is
-// 0.6, so the search's 0.5 has to be set in the read's own transaction — and
-// only when there is a `query` to match (claude-docs/db/compendium-read.md, "The compendium read").
-// The substitute picker's search (MB.138) sends the same match over the
-// compendium and the proof's coven, so it is read here too. And the plan the
-// ranked search runs, read off the same log.
+// The plan the ranked compendium search runs, and the substitute picker's
+// search (MB.138) beside it: each statement is read off the connection's log
+// and explained, so the plan is the one the finder really sends
+// (claude-docs/db/compendium-read.md, "The compendium read"). The 0.5 word
+// threshold's effect is ingredients.test.ts's to prove by the rows it finds.
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -30,76 +24,6 @@ vi.mock('@/db/connection', async () => {
       logger: { logQuery: (query, params) => logged.push({ query, params }) },
     }),
   };
-});
-
-beforeEach(() => {
-  logged.length = 0;
-});
-
-const PAGE = { limit: 26, inverted: false };
-const isSetting = ({ query }: Logged) =>
-  query.includes(`set_config('pg_trgm.word_similarity_threshold'`);
-const isRead = ({ query }: Logged) => /from "ingredients"/.test(query) && query.includes('<%');
-
-describe('the compendium search query', () => {
-  it('sets the word threshold to 0.5, transaction-local, before matching', async () => {
-    await findCompendiumPage({ query: 'mugwort' }, PAGE);
-
-    const setting = logged.findIndex(isSetting);
-    expect(setting).toBeGreaterThanOrEqual(0);
-    expect(logged[setting].query).toMatch(/, true\)/);
-    expect(logged[setting].params).toEqual(['0.5']);
-    expect(logged.findIndex(isRead)).toBeGreaterThan(setting);
-  });
-
-  it('opens no transaction for a page with no `query`', async () => {
-    await findCompendiumPage({}, PAGE);
-
-    expect(logged.some(isSetting)).toBe(false);
-    expect(logged.some(({ query }) => /^begin/i.test(query))).toBe(false);
-  });
-});
-
-describe('the ingredient suggestion query', () => {
-  it('sets the word threshold to 0.5 before matching, and reads the proof’s coven', async () => {
-    const membership = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
-    logged.length = 0;
-
-    await findIngredientSuggestions(membership, 'mugwort', PAGE);
-
-    const setting = logged.findIndex(isSetting);
-    expect(logged[setting].params).toEqual(['0.5']);
-    const read = logged.findIndex(isRead);
-    expect(read).toBeGreaterThan(setting);
-    expect(logged[read].query).toMatch(
-      /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
-    );
-    expect(logged[read].params).toContain(WORKSPACE_W_ID);
-  });
-});
-
-describe('the compendium count query', () => {
-  const START = { key: ['-1', 'Fixture Mugwort'], id: '00000000-0000-4000-8000-000000000000' };
-
-  it('counts a search in one read, under the page’s 0.5, with no order and no limit', async () => {
-    await findCompendiumCount({ query: 'mugwort' }, START);
-
-    const reads = logged.filter(({ query }) => /from "ingredients"/.test(query));
-    expect(reads).toHaveLength(1);
-    const [read] = reads;
-    expect(read.query).toMatch(/count\(\*\) filter \(where/);
-    expect(read.query).not.toMatch(/order by|limit/i);
-    const setting = logged.findIndex(isSetting);
-    expect(logged[setting].params).toEqual(['0.5']);
-    expect(logged.indexOf(read)).toBeGreaterThan(setting);
-  });
-
-  it('opens no transaction for a count with no `query`', async () => {
-    await findCompendiumCount({}, undefined);
-
-    expect(logged.some(isSetting)).toBe(false);
-    expect(logged.some(({ query }) => /^begin/i.test(query))).toBe(false);
-  });
 });
 
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';

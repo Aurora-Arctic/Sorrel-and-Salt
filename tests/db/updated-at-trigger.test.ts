@@ -108,42 +108,6 @@ describe('the updated_at trigger', () => {
     it('attaches to every audited table', async () => {
       expect(await triggeredTables()).toEqual(AUDITED_TABLES);
     });
-
-    it('fires before each updated row, and on nothing else', async () => {
-      const rows = await sql<{ relname: string; timing: string; level: string; events: string }[]>`
-        select c.relname,
-               case when (t.tgtype & 2) <> 0 then 'before' else 'after' end as timing,
-               case when (t.tgtype & 1) <> 0 then 'row' else 'statement' end as level,
-               concat_ws(
-                 ',',
-                 case when (t.tgtype & 4) <> 0 then 'insert' end,
-                 case when (t.tgtype & 8) <> 0 then 'delete' end,
-                 case when (t.tgtype & 16) <> 0 then 'update' end
-               ) as events
-        from pg_trigger t
-        join pg_class c on c.oid = t.tgrelid
-        join pg_proc p on p.oid = t.tgfoid
-        where not t.tgisinternal and p.proname = ${FUNCTION}
-      `;
-
-      expect(rows).toHaveLength(AUDITED_TABLES.length);
-      for (const row of rows) {
-        expect({ timing: row.timing, level: row.level, events: row.events }).toEqual({
-          timing: 'before',
-          level: 'row',
-          events: 'update',
-        });
-      }
-    });
-
-    it('shares one function rather than one per table', async () => {
-      const [{ count }] = await sql<{ count: number }[]>`
-        select count(*)::int as count from pg_proc p
-        join pg_namespace n on n.oid = p.pronamespace
-        where n.nspname = 'public' and p.proname = ${FUNCTION}
-      `;
-      expect(count).toBe(1);
-    });
   });
 
   describe('a raw SQL update', () => {

@@ -39,6 +39,15 @@ const jars = pgTable('pagination_probe_jars', {
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
 
+// Compile-time refusals, which tsc checks and nothing runs. A NULL sort key
+// makes the row comparison NULL, and the row vanishes from every page; and
+// `jars` carries `workspace_id`, so only the proof-taking finder reaches it.
+const PAGE_REQUEST = { limit: 1, inverted: false };
+// @ts-expect-error — `note` is nullable.
+void (() => findPage(leaves, [leaves.note], PAGE_REQUEST));
+// @ts-expect-error — the unscoped finder refuses a workspace-scoped table.
+void (() => findPage(jars, [jars.label], PAGE_REQUEST));
+
 let sql: ReturnType<typeof postgres>;
 
 const AUDIT_DDL = `
@@ -279,14 +288,6 @@ describe('Keyset pagination through the repository', () => {
       ),
     ).rejects.toThrow(InvalidCursor);
   });
-
-  it('sorts only on a column that cannot be null', () => {
-    const request = { limit: 1, inverted: false };
-    // A NULL sort key makes the row comparison NULL, and the row vanishes
-    // from every page.
-    // @ts-expect-error — `note` is nullable.
-    void (() => findPage(leaves, [leaves.note], request));
-  });
 });
 
 /**
@@ -424,11 +425,5 @@ describe('Keyset pagination inside a workspace', () => {
     );
 
     expect(page.edges.map((edge) => edge.node.label)).toEqual(['W jar 0', 'W jar 1', 'W jar 2']);
-  });
-
-  it('reaches a workspace-scoped table only with a proof', () => {
-    const request = { limit: 1, inverted: false };
-    // @ts-expect-error — `jars` carries `workspace_id`, so the unscoped finder refuses it.
-    void (() => findPage(jars, [jars.label], request));
   });
 });

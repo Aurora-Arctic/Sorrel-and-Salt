@@ -55,11 +55,10 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 - **One tier.** Nothing groups a body or a sign, so the seed needs a flat
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
-- **The DESIGN.md table sits outside `forms.test.ts`'s slice.** That test
-  reads every table line between ``**`ingredient_forms`**`` and
-  ``**`ingredient_form_groups`**`` as a form, so §5's planet and zodiac
-  table is placed after the `ingredients.form` paragraph and before
-  `categories`, and MB.93's test slices its own anchors.
+- **The DESIGN.md table sits outside the forms table's run.** §5's planet and
+  zodiac table is placed after the `ingredients.form` paragraph and before
+  `categories`, where a test once parsing the forms' lines would not read it
+  as one; no test parses §5 since MB.225.
 - **`standard` seeds no uncurated planet.** Its compendium's planet values are
   all curated names in title case, which match case-insensitively. MB.94
   decided against one: its tests write their own against an emptied

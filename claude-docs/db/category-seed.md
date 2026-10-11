@@ -30,15 +30,14 @@ from, is retired (M5.6b): it gave every group one saturation per theme, and
 the hand-tuned pairs follow no single formula
 ([`styling.md`](../styling.md), "Category-group colours").
 
-`categories.test.ts` holds the pairs to what is still a rule. It compiles
-`$sorrel`'s hue from the stylesheet, puts each group on its own odd 22.5° step
-of the rotation, and holds both of its hexes within `ROTATION_TOLERANCE`, 2°,
-of that step; the widest drift is Love & Connection's dark hex, at 1.04°. It
-recomputes the WCAG ratio for each hex against its own theme's ground
-(`$soot` dark, `$parchment` light), and pins those two grounds to the
-literals `_variables.scss` defines, so a repalette cannot leave the ratios
-measuring against the wrong thing. Worst pairing in the set is Mind & Spirit's
-light hex at 4.52:1.
+Each group sits on its own odd 22.5° step of the rotation off `$sorrel`'s
+hue, both hexes within 2° of it; the widest drift is Love & Connection's dark
+hex, at 1.04°. That is review's to hold, a matter of presentation (MB.225).
+`categories.test.ts` holds what is functional: the WCAG ratio of each hex
+against its own theme's ground (`$soot` dark, `$parchment` light), the
+grounds read from `_variables.scss` itself, so a repalette cannot leave the
+ratios measuring against the wrong thing. Worst pairing in the set is Mind &
+Spirit's light hex at 4.52:1.
 
 **A retuned colour needs a migration as well as a seed edit**, because the
 seed inserts only missing rows and never reaches one already written.
@@ -91,10 +90,11 @@ One rule a later scenario inherits: write through the handle, stamping via
 
 `tests/db/seed/index.test.ts` is the `db`-project test, against the worker's
 clone with every table emptied first: it hands `seed()` a handle of its own
-and asserts `minimal`'s two rows, the fixed ids and the creator chain from one
-run, then the shape every seed entry point shares — `minimal`, `standard`,
-`demo`, and the category, form, astrology, deity and sources seeds run alone
-— once over all of them in an `it.each(SEED_ENTRIES)` (MB.183;
+and asserts that `minimal` leaves a bare install no admin, then the shape
+every production seed shares — the category, form, astrology, deity and
+sources seeds `migrate.yml` runs, each alone; the dev-only scenarios are a
+developer's to see working (MB.225) — once over all of them in an
+`it.each(SEED_ENTRIES)` (MB.183;
 [`testing/layer-ownership.md`](../testing/layer-ownership.md)): from empty
 tables, the bootstrap user inserted as a plain user, every row of the seed's
 own tables stamped as it and, through one `AFTER INSERT` trigger on every
@@ -102,6 +102,8 @@ table recording `current_setting('app.current_user_id', true)` — the
 observation trick `tests/db/repository/write.test.ts` uses — published as the
 acting user of every insert; a second run that changes no row anywhere; and a
 row an admin soft-deleted left deleted. Each entry names the tables it is the
-seed of, which is also what proves `seed()` routed a scenario to its own seed.
-`categories.test.ts` keeps what is the category seed's alone: the literal
-against §6 and M0.7, and a reseed over a colour pair an admin changed.
+seed of.
+`categories.test.ts` keeps what is the category seed's alone: every group's
+colours clearing 4.5:1 on the page grounds `_variables.scss` defines, each
+category filed under its group, and a reseed over a colour pair an admin
+changed. Whether the literal matches §6 is review's, not a test's (MB.225).

@@ -190,10 +190,8 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   (MB.189): the files under those trees that never reach a database, which
   run in `unit` instead of waiting on a fresh clone before each. They are
   `tests/modules/**/validation/**` — Zod schemas, which run in the browser
-  too — and `tests/db/audit.test.ts` (`applyAudit` and the audit column
-  instances), `tests/db/bootstrap.test.ts` (a constant),
-  `tests/db/repository/index.test.ts` (that loading the repository builds
-  `users`; it opens no connection), `tests/modules/coven/schema/workspaces-schema.test.ts`
+  too — and `tests/db/audit.test.ts` (`applyAudit`),
+  `tests/modules/coven/schema/workspaces-schema.test.ts`
   (Drizzle's introspection of the table), `tests/modules/coven/services/access-control.test.ts`
   (the permission matrix), `tests/modules/identity/services/site-admin.test.ts`
   and `workshop-access.test.ts` (checks that read the session alone), and
@@ -201,11 +199,10 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   They stay where they mirror `src/`, which is why it is a list. A
   database-free file added to `db` is named in `DB_FREE` by review: it costs
   a clone, not a failure. The `tests/db/**` half is real as of Wave 1
-  (`audit`, `bootstrap`, `users-schema`, `test-database-isolation`); since
+  (`audit`, `users-schema`, `test-database-isolation`); since
   M1.27 every file in it runs against a clone that already carries the full
   migrated schema and the `standard` scenario, so a schema test asserts
-  against the real table (`tests/db/seeded-template.test.ts` states that
-  baseline) and no file builds tables of its own. The `tests/modules/**` half
+  against the real table and no file builds tables of its own. The `tests/modules/**` half
   is real as of M6.3 (`membership`) — a service test lands here rather than
   in `unit` because a service reads Postgres, and the split is a path glob. Nothing in this
   project's config ever points at
@@ -237,8 +234,7 @@ DATABASE IF EXISTS ... WITH (FORCE)`) so a crashed previous run self-heals
     which `test-database-isolation.test.ts` asserts its own database is a
     member of (MB.14) — the point being that a worker's name is checked
     against what was actually created, not against a bound the test
-    recomputed — and the template's name as `templateDatabase`, which
-    `seeded-template.test.ts` asserts exists. The returned teardown drops all
+    recomputed — and the template's name as `templateDatabase`. The returned teardown drops all
     of them, template included. Requires `sorrel` to own `sorrel_template`
     and hold `CREATEDB` — both granted in
     `Docker/postgres-init/enable-extensions.sql` (M1.9) — since `postgres`'s

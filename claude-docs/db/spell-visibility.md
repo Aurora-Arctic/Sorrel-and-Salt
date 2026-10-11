@@ -119,8 +119,8 @@ MB.33 bars everything outside the database layer from importing `drizzle-orm`
 at runtime, so a service cannot build the `where` that `updateInWorkspace`
 takes. The eighth `AuditWriter` method builds the one predicate every entity
 update needs — `id = $1`, ANDed onto the proof's own clause — below that
-boundary. `tests/db/repository/write.test.ts` pins the method count, so each new one is a
-decision argued for in its own PR rather than a convenience.
+boundary. Each new method is a decision argued for in its own PR rather than
+a convenience.
 
 **`updateById` is the ninth** (MB.60), for the same reason on a table no proof
 scopes: the primary admin's promotion writes `users.role` by the signed-in

@@ -73,7 +73,10 @@ describe('a revoked admin’s next request', () => {
     expect(before).toEqual({ userId: REVOKED, role: 'admin' });
     expect(() => identity.assertSiteAdmin(before!)).not.toThrow();
     const probe = `mutation { setUserRole(userId: "${E.id}", role: admin) { id } }`;
-    expect((await run(before, probe)).errors?.[0]?.message).toBe(`${E.name} is already an admin`);
+    // Past the scope: the service's own refusal, in other words than the scope's.
+    const admitted = (await run(before, probe)).errors?.[0];
+    expect(admitted?.extensions?.code).toBe('FORBIDDEN');
+    expect(admitted?.message).not.toBe(new Forbidden().message);
     const issued = await sessionsOf();
 
     await identity.setUserRole(asUser(E), REVOKED, 'user');
@@ -82,8 +85,10 @@ describe('a revoked admin’s next request', () => {
     expect(after).toEqual({ userId: REVOKED, role: 'user' });
     // What `/admin`'s guard asks, and the mutation's scope refusing first.
     // The identity module here is the auth import's graph, so its `Forbidden`
-    // is another class than this file's: the message is what is compared.
-    expect(() => identity.assertSiteAdmin(after!)).toThrow('Only a site admin may do this');
+    // is another class than this file's: the name is what is compared.
+    expect(() => identity.assertSiteAdmin(after!)).toThrow(
+      expect.objectContaining({ name: 'Forbidden' }),
+    );
     const refused = await run(after, probe);
     expect(refused.errors?.[0]).toMatchObject({
       message: new Forbidden().message,
