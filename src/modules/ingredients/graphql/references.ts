@@ -6,7 +6,12 @@ import type { BuilderTypes } from '../../../graphql/types';
 import { citationText } from '../../../lib/citation';
 import type { CitationFields } from '../../../lib/types';
 import { REFERENCE_KINDS } from '../schema/ingredient-enums';
-import { createReference, suggestReferences, updateReference } from '../services/references';
+import {
+  createReference,
+  getReference,
+  suggestReferences,
+  updateReference,
+} from '../services/references';
 import type { CitedReference, ReferenceRow } from '../types';
 import { REFERENCE_TEXT_FIELDS } from '../validation/reference-format';
 import type { ReferenceTextField } from '../validation/types';
@@ -15,7 +20,8 @@ import type { ReferenceTextField } from '../validation/types';
 // fields, the tier as `isGlobal`, and the citation rendered on the server by
 // the one renderer, plain. Its two writes and the picker's search are here;
 // `Ingredient.references` reads through the request's loader in
-// `ingredient.ts`. `workspaceId` stays off the wire, as it does on `Ingredient`.
+// `ingredient.ts`, and `reference` reads one whole, for the form that edits
+// it. `workspaceId` stays off the wire, as it does on `Ingredient`.
 
 /** Every text field but the title, which every kind of reference requires. */
 const OPTIONAL_FIELDS = REFERENCE_TEXT_FIELDS.filter(
@@ -143,6 +149,22 @@ builder.mutationField('updateReference', (t) =>
       loaders.referencesByIngredient.clearAll();
       return row;
     },
+  }),
+);
+
+// One source whole, for the edit panel to open on (MB.115). Signed-in
+// whatever the tier, as the picker it is opened from is; one row, so no page.
+builder.queryField('reference', (t) =>
+  t.field({
+    type: ReferenceRef,
+    description:
+      "A null workspaceId reads the compendium's alone; a coven's reads its own or the compendium's, never another coven's.",
+    args: {
+      id: t.arg.id({ required: true }),
+      workspaceId: t.arg.id({ required: false }),
+    },
+    resolve: (_root, { id, workspaceId }, context) =>
+      getReference(sessionOf(context), workspaceId, id),
   }),
 );
 

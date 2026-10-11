@@ -21,6 +21,9 @@ import type { AdminWrite, ScopeProbe } from './types';
 
 let compendiumId: string;
 
+/** An id naming nothing: a signed-out caller is refused before any row is looked for. */
+const NOWHERE = '00000000-0000-4000-8000-000000000000';
+
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
   const [row] = await sql`
@@ -143,6 +146,12 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  reference: {
+    source:
+      'query ($workspaceId: ID!, $id: ID!) { reference(workspaceId: $workspaceId, id: $id) { id } }',
+    variables: { workspaceId: WORKSPACE_W_ID, id: NOWHERE },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   planetSuggestions: suggestion('planetSuggestions'),
@@ -196,6 +205,12 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: null },
     outcome: 'refuses',
   },
+  reference: {
+    source:
+      'query ($workspaceId: ID, $id: ID!) { reference(workspaceId: $workspaceId, id: $id) { id } }',
+    variables: { workspaceId: null, id: NOWHERE },
+    outcome: 'refuses',
+  },
   // The substitute picker always has a coven, so the SDL takes no null.
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {
@@ -217,11 +232,10 @@ describe('a null session and a null workspaceId at every Query field taking one'
   it.each(Object.entries(NULL_WORKSPACE_PROBES))('%s: %o', expectOutcome);
 });
 
-// Every write refuses a null session. The ids name nothing, since a
+// Every write refuses a null session. The ids are NOWHERE, since a
 // signed-out caller is refused before any row is looked for, and the inputs
 // are the least each SDL type takes, so the refusal is the field's and not
 // the document's.
-const NOWHERE = '00000000-0000-4000-8000-000000000000';
 
 const write = (source: string, variables?: Record<string, unknown>): ScopeProbe => ({
   source,

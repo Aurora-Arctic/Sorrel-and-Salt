@@ -50,6 +50,7 @@ export interface ReferenceSeed {
   place?: string | null;
   published?: string | null;
   url?: string | null;
+  modified?: string | null;
   accessed?: string | null;
 }
 
