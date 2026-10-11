@@ -10,6 +10,22 @@ import type { SeedCompendiumShard } from '../types';
 export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
   name: 'resins-woods-and-other',
   sources: {
+    'grieve-acacia-gum': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Acacia (Gum)',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/acaci006.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-asafetida': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Asafetida',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/asafe070.html',
+      accessed: '2026-10-11',
+    },
     'grieve-balsam-of-gilead': {
       kind: 'web_page',
       authors: 'Grieve, M.',
@@ -48,6 +64,14 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       title: "Dragon's Blood",
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/d/dragon20.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-galbanum': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Galbanum',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/g/galban02.html',
       accessed: '2026-10-11',
     },
     'grieve-mastic': {
@@ -90,6 +114,14 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/s/storax93.html',
       accessed: '2026-10-11',
     },
+    'grieve-tragacanth': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Tragacanth',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/t/tragac26.html',
+      accessed: '2026-10-11',
+    },
     'inchem-icsc-0184': {
       kind: 'web_page',
       title: 'ICSC 0184 - POTASSIUM NITRATE',
@@ -124,6 +156,13 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       title: 'Aquilaria malaccensis',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Aquilaria_malaccensis&oldid=1375040886',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-asafoetida': {
+      kind: 'entry',
+      title: 'Asafoetida',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Asafoetida&oldid=1378360098',
       accessed: '2026-10-11',
     },
     'wikipedia-benzoin-resin': {
@@ -273,6 +312,20 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Eggs_as_food&oldid=1372838503',
       accessed: '2026-10-11',
     },
+    'wikipedia-ferula-assa-foetida': {
+      kind: 'entry',
+      title: 'Ferula assa-foetida',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ferula_assa-foetida&oldid=1366898231',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-ferula-gummosa': {
+      kind: 'entry',
+      title: 'Ferula gummosa',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ferula_gummosa&oldid=1218192752',
+      accessed: '2026-10-11',
+    },
     'wikipedia-frankincense': {
       kind: 'entry',
       title: 'Frankincense',
@@ -280,11 +333,25 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Frankincense&oldid=1375501301',
       accessed: '2026-10-11',
     },
+    'wikipedia-galbanum': {
+      kind: 'entry',
+      title: 'Galbanum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Galbanum&oldid=1378641616',
+      accessed: '2026-10-11',
+    },
     'wikipedia-goofer-dust': {
       kind: 'entry',
       title: 'Goofer dust',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Goofer_dust&oldid=1367193680',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-gum-arabic': {
+      kind: 'entry',
+      title: 'Gum arabic',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Gum_arabic&oldid=1379359535',
       accessed: '2026-10-11',
     },
     'wikipedia-hierochloe-odorata': {
@@ -334,6 +401,13 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       title: 'Liquidambar styraciflua',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Liquidambar_styraciflua&oldid=1376158564',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-list-of-plants-used-in-herbalism': {
+      kind: 'entry',
+      title: 'List of plants used in herbalism',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=List_of_plants_used_in_herbalism&oldid=1369965674',
       accessed: '2026-10-11',
     },
     'wikipedia-machilus': {
@@ -434,6 +508,13 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Sandarac&oldid=1363521454',
       accessed: '2026-10-11',
     },
+    'wikipedia-senegalia-senegal': {
+      kind: 'entry',
+      title: 'Senegalia senegal',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Senegalia_senegal&oldid=1338572315',
+      accessed: '2026-10-11',
+    },
     'wikipedia-snake': {
       kind: 'entry',
       title: 'Snake',
@@ -481,6 +562,13 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       title: 'Tolu balsam',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Tolu_balsam&oldid=1364527526',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-tragacanth': {
+      kind: 'entry',
+      title: 'Tragacanth',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Tragacanth&oldid=1374737249',
       accessed: '2026-10-11',
     },
     'wikipedia-vinegar': {
@@ -689,6 +777,124 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
               source: 'cunningham-crystals',
               locator: 'p. 97',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Asafoetida',
+      canonicalName: 'Ferula assa-foetida',
+      nomenclature: 'botanical',
+      description:
+        "Asafoetida is the dried gum resin of several species of Ferula, tall perennials of the carrot family. Ferula assa-foetida, a plant found only in southern Iran, is one of them, though it is often wrongly named as the main source. The plant can reach nine feet, with a thick stem, parsley-like leaves and pale greenish-yellow flowers. Harvesters bare and slash the fleshy roots of plants about four years old, and the milky juice seeps out and hardens into reddish lumps. Afghanistan and Iran have long been the chief producers, sending most of the crop to India, where a pinch, ground with rice flour, seasons curries, pickles and lentil dishes, and stands in for onion and garlic among Jains. Babylonians, Greeks and Romans cooked with it too, and Persians called it the food of the gods. Its sulphurous stench earned it the name devil's dung. Even so it has been burned as ritual incense: Agrippa, and later the French mystic Paul Sédir, recorded medieval magicians burning it to make spirits appear, and the occultist Karl von Eckartshausen listed it among fumigations to banish spectres. In Germany and colonial Pennsylvania a lump hung round the neck kept off evil spirits, witches and ghosts. Modern practice burns small amounts in exorcism and protection incense, and Cunningham warns that the smell alone has made people vomit.",
+      elements: ['fire'],
+      planets: ['Mars', 'Pluto'],
+      zodiacSigns: ['Gemini'],
+      colors: ['yellow', 'grey'],
+      folkNames: [
+        'Asafetida',
+        'Assyfetida',
+        "Devil's Dung",
+        "Devil's Incense",
+        'Food of the Gods',
+        'Giant Fennel',
+        'Hing',
+        'Stinking Assa',
+        'Stinking Gum',
+        'Ungoozeh',
+      ],
+      deities: ['Cernunnos', 'Kali', 'Pan'],
+      categories: ['Protection', 'Purification', 'Banishing', 'Fertility', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Asafoetida',
+          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Asafoetida',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-ferula-assa-foetida',
+          supports: ['canonicalName', 'nomenclature', 'description'],
+        },
+        {
+          source: 'wikipedia-asafoetida',
+          supports: ['description', 'colors', 'folkNames'],
+        },
+        {
+          source: 'grieve-asafetida',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 365',
+          supports: ['canonicalName', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Resin',
+          safetyNotes:
+            'The AHPA handbook rates asafoetida oleo gum resin Safety Class 2b and 2d: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, and not for use in infants, after a five-week-old developed methaemoglobinaemia from it. Taking too much has caused swollen lips, gastric burning, belching, flatulence, diarrhoea, burning urination, headaches and dizziness, and doses of 50 to 100 mg are reported to have caused convulsions in nervous people. Safety while breastfeeding has not been established. The handbook notes these concerns rest on therapeutic doses, not on its use as a spice. Cunningham likewise says not to take it internally when pregnant, nor to give it to a child with colic.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 365–366; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Asafoetida; p. 266',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Asafoetida',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-asafoetida',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'Ground asafoetida is usually compounded: the resin is pounded with rice flour or another absorbent, which tempers it so that only a pinch is needed. The powder keeps its aroma for several years, where the pure resin keeps it for decades, and it taints nearby spices unless it is stored airtight.',
+          references: [
+            {
+              source: 'wikipedia-asafoetida',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Asafoetida',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The essential oil is pale yellow to yellow-orange, with a strong, acrid, garlic-like smell. Perfumers use asafoetida extracts mainly as a fixative, though the oil lacks the fixing power and balsamic depth of the absolute, which is extracted with alcohol.',
+          references: [
+            {
+              source: 'wikipedia-asafoetida',
+              supports: ['form', 'description'],
             },
           ],
         },
@@ -1581,6 +1787,67 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Galbanum',
+      canonicalName: 'Ferula gummosa',
+      nomenclature: 'botanical',
+      description:
+        "Galbanum is an aromatic gum resin from Persian species of Ferula, chiefly Ferula gummosa, once called Ferula galbaniflua, a perennial herb of the carrot family native to Iran and Turkmenistan. Its milky juice oozes from the base of the stem and from the leaf sheaths, often without any cutting, and hardens into translucent tears or a soft, sticky mass, light brown, yellowish or greenish-yellow. It tastes bitter and smells sharp, musky and intensely green, with a turpentine edge. Galbanum has a long sacred history: the Book of Exodus names it with stacte, onycha and frankincense as one of the four ingredients of the ketoret, the incense offered in the Temple in Jerusalem, and the medieval commentator Rashi read its bitterness there as a reminder of unrepentant sinners. Hippocrates used it as a medicine, and Pliny, who called it bubonion, credited it with remarkable healing powers. Later physicians gave it for chronic bronchitis and spread it as a plaster on swellings, uses now obsolete. Today it is prized mainly in perfumery, where its green note shaped scents such as Balmain's Vent Vert of 1945. It is a close relative of asafoetida, and old writers often confused the gum resins of Ferula with one another.",
+      colors: ['brown', 'yellow'],
+      folkNames: ['Bubonion', 'Mother Resin'],
+      references: [
+        {
+          source: 'wikipedia-ferula-gummosa',
+          supports: ['canonicalName', 'nomenclature', 'description'],
+        },
+        {
+          source: 'wikipedia-galbanum',
+          supports: ['canonicalName', 'description', 'colors', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-incense',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-asafoetida',
+          supports: ['canonicalName', 'description', 'colors'],
+        },
+        {
+          source: 'grieve-galbanum',
+          supports: ['description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Resin',
+          references: [
+            {
+              source: 'wikipedia-galbanum',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-galbanum',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            "Distilled with water, the gum yields an essential oil, about six drachms to the pound by Grieve's figure, with a pine-like top note that is fainter in the resinoid. Dry distillation gives instead a thick, bluish oil. The oil is often adulterated with pine oil.",
+          references: [
+            {
+              source: 'wikipedia-galbanum',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-galbanum',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Golden Frankincense',
       canonicalName: 'Boswellia papyrifera',
       nomenclature: 'botanical',
@@ -1746,6 +2013,125 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             {
               source: 'wikipedia-incense',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Gum Arabic',
+      canonicalName: 'Senegalia senegal',
+      nomenclature: 'botanical',
+      description:
+        "Gum arabic, also called gum acacia, is the hardened sap of acacia trees, above all Senegalia senegal, long known as Acacia senegal: a small, thorny, deciduous tree of 5 to 12 metres, native to the semi-desert lands of sub-Saharan Africa, Oman, Pakistan and western India. Gatherers cut or strip the bark, and the gum oozes out and dries into round tears; one tree gives some 200 to 300 grams. Sudan supplies most of the world's gum, and its hashab gum is reckoned the finest. The name does not fix a single botanical source: the Codex definition also admits the gum of Vachellia seyal, and Grieve records how Senegal gum, first a stand-in for the Sudanese gum, came to share its name. Soluble in water and edible, the gum binds and thickens foods, soft drinks, watercolour paints, inks, medicines and homemade incense cones. Cunningham places both the tree and its gum under the Sun and air. The wood fed sacred fires in India, a sprig over the bed was said to ward off evil, and the wood burned with sandalwood to stir psychic powers. The gum itself is smouldered alone on charcoal or added to incense to purify a space of negativity and evil. In the Sahel it stands for the purity of youth.",
+      elements: ['air'],
+      planets: ['Sun'],
+      colors: ['white', 'yellow'],
+      folkNames: [
+        'Acacia Gum',
+        'Arabic Gum',
+        'Cape Gum',
+        'Egyptian Gum',
+        'Egyptian Thorn',
+        'Gum Acacia',
+        'Gum Arabic Tree',
+        'Gum Sudani',
+        'Hashab Gum',
+        'Indian Gum',
+        'Kher',
+        'Khor',
+        'Kikwata',
+        'Kumatiya',
+        'Kummat',
+        'Mgunga',
+        'Mkwatia',
+        'Mokala',
+        'Senegal Gum',
+        'Sudan Gum',
+        'Sudan Gum Arabic',
+      ],
+      deities: ['Osiris', 'Astarte', 'Ishtar', 'Diana', 'Ra'],
+      categories: ['Protection', 'Psychic Work', 'Purification'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Acacia; s.v. Arabic, Gum',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-senegalia-senegal',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-gum-arabic',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-list-of-plants-used-in-herbalism',
+          supports: ['canonicalName', 'description'],
+        },
+        {
+          source: 'wikipedia-incense',
+          supports: ['description'],
+        },
+        {
+          source: 'grieve-acacia-gum',
+          supports: ['description', 'colors'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Resin',
+          safetyNotes:
+            'Gum arabic is generally recognised as safe to eat, and Cunningham marks it safe. Large doses, of 30 grams or more a day, give some people harmless flatulence. It slows the absorption of some medicines from the gut, amoxicillin among them.',
+          references: [
+            {
+              source: 'wikipedia-gum-arabic',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Arabic, Gum; p. 266',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-acacia-gum',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            'Cunningham records the wood burned as fuel for sacred fires in India and used in building temples, and burned with sandalwood to stimulate psychic powers. The wood of Senegalia senegal also makes tool handles and parts for weaving looms, and is valued as firewood and for charcoal.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Acacia',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-senegalia-senegal',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'Gum arabic is sold in pieces and as a powder. For painting, one part of the powdered gum is dissolved in four parts of distilled water to make a liquid that can be added to pigments.',
+          references: [
+            {
+              source: 'wikipedia-gum-arabic',
+              supports: ['form', 'description'],
             },
           ],
         },
@@ -2997,6 +3383,81 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             {
               source: 'grieve-balsam-of-tolu',
               supports: ['form', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Tragacanth',
+      canonicalName: 'Astragalus',
+      nomenclature: 'botanical',
+      description:
+        "Tragacanth is a natural gum taken from the dried sap of several Middle Eastern species of Astragalus, legumes that include A. adscendens, A. gummifer and A. tragacantha; some are known together as goat's thorn, and the name joins the Greek words for goat and thorn. Grieve describes A. gummifer as a small, branching, thorny shrub of Asia Minor, Persia and Kurdistan, and Iran is now the largest producer. Sap drained from the root seeps out in twisted ribbons or flakes, horny in look, nearly colourless or faintly yellow, odourless and almost tasteless. In water it swells into a gel rather than dissolving: one part, tragacanthin, forms a mucilage, while the other, bassorin, only swells. That gel makes it a thickener and stabiliser in foods and medicines, the traditional binder of artists' pastels, a size for paper marbling, a paste for sugar flowers on cakes, and a burnishing compound in leatherwork. Incense makers use it to bind powdered herbs, and it holds them so well that half as much is needed as of gum arabic. Older medicine gave it for coughs and diarrhoea and spread its mucilage on burns. Cunningham assigns it to fire and to the Earth and lists binding among its powers; he suggests blending it with symbols of the ethereal to fill a dream pillow, carrying the ethereal into the subconscious.",
+      elements: ['fire'],
+      planets: ['Earth'],
+      colors: ['colourless', 'yellow'],
+      folkNames: [
+        'Gond Katira',
+        'Goond Kateera',
+        'Gum Dragon',
+        'Gum Elect',
+        'Gum Tragacanth',
+        'Shiraz',
+        'Shiraz Gum',
+        'Syrian Tragacanth',
+      ],
+      categories: ['Binding', 'Transformation'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Tragacanth Gum',
+          supports: ['description', 'elements', 'planets', 'categories'],
+        },
+        {
+          source: 'wikipedia-tragacanth',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-tragacanth',
+          supports: ['canonicalName', 'description', 'colors', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-incense',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Resin',
+          references: [
+            {
+              source: 'wikipedia-tragacanth',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-tragacanth',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Tragacanth Gum',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'The dried flakes can be ground to a powder, and powders built on tragacanth were once called diatragacanth. Grieve records a compound tragacanth powder in the British Pharmacopoeia.',
+          references: [
+            {
+              source: 'wikipedia-tragacanth',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-tragacanth',
+              supports: ['form', 'description'],
             },
           ],
         },
