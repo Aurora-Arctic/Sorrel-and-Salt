@@ -8,7 +8,7 @@ import { normaliseEmail, validateEmailAddress } from './email';
 import { assertSiteAdmin } from './site-admin';
 import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
-import type { InvitationSender } from '../types';
+import type { AdminInvitationFilter, InvitationSender } from '../types';
 
 // MB.70: an admin invites an address to become an admin, M2.9's option B on
 // MB.201's site tier of `invitations`. Who may invite and the pause are this
@@ -78,14 +78,26 @@ export async function revokeAdminInvitation(session: Session, id: string): Promi
   return row;
 }
 
+/** How soon an invitation lapses for Expires in 24 Hrs to list it (MB.115). */
+const EXPIRING_SOON_HOURS = 24;
+
 /**
- * The pending admin invitations, newest first, for `/admin/users`. To every
- * admin, paused or not: the list is where an invitation is seen.
+ * The pending admin invitations, newest first, for `/admin/invitations`. To
+ * every admin, paused or not: the list is where an invitation is seen.
+ * Narrowed by `filter` in the finder's SQL: `email` a fragment of the
+ * address, trimmed, and `expiringSoon` only those lapsing within
+ * `EXPIRING_SOON_HOURS`.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
-export async function listPendingAdminInvitations(session: Session): Promise<InvitationRow[]> {
+export async function listPendingAdminInvitations(
+  session: Session,
+  { email, expiringSoon }: AdminInvitationFilter = {},
+): Promise<InvitationRow[]> {
   const admin = assertSiteAdmin(session, 'Only a site admin may see admin invitations');
-  const rows = await findPendingSiteInvitations(admin);
+  const rows = await findPendingSiteInvitations(admin, {
+    email: email?.trim() || undefined,
+    expiresWithinHours: expiringSoon ? EXPIRING_SOON_HOURS : undefined,
+  });
   return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }

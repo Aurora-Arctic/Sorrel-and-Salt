@@ -22,6 +22,7 @@ export * from './graphql/privilege-changes';
 export * from './loaders/providers-by-user';
 export * from './loaders/users-by-id-for-admin';
 export type {
+  AdminInvitationFilter,
   AdminRoleChangePauseState,
   EmailVerificationSender,
   InvitationRefusal,
