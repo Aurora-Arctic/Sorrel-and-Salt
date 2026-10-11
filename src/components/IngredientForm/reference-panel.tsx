@@ -42,6 +42,10 @@ export const CreateReferenceDocument = graphql(`
       id
       citation
       isGlobal
+      kind
+      authors
+      title
+      container
     }
   }
 `);
