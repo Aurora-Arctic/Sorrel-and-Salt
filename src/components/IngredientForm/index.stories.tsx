@@ -663,10 +663,12 @@ function WhatToTry() {
           folds it to its summary line, and Edit opens it again, closing any other. Save with a
           variant&rsquo;s box holding text while it is folded, and it opens on the error. Remove
           takes a variant out. In a variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists
-          the Testwort that comes in oil first, a row for any form of it and one for each form; pick
-          a form, and its pill names it. Each of a variant&rsquo;s fields has Copy From Ingredient,
-          shut while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and
-          press it to add what the variant lacks.
+          the Testwort that comes in oil first, one row for each of its forms, and never Mockleaf,
+          which comes in none; pick a form, and its pill names it. Each of a variant&rsquo;s fields
+          has Copy From Ingredient, shut while the ingredient&rsquo;s own field is empty: fill the
+          ingredient&rsquo;s, and press it to add what the variant lacks. Its Substitute Ingredients
+          links the same form of each, and names beneath the list those in no such form, with Copy
+          Anyway to add them as names.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -829,6 +831,16 @@ const ENTRY = {
         safetyNotes: 'Dry away from damp.',
         planets: [{ value: 'Mercury' }],
         categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
+        // A form's link names one form of what it links (MB.115): Fixturewort
+        // in its one form, beside a name typed.
+        substitutes: [
+          {
+            value: 'Fixturewort',
+            link: linkOf(INGREDIENTS[2]),
+            variantId: INGREDIENTS[2].variants[0].id,
+          },
+          { value: 'Hedge Mockroot' },
+        ],
         references: [cited(SOURCES[1], 'pp. 12–19')],
       },
       {
@@ -976,7 +988,11 @@ export const CompendiumEntrySaveError: Story = () => {
           ...ENTRY.values,
           substitutes: [],
           references: [],
-          variants: ENTRY.values.variants.map((variant) => ({ ...variant, references: [] })),
+          variants: ENTRY.values.variants.map((variant) => ({
+            ...variant,
+            substitutes: [],
+            references: [],
+          })),
           drafts: { ...ENTRY.values.drafts, colors: 'Fixture Red' },
         },
       }}
@@ -995,6 +1011,42 @@ export const CompendiumEntryVariantOpen: Story = () => {
   }, []);
   return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
 };
+
+/**
+ * The same entry, Mockleaf, in no form at all, among its substitutes, with its
+ * first form open and that form's Substitute Ingredients copied (MB.115):
+ * Testwort links its Dried leaf, and the notice beneath the list names
+ * Mockleaf, skipped, with Copy Anyway. Pressed once drawn, as a person would.
+ */
+export const CompendiumEntryCopySkipped: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Variants');
+    document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]')?.click();
+    const timer = setTimeout(() =>
+      document
+        .querySelector<HTMLButtonElement>(
+          'button[aria-label="Copy From Ingredient: Substitute Ingredients"]',
+        )
+        ?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  const values = {
+    ...ENTRY.values,
+    substitutes: [...ENTRY.values.substitutes, { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) }],
+  };
+  return (
+    <IngredientForm workspaceId={null} entry={{ ...ENTRY, values }} onCancel={() => undefined} />
+  );
+};
+
+// The notice at a phone's width, in each theme.
+export const CopySkippedPhoneDark: Story = () => <CompendiumEntryCopySkipped />;
+CopySkippedPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const CopySkippedPhoneLight: Story = () => <CompendiumEntryCopySkipped />;
+CopySkippedPhoneLight.meta = { theme: 'light', width: 375 };
 
 /** The same entry with its first source open and its Edit Source pressed: the panel prefilled. */
 export const CompendiumEntryEditSource: Story = () => {

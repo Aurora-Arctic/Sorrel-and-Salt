@@ -85,7 +85,8 @@ each with its own substitutes, references and categories. A coven's form is
 free text, its pick checked only when one is sent. A substitute may name one
 form of the ingredient it links, `substituteVariantId`, which must be a live
 form of that ingredient in the writer's scope, refused on that field
-otherwise. And a form may not stand in for itself, though a sibling may.
+otherwise; a form's own link must name one, which the schema refuses before
+the service reads anything (MB.115, [`validation.md`](../validation.md)). And a form may not stand in for itself, though a sibling may.
 
 **The slug follows the label and the formal name** (no form since MB.220).
 `slug` is `NOT NULL`, so a create writes `ingredientSlug` of the two, through
