@@ -143,6 +143,8 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
 | MB.247 | `resins-woods-and-other` (resins, woods, incense; animal, salts, waters)                  | ~80                  | 5     |
 | MB.248 | `stones-and-metals`                                                                       | ~135                 | 8     |
 
+_Note added by MB.240 when it committed the candidate list: the list moved the plant split points to Co, L and R for balance, so the shards are `plants-a-cn` (112 rows), `plants-co-k` (116), `plants-l-q` (104) and `plants-r-z` (98), with `resins-woods-and-other` at 48 and `stones-and-metals` at 136. The resins, woods and other ingredients came in under this table's ~80 because few of the sources read name them, and no row was added without a source. The table above is left as the plan wrote it._
+
 Split points come from MB.240's list, balanced by count. Each shard is ~200–300 KB and 2,500–3,500 lines (estimate), inside every GitHub limit. Each lane conflicts with the others on one line of `compendium/index.ts`; MB.243 merges first because it switches `SEED_ENTRIES` to `COMPENDIUM` and adds the precondition `COMPENDIUM.length > 0`.
 
 - **Story (per shard):** As a reader, I want [shard] in the compendium with its forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
