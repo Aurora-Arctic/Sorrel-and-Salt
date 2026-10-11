@@ -40,7 +40,7 @@ export function ProviderRow({
         removal === 'offered' ? (
           <button
             type="button"
-            className="btn btn--destructive"
+            className="btn btn--destructive btn--small"
             disabled={pending}
             onClick={onRemove}
           >
@@ -52,7 +52,7 @@ export function ProviderRow({
           // 2026-10-11), and a screen reader hears it as the button's description.
           <button
             type="button"
-            className="btn btn--destructive"
+            className="btn btn--destructive btn--small"
             aria-disabled="true"
             aria-describedby={reasonId}
           >
@@ -62,7 +62,9 @@ export function ProviderRow({
       ) : (
         <button
           type="button"
-          className="btn"
+          // Small and quiet, as Remove is small and in the wax: a row's action,
+          // not a page's (the owner, 2026-10-11).
+          className="btn btn--quiet btn--small"
           // Not `disabled`, as on /sign-in: it stays in the tab order.
           aria-disabled={unavailable || undefined}
           aria-describedby={unavailable ? noteId : undefined}
