@@ -104,7 +104,7 @@ function BrandButton({
         <Mark chip />
         Continue with {label}
         {state === 'last-used' && (
-          <span className="badge badge--last-used sign-in-panel__last-used">Last used</span>
+          <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
         )}
       </button>
       {greyed && <ProviderUnavailableNote id={noteId} />}
@@ -552,12 +552,12 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="--badge-*" title="Badges">
           Deliberately not equals. <strong>Safety</strong> is a warning, drawn solid in the
           sealing-wax hue. <strong>Low stock</strong> is an inventory state, the muted ink tinted
-          into the surface. <strong>Last used</strong> is a pointer, solid in the accent.
+          into the surface. <strong>Last Used</strong> is a pointer, solid in the accent.
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
           <span className="badge badge--low-stock">Low stock</span>
-          <span className="badge badge--last-used">Last used</span>
+          <span className="badge badge--last-used">Last Used</span>
         </div>
       </section>
 
