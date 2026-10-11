@@ -1,14 +1,9 @@
-import { isNotNull, isNull } from 'drizzle-orm';
-import {
-  beginSeedTransaction,
-  insertMissingBy,
-  insertMissingReturningIds,
-  requireFrom,
-} from './idempotent';
+import { isNotNull } from 'drizzle-orm';
+import { beginSeedTransaction, insertMissingBy, requireFrom } from './idempotent';
+import { insertMissingReferences } from './reference-rows';
 import { DEITIES } from './deities';
 import { citationText } from '../../lib/citation';
 import { slugify } from '../../lib/slugify';
-import { references } from '../../modules/ingredients/schema/references';
 import { referenceLinks, SOURCED_KEYS } from '../../modules/ingredients/schema/reference-links';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
@@ -23,10 +18,11 @@ import type {
 // MB.156: the sources the vocabulary seed docs record, as compendium-tier
 // `references` rows linked to the curated rows each supports. Reference data,
 // not a scenario — migrate.yml seeds it after the vocabularies it links.
-// Transcribed from the deity and astrology seed docs, which sources.test.ts
-// parses and compares citation by citation through the one renderer; the
-// docs, not this file, are where a source is argued
-// (claude-docs/db/references.md, "How the seed reads the docs").
+// Transcribed from the deity and astrology seed docs, which review holds in
+// step with it since MB.225 retired the test that compared them; the docs,
+// not this file, are where a source is argued (claude-docs/db/references.md,
+// "How the seed reads the docs"). Its references are written through
+// reference-rows.ts, which the compendium seed shares.
 
 /**
  * Every source, in the docs' order: the five that chose which deities to
@@ -4547,7 +4543,10 @@ export async function seedSources(db: SeedDatabase): Promise<void> {
  * GUC is published and the bootstrap user exists.
  */
 export async function seedVocabularySources(tx: SeedTransaction): Promise<void> {
-  const referenceIds = await insertMissingReferences(tx);
+  const referenceIds = await insertMissingReferences(
+    tx,
+    SOURCES.map((source) => source.reference),
+  );
   const targets = {
     traditions: await idsBySeedKey(tx, deityTraditions),
     deities: await idsBySeedKey(tx, deities),
@@ -4564,38 +4563,6 @@ export async function seedVocabularySources(tx: SeedTransaction): Promise<void> 
   await insertMissingBy(tx, referenceLinks, wanted, {
     columns: ['referenceId', ...SOURCED_KEYS],
     toRow: (link) => link,
-  });
-}
-
-/**
- * Every source's id by its citation, inserting the missing ones. A row the
- * seed wrote answers by its key, live or not — `null` when soft-deleted, so
- * it is neither re-inserted nor linked anew. A live compendium row nobody
- * seeded, whose citation is the source's to the letter, is linked rather than
- * duplicated, and never written to.
- */
-async function insertMissingReferences(tx: SeedTransaction): Promise<Map<string, string | null>> {
-  const compendium = await tx.select().from(references).where(isNull(references.workspaceId));
-  const ids = new Map<string, string | null>();
-
-  for (const row of compendium) {
-    if (row.seedKey !== null) ids.set(row.seedKey, row.deletedAt === null ? row.id : null);
-  }
-  for (const row of compendium) {
-    const citation = citationText(row);
-    if (row.seedKey === null && row.deletedAt === null && !ids.has(citation)) {
-      ids.set(citation, row.id);
-    }
-  }
-
-  return insertMissingReturningIds(tx, references, SOURCES, ids, {
-    keyOf: (source) => citationText(source.reference),
-    keyOfRow: (row) => row.seedKey as string,
-    toRow: ({ reference }) => ({
-      ...reference,
-      workspaceId: null,
-      seedKey: citationText(reference),
-    }),
   });
 }
 

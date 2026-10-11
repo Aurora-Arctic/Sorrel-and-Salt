@@ -217,3 +217,97 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
   SourcedKey,
   'ingredientId' | 'ingredientVariantId'
 >]['table'];
+
+// The compendium seed (MB.242): the production compendium's entries, sharded,
+// each field traced to a source its citations name.
+
+/** A compendium entry's fields a citation may support, by the literal's own names. */
+export type CompendiumEntryField =
+  | 'name'
+  | 'canonicalName'
+  | 'nomenclature'
+  | 'description'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'safetyNotes'
+  | 'folkNames'
+  | 'deities'
+  | 'categories'
+  | 'substitutes';
+
+/** A form's fields a citation may support. Deities and folk names are the entry's alone (MB.215). */
+export type CompendiumVariantField =
+  | 'form'
+  | 'description'
+  | 'safetyNotes'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'categories'
+  | 'substitutes';
+
+/**
+ * One citation: a source by its handle — a shared work in `WORKS` or one of
+ * the shard's own `sources` — where in it, and which fields it backs.
+ */
+export interface SeedCitation<Field extends string> {
+  source: string;
+  /** `p. 112`, `s.v. Mugwort`: required of a book or a chapter. */
+  locator?: string;
+  supports: readonly Field[];
+}
+
+/**
+ * What may stand in: an entry the seed writes, by its identity — the formal
+ * name lower-cased, or the label without one — and optionally one of its
+ * forms; or a name typed for an entry a later shard writes.
+ */
+export type SeedSubstitute = { identity: string; form?: string } | { name: string };
+
+/** One form of a compendium entry, and what that form adds to it (MB.215). */
+export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
+  Partial<
+    Pick<
+      typeof ingredientVariants.$inferInsert,
+      'description' | 'safetyNotes' | 'elements' | 'planets' | 'zodiacSigns' | 'colors'
+    >
+  > & {
+    categories?: string[];
+    substitutes?: SeedSubstitute[];
+    references: SeedCitation<CompendiumVariantField>[];
+  };
+
+/**
+ * One compendium entry, every curated value named as its seed literal names
+ * it: forms, categories and deities picked by the key their seed gave them,
+ * planets and signs stored in their row's current spelling.
+ */
+export type SeedCompendiumEntry = Pick<
+  typeof ingredients.$inferInsert,
+  | 'name'
+  | 'canonicalName'
+  | 'nomenclature'
+  | 'description'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'safetyNotes'
+> & {
+  folkNames?: string[];
+  deities?: string[];
+  categories?: string[];
+  substitutes?: SeedSubstitute[];
+  references: SeedCitation<CompendiumEntryField>[];
+  variants: SeedCompendiumVariant[];
+};
+
+/** One shard: its entries and the per-entry pages they cite, by handle. */
+export interface SeedCompendiumShard {
+  name: string;
+  sources: Record<string, CitationFields>;
+  entries: SeedCompendiumEntry[];
+}
