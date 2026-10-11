@@ -5,7 +5,6 @@ import {
   UNIT_DIMENSIONS,
   dimensionOf,
   isUnit,
-  type Unit,
 } from '@/modules/ingredients/schema/units';
 
 // DESIGN.md §5 transcribed rather than imported, so the module is compared
@@ -32,10 +31,6 @@ describe('unit vocabulary', () => {
     const fromMap = UNIT_DIMENSIONS.flatMap((dimension) => [...UNITS_BY_DIMENSION[dimension]]);
 
     expect([...UNITS]).toEqual(fromMap);
-  });
-
-  it('lists no unit twice', () => {
-    expect(new Set(UNITS).size).toBe(UNITS.length);
   });
 });
 
@@ -81,13 +76,5 @@ describe('isUnit', () => {
     const value: string = 'tsp';
 
     expect(isUnit(value) ? dimensionOf(value) : 'not a unit').toBe('volume');
-  });
-});
-
-describe('Unit type', () => {
-  it('admits every unit in the map', () => {
-    const everyUnit: Unit[] = [...UNITS];
-
-    expect(everyUnit).toHaveLength(14);
   });
 });

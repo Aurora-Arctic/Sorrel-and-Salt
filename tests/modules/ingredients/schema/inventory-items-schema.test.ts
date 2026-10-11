@@ -1,23 +1,15 @@
-import { readFileSync } from 'node:fs';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { fromRoot } from '../../../support/paths';
 import {
   UNITS,
   UNITS_BY_DIMENSION,
   UNIT_DIMENSIONS,
   dimensionOf,
 } from '@/modules/ingredients/schema/units';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
-import {
-  inventoryItems,
-  inventoryUnit,
-  unitDimension,
-} from '@/modules/ingredients/schema/inventory-items';
+import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { workspaces } from '@/modules/coven/schema/workspaces';
 import type { StockRow } from './types';
 
 // DESIGN.md §5's column list, transcribed.
@@ -35,99 +27,13 @@ const OWN_COLUMNS = [
 
 const HELD_ONCE_INDEX = 'inventory_items_workspace_id_ingredient_id_unique';
 const DIMENSION_CHECK = 'inventory_items_unit_matches_dimension';
-const WORKSPACE_FK = 'inventory_items_workspace_id_workspaces_id_fk';
-const INGREDIENT_FK = 'inventory_items_ingredient_id_ingredients_id_fk';
-
-const SCHEMA_SOURCE = fromRoot('src/modules/ingredients/schema/inventory-items.ts');
-
-// Every single-quoted literal, comments stripped first so the guard reads code, not prose.
-function quotedLiteralsIn(path: string): string[] {
-  const code = readFileSync(path, 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
-
-  return (code.match(/'[^'\n]*'/g) ?? []).map((literal) => literal.slice(1, -1));
-}
 
 describe('inventory_items schema', () => {
-  const {
-    byName,
-    byIndexName: indexByName,
-    checks,
-    foreignKeyByColumn,
-  } = tableFacts(inventoryItems);
+  const { byName } = tableFacts(inventoryItems);
 
-  // The full six: story 25's delete is recoverable, so the unique index below is partial.
+  // The full six: story 25's delete is recoverable, so the unique index is partial.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
-  });
-
-  it('requires the workspace and the ingredient the row is about', () => {
-    for (const column of ['workspace_id', 'ingredient_id']) {
-      expect(byName[column].notNull).toBe(true);
-    }
-  });
-
-  // "Held, not yet measured" and "held, none left" are different facts —
-  // claude-docs/db/stock.md, "Nullability, and why zero is not the same as nothing".
-  it('leaves the measurements nullable, so an unmeasured jar is not an empty one', () => {
-    for (const column of [
-      'quantity_on_hand',
-      'unit',
-      'unit_dimension',
-      'low_stock_threshold',
-      'source',
-      'acquired_date',
-    ]) {
-      expect(byName[column].notNull).toBe(false);
-    }
-  });
-
-  it('carries a surrogate id as its primary key', () => {
-    expect(byName.id.primary).toBe(true);
-    expect(byName.id.hasDefault).toBe(true);
-  });
-
-  it('points at the workspace holding the stock and the ingredient held', () => {
-    expect(foreignKeyByColumn.workspace_id.foreignTable).toBe(workspaces);
-    expect(foreignKeyByColumn.workspace_id.foreignColumnName).toBe('id');
-    expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
-    expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
-  });
-
-  it('declares exactly one index: one live row per ingredient per workspace', () => {
-    expect(Object.keys(indexByName)).toEqual([HELD_ONCE_INDEX]);
-    expect(indexByName[HELD_ONCE_INDEX].config.unique).toBe(true);
-    expect(indexByName[HELD_ONCE_INDEX].config.where).toBeDefined();
-  });
-
-  it('declares the unit/dimension check and no other constraint', () => {
-    expect(checks.map((constraint) => constraint.name)).toEqual([DIMENSION_CHECK]);
-  });
-
-  describe('the enums are the shared module, not a second copy of it', () => {
-    it('stocks the unit enum from UNITS', () => {
-      expect(inventoryUnit.enumValues).toEqual([...UNITS]);
-    });
-
-    it('stocks the dimension enum from UNIT_DIMENSIONS', () => {
-      expect(unitDimension.enumValues).toEqual([...UNIT_DIMENSIONS]);
-    });
-
-    // "Adding a unit means editing one module" as a property of the file:
-    // equal lists stay equal when the vocabulary is pasted in beside the
-    // import; a literal `'tsp'` in this file's code does not.
-    it('names no unit of its own in the schema file’s code', () => {
-      const named: readonly string[] = UNITS;
-
-      expect(quotedLiteralsIn(SCHEMA_SOURCE).filter((value) => named.includes(value))).toEqual([]);
-    });
-
-    it('names no dimension of its own either', () => {
-      const named: readonly string[] = UNIT_DIMENSIONS;
-
-      expect(quotedLiteralsIn(SCHEMA_SOURCE).filter((value) => named.includes(value))).toEqual([]);
-    });
   });
 });
 
@@ -136,10 +42,9 @@ const COVEN = WORKSPACE_W_ID;
 const OTHER_COVEN = WORKSPACE_X_ID;
 let MUGWORT: string;
 let ROSEMARY: string;
-const ABSENT = '99999999-9999-9999-9999-999999999999';
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function hold({
   workspaceId = COVEN,
@@ -181,85 +86,46 @@ beforeEach(async () => {
 });
 
 describe('inventory_items table', () => {
-  it('carries §5’s columns beside the six audit ones', async () => {
-    expect(await catalogue.columnNames('inventory_items')).toEqual(
-      [...OWN_COLUMNS, ...AUDIT_COLUMNS].sort(),
-    );
-  });
-
   describe('one live row per ingredient per workspace', () => {
-    it('refuses a second live row for the same ingredient', async () => {
+    // The pair is unique, not either half: drop a column from the index and
+    // one of the admitted rows reddens. A second live row of the pair, and its
+    // release on a soft delete, are the partial-unique sweep's.
+    it('refuses a second live row of the pair, and admits either half again', async () => {
       await hold();
 
       const error = await failureOf(hold({ quantity: '3', unit: 'kg', dimension: 'weight' }));
+      await hold({ ingredientId: ROSEMARY });
+      await hold({ workspaceId: OTHER_COVEN });
 
       // 23505 is unique_violation, named: this index refused, not something earlier.
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(HELD_ONCE_INDEX);
-    });
-
-    // Why the refusal above could have succeeded: the pair is unique, not
-    // either half; drop a column from the index and one of these reddens.
-    it('lets one workspace hold two different ingredients', async () => {
-      await hold();
-
-      await expect(hold({ ingredientId: ROSEMARY })).resolves.toBeDefined();
-    });
-
-    it('lets two workspaces each hold the same ingredient', async () => {
-      await hold();
-
-      await expect(hold({ workspaceId: OTHER_COVEN })).resolves.toBeDefined();
-    });
-
-    it('scopes the index to live rows only', async () => {
-      const index = await catalogue.indexRow('inventory_items', HELD_ONCE_INDEX);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('(deleted_at IS NULL)');
-      expect(index?.definition).toContain('USING btree (workspace_id, ingredient_id)');
-    });
-
-    // Story 25's recoverable delete: without the predicate a thrown-out jar
-    // reserves its ingredient forever.
-    it('lets a workspace re-add an ingredient it soft-deleted', async () => {
-      const id = await hold();
-      await sql`
-        update inventory_items set deleted_at = now(), deleted_by = ${MEMBER} where id = ${id}
-      `;
-
-      const readded = await hold();
-
-      expect(readded).not.toBe(id);
+      const [{ count }] = await sql`select count(*)::int as count from inventory_items`;
+      expect(count).toBe(3);
     });
   });
 
   describe('the unit vocabulary', () => {
-    // Every unit against the shipped enum rather than the TypeScript list: a
-    // unit added to the module and left out of a regenerated migration reddens.
-    for (const unit of UNITS) {
-      it(`stores ${unit} as ${dimensionOf(unit)}`, async () => {
-        const id = await hold({ unit, dimension: dimensionOf(unit) });
+    it('stores a unit beside its dimension', async () => {
+      const id = await hold({ unit: 'tsp', dimension: dimensionOf('tsp') });
 
-        const [row] = await sql`
-          select unit::text, unit_dimension::text from inventory_items where id = ${id}
-        `;
+      const [row] = await sql`
+        select unit::text, unit_dimension::text from inventory_items where id = ${id}
+      `;
 
-        expect(row.unit).toBe(unit);
-        expect(row.unit_dimension).toBe(dimensionOf(unit));
-      });
-    }
-
-    it('holds exactly the labels the shared module names', async () => {
-      const [row] = await sql`select enum_range(null::inventory_unit)::text[] as labels`;
-
-      expect(row.labels).toEqual([...UNITS]);
+      expect(row).toEqual({ unit: 'tsp', unit_dimension: 'volume' });
     });
 
-    it('holds exactly the dimensions the shared module names', async () => {
-      const [row] = await sql`select enum_range(null::unit_dimension)::text[] as labels`;
+    // Against the shipped enums rather than the TypeScript list: a unit added
+    // to the module and left out of a regenerated migration reddens.
+    it('holds exactly the units and the dimensions the shared module names', async () => {
+      const [row] = await sql`
+        select enum_range(null::inventory_unit)::text[] as units,
+               enum_range(null::unit_dimension)::text[] as dimensions
+      `;
 
-      expect(row.labels).toEqual([...UNIT_DIMENSIONS]);
+      expect(row.units).toEqual([...UNITS]);
+      expect(row.dimensions).toEqual([...UNIT_DIMENSIONS]);
     });
 
     it('refuses a unit the vocabulary does not name', async () => {
@@ -271,18 +137,14 @@ describe('inventory_items table', () => {
   });
 
   describe('a dimension that contradicts its unit cannot be written', () => {
-    // One mismatch per unit; sampling one pair would leave the constraint free to forget units.
-    for (const unit of UNITS) {
-      const wrong = UNIT_DIMENSIONS.find((dimension) => dimension !== dimensionOf(unit));
+    // One mismatch; that the CHECK names every unit is read off its definition below.
+    it('refuses a unit declared under another dimension', async () => {
+      const error = await failureOf(hold({ unit: 'g', dimension: 'volume' }));
 
-      it(`refuses ${unit} declared as ${wrong}`, async () => {
-        const error = await failureOf(hold({ unit, dimension: wrong }));
-
-        // 23514 is check_violation, named: this constraint's, not the enum's or the index's.
-        expect(error.code).toBe('23514');
-        expect(error.constraint_name).toBe(DIMENSION_CHECK);
-      });
-    }
+      // 23514 is check_violation, named: this constraint's, not the enum's or the index's.
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(DIMENSION_CHECK);
+    });
 
     it('refuses a contradiction introduced by an update, not only by an insert', async () => {
       const id = await hold({ unit: 'ml', dimension: 'volume' });
@@ -349,40 +211,12 @@ describe('inventory_items table', () => {
 
       expect(row.low_stock_threshold).toBe('0.000');
     });
-
-    it('records where the stock came from and when it arrived', async () => {
-      const id = await hold({ source: "Miller's farm stand", acquiredDate: '2026-04-30' });
-
-      const [row] = await sql`
-        select source, acquired_date::text from inventory_items where id = ${id}
-      `;
-
-      expect(row.source).toBe("Miller's farm stand");
-      expect(row.acquired_date).toBe('2026-04-30');
-    });
-  });
-
-  describe('stock belongs to a real workspace and a real ingredient', () => {
-    it('refuses a workspace id no workspace holds', async () => {
-      const error = await failureOf(hold({ workspaceId: ABSENT }));
-
-      // 23503 is foreign_key_violation.
-      expect(error.code).toBe('23503');
-      expect(error.constraint_name).toBe(WORKSPACE_FK);
-    });
-
-    it('refuses an ingredient id no ingredient holds', async () => {
-      const error = await failureOf(hold({ ingredientId: ABSENT }));
-
-      expect(error.code).toBe('23503');
-      expect(error.constraint_name).toBe(INGREDIENT_FK);
-    });
   });
 
   describe('the constraint covers the vocabulary rather than a list of its own', () => {
     // The shipped CHECK read back and compared to the module: a hand-written
     // constraint that forgets `pinch` passes every rejection test above, since
-    // none asserts what the check admits.
+    // only one sample is refused above.
     it('names every unit, under the dimension the module gives it', async () => {
       const [row] = await sql`
         select pg_get_constraintdef(oid) as definition

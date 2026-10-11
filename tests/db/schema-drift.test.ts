@@ -28,13 +28,33 @@ import * as deities from '@/modules/vocabulary/schema/deities';
 import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 
 // One comparison of the Drizzle schema against the migrated database, table by
-// table, instead of a foreign-key, NOT NULL and index case in every module
+// table, instead of a foreign-key, NOT NULL, type and index case in every module
 // schema test: a schema file edited without its migration, or a migration
 // without its schema file, fails here. What a table's rows may hold — its
 // CHECKs, identity and tier rules — is its module schema test's
 // (claude-docs/testing/db-harness.md, "The db test harness"). A schema file
 // missing from the imports below leaves its table in the catalogue and out of
 // the code's set, which the first test fails.
+
+// The expand/contract window (CLAUDE.md rule 10): a drop is two PRs, the first
+// removing the declaration and the second the object, so between them the
+// migrated database holds what the schema no longer declares. An undeclare
+// task adds its line here and the drop task removes it, so the window is
+// declared rather than tolerated; a line outliving its drop fails below
+// (claude-docs/testing/db-harness.md, "The db test harness").
+const PENDING_DROPS: readonly {
+  table: string;
+  kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table';
+  name: string;
+  droppedBy: string;
+}[] = [];
+
+const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
+  new Set(
+    PENDING_DROPS.filter((drop) => drop.table === table && drop.kind === kind).map(
+      (drop) => drop.name,
+    ),
+  );
 
 const MODULES = [
   invitations,
@@ -82,16 +102,24 @@ const ON_DELETE: Record<string, string> = {
 const byKey = <T extends { name: string }>(rows: T[]) =>
   [...rows].sort((a, b) => a.name.localeCompare(b.name));
 
+/**
+ * Drizzle's type name as `format_type` prints it: Postgres spells a bare
+ * `timestamp` out in full and closes up a numeric's precision and scale.
+ */
+const asCatalogued = (type: string) =>
+  type.replace(/, /g, ',').replace(/^timestamp(\(\d+\))?$/, 'timestamp$1 without time zone');
+
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** What the code declares of `table`: the same four facts the catalogue is read for. */
+/** What the code declares of `table`: the same facts the catalogue is read for. */
 function declared(table: PgTable) {
   const { columns, foreignKeys, checks, indexes } = tableFacts(table);
   return {
     columns: byKey(
       columns.map((column) => ({
         name: column.name,
+        type: asCatalogued(column.getSQLType()),
         notNull: column.notNull,
         // A SQL default, a generated column or an identity — what the database
         // fills. `$defaultFn` is the client's and has no catalogue twin.
@@ -124,15 +152,19 @@ function declared(table: PgTable) {
   };
 }
 
-/** The same four facts as the migrated database holds them. */
+/** The same facts as the migrated database holds them. */
 async function migrated(name: string) {
-  const columns = await sql<{ name: string; notNull: boolean; hasDefault: boolean }[]>`
-    select column_name as name,
-           is_nullable = 'NO' as "notNull",
-           (column_default is not null or is_generated = 'ALWAYS' or is_identity = 'YES')
+  const columns = await sql<
+    { name: string; type: string; notNull: boolean; hasDefault: boolean }[]
+  >`
+    select c.column_name as name,
+           format_type(a.atttypid, a.atttypmod) as type,
+           c.is_nullable = 'NO' as "notNull",
+           (c.column_default is not null or c.is_generated = 'ALWAYS' or c.is_identity = 'YES')
              as "hasDefault"
-    from information_schema.columns
-    where table_schema = 'public' and table_name = ${name}
+    from information_schema.columns c
+    join pg_attribute a on a.attrelid = ${name}::regclass and a.attname = c.column_name
+    where c.table_schema = 'public' and c.table_name = ${name}
   `;
   const foreignKeys = await sql<
     {
@@ -180,23 +212,75 @@ async function migrated(name: string) {
   };
 }
 
+/** The migrated facts less what `PENDING_DROPS` declares is on its way out. */
+async function migratedAndKept(name: string) {
+  const all = await migrated(name);
+  const kept = <T extends { name: string } | string>(
+    rows: T[],
+    kind: 'column' | 'index' | 'check' | 'foreignKey',
+  ) => {
+    const pending = pendingIn(name, kind);
+    return rows.filter((row) => !pending.has(typeof row === 'string' ? row : row.name));
+  };
+  return {
+    columns: kept(all.columns, 'column'),
+    foreignKeys: kept(all.foreignKeys, 'foreignKey'),
+    checks: kept(all.checks, 'check'),
+    indexes: kept(all.indexes, 'index'),
+  };
+}
+
+/** The public tables the migrations built, as the catalogue lists them. */
+async function migratedTables(): Promise<string[]> {
+  const rows = await sql<{ name: string }[]>`
+    select relname as name from pg_class
+    where relnamespace = 'public'::regnamespace and relkind in ('r', 'p')
+  `;
+  return rows.map((row) => row.name).sort();
+}
+
 describe('the Drizzle schema against the migrated database', () => {
   it('declares exactly the tables the migrations built', async () => {
-    const rows = await sql<{ name: string }[]>`
-      select relname as name from pg_class
-      where relnamespace = 'public'::regnamespace and relkind in ('r', 'p')
-    `;
+    const pending = new Set(
+      PENDING_DROPS.filter((drop) => drop.kind === 'table').map((drop) => drop.table),
+    );
 
     // Precondition: there is something to compare.
     expect(NAMES.length).toBeGreaterThan(0);
-    expect(rows.map((row) => row.name).sort()).toEqual(NAMES);
+    expect((await migratedTables()).filter((name) => !pending.has(name))).toEqual(NAMES);
   });
 
-  it.each(NAMES)('%s: columns, foreign keys, CHECK names and indexes match', async (name) => {
-    const code = declared(byName.get(name) as PgTable);
-    const database = await migrated(name);
+  it.each(NAMES)(
+    '%s: columns, types, foreign keys, CHECK names and indexes match',
+    async (name) => {
+      const code = declared(byName.get(name) as PgTable);
+      const database = await migratedAndKept(name);
 
-    expect(code.columns.length).toBeGreaterThan(0);
-    expect(database).toEqual(code);
+      expect(code.columns.length).toBeGreaterThan(0);
+      expect(database).toEqual(code);
+    },
+  );
+
+  // What makes the drop task remove its line: one left behind names an object
+  // the catalogue no longer holds.
+  it('declares a pending drop only for an object the database still holds', async () => {
+    if (PENDING_DROPS.length === 0) {
+      expect(PENDING_DROPS).toEqual([]);
+      return;
+    }
+    const tables = await migratedTables();
+
+    for (const drop of PENDING_DROPS) {
+      expect(tables, drop.droppedBy).toContain(drop.table);
+      if (drop.kind === 'table') continue;
+      const held = await migrated(drop.table);
+      const names = {
+        column: held.columns.map((row) => row.name),
+        foreignKey: held.foreignKeys.map((row) => row.name),
+        check: held.checks,
+        index: held.indexes.map((row) => row.name),
+      }[drop.kind];
+      expect(names, drop.droppedBy).toContain(drop.name);
+    }
   });
 });
