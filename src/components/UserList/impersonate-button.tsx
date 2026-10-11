@@ -2,6 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import { impersonateUser } from '../../lib/auth-client';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import type { ImpersonateButtonProps } from './types';
 
@@ -16,6 +17,8 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
   const [failed, setFailed] = useState(false);
 
   async function impersonate() {
+    // `aria-disabled` lets a click through, so a second one is refused here.
+    if (pending) return;
     setPending(true);
     setFailed(false);
     const { error } = await impersonateUser({ userId });
@@ -30,16 +33,19 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
   return (
     <>
       {/* The visible label opens the accessible name, so a voice command
-          saying what it sees still reaches it. */}
-      <button
+          saying what it sees still reaches it, busy or not. Busy until the
+          site opens as the user; `aria-disabled` rather than `disabled`,
+          which would drop the focus and leave a keyboard nowhere. */}
+      <BusyButton
         className="btn btn--small btn--destructive"
-        type="button"
-        aria-label={`Impersonate ${name}`}
-        disabled={pending}
-        onClick={impersonate}
+        aria-label={pending ? `Impersonating ${name}` : `Impersonate ${name}`}
+        aria-disabled={pending || undefined}
+        busy={pending}
+        busyLabel="Impersonating"
+        onClick={() => void impersonate()}
       >
         Impersonate
-      </button>
+      </BusyButton>
       {failed && <Notice kind="error">{name} could not be impersonated.</Notice>}
     </>
   );

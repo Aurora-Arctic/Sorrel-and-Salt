@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
@@ -12,6 +14,9 @@ import type { ConfirmedActionProps, ConfirmStep } from './types';
 // sends the write and stays busy until the re-read page replaces the row; a
 // refusal closes it and says why in the row. The service is the guard; this
 // only puts it where an admin looks (claude-docs/components/user-list.md).
+
+/** The Reason field's line beneath its label, in view rather than in a tip until the section's sign-off (MB.115, 1d.12). */
+const NOTE_HINT = 'Kept with the change in the record of who changed what.';
 
 const ConfirmedAction = ({
   label,
@@ -27,8 +32,7 @@ const ConfirmedAction = ({
 }: ConfirmedActionProps): ReactElement => {
   const router = useRouter();
   const warningId = useId();
-  const noteId = useId();
-  const noteHintId = useId();
+  const { aria: noteAria, ...noteField } = fieldDescription({ id: useId(), note: NOTE_HINT });
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState('');
@@ -103,40 +107,37 @@ const ConfirmedAction = ({
                 </Notice>
               )}
               {withNote && (
-                <div className="field user-list__note">
-                  <label className="field__label" htmlFor={noteId}>
-                    Reason
-                  </label>
-                  <p id={noteHintId} className="field__hint">
-                    Kept with the change in the record of who changed what.
-                  </p>
-                  <input
-                    id={noteId}
-                    className="input"
-                    type="text"
-                    autoComplete="off"
-                    aria-describedby={noteHintId}
-                    value={note}
-                    disabled={sending}
-                    onChange={(event) => setNote(event.target.value)}
-                  />
+                // The wrapper holds the field's room above and below; the shell
+                // takes no class of its own.
+                <div className="user-list__note">
+                  <FieldShell label="Reason" note={NOTE_HINT} {...noteField}>
+                    <input
+                      id={noteField.controlId}
+                      className="input"
+                      type="text"
+                      autoComplete="off"
+                      {...noteAria}
+                      value={note}
+                      disabled={sending}
+                      onChange={(event) => setNote(event.target.value)}
+                    />
+                  </FieldShell>
                 </div>
               )}
               <div className="modal__actions">
                 {/* Described by the warning: the focus lands here as the modal
                     opens, so the warning is read with what it confirms. */}
-                <button
+                <BusyButton
                   ref={confirmRef}
                   className={confirmClass}
-                  type="button"
                   aria-describedby={warning ? warningId : undefined}
                   disabled={sending}
-                  aria-busy={sending || undefined}
+                  busy={sending}
+                  busyLabel={busy}
                   onClick={() => void confirm()}
                 >
-                  {sending && <span className="spinner" aria-hidden="true" />}
-                  {sending ? busy : label}
-                </button>
+                  {label}
+                </BusyButton>
                 <button className="btn btn--quiet" type="button" disabled={sending} onClick={close}>
                   Cancel
                 </button>

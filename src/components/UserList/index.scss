@@ -264,9 +264,9 @@ $tip-layer: $sticky-column-layer + 1;
 
 // The confirmation's Reason field, given the warning's step of room above and
 // 2rem below, so it reads apart from the question and stands clear of
-// the buttons (the owner's call). Compounded with `.field` for the same
-// reason as the warning.
-.field.user-list__note {
+// the buttons (the owner's call). A wrapper round the field's shell, which
+// takes no class of its own.
+.user-list__note {
   margin-block: space(5) space(6);
 }
 
