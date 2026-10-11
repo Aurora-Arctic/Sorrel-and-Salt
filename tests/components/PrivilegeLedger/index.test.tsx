@@ -8,6 +8,10 @@ import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
 // so the page owns the read and this owns what an admin sees of it
 // (claude-docs/components/privilege-ledger.md).
 
+// The filter's shared form holds the router, which only a mounted app
+// provides; a full-load filter never calls it.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const GRANT: PrivilegeLedgerEntry = {
   id: 'c1',
   at: new Date('2026-03-04T05:06:07Z'),

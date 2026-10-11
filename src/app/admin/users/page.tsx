@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import AdminInvitations from '../../../components/AdminInvitations';
+import PageHeader from '../../../components/PageHeader';
 import UserList, { PauseControl } from '../../../components/UserList';
 import { userListHref } from '../../../components/UserList/href';
 import type { UserListEntry } from '../../../components/UserList/types';
 import { impersonationEnabled } from '../../../lib/impersonation';
 import { DEFAULT_PAGE_SIZE, resolvePage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
-import { readableCursor, single } from '../../../lib/search-params';
+import { single } from '../../../lib/search-params';
 import type { Session, UserRole } from '../../../lib/session';
 import type { ConnectionArgs } from '../../../lib/types';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../../lib/primary-admin';
@@ -18,6 +19,7 @@ import {
   listUsers,
   providersOf,
 } from '@/modules/identity';
+import { pagerHrefs, readListPlace } from '../list-page';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -75,15 +77,13 @@ const readInvitations = cache(async (session: Session) =>
 export default async function AdminUsersPage({ searchParams }: AdminUsersPageProps) {
   const session = await requireAdminSession();
   const params: UsersSearchParams = await searchParams;
-  const query = single(params.query)?.trim() ?? '';
+  const { query, after, before } = readListPlace(params);
   // A flag by presence: `?awaiting`, a native submit's `awaiting=`, or an
   // older link's `awaiting=1`.
   const awaitingApproval = params.awaiting !== undefined;
   // Either role, or none: a hand-edited value is no filter rather than an error.
   const roleParam = single(params.role);
   const role = roleParam === 'admin' || roleParam === 'user' ? roleParam : undefined;
-  const after = readableCursor(single(params.after));
-  const before = after ? undefined : readableCursor(single(params.before));
 
   const [{ users, pageInfo }, adminChanges, invitations] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
@@ -99,10 +99,10 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
           pages put their primary action (MB.63, on the owner's call). Keyed by
           the state, so the refresh after a flip mounts a fresh switch rather
           than keeping this one's busy state. */}
-      <div className="page-header">
-        <h1>Users</h1>
-        <PauseControl key={String(adminChanges.paused)} {...adminChanges} />
-      </div>
+      <PageHeader
+        title="Users"
+        action={<PauseControl key={String(adminChanges.paused)} {...adminChanges} />}
+      />
       <UserList
         users={users}
         query={query}
@@ -110,16 +110,9 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         role={role}
         canImpersonate={impersonationEnabled()}
         adminChanges={adminChanges}
-        previousHref={
-          pageInfo.hasPreviousPage && pageInfo.startCursor
-            ? userListHref({ query, awaitingApproval, role }, { before: pageInfo.startCursor })
-            : undefined
-        }
-        nextHref={
-          pageInfo.hasNextPage && pageInfo.endCursor
-            ? userListHref({ query, awaitingApproval, role }, { after: pageInfo.endCursor })
-            : undefined
-        }
+        {...pagerHrefs(pageInfo, (cursor) =>
+          userListHref({ query, awaitingApproval, role }, cursor),
+        )}
       />
       {/* Locked, with the pause as the reason, for an admin the pause binds:
           everyone but the primary admin (MB.63). */}

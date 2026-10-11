@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
+import PageHeader from '../../../components/PageHeader';
 import PrivilegeLedger from '../../../components/PrivilegeLedger';
 import { privilegeLedgerHref } from '../../../components/PrivilegeLedger/href';
 import type {
@@ -11,7 +12,7 @@ import { userListHref } from '../../../components/UserList/href';
 import { InvalidCursor } from '../../../lib/errors';
 import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
-import { readableCursor, single } from '../../../lib/search-params';
+import { single } from '../../../lib/search-params';
 import type { Session } from '../../../lib/session';
 import {
   countPrivilegeChanges,
@@ -19,6 +20,7 @@ import {
   listedOnUserList,
   usersForAdmin,
 } from '@/modules/identity';
+import { pagerHrefs, readListPlace } from '../list-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -110,39 +112,29 @@ export default async function AdminPrivilegeChangesPage({
 }: AdminPrivilegeChangesPageProps) {
   const session = await requireAdminSession();
   const params: PrivilegeChangesSearchParams = await searchParams;
-  const query = single(params.query)?.trim() || undefined;
+  const place = readListPlace(params);
+  // None rather than blank: the ledger's filter leaves an unasked field out.
+  const query = place.query || undefined;
   // Either privilege, or none: a hand-edited value is no filter.
   const privilegeParam = single(params.privilege);
   const privilege = PRIVILEGES.find((value) => value === privilegeParam);
-  const after = readableCursor(single(params.after));
-  const before = after ? undefined : readableCursor(single(params.before));
-
   const { changes, pageInfo, position } = await readLedger(
     session,
     query,
     privilege,
-    after,
-    before,
+    place.after,
+    place.before,
   );
   const filter = { query, privilege };
 
   return (
     <main>
-      <h1>Privilege Changes</h1>
+      <PageHeader title="Privilege Changes" />
       <PrivilegeLedger
         changes={changes}
         filter={filter}
         position={position}
-        previousHref={
-          pageInfo.hasPreviousPage && pageInfo.startCursor
-            ? privilegeLedgerHref(filter, { before: pageInfo.startCursor })
-            : undefined
-        }
-        nextHref={
-          pageInfo.hasNextPage && pageInfo.endCursor
-            ? privilegeLedgerHref(filter, { after: pageInfo.endCursor })
-            : undefined
-        }
+        {...pagerHrefs(pageInfo, (cursor) => privilegeLedgerHref(filter, cursor))}
       />
     </main>
   );

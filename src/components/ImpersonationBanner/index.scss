@@ -1,18 +1,19 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Layout and motion only, until the admin area's design review (MB.115).
+// The impersonation banner: a row of the sentence and Stop over a heavy red
+// rule, in the page's flow on a touch screen and tucked above the page where
+// a pointer can hover, sliding down when one nears the top. The motion, the
+// width, the rule and the button size are the owner's calls during MB.53;
 // claude-docs/components/impersonation-banner.md, "Styling".
-
-// The rule along its foot: thick enough to read as a warning on its own,
-// which is all of it the tucked banner shows.
-$impersonation-banner-rule: 3px;
 // What shows while it is tucked away: the rule and a sliver above it.
 $impersonation-banner-peek: space(2);
 // How far below the sliver a pointer still counts as near the top.
 $impersonation-banner-reach: space(4);
-// ThemeToggle's corner, `$theme-toggle-corner-radius`, which the tucked banner
-// runs beneath and keeps its own content clear of.
+// ThemeToggle's corner, which the tucked banner runs beneath and keeps its
+// own content clear of. The same 3.9rem as `$theme-toggle-corner-radius` in
+// `ThemeToggle/index.scss`, which is that file's own variable rather than a
+// token, so the two are kept equal by hand until it is one.
 $impersonation-banner-corner: 3.9rem;
 
 // A wrapping row of the sentence and Stop. On a touch screen, where nothing
@@ -27,10 +28,14 @@ $impersonation-banner-corner: 3.9rem;
   // More below than above: wrapped on a phone, Stop sits on the bottom row,
   // and the rule beneath it would otherwise crowd it.
   padding: space(2) space(5) space(3);
-  border-bottom: $impersonation-banner-rule solid $secondary;
+  // Thick enough to read as a warning by its weight as well as its colour,
+  // which is all of it the tucked banner shows.
+  border-bottom: $rule-heavy solid $secondary;
   background-color: $surface-card;
 }
 
+// `0px`, not `0`: the fallback is used inside `calc()` by everything that
+// offsets by the inset, and a unitless zero there is invalid.
 @media (hover: none) {
   :root {
     --top-inset: var(--impersonation-banner-height, 0px);
@@ -50,7 +55,8 @@ $impersonation-banner-corner: 3.9rem;
     right: 0;
     left: 0;
     // Under ThemeToggle (`z-index: 2`), so aiming at the toggle reaches the
-    // toggle and never opens the banner.
+    // toggle and never opens the banner. Raw, as ThemeToggle's is: a site-wide
+    // map of layers is MB.124's.
     z-index: 1;
     padding-right: calc(#{$impersonation-banner-corner} + #{space(3)});
     padding-bottom: space(2);

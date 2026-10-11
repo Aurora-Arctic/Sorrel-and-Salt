@@ -1,4 +1,6 @@
 import type { Story } from '@ladle/react';
+import type { PropsWithChildren } from 'react';
+import PageHeader from '../PageHeader';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
@@ -98,3 +100,29 @@ export const EmptyForASearch: Story = () => (
     filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
   />
 );
+
+// The admin layout's frame and the page's heading, as /admin/privilege-changes
+// draws them.
+const Frame = ({ children }: PropsWithChildren) => (
+  <div className="admin-layout">
+    <main>
+      <PageHeader title="Privilege Changes" />
+      {children}
+    </main>
+  </div>
+);
+
+// At phone width: each change a card, every fact led by its column's name.
+export const PhoneDark: Story = () => (
+  <Frame>
+    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
+  </Frame>
+);
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => (
+  <Frame>
+    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
+  </Frame>
+);
+PhoneLight.meta = { theme: 'light', width: 375 };

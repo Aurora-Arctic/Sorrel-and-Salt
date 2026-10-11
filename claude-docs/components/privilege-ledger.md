@@ -31,12 +31,16 @@ id.
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
   (`query`), matching part of the subject's name or email, a native Privilege
   dropdown (`privilege`: All, Admin or Coven creation), both on the owner's
-  call, and a Filter button. It is `filter.tsx`, the one client file here. A native
+  call, and a Filter button. It is `filter.tsx`, the one client file here:
+  the fields and their state inside the shared `FilterForm`
+  ([`filter-form.md`](filter-form.md)), so Filter is busy, a spinner and
+  "Filtering", until the full load leaves (MB.115). A native
   `<select>`, so before hydration the form still submits, All as
   `privilege=`, which the page reads as no privilege. Filter is `disabled`
   while the trimmed query and the dropdown match the filter shown, as the
   user list's is (MB.53), and a submit opens the new filter from the first
-  page as a full load. `href.ts`'s `privilegeLedgerHref` builds every address here, the
+  page as a full load. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
+  over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's
   permissions history icon opens it with their address in the search, which
@@ -45,7 +49,9 @@ id.
   case-insensitive substring, so an address inside another (`ada@…` in
   `bada@…`) matches both.
 - **Seven columns**: When, User, Privilege, Change, How, Changed By and Note,
-  each heading in title case (DESIGN.md §9). When is the UTC minute, saying
+  each heading in title case (DESIGN.md §9), the headings and each cell's
+  `data-label` from one `COLUMNS` list, the table's roles written out so it
+  can stack into cards at phone width. When is the UTC minute, saying
   UTC since the server renders it, in a `<time>` carrying the full instant.
   Privilege reads Admin or Coven creation, Change Granted or Revoked, and How
   Primary admin bootstrap, By an admin, Invitation accepted or Manual fix.
@@ -64,21 +70,25 @@ id.
 
 ## Styling
 
-Layout only, until the admin area's design review (MB.115): a column of the
-filter, the table and the pager; the filter a wrapping row of the two fields
-and the button, on the `.field`, `.input`, `.select` and `.btn` primitives; the time
-on one line; and the note held to `$measure`. The table is the `.data-table`
-primitive in its `.data-table-frame`, the pager the `.pager` primitive.
-Tokens: `space()` and `$measure`.
+Built from the shared list primitives ([`styling.md`](../styling.md),
+"Designing a section"): the root is a `.list-frame`, the filter
+`FilterForm`'s `.filter-row` on the `.field`, `.input`, `.select` and `.btn`
+primitives, the table a `.data-table` with `--stack` in its
+`.data-table-frame`, and the pager the `.pager`. Under `$table-stack-width`
+of its frame each change is a card, every fact led by its column's name. Its
+own stylesheet keeps the time on one line and holds the note to `$measure`.
+The look past the tokens waits for the section's sign-off (MB.115).
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/PrivilegeLedger/index.stories.tsx)
-— `Everything`, `OneUser` (searched by address), `OneUserAdminOnly` (and by
-privilege), `Empty` and `EmptyForASearch`, on invented people, each story's
-rows what its filter would show: every route, a note on a role grant and the flag it set at one instant, a
-deleted subject and the seed's actor, unlinked. Render-only, no test ids, no
-snapshots.
+[`index.stories.tsx`](../../src/components/PrivilegeLedger/index.stories.tsx),
+`Admin / Privilege Ledger`: `Everything`, `OneUser` (searched by address),
+`OneUserAdminOnly` (and by privilege), `Empty` and `EmptyForASearch`, on
+invented people, each story's rows what its filter would show: every route, a
+note on a role grant and the flag it set at one instant, a deleted subject and
+the seed's actor, unlinked. `PhoneDark` and `PhoneLight` show the page's
+header and every change as a card at 375px, inside the admin layout's frame.
+Render-only, no test ids, no snapshots.
 
 ## Testing
 

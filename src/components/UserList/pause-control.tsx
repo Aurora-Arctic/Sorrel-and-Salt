@@ -5,6 +5,7 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
@@ -87,16 +88,15 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
         </Notice>
       )}
       {canToggle ? (
-        <button
+        <BusyButton
           className={copy.buttonClass}
-          type="button"
           disabled={sending}
-          aria-busy={sending || undefined}
+          busy={sending}
+          busyLabel={copy.busy}
           onClick={() => void toggle()}
         >
-          {sending && <span className="spinner" aria-hidden="true" />}
-          {sending ? copy.busy : copy.label}
-        </button>
+          {copy.label}
+        </BusyButton>
       ) : (
         // In view but unusable, its reason in a tip, as the primary admin's
         // Revoke is (on the owner's call): the notice is the page's one sentence.

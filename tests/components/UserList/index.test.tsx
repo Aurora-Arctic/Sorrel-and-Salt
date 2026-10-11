@@ -178,6 +178,22 @@ describe('UserList impersonation', () => {
     expect(impersonateUserMock).toHaveBeenCalledWith({ userId: BO.id });
   });
 
+  it('is busy while pending, keeping its place in the tab order, and sends once', async () => {
+    // Never answers, so the request stays in flight.
+    impersonateUserMock.mockReturnValue(new Promise(() => {}));
+    render(<UserList {...props({ canImpersonate: true })} />);
+    const impersonate = screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' });
+
+    fireEvent.click(impersonate);
+
+    await waitFor(() => expect(impersonate).toHaveAttribute('aria-busy', 'true'));
+    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
+    expect(impersonate).toHaveAttribute('aria-disabled', 'true');
+    expect(impersonate).toBeEnabled();
+    fireEvent.click(impersonate);
+    expect(impersonateUserMock).toHaveBeenCalledTimes(1);
+  });
+
   it('says so in the row when the endpoint refuses, and stays on the page', async () => {
     impersonateUserMock.mockResolvedValue({
       data: null,

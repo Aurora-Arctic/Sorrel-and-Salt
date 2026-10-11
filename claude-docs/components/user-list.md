@@ -34,8 +34,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   Filter button. All roles submits natively as `role=`, which the page reads
   as no role. A
   filtered page is an address, and filtering starts again from the first page,
-  since the form carries no cursor. It is `filter.tsx`, one of three client files
-  here.
+  since the form carries no cursor. It is `filter.tsx`, a client file: the
+  fields and their state, inside the shared `FilterForm`
+  ([`filter-form.md`](filter-form.md)), which holds the form, the Filter
+  button and the full-load navigation, so Filter is busy, a spinner and
+  "Filtering", from the press until the browser leaves (MB.115).
 - **Filter is offered only when there is a new filter to apply** (MB.53, on
   the owner's word). It is `disabled` while the trimmed query and the checkbox
   match the filter the page shows, enabled once either differs, and disabled
@@ -43,12 +46,17 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the primitives reserve it for a submit with nothing to send.
 - **`awaiting` is a bare flag**, read by its presence (MB.53, on the owner's
   word). A submit builds the address itself with `href.ts`'s `userListHref`,
+  a thin typed wrapper over the shared `listHref` (`src/lib/list-href.ts`),
   the pager's builder too, so it reads `?query=bo&awaiting` rather than
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
   hydration the form submits natively, with the checkbox as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
   Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
+  The headings and each cell's `data-label`, the name a cell carries as a
+  card at phone width, come from one `COLUMNS` list in `index.tsx`, so the
+  two cannot drift; the table writes out its roles (MB.115, "Tables at phone
+  width" in [`styling.md`](../styling.md)).
   The two columns with a control, Role and Coven Creation, sit together, and
   the two facts read rather than changed follow them (reordered during MB.59,
   on the owner's call). The Email
@@ -104,14 +112,20 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
   column does not exist. Each non-admin row holds an Impersonate button named
   "Impersonate <name>", from `impersonate-button.tsx`, a client file. An admin's row holds none, because the endpoint refuses to
-  impersonate an admin. A success is a full load of `/` as the user. A refusal
-  says "<name> could not be impersonated." in the row, and the page stays.
+  impersonate an admin. While the request is out the button is a `BusyButton`
+  ([`busy-button.md`](busy-button.md)): `aria-busy`, the spinner and
+  "Impersonating", named "Impersonating <name>", and `aria-disabled` rather
+  than `disabled`, so the focus stays on it rather than falling to the page;
+  a second press sends nothing (MB.115). A success is a full load of `/` as
+  the user. A refusal says "<name> could not be impersonated." in the row,
+  the button works again, and the page stays.
   The endpoint is the guard: the button only puts it where an admin looks.
   The column, heading and cells, has a red rule down its left. The column is
   tinted a faded red with red text, and its heading's hairline is red where
   every other is the muted ink. It is sticky at the table's right edge, so on
-  a narrow screen the other columns scroll beneath it (on the owner's call,
-  during MB.59): its tint is therefore mixed into the ground it sits on, the
+  a narrow frame the other columns scroll beneath it (on the owner's call,
+  during MB.59), until the table stacks into cards at phone width, where it
+  is the card's foot instead (Styling, below): its tint is therefore mixed into the ground it sits on, the
   page or a banded row's card, rather than laid over transparent. Every tip
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
@@ -239,43 +253,91 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 
 ## Styling
 
-Layout only, until the admin area's design review (MB.115). Its cells are centred on the row rather than on the text's baseline, the
-primitive's rule, since its rows mix text with provider marks, check marks and
-buttons whose baselines sit at different heights, and the signup date never
-breaks at its hyphens (the owner's review). The filter is a
-wrapping row of the field, the checkbox and the button. The creation cell is
-the mark on the left and the control on the right, centred on one line, as
-the role cell is (MB.63, on the owner's call), and the role cell a wrapping row
-of the role, with the primary admin's crown in `$text-muted` beside it, on the
-left and the control on the right, centred on one line (MB.59, on the owner's
-call). Both of the role cell's tips, the crown's and the locked Revoke's, are
-the `tip-bubble` mixin's, above their mark from its left edge, as InfoTip's.
-The confirmation is the
-`Modal`'s own layout, its buttons in `.modal__actions`, all built on the
-`.field`, `.input`, `.checkbox` and `.btn` primitives. The table is the
-`.data-table` primitive, filling the layout's width and scrolling inside its
-`.data-table-frame` on a narrow screen rather than widening the page: its rows
-are banded and its header carries a hairline, as every admin list's does, and its pager is the shared `.pager` primitive: Prev and Next, centred ([`styling.md`](../styling.md), "Buttons"). Each provider mark is the `.provider-mark` primitive's circle, held in its
-`.user-list__hint` as a flex box so the circle, not a line of text around it,
-sets the hint's height. Tokens: `space()`, `$text-muted` and `$surface-card`.
+The list is built from the shared list primitives ([`styling.md`](../styling.md),
+"Designing a section"): its root is a `.list-frame`, its filter
+`FilterForm`'s `.filter-row`, its table a `.data-table` with the
+`--stack` modifier inside a `.data-table-frame`, and its pager the `.pager`.
+Its own stylesheets hold only what is the list's, on the tokens. The look past
+the tokens, at desktop width, waits for the section's sign-off (MB.115,
+proposal 1d.2, below).
+
+- **Cells are centred on the row** rather than on the text's baseline, the
+  primitive's rule, since its rows mix text with provider marks, check marks
+  and buttons whose baselines sit at different heights; the signup date never
+  breaks at its hyphens (the owner's review).
+- **At desktop width no cell wraps**: the table scrolls inside its frame
+  instead (the owner's call, during MB.59), with separate borders so each rule
+  belongs to its own cell. Its rows are banded and its header carries a
+  hairline, as every admin list's does.
+- **The marks** are 1.25em, a ratio of the text beside them rather than a
+  fixed size. **The history link and the crown** are `$icon-size` boxes,
+  WCAG 2.2's 24px target, around a `$glyph-size` glyph, in `$text-muted`;
+  the history link's hit area reaches `$control-height` through a
+  pseudo-element.
+- **The tips** are the `tip-bubble` mixin's: a mark's or logo's centred
+  above it (`.user-list__tip`), the history link's, the crown's and a locked
+  control's from its left edge, no wider than `$tip-width` capped at the
+  window. Each sits one layer above the sticky column (`_layers.scss`).
+- **The Impersonate column** has a 1px red rule down its left and a 6% red
+  tint mixed into the ground it sits on, and is sticky at the table's right
+  edge (above).
+- **At phone width each row is a card.** Under `$table-stack-width` (40rem)
+  of its frame the primitive turns each row into a card on `$surface-card`,
+  every fact led by its column's name from its `data-label`. The list's own
+  rule, under the same named container query, lets the cells wrap, sets the
+  Impersonate cell back to `position: static` with its red rule drawn above
+  it rather than beside it, on the card's own ground, as the card's foot, and
+  hides it on an admin's card, which has no Impersonate.
+- **The role and creation cells** each hold the value or mark on the left and
+  the control on the right, centred on one line (MB.59, MB.63, on the
+  owner's call). **The pause** is a row, `.user-list__pause`, centred with a
+  `space(3)` gap.
+- **`controls.scss`** holds the rules of the controls that also stand outside
+  the table: the confirmation's warning and its Reason field's room (a step
+  above, `space(6)` below), and the locked control's and the crown's tips.
+  `confirmed-action.tsx`, `locked-control.tsx` and `primary-admin-mark.tsx`
+  each import it, so `AdminInvitations`, which uses the first two, takes
+  their rules with them rather than the list's whole stylesheet.
+- Each provider mark is the `.provider-mark` primitive's circle, held in its
+  `.user-list__hint` as a flex box so the circle sets the hint's height. The
+  confirmation is the `Modal`'s own layout, its Reason the shared field shell
+  ([`field.md`](field.md)).
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/UserList/index.stories.tsx) —
-`Default`, `Filtered`, `NoMatch`, `WithImpersonation`, `UnverifiedApproval`,
-`AdminRoles`, `AdminChangesPaused` and `AdminChangesNotPrimary`,
-inside the admin layout's frame, each name led by its permissions history
-icon, whose tip shows on hover or focus; the list holds an admin, a user awaiting
-approval and an approved user, so each control shows. `UnverifiedApproval`
-holds two users awaiting approval, one unverified and one verified, so the
-first's Approve opens the warning (MB.205) and the second's does not.
-`AdminRoles` holds the primary admin, its Revoke unusable with the reason
-beside it, a second admin whose Revoke opens its modal, and users whose Grant
-opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused` shows
-the switch paused with the primary admin's Resume, and
-`AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63). In the workshop neither Impersonate nor Approve or Revoke reaches a
-server, so a click shows the refusal.
-Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/UserList/index.stories.tsx),
+`Admin / Users`, every story inside the admin layout's frame:
+
+- **States**: `Default`, `Filtered`, `NoMatch`, `WithImpersonation`,
+  `UnverifiedApproval`, `AdminRoles`, `AdminChangesPaused` and
+  `AdminChangesNotPrimary`, each name led by its permissions history icon,
+  whose tip shows on hover or focus; the list holds an admin, a user awaiting
+  approval and an approved user, so each control shows. `UnverifiedApproval`
+  holds two users awaiting approval, one unverified and one verified, so the
+  first's Approve opens the warning (MB.205) and the second's does not.
+  `AdminRoles` holds the primary admin, its Revoke unusable with the reason
+  beside it, a second admin whose Revoke opens its modal, and users whose
+  Grant opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
+  shows the switch paused with the primary admin's Resume, and
+  `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
+- **Phone width**: `PhoneDark` and `PhoneLight`, the page's header and the
+  list with Impersonate at 375px, every row a card.
+- **Proposals for MB.115's sign-off**, story-only markup deleted with the
+  losers: the list at phone width, `ProposalPhoneCardsA` (the cards, as
+  shipped), `ProposalPhoneDisclosureB` (a `<details>` per user) and
+  `ProposalPhoneTwoTierC` (a control row beneath each), each `Dark` and
+  `Light` (1d.1); the list at desktop width, `ProposalDesktopColumnsA`
+  (today's columns restyled) and `ProposalDesktopUserColumnB` (Name and Email
+  as one User column), each with `PhoneDark` and `PhoneLight` (1d.2);
+  confirming Impersonate, `ProposalImpersonateConfirmA` (none, today) and
+  `…B` (a modal), and Pause, `ProposalPauseConfirmA` (none, today) and
+  `…B` (1d.5); and the Reason field's hint, `ProposalReasonTipA` (in a tip,
+  the label "Reason (Optional)") and `ProposalReasonVisibleB` (in view,
+  today) (1d.12), each at desktop width and with `PhoneDark` and
+  `PhoneLight`.
+
+In the workshop neither Impersonate nor Approve or Revoke reaches a server,
+so a click shows the refusal. Render-only, no test ids, no snapshots.
 
 ## Testing
 
@@ -286,8 +348,9 @@ roster; no table when no user matches; the filter form's action, method,
 names and kept values; the Filter button's disabled and enabled states, the
 bare `awaiting` it opens, the Role select's values and the `role` it opens;
 the history link before every name and its address; the Impersonate column:
-absent when off, on non-admin rows only, the call and the landing, and the
-refusal; the creation cell: Approve on rows awaiting approval, Revoke on
+absent when off, on non-admin rows only, the call and the landing, busy
+and still focusable while pending with a second press sending nothing, and
+the refusal; the creation cell: Approve on rows awaiting approval, Revoke on
 approved ones and nothing on an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
 until the refresh, and the refusal in the row; the unverified warning
@@ -304,8 +367,8 @@ tried; and, while paused, every Grant, Revoke, Approve and coven Revoke
 locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Revoke kept on its own reason — which of the two reasons won is told by its
-words alone. Its colours, marks, tips and their placement are presentation;
-paging is Pager's. `tests/app/admin/users/page.test.tsx` reads the page's
+words alone. Its colours, marks, tips and their placement, and the cards at phone width,
+are presentation; paging is Pager's. `tests/app/admin/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, and `awaiting` read by its presence. `tests/e2e/admin.spec.ts`
 approves and revokes a user against the built server, and grants admin with a
