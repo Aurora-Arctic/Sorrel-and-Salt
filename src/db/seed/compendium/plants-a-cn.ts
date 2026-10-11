@@ -168,12 +168,52 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/b/beech-27.html',
       accessed: '2026-10-11',
     },
+    'grieve-beetroots': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Beetroots',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/beetro28.html',
+      accessed: '2026-10-11',
+    },
     'grieve-bergamot': {
       kind: 'web_page',
       authors: 'Grieve, M.',
       title: 'Bergamot',
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/b/bergam32.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bilberry': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bilberry',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bilber37.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bindweeds': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bindweeds',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bindwe38.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-birch-common': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Birch, Common',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bircom43.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-bistort': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Bistort',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/bistor45.html',
       accessed: '2026-10-11',
     },
     'grieve-ginseng': {
@@ -198,6 +238,30 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Lucerne',
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/l/lucern48.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-nightshade-deadly': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Nightshade, Deadly',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/n/nighde05.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-orange-bitter': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Orange, Bitter',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/o/orabit11.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-orange-sweet': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Orange, Sweet',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/o/oraswe12.html',
       accessed: '2026-10-11',
     },
     'grieve-poplar-trembling': {
@@ -328,6 +392,13 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Arnica_montana&oldid=1361261909',
       accessed: '2026-10-11',
     },
+    'wikipedia-atropa-bella-donna': {
+      kind: 'entry',
+      title: 'Atropa bella-donna',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Atropa_bella-donna&oldid=1376240967',
+      accessed: '2026-10-11',
+    },
     'wikipedia-avocado': {
       kind: 'entry',
       title: 'Avocado',
@@ -363,6 +434,41 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Berberis_vulgaris&oldid=1378745653',
       accessed: '2026-10-11',
     },
+    'wikipedia-bergamot-orange': {
+      kind: 'entry',
+      title: 'Bergamot orange',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Bergamot_orange&oldid=1378785616',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-beta-vulgaris': {
+      kind: 'entry',
+      title: 'Beta vulgaris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Beta_vulgaris&oldid=1358735749',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-betula-pendula': {
+      kind: 'entry',
+      title: 'Betula pendula',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Betula_pendula&oldid=1377221570',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-bistorta-officinalis': {
+      kind: 'entry',
+      title: 'Bistorta officinalis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Bistorta_officinalis&oldid=1366901099',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-bitter-orange': {
+      kind: 'entry',
+      title: 'Bitter orange',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Bitter_orange&oldid=1368703094',
+      accessed: '2026-10-11',
+    },
     'wikipedia-callistephus': {
       kind: 'entry',
       title: 'Callistephus',
@@ -382,6 +488,13 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Celastrus scandens',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Celastrus_scandens&oldid=1359249101',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-convolvulus-arvensis': {
+      kind: 'entry',
+      title: 'Convolvulus arvensis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Convolvulus_arvensis&oldid=1375030855',
       accessed: '2026-10-11',
     },
     'wikipedia-erythronium-americanum': {
@@ -466,6 +579,13 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Streptocarpus ionanthus',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Streptocarpus_ionanthus&oldid=1315367187',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-vaccinium-myrtillus': {
+      kind: 'entry',
+      title: 'Vaccinium myrtillus',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Vaccinium_myrtillus&oldid=1377480885',
       accessed: '2026-10-11',
     },
   },
@@ -4606,6 +4726,938 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             {
               source: 'kynes-plants',
               locator: 's.v. Beech',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Beet',
+      canonicalName: 'Beta vulgaris',
+      nomenclature: 'botanical',
+      description:
+        'Beet is a single species of the amaranth family that people have bred into several quite different crops: the red root vegetable called beetroot, the leafy chard, the sugar beet, and the mangelwurzel grown as cattle fodder. All descend from the sea beet, a wild plant of shorelines from western Europe and the Mediterranean to North Africa and western Asia. Usually grown as a biennial, it can reach about 120 centimetres, and the swollen roots of cultivated plants may be deep red, white or yellow. Its earliest written record comes from Mesopotamia in the eighth century BC; Romans gave the root for fevers and constipation, and Grieve records that the ancients presented it on silver to Apollo at Delphi. Jewish households serve it at Rosh Hashana, praying that their enemies depart, a pun on its Aramaic name. Culpeper treats the red and white sorts as two plants under different planets, putting the red beet under Saturn. In magic it is a love plant: Cunningham says a couple who eat from one beet will fall in love, and that its juice serves as an ink for love spells and as a stand-in for blood.',
+      elements: ['earth'],
+      planets: ['Saturn'],
+      folkNames: ['Mangel', 'Mangold'],
+      categories: ['Love'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Beet',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Beets',
+          supports: ['planets', 'description'],
+        },
+        {
+          source: 'grieve-beetroots',
+          supports: ['canonicalName', 'description'],
+        },
+        {
+          source: 'wikipedia-beta-vulgaris',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          colors: ['red', 'white', 'yellow'],
+          references: [
+            {
+              source: 'grieve-beetroots',
+              supports: ['form'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. Beets',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'wikipedia-beta-vulgaris',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            "Beet leaves are cooked as a pot herb in the manner of spinach, and the garden beet's young leaves serve likewise. Grieve notes that the French mix them with sorrel to soften its sharpness.",
+          safetyNotes:
+            'Cunningham marks large amounts of the leaf as not recommended for internal use. Beet greens are high in oxalate, which can contribute to kidney stones.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Beet; p. 266',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-beetroots',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-beta-vulgaris',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Belladonna',
+      canonicalName: 'Atropa bella-donna',
+      nomenclature: 'botanical',
+      description:
+        "Belladonna, or deadly nightshade, is a bushy perennial of the nightshade family, native to Europe, western Asia and north-west Africa and partial to chalk and limestone; in Britain it is native only to England. It bears dull purple, bell-shaped flowers and glossy black berries about the size of a cherry, sweet enough to tempt children, and it ranks among the most poisonous plants known, every part carrying atropine and related alkaloids. Linnaeus named the genus after Atropos, the Fate who cuts the thread of life, while the species name, Italian for 'beautiful woman', recalls the drops women once put in their eyes to widen the pupils. Its older English name was dwale. Lore makes it a poisoner's plant: Livia was rumoured to have killed Augustus with its juice, and the Scots are said to have drugged an invading army with it during a truce. The priests of Bellona, the Roman war goddess, reputedly drank it before invoking her, and it was named among the ingredients of the witches' flying ointment. Old legend held that the Devil tended it himself, leaving it only on Walpurgis Night. Today's writers urge great care: Cunningham calls it best avoided, and Kynes suggests working with a picture of the plant, for journeying, astral work or keeping a secret, and leaving an offering to Hecate where it grows wild.",
+      elements: ['water'],
+      planets: ['Saturn', 'Pluto'],
+      zodiacSigns: ['Libra', 'Scorpio'],
+      safetyNotes:
+        'Poisonous in every part: never take it internally or put it on the skin. AHPA safety class 3, to be used only under the supervision of an expert qualified in its use. An overdose brings on anticholinergic poisoning: a flushed face, widened pupils, a racing heart, a dry mouth, agitation, hallucinations and meaningless speech. The sweet berries are the commonest cause of poisoning in children. Touching the plant can irritate the skin, so wear gloves, and never handle it with cuts or grazes on the hands. Its alkaloid atropine crosses the placenta quickly. Cats and dogs are very susceptible to it.',
+      folkNames: [
+        'Deadly Nightshade',
+        'Banewort',
+        'Black Cherry',
+        "Death's Herb",
+        "Devil's Cherries",
+        'Divale',
+        'Dwale',
+        'Dwaleberry',
+        'Dwayberry',
+        'Fair Lady',
+        'Great Morel',
+        "Naughty Man's Cherries",
+        "Sorcerer's Berry",
+        "Witch's Berry",
+        "Devil's Berries",
+        'Death Cherries',
+        'Beautiful Death',
+        "Devil's Herb",
+        'Sleeping Nightshade',
+      ],
+      deities: ['Hecate', 'Circe'],
+      categories: ['Creativity', 'Divination'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Belladonna; "How to Read the Entries"',
+          supports: ['elements', 'planets', 'deities', 'folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Nightshade',
+          supports: [
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 112–113; p. xxii',
+          supports: ['folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-nightshade-deadly',
+          supports: ['folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-atropa-bella-donna',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 112',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-nightshade-deadly',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description:
+            'The thick, whitish root entered English medicine only in 1860, as the base of a pain-relieving liniment. In Bukovina, in the Carpathians, a girl wishing to grow more attractive would dig up a root on a Shrovetide Sunday, leave bread, salt and brandy in its place, and carry it home on her head, telling no one what it was.',
+          safetyNotes:
+            'The root is the most poisonous part of the plant, holding up to about 1.3 per cent tropane alkaloids by fresh weight.',
+          references: [
+            {
+              source: 'grieve-nightshade-deadly',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-atropa-bella-donna',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bergamot Orange',
+      canonicalName: 'Citrus bergamia',
+      nomenclature: 'botanical',
+      description:
+        'The bergamot orange is a small citrus tree with glossy leaves and clusters of white, star-shaped flowers. Its fruit, about the size of an orange, ripens from green to a pale yellow and is slightly flattened and knobbly. It is most likely a cross between the lemon and the bitter orange, and it is unrelated to the mint-family herbs also called bergamot, which only share something of its scent. It is grown chiefly around the Mediterranean, above all on the Ionian coast of Reggio di Calabria in southern Italy, where the fruit has become an emblem of the city; French and Ivorian growers also raise it for its oil. The fragrant oil drawn from the rind has been used in French perfumery since the seventeenth century, was part of the original eau de Cologne, and gives Earl Grey tea its character. In magical practice Kynes ties it to air, Mercury and the Sun, and to confidence, protection and prosperity: its oil is diffused to reach and speak with spirits or worn for psychic protection, and the fruit goes into spells for luck and wealth.',
+      elements: ['air'],
+      planets: ['Mercury', 'Sun'],
+      safetyNotes:
+        'Used on the skin it can raise sensitivity to sunlight, so the sun does more damage. The reaction comes from bergapten and is not expected after eating the fruit or peel.',
+      categories: ['Confidence', 'Prosperity', 'Protection'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bergamot',
+          supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 234',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-bergamot-orange',
+          supports: ['canonicalName', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          colors: ['green', 'yellow'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bergamot',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'wikipedia-bergamot-orange',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The essential oil is the form Kynes works with most: a little diffused in the room helps one reach and talk with spirits, and the scent worn on the body guards against psychic harm. It flavours Earl Grey and Lady Grey teas and is among the commonest ingredients in perfumery.',
+          safetyNotes:
+            'Bergamot oil on the skin followed by sunlight has caused phototoxic rashes, and repeated use in perfumes or cosmetics has caused allergic contact dermatitis. Use on the skin may be unsafe, particularly for children and pregnant women. A man who drank about four litres of Earl Grey tea a day developed muscle cramps, twitching and blurred vision, which cleared when he stopped.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bergamot',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 234–235',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-bergamot-orange',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Peel',
+          description:
+            'The rind is where the aromatic essence lies, and leftover peels were traditionally fashioned into little souvenir boxes and snuff boxes.',
+          safetyNotes:
+            'AHPA safety class 1 for the peel, with a notice that it is photosensitising when applied to the skin. Bergapten-free products are sold. Safety in pregnancy and nursing has not been conclusively established.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 234; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-bergamot-orange',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bilberry',
+      canonicalName: 'Vaccinium myrtillus',
+      nomenclature: 'botanical',
+      description:
+        "Bilberry is a low deciduous shrub of the family Ericaceae, usually under half a metre tall, that spreads by creeping rhizomes over acid heaths, moorland and open woods across most of Europe and northern and central Asia, with outposts in Greenland and western North America. Its small leaves turn red in autumn, and its round berries ripen a deep blue-black under a greyish bloom; unlike the highbush blueberry, the fruit is coloured right through, and its juice stains hands and lips. In Britain the berries long served to dye food and cloth, and during the First World War dyers bought up much of the crop. The Anglo-Saxons called it the hart's berry. Irish custom read a heavy crop as the sign of a good harvest, and at Lughnasadh people in County Limerick laid bilberries and flowers on the cairn atop Knockfierna, the hill of a faery king; patches where the berries grew were thought of as places where the faery folk might be met. Culpeper put the plant under Jupiter. In magic it is used for luck, to ward off evil and to undo hexes and curses, and to make dreams come to pass; Kynes also sets the berries or their jam on the Lughnasadh altar.",
+      elements: ['water', 'fire'],
+      planets: ['Venus', 'Jupiter'],
+      zodiacSigns: ['Pisces', 'Sagittarius'],
+      folkNames: [
+        'Whortleberry',
+        'Hurtleberry',
+        'Blaeberry',
+        'Huckleberry',
+        'European Blueberry',
+        'Heath Berry',
+        'Whinberry',
+        'Wimberry',
+        'Winberry',
+        'Fraughan',
+        'Hurts',
+        'Whorts',
+        'Black Whortles',
+        'Bleaberry',
+        'Trackleberry',
+        'Common Bilberry',
+        'Blue Whortleberry',
+        'Myrtleberry',
+        'Myrtle Whortleberry',
+        'Myrtille',
+      ],
+      deities: ['Lugh'],
+      categories: [
+        'Protection',
+        'Hex-Breaking',
+        'Dream Work',
+        'Healing',
+        'Love',
+        'Manifestation',
+        'Prophecy',
+        'Prosperity',
+        'Success',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Huckleberry',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bilberry',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Bilberries, Called by Some Whorts, and Whortle-Berries',
+          supports: ['planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-bilberry',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 903',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-vaccinium-myrtillus',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Berry',
+          colors: ['blue', 'black'],
+          safetyNotes:
+            'AHPA safety class 1 for the fruit, which is traditionally eaten as food. The fruit may reduce blood clotting: an extract taken before surgery reduced bleeding. Small studies of fruit extract taken in pregnancy found no harm to mother or child.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 903; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bilberry',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-bilberry',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'wikipedia-vaccinium-myrtillus',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            "Cunningham's magic lies in the leaves: carried in a sachet they bring luck and keep evil and hexes away, and burned in the bedroom just before sleep they make one's dreams come true, with results promised within seven days. In northern and western Britain the leaves went into a moorland tea with heather tops and other herbs.",
+          safetyNotes:
+            'AHPA safety class 2d for the leaf: not for long-term use. In animals, long-term high doses of the leaf caused muscle wasting, weight loss, anaemia, yellowing of the skin and bouts of excitement. Safety in pregnancy and nursing has not been established, and eating the leaves may be unsafe.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Huckleberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bilberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 906–907; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-vaccinium-myrtillus',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bindweed',
+      canonicalName: 'Convolvulus arvensis',
+      nomenclature: 'botanical',
+      description:
+        "Field bindweed is a twining perennial of the morning-glory family, Convolvulaceae, native across Europe and Asia. Its stems, half a metre to two metres long, either clamber over whatever stands near or trail along the ground, and its roots can go several metres down, which makes it notoriously hard to clear. The leaves are arrow-shaped, and the small trumpet flowers, white or pale pink and marked with five darker stripes, last a single day. Probably carried to North America in contaminated crop seed, perhaps as early as 1739, it is now one of the costliest weeds of farmland there. Grieve counts it among Britain's three native bindweeds and notes that the whole family is purgative, and its leaves have served in folk medicine as a laxative and diuretic. Kynes traces its bad name to the way it strangles other plants and starves the soil: English witches were said to wind a stem nine times round a poppet to bewitch the person it stood for, and Scottish children were told that picking the flowers would call up a thunderstorm. Because the stems coil widdershins, she recommends it for widdershins work, knot magic and handfasting.",
+      elements: ['air', 'water'],
+      planets: ['Mercury', 'Saturn'],
+      zodiacSigns: ['Aquarius', 'Gemini'],
+      safetyNotes:
+        'Kynes cautions that every part of the plant, the roots and seeds above all, is toxic if eaten. It contains alkaloids, chiefly pseudotropine, which are toxic to mice and reported to be psychoactive; in quantity it may poison horses, its roots are reported as possibly poisonous to pigs, and it can cause photosensitisation in susceptible animals.',
+      folkNames: [
+        'Field Bindweed',
+        'Creeping Jenny',
+        "Devil's Guts",
+        'Hellweed',
+        'Small Bindweed',
+        'Thunder Flower',
+        'Wild Morning Glory',
+        'Lesser Bindweed',
+        'European Bindweed',
+        'Withy Wind',
+        'Perennial Morning Glory',
+        'Small-Flowered Morning Glory',
+        'Possession Vine',
+      ],
+      categories: ['Binding', 'Strength'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bindweed',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'wikipedia-convolvulus-arvensis',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-bindweeds',
+          supports: ['description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stem',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bindweed',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-convolvulus-arvensis',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            "The funnel-shaped flowers open for one day only, and now and then by bright moonlight. In Scotland children were warned that picking them would bring on a thunderstorm, and young women that it would cost a sweetheart his life. In a tale the Brothers Grimm collected, the Virgin Mary drinks wine from one, and so the flower is called Our Lady's Little Glass.",
+          colors: ['white', 'pink'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bindweed',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-convolvulus-arvensis',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Birch',
+      canonicalName: 'Betula pendula',
+      nomenclature: 'botanical',
+      description:
+        "The silver birch is a slender deciduous tree of the birch family, Betulaceae, named for the white bark that peels from its trunk in papery flakes. It grows wild from western Europe to Siberia, Mongolia and Xinjiang, south to the Caucasus and northern Iran, and in the uplands of northern Morocco; as a pioneer it is among the first trees to take hold on bare or burnt ground. It is the national tree of Finland, where bunches of its leafy twigs are used to beat the skin in the sauna, and Grieve notes that Coleridge called it the Lady of the Woods. In northern and central Europe the tree stood for birth and for rebirth after death, and in Scandinavia it was thought to house the spirits of ancestors; Siberian shamans used it in rites of purification and initiation. Branches set before Swedish houses at Walpurgis, or crossed twigs over English doorways, kept witches and enchantment away, though in medieval France witches were said to fly on birch and work weather magic with it. Cunningham counts it a cleansing tree, used to drive out spirits and to guard against lightning and the evil eye, and says the witch's broom was traditionally made of its twigs.",
+      elements: ['water'],
+      planets: ['Venus', 'Jupiter', 'Moon', 'Sun'],
+      zodiacSigns: ['Capricorn', 'Sagittarius'],
+      safetyNotes:
+        'AHPA safety class 1 and interaction class A: no contraindications, precautions, drug interactions or side effects are known, and it is noted as a diuretic. No concern was identified for use in pregnancy or while nursing, though safety in either has not been firmly proven. Cunningham marks it as recognised safe.',
+      folkNames: [
+        'Beithe',
+        'Bereza',
+        'Berke',
+        'Beth',
+        'Bouleau',
+        'Lady of the Woods',
+        'Silver Birch',
+        'European White Birch',
+        'Common Birch',
+        'Weeping Birch',
+        'Warty Birch',
+      ],
+      deities: ['Thor', 'Cerridwen', 'Dagda', 'Freya', 'Frigg', 'Lugh'],
+      categories: [
+        'Protection',
+        'Purification',
+        'Cleansing',
+        'Ancestor Work',
+        'Banishing',
+        'Clarity',
+        'Divination',
+        'Fertility',
+        'Healing',
+        'Inspiration',
+        'Intuition',
+        'Love',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Birch; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Birch',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 134–135; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. The Birch Tree',
+          supports: ['planets'],
+        },
+        {
+          source: 'grieve-birch-common',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-betula-pendula',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Bark',
+          description:
+            'Kynes puts a few bits of the bark into a sachet to carry as a love charm. The papery outer bark is up to a fifth betulin and lights easily even when damp; slabs of it have roofed houses, strips have been woven into shoes and small boxes, and it was long used in tanning. Distilled, it yields the birch tar oil that gave Russia leather its smell.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 134',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Birch',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-betula-pendula',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'grieve-birch-common',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'The leaves smell pleasantly aromatic and taste bitter. Grieve records them taken as an infusion, birch tea, for gout, rheumatism and dropsy, and trusted to dissolve kidney stones; Culpeper prescribes the juice of the young leaves, or a water distilled from them, for stones of the kidney and bladder and as a wash for a sore mouth.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 134',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-birch-common',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Birch Tree',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Sap',
+          description:
+            'In spring a strong flow of sap rises in the trunk and can be tapped. At about one per cent sugar it is drunk fresh, boiled down like maple syrup or fermented. Grieve gives a birch wine of March sap with honey, cloves and lemon peel, and Culpeper the distilled water drawn from a trunk bored with an auger.',
+          references: [
+            {
+              source: 'wikipedia-betula-pendula',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-birch-common',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Birch Tree',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          description:
+            "Cunningham records that birch twigs were used to strike the possessed and drive their spirits out, that the witches' broom was bound from them, and that cradles were once made of birch wood to protect the babies in them. Birch brushwood still makes besoms and racecourse jumps, and the pale timber goes into furniture, plywood, skis and kitchen utensils.",
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Birch',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-betula-pendula',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bistort',
+      canonicalName: 'Bistorta officinalis',
+      nomenclature: 'botanical',
+      description:
+        'Bistort is a clump-forming perennial of the dock family, Polygonaceae, native to Europe and to northern and western Asia, where it favours damp meadows and the margins of woods. A thick rootstock bent twice over gives it its Latin name, from bis, twice, and torta, twisted, and its old names of snakeweed and adderwort; from it rise long oval leaves and slender stems, each ending in a dense spike of pink flowers. The root is rich in tannin, among the strongest astringents of any native British plant, and was once used to tan leather, while the young leaves and shoots were eaten as spring greens; in northern England they went into a bitter herb pudding at Lent. Kynes gathers its lore: some northern English cures worked only if it was picked at the full moon, in sixteenth-century France it was worn as an amulet to help conception, Irish travellers pocketed a few flowers for a safe journey, and Scots knotted the leaves into a cloth to break a spell. Cunningham has it carried by those hoping to conceive, burned with frankincense to strengthen psychic powers and divination, sprinkled as an infusion to drive out poltergeists, and added to sachets and incenses for money and wealth.',
+      elements: ['earth'],
+      planets: ['Saturn'],
+      zodiacSigns: ['Aquarius', 'Virgo'],
+      safetyNotes:
+        'AHPA safety class 1 and interaction class A, with no known contraindications or drug interactions. It is 15–21% tannin, and mild abdominal pain and diarrhoea have been reported, thought to come from irritation of the gut lining. No concern was identified for pregnancy or nursing, though safety in either has not been firmly proven, and Kynes cautions that it is an abortifacient.',
+      folkNames: [
+        'Common Bistort',
+        'Meadow Bistort',
+        'European Bistort',
+        'Adderwort',
+        'Dragonwort',
+        'Snakeroot',
+        'Snakeweed',
+        'Easter Giant',
+        'Easter-Ledges',
+        'Easter Mangiant',
+        'English Serpentary',
+        'Osterick',
+        'Oderwort',
+        'Passions',
+        'Patience Dock',
+        'Red Legs',
+        'Sweet Dock',
+        'Twice Writhen',
+      ],
+      categories: [
+        'Psychic Work',
+        'Fertility',
+        'Divination',
+        'Wealth',
+        'Binding',
+        'Knowledge',
+        'Purification',
+        'Release',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Bistort',
+          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bistort',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 695; p. xxii',
+          supports: ['folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Bistort, or Snakeweed',
+          supports: ['planets', 'folkNames'],
+        },
+        {
+          source: 'grieve-bistort',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-bistorta-officinalis',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'Kynes has pieces of dried root strewn before the door or laid under the doormat to turn negative energy away, and the burning root wafted through a house to clear it of ghosts. Black outside and red within, the rootstock is about a fifth tannin and starch-rich; soaked and roasted, it was eaten in lean years in Russia, Iceland and Siberia.',
+          colors: ['black', 'red'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 695',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bistort',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-bistort',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. Bistort, or Snakeweed',
+              supports: ['colors'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Scots bound the leaves inside a cloth to break a spell. With the young shoots they were boiled or steamed as a spring vegetable, under names such as Patience Dock and Passions in Lancashire and Cumberland, and they are the main green of the dock or Easter-ledge pudding of northern England.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bistort',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-bistort',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-bistorta-officinalis',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'In Ireland a traveller would pick a few of the flowers just before setting out and carry them in a pocket as a protective charm. Kynes also scatters dried flowers and leaves around the circle as it is cast, to purify the space, then sweeps them up afterwards and burns them.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bistort',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bitter Orange',
+      canonicalName: 'Citrus × aurantium',
+      nomenclature: 'botanical',
+      description:
+        "Bitter orange, also sold as Seville or sour orange, is a hybrid citrus tree, a cross of the pomelo and the wild mandarin, native to southern China and South-East Asia. By about 700 AD it had spread through India and Iran into the Islamic world, and its English and botanical names go back, by way of Arabic naranj, to the Sanskrit nagaranga. It is a small evergreen with glossy oval leaves, heart-shaped leaf-stalks bearing long thorns, and strongly scented white flowers, and it can live for six hundred years. The fruit is rougher and darker than a sweet orange, its flesh too sour to eat raw but its peel richly aromatic. The Seville orange is the classic fruit for British marmalade and the bigarade of the original duck à l'orange, and its peel flavours Belgian white beer, orange liqueurs, bitters and Scandinavian Christmas breads. The south of France, Calabria and Sicily grew it on a large scale for the neroli distilled from its blossom. It also serves as the rootstock on which sweet oranges are grown, and its hard pale wood has been turned into baseball bats in Cuba.",
+      safetyNotes:
+        'The fruit is AHPA safety class 1 but interaction class C: like grapefruit juice, its juice inhibits the drug-metabolising enzyme CYP3A4 and so raises blood levels of drugs it clears, with interactions confirmed for cyclosporine, felodipine, dextromethorphan and saquinavir. One Chinese medicine text cautions against the unripe fruit in pregnancy, and safety while nursing is not established. Concentrated fruit extracts standardised to synephrine are class 2d: combined with caffeine they are not advised for heavy or prolonged use, nor for people with heart irregularities, high blood pressure, insomnia or anxiety. Weight-loss supplements containing bitter orange have been linked in case reports to strokes, angina, ischaemic colitis and heart attacks.',
+      folkNames: [
+        'Seville Orange',
+        'Sour Orange',
+        'Bigarade Orange',
+        'Marmalade Orange',
+        'Bigarade',
+        'Bigaradier',
+      ],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Orange',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 220–221, 223; pp. xxii–xxiii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-orange-bitter',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'grieve-orange-sweet',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-bitter-orange',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          colors: ['orange'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 220',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-bitter-orange',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Peel',
+          description:
+            'The peel is the fragrant part of a fruit too sour to eat. Used fresh or dried, it is powdered as a bitter tonic, for which Grieve rated the Seville peel above the sweet. Dried and ground, it spices Scandinavian Christmas bread and gingerbread, and it flavours Belgian white beer, Cointreau, orange bitters and glögg.',
+          safetyNotes:
+            'Eating large amounts of orange peel has been said to cause colic and convulsions in children, but AHPA traces the one recorded death to a single case of 1833 and finds no concern at standard doses.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Orange',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-orange-sweet',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-bitter-orange',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 221',
+              supports: ['safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'At Grasse the blossoms were candied in great quantities, and continental Europeans drank a tea of the dried flowers as a mild stimulant for the nerves. Distilled, they give neroli and orange flower water, which French biscuit-makers added to make their biscuits crisp.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'grieve-orange-sweet',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-bitter-orange',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Two oils come from the tree: oil of bigarade from the peel, and neroli, distilled from the flowers and a chief ingredient of eau de Cologne. The peel oil flavours ice creams, sweets, drinks of every kind and medicines, an oil from the dried unripe peel goes into Curaçao liqueur, and neroli is used in perfume.',
+          references: [
+            {
+              source: 'grieve-orange-sweet',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-bitter-orange',
               supports: ['form', 'description'],
             },
           ],
