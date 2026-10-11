@@ -36,4 +36,4 @@ Its own stylesheet adds two things. The description takes the measure. While it 
 
 ## Testing
 
-`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, and `groupsHref`, `/admin/deity-traditions` included. The chip's colours and the cards are presentation, owned by the stories, and paging is Pager's. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx` ([`group-form.md`](group-form.md), "Testing").
+`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, and `groupsHref`, `/admin/deity-traditions` included. The chip's colours and the cards are presentation, owned by the stories, and paging is Pager's. The pages' half is `tests/app/admin/group-page.test.tsx` ([`group-form.md`](group-form.md), "Testing").

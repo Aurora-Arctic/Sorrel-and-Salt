@@ -1,32 +1,35 @@
 # GroupedValueForm
 
-`src/components/GroupedValueForm/` — the admin's form for a grouped curated
-value: a category (M5.6), a curated ingredient form (M5.6a) or a curated
-deity (MB.132). One component serves every such vocabulary, `kind:
-'category' | 'form' | 'deity'`, as [`GroupForm`](group-form.md) serves their
-groups, so the deities are a third kind rather than a third copy. It has three
-fields: a name, a description, and the group the value is filed under — a
-deity's is its tradition. It saves through the kind's create or update
-mutation — `createCategory` and `updateCategory`,
-`createIngredientFormValue` and `updateIngredientFormValue`, or
-`createDeity` and `updateDeity`. On an existing
-value it also offers a delete behind a confirmation. It holds no modal of
-its own: the page puts it in one.
+`src/components/GroupedValueForm/` — the admin's form for a curated value,
+grouped or flat. Grouped, the value is filed under a group: a category
+(M5.6), a curated ingredient form (M5.6a) or a curated deity (MB.132). Flat,
+it is filed under nothing: a planet or a zodiac sign (MB.95). One component
+serves every such vocabulary, `kind: 'category' | 'form' | 'deity' |
+'planet' | 'zodiacSign'`, as [`GroupForm`](group-form.md) serves the groups,
+so a new vocabulary is a kind rather than another copy. The flat kinds had a
+copy of their own, `VocabularyValueForm`, until MB.115 folded it in.
+
+It has a name and a description, and for a grouped kind the group the value
+is filed under — a deity's is its tradition. It saves through the kind's
+create or update mutation (`createCategory`, `updateIngredientFormValue`,
+`createPlanet` and so on). On an existing value it also offers a delete
+behind a confirmation. It holds no modal of its own: the page puts it in one.
 
 The form kind is named for the GraphQL type, `IngredientFormValue`, because
 `IngredientForm` is the ingredient entry form (DESIGN.md §7). The copy calls
-a row a "form": Add Form, Save Form.
+a row a "form": Add Form, Save Form. A zodiac sign is a "Sign" on every
+button, as its page's labels say it.
 
 ## Props
 
 `GroupedValueFormProps` (`types.ts`):
 
-| Prop     | What it is                                                                                            |
-| -------- | ----------------------------------------------------------------------------------------------------- |
-| `kind`   | `'category'`, `'form'` or `'deity'`: which mutations, which schema, and what the copy calls the value |
-| `value`  | The value to edit, as `{ id, name, description, groupId }`                                            |
-| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35)                                  |
-| `onDone` | Called after a save or a delete, and on Cancel; the owner closes it                                   |
+| Prop     | What it is                                                                                   |
+| -------- | -------------------------------------------------------------------------------------------- |
+| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says  |
+| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind |
+| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35); none for a flat kind   |
+| `onDone` | Called after a save or a delete, and on Cancel; the owner closes it                          |
 
 Without `value`, the form adds one.
 
@@ -37,9 +40,9 @@ Everything that tells one kind from another is its entry in `index.tsx`'s
 its three mutation documents, and nothing else:
 
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
-  "Form", "Deity"); `groupLabel` and `groupPlaceholder`, the group field's
-  label and what it shows until one is chosen ("Group", "Choose a group"; a
-  deity's "Tradition", "Choose a tradition"); `deleteNote`, what the
+  "Form", "Deity", "Planet", "Sign"); `group`, for a grouped kind only, the
+  group field's `label` and `placeholder`, what it shows until one is chosen
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (the form's and the deity's).
 - **Its schema and input**: `schema`, the shared schema the values pass
@@ -54,6 +57,11 @@ its three mutation documents, and nothing else:
   one: `DeityInput` calls the group `traditionId`, so its schema is
   `DeityInput` with `traditionId` swapped for `groupId`, and its
   `inputKeys` is `{ groupId: 'traditionId' }`.
+- **No group, for a flat kind.** A planet or a sign has no `group`, so the
+  form draws no group field. Its values still carry `groupId`, always `''`,
+  so every kind has one shape; its schema, `PlanetInput` or
+  `ZodiacSignInput` (`src/modules/vocabulary/validation/astrology-value.ts`),
+  parses the name and description alone, and `toInput` leaves the group out.
 - **Its mutations**: `create`, `update` and `remove`, the three typed
   documents. `defineKind` holds them to the kind's input and hides the input
   type from the record, so kinds whose inputs differ sit in one `KINDS`.
@@ -69,13 +77,13 @@ its three mutation documents, and nothing else:
   group's input key (`groupId`, or a deity's `traditionId`). Anything else
   renders above the fields in a `role="alert"` notice. The slug collision is pathed to `name`, since the
   slug is derived from the name and has no field of its own (MB.43).
-- **The group is a closed set**, on the combobox's select-only box
+- **The group, where the kind has one, is a closed set**, on the combobox's select-only box
   (`ComboboxSelect`), with the kind's placeholder, "Choose a group". It is
   named by the kind's label, "Group", and its list is "Group choices"; a
   deity's is "Tradition", "Choose a tradition" and "Tradition choices". The
   list floats over the modal rather than stretching it, as every combobox
   list does.
-- **All three fields are required**, as the schema and the columns say, and
+- **Every field is required**, as the schema and the columns say, and
   each label carries an asterisk in the error red. The asterisk is hidden from
   the field's name: a screen reader hears "Name" and the control's
   `aria-required`.
@@ -83,9 +91,9 @@ its three mutation documents, and nothing else:
   for every form). It is disabled on a new value until something is typed,
   and on an existing one until something changes, by react-hook-form's
   `isDirty`. Putting a value back disables it again. From the press to the
-  answer it is busy and says so: "Saving Category", "Saving Form" or
-  "Saving Deity",
-  `aria-busy`, with the shared `.spinner` ahead of the label. The
+  answer it is a [`BusyButton`](busy-button.md) and says so: "Saving
+  Category", "Saving Form" and so on, `aria-busy`, with the shared
+  `.spinner` ahead of the label. The
   confirmation's Delete does the same, as "Deleting".
 - **A form's or a deity's rename says it carries onto the compendium.**
   Renaming a form rewrites every live compendium variant that picked it
@@ -128,39 +136,50 @@ changes.` A deity's is the form's, word for word. A refusal comes back as a
 
 ## On the admin pages
 
-`/admin/categories`, `/admin/forms` and `/admin/deities` open the form in
-`Modal` from their address. `?new` opens an empty form, and `?edit=<slug>`
-opens the value at that slug, which the page reads through
-`getCategoryBySlug`, `getIngredientFormValueBySlug` or `getDeityBySlug`.
-Each page's dialog, `src/app/admin/categories/category-dialog.tsx`,
-`src/app/admin/forms/form-dialog.tsx` or
-`src/app/admin/deities/deity-dialog.tsx`, is the client glue between them. Its
-`onDone` and the modal's `onClose` both `router.replace` the page the modal
-opened over, filter and cursor kept (`closeHref`, from `groupedValuesHref`),
-so Back does not reopen the modal, then `router.refresh()` so the list
-re-reads after a save or a delete. A form's slug is its name and its group's
-(`wax-substance`), and a deity's its name and its tradition's
-(`hecate-greek`, from `deitySlug`), so a save that changes either can move
-the address; closing after every save means the modal never sits on a stale
-one. A deity's address also moves when its tradition is renamed, or deleted
-and its deities moved ([`group-form.md`](group-form.md);
+`/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/planets` and
+`/admin/zodiac-signs` are one page, `src/app/admin/value-page.tsx`'s
+`ValuePage`. Each route's `page.tsx` keeps its tab title and hands its kind
+and address over. `value-kinds.ts` holds each kind's readers from
+`@/modules/vocabulary` (its list, count, value by slug and, for a grouped
+kind, its groups), each mapped onto the page's own names, so the deities'
+`traditionId` and the astrology services' leading vocabulary stop there.
+
+The page opens the form in a `RouteModal` ([`modal.md`](modal.md)) from its
+address. `?new` opens an empty form, and `?edit=<slug>` opens the value at
+that slug. `value-dialog.tsx` is the client edge between the server page and
+the form, since a server component cannot hand `RouteModal` the function its
+contents take. Closing, saving or deleting fades the modal out, then
+`router.replace`s the page it opened over, filter and cursor kept
+(`closeHref`, from `groupedValuesHref`), so Back does not reopen it, and
+`router.refresh()`es so the list re-reads. The planets and signs skipped
+that fade on a save until the pages shared it.
+
+A form's slug is its name and its group's (`wax-substance`), a deity's its
+name and its tradition's (`hecate-greek`, from `deitySlug`), and a planet's
+or a sign's its name, so a save can move the address; closing after every
+save means the modal never sits on a stale one. A deity's address also moves
+when its tradition is renamed, or deleted and its deities moved
+([`group-form.md`](group-form.md);
 [`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)), so
 an old `?edit=` link can go stale without the deity itself changing. An
-`?edit=` naming no live value, renamed or deleted since the link was
-made, opens nothing and says so in an alert above the list: "No category has
-that address — it may have been renamed or deleted.", or "No form has…", or
-"No deity has…".
+`?edit=` naming no live value opens nothing and says so above the list in
+the shared `MissingNotice`: "No category has that address — it may have
+been renamed or deleted.", or "No sign has…".
 
 Why a modal on a URL rather than separate pages or intercepted routes:
 [`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md).
 
 ## Styling
 
-Layout only, on the form primitives, `.grouped-value-form`: the actions
-wrap, the delete sits at the far end, away from Save and Cancel, the
-required asterisk is `$secondary`, and the rename note sits a step above the
-actions with a closer gap between it and them. Nothing goes further before
-MB.115's design review.
+The form is the shared pieces on the form primitives
+([`styling.md`](../styling.md), "Form fields"): Name and Description are
+[`TextField`](field.md)s in a `FormProvider`, the group a `SelectField`, each
+with its label row and the `.field__required` asterisk; Save is a
+`BusyButton` in a wrapping `.form__actions` row, with Delete pushed to the far
+end by `.form__aside`; and the confirmation is a `.form__confirm` with its own
+`.modal__actions` row. Under 28rem of the form's own width every row stacks,
+full width. Its one rule of its own, `.grouped-value-form__note`, sets the
+rename note a step above the actions, with a closer gap between it and them.
 
 The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
 failed request is read by the shared `readGraphqlIssues`
@@ -175,9 +194,11 @@ there is none.
 
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
 — `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
-`AddingADeity` and `EditingADeity`, each in the modal and its own iframe,
-the deities under invented traditions. Renaming in `EditingAForm` or
-`EditingADeity` shows the note. The workshop has no API, so a save answers
+`AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingASign`, each in
+the modal and its own iframe, the deities under invented traditions; and
+`PhoneDark` and `PhoneLight`, the category's edit at 375px in each theme,
+where the buttons stack. Renaming in `EditingAForm`, `EditingADeity` or
+`EditingASign` shows the note. The workshop has no API, so a save answers
 with the generic error.
 
 ## Testing
@@ -193,14 +214,17 @@ their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's
 create sending its tradition as `traditionId`, its rename saved under its
 id after the note, a `traditionId` refusal landing beside Tradition, and
-its delete refusal. The pages' half is
-`tests/app/admin/categories/page.test.tsx`,
-`tests/app/admin/forms/page.test.tsx` and
-`tests/app/admin/deities/page.test.tsx`: `?new` opening the empty modal
+its delete refusal. The flat kinds, the planet and the sign, are rows of
+`describe.each` getting only what they change, their three mutations, the
+create sending no group and asking for none. The shared pieces the form is
+built from, `TextField`, `SelectField` and `BusyButton`, have no test file
+of their own: this one covers them as it uses them. The pages' half is
+`tests/app/admin/value-page.test.tsx`, its shape run on the categories and
+every other kind getting only its path and its services: `?new` opening the empty modal
 without a read, `?edit=` reading the value by its slug and filling the modal
 from it, a slug no value holds an alert and any other failure thrown, and
 the modal closing back to the page, filter and cursor included, that it
 opened over. What the modal shows once open is this file's. `tests/e2e/admin.spec.ts`
-adds, renames and deletes a category and a form through the real server, adds
+adds, renames and deletes a category, a form and a planet through the real server, adds
 a deity under a new tradition and moves it when the tradition goes, and is
 refused deleting Protection, which seeded compendium entries are filed under.
