@@ -3,8 +3,8 @@
 `src/components/Pager/` — a paged list's Prev and Next (M5.6), on the
 `.pager` primitive ([`styling.md`](../styling.md), "Buttons"). The category
 list and UserList were its first two owners, the forms' list its third and
-VocabularyValueList its fourth; the two grouped lists are now one,
-[`GroupedValueList`](grouped-value-list.md). Every list pages through the M3.6
+the planets' list its fourth; the grouped and flat lists are now one,
+[`GroupedValueList`](grouped-value-list.md) (MB.132, MB.115). Every list pages through the M3.6
 cursor helper (rule 8), so every list that shows its pages shows them here.
 
 ## Props
@@ -32,7 +32,7 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   muted ink, as text rather than a control. The owner reads it as DESIGN.md §7
   computes it for the compendium: page `floor(countBefore / size) + 1` of
   `max(1, ceil(totalCount / size))`, counted from the page's first row.
-  GroupedValueList, VocabularyValueList, CompendiumList and GroupList pass
+  GroupedValueList, CompendiumList and GroupList pass
   it, each page computing it through `resolveNumberedPage`
   (`src/lib/pagination.ts`, MB.132), and UserList does not count its rows yet.
 - **Named "Prev" and "Next"**, the chevrons `aria-hidden` beside them in

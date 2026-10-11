@@ -8,8 +8,8 @@ import type { ListPlace, ListSearchParams, PagerCursor, PagerHrefs } from './typ
 // What every admin list page reads off its address and builds back into one,
 // written once (MB.115) after ten pages had each carried the cursor read, the
 // pager's two hrefs and the `?edit=` lookup that turns a stale slug into a
-// notice rather than an error page. Modelled on `vocabulary-page.tsx`, the one
-// page shape two routes already shared.
+// notice rather than an error page. Modelled on the planets' and signs' page
+// module, the one shape two routes already shared, now `value-page.tsx`.
 
 /** The name filter, cursor and modal the address asks for. */
 export function readListPlace(params: ListSearchParams): ListPlace {

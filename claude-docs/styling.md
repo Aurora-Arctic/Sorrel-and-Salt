@@ -525,7 +525,7 @@ is muted text at the body size with `space(4)` either side, since it is not
 a control. An end with no page is disabled rather than
 hidden, so neither moves. The markup is the `Pager` component's
 ([`components/pager.md`](components/pager.md)), which GroupedValueList,
-VocabularyValueList and UserList render.
+GroupList, CompendiumList and UserList render.
 
 **`.page-header` puts a page's heading and its one primary action on one
 line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
@@ -547,9 +547,9 @@ its cell's bottom instead, on the owner's call, so one that wraps keeps its
 last line level with its neighbours', on the 1px `$text-muted` hairline under
 the header row. These rules are the `.data-table` primitive, inside a
 `.data-table-frame`: the category list and UserList each carried them until
-the forms' list made a third (M5.6a), and CompendiumList (M5.5),
-VocabularyValueList (MB.95) and GroupedValueList, the category and form lists
-made one (MB.132), are on it too. Narrow, a table with the `.data-table--stack`
+the forms' list made a third (M5.6a), and CompendiumList (M5.5) and
+GroupedValueList, the category and form lists made one (MB.132) and the flat
+vocabularies' list folded in (MB.115), are on it too. Narrow, a table with the `.data-table--stack`
 modifier turns each row into a card once its frame is under
 `$table-stack-width` ("Tables at phone width", below); a table without it
 scrolls sideways inside its frame rather than widening the page.

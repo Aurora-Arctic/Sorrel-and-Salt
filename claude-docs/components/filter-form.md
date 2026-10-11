@@ -2,9 +2,9 @@
 
 `src/components/FilterForm/` — a list's filter form: the fields the caller
 supplies, then a Filter button that opens the filtered list from its first
-page. Five admin lists (CompendiumList, GroupedValueList,
-VocabularyValueList, UserList, PrivilegeLedger) each wrote this form for
-themselves until MB.115; three navigated softly with a spinner, two with a
+page. Five admin lists (CompendiumList, GroupedValueList, the flat
+vocabularies' list it has since absorbed, UserList, PrivilegeLedger) each
+wrote this form for themselves until MB.115; three navigated softly with a spinner, two with a
 full page load and none.
 
 ## Props
