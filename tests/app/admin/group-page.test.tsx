@@ -5,12 +5,17 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
+import type { GroupKind } from '@/components/GroupForm/types';
 
-// The `/admin/category-groups` page (M5.6b): the guard, one page of the
-// groups, and the modal its address opens — `?new` empty, `?edit=` a group by
-// slug, told how many categories its delete must move. The guard and the
-// services are mocked: what they decide is tests/lib/request-session.test.ts's
-// and tests/modules/vocabulary's.
+// The page every group vocabulary shares (src/app/admin/group-page.tsx,
+// MB.115): the guard, one page of the groups, and the modal its address opens
+// — `?new` empty, `?edit=` a group by slug, told how many rows its delete
+// must move. The shape runs on the category groups, as
+// `/admin/category-groups` (M5.6b); the form groups and the deity traditions
+// get only what they change, their path and their services
+// (claude-docs/testing/layer-ownership.md, rule 5). The guard and the services
+// are mocked: what they decide is tests/lib/request-session.test.ts's and
+// tests/modules/vocabulary's.
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -19,11 +24,27 @@ const listCategoryGroups = vi.fn();
 const countCategoryGroups = vi.fn();
 const getCategoryGroupBySlug = vi.fn();
 const countCategories = vi.fn();
+const listIngredientFormGroups = vi.fn();
+const countIngredientFormGroups = vi.fn();
+const getIngredientFormGroupBySlug = vi.fn();
+const countIngredientFormValues = vi.fn();
+const listDeityTraditions = vi.fn();
+const countDeityTraditions = vi.fn();
+const getDeityTraditionBySlug = vi.fn();
+const countDeities = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
   listCategoryGroups,
   countCategoryGroups,
   getCategoryGroupBySlug,
   countCategories,
+  listIngredientFormGroups,
+  countIngredientFormGroups,
+  getIngredientFormGroupBySlug,
+  countIngredientFormValues,
+  listDeityTraditions,
+  countDeityTraditions,
+  getDeityTraditionBySlug,
+  countDeities,
 }));
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -37,7 +58,7 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-const { default: AdminCategoryGroupsPage } = await import('@/app/admin/category-groups/page');
+const { GroupPage } = await import('@/app/admin/group-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -62,8 +83,8 @@ const entry = <T extends { id: string; name: string }>(node: T) => ({
   cursor: { key: [node.name], id: node.id },
 });
 
-async function renderPage(params: Record<string, string> = {}) {
-  const page = await AdminCategoryGroupsPage({ searchParams: Promise.resolve(params) });
+async function renderPage(params: Record<string, string> = {}, kind: GroupKind = 'category') {
+  const page = await GroupPage({ kind, searchParams: Promise.resolve(params) });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
 
@@ -82,7 +103,7 @@ beforeEach(() => {
   router.refresh.mockReset();
 });
 
-describe('the /admin/category-groups page', () => {
+describe('a group page, on the category groups', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 
@@ -187,4 +208,50 @@ describe('the /admin/category-groups page', () => {
     );
     expect(router.refresh).toHaveBeenCalled();
   });
+});
+
+// The other two kinds change only their path and their services: the page
+// of groups, the group by slug, and the count of what its delete must move.
+describe('a group page, for each other kind', () => {
+  const PLAIN = { ...WARDS, colorDark: undefined, colorLight: undefined };
+  const ROWS = [
+    {
+      kind: 'form',
+      path: '/admin/form-groups',
+      list: listIngredientFormGroups,
+      count: countIngredientFormGroups,
+      get: getIngredientFormGroupBySlug,
+      members: countIngredientFormValues,
+      memberFilter: { groupId: WARDS.id },
+    },
+    {
+      kind: 'tradition',
+      path: '/admin/deity-traditions',
+      list: listDeityTraditions,
+      count: countDeityTraditions,
+      get: getDeityTraditionBySlug,
+      members: countDeities,
+      memberFilter: { traditionId: WARDS.id },
+    },
+  ] as const;
+
+  it.each(ROWS)(
+    'reads the $kind groups and the edited one through its own services, on $path',
+    async ({ kind, path, list, count, get, members, memberFilter }) => {
+      list.mockResolvedValue([entry(PLAIN)]);
+      count.mockResolvedValue({ totalCount: 1, countBefore: 0 });
+      get.mockResolvedValue(PLAIN);
+      members.mockResolvedValue({ totalCount: 2, countBefore: null });
+
+      await renderPage({ edit: WARDS.slug }, kind);
+
+      expect(get).toHaveBeenCalledWith(WARDS.slug);
+      expect(members).toHaveBeenCalledWith(memberFilter, undefined);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: `Edit ${WARDS.name}` })).toHaveAttribute(
+        'href',
+        `${path}?edit=${WARDS.slug}`,
+      );
+    },
+  );
 });

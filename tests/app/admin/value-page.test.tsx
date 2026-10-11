@@ -5,16 +5,20 @@ import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
+import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 
-// The `/admin/categories` page (M5.6, MB.178): the guard, one page of the
-// vocabulary under the address's filter and the groups, and the modal its
-// address opens — `?new` empty, `?edit=` a category by slug. The guard and the services are mocked: what they
-// decide is tests/lib/request-session.test.ts's and
-// tests/modules/vocabulary/services/categories.test.ts's. This file holds the
-// page's half — the address read into service calls, the guard, NotFound
-// against any other error, and what the page builds for the list and the
-// modal; how the list and the form behave given those props is their own
-// tests' (claude-docs/testing/layer-ownership.md, "The owning layer").
+// The page every curated value shares (src/app/admin/value-page.tsx, MB.115):
+// the guard, one page of the vocabulary under the address's filter and its
+// groups, and the modal its address opens — `?new` empty, `?edit=` a value
+// by slug. The shape runs on the categories, as `/admin/categories` (M5.6,
+// MB.178); every other kind gets only what it changes, its path and its
+// services (claude-docs/testing/layer-ownership.md, rule 5). The guard and the
+// services are mocked: what they decide is tests/lib/request-session.test.ts's
+// and the vocabulary module's service tests'. This file holds the page's half
+// — the address read into service calls, the guard, NotFound against any
+// other error, and what the page builds for the list and the modal; how the
+// list and the form behave given those props is their own tests'
+// (claude-docs/testing/layer-ownership.md, "The owning layer").
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -23,11 +27,33 @@ const listCategories = vi.fn();
 const listCategoryGroups = vi.fn();
 const getCategoryBySlug = vi.fn();
 const countCategories = vi.fn();
+const listIngredientFormValues = vi.fn();
+const listIngredientFormGroups = vi.fn();
+const getIngredientFormValueBySlug = vi.fn();
+const countIngredientFormValues = vi.fn();
+const listDeities = vi.fn();
+const listDeityTraditions = vi.fn();
+const getDeityBySlug = vi.fn();
+const countDeities = vi.fn();
+const listAstrologyValues = vi.fn();
+const getAstrologyValueBySlug = vi.fn();
+const countAstrologyValues = vi.fn();
 vi.mock('@/modules/vocabulary', () => ({
   listCategories,
   listCategoryGroups,
   getCategoryBySlug,
   countCategories,
+  listIngredientFormValues,
+  listIngredientFormGroups,
+  getIngredientFormValueBySlug,
+  countIngredientFormValues,
+  listDeities,
+  listDeityTraditions,
+  getDeityBySlug,
+  countDeities,
+  listAstrologyValues,
+  getAstrologyValueBySlug,
+  countAstrologyValues,
 }));
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -41,7 +67,7 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-const { default: AdminCategoriesPage } = await import('@/app/admin/categories/page');
+const { ValuePage } = await import('@/app/admin/value-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -67,8 +93,11 @@ const entry = <T extends { id: string; name: string }>(node: T) => ({
   cursor: { key: [node.name], id: node.id },
 });
 
-async function renderPage(params: Record<string, string> = {}) {
-  const page = await AdminCategoriesPage({ searchParams: Promise.resolve(params) });
+async function renderPage(
+  params: Record<string, string> = {},
+  kind: GroupedValueKind = 'category',
+) {
+  const page = await ValuePage({ kind, searchParams: Promise.resolve(params) });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
 
@@ -96,7 +125,7 @@ beforeEach(() => {
   countCategories.mockResolvedValue({ totalCount: 1, countBefore: 0 });
 });
 
-describe('the /admin/categories page', () => {
+describe('a curated value page, on the categories', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
     requireAdminSession.mockRejectedValue(new Error('forbidden'));
 
@@ -189,7 +218,7 @@ describe('the /admin/categories page', () => {
 
 // MB.178: `?query=` and `?group=<slug>` narrow the list, as the user list's
 // filter does (MB.52), and every link the page builds keeps them.
-describe('the /admin/categories filter', () => {
+describe("a curated value page's filter, on the categories", () => {
   /** A full page and one more, so the pager links both ways. */
   const fullPage = () =>
     Array.from({ length: 26 }, (_, index) =>
@@ -264,4 +293,93 @@ describe('the /admin/categories filter', () => {
       /^\/admin\/categories\?query=test&group=fixture-healing&after=[^&]+$/,
     );
   });
+});
+
+// Every other kind changes only its path and its services: its group read
+// under its own parameter, or none for a flat kind, and its value read by
+// slug for the modal (claude-docs/testing/layer-ownership.md, rule 5).
+describe('a curated value page, for each other kind', () => {
+  const VALUE = { id: TESTCRAFT.id, name: 'Testwort Shard', slug: 'testwort-shard' };
+  const ROWS = [
+    {
+      kind: 'form',
+      path: '/admin/forms',
+      address: { group: 'fixture-protection' },
+      list: listIngredientFormValues,
+      count: countIngredientFormValues,
+      groups: listIngredientFormGroups,
+      get: getIngredientFormValueBySlug,
+      filter: { query: 'te', groupId: GROUPS[1].id },
+      getArgs: ['testwort-shard'],
+      row: { ...TESTCRAFT, ...VALUE },
+    },
+    {
+      kind: 'deity',
+      path: '/admin/deities',
+      address: { tradition: 'fixture-protection' },
+      list: listDeities,
+      count: countDeities,
+      groups: listDeityTraditions,
+      get: getDeityBySlug,
+      // The deities' service calls the group a tradition.
+      filter: { query: 'te', traditionId: GROUPS[1].id },
+      getArgs: ['testwort-shard'],
+      row: { ...VALUE, description: 'A deity', traditionId: GROUPS[1].id },
+    },
+    {
+      kind: 'planet',
+      path: '/admin/planets',
+      address: {},
+      list: listAstrologyValues,
+      count: countAstrologyValues,
+      groups: undefined,
+      get: getAstrologyValueBySlug,
+      filter: { query: 'te' },
+      getArgs: ['planets', 'testwort-shard'],
+      row: { ...VALUE, description: 'A planet' },
+    },
+    {
+      kind: 'zodiacSign',
+      path: '/admin/zodiac-signs',
+      address: {},
+      list: listAstrologyValues,
+      count: countAstrologyValues,
+      groups: undefined,
+      get: getAstrologyValueBySlug,
+      filter: { query: 'te' },
+      getArgs: ['zodiacSigns', 'testwort-shard'],
+      row: { ...VALUE, description: 'A sign' },
+    },
+  ] as const;
+
+  it.each(ROWS)(
+    'reads the $kind list and value through its own services, on $path',
+    async ({ kind, path, address, list, count, groups, get, filter, getArgs, row }) => {
+      list.mockReset();
+      list.mockResolvedValue([entry(row)]);
+      count.mockReset();
+      count.mockResolvedValue({ totalCount: 1, countBefore: 0 });
+      groups?.mockReset();
+      groups?.mockResolvedValue(GROUPS.map(entry));
+      get.mockReset();
+      get.mockResolvedValue(row);
+
+      await renderPage({ query: 'te', ...address, edit: 'testwort-shard' }, kind);
+
+      // A flat kind's services take the vocabulary first.
+      const flat = getArgs.length === 2;
+      expect(list.mock.lastCall?.slice(0, flat ? 2 : 1)).toEqual(
+        flat ? [getArgs[0], filter] : [filter],
+      );
+      expect(count.mock.lastCall?.slice(0, flat ? 2 : 1)).toEqual(
+        flat ? [getArgs[0], filter] : [filter],
+      );
+      expect(get).toHaveBeenCalledWith(...getArgs);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: `Edit ${VALUE.name}` })).toHaveAttribute(
+        'href',
+        `${path}?${new URLSearchParams({ query: 'te', ...address }).toString()}&edit=${VALUE.slug}`,
+      );
+    },
+  );
 });
