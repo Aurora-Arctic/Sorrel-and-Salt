@@ -45,7 +45,8 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
 `insertMissingVariants` from `standard.ts` writes one variant per entry of its
 form, lower-case as the entries spell it (Hearth Ash is `ash`, House Chamomile
 `flower`), so every linked layer's ingredient has a variant a layer can name
-once MB.217 gives layers one.
+now that MB.217 gives layers one: each linked layer is seeded with its
+ingredient's one live variant, read back after the variants are written.
 
 Layer order is the position in the `layers` array, never a number written
 beside it: one list, so the stack and its depths cannot disagree, and each jar
@@ -74,7 +75,8 @@ edited and the arithmetic is against you both ways: a layer pulled out of the
 middle leaves the ones below it renumbered, so the depth the seed wants is
 occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
-(`spell_ingredients_spell_id_ingredient_id_unique`). Either collision fails the
+(`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
+ingredient's variant). Either collision fails the
 whole scenario rather than the row.
 
 So a jar that already has layers is left exactly as it is — removed ones

@@ -368,3 +368,35 @@ ingredients where deleted_at is null group by 1, 2 having count(*) > 1`.
 migration's own fill and guard, and retires once `0062` is in production's
 journal (claude-docs/testing/layer-ownership.md, "What a test may assert",
 rule 7).
+
+**MB.217: what names a variant, as built.** Migration `0063_variant-children.sql`
+gives four tables a `variant_id` held to their `ingredient_id` by a composite
+foreign key, `(variant_id, ingredient_id) → ingredient_variants (id,
+ingredient_id)`, declared with Drizzle's `foreignKey` against MB.216's
+non-partial `(id, ingredient_id)` index, so no row pairs one ingredient with
+another's form. The key is `MATCH SIMPLE`, which skips the check when either
+column is null, so a CHECK closes the gap wherever the ingredient may be null.
+
+- `inventory_items.variant_id`, NOT NULL; one live row per coven and variant.
+- `spell_ingredients.variant_id`, set exactly when `ingredient_id` is; one
+  live layer per jar and variant. `0063` filled every linked layer from its
+  ingredient's one live variant, behind a guard refusing a database where one
+  has none or several.
+- `ingredient_categories.variant_id`, nullable: the pair primary key became
+  two unique indexes, one on the parent's pairs and one on a form's
+  ([`ingredient_categories`](ingredient-categories.md)).
+- `ingredient_substitutes.variant_id`, the form a row stands in for, and
+  `substitute_variant_id`, the linked ingredient's form, under its own
+  composite key against `substitute_id` and a CHECK that it has one beside
+  it. `ingredient_substitutes_not_itself` narrowed to the same ingredient
+  _and_ the same form, so a sibling form may stand in, and the link and name
+  uniqueness split by whether `variant_id` is set.
+- `reference_links.ingredient_variant_id`, one entry in the `SOURCED` registry
+  ([References](references.md)).
+
+Nothing writes `variant_id` on stock yet (M9.4), nor on layers but the demo
+seed and the test fixtures (the grimoire tasks); MB.219 writes a form's
+categories, substitutes and references. `tests/db/migrations/0063-variant-children.test.ts`
+re-runs the fill and the guard, and retires once `0063` is in production's
+journal (claude-docs/testing/layer-ownership.md, "What a test may assert",
+rule 7).

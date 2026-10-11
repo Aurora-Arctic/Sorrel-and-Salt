@@ -48,7 +48,9 @@ run as a test.
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups every schema test used to build by hand:
   `byName`, `byIndexName`, `foreignKeyByColumn` (each entry
-  `{ column, name, foreignColumnName, foreignTable }`) and
+  `{ column, columns, name, foreignColumnNames, foreignTable }`, every column
+  of the key read so MB.217's composite keys are not taken for single-column
+  ones, `column` their names joined by `, `) and
   `nonAuditForeignKeys`, the table's own references with the audit ids
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
@@ -111,6 +113,9 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   set to its `NOT_PARTIAL` map, each entry with its reason, so rule 4's one
   exception, `ingredient_variants_id_ingredient_id_unique` (MB.216, the target
   of MB.217's composite foreign keys), is decided there and any other fails.
+  A table with no tombstone, `ingredient_categories`, whose two pair indexes
+  are partial on `variant_id` (MB.217), is classified `hardDeleted`: its
+  holder is deleted outright to free the slot.
 
 - **`tests/db/schema-drift.test.ts` — the schema files against the migrated
   database, once for every table** (MB.226). It imports every
@@ -120,7 +125,9 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   column's name, type (`format_type`, Drizzle's spelling normalised),
   nullability and whether the database fills a default; each foreign key's
   name, columns, target and `ON DELETE`; the CHECK names; and each index's
-  name, uniqueness and whether it is partial. A schema file edited without its
+  name, uniqueness and whether it is partial. An index backing the table's own
+  primary key or unique constraint is the constraint's and is left out, but
+  not one a foreign key merely points at, which records it too (MB.217). A schema file edited without its
   migration, or a migration without its schema file, fails here, which is why no
   module schema test carries a foreign-key, NOT NULL, type or index-name case.
   What a CHECK or an index _refuses_ is not compared, and stays the module
