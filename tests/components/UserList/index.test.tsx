@@ -229,11 +229,8 @@ describe('UserList', () => {
     const methods = within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getAllByRole(
       'cell',
     )[4] as HTMLElement;
-    const logos = [...methods.querySelectorAll('.user-list__provider')];
-    expect(logos.map((logo) => logo.className)).toEqual([
-      'user-list__hint user-list__provider user-list__provider--discord',
-      'user-list__hint user-list__provider user-list__provider--google',
-    ]);
+    const logos = [...methods.querySelectorAll('.user-list__hint')];
+    expect(logos).toHaveLength(2);
     for (const [logo, name] of [
       [logos[0], 'Discord'],
       [logos[1], 'Google'],

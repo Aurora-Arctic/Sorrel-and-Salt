@@ -178,7 +178,10 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(tip).toBeVisible();
   await expect(tip).toHaveText('Verified');
   // So does each sign-in logo, its provider's name.
-  const discord = admin.getByRole('cell').nth(4).locator('.user-list__provider--discord');
+  const discord = admin
+    .getByRole('cell')
+    .nth(4)
+    .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
   await expect(discord.locator('.user-list__tip')).toHaveText('Discord');
