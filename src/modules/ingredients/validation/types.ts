@@ -86,11 +86,12 @@ export type DeityEntry = LinkOrName<'deityId'>;
 
 /**
  * What `crossFieldRules` reads of one form in `variants` (MB.215): its id and
- * its text, either missing when the entry failed its own parse.
+ * its text. Zod runs the rules across the list only once each entry has its
+ * fields, so the text is there.
  */
 export interface VariantFields {
   id?: string | null;
-  form?: string;
+  form: string;
 }
 
 /** What `crossFieldRules` reads of either variant's value. */

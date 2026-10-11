@@ -110,6 +110,14 @@ const referenceLink = z.object({
 /** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
 function asLinkOrName<IdKey extends string>(
   idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[],
+): LinkOrName<IdKey>[];
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[] | null | undefined,
+): LinkOrName<IdKey>[] | undefined;
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
   entries: LinkOrNameFields<IdKey>[] | null | undefined,
 ): LinkOrName<IdKey>[] | undefined {
   // A computed key widens to a string index, so the shape is asserted back.
@@ -122,22 +130,16 @@ function asLinkOrName<IdKey extends string>(
 }
 
 /** Each substitute as the one half it carries, with the form a link names. */
-function asSubstitutes(
-  entries: SubstituteFields[] | null | undefined,
-): SubstituteEntry[] | undefined {
-  return asLinkOrName('ingredientId', entries)?.map((entry, index) => ({
+function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
+  return asLinkOrName('ingredientId', entries).map((entry, index) => ({
     ...entry,
-    substituteVariantId: entry.ingredientId
-      ? (entries?.[index]?.substituteVariantId ?? null)
-      : null,
+    substituteVariantId: entry.ingredientId ? (entries[index].substituteVariantId ?? null) : null,
   }));
 }
 
 /** Each reference as its id and locator, once `referenceRules` has held it to an id. */
-function asReferences(
-  entries: ReferenceLinkFields[] | null | undefined,
-): ReferenceLinkEntry[] | undefined {
-  return entries?.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
+function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
+  return entries.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
 }
 
 /**
@@ -159,9 +161,9 @@ function asEntries<
 } {
   return {
     ...value,
-    substitutes: asSubstitutes(value.substitutes),
+    substitutes: value.substitutes ? asSubstitutes(value.substitutes) : undefined,
     deities: asLinkOrName('deityId', value.deities),
-    references: asReferences(value.references),
+    references: value.references ? asReferences(value.references) : undefined,
   };
 }
 
@@ -213,8 +215,8 @@ const variant = z
     planets: nonBlank(value.planets),
     zodiacSigns: nonBlank(value.zodiacSigns),
     colors: nonBlank(value.colors),
-    substitutes: asSubstitutes(value.substitutes) ?? [],
-    references: asReferences(value.references) ?? [],
+    substitutes: asSubstitutes(value.substitutes),
+    references: asReferences(value.references),
   }));
 
 const fields = {
@@ -315,7 +317,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
  * variant's own rules ran in its schema.
  */
 function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
-  for (const index of repeatsOf(entries.map((entry) => entry.form ?? ''))) {
+  for (const index of repeatsOf(entries.map((entry) => entry.form))) {
     ctx.addIssue({
       code: 'custom',
       path: ['variants', index, 'form'],
