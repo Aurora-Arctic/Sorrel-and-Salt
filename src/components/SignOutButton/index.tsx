@@ -2,6 +2,8 @@
 
 import { type ReactElement, useState } from 'react';
 import { signOut } from '../../lib/auth-client';
+import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import Notice from '../Notice';
 import './index.scss';
 
 // Sign Out, beside the account page's heading (MB.63, on the owner's call):
@@ -12,7 +14,6 @@ import './index.scss';
 // (claude-docs/components/sign-out-button.md).
 
 const LANDING = '/';
-const FAILURE = "That didn't work. Please try again.";
 
 const SignOutButton = (): ReactElement => {
   const [pending, setPending] = useState(false);
@@ -43,11 +44,9 @@ const SignOutButton = (): ReactElement => {
         {pending && <span className="spinner" aria-hidden="true" />}
         {pending ? 'Signing Out' : 'Sign Out'}
       </button>
-      {failed && (
-        <p className="notice notice--error sign-out-button__failure" role="alert">
-          {FAILURE}
-        </p>
-      )}
+      {/* The shared fallback sentence, though this call is Better Auth's and
+          not GraphQL's: it has no more to say about why than a lost request. */}
+      {failed && <Notice kind="error">{GENERIC_FAILURE}</Notice>}
     </div>
   );
 };

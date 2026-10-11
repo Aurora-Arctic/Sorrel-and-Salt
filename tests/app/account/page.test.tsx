@@ -76,6 +76,19 @@ describe('the /account page', () => {
     expect(screen.getAllByRole('separator')).toHaveLength(2);
   });
 
+  // The page owns the Sign-In Methods head, so it is a named region like the
+  // other two (MB.116).
+  it('names the Sign-In Methods section by its heading', async () => {
+    await renderPage();
+
+    expect(
+      within(section('Sign-In Methods')).getByRole('heading', {
+        level: 2,
+        name: 'Sign-In Methods',
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('says what the Name section is for beneath its heading', async () => {
     await renderPage();
 
