@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, not, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -10,16 +10,17 @@ import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInTiers, findPageInTiers } from './finders';
-import { readableIngredientParent } from './ingredient-parent';
+import { readableIngredientParent, readableVariantParent } from './ingredient-parent';
 import {
   fold,
   foldedWordMatch,
   inCompendium,
   listFolds,
   notSoftDeleted,
+  ownedByIngredient,
   readableInTiers,
 } from './predicates';
-import { citesNothing } from './references';
+import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
 import { curated } from './vocabularies';
 import type {
@@ -33,12 +34,14 @@ import type {
   NotSpellScoped,
   SimilarityScore,
   Unscoped,
+  VariantScoped,
 } from './types';
 
 /**
  * The rows of an ingredient's child table — `ingredient_folk_names`,
- * `ingredient_categories` or `ingredient_variants` (MB.218) — belonging to
- * these ingredients, readable exactly when the parent is: live, and in the
+ * `ingredient_categories`, `ingredient_variants` (MB.218) and the rest —
+ * belonging to these ingredients themselves, not to one of their forms
+ * (`ownedByIngredient`), readable exactly when the parent is: live, and in the
  * compendium or in a coven one of `memberships` proves. No proofs reads the
  * compendium alone. No such table carries a `workspace_id`, so the correlated
  * `EXISTS` over the parent is where the tier comes from, and a caller naming
@@ -57,8 +60,34 @@ export function findManyOfIngredients<
     table,
     and(
       notSoftDeleted(table),
+      ownedByIngredient(table),
       inArray(table.ingredientId, [...ingredientIds]),
       readableIngredientParent(memberships, table.ingredientId),
+    ),
+  );
+}
+
+/**
+ * The live rows these variants own — one form's categories, say — readable
+ * exactly when the variant and its ingredient are: the variant live, and its
+ * ingredient live and in the compendium or a coven one of `memberships`
+ * proves (`readableVariantParent`, MB.218). Never by a bare id: a variant has
+ * no `workspace_id`, so its ingredient's tier is the only scope it has.
+ */
+export function findManyOfVariants<
+  TTable extends PgTable & VariantScoped & IngredientScoped & Unscoped & NotSpellScoped,
+>(
+  memberships: readonly Membership[],
+  table: TTable,
+  variantIds: readonly string[],
+): Promise<TTable['$inferSelect'][]> {
+  if (variantIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    table,
+    and(
+      notSoftDeleted(table),
+      inArray(table.variantId, [...variantIds]),
+      readableVariantParent(memberships, table.variantId),
     ),
   );
 }
@@ -92,38 +121,48 @@ export function findDeitiesOfIngredients(
 }
 
 /**
- * The live substitutes of these ingredients, each beside the ingredient it
- * links — soft-deleted or not — or null for a typed name. The third escape
- * hatch (MB.138): a link to a deleted ingredient is kept, and reads as that
- * ingredient's last name (claude-docs/db/soft-delete.md, "Soft-delete
- * filtering"). It skips the linked ingredient's filter and no other. The
- * substitute's own tombstone filters; its parent must be live and readable,
- * as `findManyOfIngredients` reads it; and the link must point where the
- * parent's readers may look — the compendium, or the parent's own coven — so a
- * row written past the service's tier rule shows nothing. One statement for
- * the whole batch: the linked ingredient is a left join, under an alias, since
- * the parent's correlated subquery reads `ingredients` itself.
+ * The live substitutes of these ingredients, or of these variants — `of`
+ * says which the ids name (MB.218) — each beside the ingredient it links,
+ * soft-deleted or not, or null for a typed name. An ingredient's are its own
+ * rows, not its forms' (`ownedByIngredient`); a variant's are the rows that
+ * form owns. The third escape hatch (MB.138): a link to a deleted ingredient is
+ * kept, and reads as that ingredient's last name (claude-docs/db/soft-delete.md,
+ * "Soft-delete filtering"). It skips the linked ingredient's filter and no
+ * other. The substitute's own tombstone filters; its parent — the ingredient,
+ * or the variant and its ingredient — must be live and readable, as
+ * `findManyOfIngredients` and `findManyOfVariants` read them; and the link
+ * must point where the parent's readers may look — the compendium, or the
+ * parent's own coven — so a row written past the service's tier rule shows
+ * nothing. One statement for the whole batch: the linked ingredient is a left
+ * join, under an alias, since the parent's correlated subquery reads
+ * `ingredients` itself.
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],
-  ingredientIds: readonly string[],
+  of: 'ingredient' | 'variant',
+  ids: readonly string[],
 ): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
-  if (ingredientIds.length === 0) return Promise.resolve([]);
+  if (ids.length === 0) return Promise.resolve([]);
   const linked = alias(ingredients, 'linked');
+  const linkReadable = or(
+    isNull(ingredientSubstitutes.substituteId),
+    inCompendium(linked),
+    eq(linked.workspaceId, ingredients.workspaceId),
+  );
   return selectFrom(
     ingredientSubstitutes,
     and(
       notSoftDeleted(ingredientSubstitutes),
-      inArray(ingredientSubstitutes.ingredientId, [...ingredientIds]),
-      readableIngredientParent(
-        memberships,
-        ingredientSubstitutes.ingredientId,
-        or(
-          isNull(ingredientSubstitutes.substituteId),
-          inCompendium(linked),
-          eq(linked.workspaceId, ingredients.workspaceId),
-        ),
-      ),
+      ...(of === 'ingredient'
+        ? [
+            ownedByIngredient(ingredientSubstitutes),
+            inArray(ingredientSubstitutes.ingredientId, [...ids]),
+            readableIngredientParent(memberships, ingredientSubstitutes.ingredientId, linkReadable),
+          ]
+        : [
+            inArray(ingredientSubstitutes.variantId, [...ids]),
+            readableVariantParent(memberships, ingredientSubstitutes.variantId, linkReadable),
+          ]),
     ),
     { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
   );
@@ -284,7 +323,7 @@ function compendiumList(filter: IngredientFilter): {
             ),
           )
         : undefined,
-      filter.withoutReferences ? citesNothing('ingredientId') : undefined,
+      filter.withoutReferences ? citesNowhere() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
     order: match
@@ -352,6 +391,23 @@ function searchMatch(
     join: { source, on: eq(sql`${matched}.id`, ingredients.id) },
     score: sql<number>`${matched}.score`,
   };
+}
+
+/**
+ * The entry shows no reference, on itself or on any of its live forms: the
+ * admin's to-do list (M5.5). An entry whose only source is on its oil is
+ * sourced, under the union rule (MB.215, MB.218), so it is not on the list.
+ */
+function citesNowhere(): SQL | undefined {
+  return and(
+    citesNothing('ingredientId'),
+    not(
+      existsIn(
+        ingredientVariants,
+        and(eq(ingredientVariants.ingredientId, ingredients.id), cites('ingredientVariantId')),
+      ),
+    ),
+  );
 }
 
 /** One correlated `EXISTS` per id, so an entry must carry every one of them. */

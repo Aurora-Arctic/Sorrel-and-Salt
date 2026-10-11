@@ -57,6 +57,9 @@ export interface IngredientVariantNode {
   planets: string[] | null;
   zodiacSigns: string[] | null;
   colors: string[] | null;
+  categories: { name: string }[];
+  substitutes: (SubstituteNode & { variant: { id: string; form: string } | null })[];
+  references: { reference: { title: string }; locator: string | null }[];
   audit: { createdBy: string; updatedBy: string };
 }
 

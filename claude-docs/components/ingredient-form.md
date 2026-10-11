@@ -564,6 +564,8 @@ either field revalidates the formal name, and the error clears as soon as the
 pair agrees, with no second submit. The classification's info tip
 states the rule before anyone breaks it.
 
+**MB.215: a Variants section.** An ingredient's forms become its variants (DESIGN.md §5), and MB.221 moves the Form box into a new "Variants" section, `variants.tsx`: one fieldset per form, each named by its form, carrying Form (this box, pick-only on the compendium as now), Description, Safety Notes, Elements, Planets, Zodiac Signs, Colours, Categories, Substitutes and References — what a variant carries. The top-level Form field leaves the form, which then sends only `variants`; a repeat form is refused at Add; a variant's server error lands beside its own field, `variants.1.form`, as any field's does; and a variant's Substitutes picker ranks a matching form first, then its group, and offers the linked ingredient's forms when it has some. The compendium prompts for at least one form. "The form's pick" above then describes each variant's Form box ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 ## What it sends
 
 The values **as typed**, reshaped by `toInput` into the input the mutation

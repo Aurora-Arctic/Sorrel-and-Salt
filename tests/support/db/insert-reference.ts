@@ -43,3 +43,27 @@ export async function insertReferenceLink(
     returning id`;
   return row.id as string;
 }
+
+/**
+ * Links `referenceId` from one form of an ingredient, `variantId` (MB.217),
+ * stamped by `author`, and returns the link's id. Raw, as
+ * `insertReferenceLink` is.
+ */
+export async function insertVariantReferenceLink(
+  sql: postgres.Sql,
+  variantId: string,
+  referenceId: string,
+  author: string,
+  locator: string | null = null,
+): Promise<string> {
+  const [row] = await sql`
+    insert into reference_links ${sql({
+      ingredient_variant_id: variantId,
+      reference_id: referenceId,
+      locator,
+      created_by: author,
+      updated_by: author,
+    })}
+    returning id`;
+  return row.id as string;
+}

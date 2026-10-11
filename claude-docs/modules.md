@@ -266,7 +266,8 @@ and `findPageCountInTiers` in `finders.ts`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 (M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
-ingredient's folk names and category links; `findCompendiumPage` (M8.5), the
+ingredient's folk names and category links; `findManyOfVariants` (MB.218), the
+rows one form of an ingredient owns; `findCompendiumPage` (M8.5), the
 public list, and `findCompendiumCount` (MB.105), its count;
 `findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
 `findIngredientSuggestions` (MB.138), the substitute picker's search;
@@ -275,17 +276,18 @@ write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
-ingredient's substitutes and the ingredients they link, deleted or not;
+ingredient's or a variant's substitutes and the ingredients they link, deleted or not;
 `findReferencesOf` (MB.153, MB.208), a sourced row's references, each
 where its readers may look; `findManyReferences` (MB.153), what a row
 written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
 reference picker's search; `citesNothing` (MB.153), the admin's to-do
-filter, a sourced row citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+filter, a sourced row citing no compendium reference, and `cites` (MB.218),
+its converse; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
 curated form's rename onto the entries picking it (`carryFormRename`, M5.6a). The
 list, its count, the identity lookup, the two address finders and the writer
-touch the compendium tier alone, as does `citesNothing`; each of the rest
+touch the compendium tier alone, as do `citesNothing` and `cites`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later
 task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
 this list in its own PR, with a one-line reason beside it.
@@ -295,6 +297,8 @@ One entry is not the compendium's: `onSiteTier` (MB.202), `invitations`'
 site tier, `workspace_id IS NULL` spelled for that table alone so that no
 invitation read calls `inCompendium`. It is listed because it spells the
 tier's predicate, and the extraction task leaves it behind.
+
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gains MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers, which MB.218 adds to the list above in its own PR ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Where types live
 

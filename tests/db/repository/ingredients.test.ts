@@ -6,7 +6,10 @@ import {
   findCompendiumPage,
   findIngredientSuggestions,
   findManyOfIngredients,
+  findManyOfVariants,
   findOneIngredient,
+  findReferencesOf,
+  findSubstitutesIncludingSoftDeleted,
   type CompendiumScore,
   type IngredientFilter,
   type IngredientRow,
@@ -17,6 +20,7 @@ import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { A, B, D, E, asUser } from '../../support/as-user';
 import {
@@ -24,6 +28,7 @@ import {
   insertIngredient,
   insertVariant,
 } from '../../support/db/insert-ingredient';
+import { insertReference, insertVariantReferenceLink } from '../../support/db/insert-reference';
 import { makeIngredient } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
@@ -235,11 +240,11 @@ describe('findCompendiumPage', () => {
         await insertVariant(
           sql,
           mugwortId,
-          { form: 'Testoil', description: 'Pressed from the fixturberry seed' },
+          { form: 'Testoil', description: 'Pressed from the quandleberry seed' },
           A.id,
         );
 
-        expect(await namesOf({ query: 'fixturberry' })).toEqual(['Fixture Mugwort']);
+        expect(await namesOf({ query: 'quandleberry' })).toEqual(['Fixture Mugwort']);
       });
 
       it('answers one row, at its best score, for an entry two of whose variants match', async () => {
@@ -750,6 +755,7 @@ describe('a variant read under its ingredient', () => {
   let inW: Membership;
   let inX: Membership;
   let localId: string;
+  let variantId: string;
 
   beforeAll(async () => {
     inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
@@ -757,9 +763,32 @@ describe('a variant read under its ingredient', () => {
   });
 
   beforeEach(async () => {
-    localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
-    await insertVariant(sql, localId, { form: 'Testoil' }, A.id);
+    localId = await add('Fixture Local', {
+      workspaceId: WORKSPACE_W_ID,
+      categories: ['Cleansing'],
+      substitutes: ['Fixture Stand-in'],
+    });
+    variantId = await insertVariant(
+      sql,
+      localId,
+      { form: 'Testoil', categories: ['Protection'], substitutes: ['Testbane'] },
+      A.id,
+    );
+    const book = await insertReference(sql, { title: 'Fixture Oils' }, E.id);
+    await insertVariantReferenceLink(sql, variantId, book, A.id);
   });
+
+  /** What each of a variant's three child reads answers under `proofs`, by direct id. */
+  const childrenOf = async (proofs: Membership[], id: string) => ({
+    categories: (await findManyOfVariants(proofs, ingredientCategories, [id])).length,
+    substitutes: (await findSubstitutesIncludingSoftDeleted(proofs, 'variant', [id])).map(
+      ({ row }) => row.name,
+    ),
+    references: (await findReferencesOf(proofs, 'ingredientVariantId', [id])).map(
+      ({ reference }) => reference.title,
+    ),
+  });
+  const NONE = { categories: 0, substitutes: [], references: [] };
 
   const formsOf = async (proofs: Membership[], id: string) =>
     (await findManyOfIngredients(proofs, ingredientVariants, [id])).map((row) => row.form).sort();
@@ -771,6 +800,40 @@ describe('a variant read under its ingredient', () => {
 
     expect(await formsOf([], localId)).toEqual([]);
     expect(await formsOf([inX], localId)).toEqual([]);
+  });
+
+  it("answers a coven's variant's own rows under its own coven's proof only, by direct id", async () => {
+    // Why the refusals below could have passed wrongly: the rows are there,
+    // and the right proof reaches each by this id.
+    expect(await childrenOf([inW], variantId)).toEqual({
+      categories: 1,
+      substitutes: ['Testbane'],
+      references: ['Fixture Oils'],
+    });
+
+    expect(await childrenOf([], variantId)).toEqual(NONE);
+    expect(await childrenOf([inX], variantId)).toEqual(NONE);
+  });
+
+  it("hides a soft-deleted variant's own rows, which stay for a restore", async () => {
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${variantId}`;
+
+    expect(await childrenOf([inW], variantId)).toEqual(NONE);
+  });
+
+  // The union rule (MB.215): an ingredient's lists are its own rows, a form's
+  // its additions, and no read answers the one for the other.
+  it("keeps an ingredient's own rows and its variant's apart", async () => {
+    const ownCategories = await findManyOfIngredients([inW], ingredientCategories, [localId]);
+    const ownSubstitutes = await findSubstitutesIncludingSoftDeleted([inW], 'ingredient', [
+      localId,
+    ]);
+    const formCategories = await findManyOfVariants([inW], ingredientCategories, [variantId]);
+
+    expect(ownCategories.map((pair) => pair.variantId)).toEqual([null]);
+    expect(ownSubstitutes.map(({ row }) => row.name)).toEqual(['Fixture Stand-in']);
+    expect(formCategories.map((pair) => pair.variantId)).toEqual([variantId]);
   });
 
   it("offers a coven's entry by its variant's form to that coven's picker alone", async () => {

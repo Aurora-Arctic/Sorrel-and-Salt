@@ -6,9 +6,13 @@ import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
   type IngredientKey,
+  type VariantKey,
   categoriesByIngredient,
+  categoriesByVariant,
   folkNamesByIngredient,
+  referencesByVariant,
   substitutesByIngredient,
+  substitutesByVariant,
   variantsByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
@@ -17,6 +21,7 @@ import {
   insertSubstituteLink,
   insertVariant,
 } from '../../../support/db/insert-ingredient';
+import { insertReference, insertVariantReferenceLink } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
@@ -25,8 +30,10 @@ import type { Written } from './types';
 // lookup is `assertMembership`'s one query; the rest are the reads themselves.
 const repository = vi.hoisted(() => ({
   findManyOfIngredients: vi.fn(),
+  findManyOfVariants: vi.fn(),
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
+  findReferencesOf: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -117,24 +124,66 @@ const loadersFor = (session: Session | null) =>
       folkNamesByIngredient,
       substitutesByIngredient,
       variantsByIngredient,
+      categoriesByVariant,
+      substitutesByVariant,
+      referencesByVariant,
     },
     session,
   );
 
-const categoryNames = async (session: Session | null, ref: IngredientKey) =>
-  (await loadersFor(session).categoriesByIngredient.load(ref)).map((category) => category.name);
+type Loaders = ReturnType<typeof loadersFor>;
 
-const folkNames = (session: Session | null, ref: IngredientKey) =>
-  loadersFor(session).folkNamesByIngredient.load(ref);
+/** The second form each ingredient a test gave one has, by the ingredient's id. */
+const variantOf = new Map<string, string>();
 
-const substituteNames = async (session: Session | null, ref: IngredientKey) =>
-  (await loadersFor(session).substitutesByIngredient.load(ref)).map(
-    (substitute) => substitute.name,
+/**
+ * The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how
+ * a variant's loaders are asked (MB.218), so a key that lies about its
+ * ingredient's tier lies about the variant's too.
+ */
+const variantKey = (ref: IngredientKey): VariantKey => ({
+  id: variantOf.get(ref.id) ?? '',
+  ingredientId: ref.id,
+  workspaceId: ref.workspaceId,
+});
+
+/**
+ * Gives `ref`'s ingredient a second form, Fixture Gum, which adds the
+ * category Protection, the typed substitute Testbane and a compendium book.
+ */
+async function addVariant({ ref }: Written): Promise<void> {
+  const id = await insertVariant(
+    sql,
+    ref.id,
+    { form: 'Fixture Gum', categories: ['Protection'], substitutes: ['Testbane'] },
+    A.id,
   );
+  const book = await insertReference(sql, { title: 'Fixture Gums' }, E.id);
+  await insertVariantReferenceLink(sql, id, book, A.id);
+  variantOf.set(ref.id, id);
+}
+
+const categoryNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.categoriesByIngredient.load(ref)).map((category) => category.name);
+
+const folkNames = (loaders: Loaders, ref: IngredientKey) => loaders.folkNamesByIngredient.load(ref);
+
+const substituteNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.substitutesByIngredient.load(ref)).map((substitute) => substitute.name);
 
 /** The forms each ingredient comes in, as `Ingredient.variants` lists them. */
-const variantForms = async (session: Session | null, ref: IngredientKey) =>
-  (await loadersFor(session).variantsByIngredient.load(ref)).map((variant) => variant.form);
+const variantForms = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.variantsByIngredient.load(ref)).map((variant) => variant.form);
+
+/** What the second form of `ref`'s ingredient adds, through that form's own loaders. */
+const variantCategoryNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.categoriesByVariant.load(variantKey(ref))).map((category) => category.name);
+
+const variantSubstituteNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.substitutesByVariant.load(variantKey(ref))).map((substitute) => substitute.name);
+
+const variantCitations = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.referencesByVariant.load(variantKey(ref))).map(({ reference }) => reference.title);
 
 describe('the categoriesByIngredient loader', () => {
   it('answers fifty ingredients across two tiers with one role lookup and two reads', async () => {
@@ -148,8 +197,10 @@ describe('the categoriesByIngredient loader', () => {
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
@@ -178,8 +229,10 @@ describe('the categoriesByIngredient loader', () => {
     expect(answers).toHaveLength(25);
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 0,
     });
   });
@@ -195,8 +248,10 @@ describe('the folkNamesByIngredient loader', () => {
     expect(answers).toEqual(written.map(({ folkNames: names }) => names));
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
@@ -219,7 +274,7 @@ describe('the folkNamesByIngredient loader', () => {
       where name = 'Testbane'
     `;
 
-    expect(await folkNames(asUser(B), ref)).toEqual(['Mock Root']);
+    expect(await folkNames(loadersFor(asUser(B)), ref)).toEqual(['Mock Root']);
   });
 });
 
@@ -244,8 +299,10 @@ describe('the substitutesByIngredient loader', () => {
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 0,
+      findManyOfVariants: 0,
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 1,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
@@ -268,9 +325,41 @@ describe('the variantsByIngredient loader', () => {
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
+    });
+  });
+});
+
+describe("a variant's child loaders", () => {
+  it('answer fifty variants across two tiers with one read each and one role lookup each', async () => {
+    const written = await addFifty();
+    for (const one of written) await addVariant(one);
+    const loaders = loadersFor(asUser(B));
+
+    const categories = await Promise.all(
+      written.map(({ ref }) => variantCategoryNames(loaders, ref)),
+    );
+    const substitutes = await Promise.all(
+      written.map(({ ref }) => variantSubstituteNames(loaders, ref)),
+    );
+    const citations = await Promise.all(written.map(({ ref }) => variantCitations(loaders, ref)));
+
+    // Each form's own, never its ingredient's: the ingredients are filed
+    // under other categories too, and type their folk names as substitutes.
+    expect(categories).toEqual(written.map(() => ['Protection']));
+    expect(substitutes).toEqual(written.map(() => ['Testbane']));
+    expect(citations).toEqual(written.map(() => ['Fixture Gums']));
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 0,
+      findManyOfVariants: 1,
+      findManyByIds: 1,
+      findSubstitutesIncludingSoftDeleted: 1,
+      findReferencesOf: 1,
+      findWorkspaceRole: 3,
     });
   });
 });
@@ -284,13 +373,19 @@ describe('who the ingredient-children loaders answer', () => {
     folkNamesByIngredient: folkNames,
     substitutesByIngredient: substituteNames,
     variantsByIngredient: variantForms,
+    categoriesByVariant: variantCategoryNames,
+    substitutesByVariant: variantSubstituteNames,
+    referencesByVariant: variantCitations,
   };
   const CHILDREN = {
     categoriesByIngredient: ['Protection'],
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
-    // The fixture's own form, a variant since MB.216.
-    variantsByIngredient: ['herb'],
+    // The fixture's own form, a variant since MB.216, and the one added.
+    variantsByIngredient: ['Fixture Gum', 'herb'],
+    categoriesByVariant: ['Protection'],
+    substitutesByVariant: ['Testbane'],
+    referencesByVariant: ['Fixture Gums'],
   };
   type Loader = keyof typeof READS;
   const LOADERS = Object.keys(READS) as Loader[];
@@ -301,11 +396,13 @@ describe('who the ingredient-children loaders answer', () => {
   beforeEach(async () => {
     local = await addIngredient('Fixturewort', WORKSPACE_W_ID, ['Testbane'], ['Protection']);
     compendium = await addIngredient('Mockleaf', null, ['Testbane'], ['Protection']);
+    await addVariant(local);
+    await addVariant(compendium);
   });
 
   /** What one read answers, a refusal as `'Forbidden'` so the matrix compares. */
   const outcome = (read: (typeof READS)[Loader], session: Session | null, ref: IngredientKey) =>
-    read(session, ref).then(
+    read(loadersFor(session), ref).then(
       (names) => names,
       (error: unknown) => (error instanceof Forbidden ? 'Forbidden' : error),
     );
@@ -347,7 +444,9 @@ describe('who the ingredient-children loaders answer', () => {
 
   it('refuses one key without refusing the rest of its batch', async () => {
     for (const loader of LOADERS) {
-      const load = (ref: IngredientKey) => loadersFor(asUser(D))[loader].load(ref);
+      // One request's loaders, so the two keys are one batch.
+      const loaders = loadersFor(asUser(D));
+      const load = (ref: IngredientKey) => READS[loader](loaders, ref);
 
       const [refused, answered] = await Promise.allSettled([load(local.ref), load(compendium.ref)]);
 
@@ -360,7 +459,7 @@ describe('who the ingredient-children loaders answer', () => {
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${local.ref.id}`;
 
     for (const loader of LOADERS) {
-      expect(await READS[loader](asUser(B), local.ref), loader).toEqual([]);
+      expect(await READS[loader](loadersFor(asUser(B)), local.ref), loader).toEqual([]);
     }
   });
 });

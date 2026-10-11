@@ -141,12 +141,15 @@ export interface IngredientDeityRow {
 /**
  * One substitute as `Ingredient.substitutes` reads it (DESIGN.md §7): the name
  * it shows — the linked ingredient's label, its last once deleted, or the
- * typed text — and the ingredient to follow, null on typed text and on a
- * deleted link.
+ * typed text — the ingredient to follow, null on typed text and on a deleted
+ * link, and the form of it the link names, null when it names none or the
+ * ingredient is gone (MB.218). The form is an id, read beneath the linked
+ * ingredient like any of its variants, never by itself.
  */
 export interface SubstituteRow {
   name: string;
   ingredient: IngredientRow | null;
+  variantId: string | null;
 }
 
 /**
