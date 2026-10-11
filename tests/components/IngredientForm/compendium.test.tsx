@@ -498,6 +498,8 @@ describe('IngredientForm on the compendium', () => {
       fireEvent.click(button('Delete Ingredient'));
       expect(button('Delete')).toBeVisible();
       expect(screen.getByText(/Testwort/)).toBeInTheDocument();
+      // The question takes the focus on its safe answer, the pressed button gone (MB.115).
+      expect(button('Keep It')).toHaveFocus();
       fireEvent.click(button('Keep It'));
       noButton('Delete');
 

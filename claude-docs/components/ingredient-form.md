@@ -844,7 +844,10 @@ site admin's, through the compendium mutations
   `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
 "Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
-  [`GroupedValueForm`](grouped-value-form.md) asks. Delete sends
+  [`GroupedValueForm`](grouped-value-form.md) asks. The question, as the redirect's does, scrolls
+  into view and takes the focus on Keep It, its safe answer, since the
+  pressed button has gone and a long form would leave it below the fold
+  (MB.115, the owner's call); smooth unless motion is reduced. Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
   as an alert above the fields.

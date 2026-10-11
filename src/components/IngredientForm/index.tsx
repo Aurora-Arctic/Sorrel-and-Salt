@@ -207,6 +207,24 @@ const IngredientForm = ({
   const [question, setQuestion] = useState<RedirectQuestion | null>(null);
   // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
+  // A question in place of the saves (Delete's, or a redirect's) is brought
+  // into view and takes the focus on its safe answer, Keep It: the button
+  // pressed has gone, and in a long form the question would sit below the
+  // fold (MB.115, the owner's call). Smooth unless motion is reduced; jsdom
+  // has no scrollIntoView, hence the optional call.
+  const keepIt = useRef<HTMLButtonElement>(null);
+  const asking = deleting || question !== null;
+  useEffect(() => {
+    if (!asking) return;
+    const button = keepIt.current;
+    if (!button) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? true;
+    button.closest('.form__confirm')?.scrollIntoView?.({
+      block: 'end',
+      behavior: still ? 'auto' : 'smooth',
+    });
+    button.focus({ preventScroll: true });
+  }, [asking]);
   const [refusal, setRefusal] = useState<string>();
 
   const mutation = useMutation({
@@ -498,7 +516,12 @@ const IngredientForm = ({
               >
                 End Redirect & Save
               </BusyButton>
-              <button type="button" className="btn btn--quiet" onClick={() => setQuestion(null)}>
+              <button
+                ref={keepIt}
+                type="button"
+                className="btn btn--quiet"
+                onClick={() => setQuestion(null)}
+              >
                 Keep It
               </button>
             </div>
@@ -519,7 +542,12 @@ const IngredientForm = ({
               >
                 Delete
               </BusyButton>
-              <button type="button" className="btn btn--quiet" onClick={() => setDeleting(false)}>
+              <button
+                ref={keepIt}
+                type="button"
+                className="btn btn--quiet"
+                onClick={() => setDeleting(false)}
+              >
                 Keep It
               </button>
             </div>
