@@ -538,6 +538,8 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 ### The workspace ingredient mutations
 
 Stories 15, 25 and 34's writes (M8.8, the delete M5.3), registered by
