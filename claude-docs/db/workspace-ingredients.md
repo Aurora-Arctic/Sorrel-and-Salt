@@ -79,6 +79,13 @@ substitutes, deities, references and categories, `'add'` on a create and
 same call with none. A sixth child table costs one writer, one loader and one
 input field, and no edit to this service or its mutations
 (["Compendium writes"](compendium-writes.md) says which three).
+A coven's ingredient takes its forms the same way (MB.219): `variants`
+through the same `writeChildren` call, matched by id and then by folded text,
+each with its own substitutes, references and categories. A coven's form is
+free text, its pick checked only when one is sent. A substitute may name one
+form of the ingredient it links, `substituteVariantId`, which must be a live
+form of that ingredient in the writer's scope, refused on that field
+otherwise. And a form may not stand in for itself, though a sibling may.
 
 **The slug follows the label, the form and the formal name.** `slug` is
 `NOT NULL`, so a create writes `ingredientSlug` of the three, through

@@ -40,6 +40,39 @@ types spread. No service, mutation or input type is edited, and
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` proves the
 mutations clear what the record names.
 
+**Variants are the recipe's first adopter** (MB.219). An entry's forms are
+`variants`, a field of `ingredientInputFields`, and `writeChildren` writes
+them last, through `addVariants` and `replaceVariants`. Each form's own
+substitutes, references and categories go through the same writers as the
+entry's, now taking an owner, `{ ingredientId, variantId, at }`. `variantId`
+is null for the entry's own rows. `at` is where the input sent the form,
+`['variants', i]`, and every issue about one of its rows is pathed beneath
+it. A replace matches each form sent to a row by its `id` when the entry
+holds that row, and otherwise by its text folded, `lower(btrim(form))`, so a
+form can be respelt in place. A row no form keeps is soft-deleted and its
+children are left for a restore. A kept row is rewritten only where it
+differs, so a save that changes nothing writes no form and none of its
+children. The recipe needed one more edit: the services pass the lists
+`resolvePicks` checks as one bundle. A form's pick and categories are read
+against the database, as the deities and categories already were, so
+`splitChildren` hands `resolvePicks` the deities and the forms together, and
+its `children` go to `writeChildren` whole. The next child, checked or not,
+edits neither service. `ingredient_variants_form_unique` is mapped where the
+form is written, onto that form's `form`, since only that write knows which
+entry it was writing. The compendium holds each form to the curated rules the
+entry's own form was held to. Each form must be a pick, refused at
+`['variants', i, 'form']` or `['variants', i, 'formId']`. Each form's planets
+and signs must name curated rows, at `['variants', i, 'planets', j]`.
+
+Two measures keep the old form field working until MB.222 removes them. An
+input with no `variants` reads its top-level `form` and `formId` as its one
+form, and that form's refusals land on `form` and `formId` as they always
+have, so `IngredientForm` saves unchanged. And `resolvePicks` hands back the
+first form's text and pick as the row's `form` and `formId`, so the row
+mirrors a form while the columns last. Between the two, an entry saved through
+the old form sends only its first form, and the save drops any other form it
+holds. Nothing but the API writes a second form until MB.221.
+
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and
 `unknown` included as answers (§5). A write that leaves it out, or sends

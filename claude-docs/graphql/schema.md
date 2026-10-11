@@ -665,6 +665,18 @@ the thrown type — the ingredients files since MB.185, the vocabulary, identity
 and coven files since MB.186. A test that watches a loader or shares one across
 operations, or records what a sender was asked to mail, hands `run` its own.
 
+**`variants` on all four inputs** (MB.219): `[IngredientVariantInput!]`, each
+a whole form whose every field but `id` is non-null, `""` or `[]` clearing
+one, as MB.159 holds every row-replacing input. The list itself is optional
+on all four, the update inputs included, until MB.222. An input without it
+reads `form` and `formId` as the one form, which is how `IngredientForm`
+still saves. MB.222 makes it required on the two update inputs when it
+removes those two fields. `SubstituteInput` gains `substituteVariantId`, one
+form of the linked ingredient. A form's refusal is `VALIDATION` pathed to it,
+`['variants', 1, 'form']`. Both update mutations clear `variantsByIngredient`
+with the other child loaders, so a second update in one request answers its
+own forms.
+
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
 mutations' half: the input that names a tier, or leaves a field out, refused
 before any resolver runs; the answer equal to a fresh read; the child
