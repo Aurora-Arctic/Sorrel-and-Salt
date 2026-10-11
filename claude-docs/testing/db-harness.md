@@ -38,10 +38,10 @@ run as a test.
   ```
 
   `repository/*.test.ts` (through `tests/support/db/probe-tables.ts`), `updated-at-trigger.test.ts`,
-  `test-database-isolation.test.ts`, `seeded-template.test.ts` and
-  `tests/db/seed/*` still open their own client — the isolation test's subject
-  _is_ the connection, and the others either read the clone as the template
-  built it or truncate everything before a seed run they assert (MB.183).
+  `test-database-isolation.test.ts` and `tests/db/seed/*` still open their
+  own client — the isolation test's subject _is_ the connection, and the
+  others either read the clone as the template built it or truncate
+  everything before a seed run they assert (MB.183).
 
 - **`table-metadata.ts` — the Drizzle half.** `tableFacts(table)` is
   `getTableConfig` plus the lookups every schema test used to build by hand:
@@ -55,39 +55,37 @@ run as a test.
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
-  audit-columns sweep read one list. `APPEND_ONLY_TABLES` is the same kind of
-  list for `tests/db/append-only-trigger.test.ts`, which holds the tables
-  carrying a `forbid_rewrite` trigger to it (MB.194).
+  audit-columns sweep read one list. `APPEND_ONLY_TABLES` names the tables
+  carrying a `forbid_rewrite` trigger (MB.194); the trigger's refusals are
+  `user-privilege-changes-schema.test.ts`'s and
+  `tests/db/privilege-change-trigger.test.ts`'s (MB.225).
 
 - **`insert-ingredient.ts` — `insertIngredient(sql, fixture, author)`** (MB.101).
   The setup inserter for an ingredient and its children, on the raw client and
   in one transaction. Why setup goes this way rather than through `withAudit`
-  is under ["Fixture factories"](fixture-factories.md), where the convention is stated; its test
-  is `tests/db/insert-ingredient.test.ts`, under `tests/db/` because that is
-  the project with a database.
+  is under ["Fixture factories"](fixture-factories.md), where the convention is stated. It
+  has no test of its own: it is the harness, proved by every test seeding
+  through it (MB.225).
 
 - **`insert-spell.ts` — `insertSpell(sql, fixture, author)`** (M5.3). The
   same for a spell: its row, its layers and its assigned categories, on
   `insertIngredient`'s terms. `author` is `created_by`, which is whom a
   private spell is readable by, and a layer's ingredient id is written as
   given, which is how a test writes the cross-coven link a finder must
-  withhold. Its test is `tests/db/insert-spell.test.ts`.
+  withhold.
 
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
-  file, on the catalogue side** (MB.188). It splits `AUDITED_TABLES` into
-  the twenty-four six-column tables and the two four-column join tables,
-  asserts the twenty-six are exactly the tables `information_schema` finds
-  carrying the four stamps, and loops the same expectations over each: the
-  columns are there, the stamps `NOT NULL`, the delete pair nullable or
-  absent, and `referential_constraints` shows each `*_by` referencing
+  file, on the catalogue side** (MB.188, one `it` since MB.225). It asserts
+  `AUDITED_TABLES` are exactly the tables the catalogue finds carrying the
+  four stamps, and holds each to its expectation at once: the twenty-four
+  six-column tables and the two four-column join tables, the stamps `NOT
+NULL`, the delete pair nullable or absent, and each `*_by` referencing
   `users(id)`. It reads `getTableConfig` nowhere. The code side is the
   module schema tests': **each asserts its table's exact column set,
   `[...OWN, ...AUDIT_COLUMNS]` or `[...OWN, ...STAMP_COLUMNS]`**, which is
   what fails when a spread leaves a schema file — the migrated database's
-  columns would stand, so the catalogue alone would stay green. What the
-  spread instances declare — the stamps required, every id a key to
-  `users.id` — is asserted once, in `tests/db/audit.test.ts`, since every
-  table spreads the same ones. The `UNAUDITED_TABLES` are asserted to exist
+  columns would stand, so the catalogue alone would stay green
+  (`tests/db/audit.test.ts` covers `applyAudit` alone). The `UNAUDITED_TABLES` are asserted to exist
   with an `updated_at` and carry none of the three audit ids by name
   (`sessions.impersonated_by` is no audit id, MB.53), which is what stops the
   sweep being satisfied by a table with nothing to check. A new audited table
@@ -184,9 +182,8 @@ every reset re-evaluated `src/db/connection.ts`, which opened a client per
 evaluation and ended none, so a worker idled on several pools' worth of
 connections at once, each only seconds old.
 
-**The bound.** One client per process, and three configured numbers, each
-read by `tests/guards/db-connection-budget.test.ts`, which fails a change
-that raises any one without the others:
+**The bound.** One client per process, and three configured numbers, which
+move together: raising any one without the others breaks the arithmetic below.
 
 - **One app client per process per URL**, kept on `globalThis` by
   `src/db/connection.ts` rather than in the module's scope, so a
@@ -194,11 +191,10 @@ that raises any one without the others:
   the URL, so a test that repoints `DATABASE_URL` still gets its own. The
   same shape guards `next dev`, whose hot reload re-evaluates a server
   module the same way — the dev server idling on `sorrel` through these
-  measurements grew from eleven connections to twenty-seven. The regression
-  test is `tests/db/connection-budget.test.ts`'s "survives a module reset
-  without a second pool": a burst through `withAudit`, a reset, a second
-  burst through the re-imported repository, and the clone still holds the
-  cap's worth of connections rather than two caps' worth.
+  measurements grew from eleven connections to twenty-seven. It was measured
+  with a burst through `withAudit`, a reset, a second burst through the
+  re-imported repository: the clone held the cap's worth of connections
+  rather than two caps' worth.
 
 - **`TEST_POOL_MAX = 4`** in `tests/support/db/bounded-postgres.ts` — a cap on
   every pool opened inside the `db` project and the acceptance config, the
@@ -208,10 +204,10 @@ that raises any one without the others:
   is the one left to the real package), and the wrapper passes
   `max: min(asked, TEST_POOL_MAX)`. A cap rather than a default: a call site
   may lower it (postgres.js's ordering guarantee is `max: 1`) and cannot raise
-  it. `tests/db/connection-budget.test.ts` proves it at the server — a burst
-  three times the cap wide, counted mid-flight in `pg_stat_activity`, opens
-  exactly the cap for the app's client through `withAudit`, for a client a file
-  opens, and for one asking for more; one asking for less keeps its own.
+  it. Measured at the server, a burst three times the cap wide, counted
+  mid-flight in `pg_stat_activity`, opened exactly the cap for the app's
+  client through `withAudit`, for a client a file opens, and for one asking
+  for more; one asking for less kept its own.
 - **`DB_WORKER_CAP = 12`** in `tests/support/db-project.mts` — the worker count
   is still Vitest's default, `availableParallelism() - 1`, but no higher than
   twelve, so the budget is arithmetic over a constant rather than over the
@@ -229,15 +225,15 @@ that raises any one without the others:
   `make docker-build` and a `make docker-up` to recreate the container. Until
   then the live limit stays 100, which a single run's worst case still fits.
 
-The guard's arithmetic: `DB_WORKER_CAP × 2 pools × TEST_POOL_MAX + 1 =
+The arithmetic: `DB_WORKER_CAP × 2 pools × TEST_POOL_MAX + 1 =
 12 × 2 × 4 + 1 = 97 ≤ 200 / 2`. The two pools are the app's and the file's;
 the `+ 1` is the run's one client outside the workers, global setup's admin
 client, which ends before a worker starts. The per-file clone's admin client
 is not a third term: it opens in the setup file, after the previous file's
 `afterAll` ended its client and before `useTestDatabase`'s `beforeAll` opens
 the next, and the `WITH (FORCE)` clone it runs kills the previous file's app
-pool. A file that opens a second client of its own (`tests/db/seed/reset.test.ts`'s
-admin client on `sorrel`) runs it one statement at a time, so it holds one
+pool. A file that opens a second client of its own (an admin client on
+`sorrel`, say) must run it one statement at a time, so it holds one
 connection and the term for the file's own client still covers it; a file
 that fired bursts through two clients of its own at once would be the thing
 to change. The other half of the limit is the room the task asked for: a
@@ -247,8 +243,8 @@ second run's whole budget, or the e2e servers — `E2E_SLOTS + 1` of
 **After the bound**, the same measurement: a peak of **28 connections of the
 run's own** (63 on the server, beside the `next dev` idling on `sorrel`
 and an e2e `next start` holding its ten), sixteen seconds in; per worker, 9
-on the clone running `tests/db/connection-budget.test.ts` itself — its
-watcher, the app's four and its own four — and 5 or fewer on every other,
+on the clone running the budget measurement itself — its watcher, the app's
+four and its own four — and 5 or fewer on every other,
 with the eleven admin clients on `sorrel` at the start unchanged. The three
 files from M5.5 passed together ten runs in a row beside that server, the
 loop peaking at six connections. The run is no slower: 103 s against 139 s
