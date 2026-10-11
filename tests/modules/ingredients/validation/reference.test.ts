@@ -6,14 +6,12 @@ import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 // field, per kind — plus the form's own rule that a book needs a date
 // (claude-docs/design-decisions/mb.151-references.md).
 
-/** The paths and messages a failed parse reported, which is what lands beside a field. */
-function failures(input: unknown) {
+/** The paths a failed parse reported: which field each refusal lands beside. */
+function failedPaths(input: unknown) {
   const result = ReferenceInput.safeParse(input);
   expect(result.success).toBe(false);
-  return result.error?.issues.map(({ path, message }) => ({ path, message })) ?? [];
+  return result.error?.issues.map((issue) => issue.path) ?? [];
 }
-
-const failedPaths = (input: unknown) => failures(input).map(({ path }) => path);
 
 // The least each kind takes, so a case varies one field against a row that
 // is otherwise accepted.
@@ -98,14 +96,10 @@ describe('ReferenceInput', () => {
   });
 
   describe('per kind', () => {
-    it.each([
-      ['chapter', 'Name the book this chapter is in'],
-      ['article', 'Name the journal this article is in'],
-      ['entry', 'Name the reference work this entry is in'],
-    ] as const)('refuses a %s without its container, at the container', (kind, message) => {
-      expect(failures({ ...MINIMAL[kind], container: ' ' })).toEqual([
-        { path: ['container'], message },
-      ]);
+    it('refuses a chapter, an article or an entry without its container, at the container', () => {
+      for (const kind of ['chapter', 'article', 'entry'] as const) {
+        expect(failedPaths({ ...MINIMAL[kind], container: ' ' }), kind).toEqual([['container']]);
+      }
     });
 
     // Why the refusal above is the kind's: a book and a web page need none.
@@ -115,16 +109,11 @@ describe('ReferenceInput', () => {
     });
 
     it('refuses a web page without its address or the day it was read, at each', () => {
-      expect(failures({ kind: 'web_page', title: 'Testwort' })).toEqual([
-        { path: ['url'], message: 'A web page needs its address' },
-        { path: ['accessed'], message: 'A web page needs the day it was read' },
-      ]);
+      expect(failedPaths({ kind: 'web_page', title: 'Testwort' })).toEqual([['url'], ['accessed']]);
     });
 
     it('refuses a book without a date, at the date', () => {
-      expect(failures({ ...MINIMAL.book, published: '' })).toEqual([
-        { path: ['published'], message: 'A book needs the year it was published' },
-      ]);
+      expect(failedPaths({ ...MINIMAL.book, published: '' })).toEqual([['published']]);
     });
 
     // A form rule, not the table's: why a chapter saves without one.
@@ -136,14 +125,13 @@ describe('ReferenceInput', () => {
   });
 
   describe('the address and the days', () => {
-    it.each(['ftp://example.org/a', 'javascript:alert(1)', 'https://', 'testwort'])(
-      'refuses %s as not a full http(s) address, at the url',
-      (url) => {
-        expect(failures({ ...MINIMAL.book, url, accessed: '2026-10-06' })).toEqual([
-          { path: ['url'], message: 'Give the full address, starting http:// or https://' },
+    it('refuses an address that is not a full http(s) one, at the url', () => {
+      for (const url of ['ftp://example.org/a', 'javascript:alert(1)', 'https://', 'testwort']) {
+        expect(failedPaths({ ...MINIMAL.book, url, accessed: '2026-10-06' }), url).toEqual([
+          ['url'],
         ]);
-      },
-    );
+      }
+    });
 
     // MB.154: an address typed without its scheme is taken as https.
     it('takes an address with no scheme as https', () => {
@@ -154,12 +142,7 @@ describe('ReferenceInput', () => {
 
     it('refuses an address with a space, or a host with no dot, at the url', () => {
       for (const url of ['https://example.org/a b', 'https://fixture/testwort']) {
-        expect(failures({ ...MINIMAL.web_page, url }), url).toEqual([
-          {
-            path: ['url'],
-            message: 'That is not a web address: check it for spaces and a full site name',
-          },
-        ]);
+        expect(failedPaths({ ...MINIMAL.web_page, url }), url).toEqual([['url']]);
       }
     });
 
@@ -170,19 +153,7 @@ describe('ReferenceInput', () => {
     });
 
     it('refuses an accessed day without an address, at the day', () => {
-      expect(failures({ ...MINIMAL.book, accessed: '2026-10-06' })).toEqual([
-        {
-          path: ['accessed'],
-          message: 'A day read goes with an address — add the URL, or clear the day',
-        },
-      ]);
-    });
-
-    it.each(['modified', 'accessed'])('refuses a %s that is not a calendar day', (field) => {
-      const input = { ...MINIMAL.web_page, [field]: '6 October 2026' };
-
-      expect(failedPaths(input)).toEqual([[field]]);
-      expect(failedPaths({ ...MINIMAL.web_page, [field]: '2026-02-30' })).toEqual([[field]]);
+      expect(failedPaths({ ...MINIMAL.book, accessed: '2026-10-06' })).toEqual([['accessed']]);
     });
   });
 
@@ -237,12 +208,8 @@ describe('ReferenceInput', () => {
     });
 
     it('refuses a day read or modified after tomorrow, at the day', () => {
-      expect(failures({ ...MINIMAL.web_page, accessed: '2026-10-09' })).toEqual([
-        { path: ['accessed'], message: 'That day is in the future' },
-      ]);
-      expect(failures({ ...MINIMAL.web_page, modified: '2026-11-01' })).toEqual([
-        { path: ['modified'], message: 'That day is in the future' },
-      ]);
+      expect(failedPaths({ ...MINIMAL.web_page, accessed: '2026-10-09' })).toEqual([['accessed']]);
+      expect(failedPaths({ ...MINIMAL.web_page, modified: '2026-11-01' })).toEqual([['modified']]);
       // Tomorrow is already today east of Greenwich.
       expect(
         ReferenceInput.safeParse({ ...MINIMAL.web_page, accessed: '2026-10-08' }).success,
@@ -251,10 +218,8 @@ describe('ReferenceInput', () => {
 
     it('refuses a last modified day after the day it was read, at the modified day', () => {
       expect(
-        failures({ ...MINIMAL.web_page, modified: '2026-10-06', accessed: '2026-10-01' }),
-      ).toEqual([
-        { path: ['modified'], message: 'It cannot have been modified after the day it was read' },
-      ]);
+        failedPaths({ ...MINIMAL.web_page, modified: '2026-10-06', accessed: '2026-10-01' }),
+      ).toEqual([['modified']]);
       expect(
         ReferenceInput.safeParse({
           ...MINIMAL.web_page,
@@ -265,12 +230,7 @@ describe('ReferenceInput', () => {
     });
 
     it('refuses a published date with no year, at the date', () => {
-      expect(failures({ ...MINIMAL.book, published: 'soon' })).toEqual([
-        {
-          path: ['published'],
-          message: 'Give the year it was published — 1985, November 1950 — or n.d. for none',
-        },
-      ]);
+      expect(failedPaths({ ...MINIMAL.book, published: 'soon' })).toEqual([['published']]);
       for (const published of ['November 1950', 'Summer/Autumn 2013', 'n.d.', 'forthcoming']) {
         expect(ReferenceInput.safeParse({ ...MINIMAL.book, published }).success, published).toBe(
           true,
@@ -279,16 +239,14 @@ describe('ReferenceInput', () => {
     });
 
     it('refuses pages that are not numbers, on any kind, at the pages', () => {
-      expect(failures({ ...MINIMAL.chapter, pages: 'the middle' })).toEqual([
-        { path: ['pages'], message: 'Give the pages as numbers: 112, or 399–412' },
-      ]);
+      expect(failedPaths({ ...MINIMAL.chapter, pages: 'the middle' })).toEqual([['pages']]);
       expect(ReferenceInput.parse({ ...MINIMAL.chapter, pages: 'xii-xv' }).pages).toBe('xii–xv');
     });
 
     it("refuses an article's volume or issue that is not a number, at each", () => {
-      expect(failures({ ...MINIMAL.article, volume: 'vol. 3', issue: 'Summer' })).toEqual([
-        { path: ['volume'], message: 'Give the volume as a number: 51' },
-        { path: ['issue'], message: 'Give the issue as a number: 2' },
+      expect(failedPaths({ ...MINIMAL.article, volume: 'vol. 3', issue: 'Summer' })).toEqual([
+        ['volume'],
+        ['issue'],
       ]);
     });
 

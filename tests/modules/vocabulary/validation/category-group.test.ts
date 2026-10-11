@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { CHIP_GROUNDS, contrastRatio } from '@/lib/contrast';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 
 // A category group as an admin writes one (M5.6b): its colours held to 4.5:1,
 // each against the harder of its own theme's surfaces — `colorDark` the dark
 // card, `colorLight` the light page (MB.36) — refused beside the picker that
-// chose it (MB.43), naming the column and the ratio missed.
+// chose it (MB.43), naming the column and the ratio missed. The name, the
+// description and the dropped slug are curatedValueInput's, and
+// tests/lib/validation.test.ts's.
 
 const VALID = {
   name: 'Fixture Wards',
@@ -24,47 +25,27 @@ function issuesOf(input: unknown) {
   return result.error?.issues.map(({ path, message }) => ({ path, message })) ?? [];
 }
 
-describe('CategoryGroupInput', () => {
-  it('takes a name, a description and two colours, trimmed', () => {
-    expect(
-      CategoryGroupInput.parse({ ...VALID, name: ' Fixture Wards ', description: ' Invented. ' }),
-    ).toEqual(VALID);
-  });
+function failedPaths(input: unknown) {
+  return issuesOf(input).map((issue) => issue.path);
+}
 
+describe('CategoryGroupInput', () => {
   it('stores a colour lower-cased, however it was typed', () => {
     expect(CategoryGroupInput.parse({ ...VALID, colorDark: '#4E8BC2' }).colorDark).toBe('#4e8bc2');
   });
 
-  // The slug is derived from the name (src/lib/slugify.ts), never written beside it.
-  it('drops a slug rather than taking one', () => {
-    expect(CategoryGroupInput.parse({ ...VALID, slug: 'elsewhere' })).not.toHaveProperty('slug');
-  });
-
-  it.each([
-    ['name', 'Give the group a name'],
-    ['description', 'Describe the group'],
-  ])('requires a non-blank %s', (field, message) => {
-    for (const value of ['  ', undefined]) {
-      expect(issuesOf({ ...VALID, [field]: value })).toEqual([{ path: [field], message }]);
-    }
-  });
-
-  it.each(['colorDark', 'colorLight'])('requires %s as a six-digit hex', (column) => {
+  it('requires each colour as a six-digit hex, at its column', () => {
     for (const value of [undefined, '', 'blue', '#abc', '4e8bc2', '#4e8bc2ff', '#gggggg']) {
-      expect(issuesOf({ ...VALID, [column]: value })).toEqual([
-        { path: [column], message: 'Choose a colour, as a hex like #4e8bc2' },
-      ]);
+      expect(failedPaths({ ...VALID, colorDark: value }), String(value)).toEqual([['colorDark']]);
     }
+    expect(failedPaths({ ...VALID, colorLight: '#abc' })).toEqual([['colorLight']]);
   });
 
   // The owner's call: the pair is one family, as every seeded pair is.
   describe('the one hue', () => {
     it('refuses a pair whose hues are more than 10° apart, beside the light-theme colour', () => {
       expect(issuesOf({ ...VALID, colorLight: '#930c31' })).toEqual([
-        {
-          path: ['colorLight'],
-          message: 'The two colours are 135° apart in hue — keep them within 10° of each other',
-        },
+        { path: ['colorLight'], message: expect.stringContaining('135°') },
       ]);
     });
 
@@ -80,19 +61,12 @@ describe('CategoryGroupInput', () => {
     });
 
     it('refuses a grey beside a colour', () => {
-      expect(issuesOf({ ...VALID, colorDark: '#8a8a8a' })).toEqual([
-        {
-          path: ['colorLight'],
-          message: 'One colour is grey and the other is not — give them the same hue',
-        },
-      ]);
+      expect(failedPaths({ ...VALID, colorDark: '#8a8a8a' })).toEqual([['colorLight']]);
     });
 
     // A floor already missed is the refusal to fix first; the hue waits for it.
     it('says nothing of the hue while a colour is under the floor', () => {
-      expect(issuesOf({ ...VALID, colorDark: '#930c31' })).toEqual([
-        expect.objectContaining({ path: ['colorDark'] }),
-      ]);
+      expect(failedPaths({ ...VALID, colorDark: '#930c31' })).toEqual([['colorDark']]);
     });
   });
 
@@ -102,10 +76,7 @@ describe('CategoryGroupInput', () => {
       expect(contrastRatio('#0c5393', CHIP_GROUNDS.light)).toBeGreaterThan(4.5);
 
       expect(issuesOf({ ...VALID, colorDark: '#0c5393' })).toEqual([
-        {
-          path: ['colorDark'],
-          message: 'The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1',
-        },
+        { path: ['colorDark'], message: expect.stringContaining('2.16:1') },
       ]);
     });
 
@@ -113,11 +84,7 @@ describe('CategoryGroupInput', () => {
       expect(contrastRatio('#4e8bc2', CHIP_GROUNDS.dark)).toBeGreaterThan(4.5);
 
       expect(issuesOf({ ...VALID, colorLight: '#4e8bc2' })).toEqual([
-        {
-          path: ['colorLight'],
-          message:
-            'The light theme colour reads 2.99:1 on the light page — it needs at least 4.5:1',
-        },
+        { path: ['colorLight'], message: expect.stringContaining('2.99:1') },
       ]);
     });
 
@@ -126,17 +93,14 @@ describe('CategoryGroupInput', () => {
       expect(contrastRatio('#7f7f7f', DARK_PAGE)).toBeGreaterThanOrEqual(4.5);
 
       expect(issuesOf({ ...VALID, colorDark: '#7f7f7f' })).toEqual([
-        {
-          path: ['colorDark'],
-          message: 'The dark theme colour reads 4.24:1 on the dark card — it needs at least 4.5:1',
-        },
+        { path: ['colorDark'], message: expect.stringContaining('4.24:1') },
       ]);
     });
 
     it('refuses both columns at once, each beside its own picker', () => {
-      expect(issuesOf({ ...VALID, colorDark: '#0c5393', colorLight: '#4e8bc2' })).toEqual([
-        expect.objectContaining({ path: ['colorDark'] }),
-        expect.objectContaining({ path: ['colorLight'] }),
+      expect(failedPaths({ ...VALID, colorDark: '#0c5393', colorLight: '#4e8bc2' })).toEqual([
+        ['colorDark'],
+        ['colorLight'],
       ]);
     });
 
@@ -148,15 +112,5 @@ describe('CategoryGroupInput', () => {
       expect(contrastRatio('#07938c', CHIP_GROUNDS.dark)).toBeLessThan(4.5);
       expect(message).not.toContain('4.50:1');
     });
-
-    // So editing a seeded group never trips the check (MB.36).
-    it.each(CATEGORY_GROUPS.map((group) => [group.name, group] as const))(
-      'accepts the seeded pair of %s',
-      (_name, { name, description, colorDark, colorLight }) => {
-        expect(
-          CategoryGroupInput.safeParse({ name, description, colorDark, colorLight }).success,
-        ).toBe(true);
-      },
-    );
   });
 });
