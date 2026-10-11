@@ -18,7 +18,7 @@ import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology'
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
-import { TWO_TIER, type PickedTable, type TwoTierPair } from '../vocabularies';
+import { TWO_TIER, type GroupTable, type PickedTable, type TwoTierPair } from '../vocabularies';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPage, findPageCount } from './finders';
@@ -39,6 +39,7 @@ import type {
   DeityFilter,
   DeitySuggestion,
   FormSuggestion,
+  GroupFilter,
   IngredientFormValueFilter,
   IngredientRow,
   InUseSource,
@@ -160,6 +161,37 @@ export function findDeityPage(
  */
 export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(deities, DEITY_ORDER, start, deityArms(filter));
+}
+
+/**
+ * One page of a group vocabulary — the category groups, the form groups or
+ * the deity traditions — alphabetical by name (MB.35), narrowed by a name
+ * fragment as the values' lists are (MB.115): what a group's admin page
+ * lists. Public reference data, so no proof.
+ */
+export function findGroupPage<TTable extends GroupTable>(
+  table: TTable,
+  filter: GroupFilter,
+  page: PageRequest,
+): Promise<PageEntry<TTable['$inferSelect']>[]> {
+  return findPage(table, [table.name], page, groupArms(table, filter));
+}
+
+/**
+ * How many groups `findGroupPage` pages under `filter`, and how many come
+ * before `start` in its order: "Page X of Y" on the group's admin page.
+ */
+export function findGroupCount(
+  table: GroupTable,
+  filter: GroupFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(table, [table.name], start, groupArms(table, filter));
+}
+
+/** A group filter's one arm, a name fragment; none with no query. */
+function groupArms(table: GroupTable, { query }: GroupFilter): SQL | undefined {
+  return query ? containsText(table.name, query) : undefined;
 }
 
 /**

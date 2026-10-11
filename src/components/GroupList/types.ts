@@ -20,13 +20,45 @@ export interface GroupListProps {
   nextHref?: Route;
   /** Where this page stands among them all, for the pager; none says nothing of it. */
   position?: { page: number; pages: number };
+  /**
+   * The name search the page shows, `''` for none; absent, the list draws no
+   * filter row at all, as a kind without a search (`group-page.tsx`).
+   */
+  filter?: GroupListFilter;
 }
 
-/** Where the list stands: the cursor of the page a modal opens over. */
+/** The list's filter as asked: a fragment of the name, blank for none. */
+export interface GroupListFilter {
+  query: string;
+}
+
+/** What the filter form starts from: the kind, and the search the page shows. */
+export interface GroupListFilterProps {
+  kind: GroupKind;
+  filter: GroupListFilter;
+}
+
+/** Where the list stands: its name search, and the cursor of the page a modal opens over. */
 export interface GroupsPlace {
+  query?: string;
   after?: string;
   before?: string;
 }
 
 /** Which modal the address opens: the empty one, or a group's by slug. */
 export type GroupsDialog = 'new' | { edit: string };
+
+/** How a group list is named and what it calls its rows (`kinds.ts`). */
+export interface GroupListKind {
+  /**
+   * The table's name, what a screen reader lists it as: the full name its
+   * tab's short label, "Groups" or "Traditions", stands for (MB.115).
+   */
+  title: string;
+  /** One row, lower-case, as a sentence says it: "tradition". */
+  noun: string;
+  /** More than one, lower-case: "traditions". */
+  plural: string;
+  /** The page header's Add, named as that button is (`group-page.tsx`): "Add Tradition". */
+  add: string;
+}
