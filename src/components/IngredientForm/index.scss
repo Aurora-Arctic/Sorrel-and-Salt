@@ -6,7 +6,8 @@
 // confirm in place of the saves and Delete set apart: the form's column, its
 // titled sections, a list's spacing, the row a box shares with Add, the
 // duplicate warning's region, the references' rows and the new reference
-// panel, the Variants section, and the substitutes' second pickers.
+// panel, the Variants section, the substitutes' second pickers, and what a
+// linked substitute's summary holds, inside the Combobox's panel.
 
 // A column narrower than the measure, as the other forms keep: wide enough
 // for a formal name and a line of description, and no wider, wherever the
@@ -476,4 +477,57 @@
   display: flex;
   flex-direction: column;
   gap: space(3);
+}
+
+// A linked substitute's summary (MB.115), inside the Combobox's panel: the
+// name, the formal name muted beneath it, then a term and its value to a
+// line, the term muted, and a link to the entry. Muted text on the card, the
+// panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
+.entry-summary__name {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 space(2);
+}
+
+.entry-summary__formal {
+  color: $text-muted;
+}
+
+.entry-summary__facts {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  margin: 0;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 space(1);
+  }
+
+  dt {
+    color: $text-muted;
+
+    &::after {
+      content: ':';
+    }
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.entry-summary__link {
+  display: inline-block;
+  margin-top: space(2);
+}
+
+// Loading and a failed read: the sentence, and Try Again beneath it.
+.entry-summary__status {
+  margin: 0;
+
+  > p {
+    margin: 0 0 space(2);
+  }
 }

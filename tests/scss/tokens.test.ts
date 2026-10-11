@@ -160,6 +160,17 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     row("the switch's edge off on the card", tokens['--text-muted'], card, 3);
     row("the switch's thumb off on its track", tokens['--text-muted'], card, 3);
 
+    // A chip on its wash, the muted ink 18% into the card (Combobox/index.scss):
+    // its text, the body ink, at 4.5:1; a linked substitute's link mark
+    // (MB.115), a glyph in the accent, at the 3:1 a control's mark needs;
+    // and the linked chip pointed at, its text and mark in the accent's
+    // hover, at 4.5:1. The accent itself is held to 3:1 alone, so the text
+    // keeps the body ink and its underline until pointed at.
+    const wash = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
+    row("a chip's text on its wash", tokens['--text-primary'], wash, 4.5);
+    row("a linked chip's mark on its wash", tokens['--accent'], wash, 3);
+    row('a linked chip pointed at on its wash', tokens['--accent-hover'], wash, 4.5);
+
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is
     // not yet an answer (WCAG 1.4.3).

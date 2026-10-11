@@ -240,6 +240,17 @@ export function entryText(entry: AnyListEntry): string {
   return form ? `${text} · ${form}` : text;
 }
 
+/**
+ * Whether a list is the ingredient's substitutes or a variant's: the lists
+ * whose entries may link an ingredient, and whose typed ones are told apart
+ * as names only (MB.115).
+ */
+export const holdsSubstitutes = (list: ListFieldName): boolean =>
+  list === 'substitutes' || list.endsWith('.substitutes');
+
+/** What a typed substitute's chip is read as after its text: no ingredient behind it. */
+export const NAME_ONLY = 'name only';
+
 /** Whose a linked ingredient is, as its lookup row and its pill's tooltip say. */
 export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =>
   isGlobal ? 'Compendium entry' : 'This coven’s entry';

@@ -436,5 +436,12 @@ export function LookupListField({
         : found.options.filter((option) => option.link?.id !== omit);
     return { ...found, options: rank ? rank(kept) : kept };
   }, [found, omit, rank]);
-  return <ListField {...list} suggestions={suggestions} onActivate={() => setActive(true)} />;
+  return (
+    <ListField
+      {...list}
+      workspaceId={workspaceId}
+      suggestions={suggestions}
+      onActivate={() => setActive(true)}
+    />
+  );
 }

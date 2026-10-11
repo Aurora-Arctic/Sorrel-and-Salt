@@ -43,6 +43,9 @@ export default function CompendiumDialog({
           onCancel={done}
           // A near match opens its own modal here, over the same list.
           duplicateHref={(match) => compendiumHref(place, { edit: match.slug })}
+          // A linked substitute's summary opens its entry's modal in a new
+          // tab, every substitute here being a compendium entry (MB.115).
+          entryHref={({ slug }) => compendiumHref(place, { edit: slug })}
         />
       )}
     </RouteModal>
