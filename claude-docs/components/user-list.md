@@ -223,8 +223,10 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   page and the Users page read the pause through
   `src/app/admin/(people)/pause-state.ts`, cached per request, so it is
   read once. It is
-  one row, `.user-list__pause`, centred with a `space(3)` gap, which spans
-  the line at a phone's width. While
+  one row, `.user-list__pause`, centred with a `space(3)` gap. At a phone's
+  width, where the heading line spans its action, the warning and the switch
+  take a line each, the switch across it, locked or not (`index.scss`, and
+  `controls.scss` for a locked control as a page's action). While
   changes are on it shows the button alone; while paused it first says so in
   a quiet warning `Notice`: "Admin changes are paused.", on the owner's
   call. Quiet makes it an `<output>`, a status rather than an alert, because

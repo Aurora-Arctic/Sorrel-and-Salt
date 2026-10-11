@@ -34,6 +34,19 @@
   display: inline-flex;
 }
 
+// A locked control as a page's action, Pause Admin Changes or Invite Admin
+// while paused: at a phone's width the heading line spans the action across
+// its line, and the button spans its wrapper with it.
+@container page-header (max-width: #{$narrow-column}) {
+  .admin-layout .page-header .user-list__locked {
+    display: flex;
+
+    > .btn {
+      flex: 1 1 auto;
+    }
+  }
+}
+
 // Both tips, the crown's and the locked Revoke's: the tip-bubble mixin's, as
 // InfoTip's, above the mark or button from its left edge, no wider than
 // `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`,

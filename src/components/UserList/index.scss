@@ -356,3 +356,17 @@
     margin: 0;
   }
 }
+
+// At a phone's width the heading line puts the action on a line of its own
+// and spans it (`.page-header`, MB.115, the owner's call): the warning and
+// the switch then take a line each, the switch across it, as every admin
+// page's action is.
+@container page-header (max-width: #{$narrow-column}) {
+  .admin-layout .user-list__pause {
+    flex-wrap: wrap;
+
+    > * {
+      flex: 1 1 100%;
+    }
+  }
+}
