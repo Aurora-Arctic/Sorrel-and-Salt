@@ -490,50 +490,44 @@ nothing.
 ## Testing
 
 `tests/components/Combobox/index.test.tsx` renders the box with fixed
-suggestions and asserts: the name from a label or a label element; the rows,
-their buckets and the typed row; headed rows grouped under their headings
-in first-seen order, an unheaded row last and outside every group, and two
-same-named rows under different headings told apart; a row's accessible name carrying its label
-and note; picking by keyboard and by click, and the typed row as `null`;
-the list as wide as its anchor, or the box with none, and opening above
-the box with no room beneath it, its height held to the room on the side it
-opens; the text kept through a second pick; the create row first in the typed
-row's place, there with a blank box and with no suggestions, calling
-`onCreate` by click or keyboard and never `onPick`; the typed row withheld
-under `offerTyped={false}`, the suggestions still shown, Enter still handed
-to `onCommit`, and the list shut when it would have been the only row;
-the entry's ×, its tooltip on a cut-off text only, its error, and the
-colour pair and `is-coloured` class a coloured one carries and a plain one
-does not; the
-qualifier drawn inside the control before the clear, read as the box's
-description after the field's own, its detail's tooltip on hover and on the
-box's focus, closed by Escape and blur, and none without a detail; Enter handed to `onCommit` with the list open or closed, and otherwise
-closing the list or reaching the form; Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape, blur and a pick keeping the
-text; a box with no source never opening; the status region; the chevron,
-the clear and the entries inside the control; two rows reading alike told
-apart by their keys; and the select-only box, its name, placeholder, list
-and choices, "None" among them, its control the suggesting box's, focusable
-and with its chevron, and no native select; and the multi-select box, its name and
+suggestions and asserts: the box closed until something is typed; the rows,
+their buckets and the typed row, which echoes what was typed and comes first;
+headed rows grouped under their headings in first-seen order, and two
+same-named rows under different headings told apart and counted; a row's
+accessible name carrying its label and note; picking by keyboard and by
+click, and the typed row as `null`; the list opening above the box with no
+room beneath it; the create row first in the typed row's place, there with a
+blank box and with no suggestions, calling `onCreate` by click or keyboard
+and never `onPick`; the typed row withheld under `offerTyped={false}`, the
+suggestions still shown, Enter still handed to `onCommit`, and the list shut
+when it would have been the only row; Enter handed to `onCommit` with the
+list open or closed, and otherwise closing the list or reaching the form;
+Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
+blur and a pick keeping the text; a box with no source never opening; the
+status region's count, and its busy and empty states; the qualifier read as
+the box's description after the field's own, its detail's tooltip on hover
+and on the box's focus, closed by Escape and blur; the entry's ×, its
+tooltip on a cut-off text and on a detail, and its error read by its ×; the
+select-only box, its name, placeholder, list and choices, "None" among them,
+chosen by the keyboard, the arrows opening and moving, Enter choosing and
+Escape closing on what it had; the multi-select box, its name and
 placeholder, chips inside the control in the order chosen, the list
 offering only what is left and staying open, the arrows, Enter, Space and
 Escape, Backspace taking the last, an × and the clear, a press on the
-control opening it, its announcements, and nothing to offer once every
-choice is made; and a sortable list, each chip's handle named for it
-ahead of its ×, saying how it moves, a move by Space or Enter and the
-arrows said at each step with the focus kept on the moved chip, Escape
-putting it back, a move by pointer, a press or a lift put straight back
-moving nothing, the × still removing, and the handle's focus opening the
-chip's tooltip and reading its error and detail first; a held chip pressed
-and marked as picked up; and, on wrapped rows of chips of different widths,
-Left and Right a place along the list whichever row it is on, Up and Down
-a row to the nearest place, Left from a row's start onto the row above and
-back, Home and End to either end, nothing past either end or row, and the
-chips laid out while one is held as the row would lay them, with no
-overlap or gap; a list that is not
-sortable has no handle; and the select-only box chosen by the keyboard, the
-arrows opening and moving, Enter choosing and Escape closing on what it had.
-That test and the control's were `IngredientForm`'s until MB.181 moved them
-here, the only ones of `ComboboxSelect`'s keyboard and of its control. Role and label queries only, in the `dom` project.
+control opening it, its announcements naming each change, and nothing to
+offer once every choice is made; and a sortable list, each chip's handle
+named for it ahead of its ×, described by how it moves, a move by Space or
+Enter and the arrows announced at each step with the focus kept on the moved
+chip and the handle pressed while held, Escape putting it back, a move by
+pointer, and a press or a lift put straight back moving nothing; and, on
+wrapped rows of chips of different widths, one case a direction — Right a
+place along the list onto the next row, Up a row to the nearest place — Home
+and End to either end, and nothing past the first or last row. A row's or a
+chip's colours, the caret placed by a press on the control, the qualifier's
+place and brackets, the list's width, its fixed position and its room, and
+the chips' layout while one is held are presentation, owned by the workshop
+story and the Playwright scan. Role and label queries only, in the `dom`
+project.
 
 jsdom lays nothing out, and dnd-kit finds where a chip may go from each
 chip's box, so `tests/support/sortable.ts` gives every chip one, on one

@@ -57,17 +57,13 @@ test ids, no snapshots.
 
 ## Testing
 
-`tests/components/Welcome/index.test.tsx` covers: the level-one heading and
-what the site is; the invite-only sentence and how to get in; the signed-out
-link to `/sign-in` with no "Continue"; the signed-in link to the `landing`
-given, with no sign-in offered anywhere on the page; and that the
-introduction is the same signed in. Role and label queries only. Runs in the
-`dom` (jsdom) Vitest project — `npm run test:coverage`.
+`tests/components/Welcome/index.test.tsx` covers the way in: the signed-out
+link to `/sign-in` with no "Continue", and the signed-in link to the
+`landing` given, an admin's included, with no Sign In. What the page says is
+copy, and no test asserts it. Role and label queries only. Runs in the `dom`
+(jsdom) Vitest project — `npm run test:coverage`.
 `tests/app/page.test.tsx` covers the page's half, with the session mocked:
-Sign In signed out, and Continue to `/admin` for an admin and `/coven` for
-anyone else.
+Sign In signed out, and Continue signed in.
 
-`tests/e2e/smoke.spec.ts` renders `/` against the built server signed out: no
-redirect, the heading and the invite-only text visible, the link reaching
-`/sign-in`, and the axe scan. Signed in through `signInAs`, an admin's
-Continue reaches the admin area and anyone else's links to `/coven`.
+`tests/e2e/smoke.spec.ts` renders `/` against the built server signed out,
+with no redirect, and runs the axe scan.

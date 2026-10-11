@@ -113,8 +113,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
   Impersonate cell comes later in the DOM, and at the same layer the cell
-  painted over the tip's corner (fixed in MB.63's PR;
-  `tests/components/UserList/layers.test.ts`). The table's
+  painted over the tip's corner (fixed in MB.63's PR; presentation, so
+  no test pins the layers). The table's
   borders are separate rather than the primitive's collapsed ones, so each
   rule belongs to its cell and the headings' hairline scrolls beneath the red
   one rather than being drawn across it. No cell wraps: the table scrolls
@@ -266,34 +266,34 @@ Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/UserList/index.test.tsx` covers the Filter button's
-disabled and enabled states, the bare `awaiting` it opens, the Role select
-and the `role` it opens, the column headers, each
-row's cells, the `<time>`, a provider outside the roster, the empty list, the
-form's action, method, names and kept values, the pager's links, and the
-history link before every name, its tip on hover, focus, Escape and blur,
-the Impersonate column: absent when off, on non-admin rows only, the call and
-the landing, and the refusal; the yes-or-no marks and their words; and the creation cell: Approve on rows awaiting
-approval, Revoke on approved ones and nothing on an admin's, each modal
-and its focus, Cancel sending nothing, each call and its busy state until the
-refresh, and the refusal; and the unverified warning: in Approve's modal and
-describing its Approve for an unverified user, which still approves, and
-absent for a verified one and from Revoke; and the role cell (MB.59): Grant
-on a user's row and Revoke on an admin's, each modal, the reason sent
-trimmed or not at all, Cancel sending nothing, Grant's warning for an
-unverified user, the refusal in the row, the fresh control after the
-refresh, and the primary admin's tag and its `aria-disabled` Revoke, described
-by the reason and stating it as an alert each time it is tried, sending
-nothing; and the switch on admin changes (MB.63): none inside the list, no sentence
-while on and the warning while paused, Pause and Resume big and red, busy
-until the refresh, a refusal beside it, and another admin's locked switch,
-its reason a tip and an alert when tried; and while paused, every Grant and
-Revoke locked for another admin with the pause's reason, none for the
-primary admin or while changes are on, and the primary admin's Revoke kept on
-its own reason. `tests/app/admin/users/page.test.tsx` finds the switch in
-the heading's `.page-header`. `tests/e2e/admin.spec.ts` approves
-and revokes a user against the built server, approves an unverified one
-through the warning, grants admin with a reason and revokes it, and tries
-the primary admin's Revoke, with axe over each open modal.
-`tests/app/admin/users/page.test.tsx` covers what the page hands it, the
-impersonation gate and the primary admin's flag included, and `awaiting` read by its presence.
+`tests/components/UserList/index.test.tsx` covers each row's name, address,
+coven-creation flag and signup date in the order given, the flag's and the
+address's marks the one rendering of their state; a provider outside the
+roster; no table when no user matches; the filter form's action, method,
+names and kept values; the Filter button's disabled and enabled states, the
+bare `awaiting` it opens, the Role select's values and the `role` it opens;
+the history link before every name and its address; the Impersonate column:
+absent when off, on non-admin rows only, the call and the landing, and the
+refusal; the creation cell: Approve on rows awaiting approval, Revoke on
+approved ones and nothing on an admin's, each modal naming the user and its
+focus, Cancel sending nothing, each call with its reason and its busy state
+until the refresh, and the refusal in the row; the unverified warning
+describing Approve for an unverified user, who is still approved, and absent
+from Revoke; the role cell (MB.59): Grant on a user's row and Revoke on an
+admin's, each modal, the reason sent trimmed or not at all, Cancel sending
+nothing, Grant's warning for an unverified user, the refusal in the row, and
+the primary admin's crown and its `aria-disabled` Revoke, described by the
+reason and raising an alert each time it is tried, sending nothing; the
+switch on admin changes (MB.63): no notice while on and one while paused,
+Pause and Resume busy until the refresh, a refusal beside it, and another
+admin's locked switch, described by its reason and raising an alert when
+tried; and, while paused, every Grant, Revoke, Approve and coven Revoke
+locked for another admin and described by the pause, the primary admin's
+Approve usable, nothing locked while changes are on, and the primary admin's
+Revoke kept on its own reason — which of the two reasons won is told by its
+words alone. Its colours, marks, tips and their placement are presentation;
+paging is Pager's. `tests/app/admin/users/page.test.tsx` reads the page's
+half: what it hands the list, the impersonation gate and the primary admin's
+flag included, and `awaiting` read by its presence. `tests/e2e/admin.spec.ts`
+approves and revokes a user against the built server, and grants admin with a
+reason and revokes it, with axe over each open modal.

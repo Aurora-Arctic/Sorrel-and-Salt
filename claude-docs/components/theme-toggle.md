@@ -148,16 +148,13 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 
 ## Testing
 
-`tests/components/ThemeToggle/index.test.tsx` covers the accessible name, click-to-light and click-to-dark
-with storage persistence, `aria-pressed`, the correct initial facet classes when
-mounted already in light mode, the `transitionend` park back to `--pre-enter`, a
-non-`transform` `transitionend` being ignored, and listener cleanup on unmount.
-All queries are by role and accessible name.
-
-Three of them cover the reduced-motion park (MB.1): the immediate park on a
-single click, both facets still correct after two toggles, and — the other side
-of the branch — the facet still waiting on `transitionend` when motion is not
-reduced. They stub `window.matchMedia` via `vi.stubGlobal`, since jsdom's own
-implementation always answers `false` for `(prefers-reduced-motion: reduce)`.
+`tests/components/ThemeToggle/index.test.tsx` covers click-to-light and
+click-to-dark with storage persistence, `aria-pressed` (mounted in light mode
+too), and the light system preference that never stamps `data-theme`: the
+first click going dark, and `aria-pressed` true on mount; and, with nothing
+stored and no preference, the first click going light. The facets' animation
+— their classes, the `transitionend` park and the reduced-motion branch — is
+presentation, and no test asserts it. All queries are by role and accessible
+name.
 
 Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`.

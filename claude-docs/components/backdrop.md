@@ -132,11 +132,9 @@ preview's corners rather than in the story frame.
 
 ## Testing
 
-`tests/components/Backdrop/index.test.tsx` asserts only what matters for a
-decoration: no `img` role, no text, every element `aria-hidden` and empty.
-The scroll fix that came with it — the page frames' `box-sizing` — is
-asserted by the smoke spec's check that `/` does not scroll at the default
-viewport.
+A decoration has no behaviour for a jsdom test to prove, so it has none. The
+scroll fix that came with it — the page frames' `box-sizing` — is asserted by
+the smoke spec's check that `/` does not scroll at the default viewport.
 The visual result is checked by eye in the workshop and against the script's
 previews. `tests/e2e/smoke.spec.ts` reads each layer's computed `background-image`, asserts
 it is a hashed `/_next/static/media` URL, and fetches it: served as

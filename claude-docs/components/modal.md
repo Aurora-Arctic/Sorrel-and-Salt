@@ -87,11 +87,15 @@ within the viewport's height either way.
 
 `tests/components/Modal/index.test.tsx`. jsdom implements neither
 `showModal()` nor `close()`, so the test stands both in on the prototype,
-adding and removing `open` as a browser does, and checks that only
-`size="wide"` adds the wide class. A click outside is told by its point against a stubbed
-rectangle: pressed and released outside closes it; its padding, its
-contents, and a press inside let go outside do not. The e2e spec (`admin.spec.ts`)
+adding and removing `open` as a browser does. A click outside is told by
+where the press began and ended, jsdom laying nothing out: pressed and
+released on the backdrop closes it; its contents, and a press inside let go
+outside, do not. Its own padding is inside its box, which only a real layout
+shows, as does the wide size. The fade asks the owner once its transition
+ends, once however many ways it was asked, after a limit if no end comes, and
+at once under reduced motion. The e2e spec (`admin.spec.ts`)
 opens the category modal in a real browser, closes it with Escape, and runs
-axe against it while it is open. `admin-compendium.spec.ts` holds the wide one
-to its gap on a desktop and at 375px, and the page behind still while it is
-open and scrolling again once it closes.
+axe against it while it is open. `admin-compendium.spec.ts` closes one by a
+click on the backdrop, holds the wide one to its gap on a desktop and at
+375px, and the page behind still while it is open and scrolling again once it
+closes.

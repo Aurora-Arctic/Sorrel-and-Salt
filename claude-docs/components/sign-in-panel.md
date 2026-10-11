@@ -178,7 +178,7 @@ assigning `window.location.href`, which jsdom cannot follow
 (`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
 client). The rest of the module is the real one, so the last-used read is the
 client plugin's own, against jsdom's `document.cookie`. Covers: every roster
-provider renders as a native `<button>` by accessible name; a click calls
+provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
 explicit `/coven`;

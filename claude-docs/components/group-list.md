@@ -33,4 +33,4 @@ Layout only, until MB.115: GroupedValueList's column without its filter row. Its
 
 ## Testing
 
-`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, a category group's chip carrying its pair, a form group's plain name, the empty list and the traditions' own empty message, the pager's link, and `groupsHref`, `/admin/deity-traditions` included. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx` ([`group-form.md`](group-form.md), "Testing").
+`tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, and `groupsHref`, `/admin/deity-traditions` included. The chip's colours are presentation, and paging is Pager's. The pages' half is `tests/app/admin/{category-groups,form-groups,deity-traditions}/page.test.tsx` ([`group-form.md`](group-form.md), "Testing").

@@ -82,11 +82,11 @@ snapshots.
 
 ## Testing
 
-`tests/components/PrivilegeLedger/index.test.tsx` covers the headings, each
-row's cells, the links to the user rows and the people without one, the
-`<time>`, the filter's form, search, dropdown, disabled and enabled Filter
-and the address it opens, every empty
-state, the pager, and `privilegeLedgerHref`.
+`tests/components/PrivilegeLedger/index.test.tsx` covers each row's data,
+the links to the user rows and the people without one, the `<time>`, the
+filter's form, search, dropdown values, disabled and enabled Filter and the
+address it opens, no table when there is nothing to show, and
+`privilegeLedgerHref`. Paging is Pager's.
 `tests/app/admin/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.

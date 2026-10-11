@@ -61,8 +61,8 @@ the marker sat against the previous link. No tokens used.
 
 ## Testing
 
-`tests/components/AdminNav/index.test.tsx` covers the landmark's name and
-every link, its label and its route, in order. `tests/app/admin/layout.test.tsx`
+`tests/components/AdminNav/index.test.tsx` covers every link's route, in
+order, inside the landmark named Admin. `tests/app/admin/layout.test.tsx`
 checks the layout renders it only once the guard resolves, and
 `tests/e2e/admin.spec.ts` that an admin sees it and a non-admin's 403 page
 carries none of it.

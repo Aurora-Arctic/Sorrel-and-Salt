@@ -48,7 +48,7 @@ a column, and the field, notices and button are the form primitives'.
 
 `tests/components/NameForm/index.test.tsx`, by role and label against MSW,
 which answers in the route's own error shape. It covers the prefill, nothing
-to save until a real change, the save and its new baseline, the busy button,
-and both error surfaces. The page around it is
+to save until a real change, the save and its new baseline, the busy button
+held from before the save, and both error surfaces. The page around it is
 `tests/app/account/page.test.tsx`, and `tests/e2e/account.spec.ts` scans
 the page holding it with axe in a real browser.
