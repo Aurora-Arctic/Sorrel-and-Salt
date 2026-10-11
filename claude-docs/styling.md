@@ -59,10 +59,12 @@ to.
   target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
   button, 2.5rem), `$table-stack-width` (the frame width under which a table
-  stacks, 40rem), `$filter-choice-width` (a filter's type-ahead field, 14rem), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
+  stacks, 40rem), `$filter-choice-width` (a filter's type-ahead field, 14rem), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
-  of).
+  of). A duration with a role of its own is one too: `$motion-short`
+  (150ms), a control answering a press with a movement of its own, as the
+  switch's thumb slides.
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
@@ -590,6 +592,7 @@ The class layer every form is built from, in `_primitives.scss`:
 | `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
 | `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
 | `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
+| `.switch`, `.switch__control`                    | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                 |
 | `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
 | `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
 
@@ -650,6 +653,33 @@ The class layer every form is built from, in `_primitives.scss`:
   option instead.
 - **The checkbox is the platform's**, coloured by `accent-color`, which takes
   the token and picks its own check-mark contrast.
+- **An on-or-off filter is a switch**, the owner's call at MB.115's review
+  over a checkbox, which looked out of place among a filter row's boxes: a
+  native checkbox with `role="switch"` and `appearance: none`, drawn as a
+  rounded track, `$switch-width` by `$icon-size`, with a `$glyph-size`
+  thumb (`::before`). Native, so it submits with a GET form before
+  hydration and keeps Space and its label's click, and its checked state is
+  the switch's to a screen reader; no `aria-checked` is written, since a
+  press before hydration would leave it stale. Its label stands above it as
+  every field's does (the owner's call), and the toggle sits centred in a
+  `$control-height` row, so in a filter row it lines up with the boxes
+  beside it. Off is the field's ground with the muted 1px edge and a muted
+  thumb at the start; on fills the track with `$accent` and the thumb, in
+  the page's colour as a solid button's label is, slides to the end over
+  `$motion-short`, jumping under reduced motion. Where the thumb sits, not
+  its colour, tells on from off (WCAG 1.4.1). Hovering the toggle or its
+  label takes the edge to the body ink, or the fill to `$accent-solid-hover`
+  when on; pressing either stretches the thumb a step towards the other end,
+  marked `data-pressed` (`src/lib/press-feedback.ts`) as well as
+  `:active`; the focus ring is the shared one. Disabled is dashed and
+  unfilled, its thumb muted in either position and its label dimmed, as a
+  field is; `aria-disabled`, a filter row's while its list is on its way,
+  stops the hover and press looks and leaves the row's fade to grey it.
+  `tests/scss/tokens.test.ts` holds the edge and thumb at 3:1 (WCAG
+  1.4.11) against the page and the card in both themes, off, on and hovered
+  on: the lowest is the light theme's on track against the page and its
+  thumb on it, 4.65:1. Under forced colours the thumb is drawn in
+  `CanvasText`, and on the track in `Highlight`.
 - **Disabled is an attribute, not a class**, and looks the same on a field as
   on a button: a dashed edge and no fill. A disabled field also takes the muted
   ink and dims its `.field__label`, since a faded box alone reads as a live
@@ -917,7 +947,7 @@ heavier than the reverse; light reverts to the browser default.
     `--small` size, `.notice`, `.page-frame` and its parts, `.link-row`,
     `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news.
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,

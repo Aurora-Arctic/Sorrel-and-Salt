@@ -29,7 +29,8 @@ full page load and none. It renders inside its list's
 - **It works before hydration.** The form is `method="get"` to `action`, so
   a press before the script loads still submits, each field under its own
   `name`. A field must therefore submit something the page reads as the same
-  filter: a blank `<select>` option as `role=`, a checkbox as `awaiting=` or
+  filter: a blank `<select>` option as `role=`, a switch, a native checkbox
+  beneath (`SwitchField`, [`field.md`](field.md)), as `awaiting=` or
   `withoutReferences=1`. A field that is a script's control, the curated
   lists' type-ahead group, is drawn as a native control by the server and
   swapped once hydrated, so the press before the script still sends it
@@ -86,7 +87,7 @@ full page load and none. It renders inside its list's
   since the pressed link then has nothing to do, and Filter is left with
   nothing to apply. It is offered while any of `shown` or of `draft` is
   set, a non-blank string or `true`, so a blank name box, an "All …"
-  choice and an unticked check count as none. Each list passes its values
+  choice and a switch that is off count as none. Each list passes its values
   and this one place decides. Before hydration the fields hold the filter
   shown, so the server's link is offered for that alone and is the plain
   address, which empties every field on load. With nothing to clear it is
@@ -106,7 +107,7 @@ full page load and none. It renders inside its list's
 None of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
 "Form fields"), the row the five lists' `__search` rules were, and the
 fields and button are the primitives'. On a phone the row stacks: under 28rem of
-its own width the query takes the whole line and the selects, checks,
+its own width the query takes the whole line and the selects, switches,
 Filter and Clear Filters wrap beneath it, Clear Filters beside Filter or
 under it as the width allows, the owner's call at MB.115's review over a filter
 folded behind a disclosure.
@@ -118,6 +119,15 @@ the app: every field faded to 55% with its colour taken out
 field's hover changing nothing. Filter and Clear Filters are left out of the
 fade, since `.btn[aria-disabled='true']` already draws them dashed and
 faded, and faded twice they would all but vanish.
+
+**An on-or-off filter is a switch**, `SwitchField` ([`field.md`](field.md)):
+a `.field` like the rest, its label above and the slide toggle beneath at
+`$control-height`, so it stands level with the boxes and selects beside it
+at desktop width and in the stacked row. The owner's call at MB.115's
+review, over a checkbox with its name beside it, which looked out of place
+in the row. While a list is on its way the row's `aria-disabled` on the
+toggle stops its hover and press look, and the row's fade greys it as it
+does the other fields.
 
 **A type-ahead field takes one width.** A field typed into once hydrated
 and drawn as a native `<select>` before, as the curated lists' Group and

@@ -30,8 +30,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 - **The filter is a GET form to `/admin/users`**, named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
   native Role select (`role`: All Roles, Admin or User), a "Needs Approval"
-  checkbox (`awaiting`), each label in title case on the owner's call, and a
-  Filter button. All Roles submits natively as `role=`, which the page reads
+  switch (`awaiting`), each label in title case on the owner's call, and a
+  Filter button. The switch is `SwitchField`, a slide toggle with its label
+  above as the other fields have, over a native checkbox; it was a checkbox
+  until the owner found it out of place in the row, and the compendium's
+  Without References changed with it, so the filters match (MB.115;
+  [`field.md`](field.md)). All Roles submits natively as `role=`, which the page reads
   as no role. A
   filtered page is an address, and filtering starts again from the first page,
   since the form carries no cursor. It is `filter.tsx`, a client file: the
@@ -45,8 +49,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   only the fields hold one empties them in place
   ([`filter-form.md`](filter-form.md)).
 - **Filter is offered only when there is a new filter to apply** (MB.53, on
-  the owner's word). It is `disabled` while the trimmed query and the checkbox
-  match the filter the page shows, enabled once either differs, and disabled
+  the owner's word). It is `disabled` while the trimmed query, the role and the switch
+  match the filter the page shows, enabled once any differs, and disabled
   again when they are put back. `disabled` rather than `aria-disabled`, as
   the primitives reserve it for a submit with nothing to send.
 - **`awaiting` is a bare flag**, read by its presence (MB.53, on the owner's
@@ -54,7 +58,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   a thin typed wrapper over the shared `listHref` (`src/lib/list-href.ts`),
   the pager's builder too, so it reads `?query=bo&awaiting` rather than
   `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
-  hydration the form submits natively, with the checkbox as `awaiting=`, which
+  hydration the form submits natively, with the switch as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
   Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
@@ -381,7 +385,7 @@ People page with its Users tab open:
 coven-creation flag and signup date in the order given, the flag's and the
 address's marks the one rendering of their state; a provider outside the
 roster; no table when no user matches; the filter form's action, method,
-names and kept values; the Filter button's disabled and enabled states, the
+names and kept values, Needs Approval found as a `switch`; the Filter button's disabled and enabled states, the
 bare `awaiting` it opens, the Role select's values and the `role` it opens;
 Clear Filters offered by each filter shown, off with none, emptying the
 fields in place when none is applied, and its full load;
