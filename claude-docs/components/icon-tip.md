@@ -77,6 +77,14 @@ tip is: a `.data-table-frame` scrolls sideways, and a box that scrolls one way
 clips both ways, so a tip above the first row or card was cut off. The tip
 covers the text beside the control while it is open.
 
+**In a table row, above the control and running left from its right edge**
+(`.data-table .icon-tip__bubble`), the owner's call at MB.115's review, so
+it covers nothing of the row's own. Above the first row is the header row,
+inside the frame, so nothing is clipped. A phone card (a `.data-table--stack`
+table under `$table-stack-width`) keeps the tip to the left: above the first
+card's top-right Edit is only the card's padding, and the frame would cut it
+off.
+
 ## Styling
 
 Tokens and two mixins in `_mixins.scss`, so every Edit matches:

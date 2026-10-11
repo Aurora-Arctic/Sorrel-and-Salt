@@ -36,6 +36,35 @@
   }
 }
 
+// In a table row, above the control and ending at its right edge, running
+// left, the owner's call at MB.115's review: level with it, the tip covered
+// the row's own text. Above the first row is the header row, inside the
+// frame, so the frame's sideways scroll clips nothing. Not on a phone card:
+// above the first card's top-right Edit is only the card's padding, and the
+// frame would cut it off, so a card keeps the tip to the left.
+.data-table .icon-tip__bubble {
+  top: auto;
+  right: 0;
+  bottom: 100%;
+  margin: 0 0 space(1);
+  translate: none;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+@container data-table (max-width: #{$table-stack-width}) {
+  .data-table--stack .icon-tip__bubble {
+    top: 50%;
+    right: 100%;
+    bottom: auto;
+    margin: 0 space(1) 0 0;
+    translate: 0 -50%;
+  }
+}
+
 // A list row's Edit link, outside a form: the larger pencil (`$icon-size-large`
 // around `$glyph-size-large`), in the green every Edit control wears. The
 // link's own focus ring, the accent's, from the typography.
