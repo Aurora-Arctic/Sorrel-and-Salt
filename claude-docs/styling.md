@@ -51,6 +51,16 @@ to.
   `radius()` and `type-size()`. A length off the scale is a chip's or a
   badge's inner geometry, a control's target size, or a heading's size — and
   says so in a comment.
+- **A length with a role of its own is a token**, under "Motion and layout"
+  in `_variables.scss`, so the components that share the role share the
+  number (MB.115): `$wide-column` (the admin area's column, 64rem),
+  `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
+  48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
+  target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
+  line, 18rem, capped at the window), `$close-target` (the dialog's close
+  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  stacks, 40rem) and `$rule-heavy` (the 3px rule that marks something by
+  weight as well as colour).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
@@ -522,20 +532,27 @@ line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
 Add Category beside its H1. The row is centred and the action brought down
 0.25rem, the owner's measure: a heading's box carries room below its letters,
 so a centred button reads high and one on the baseline low. The row wraps on
-a narrow screen rather than squeezing the heading.
+a narrow screen rather than squeezing the heading. The header is a size
+container, so it measures its own width rather than the screen's: under
+28rem of it, the forms' column, the action goes beneath the heading at its
+natural width and loses the quarter-rem drop, which only lined it up beside
+the heading (MB.115).
 
-**The admin tables are banded**: every even body row on `$surface-card`, the
-surface a modal wears, so a wide row stays readable across. Each cell is
-inset `space(3)` on both sides so no text meets a band's edge, and aligned on
-the baseline so a row's small button reads on its text's line. A heading sits
-on its cell's bottom instead, on the owner's call, so one that wraps keeps its
+**The admin tables are banded at desktop width, and stack into cards on a
+phone.** Wide, every even body row sits on `$surface-card`, the surface a
+modal wears, so a wide row stays readable across. Each cell is inset
+`space(3)` on both sides so no text meets a band's edge, and aligned on the
+baseline so a row's small button reads on its text's line. A heading sits on
+its cell's bottom instead, on the owner's call, so one that wraps keeps its
 last line level with its neighbours', on the 1px `$text-muted` hairline under
-the header row. The rules are the
-`.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
-table sideways rather than widening the page: the category list and UserList
-each carried them until the forms' list made a third (M5.6a), and
-CompendiumList (M5.5) and VocabularyValueList (MB.95) are on it too, as is
-GroupedValueList, the category and form lists made one (MB.132).
+the header row. These rules are the `.data-table` primitive, inside a
+`.data-table-frame`: the category list and UserList each carried them until
+the forms' list made a third (M5.6a), and CompendiumList (M5.5),
+VocabularyValueList (MB.95) and GroupedValueList, the category and form lists
+made one (MB.132), are on it too. Narrow, a table with the `.data-table--stack`
+modifier turns each row into a card once its frame is under
+`$table-stack-width` ("Tables at phone width", below); a table without it
+scrolls sideways inside its frame rather than widening the page.
 
 ## Form fields
 
@@ -599,6 +616,19 @@ The class layer every form is built from, in `_primitives.scss`:
 
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
+The pieces around a field and a form's buttons that more than one form
+shares (MB.115), each written once in `_primitives.scss` where every admin
+form had kept its own copy:
+
+| Class               | What it is                                                                                                                                                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.field__label-row` | A label and what stands beside it on its line, an `InfoTip`'s ⓘ or the required mark, a `space(1)` apart. It is the position a tip opens from, so the tip lines up with its field                                                              |
+| `.field__required`  | The asterisk hard against a label whose field a save asks for, in the error red. The markup hides it from a screen reader, which hears the control's `aria-required` instead of "star"                                                         |
+| `.form__confirm`    | A question standing where a form's buttons were, "Delete this?", with its own `.modal__actions` row; as far from the fields as the buttons it replaces, and stacked with them in a narrow form                                                 |
+| `.form__aside`      | The button set apart at the row's far end, an edit's Delete, so it is not pressed for Save. A `margin-inline-start: auto`, which the narrow form's stacking takes back                                                                         |
+| `.filter-row`       | A list's filter form: the query, its selects and checks and the Filter button, wrapping, level on the line's end. A size container: under 28rem of its own width the query, its first child, takes the whole line and the rest wrap beneath it |
+| `.list-frame`       | A list page's root: its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own                                                                                                        |
+
 ## The page frame
 
 `.page-frame` is the centred, full-height column of a page with no AppShell:
@@ -629,12 +659,91 @@ does not scroll by its own padding or the banner above it.
   `space(4)` clear of the top when the page's own nav jumps to it.
   **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
 
+## The admin layout
+
+`.admin-layout` is the frame every `/admin` page sits in (MB.115): the admin
+nav above, the page below, a `space(5)` apart. It is a column as wide as
+`$wide-column` (64rem), centred, with `space(6)` above and below and
+`space(4)` at the sides, `border-box`. It is wider than `.page-frame`
+because its pages hold tables, and it is neither full height nor centred
+down the window, since a list page runs as long as its rows. Its paragraphs
+still stop at the measure. The width and its cap sit inside `:where()`, as
+the page frame's do, so a single class can change them. It is a primitive
+rather than AdminNav's own rule because the admin layout and three stories
+(AdminNav, AdminInvitations and UserList) use the class as their frame.
+
+## Tables at phone width
+
+A table whose rows turn into cards on a narrow screen, so no column scrolls
+out of sight (MB.115). Add `data-table--stack` beside `data-table`, and every
+column's cell names its column in a `data-label` attribute:
+
+```html
+<div class="data-table-frame">
+  <table class="data-table data-table--stack" role="table" aria-label="Categories">
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Name</th>
+        …
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell" data-label="Name">Protection</td>
+        …
+        <td role="cell" data-label=""><a class="btn btn--small" href="…">Edit</a></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+- **It stacks by its frame's width, not the screen's.** `.data-table-frame`
+  is a size container named `data-table`, and under `$table-stack-width`
+  (40rem) of it each row becomes a card: a grid on `$surface-card` with
+  `radius('surface')` and `space(3)` of padding, a `space(3)` gap between
+  cards, every cell a block beneath the last. Every card is on the card
+  surface, so the bands give way. A frame measures its own width only while
+  that width does not come from the table inside it, so it sits as a block or
+  a stretched flex item, never in a row that shrinks to fit.
+- **The header row is hidden but still read.** It is clipped as
+  `.visually-hidden` is, so a screen reader still has the column names.
+  Each cell is led by its own name instead, drawn from `data-label` by a
+  `::before` in the muted ink at the caption size. A cell whose `data-label`
+  is empty, an action such as Edit or Impersonate, has no label and spans
+  the card.
+- **A stacking table writes out its roles**: `role="table"`, `rowgroup`,
+  `row`, `columnheader` and `cell`. WebKit drops a table's meaning once
+  `display` changes on its parts, so a screen reader in Safari would read the
+  cards as loose text; the explicit roles put the meaning back. They are the
+  roles the elements have already, so nothing else changes, and a jsdom test's
+  `getByRole('cell')` finds a `td` either way.
+- **The label is written twice.** `content: attr(data-label)` and then
+  `content: attr(data-label) / ''`: the second gives the label an empty
+  alternative text, so a screen reader, which has the header, does not hear
+  the column name twice. Safari 16.4, the oldest browser supported ("Binding
+  rules"), drops the second declaration and keeps the first, so there the
+  name is read twice, which is acceptable.
+- **A sticky cell is reset in its component.** A cell made
+  `position: sticky`, as UserList's Impersonate column is, only works while
+  the frame scrolls, and in a card it would sit over its neighbours, so the
+  component sets it back to `static` under the same container query. The
+  primitive leaves `position` alone, since a cell may be `relative` to anchor
+  a tip.
+
 ## Link rows and provider marks
 
 **`.link-row` is a wrapping row of links that is not a bulleted list**: a
 page's own nav, the admin nav. A `space(2)` by `space(5)` gap, and the
 list's indent, item margins and `typography-base`'s ◆ marker cleared, since
 the marker would sit against the link before and hang outside the first.
+
+**The link to the page you are on carries `aria-current="page"`**, which
+tells a screen reader, and `.link-row` draws it by shape rather than hue
+(MB.115): weight 500 and a `$rule-heavy` underline set `space(1)` below the
+letters, where every other link has the browser's hairline. A colour alone
+would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
+nav is the first to mark its current page.
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
 ground**, as its sign-in button gives it one: the marks are drawn for those
@@ -683,6 +792,11 @@ What each section review (MB.115 to MB.124) designs to:
   the same name everywhere: a "sign-in method", never a "sign-in option", and
   an email "address". Every label, button and heading is title case
   (`.claude/rules/components.md`, "Copy").
+- **Lists are the list primitives.** A list page's root is a `.list-frame`,
+  its filter form a `.filter-row`, and its table a `.data-table` in a
+  `.data-table-frame` with the `--stack` modifier, its explicit roles and a
+  `data-label` on every cell, so it turns to cards on a phone rather than
+  scrolling sideways ("Tables at phone width", above).
 - **Prose stops at the measure**; a table or a grid may be as wide as it
   needs.
 - **Both themes, and 375px.** A review signs off in the workshop in both, at
