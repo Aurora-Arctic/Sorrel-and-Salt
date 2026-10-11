@@ -2,8 +2,8 @@
 
 // What the list has of its own. The root is `.list-frame`, the filter
 // `.filter-row` (through FilterForm), the table `.data-table` stacking into
-// cards on a phone (`.data-table--stack`), and the chip, Edit and the pager
-// are primitives too (`.chip`, `.btn--small`, `.pager`).
+// cards on a phone (`.data-table--stack`), the chip and the pager are
+// primitives too (`.chip`, `.pager`), and Edit is IconTip's pencil.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .grouped-value-list__description {

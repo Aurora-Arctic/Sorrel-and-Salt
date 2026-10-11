@@ -1,0 +1,138 @@
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import IconTip, { EditLink } from '@/components/IconTip';
+import Modal from '@/components/Modal';
+
+// A word above an icon control, "Edit" over a pencil: shown on hover or the
+// control's focus, kept while the pointer is on it, and dismissed by Escape
+// (WCAG 1.4.13); decoration only, since the control's own name says more
+// (claude-docs/components/icon-tip.md).
+
+// Open, the tip is in the page but kept out of the accessibility tree, so
+// it is found with `hidden`; shut, it is not in the page at all.
+const tip = () => screen.queryByRole('tooltip', { hidden: true });
+
+function renderTip() {
+  render(
+    <IconTip tip="Edit">
+      <button type="button" aria-label="Edit Fixture Salt">
+        ✎
+      </button>
+    </IconTip>,
+  );
+  return screen.getByRole('button', { name: 'Edit Fixture Salt' });
+}
+
+describe('IconTip', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('opens on hover, stays while the pointer crosses onto it, and closes a moment after it leaves', () => {
+    const button = renderTip();
+    expect(tip()).toBeNull();
+
+    fireEvent.mouseEnter(button);
+    expect(tip()).not.toBeNull();
+
+    fireEvent.mouseLeave(button);
+    fireEvent.mouseEnter(tip()!);
+    act(() => vi.advanceTimersByTime(200));
+    expect(tip()).not.toBeNull();
+
+    fireEvent.mouseLeave(tip()!);
+    act(() => vi.advanceTimersByTime(200));
+    expect(tip()).toBeNull();
+  });
+
+  it('opens on the control’s focus and closes on its blur', () => {
+    const button = renderTip();
+
+    act(() => button.focus());
+    expect(tip()).not.toBeNull();
+
+    act(() => button.blur());
+    expect(tip()).toBeNull();
+  });
+
+  it('is kept from assistive technology, adding nothing to the control’s name or description', () => {
+    const button = renderTip();
+
+    act(() => button.focus());
+
+    expect(tip()).not.toBeNull();
+    expect(screen.queryByRole('tooltip')).toBeNull();
+    expect(button).toHaveAccessibleName('Edit Fixture Salt');
+    expect(button).not.toHaveAccessibleDescription();
+  });
+
+  it('closes on Escape without moving the focus, marking the key handled only while open', () => {
+    const button = renderTip();
+    act(() => button.focus());
+
+    // `false`: the default was prevented.
+    expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(false);
+    expect(tip()).toBeNull();
+    expect(button).toHaveFocus();
+
+    expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(true);
+  });
+
+  // jsdom has no `showModal`, and no Escape turned into the dialog's
+  // `cancel`; both are stood in for as a browser behaves, the cancel fired
+  // only for a keydown left unhandled.
+  describe('inside a modal', () => {
+    beforeEach(() => {
+      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+        this.setAttribute('open', '');
+      };
+      HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+        this.removeAttribute('open');
+      };
+    });
+
+    const escape = (target: HTMLElement) => {
+      if (fireEvent.keyDown(target, { key: 'Escape' })) {
+        fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+      }
+    };
+
+    it('takes the first Escape to close the tip alone, and leaves the next to close the modal', () => {
+      const onClose = vi.fn();
+      render(
+        <Modal title="Edit Ingredient" onClose={onClose}>
+          <IconTip tip="Edit">
+            <button type="button" aria-label="Edit Fixture Salt">
+              ✎
+            </button>
+          </IconTip>
+        </Modal>,
+      );
+      const button = screen.getByRole('button', { name: 'Edit Fixture Salt' });
+      act(() => button.focus());
+      expect(tip()).not.toBeNull();
+
+      escape(button);
+      expect(tip()).toBeNull();
+      expect(onClose).not.toHaveBeenCalled();
+
+      escape(button);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+describe('EditLink', () => {
+  it('is a link named Edit and its row’s name, wearing the tip', () => {
+    render(<EditLink href="/admin/compendium?edit=fixture-salt" name="Fixture Salt" />);
+
+    const link = screen.getByRole('link', { name: 'Edit Fixture Salt' });
+    expect(link).toHaveAttribute('href', '/admin/compendium?edit=fixture-salt');
+
+    fireEvent.mouseEnter(link);
+    expect(tip()).not.toBeNull();
+  });
+});

@@ -162,10 +162,14 @@ const row = (citation: string) =>
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
-/** What a row shows a sighted reader: its text less every hidden element's. */
+/**
+ * What a row's line shows a sighted reader: its text less every hidden
+ * element's, and less a pencil's tip, which the press that opens or shuts
+ * the row leaves showing over it.
+ */
 const shownIn = (item: HTMLElement) => {
   const copy = item.cloneNode(true) as HTMLElement;
-  copy.querySelectorAll('[hidden]').forEach((node) => node.remove());
+  copy.querySelectorAll('[hidden], [role="tooltip"]').forEach((node) => node.remove());
   return copy.textContent;
 };
 const changes = () => within(references()).getByRole('status', { name: 'References changes' });

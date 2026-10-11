@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import type { GroupKind } from '../GroupForm/types';
@@ -88,10 +88,7 @@ const GroupList = ({
                     {group.description}
                   </td>
                   <td {...stackCell('')}>
-                    {/* Soft navigation: the page renders again with the modal open. */}
-                    <Link className="btn btn--small btn--quiet" href={group.editHref}>
-                      Edit <span className="visually-hidden">{group.name}</span>
-                    </Link>
+                    <EditLink href={group.editHref} name={group.name} />
                   </td>
                 </tr>
               ))}

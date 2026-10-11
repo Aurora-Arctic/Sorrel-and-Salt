@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 
 // What a group list adds to the list primitives (`.list-frame`, `.data-table`
-// with `--stack`, `.chip`, `.btn--small`, `.pager`): the description's
-// measure, and the taller, centred rows a chip needs.
+// with `--stack`, `.chip`, `.pager`, and IconTip's Edit pencil): the
+// description's measure, and the taller, centred rows a chip needs.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .group-list__description {

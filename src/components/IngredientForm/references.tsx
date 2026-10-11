@@ -23,9 +23,10 @@ import { formatLocator } from '@/modules/ingredients/validation/reference-format
 import { graphql } from '../../gql';
 import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
+import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import { FieldError } from '../Field';
-import { EditIcon, RemoveIcon } from './icons';
+import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
 import ReferencePanel from './reference-panel';
 import { useLookup } from './suggestions';
 import type {
@@ -360,20 +361,22 @@ export function ReferencesField({
                 {/* Named for its source by its short form, as its × is: a
                     column of bare "Edit"s is no help to a screen reader.
                     Each is described by the citation whole. */}
-                <button
-                  type="button"
-                  className="ingredient-form__icon-button ingredient-form__edit"
-                  aria-label={`Edit ${name}`}
-                  aria-describedby={citationId}
-                  aria-expanded={open}
-                  aria-controls={detailId}
-                  onClick={() => {
-                    focusLocator.current = !open;
-                    setOpenRow(open ? null : row.id);
-                  }}
-                >
-                  <EditIcon />
-                </button>
+                <IconTip tip="Edit">
+                  <button
+                    type="button"
+                    className="ingredient-form__icon-button ingredient-form__edit"
+                    aria-label={`Edit ${name}`}
+                    aria-describedby={citationId}
+                    aria-expanded={open}
+                    aria-controls={detailId}
+                    onClick={() => {
+                      focusLocator.current = !open;
+                      setOpenRow(open ? null : row.id);
+                    }}
+                  >
+                    <EditIcon />
+                  </button>
+                </IconTip>
                 {/* The focus goes back to the box, since the pressed × goes. */}
                 <button
                   type="button"
@@ -388,27 +391,31 @@ export function ReferencesField({
                   <RemoveIcon />
                 </button>
                 <div id={detailId} className="ingredient-form__reference-detail" hidden={!open}>
-                  {/* Its tier, and beside it the edit of the source itself,
-                      quieter than the row's own controls: it changes the
-                      source for every entry citing it. Named for the source,
-                      as the pencil is. Absent where the source is not this
-                      form's to change, which the tier line then says. */}
+                  {/* Its tier, and beside it the edit of the source itself:
+                      a page with a pencil, not the row's own pencil, since
+                      it changes the source for every entry citing it where
+                      the pencil opens this row (MB.115). Named for the
+                      source, as the pencil is. Absent where the source is
+                      not this form's to change, which the tier line then
+                      says. */}
                   <div className="ingredient-form__tier-row">
                     <span className="ingredient-form__tier">
                       {sourceTierOf(entry.link)}
                       {!editable && '. Only the site’s admins can edit it.'}
                     </span>
                     {editable && (
-                      <button
-                        type="button"
-                        id={editSourceId(row.id)}
-                        className="btn btn--small btn--quiet"
-                        aria-label={`Edit Source ${name}`}
-                        aria-describedby={citationId}
-                        onClick={() => editSource(row.id, entry.link)}
-                      >
-                        Edit Source
-                      </button>
+                      <IconTip tip="Edit Source">
+                        <button
+                          type="button"
+                          id={editSourceId(row.id)}
+                          className="ingredient-form__icon-button ingredient-form__edit"
+                          aria-label={`Edit Source ${name}`}
+                          aria-describedby={citationId}
+                          onClick={() => editSource(row.id, entry.link)}
+                        >
+                          <SourceEditIcon />
+                        </button>
+                      </IconTip>
                     )}
                   </div>
                   {/* Read with the source it locates, then what a locator is:

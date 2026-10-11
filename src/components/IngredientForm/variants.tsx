@@ -10,6 +10,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import Combobox from '../Combobox';
+import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
@@ -346,24 +347,26 @@ function VariantFieldset({
         <div className="ingredient-form__variant-actions">
           {/* The reference rows' pencil and × (MB.115, the owner's call),
             each named for its form, as a list entry's × is for its entry. */}
-          <button
-            ref={editButton}
-            type="button"
-            className="ingredient-form__icon-button ingredient-form__edit"
-            aria-label={`Edit ${legend}`}
-            aria-expanded={open}
-            aria-controls={fieldsId}
-            aria-describedby={
-              [!open && summaryId, invalid && !open && flagId].filter(Boolean).join(' ') ||
-              undefined
-            }
-            onClick={() => {
-              focusOnOpen.current = !open;
-              onToggle(!open);
-            }}
-          >
-            <EditIcon />
-          </button>
+          <IconTip tip="Edit">
+            <button
+              ref={editButton}
+              type="button"
+              className="ingredient-form__icon-button ingredient-form__edit"
+              aria-label={`Edit ${legend}`}
+              aria-expanded={open}
+              aria-controls={fieldsId}
+              aria-describedby={
+                [!open && summaryId, invalid && !open && flagId].filter(Boolean).join(' ') ||
+                undefined
+              }
+              onClick={() => {
+                focusOnOpen.current = !open;
+                onToggle(!open);
+              }}
+            >
+              <EditIcon />
+            </button>
+          </IconTip>
           <button
             type="button"
             className="ingredient-form__icon-button ingredient-form__remove"
