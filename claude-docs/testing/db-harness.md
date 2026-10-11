@@ -108,6 +108,48 @@ run as a test.
   sweep until it is classified; a schema test keeps only what is particular to
   its table, such as a slug shared across two groups.
 
+- **`tests/db/schema-drift.test.ts` — the schema files against the migrated
+  database, once for every table** (MB.226). It imports every
+  `src/modules/*/schema/*.ts`, asserts the tables it finds non-empty and
+  exactly the `public` tables the catalogue holds, then, per table, compares
+  what `tableFacts` reads off `getTableConfig` with the catalogue: each
+  column's name, type (`format_type`, Drizzle's spelling normalised),
+  nullability and whether the database fills a default; each foreign key's
+  name, columns, target and `ON DELETE`; the CHECK names; and each index's
+  name, uniqueness and whether it is partial. A schema file edited without its
+  migration, or a migration without its schema file, fails here, which is why no
+  module schema test carries a foreign-key, NOT NULL, type or index-name case.
+  What a CHECK or an index _refuses_ is not compared, and stays the module
+  schema test's or the partial-unique sweep's.
+
+  **`PENDING_DROPS` declares the expand/contract window.** A column or index
+  drop is two PRs (CLAUDE.md rule 10): the first removes the declaration and
+  ships no migration, so until the second lands the migrated database holds an
+  object the schema no longer declares. The undeclare task adds a line to the
+  file's `PENDING_DROPS` — table, kind (`column`, `index`, `check`,
+  `foreignKey` or `table`), name, and the task that drops it — and the
+  comparison leaves that object out; the drop task removes the line. A line
+  left behind fails the file's last test, which asserts every pending drop
+  still names an object the catalogue holds, so the window is declared rather
+  than tolerated.
+
+**What a module schema test asserts** (MB.226). Its table's exact column set
+on the code side, and the behaviour particular to that table: each CHECK's
+refusal with the row it would otherwise admit, identity and tier rules, a
+trigger's effect, a default the domain depends on, and a closed list as one
+accepted value, one refused and one equality of the database's `enum_range`
+against the code's. Not the catalogue twin of its columns
+(`audit-columns.test.ts`), a foreign key, NOT NULL or index name (the drift
+test), a second live row refused or freed by a soft delete (the partial-unique
+sweep), a `getTableConfig` property pin, a "no such column" case (the exact
+set already fails), one case per enum member, or a shipped migration's data
+test, which retires once its migration is in the journal
+(["Migrations and scripts"](../db/migrations-and-scripts.md)). The eight
+curated vocabularies run off one registry-driven file,
+`tests/modules/vocabulary/schema/vocabularies.test.ts`, over
+`src/db/vocabularies.ts`'s `TWO_TIER` and `FLAT`, and the two category join
+tables off one template, `tests/modules/ingredients/schema/join-tables.test.ts`.
+
 ### Connections per run (MB.179)
 
 A `db` run can fail tests that pass alone. During M5.5 the OAuth sign-in

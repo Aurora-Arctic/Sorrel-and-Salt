@@ -10,8 +10,10 @@ asserted by `EXPLAIN` on the SQL the services send (MB.184):
 index to `name` alone and the duplicates plan reddens: an `OR` reaches a
 bitmap scan only when both arms have an index, so the plan loses
 `Bitmap Index Scan on ingredients_trgm` altogether;
-`ingredients-trigram.test.ts` keeps the declaration pin and the negative
-control, a `similarity()` comparison that reaches no index on the same rows.
+`ingredients-trigram.test.ts` keeps the index's expression and the negative
+control, a `similarity()` comparison that reaches no index on the same rows
+where `%` reaches it; the index's name and partiality are
+`tests/db/schema-drift.test.ts`'s (MB.226).
 It is neither unique nor partial: the three unique indexes _reserve_
 an identity, so a tombstone must fall outside them, while this one only answers
 "what is this called" for a finder that filters `deleted_at` itself.

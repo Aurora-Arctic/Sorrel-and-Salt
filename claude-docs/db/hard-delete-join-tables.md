@@ -65,13 +65,11 @@ to make it possible, and a delete rolls back with the rest of its transaction.
 
 **Both are written.** `ingredient_categories` (M4.4, migration
 `0009_amusing_ken_ellis.sql`) is the shape the other takes, and
-`ingredient-categories-schema.test.ts` runs the same three assertions against
-the real table rather than the scratch pair: `write.delete` removes the row
-outright, the pair can be re-added afterwards — by a different member, whose
-stamps the new row carries — and an ingredient's other categories are untouched.
-`spell_categories` (M10.4, migration `0015_wooden_zaran.sql`) is the second,
-and repeats those three assertions against its own table, so the shape is
-proved where it is used rather than once in the abstract.
+`spell_categories` (M10.4, migration `0015_wooden_zaran.sql`) is the second.
+`tests/modules/ingredients/schema/join-tables.test.ts` runs one template over
+both real tables rather than the scratch pair: `write.delete` removes the row
+outright, and the pair can be re-added afterwards — by a different member,
+whose stamps the new row carries (MB.226).
 
 **Why not `spell_ingredients`** (MB.110). It was the third, and is
 soft-deleted since `0029`: a spell is a record of a working, so a layer taken

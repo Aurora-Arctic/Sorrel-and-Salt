@@ -115,8 +115,9 @@ this is what holds it in the database.
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
 not across two; the same ingredient twice is refused by the partial index, a
-layer collision by the layer index. Each reuse after a removal — the depth, the
-ingredient, the custom name — is shown refused while the row was live. What Wave 13 inherits — the Zod exclusive-or, the
+layer collision by the layer index. That a removal frees the depth, the
+ingredient and the custom name is `tests/db/partial-unique-indexes.test.ts`'s,
+once for every partial unique index (MB.226). What Wave 13 inherits — the Zod exclusive-or, the
 skip in derived categories, no suppression, no held/not-held, no safety source
 — is written into each task's criteria rather than left to be remembered.
 
