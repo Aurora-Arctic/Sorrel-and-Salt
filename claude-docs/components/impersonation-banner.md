@@ -32,10 +32,12 @@ carries Stop Impersonating
 
 ## Styling
 
-Layout and motion only, until the admin area's design review (MB.115). The
-motion, the width, the rule and the button size are the owner's calls, made
-during MB.53. It is a wrapping row of the sentence and the button, padded with
-`space()`, on `$surface-card` over a 3px `$secondary` rule. The button is
+The motion, the width, the rule and the button size are the owner's calls,
+made during MB.53. It is a wrapping row of the sentence and the button,
+padded with `space()`, on `$surface-card` over a `$rule-heavy` (3px)
+`$secondary` rule, heavy enough to read by its weight as well as its colour.
+The touch layout below is signed off at MB.115 from touch-emulated
+screenshots. The button is
 `.btn--quiet .btn--small`, and a failure is a `Notice` of the `error` kind
 ([`notice.md`](notice.md)).
 
@@ -53,7 +55,10 @@ during MB.53. It is a wrapping row of the sentence and the button, padded with
 - **Where a pointer can hover, it is fixed over the top of the page and sits
   under the ThemeToggle** (`z-index: 1` under the toggle's `2`), so pointing
   at the toggle reaches the toggle and never opens the banner. Its right padding keeps its content clear of the
-  toggle's corner (3.9rem, ThemeToggle's `$theme-toggle-corner-radius`).
+  toggle's corner (3.9rem, ThemeToggle's `$theme-toggle-corner-radius`, a
+  variable of that file's rather than a token, so the two are kept equal by
+  hand). The z-indices are raw, as the toggle's is, until MB.124's map of
+  layers.
 - **Tucked away until a pointer nears the top.** Where the pointer can hover
   (`@media (hover: hover)`), the banner is fixed to the top and translated up
   so only `space(2)` of it shows: the 3px rule and a sliver above it. An
@@ -68,9 +73,14 @@ during MB.53. It is a wrapping row of the sentence and the button, padded with
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx):
-`Default`. In the workshop Stop reaches no server, so a click shows the
-failure. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx),
+`Impersonation Banner`: `Default`, and `PhoneDark` and `PhoneLight`, the
+banner above a page at 375px. A desktop browser can hover, so it shows the
+banner tucked; the review screenshots emulate a touch screen
+(`scripts/review-screenshots.mjs`), where `(hover: none)` holds and the
+banner sits in the flow with the page starting below it. In the workshop Stop
+reaches no server, so a click shows the failure. Render-only, no test ids, no
+snapshots.
 
 ## Testing
 
