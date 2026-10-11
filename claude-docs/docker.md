@@ -155,9 +155,10 @@ no Neon connection and no host Node-version juggling.
   - **Ladle's preview port 61001 is deliberately not published** — only 61000
     (serve) and 61002 (HMR) are.
   - **`Docker/Dockerfile.e2e`** has two stages as of MB.23:
-    `e2e` (named, previously the file's only stage — Microsoft's Playwright
-    base plus `npm ci`, headless, what CI and `make docker-e2e` build) and
-    `FROM e2e AS headed` (adds Xvfb, openbox and an x11vnc/noVNC bridge for a
+    `e2e` (named, previously the file's only stage — `node:26.6.0-bookworm-slim`
+    plus `npm ci` and Chromium's headless shell, headless, what CI and
+    `make docker-e2e` build; on Microsoft's Playwright image until MB.237) and
+    `FROM e2e AS headed` (adds the full Chromium, Xvfb, openbox and an x11vnc/noVNC bridge for a
     display). Because an unqualified `docker build` picks the _last_ stage,
     both `.github/workflows/build-e2e-image.yml` and the `e2e` compose
     service pin `target: e2e` explicitly. The `playwright-server` compose

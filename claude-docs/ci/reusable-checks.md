@@ -234,11 +234,11 @@
   [Runner budget](runner-budget.md).
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
   `build-image.yml`, but for `Docker/Dockerfile.e2e`:
-  `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
-  which bundles a matching Node runtime, every OS dep Chromium needs, and
-  the browser itself, all pinned together) — pinned to
-  `@playwright/test`'s resolved `package-lock.json` version; bump both
-  together. `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile
+  `FROM node:26.6.0-bookworm-slim` (Debian, on `Dockerfile.node`'s Node
+  version; keep the two in step), with Chromium's headless shell and its
+  system libraries installed by the lockfile's own `@playwright/test`, so
+  the browser cannot drift from the package (MB.237;
+  [`testing/e2e.md`](../testing/e2e.md)). `Docker/docker-compose.yaml`'s opt-in `e2e` service (profile
   `e2e`, `make docker-e2e`) builds this same file for local use, so a
   devcontainer session (still Alpine-based itself, via `Docker/Dockerfile.node`)
   can run the full e2e suite without a base-distro change of its own.
