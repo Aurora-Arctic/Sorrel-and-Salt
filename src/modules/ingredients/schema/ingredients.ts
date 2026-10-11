@@ -27,11 +27,22 @@ export function canonicalKeyOf(name: SQLWrapper, canonicalName: SQLWrapper, form
 `;
 }
 
+/**
+ * An ingredient's identity since MB.215: its formal name, falling back to the
+ * label, and never the form, which is a variant's. The generated column's own
+ * expression, as `canonicalKeyOf` is `canonical_key`'s, which it replaces
+ * when MB.223 drops that column.
+ */
+export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL {
+  return sql`lower(coalesce(${canonicalName}, ${name}))`;
+}
+
 // The column names raw because they name columns of the table still being
 // built; every function in the key is IMMUTABLE and no enum cast is involved,
 // which is what makes a stored generated column legal. The text is the
 // migrations' own, byte for byte, so `db:generate` sees no change.
 const CANONICAL_KEY = canonicalKeyOf(sql.raw('name'), sql.raw('canonical_name'), sql.raw('form'));
+const IDENTITY_KEY = identityKeyOf(sql.raw('name'), sql.raw('canonical_name'));
 
 // One table, two tiers: `workspace_id IS NULL` is the compendium (everyone
 // reads, admins write), set is local to that workspace, where a formal name
@@ -63,6 +74,9 @@ export const ingredients = pgTable(
     // GENERATED ALWAYS, so Postgres refuses a direct write — and Drizzle
     // omits generated columns from $inferInsert, so TypeScript refuses first.
     canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
+    // The formal name alone (MB.216), beside `canonical_key` until MB.223
+    // drops that: what the tier-split unique indexes below hold once per tier.
+    identityKey: text('identity_key').notNull().generatedAlwaysAs(IDENTITY_KEY),
     description: text('description'),
     // A list of the five rather than the single `element` it replaced
     // (MB.157), a new name for the reason the three lists below have one.
@@ -110,6 +124,15 @@ export const ingredients = pgTable(
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
     uniqueIndex('ingredients_workspace_identity_unique')
       .on(table.workspaceId, table.canonicalKey)
+      .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
+    // The formal name once per tier, whatever the form (MB.216): two forms of
+    // one plant are one entry and two variants. The same shape as the pair
+    // above, which they replace when MB.223 drops `canonical_key`.
+    uniqueIndex('ingredients_compendium_identity_key_unique')
+      .on(table.identityKey)
+      .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
+    uniqueIndex('ingredients_workspace_identity_key_unique')
+      .on(table.workspaceId, table.identityKey)
       .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
     // Label uniqueness in the workspace tier only: inside one drawer an
     // ambiguous label is a mistake; in the compendium it is the point.

@@ -53,7 +53,7 @@ run as a test.
   filtered out. `AUDIT_COLUMNS`, `STAMP_COLUMNS` and `DELETE_COLUMNS` are
   **literal string lists, deliberately not derived from `src/db/audit.ts`**:
   a test comparing a table against `Object.keys(auditColumns)` passes for any
-  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (twenty-six
+  value of `auditColumns`, an empty one included. `AUDITED_TABLES` (twenty-seven
   names, the two hard-deleted join tables among them) and
   `UNAUDITED_TABLES` (Better Auth's `accounts`, `sessions`, `verifications`)
   moved here from `updated-at-trigger.test.ts` so the trigger sweep and the
@@ -79,7 +79,7 @@ run as a test.
 - **`tests/db/audit-columns.test.ts` — one sweep instead of a copy per
   file, on the catalogue side** (MB.188, one `it` since MB.225). It asserts
   `AUDITED_TABLES` are exactly the tables the catalogue finds carrying the
-  four stamps, and holds each to its expectation at once: the twenty-four
+  four stamps, and holds each to its expectation at once: the twenty-five
   six-column tables and the two four-column join tables, the stamps `NOT
 NULL`, the delete pair nullable or absent, and each `*_by` referencing
   `users(id)`. It reads `getTableConfig` nowhere. The code side is the

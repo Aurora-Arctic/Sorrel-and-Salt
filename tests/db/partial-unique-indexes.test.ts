@@ -75,6 +75,23 @@ function ingredient(workspaceId: string | null): () => Promise<Row> {
 const workspaceIngredient = ingredient(WORKSPACE_W_ID);
 const compendiumIngredient = ingredient(null);
 
+/**
+ * `ingredient`, its form fresh too, so a second row sharing only the formal
+ * name differs from the holder in `canonical_key` and the identity-key index
+ * alone can refuse it (MB.216).
+ */
+function ingredientOfItsOwnForm(workspaceId: string | null): () => Promise<Row> {
+  return async () => ({ ...(await ingredient(workspaceId)()), form: `Testform ${token()}` });
+}
+
+/** A variant of a fresh ingredient (MB.216), under a form no other row holds. */
+async function variant(): Promise<Row> {
+  return stamped({
+    ingredient_id: await idOf('ingredients', await workspaceIngredient()),
+    form: `Testleaf ${token()}`,
+  });
+}
+
 let position = 0;
 async function ingredientDeity(linked: boolean): Promise<Row> {
   return stamped({
@@ -144,16 +161,27 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_forms_slug_unique: { row: form },
   ingredient_substitutes_link_unique: { row: () => substitute(true) },
   ingredient_substitutes_name_unique: { row: () => substitute(false) },
+  ingredient_variants_form_unique: { row: variant },
   // `canonical_key` is generated: the clash is its formal name and form under
   // another label, which the label index would otherwise refuse first.
   ingredients_compendium_identity_unique: {
     row: compendiumIngredient,
     clash: ['workspace_id', 'canonical_name', 'form'],
   },
+  // `identity_key` is generated: the clash is the formal name alone, under
+  // another label and form, which the older identity index would otherwise refuse first.
+  ingredients_compendium_identity_key_unique: {
+    row: ingredientOfItsOwnForm(null),
+    clash: ['workspace_id', 'canonical_name'],
+  },
   ingredients_compendium_slug_unique: { row: compendiumIngredient },
   ingredients_workspace_identity_unique: {
     row: workspaceIngredient,
     clash: ['workspace_id', 'canonical_name', 'form'],
+  },
+  ingredients_workspace_identity_key_unique: {
+    row: ingredientOfItsOwnForm(WORKSPACE_W_ID),
+    clash: ['workspace_id', 'canonical_name'],
   },
   ingredients_workspace_label_unique: { row: workspaceIngredient },
   ingredients_workspace_slug_unique: { row: workspaceIngredient },
@@ -194,6 +222,14 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   zodiac_signs_seed_key_unique: { row: zodiacSign },
   zodiac_signs_slug_unique: { row: zodiacSign },
+};
+
+// The unique indexes a soft-deleted table may carry without the predicate,
+// each named with why: rule 4's exceptions are decided here, never found.
+const NOT_PARTIAL: Record<string, string> = {
+  // The target of MB.217's composite foreign keys, which a partial index
+  // cannot be; it reserves nothing the primary key on `id` does not (MB.216).
+  ingredient_variants_id_ingredient_id_unique: 'ingredient_variants',
 };
 
 /** Every partial unique index in `public`, with each column its key, expressions and predicate read. */
@@ -259,6 +295,30 @@ describe('every partial unique index', () => {
 
     expect(outcomes).toEqual(
       indexes.map(({ index }) => ({ index, refusedBy: index, afterDelete: 'admitted' })),
+    );
+  });
+});
+
+describe('every unique index on a soft-deleted table', () => {
+  it('is partial, but for the named exceptions (rule 4)', async () => {
+    const unpartial = await sql<{ index: string; table: string }[]>`
+      select ic.relname as index, tc.relname as table
+      from pg_index i
+      join pg_class ic on ic.oid = i.indexrelid
+      join pg_class tc on tc.oid = i.indrelid
+      join pg_namespace n on n.oid = tc.relnamespace
+      where n.nspname = 'public' and i.indisunique and not i.indisprimary
+        and i.indpred is null
+        and exists (
+          select 1 from pg_attribute a
+          where a.attrelid = tc.oid and a.attname = 'deleted_at' and not a.attisdropped
+        )
+      order by ic.relname
+    `;
+
+    // Non-empty by NOT_PARTIAL's own entries, so an empty scan fails too.
+    expect(Object.fromEntries(unpartial.map(({ index, table }) => [index, table]))).toEqual(
+      NOT_PARTIAL,
     );
   });
 });

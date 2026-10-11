@@ -5,14 +5,19 @@ import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { IngredientOverrides, Inserted } from './types';
 
-// §5's five unique indexes, by what each refuses; that each is partial on
+// §5's seven unique indexes, by what each refuses; that each is partial on
 // deleted_at, and frees its slot on a soft delete, is
-// tests/db/partial-unique-indexes.test.ts's. Identity is `canonical_key`, so
-// the compendium is unique on identity and label uniqueness survives only
-// inside a workspace — claude-docs/db/identity-model.md, "The ingredient identity model".
+// tests/db/partial-unique-indexes.test.ts's. Identity is `canonical_key`, and
+// `identity_key` beside it until MB.223 drops the first, so the compendium is
+// unique on identity and label uniqueness survives only inside a workspace —
+// claude-docs/db/identity-model.md, "The ingredient identity model".
 const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
 const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
+// MB.216's two: the formal name alone, once per tier, whatever the form —
+// the form is a variant's (claude-docs/db/identity-model.md).
+const COMPENDIUM_IDENTITY_KEY = 'ingredients_compendium_identity_key_unique';
+const WORKSPACE_IDENTITY_KEY = 'ingredients_workspace_identity_key_unique';
 // MB.80's two: the public address unique per tier —
 // claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
@@ -98,22 +103,30 @@ describe('ingredients unique indexes', () => {
       expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY);
     });
 
-    // Folding the form into the key makes valerian root and leaf two identities.
-    it('holds Valeriana officinalis root and leaf as two entries', async () => {
+    // Valerian root and leaf are one entry with two forms (MB.215), so a
+    // second entry of the formal name is refused whatever its form.
+    it('refuses a second entry of one formal name under another form', async () => {
       const root = await insert({
         name: 'Valerian root',
         canonicalName: 'Valeriana officinalis',
         form: 'root',
       });
+
+      // Why it could have been admitted: the old key, label and slug all differ.
       const leaf = await insert({
+        workspaceId: WORKSPACE_A,
         name: 'Valerian leaf',
         canonicalName: 'Valeriana officinalis',
         form: 'leaf',
       });
+      expect(leaf.canonicalKey).not.toBe(root.canonicalKey);
 
-      expect(root.canonicalKey).toBe('valeriana officinalis :: root');
-      expect(leaf.canonicalKey).toBe('valeriana officinalis :: leaf');
-      expect(await liveCount()).toBe(2);
+      const error = await failureOf(
+        insert({ name: 'Valerian leaf', canonicalName: 'Valeriana Officinalis', form: 'leaf' }),
+      );
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY_KEY);
     });
 
     // The label index stops at the compendium's edge, and the tier predicates
@@ -146,6 +159,21 @@ describe('ingredients unique indexes', () => {
 
       expect(error.code).toBe('23505');
       expect(error.constraint_name).toBe(WORKSPACE_IDENTITY);
+    });
+
+    it('refuses two locals of one workspace sharing a formal name under different forms', async () => {
+      const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort', form: 'herb' });
+
+      // Why it could have been admitted: the other workspace holds the pair.
+      const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort', form: 'oil' });
+      expect(elsewhere.canonicalKey).not.toBe(first.canonicalKey);
+
+      const error = await failureOf(
+        insert({ workspaceId: WORKSPACE_A, name: 'Cronewort', form: 'oil' }),
+      );
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(WORKSPACE_IDENTITY_KEY);
     });
 
     it('refuses two locals of one workspace that share a label', async () => {
