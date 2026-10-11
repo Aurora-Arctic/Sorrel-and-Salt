@@ -52,13 +52,6 @@ without a page routed to it.
     M0.31 briefly set it to `'auto'` (the control's unset position, letting
     `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
     confirmed intent.
-- **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
-  the workshop guard read, for `tsc` alone, and read by nothing since MB.224
-  retired that guard: `allowJs` is off, so the
-  `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
-  editors and nothing else, and the test could not import the config without
-  it. Deliberately not `UserConfig` itself — see the `tsconfig` note under
-  Commands and gates. Ladle never reads it.
 - **`vite.config.ts`** — Sass API pinned to `modern-compiler`. Resolution is
   left at Vite/Sass defaults **because** that is what `next dev` does: relative
   `@use`, empty load paths. This file is the seam for keeping the two aligned

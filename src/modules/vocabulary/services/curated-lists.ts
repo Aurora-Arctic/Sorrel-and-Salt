@@ -5,8 +5,7 @@ import { RowId } from '../../../lib/validation';
 // How a curated vocabulary's list and its count read their filter, written
 // once for the three filtered by a group (categories, forms, deities). Each
 // service still builds its own two cached reads, so each cache key is spelled
-// where tests/guards/compendium-cache.test.ts looks for it; this file only
-// wraps them. Internal to the module; the index exports no part of it.
+// beside the read it names; this file only wraps them. Internal to the module; the index exports no part of it.
 
 /**
  * The filter as the repository reads it, its query trimmed and a blank one

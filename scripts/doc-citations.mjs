@@ -1,7 +1,6 @@
-// What a claude-docs citation is, shared by the guard that fails one which does
-// not resolve (tests/guards/doc-citation.test.ts) and the repoint that follows
-// a summary split (scripts/repoint-doc-citations.mjs), so the rewrite reaches
-// exactly the citations the guard reads.
+// What a claude-docs citation is, for the repoint that follows a summary split
+// (scripts/repoint-doc-citations.mjs), so the rewrite reaches exactly the
+// citations a reader follows.
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';

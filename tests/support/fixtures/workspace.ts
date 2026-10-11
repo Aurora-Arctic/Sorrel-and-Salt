@@ -6,8 +6,8 @@ import type { WorkspaceFixture, Overrides } from './types';
 // A coven and who is in it. The pair is the point: a workspace nobody belongs
 // to denies everyone and proves nothing.
 
-// Neither W nor X, and invented (CLAUDE.md, Testing); workspace.test.ts checks
-// it against the seed.
+// Neither W nor X, and invented (CLAUDE.md, Testing): a real name is safe only
+// until someone seeds it.
 const DEFAULT_NAME = 'Fixture Coven';
 
 const DEFAULTS: WorkspaceFixture = {
