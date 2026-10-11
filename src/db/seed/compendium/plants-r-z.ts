@@ -20,6 +20,15 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/a/ashmo076.html',
       accessed: '2026-10-11',
     },
+    'grieve-benne': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Benne',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/b/benne-30.html',
+      accessed: '2026-10-11',
+    },
     'grieve-chamomiles': {
       kind: 'web_page',
       authors: 'Grieve, M.',
@@ -27,6 +36,24 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       container: 'A Modern Herbal',
       publisher: 'Botanical.com',
       url: 'https://www.botanical.com/botanical/mgmh/c/chammo49.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-elm-slippery': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Elm, Slippery',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/e/elmsli09.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-holly-sea': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Holly, Sea',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/h/holsea29.html',
       accessed: '2026-10-11',
     },
     'grieve-pimpernel-scarlet': {
@@ -137,6 +164,87 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/s/sassaf20.html',
       accessed: '2026-10-11',
     },
+    'grieve-scullcaps': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Scullcaps',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/scullc34.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-self-heal': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Self-Heal',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/selfhe40.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-senega': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Senega',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/senega41.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-senna': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Senna',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/senna-42.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-skunk-cabbage': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Skunk-Cabbage',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/skunkc52.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-snapdragon': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Snapdragon',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/snapdr58.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-snowdrop': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Snowdrop',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/snowdr59.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-solomons-seal': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: "Solomon's Seal",
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/solsea63.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-southernwood': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Southernwood',
+      container: 'A Modern Herbal',
+      publisher: 'Botanical.com',
+      url: 'https://www.botanical.com/botanical/mgmh/s/sowood69.html',
+      accessed: '2026-10-11',
+    },
     'grieve-zedoary': {
       kind: 'web_page',
       authors: 'Grieve, M.',
@@ -144,6 +252,20 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       container: 'A Modern Herbal',
       publisher: 'Botanical.com',
       url: 'https://www.botanical.com/botanical/mgmh/z/zeodar01.html',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-antirrhinum-majus': {
+      kind: 'entry',
+      title: 'Antirrhinum majus',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Antirrhinum_majus&oldid=1342296978',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-artemisia-abrotanum': {
+      kind: 'entry',
+      title: 'Artemisia abrotanum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Artemisia_abrotanum&oldid=1368757332',
       accessed: '2026-10-11',
     },
     'wikipedia-chamaemelum-nobile': {
@@ -167,6 +289,20 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Curcuma_zedoaria&oldid=1340334620',
       accessed: '2026-10-11',
     },
+    'wikipedia-eryngium': {
+      kind: 'entry',
+      title: 'Eryngium',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Eryngium&oldid=1368075178',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-galanthus-nivalis': {
+      kind: 'entry',
+      title: 'Galanthus nivalis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Galanthus_nivalis&oldid=1364735232',
+      accessed: '2026-10-11',
+    },
     'wikipedia-jacobaea-vulgaris': {
       kind: 'entry',
       title: 'Jacobaea vulgaris',
@@ -186,6 +322,20 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       title: 'Oryza sativa',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Oryza_sativa&oldid=1361047241',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-polygonatum-multiflorum': {
+      kind: 'entry',
+      title: 'Polygonatum multiflorum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Polygonatum_multiflorum&oldid=1354932640',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-prunella-vulgaris': {
+      kind: 'entry',
+      title: 'Prunella vulgaris',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Prunella_vulgaris&oldid=1370641983',
       accessed: '2026-10-11',
     },
     'wikipedia-radish': {
@@ -251,6 +401,34 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Sassafras_albidum&oldid=1378896201',
       accessed: '2026-10-11',
     },
+    'wikipedia-scutellaria': {
+      kind: 'entry',
+      title: 'Scutellaria',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Scutellaria&oldid=1358114663',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-senega-officinalis': {
+      kind: 'entry',
+      title: 'Senega officinalis',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Senega_officinalis&oldid=1361592303',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-senna-plant': {
+      kind: 'entry',
+      title: 'Senna (plant)',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Senna_(plant)&oldid=1369745320',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-sesame': {
+      kind: 'entry',
+      title: 'Sesame',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Sesame&oldid=1378216100',
+      accessed: '2026-10-11',
+    },
     'wikipedia-sorbus-aucuparia': {
       kind: 'entry',
       title: 'Sorbus aucuparia',
@@ -258,11 +436,25 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Sorbus_aucuparia&oldid=1378549974',
       accessed: '2026-10-11',
     },
+    'wikipedia-symplocarpus-foetidus': {
+      kind: 'entry',
+      title: 'Symplocarpus foetidus',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Symplocarpus_foetidus&oldid=1375306212',
+      accessed: '2026-10-11',
+    },
     'wikipedia-taxus-baccata': {
       kind: 'entry',
       title: 'Taxus baccata',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Taxus_baccata&oldid=1378354864',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-ulmus-rubra': {
+      kind: 'entry',
+      title: 'Ulmus rubra',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ulmus_rubra&oldid=1353755111',
       accessed: '2026-10-11',
     },
     'wikipedia-yucca': {
@@ -2343,6 +2535,1170 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             {
               source: 'wikipedia-lysimachia-arvensis',
               supports: ['colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Sea Holly',
+      canonicalName: 'Eryngium',
+      nomenclature: 'botanical',
+      description:
+        "Sea holly is the common name of Eryngium, a genus of some 250 species in the celery family, Apiaceae, found across much of the world, with its richest diversity in the western Mediterranean, South America and Mexico. They are annual or perennial herbs with stiff, mostly spiny leaves and domed heads of steely blue or white flowers set in a collar of spiny bracts; despite the name they are no relation of the true hollies. The British species, Eryngium maritimum, grows on sandy shores, its long fleshy roots reaching several feet down into the sand. Its young shoots have been cooked like asparagus and its roots boiled, roasted or candied: Grieve tells of a Colchester apothecary who made candied eryngo a trade in the seventeenth century, and connects the sweet with the 'kissing comfits' Falstaff mentions. Old herbalists gave the root for coughs, liver and kidney complaints and nervous disorders, and in Iran the plant is still taken as a tea. In the language of flowers it means admiration. In magic Cunningham places eryngo under Venus and water, with powers of love, lust and peace: travellers carry or wear it for a safe and lucky journey, it is scattered about a place or given to a quarrelling couple to restore peace, and, having once been eaten to stir desire, it now goes into love spells of every kind.",
+      elements: ['water'],
+      planets: ['Venus'],
+      safetyNotes:
+        "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for eryngo, plains eryngo and button eryngo: no contraindications, precautions or drug interactions are known. Large doses of button eryngo may cause nausea or vomiting. AHPA found no information on its use in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe.",
+      folkNames: ['Eryngo', 'Yerba del Sapo', 'Sea Hulver', 'Sea Holme'],
+      categories: ['Love', 'Lust', 'Peace'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Eryngo; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 344; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-eryngium',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-holly-sea',
+          supports: ['description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The root is the part used, and is sold as eryngo root from both sea holly and field eryngo. Grieve has it dug in autumn from plants at least two years old; dried, it comes in wrinkled pieces a few inches long with a small yellow centre, sweetish and mucilaginous but without smell. Candied, it was long sold as a sweetmeat and restorative, and was credited with aphrodisiac powers.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 344',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-holly-sea',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-eryngium',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Self-Heal',
+      canonicalName: 'Prunella vulgaris',
+      nomenclature: 'botanical',
+      description:
+        "Self-heal is a low, creeping perennial of the mint family, native to Europe, Asia, Africa and North America and common through most temperate regions. Its squarish, often reddish stems carry pairs of blunt oval leaves and end in a dense, cylindrical spike of two-lipped purple flowers, with a pair of stalkless leaves standing out beneath it like a collar. It is plentiful in pastures, roadsides and waste ground, and can spread into dense mats and turn weedy in lawns. Its English names record its old standing as a wound herb: Gerard rated none better, saying the bruised herb alone made a healing salve, and Grieve gives an infusion as a general tonic and, sweetened with honey, as a gargle for a sore throat or ulcered mouth. Its Latin name is traced to the German word for diphtheria, which it was once used to treat. Peoples of the Pacific Northwest put its juice on boils, it is the xia ku cao of Chinese medicine, and its young leaves and stems can be eaten raw in salads. Folklore gave it two faces: the Irish held it so strong that nothing natural or supernatural could harm it and used it to cure a fairy-struck child, while English children were told it was the devil's and that he would carry off whoever picked its flowers. Kynes places it under earth and Venus, for clarity, healing, peace and release.",
+      elements: ['earth'],
+      planets: ['Venus'],
+      safetyNotes:
+        'AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Rare allergic reactions have been reported, with rashes, swelling of the throat, lips and tongue, and nausea, vomiting or diarrhoea. An animal study found it may alter blood-sugar regulation, so anyone with diabetes should watch their blood sugar closely and talk to a qualified practitioner before using it. Little is known of its safety in pregnancy or while nursing, so its safety then has not been established.',
+      folkNames: [
+        'All-Heal',
+        'Heal-All',
+        'Blue Curls',
+        "Cailleach's Tea",
+        "Carpenter's Weed",
+        "Carpenter's Herb",
+        'Prunella',
+        'Brunella',
+        'Woundwort',
+        'Hook-Heal',
+        'Slough-Heal',
+        'Heart of the Earth',
+        'Brownwort',
+      ],
+      categories: ['Clarity', 'Healing', 'Peace', 'Release'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Self Heal',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 701–702; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-prunella-vulgaris',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-self-heal',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          description:
+            'The whole herb, gathered in midsummer when at its best, is the part Grieve names, and Kynes lists the cut, dried leaves and stems for sale. Grieve steeps an ounce in a pint of boiling water, taken a wineglass at a time as a strengthener, or sweetened with honey as a gargle for the throat and mouth. Kynes crumbles a handful of the dried leaves into the cauldron during a ritual of letting go of whatever holds one back.',
+          references: [
+            {
+              source: 'grieve-self-heal',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Self Heal',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-prunella-vulgaris',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Seneca Snakeroot',
+      canonicalName: 'Senega officinalis',
+      nomenclature: 'botanical',
+      description:
+        "Seneca snakeroot is a perennial herb of the milkwort family, Polygalaceae, native to southern Canada and the central and eastern United States, where it grows on prairies, in woods and on wet shores and riverbanks, usually in thin, rocky, limy soil. A mature plant may send up dozens of stems, about half a metre tall at most, from a hard, woody rootstock; they carry narrow, lance-shaped leaves and end in a slender spike of small white or greenish flowers. The twisted root smells faintly of wintergreen. It is named after the Seneca people, who used the root for snakebite: around 1735 John Tennent, a Scottish physician in Pennsylvania, learned of it from them, tried it on pleurisy and pneumonia, and soon had it accepted in Europe. Other Native nations used it as well, the Cherokee as an expectorant and for colds and croup and the Cree chewing it for sore throats and toothache. It became a standard expectorant in the pharmacies and still goes into cough syrups, teas, lozenges and gargles, and about three quarters of the world's supply is dug from the wild in Manitoba. Cunningham, who files it as rattlesnake root, gives it powers of protection and money: an infusion added to the bath and to the water clothes are rinsed in guards against anyone trying to harm you, and rubbed on the hands or feet it is said to lead you to money.",
+      safetyNotes:
+        "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner (it has traditionally been used to bring on menstruation), not for long-term use, do not exceed the recommended dose, and not for anyone with gastritis or gastric ulcers. Prolonged use or an overdose may irritate the stomach and gut and cause nausea, vomiting, retching and diarrhoea. Animal studies suggest it may alter blood-sugar regulation, so people with diabetes should watch their blood sugar closely and consult a qualified practitioner before use. Its safety while nursing has not been established; no drug interactions are known. Cunningham's health codes for the root: not if pregnant, or with gastritis or gastric ulcers.",
+      folkNames: [
+        'Rattlesnake Root',
+        'Mountain Flax',
+        'Seneka',
+        'Seneca',
+        'Senega Snakeroot',
+        'Senegaroot',
+      ],
+      categories: ['Protection'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Rattlesnake Root; p. 266',
+          supports: ['description', 'safetyNotes', 'folkNames', 'categories'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 688–689; p. xxii',
+          supports: ['safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-senega-officinalis',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-senega',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The dried root is the part used and traded. Grieve describes it as twisted, sometimes almost spiral, light yellowish to brownish grey, with a ridge running along its inner curve and a thick, knotty crown, and has it dug once the leaves have died and before the first frost. Cultivated plants take about four years to make a root worth harvesting. Cunningham records that some Native Americans carried the root to guard against rattlesnake bites.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 688',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-senega',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-senega-officinalis',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Rattlesnake Root',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Senna',
+      canonicalName: 'Senna',
+      nomenclature: 'botanical',
+      description:
+        'Senna is a large genus of the legume family, Fabaceae: somewhere between 260 and 350 species of shrubs, small trees and perennial herbs, native throughout the tropics with a few in temperate regions. Their leaves are divided into paired leaflets, their flowers usually have five yellow petals, and their fruit is a leathery pod holding several seeds. The name comes from the Arabic sanā, given to plants whose leaves and pods purge the bowels, and the type species, Senna alexandrina, known as Alexandrian or Indian senna, is the one long sold as a laxative. Arab physicians brought it into European medicine in the ninth or tenth century. Grieve describes the leaves being cut in Nubia, dried on sun-baked rocks and sent by camel and down the Nile to Cairo, and notes that it was grown in England by about 1640. It is still a common stimulant laxative and the working part of syrup of figs, while other species give cassia gum and the leaves and flowers cooked in Thai curries. In Arab tradition senna was used to lift illness caused by sorcery, the evil eye or possession by jinn, and in India to foster cooperation and in love sachets. Cunningham gives it to Mercury and air for love spells; Kynes adds earth, Taurus, Virgo, the Moon, Saturn and the Sun, and uses it for love, fidelity and protection.',
+      elements: ['air', 'earth'],
+      planets: ['Mercury', 'Moon', 'Saturn', 'Sun'],
+      zodiacSigns: ['Taurus', 'Virgo'],
+      safetyNotes:
+        "AHPA safety class 2d, interaction class A, covering both the leaf and the pod. Not for anyone with an intestinal blockage, abdominal pain of unknown cause, or an inflammatory bowel condition such as appendicitis, colitis, Crohn's disease or irritable bowel syndrome, and not for more than eight days in a row. As a stimulant laxative it may hurry other medicines through the gut and cut how much is absorbed; long-term use can drain potassium, so take care alongside heart-rhythm drugs, thiazide diuretics, corticosteroids, liquorice or herbs containing cardiac glycosides. An overdose may cause griping and severe diarrhoea with loss of fluids and salts, hepatitis has been linked to chronic use, and young children who swallowed senna laxatives have suffered severe nappy rash and blistering. AHPA's reviews call it the laxative of choice in pregnancy and nursing, though some authorities advise cautious or supervised use in pregnancy. Cunningham's health codes: not if pregnant or nursing.",
+      folkNames: [
+        'Alexandrian Senna',
+        'True Senna',
+        'Indian Senna',
+        'Tinnevelly Senna',
+        'Nubian Senna',
+        'Egyptian Senna',
+        'East Indian Senna',
+        'Locust Plant',
+        'Wild Senna',
+      ],
+      categories: ['Love', 'Fidelity', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Senna; p. 266',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Senna',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 804–806; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-senna-plant',
+          supports: ['canonicalName', 'nomenclature', 'description'],
+        },
+        {
+          source: 'grieve-senna',
+          supports: ['description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Leaf',
+          description:
+            'The dried leaflets are the senna of trade: brittle, greyish to yellowish green, with a faint smell Grieve likens to green tea and a sickly, sweetish taste. She advises powdering them only as needed, since the powder takes up damp and goes mouldy, and gives senna tea as the leaves infused with ginger in a covered vessel. Kynes puts dried leaves into counter-magic to clear away unwanted influences.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 804',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-senna',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Senna',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Pod',
+          description:
+            "The flat, oblong pods each hold about six seeds. Grieve and AHPA's authorities agree they act more gently than the leaves and gripe less, and Grieve steeps six to twelve in cold water as an adult dose. Kynes uses the dried seedpods in love spells, carries them in a pocket or purse to draw love, and keeps a few at work to encourage cooperation.",
+          safetyNotes:
+            'Workers routinely exposed to senna pod dust have developed allergic reactions.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 804–805',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-senna',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Senna',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Sesame',
+      canonicalName: 'Sesamum indicum',
+      nomenclature: 'botanical',
+      description:
+        "Sesame is an upright plant with opposite, lance-shaped leaves and tubular flowers of white, pink or purple, followed by capsules that split open with a pop when ripe to release small, flattened seeds. Charred remains show it was domesticated in the Indian subcontinent at least 5,500 years ago, and it is counted the oldest oilseed crop; today it grows naturalised through the tropics, prized as a hardy crop that survives drought where others fail, with India, Myanmar and Sudan the largest producers. It is listed among the drugs of Egypt's Ebers Papyrus, and baskets of it lay among Tutankhamun's grave goods. The seeds and oil run through the cooking of the world, from the West African soups and puddings that enslaved Africans carried to colonial America to Japanese gomashio and Indian chikki. Its lore is as old: Mesopotamians used the oil for offerings and anointing, Hindu legend makes Yama, the god of death, its creator, and Greeks offered cakes of sesame and honey to Demeter and Persephone at the Thesmophoria and served sesame cakes at weddings as a sign of fertility. The 'open sesame' of Ali Baba may echo the popping pods. Cunningham gives it to the Sun, fire and Ganesha, for money and lust, keeping an open jar of seeds in the house to draw cash; Kynes adds the Moon and uses it for banishing, fertility, healing, prosperity and truth.",
+      elements: ['fire'],
+      planets: ['Sun', 'Moon'],
+      safetyNotes:
+        "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Sesame is a relatively common cause of food allergy, and severe reactions, including anaphylaxis, have been reported and confirmed by testing. In an animal study a diet very high in sesame counteracted the breast-cancer drug tamoxifen. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe, with a note that serious allergic reactions have been reported.",
+      folkNames: [
+        'Benne',
+        'Sum-Sum',
+        'Gingilly',
+        'Teel',
+        'Til',
+        'Hoholi',
+        'Bonin',
+        'Ufuta',
+        'Ziele',
+        'Logowe',
+      ],
+      deities: ['Ganesha', 'Artemis', 'Demeter', 'Hecate', 'Persephone'],
+      categories: ['Lust', 'Banishing', 'Fertility', 'Healing', 'Prosperity', 'Truth'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Sesame; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Sesame',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 812–813; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-sesame',
+          supports: ['canonicalName', 'nomenclature', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-benne',
+          supports: ['canonicalName', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          description:
+            'The seeds are the part chiefly used, small and oval, white or black (tan in some Japanese kinds), and very rich in oil. Grieve notes them boiled for broth and made into puddings. Cunningham has them eaten to stir lust and kept in an open jar in the house, changed monthly, to draw money; Kynes burns a few in a banishing spell to send an unwanted spirit on its way.',
+          colors: ['white', 'black'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 812',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-sesame',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'grieve-benne',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Sesame',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Sesame',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The oil is pressed from the seeds. It was offered and used for anointing in Mesopotamia, and in India poured as an offering at funerals and rubbed on the statues of deities. Grieve records it standing in for olive oil in liniments and ointments, and going into margarine; she adds that it is said to be laxative and to bring on menstruation. Kynes dabs a little on the third eye before meditating on a question when seeking the truth.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Sesame',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-benne',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-sesame',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Paste',
+          description:
+            'Tahini, a paste made from the seeds, is sold as a food. Kynes has a spoonful eaten when one feels the urge to give away a secret.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Sesame',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-sesame',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Grieve gives the leaves as a second part used: full of gummy matter, one or two stirred into half a pint of cold water make a bland mucilage once given for infant cholera, diarrhoea, dysentery and bladder complaints. Wikipedia notes the mature leaves used in West Africa as a laxative and against dysentery and cholera.',
+          references: [
+            {
+              source: 'grieve-benne',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-sesame',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Skullcap',
+      canonicalName: 'Scutellaria',
+      nomenclature: 'botanical',
+      description:
+        "Skullcap is the common name of Scutellaria, a genus of some 300 or more species in the mint family, found almost worldwide but mostly in temperate regions, and especially plentiful in America. Most are annual or perennial herbs from a few centimetres to about a metre tall, with square stems, paired leaves and two-lipped flowers, often blue. The genus is known at once by the small shield on the calyx, which gave it both its Latin name, from scutella, a little dish, and its English one, from a likeness to a close-fitting medieval cap. Britain has two native species, the common and the lesser skullcap, both of riverbanks, bogs and wet ground. Skullcaps have a long medicinal history: in England common skullcap was given as a sedative for anything from headache to madness, from 1773 the Virginian or mad-dog skullcap became a North American remedy for rabies, and several Native American nations used skullcaps chiefly for menstrual complaints and in purification ceremonies for girls coming of age. The root of Baikal skullcap is so widely used in Chinese medicine that the wild plant has been overharvested. In magic Cunningham assigns skullcap to Saturn and water, for love, fidelity and peace, using it in spells of relaxation and saying that a wife who wears it shields her husband from other women's charms; Kynes adds Pluto, Aquarius, Capricorn and Virgo, and uses it for harmony, creativity and healing.",
+      elements: ['water'],
+      planets: ['Saturn', 'Pluto'],
+      zodiacSigns: ['Aquarius', 'Capricorn', 'Virgo'],
+      safetyNotes:
+        "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for Virginian skullcap, Scutellaria lateriflora: no contraindications, precautions, drug interactions or side effects are known. Reports of liver damage from products sold as skullcap are most likely due to adulteration with germander (Teucrium), which is known to harm the liver. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe.",
+      folkNames: ['Greater Scullcap', 'Helmet Flower', 'Hoodwort', 'Madweed', 'Quaker Bonnet'],
+      categories: ['Love', 'Fidelity', 'Peace', 'Harmony', 'Creativity', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Scullcap; p. 266',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Skullcap',
+          supports: [
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 801–802; p. xxii',
+          supports: ['safetyNotes'],
+        },
+        {
+          source: 'wikipedia-scutellaria',
+          supports: ['canonicalName', 'nomenclature', 'description'],
+        },
+        {
+          source: 'grieve-scullcaps',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          description:
+            'The herb is the part used. Grieve has the whole plant gathered in June, dried and powdered, and rates it a fine nervine, tonic and antispasmodic, given for nervous headaches, convulsive twitching and to bring sleep. Kynes sells the cut, dried leaves: after a family row she crumples them, scatters them through the shared rooms of the house, then vacuums them up while focusing on peace.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 801',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-scullcaps',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Skullcap',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Skunk Cabbage',
+      canonicalName: 'Symplocarpus foetidus',
+      nomenclature: 'botanical',
+      description:
+        'Skunk cabbage is a low-growing plant of the arum family, native to the wetlands and damp hill slopes of eastern North America, from Nova Scotia across to Manitoba and south to Tennessee and North Carolina. It rises from a thick rhizome, and early in spring, often while snow and ice still lie, it sends up a spathe, yellowish green when young and smeared with purple as it ages, around a spadix that carries the flowers. The spadix makes its own heat, enough to melt a way up through frozen ground. Bruised, the plant gives off the rank smell that names it, and that carrion-like smell draws the blowflies that pollinate it. Many Native American peoples used it as a medicine, a seasoning and a talisman, the Winnebago and Dakota among them to loosen phlegm in asthma, and from 1820 to 1882 it was sold in pharmacy as the drug dracontium. Grieve calls it antispasmodic, expectorant and narcotic, tried for asthma, catarrh, rheumatism and dropsy, and counts the seeds stronger than the root. Cunningham makes it a feminine herb of Saturn and water whose power is legal matters: a little of it wrapped in a bay leaf on a Sunday makes a talisman that draws good fortune, and it is said to help in court cases.',
+      elements: ['water'],
+      planets: ['Saturn'],
+      safetyNotes:
+        "AHPA places skunk cabbage in safety class 2d (specific use restrictions apply) and interaction class A (no clinically relevant drug interactions expected). Do not exceed the recommended dose, and anyone with a history of kidney stones should use it with caution. Large doses have been linked with nausea, vomiting, headache, dizziness and dimmed vision. The plant holds needle-like calcium oxalate crystals that burn the lips and mouth when eaten and can bring swelling, blistering, hoarseness and difficulty swallowing. Its safety in pregnancy and while nursing has not been established. Cunningham's health code says not to take it internally if you have kidney stones.",
+      folkNames: [
+        'Meadow Cabbage',
+        'Polecat Weed',
+        'Skunk Weed',
+        'Suntull',
+        'Swamp Cabbage',
+        'Eastern Skunk Cabbage',
+        'Clumpfoot Cabbage',
+        'Foetid Pothos',
+      ],
+      categories: ['Legal Matters'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Skunk Cabbage; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 841–842; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-symplocarpus-foetidus',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-skunk-cabbage',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The root is a thick rhizome that draws the plant a little deeper into the earth each year, leaving it wrinkled with rings. Grieve has it lifted in autumn or early spring and kept no longer than one season, since it spoils with age and drying; in trade it came as pressed, corrugated slices, dark brown outside and white or yellowish within. It was given powdered, alone or stirred into honey, or as a tincture of the fresh root, and AHPA gives tincture doses for both the fresh and the dried root.',
+          colors: ['brown'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 841',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-skunk-cabbage',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-symplocarpus-foetidus',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            "The seeds are hard and about the size of a pea. They ripen inside the spadix and drop onto the mud, where birds, small animals and floods carry them away. Grieve counts them stronger in effect than the root and slower to lose their virtue; they taste acrid and give off the plant's foetid smell only when bruised.",
+          references: [
+            {
+              source: 'grieve-skunk-cabbage',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-symplocarpus-foetidus',
+              supports: ['description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Slippery Elm',
+      canonicalName: 'Ulmus rubra',
+      nomenclature: 'botanical',
+      description:
+        'Slippery elm is a medium-sized deciduous tree of eastern North America, found from south-eastern North Dakota to Maine and southern Quebec and south to northern Florida and eastern Texas, mostly on moist uplands. It usually grows twelve to nineteen metres tall, with a spreading crown, reddish-brown heartwood and broad leaves that are rough above and velvety beneath; its downy twigs, hairy reddish buds and slimy red inner bark set it apart from the American elm. Both its English names come from the tree itself: red elm from the colour of the heartwood, slippery elm from the mucilage in the inner bark. Native Americans ate that bark raw or boiled, and it has long been taken as a demulcent for sore throats and upset stomachs and laid on the skin for rashes. Grieve, noting that it was an official drug of the United States Pharmacopoeia, commends it as a gruel for infants and invalids and above all as a poultice for wounds, boils and burns. The timber, of little commercial worth, has gone into fence posts, wagon-wheel hubs and archery bows. Cunningham makes it a feminine herb of Saturn and air whose power is to halt gossip: burn it and throw a knotted yellow cord into the fire, and talk against you will stop.',
+      elements: ['air'],
+      planets: ['Saturn'],
+      safetyNotes:
+        "AHPA places slippery elm in safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant drug interactions expected). Take it with at least 250 ml (8 oz) of liquid. Take other medicines an hour before it or several hours after, since its mucilage may slow their absorption. Bladder stones have followed the insertion of the bark into the vagina in attempted abortions, which would not happen in normal use by mouth. Its safety in pregnancy and while nursing has not been established. Cunningham's health code marks the bark as safe.",
+      folkNames: ['Indian Elm', 'Moose Elm', 'Red Elm', 'Gray Elm', 'Soft Elm'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Slippery Elm; p. 266',
+          supports: ['description', 'elements', 'planets', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 891–892; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-ulmus-rubra',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-elm-slippery',
+          supports: ['description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Bark',
+          description:
+            "The part used is the inner bark, red and slimy with mucilage. Grieve describes it gathered in spring from the trunk and larger branches, the tree stripped so fully that it dies, and sold in long, thin, tough strips that bend double without breaking, smelling of fenugreek and tasting bland and slippery. It can be eaten raw or boiled or made into tea, and is still sold as a demulcent. Cunningham says a piece worn at a child's neck gives the grown adult a persuasive tongue.",
+          colors: ['red'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 891',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Slippery Elm',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-elm-slippery',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-ulmus-rubra',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'The powdered bark comes in two grades: a coarse powder for poultices and a fine one for a thickening drink. Grieve says good powder is greyish or fawn, that dark or reddish powder gives poor results, and that it is often bulked out with spoilt flour and other starches. Mixed with hot water and spread on cloth, it made a poultice she counts among the best for wounds, boils, burns and inflammation; stirred into boiling water or milk, it made Slippery Elm Food, a gruel for weak stomachs and coughs.',
+          references: [
+            {
+              source: 'grieve-elm-slippery',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Snapdragon',
+      canonicalName: 'Antirrhinum majus',
+      nomenclature: 'botanical',
+      description:
+        'The common snapdragon is a herbaceous perennial, now placed in the family Plantaginaceae and usually grown as an annual or biennial, standing half a metre to a metre tall. Its flowers crowd a tall spike, each a tube closed by two lips that spring apart like a mouth when the sides are squeezed, which is how it got its name; wild plants flower pink to purple, often with yellow lips, while garden kinds run through red, orange, yellow, white and more. It is native from south-central France and the eastern Pyrenees to north-eastern Spain and the Balearic Islands, where it grows in crevices and walls, and after centuries in gardens it is naturalised on every continent but Antarctica. Grieve records its leaves laid on tumours and ulcers on the Continent and its old reputation as a guard against witchcraft, and botanists have used it as a model plant in genetics for nearly a century. Kynes tells of Dioscorides and Pliny recommending a bracelet of the flowers against illness and poison, of Irish snapdragons grown on thatched roofs for luck and against fire, and of its hoodoo use against evil spirits and ghosts. Cunningham calls it a masculine herb of Mars and fire for protection: worn, it keeps others from deceiving you, and flowers set before a mirror send curses back.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      zodiacSigns: ['Gemini', 'Scorpio'],
+      safetyNotes: "Cunningham's health code marks the leaf as not recommended for internal use.",
+      folkNames: [
+        "Calf's Snout",
+        'Common Snapdragon',
+        'Bunny Rabbits',
+        "Dragon's Mouth",
+        'Garden Snapdragon',
+        'Snap Jacks',
+        'Great Snapdragon',
+        "Lion's-Mouth",
+        "Rabbit's Mouth",
+        'Bonny Rabbits',
+        "Toad's Mouth",
+        'Bulldogs',
+        "Lion's-Snap",
+      ],
+      categories: ['Protection', 'Banishing', 'Release', 'Truth'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Snapdragon; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Snapdragon',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-antirrhinum-majus',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-snapdragon',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          description:
+            'The flowers are the part most used in magic. Kynes sells them dried and sets them before a mirror in a protection spell to return a jinx to its sender; Cunningham has you hold one, or tread on the plant, until a sense of nearby evil passes, and keep a vase of fresh snapdragons on the altar during protective rites.',
+          colors: ['white', 'yellow', 'pink', 'red', 'orange', 'purple'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snapdragon',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Snapdragon',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The fruit is a small capsule shaped like a skull, holding many tiny seeds. Cunningham says the seed worn at the neck keeps you from being bewitched, and Kynes has a little pouch of seeds carried as a charm against lies around someone who has deceived you before.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Snapdragon',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snapdragon',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-antirrhinum-majus',
+              supports: ['description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Grieve names the leaves as the part used in medicine: bitter and stimulant, they were applied in poultices to tumours and ulcers on the Continent. The leaves are lance-shaped and glossy dark green, set in spirals up the stem.',
+          colors: ['green'],
+          references: [
+            {
+              source: 'grieve-snapdragon',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snapdragon',
+              supports: ['description', 'colors'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Snapdragon',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'The seeds are pressed for a fixed oil that Grieve reports as nearly the equal of olive oil, and for which the plant was once grown in Russia. Kynes lists the seed oil among the forms on sale.',
+          references: [
+            {
+              source: 'grieve-snapdragon',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snapdragon',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Snowdrop',
+      canonicalName: 'Galanthus nivalis',
+      nomenclature: 'botanical',
+      description:
+        "The common snowdrop is a small perennial of the family Amaryllidaceae, the best known and most widespread of the twenty species in its genus, standing seven to fifteen centimetres tall. Each bulb sends up two narrow grey-green leaves and a single stalk bearing one nodding, bell-shaped white flower, whose three inner segments are touched with green at the tips; it blooms from January to April and often comes up through snow. It is native across Europe from Spain to Ukraine and is widely naturalised in woodland elsewhere; in Britain, long taken for a native, it was probably brought in around the early sixteenth century. The name Galanthus means milk flower, and the English name snowdrop first appears in the 1633 edition of Gerard's herbal. Grieve found it of little account in medicine, though a glossary of 1465 counted it an emmenagogue; galantamine, first extracted from snowdrops, is now used to help with mild to moderate Alzheimer's disease. Kynes gathers its lore: Persephone carried it back from the underworld, it was unlucky to bring indoors and an omen of death when given to the sick in England, yet in the Welsh Borders a bowl of the flowers taken in at Imbolc drove out evil spirits, and in England and Scotland it was a flower of hope for heralding spring. Kynes gives it to earth, for courage and release.",
+      elements: ['earth'],
+      safetyNotes: 'Kynes cautions that the bulbs are poisonous if eaten.',
+      folkNames: [
+        'Common Snowdrop',
+        "Death's Flower",
+        'Drooping Lily',
+        'Fair Maids',
+        'White Bells',
+        'White Queen',
+        'Fair Maid of February',
+        'Bulbous Violet',
+        'February Fairmaids',
+        'Dingle-Dangle',
+        'Candlemas Bells',
+        "Mary's Tapers",
+        'Snow Piercers',
+      ],
+      deities: ['Persephone'],
+      categories: ['Courage', 'Release'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Snowdrop',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'safetyNotes',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-galanthus-nivalis',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-snowdrop',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Flower',
+          description:
+            'The flower hangs alone from the top of its stalk, white, with three larger outer segments around three smaller inner ones marked green. Kynes sells the flowers dried and has a sachet of them carried for perseverance through a hard time; picked flowers kept in a vase just outside the house, never inside, were said to ward off bad luck.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snowdrop',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'wikipedia-galanthus-nivalis',
+              supports: ['description', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Bulb',
+          description:
+            'Snowdrops grow from bulbs that cluster in tight masses, each sending up a single flowering stem; the tough, thickened tips of the leaves let the shoot push through the soil. Kynes lists the bulbs among the forms on sale.',
+          references: [
+            {
+              source: 'grieve-snowdrop',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Snowdrop',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-galanthus-nivalis',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Solomon's Seal",
+      canonicalName: 'Polygonatum multiflorum',
+      nomenclature: 'botanical',
+      description:
+        "Solomon's seal is a rhizomatous perennial of the family Asparagaceae, native to Europe and temperate Asia, and one of three species of its genus native to Britain. Its arching stems, up to about ninety centimetres tall, carry alternate oval leaves along their upper half, with small tubular white flowers tipped with green hanging beneath them in clusters of two to seven, followed by pea-sized blackish-blue berries. It likes light soil and shade, spreading readily through woodland by its creeping rootstock. The name is usually traced to the round scars on the rootstock, said to look like the impression of a seal, or to marks like Hebrew letters seen when the root is cut across. Grieve records the root as astringent, demulcent and tonic, laid on bruises and black eyes and given in wine to help broken bones knit, while the young shoots were boiled and eaten like asparagus in Turkey. Kynes tells how medieval Europeans prized the root as an amulet if King Solomon's seal could be made out on it, how Germans called it a key to underground treasure chambers, and how in France and Belgium its fronds were hung on houses and barns for luck on May Day. Cunningham and Kynes both give it to Saturn and water; Cunningham names it for protection and exorcism and adds it to offertory incenses.",
+      elements: ['water'],
+      planets: ['Saturn'],
+      zodiacSigns: ['Capricorn', 'Gemini'],
+      safetyNotes: 'Kynes cautions that every part of the plant is poisonous if eaten.',
+      folkNames: [
+        'Dropberry',
+        "Lady's Seal",
+        "St. Mary's Seal",
+        'Sealroot',
+        'Sealwort',
+        "Common Solomon's Seal",
+        "Lady's Lockets",
+        "Sow's Teats",
+        "David's Harp",
+        'Ladder-to-Heaven',
+        "Eurasian Solomon's Seal",
+      ],
+      categories: [
+        'Protection',
+        'Banishing',
+        'Binding',
+        'Intuition',
+        'Purification',
+        'Success',
+        'Wisdom',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: "s.v. Solomon's Seal",
+          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: "s.v. Solomon's Seal",
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'wikipedia-polygonatum-multiflorum',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-solomons-seal',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'The rootstock is thick, white, twisted and knotted, marked at intervals with the round scars of old leaf stems; Grieve has it dug in autumn and dried. Cunningham places pieces of root at the four quarters of a house to guard it and sprinkles an infusion of the roots to clear a place of evil, and Kynes has a piece held during meditation to draw out inner wisdom.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'grieve-solomons-seal',
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: "s.v. Solomon's Seal",
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: "s.v. Solomon's Seal",
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'Kynes sells the root powdered and has it sprinkled around the outside of a home to keep negative energy away. Grieve says the powdered roots make an excellent poultice for bruises, piles, inflammations and tumours.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: "s.v. Solomon's Seal",
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-solomons-seal',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'The flowers are narrow creamy or waxy white tubes tipped with yellowish green, sweet-scented and hanging on the opposite side of the stem to the leaves. Kynes seals an oath by dipping the base of a flower in ink and pressing it onto the folded paper; Grieve notes the flowers, with the roots, taken as snuff to bring on sneezing.',
+          colors: ['white'],
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: "s.v. Solomon's Seal",
+              supports: ['form', 'description', 'colors'],
+            },
+            {
+              source: 'grieve-solomons-seal',
+              supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Southernwood',
+      canonicalName: 'Artemisia abrotanum',
+      nomenclature: 'botanical',
+      description:
+        "Southernwood is a bushy, shrub-like perennial of the daisy family and a close cousin of mugwort and wormwood, native to Eurasia and Africa and naturalised in scattered places in North America. Grieve calls it the southern wormwood, native to Spain and Italy and brought into England in 1548, where it seldom flowers. It grows to about a metre, with feathery grey-green leaves and small yellow flowers, and gives off a strong camphor-like scent. That scent made it a strewing herb and a guard for stored clothes against moths, which is why the French call it garderobe; churchgoers carried bunches of it to stay awake, and a bunch with rue was set beside prisoners in the dock against jail fever. Its branches dye wool a deep yellow, Grieve gives the herb as a tonic, an emmenagogue and a worm remedy for children, and Northcote records Turner's belief that its smoke drives away serpents. Kynes traces its long tie to love: Pliny put it under the mattress as an aphrodisiac, British women used it in divination to learn whom they would marry, and French lovers gave it in bouquets as a sign of fidelity. Cunningham gives it to Mercury and air for love, lust and protection, carried or kept in the bedroom in love spells and burned as an incense against trouble of every kind.",
+      elements: ['air'],
+      planets: ['Mercury'],
+      zodiacSigns: ['Aries', 'Scorpio'],
+      safetyNotes:
+        "AHPA places southernwood in safety class 2b (not to be used in pregnancy) and interaction class A (no clinically relevant drug interactions expected): it is not for use in pregnancy except under a qualified practitioner, having been reported to bring on menstruation. Its safety while nursing has not been established. Kynes cautions that it is poisonous if eaten in large amounts, and Cunningham's health code says not to take it internally if pregnant.",
+      folkNames: [
+        'Appleringie',
+        "Boy's Love",
+        'Garde Robe',
+        "Lad's Love",
+        "Maid's Ruin",
+        'Old Man',
+        'Mother-Wood',
+        'Sweet Benjamin',
+        "Maiden's Ruin",
+        'Southern Wormwood',
+        'Oldman Wormwood',
+        "Lover's Plant",
+        "Our Lord's Wood",
+        'Garden Sagebrush',
+        'European Sage',
+        'Sitherwood',
+        'Lemon Plant',
+        "Maid's Love",
+      ],
+      deities: ['Artemis', 'Isis'],
+      categories: [
+        'Love',
+        'Lust',
+        'Protection',
+        'Divination',
+        'Fertility',
+        'Healing',
+        'Fidelity',
+        'Purification',
+        'Strength',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Southernwood; p. 266',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Southernwood',
+          supports: [
+            'canonicalName',
+            'description',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'safetyNotes',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 90–91; p. xxii',
+          supports: ['canonicalName', 'safetyNotes', 'folkNames'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 136–137',
+          supports: ['description', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-artemisia-abrotanum',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+        {
+          source: 'grieve-southernwood',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          description:
+            'The whole herb is the part used, gathered in August and dried in the same way as wormwood. Grieve makes an infusion of it in a covered pot, so that the escaping steam does not carry off its virtue. Kynes sells it as cut, dried leaves and stems: a long stem is wound round joined wrists at a handfasting or a renewal of vows, sprigs go under the mattress for pleasure, and a few dried leaves are burned before divination to clear the air.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 90',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-southernwood',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Southernwood',
+              supports: ['form', 'description'],
             },
           ],
         },
