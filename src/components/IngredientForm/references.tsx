@@ -127,16 +127,14 @@ export function ReferencesField({
   const focusBox = () => boxElement.current?.focus();
   // A source just added opens at once, its Locator focused, since a page is
   // what it most often needs next (MB.115, the owner's call). The field
-  // array keys the new row on the next render, so this waits for it.
-  const openAdded = useRef(false);
-  useEffect(() => {
-    if (!openAdded.current) return;
-    openAdded.current = false;
-    const added = fields[fields.length - 1];
-    if (!added) return;
-    focusLocator.current = true;
-    setOpenRow(added.id);
-  }, [fields]);
+  // array keys the new row on a later render, so the add says how many rows
+  // to wait for, and the render that has them opens the last: state adjusted
+  // during render, React's pattern, rather than set from an effect.
+  const [opensAt, setOpensAt] = useState<number | null>(null);
+  if (opensAt !== null && fields.length === opensAt) {
+    setOpensAt(null);
+    setOpenRow(fields[opensAt - 1].id);
+  }
 
   // A source already listed is not offered again: listing it twice is refused.
   const found = useReferenceSuggestions(workspaceId, field.value, active);
@@ -178,7 +176,8 @@ export function ReferencesField({
   const add = (citation: string, link: ReferenceLink) => {
     // Not focused by the field array: the row opens, and its Locator takes the focus.
     append({ value: citation, link, locator: '' }, { shouldFocus: false });
-    openAdded.current = true;
+    focusLocator.current = true;
+    setOpensAt(fields.length + 1);
     setAnnouncement(`Added ${shortCitationText(link)}`);
   };
   const pick = (_value: string, option: ReferenceOption | null) => {
