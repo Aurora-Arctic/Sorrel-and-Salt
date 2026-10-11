@@ -11,10 +11,8 @@ $impersonation-banner-peek: space(2);
 // How far below the sliver a pointer still counts as near the top.
 $impersonation-banner-reach: space(4);
 // ThemeToggle's corner, which the tucked banner runs beneath and keeps its
-// own content clear of. The same 3.9rem as `$theme-toggle-corner-radius` in
-// `ThemeToggle/index.scss`, which is that file's own variable rather than a
-// token, so the two are kept equal by hand until it is one.
-$impersonation-banner-corner: 3.9rem;
+// own content clear of: the one token both read.
+$impersonation-banner-corner: $toggle-corner;
 
 // A wrapping row of the sentence and Stop. On a touch screen, where nothing
 // can hover to bring it back, it stays in the page's flow at the very top,

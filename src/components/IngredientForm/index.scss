@@ -90,8 +90,8 @@
   align-items: start;
   padding: space(2) space(3);
   // A rule a step heavier than a field's 1px edge, so the row reads as a
-  // quotation's bar rather than a box; off the scale, as an edge is.
-  border-left: 2px solid $text-muted;
+  // quotation's bar rather than a box.
+  border-left: $rule-medium solid $text-muted;
   background-color: $surface-card;
   // A row, not a bulleted item: no margin or ◆ of typography-base's.
   margin: 0;

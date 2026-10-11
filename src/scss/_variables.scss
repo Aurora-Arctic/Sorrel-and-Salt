@@ -375,6 +375,17 @@ $table-stack-width: 40rem;
 // `.link-row`'s current-page link, which no hue tells apart (MB.115).
 $rule-heavy: 3px;
 
+// The medium rule, a step heavier than a 1px edge and lighter than $rule-heavy:
+// the bar down a quoted row's side in IngredientForm and the divider between
+// ChipColorField's channels and its hex, each of which wrote its own 2px
+// until MB.115.
+$rule-medium: 2px;
+
+// The corner the theme toggle sits in: its backdrop's radius and the button's
+// own size, and the space the impersonation banner keeps clear of it. Each
+// component held its own 3.9rem and kept them equal by hand until MB.115.
+$toggle-corner: 3.9rem;
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------

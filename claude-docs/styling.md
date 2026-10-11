@@ -59,8 +59,10 @@ to.
   target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
   button, 2.5rem), `$table-stack-width` (the frame width under which a table
-  stacks, 40rem) and `$rule-heavy` (the 3px rule that marks something by
-  weight as well as colour).
+  stacks, 40rem), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
+  that mark something by weight as well as colour), and `$toggle-corner` (the
+  theme toggle's 3.9rem corner, which the impersonation banner keeps clear
+  of).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
