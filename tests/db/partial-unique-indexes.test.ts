@@ -58,11 +58,7 @@ const deity = async () =>
 const reference = async () =>
   stamped({ kind: 'book', title: `A Herbal of Fixture Covens ${token()}`, seed_key: token() });
 
-/**
- * An ingredient with a formal name, in coven W or (`null`) the compendium.
- * Its `form` is a column undeclared since MB.222, written here only because
- * the two `canonical_key` indexes below read it until MB.223 drops all three.
- */
+/** An ingredient with a formal name, in coven W or (`null`) the compendium. */
 function ingredient(workspaceId: string | null): () => Promise<Row> {
   return async () => {
     const t = token();
@@ -71,22 +67,12 @@ function ingredient(workspaceId: string | null): () => Promise<Row> {
       name: `Testwort ${t}`,
       canonical_name: `Fixtura testalis ${t}`,
       nomenclature: 'botanical',
-      form: 'dried',
       slug: `testwort-${t}`,
     });
   };
 }
 const workspaceIngredient = ingredient(WORKSPACE_W_ID);
 const compendiumIngredient = ingredient(null);
-
-/**
- * `ingredient`, its form fresh too, so a second row sharing only the formal
- * name differs from the holder in `canonical_key` and the identity-key index
- * alone can refuse it (MB.216).
- */
-function ingredientOfItsOwnForm(workspaceId: string | null): () => Promise<Row> {
-  return async () => ({ ...(await ingredient(workspaceId)()), form: `Testform ${token()}` });
-}
 
 /** A variant of a fresh ingredient (MB.216), under a form no other row holds. */
 async function variant(): Promise<Row> {
@@ -217,27 +203,15 @@ const ROWS: Record<string, PartialIndexRow> = {
     clash: ['ingredient_id', 'variant_id', 'name'],
   },
   ingredient_variants_form_unique: { row: variant },
-  // `canonical_key` is generated: the clash is its formal name and form under
-  // another label, which the label index would otherwise refuse first. The
-  // two indexes on it are undeclared since MB.220 and stay in the database
-  // until MB.223 drops them, with these two rows.
-  ingredients_compendium_identity_unique: {
-    row: compendiumIngredient,
-    clash: ['workspace_id', 'canonical_name', 'form'],
-  },
   // `identity_key` is generated: the clash is the formal name alone, under
-  // another label and form, which the older identity index would otherwise refuse first.
+  // another label, which the label index would otherwise refuse first.
   ingredients_compendium_identity_key_unique: {
-    row: ingredientOfItsOwnForm(null),
+    row: compendiumIngredient,
     clash: ['workspace_id', 'canonical_name'],
   },
   ingredients_compendium_slug_unique: { row: compendiumIngredient },
-  ingredients_workspace_identity_unique: {
-    row: workspaceIngredient,
-    clash: ['workspace_id', 'canonical_name', 'form'],
-  },
   ingredients_workspace_identity_key_unique: {
-    row: ingredientOfItsOwnForm(WORKSPACE_W_ID),
+    row: workspaceIngredient,
     clash: ['workspace_id', 'canonical_name'],
   },
   ingredients_workspace_label_unique: { row: workspaceIngredient },

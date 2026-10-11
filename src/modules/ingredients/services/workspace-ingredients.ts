@@ -173,13 +173,8 @@ async function refuseCollision(
   };
   const { name, canonicalName } = fields;
   const index = violatedUniqueIndex(error);
-  // The three-part key's index stays in the database until MB.223 drops it,
-  // and refuses nothing the formal name's does not.
-  const identityIndex =
-    index === 'ingredients_workspace_identity_unique' ||
-    index === 'ingredients_workspace_identity_key_unique';
   if (
-    identityIndex ||
+    index === 'ingredients_workspace_identity_key_unique' ||
     index === 'ingredients_workspace_label_unique' ||
     index === 'ingredients_workspace_slug_unique'
   ) {
@@ -195,7 +190,6 @@ async function refuseCollision(
   switch (index) {
     case 'ingredients_workspace_label_unique':
       return refuse('name', `This coven already has an ingredient called "${name}"`);
-    case 'ingredients_workspace_identity_unique':
     case 'ingredients_workspace_identity_key_unique':
       return refuse(
         canonicalName == null ? 'name' : 'canonicalName',
