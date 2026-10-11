@@ -753,8 +753,10 @@ empty form, `?edit=<slug>` the entry at that slug, through
 the list. The edit's values are built on the navigation by
 `src/app/admin/compendium/entry-values.ts`, `server-only`, from the services
 `Ingredient`'s fields resolve through — folk names, categories, substitutes,
-deities with their traditions, references with their citations, and the
-form's pick with its group — so opening the modal sends no browser read
+deities with their traditions, references with their citations, and its
+variants, each with its pick and group and its own categories, substitutes
+and references (MB.221), a linked substitute carrying the forms its second
+picker offers — so opening the modal sends no browser read
 (CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
 slug its name now spells; Save & Add Another stays on `?new`; a delete,
