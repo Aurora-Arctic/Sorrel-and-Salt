@@ -27,7 +27,7 @@ const Rows = (): ReactElement => (
         {ROWS.map((name) => (
           <tr key={name}>
             <td data-label="Name">{name}</td>
-            <td data-label="">
+            <td className="data-table__card-action" data-label="">
               <EditLink href={`#edit-${name}`} name={name} />
             </td>
           </tr>
@@ -39,7 +39,7 @@ const Rows = (): ReactElement => (
 
 export const InAListRow: Story = () => <Rows />;
 
-// A phone's width, in each theme: each row a card, the pencil at its foot.
+// A phone's width, in each theme: each row a card, the pencil at its top right.
 export const PhoneDark: Story = () => <Rows />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 

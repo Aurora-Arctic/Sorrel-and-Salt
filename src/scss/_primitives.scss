@@ -702,6 +702,30 @@
       > tbody > tr > [data-label=''] {
         grid-column: 1 / -1;
       }
+
+      // A row's Edit, as a card, at its top right beside the first line
+      // (MB.115, the owner's call), as the user list's Impersonate stands:
+      // two tracks, the first cell and the action sharing the first line and
+      // every other cell spanning both beneath. Placed by the grid, not moved
+      // in the markup, so the columns and the keyboard order stay as the
+      // desktop has them. After the rule above, which it outranks.
+      > tbody > tr:has(> .data-table__card-action) {
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        > :is(td, th) {
+          grid-column: 1 / -1;
+        }
+
+        > :first-child {
+          grid-column: 1;
+        }
+
+        > .data-table__card-action {
+          grid-row: 1;
+          grid-column: 2;
+          align-self: start;
+        }
+      }
     }
   }
 

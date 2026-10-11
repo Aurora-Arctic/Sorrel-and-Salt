@@ -87,7 +87,7 @@ const GroupList = ({
                   <td {...stackCell('Description')} className="group-list__description">
                     {group.description}
                   </td>
-                  <td {...stackCell('')}>
+                  <td className="data-table__card-action" {...stackCell('')}>
                     <EditLink href={group.editHref} name={group.name} />
                   </td>
                 </tr>

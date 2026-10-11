@@ -10,27 +10,29 @@
   vertical-align: middle;
 }
 
-// A short word, centred above its control: above, as InfoTip's is, so it
-// covers no field beneath; centred, since a word this short overhangs the
-// mark by a few pixels a side and so fits wherever the mark does, even at a
-// phone's edge. One layer up, over the row before. Mounted only while open,
-// so it fades in from its starting style and goes at once.
+// A short word, to the left of its control and level with it: every Edit
+// stands at the end of its line, a list row's, a phone card's top right, a
+// form row's, so to its left is room the line already has. Not above, as
+// InfoTip's is: a table frame scrolls sideways, which clips it top and
+// bottom too, and a tip above the first row or card was cut off. One layer
+// up, over the text it covers. Mounted only while open, so it fades in from
+// its starting style and goes at once.
 // claude-docs/components/icon-tip.md, "Placement".
 .icon-tip__bubble {
   position: absolute;
-  bottom: 100%;
-  left: 50%;
+  top: 50%;
+  right: 100%;
   z-index: 1;
   width: max-content;
-  margin-bottom: space(1);
-  translate: -50% 0;
+  margin-right: space(1);
+  translate: 0 -50%;
 
   @include tip-bubble;
   @include tip-bubble-open;
 
   @starting-style {
     opacity: 0;
-    transform: translateY(2px);
+    transform: translateX(2px);
   }
 }
 

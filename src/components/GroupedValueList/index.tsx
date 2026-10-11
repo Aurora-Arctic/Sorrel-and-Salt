@@ -94,8 +94,8 @@ const GroupedValueList = ({
                     <td className="grouped-value-list__description" {...stackCell('Description')}>
                       {entry.description}
                     </td>
-                    {/* No label: an action spans its card on a phone. */}
-                    <td {...stackCell('')}>
+                    {/* No label: on a phone, the action stands at its card's top right. */}
+                    <td className="data-table__card-action" {...stackCell('')}>
                       <EditLink href={entry.editHref} name={entry.name} />
                     </td>
                   </tr>
