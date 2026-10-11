@@ -13,13 +13,13 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
     <div className="header">
       <h1 className="welcome__title">Sorrel &amp; Salt</h1>
       <p className="welcome__lede lede">
-        A shared grimoire of spells for a coven or a household: a compendium of ingredients, the
-        stock you keep, and the spells you make from it.
+        A shared grimoire for a coven or a household: a compendium of ingredients, the stock you
+        keep, and the spells you make from it.
       </p>
     </div>
     <p className="welcome__gate">
-      Sorrel &amp; Salt is invite-only. To get in you need an invitation from someone who already
-      uses it — signing in gives you an account, and an invitation gives you somewhere to use it.
+      Sorrel &amp; Salt is invite-only. Signing in gives you an account, but you need an invitation
+      from someone who already uses it to get in.
     </p>
     <p className="welcome__way-in">
       {landing ? (

@@ -12,11 +12,13 @@ const NotAuthorized = (): ReactElement => (
       <h1 className="not-authorized__title">Not Authorized</h1>
       <p className="not-authorized__reason lede">
         This part of Sorrel &amp; Salt is where the site&rsquo;s admins curate the shared
-        compendium, and your account does not have admin rights.
+        compendium. Your account does not have admin rights.
       </p>
     </div>
     <p className="not-authorized__way-back">
-      <Link href="/">Back to Sorrel &amp; Salt</Link>
+      <Link className="btn" href="/">
+        Back to Sorrel &amp; Salt
+      </Link>
     </p>
   </div>
 );

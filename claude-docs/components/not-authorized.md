@@ -1,9 +1,9 @@
 # NotAuthorized
 
 `src/components/NotAuthorized/` — what a signed-in non-admin sees at `/admin`:
-a level-one "Not Authorized", one sentence saying the account does not have
-admin rights, and a link back to `/`. It takes no props. `src/app/forbidden.tsx`
-wraps it in `<main className="page-frame">` and Next renders that,
+a level-one "Not Authorized", two sentences saying what the area is for and
+that the account does not have admin rights, and a link back to `/`. It
+takes no props. `src/app/forbidden.tsx` wraps it in `<main className="page-frame">` and Next renders that,
 with a 403, wherever `forbidden()` is thrown — today only by the `/admin`
 guard ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 
@@ -19,15 +19,15 @@ Two things are left out on purpose, and the test holds both:
   MB.69), never requested, so a request control would promise a path that does
   not exist.
 
-The sentence says what the area is for — curating the shared compendium — so
+The reason says what the area is for — curating the shared compendium — so
 the refusal reads as a fact about the account rather than an error. It never
 says _workspace_ (CLAUDE.md, "Vocabulary").
 
 **The way back is a `next/link` to `/`**, the one page every signed-in visitor
-can reach; `/` offers a signed-in visitor the landing. It is a plain text link
-rather than a `.btn`: it is the page's only action, and nothing about it is
-primary. MB.116 reopens this for the owner: an outline `.btn` anchor is drawn
-beside the link (Stories, below).
+can reach; `/` offers a signed-in visitor the landing. It is an outline
+`.btn`, a target the size of every other page's action, and not a solid one:
+it is the page's only action, but nothing about it is primary. The owner
+chose the button over a plain text link at MB.116's sign-off.
 
 ## Styling
 
@@ -43,10 +43,7 @@ Function used: `space()`.
 [`index.stories.tsx`](../../src/components/NotAuthorized/index.stories.tsx) —
 `Default`, and `PhoneDark` and `PhoneLight` at 375px, each inside
 `forbidden.tsx`'s real `main.page-frame` ([`workshop.md`](../workshop.md)).
-`ProposalWayBackLink` and `ProposalWayBackButton` draw the way back as
-today's link and as an outline `.btn`; the button's story copies the
-component's markup with that one change, so the losing side goes with its
-story at sign-off. Render-only, no test ids, no snapshots.
+Render-only, no test ids, no snapshots.
 
 ## Testing
 
@@ -55,4 +52,5 @@ to `/` and the absence of any button, form, text field, address or request
 wording. The root `forbidden.tsx` that renders it is exercised by the admin
 403 tests of `tests/e2e/admin.spec.ts` alone, which reach it through the
 guard against the built server — the 403, the page at the same URL, no admin
-nav — and run the axe scan.
+nav — and check nothing pushes it sideways at 375px before the axe scan
+([`testing/e2e.md`](../testing/e2e.md)).

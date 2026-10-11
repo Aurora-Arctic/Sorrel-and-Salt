@@ -22,12 +22,3 @@
 .welcome__way-in {
   margin: space(2) 0 0;
 }
-
-// Proposal (MB.116, the owner's call): today's larger lede, 1.125rem in the
-// body ink, drawn beside the `.lede` primitive's body size in the muted ink.
-// Only the `ProposalLedeLarge` story sets the class; whichever loses is
-// deleted with its story at sign-off.
-.welcome-proposal--lede-large .welcome__lede {
-  font-size: 1.125rem;
-  color: $text-primary;
-}

@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
@@ -13,9 +13,11 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The front door, signed out (MB.57): reachable without a redirect, and
-// axe-clean. Signed in, it swaps only the way in, for the landing of the
-// visitor's role; where its links go is tests/app/page.test.tsx's.
+// The front door, signed out (MB.57): reachable without a redirect, nothing
+// pushing it sideways at a phone's width, and axe-clean in both themes — the
+// one spec that checks this template so (claude-docs/testing/e2e.md). Signed
+// in, it swaps only the way in, for the landing of the visitor's role; where
+// its links go is tests/app/page.test.tsx's.
 test('the entry page renders signed out, without a redirect', async ({ page }) => {
   await page.goto('/');
 
@@ -27,7 +29,13 @@ test('the entry page renders signed out, without a redirect', async ({ page }) =
     () => document.documentElement.scrollHeight > document.documentElement.clientHeight,
   );
   expect(scrolls).toBe(false);
-  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
+  // Playwright's context is light unless told otherwise, and the site's own
+  // default is dark, so each theme is named.
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    await assertNoAccessibilityViolations(page);
+  }
 });
 
 // The ornaments are imported assets, so they are served under /_next/static
