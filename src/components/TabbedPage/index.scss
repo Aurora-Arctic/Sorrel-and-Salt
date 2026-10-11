@@ -54,8 +54,12 @@ $segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
 // nothing: a grey in the light theme, a soft glow in the dark.
 $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 
+// A flex box, so the track is a flex item: as wide as its segments, never
+// wider than the column, with no line box round it to add a descender's
+// space beneath.
 .tabbed-page__tabs {
   container: tabbed-page-tabs / inline-size;
+  display: flex;
   margin-bottom: space(5);
 }
 
@@ -65,9 +69,8 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 // scrolls inside the track rather than wrapping or squeezing, the track
 // staying put and clipping it, so the page never scrolls sideways.
 .tabbed-page__row {
-  display: inline-flex;
-  max-width: 100%;
-  box-sizing: border-box;
+  display: flex;
+  min-width: 0;
   gap: space(1);
   margin: 0;
   padding: space(1);
@@ -166,7 +169,7 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 // one that does not scrolls.
 @container tabbed-page-tabs (max-width: #{$narrow-column}) {
   .tabbed-page__row {
-    display: flex;
+    flex-grow: 1;
 
     > li {
       flex: 1 0 auto;

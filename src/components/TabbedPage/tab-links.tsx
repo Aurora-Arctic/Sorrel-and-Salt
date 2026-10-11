@@ -37,9 +37,21 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
     const row = track.current;
     const link = row?.querySelector('[aria-current="page"]');
     if (!row || !link) return;
-    const box = row.getBoundingClientRect();
-    const tab = link.getBoundingClientRect();
-    row.scrollLeft += tab.left + tab.width / 2 - (box.left + row.clientLeft + row.clientWidth / 2);
+    const centre = () => {
+      const box = row.getBoundingClientRect();
+      const tab = link.getBoundingClientRect();
+      row.scrollLeft +=
+        tab.left + tab.width / 2 - (box.left + row.clientLeft + row.clientWidth / 2);
+    };
+    centre();
+    // Again whenever the open tab or the track changes size: the web font
+    // arriving after the first paint widens every label, and a phone turned
+    // on its side widens the track.
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(centre);
+    observer.observe(row);
+    observer.observe(link);
+    return () => observer.disconnect();
   }, [openHref]);
   return (
     <ul ref={track} className="tabbed-page__row" aria-busy={pending || undefined}>
