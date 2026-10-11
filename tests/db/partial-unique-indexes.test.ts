@@ -73,6 +73,11 @@ function ingredient(workspaceId: string | null): () => Promise<Row> {
 }
 const workspaceIngredient = ingredient(WORKSPACE_W_ID);
 const compendiumIngredient = ingredient(null);
+/** A compendium entry as the compendium seed writes it, under the key it gave (MB.241). */
+const seededIngredient = async () => ({
+  ...(await compendiumIngredient()),
+  seed_key: `fixture-${token()}`,
+});
 
 /** A variant of a fresh ingredient (MB.216), under a form no other row holds. */
 async function variant(): Promise<Row> {
@@ -210,6 +215,7 @@ const ROWS: Record<string, PartialIndexRow> = {
     clash: ['workspace_id', 'canonical_name'],
   },
   ingredients_compendium_slug_unique: { row: compendiumIngredient },
+  ingredients_seed_key_unique: { row: seededIngredient },
   ingredients_workspace_identity_key_unique: {
     row: workspaceIngredient,
     clash: ['workspace_id', 'canonical_name'],
@@ -342,6 +348,26 @@ describe('every partial unique index', () => {
     expect(outcomes).toEqual(
       indexes.map(({ index }) => ({ index, refusedBy: index, afterDelete: 'admitted' })),
     );
+  });
+});
+
+describe('every seed-key index', () => {
+  it('leaves the rows no seed wrote unconstrained, however many there are (MB.171)', async () => {
+    const indexes = (await partialUniqueIndexes()).filter(({ index }) =>
+      index.endsWith('_seed_key_unique'),
+    );
+
+    // Precondition: the nine vocabulary and reference tables, and the compendium (MB.241).
+    expect(indexes.map(({ table }) => table)).toContain('ingredients');
+
+    const outcomes = [];
+    for (const { index, table } of indexes) {
+      const keyless = async () => ({ ...(await ROWS[index].row()), seed_key: null });
+      await insert(table, await keyless());
+      outcomes.push({ index, second: await outcomeOf(insert(table, await keyless())) });
+    }
+
+    expect(outcomes).toEqual(indexes.map(({ index }) => ({ index, second: 'admitted' })));
   });
 });
 
