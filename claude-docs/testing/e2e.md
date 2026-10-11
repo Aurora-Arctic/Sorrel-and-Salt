@@ -33,9 +33,11 @@ there — a dialog closing, a table emptied by a filter — does wait.
 **Each worker slot has a server and a database of its own** (MB.112), as each
 Vitest pool slot has a database. A database each, because each spec file
 reseeds by dropping its database `WITH (FORCE)`, which would cut a sharing
-worker's connections mid-test. A server each, because the code under test
-runs in `next start`, which built its client at boot, not in the Playwright
-worker, so a database swapped in the worker would never reach the page.
+worker's connections mid-test. (That drop may also end an autovacuum worker,
+which the test role can do only through the image's `pg_signal_backend` grant,
+[`ci/database-image.md`](../ci/database-image.md).) A server each, because the
+code under test runs in `next start`, which built its client at boot, not in the
+Playwright worker, so a database swapped in the worker would never reach the page.
 [`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md)
 holds the argument, and the two alternatives turned down: a server each
 worker starts for itself, and one server picking a database per request.
