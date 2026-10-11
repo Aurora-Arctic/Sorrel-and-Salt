@@ -163,16 +163,17 @@ says what that half is), and a signed-out caller at `me`, `users`,
 `setEmail`, `setName`, the two creation writes and `privilegeChanges` is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
 `memberships` through the request's loader. `users.test.ts` holds the default
-page, the cursor and the filters reaching `listUsers`, the nodes being `me`'s
+page and the filters reaching `listUsers`, the nodes being `me`'s
 `User`, and `providers`' `admin` scope refused on a user's own row; who is
 refused the list is `services/user-list.test.ts`'s. `user-private-fields.test.ts`
 holds the four private fields' `self`-or-`admin` scope, below.
 `set-email.test.ts` holds `next` reaching the sender, and one `VALIDATION`;
 every refusal's rule is `services/email.test.ts`'s.
 `workspace-creation.test.ts` holds, per write, an admin's answer and one
-refusal per error code; who is refused is `services/workspace-creation.test.ts`'s.
+refusal per error code the service gives an admin; who is refused, and the
+`admin` scope, are `services/workspace-creation.test.ts`'s and the sweep's.
 `privilege-changes.test.ts` holds every field, the filters reaching the
-service, one user read per page, and the scope's own refusal; the order and
+service, one user read per page, and one non-admin's `FORBIDDEN`; the order and
 who the service refuses are `services/privilege-changes.test.ts`'s.
 
 ### `planetSuggestions` and `zodiacSuggestions`
@@ -214,11 +215,10 @@ type CorrespondenceSuggestion {
   "On the compendium").
 
 `tests/modules/vocabulary/graphql/suggestions.test.ts` holds the transport's
-half (MB.186): the nodes, an absent `query` sent as a blank one, a page by
-cursor, `zodiacSuggestions` reading its own vocabulary, and the compendium-only
-mode with its one `FORBIDDEN`, signed out. The buckets, the thresholds and who
-is refused under a coven are `services/suggestions.test.ts`'s; a signed-out
-caller under a coven is `tests/db/graphql-query-scopes.test.ts`'s, and a `workspaceId` naming no
+half (MB.186): the nodes, a page by cursor, `zodiacSuggestions` reading its
+own vocabulary, and the compendium-only mode reaching its service. The buckets,
+an absent `query`, the thresholds and who is refused under a coven are
+`services/suggestions.test.ts`'s; a signed-out caller, under a coven or none, is `tests/db/graphql-query-scopes.test.ts`'s, and a `workspaceId` naming no
 coven `tests/db/graphql-workspace-ids.test.ts`'s.
 
 ### `formSuggestions` and `commonNameSuggestions`
@@ -515,7 +515,9 @@ type QueryCompendiumConnectionEdge {
   any resolver runs. Each table must equal the schema's field list, and none
   may be empty, so no resolver file holds a signed-out test of its own. Since
   M5.7 every `Mutation` field is also named as an admin write or one any
-  session may reach, and each admin write is run signed in as A, B, C and D
+  session may reach, and each admin write is run signed in as A, a coven's
+  owner who holds no site role, with E admitted and the service's own refusal
+  as the preconditions in the same case
   (["Auth scopes: the second check"](#auth-scopes-the-second-check) says how it tells
   the scope from the service).
 - **Cost.** A page of 100 with `categories { group { … } }` prices above
@@ -530,8 +532,9 @@ each loader, and one `VALIDATION`; what each filter matches is
 `tests/db/repository/ingredients.test.ts`'s. `ingredient.test.ts` holds the
 coven forwarded, one `NOT_FOUND` and one `FORBIDDEN`. `duplicates.test.ts`,
 `common-names.test.ts` and `ingredient-suggestions.test.ts` hold the nodes,
-the edge's `score` where there is one, a page by cursor, the compendium-only
-mode reaching its service with a null workspace, and one `FORBIDDEN`; the
+the edge's `score` where there is one, a page by cursor, and the
+compendium-only mode reaching its service with a null workspace, with
+`ingredient-suggestions.test.ts`'s one `FORBIDDEN`; the
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
@@ -660,8 +663,8 @@ and coven files since MB.186. A test that watches a loader or shares one across
 operations, or records what a sender was asked to mail, hands `run` its own.
 
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
-mutations' half: the input that names a stamp or a tier, or leaves a field out,
-refused before any resolver runs; the answer equal to a fresh read; the child
+mutations' half: the input that names a tier, or leaves a field out, refused
+before any resolver runs; the answer equal to a fresh read; the child
 loaders cleared between two updates in one request; and per mutation one
 `VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
 and the delete, one `NOT_FOUND`.
@@ -703,12 +706,10 @@ curated values.
 
 `tests/modules/ingredients/graphql/compendium-entries.test.ts` holds the three
 writes' half: the input left short refused before any resolver runs, the
-loaders cleared between two updates, `endRedirect` reaching the service on the
-create and the update, and per mutation one `FORBIDDEN` — a coven's owner,
-since `authScopes: { admin: true }` is a gate of its own — one `NOT_FOUND` for
-the update and the delete, and one `VALIDATION` for the two that take an input.
-Every other non-admin, and every collision, is
-`services/compendium-entries.test.ts`'s.
+loaders cleared between two updates, `endRedirect` reaching the update's
+service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
+for the create. A non-admin at the `admin` scope is the sweep's; who the
+service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
 
 ### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
@@ -757,8 +758,8 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 tier the `workspaceId` argument names, `referencesByIngredient` cleared by a
 write, `Ingredient.references` read signed out, `withoutReferences` reaching
 the read, the search's compendium-only mode, and one refusal per error code at
-each field — `FORBIDDEN` and `VALIDATION` on both writes, `NOT_FOUND` on the
-update. The tier rule, the order and who else is refused are
+each field — `VALIDATION` on both writes, `NOT_FOUND` on the update; a member
+at the compendium tier's `admin` scope is the sweep's. The tier rule, the order and who else is refused are
 `services/references.test.ts`'s and `services/ingredient-references.test.ts`'s.
 
 ### Curated vocabularies: one factory for the seven
@@ -827,13 +828,12 @@ sketch, as the chips read them (MB.36).
   root field may have filled. Each write expires the `compendium` tag (M8.7).
 
 `tests/modules/vocabulary/graphql/categories.test.ts` holds their half (MB.186):
-a page with its groups in one read, the count, the cursor, the two filters
-reaching the read and the count, and per write one refusal per error code —
-`FORBIDDEN` to a coven's owner, since `authScopes: { admin: true }` is a gate
-of its own; `VALIDATION` on the create and the update; `NOT_FOUND` on the
-update and the delete; and the delete's in-use `FORBIDDEN`, its message
-verbatim. Every other non-admin, what a filter matches, a malformed `groupId`
-and every collision are `services/categories.test.ts`'s.
+a page with its groups in one read, the count, the two filters reaching the
+read and the count, and per write one refusal per error code the service gives
+an admin — `VALIDATION` on the create and the update, `NOT_FOUND` on the
+update and the delete, and the delete's in-use `FORBIDDEN`. A non-admin at the
+`admin` scope is the sweep's; who the service refuses, what a filter matches, a
+malformed `groupId` and every collision are `services/categories.test.ts`'s.
 
 ### Forms: `ingredientFormGroups` and the three form writes
 
@@ -938,9 +938,9 @@ the browser.
 `tests/modules/vocabulary/graphql/category-groups.test.ts` and
 `ingredient-form-groups.test.ts` hold the writes' half: the loaders cleared by
 an update, `moveTo` reaching the delete, and per write one refusal per error
-code — `FORBIDDEN` to a coven's owner, `VALIDATION` (a colour, a collision or
-`moveTo`), and `NOT_FOUND` on the update and the delete. Every other
-non-admin, each colour and every collision are
+code — `VALIDATION` (a colour, a collision or `moveTo`), and `NOT_FOUND` on the
+update and the delete. A non-admin at the `admin` scope is the sweep's; who the
+service refuses, each colour and every collision are
 `services/category-groups.test.ts`'s and `services/ingredient-form-groups.test.ts`'s.
 
 ### Deities: `deities`, `deityTraditions` and the six writes
@@ -1019,8 +1019,10 @@ no (MB.43).
 **The sweep proves the two checks apart (M5.7).**
 `tests/db/graphql-query-scopes.test.ts` names every `Mutation` field as an
 admin write, with what it governs, or one any session may reach, so a write
-added later says which it is. It runs each admin write signed in as A, B, C
-and D, and as E, who must pass the scope. The code cannot tell the checks
+added later says which it is. It runs each admin write signed in as A — a
+coven's owner, the highest workspace role and still no site role — with E
+admitted past the scope and the service's own refusal as the preconditions in
+the same case. The code cannot tell the checks
 apart, since both answer `FORBIDDEN`, but the message can: the scope's
 refusal is `Forbidden`'s default message, and `assertSiteAdmin` says "Only a
 site admin may do this". So a non-admin hearing the default was refused by
