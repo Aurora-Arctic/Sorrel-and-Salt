@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
 export interface IconTipProps {
@@ -12,7 +13,7 @@ export interface IconTipProps {
 
 export interface EditLinkProps {
   /** Where the edit opens: a list's soft-navigation address. */
-  href: string;
+  href: Route;
   /** What it edits, read after "Edit": "Aluminium, Aluminium" names the link "Edit Aluminium, Aluminium". */
   name: string;
 }
