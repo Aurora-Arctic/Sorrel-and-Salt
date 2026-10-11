@@ -22,6 +22,7 @@ import type {
   ListOption,
   ReferenceLink,
   ReferenceListEntry,
+  SubstituteForm,
   SubstituteLink,
   SubstituteListEntry,
   VariantFormValues,
@@ -224,12 +225,19 @@ const isDeityLink = (link: SubstituteLink | DeityLink): link is DeityLink => 'tr
  * What an entry's pill reads: its text, beside what tells it from a
  * same-named one — a linked substitute's formal name, so two ingredients
  * sharing a label are told apart, and a picked deity's tradition, "Hecate
- * (Greek)", as its lookup row reads (MB.169).
+ * (Greek)", as its lookup row reads (MB.169) — and, for a substitute naming
+ * one form of what it links, that form after a dot, "Rosemary · Dried leaf",
+ * as a variant's substitute row reads (MB.115).
  */
 export function entryText(entry: AnyListEntry): string {
   const link = linkOf(entry);
   const qualifier = link && (isDeityLink(link) ? link.tradition : link.canonicalName);
-  return qualifier ? `${entry.value} (${qualifier})` : entry.value;
+  const text = qualifier ? `${entry.value} (${qualifier})` : entry.value;
+  const form =
+    link && !isDeityLink(link) && 'variantId' in entry
+      ? formNamed(link, entry.variantId)
+      : undefined;
+  return form ? `${text} · ${form}` : text;
 }
 
 /** Whose a linked ingredient is, as its lookup row and its pill's tooltip say. */
@@ -281,6 +289,49 @@ export function rankForForm(
     .map((option, index) => ({ option, index, tier: rankOf(option) }))
     .sort((a, b) => a.tier - b.tier || a.index - b.index)
     .map(({ option }) => option);
+}
+
+/**
+ * A variant's substitute rows (MB.115, the owner's call): each ingredient
+ * the lookup found, in its order, as one row per form it comes in, "Rosemary
+ * · Dried leaf (Plant part)", which links that form, after a row for any form
+ * of it, "Rosemary · Any form", which links the ingredient alone, since a
+ * whole ingredient may stand in for a form too (MB.215). An ingredient in no
+ * form keeps its one plain row. Its forms run the likeliest first, as
+ * `rankForForm` ranks ingredients for `form` and `group`; `own`, the
+ * variant's saved row, is never its own substitute, as the database's
+ * `ingredient_substitutes_not_itself` holds.
+ */
+export function formRows(
+  options: readonly ListOption[],
+  form: string,
+  group: string | null,
+  own?: string,
+): ListOption[] {
+  const key = fold(form);
+  const rankOf = (variant: SubstituteForm): number => {
+    if (key !== '' && fold(variant.form) === key) return 0;
+    return group !== null && variant.group === group ? 1 : 2;
+  };
+  return options.flatMap((option) => {
+    const { link } = option;
+    if (!link || isDeityLink(link) || !link.variants?.length) return [option];
+    const name = option.label ?? option.value;
+    const ranked = link.variants
+      .filter(({ id }) => id !== own)
+      .map((variant, index) => ({ variant, index, tier: rankOf(variant) }))
+      .sort((a, b) => a.tier - b.tier || a.index - b.index);
+    return [
+      { ...option, label: `${name} · Any form` },
+      ...ranked.map(({ variant }) => ({
+        value: option.value,
+        label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+        key: `${option.key ?? link.id}/${variant.id}`,
+        link,
+        variantId: variant.id,
+      })),
+    ];
+  });
 }
 
 /** An issue's path, as zod and the server's `fieldErrors` give it. */
@@ -389,7 +440,8 @@ export function repeatOf(
 /**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
  * suggestion picked from it, with the ingredient or the curated deity it
- * links when it is a substitute's or a deity's. Returns what the entry reads
+ * links when it is a substitute's or a deity's, and the form of that
+ * ingredient a variant's substitute row names. Returns what the entry reads
  * as, or undefined when the text was blank.
  */
 export function addEntry(
@@ -397,10 +449,13 @@ export function addEntry(
   list: ListFieldName,
   text: string,
   link?: SubstituteLink | DeityLink,
+  variantId?: string,
 ): string | undefined {
   const value = text.trim();
   if (value === '') return undefined;
-  const entry: AnyListEntry = link ? { value, link } : { value };
+  const entry: AnyListEntry = link
+    ? { value, link, ...(variantId ? { variantId } : {}) }
+    : { value };
   // Any list's entries: the union of the lists' own entry types is more than
   // `setValue` can check against a path it does not know until now.
   const listed = getValues(list) as AnyListEntry[];

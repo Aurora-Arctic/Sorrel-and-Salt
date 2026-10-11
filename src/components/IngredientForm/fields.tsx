@@ -241,7 +241,7 @@ export function ListField({
     if (!refused(getValues(box) as string)) added(commitDraft(form, name));
   };
   const pick = (value: string, option: ListOption | null) =>
-    added(addEntry(form, name, value, option?.link));
+    added(addEntry(form, name, value, option?.link, option?.variantId));
   const clear = () => {
     setAnnouncement(`Cleared ${legend}`);
     remove();
@@ -258,12 +258,12 @@ export function ListField({
   };
 
   // Keyed by the field array's id, which follows an entry through a move.
-  // The detail is read from the values watched: the field array's rows are a
-  // snapshot that an entry's own field — a substitute's form, picked beside
-  // the list (MB.221) — does not refresh.
+  // The text and detail are read from the values watched: the field array's
+  // rows are a snapshot that an entry's own field — a substitute's form,
+  // picked beside the list (MB.221) — does not refresh.
   const chips = fields.map((row, index) => ({
     id: row.id,
-    value: entryText(row),
+    value: entryText(listed[index] ?? row),
     detail: entryDetail(listed[index] ?? row),
     errorId: entryErrors[index] && errorId,
     onRemove: () => {

@@ -172,7 +172,7 @@ const INGREDIENTS = [
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
-    // In forms, so a variant's substitutes rank it and its second picker opens (MB.221).
+    // In forms, so a variant's substitutes rank it and offer it form by form (MB.115).
     variants: [
       { id: '00000000-0000-4000-8000-000000000401', form: 'Dried leaf', formChoice: null },
       { id: '00000000-0000-4000-8000-000000000402', form: 'Oil', formChoice: null },
@@ -576,7 +576,8 @@ function WhatToTry() {
           and Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text
           while it is folded, and it opens on the error. Remove takes a variant out. In a
           variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
-          oil first; pick it, and Form of Testwort chooses which of its forms stands in.
+          oil first, a row for any form of it and one for each form; pick a form, and its pill names
+          it.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what

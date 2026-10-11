@@ -9,21 +9,21 @@ compendium mutations, and puts an error from either side beside the field it
 names. It is built standalone: the add and edit modals and the admin
 compendium page wrap it rather than containing their own form.
 
-| File                   | What it holds                                                                                                                                                                              |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.tsx`            | The form: the mutations, the fields in order in their titled sections, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question          |
-| `fields.tsx`           | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`          |
-| `suggestions.tsx`      | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                               |
-| `duplicates.tsx`       | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                               |
-| `references.tsx`       | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators           |
-| `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                    |
-| `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                   |
-| `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                         |
-| `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                   |
-| `substitute-forms.tsx` | `SubstituteForms`, a substitute list's second pickers: which form of each linked ingredient a substitute names                                                                             |
-| `values.ts`            | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
-| `options.ts`           | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                           |
-| `types.ts`             | The props, the form's own values, and the input it sends                                                                                                                                   |
+| File                   | What it holds                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.tsx`            | The form: the mutations, the fields in order in their titled sections, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                      |
+| `fields.tsx`           | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                      |
+| `suggestions.tsx`      | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                           |
+| `duplicates.tsx`       | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                           |
+| `references.tsx`       | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                       |
+| `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                |
+| `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                               |
+| `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                     |
+| `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                               |
+| `substitute-forms.tsx` | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                      |
+| `values.ts`            | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
+| `options.ts`           | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                       |
+| `types.ts`             | The props, the form's own values, and the input it sends                                                                                                                                               |
 
 ## The props contract
 
@@ -170,6 +170,9 @@ field shows none: the browser draws its own format there.
   entry's pill reads as the label with its formal name, "Mugwort (Artemisia
   vulgaris)", and so does its × and any error naming it, since two
   ingredients can share a label; one with no formal name reads as its label.
+  A link naming one form of the ingredient adds that form after a dot,
+  "Mugwort (Artemisia vulgaris) · Dried leaf" (`entryText`, MB.115), read
+  from the values watched, so a form chosen beside the list redraws it.
   What the pill leaves out is its `detail`, from `entryDetail` (MB.164): the
   form of it picked, when one is, or else every form it comes in, so two
   pills reading alike, a compendium entry and a coven's copy, are told apart;
@@ -546,15 +549,32 @@ as the ingredient's page shows its forms after it (MB.221).
   from its pick is refused beside that box at save (MB.162). While an entry
   has no form the section says one is wanted: an entry with none saves, but
   as information only, which nothing can stock.
-- **A variant's substitutes rank for its form** (`rankForForm`): the lookups
-  read each ingredient's forms, and an ingredient coming in a form that
-  folds alike is listed first, then one with a form in the same curated
-  group, then the rest, each tier in the search's order. Every row stays,
-  since anything may stand in for a form.
-- **A linked ingredient in forms gets a second picker**, `SubstituteForms`:
-  "Form of Mockwort", Any Form until one of its forms is chosen, sent as the
-  entry's `substituteVariantId`. The ingredient's own substitutes have it
-  too.
+- **A variant's substitutes are picked form by form** (`formRows`, MB.115,
+  the owner's call). The lookups already read each ingredient's forms, so
+  the box shows each ingredient it found as a row per form, "Mockwort ·
+  Dried leaf (Plant part)", which links that form and is sent as the
+  entry's `substituteVariantId`, after a row for any form of it, "Mockwort
+  · Any form", which links the ingredient alone, since a whole ingredient
+  may stand in for a form (MB.215). An ingredient in no form keeps its one
+  plain row. The pill names what was picked, "Mockwort · Dried leaf", and an
+  any-form pick reads as the ingredient alone, "Mockwort", as a link
+  naming no form reads everywhere. A typed name that matches nothing is
+  still added as a name, its pill the text as typed. The variant itself is
+  never offered, as `ingredient_substitutes_not_itself` refuses it; its
+  sibling forms are. Once an ingredient is listed, every row of it leaves
+  the box, since `ingredient_substitutes_variant_link_unique` holds one
+  link per ingredient in a form's list, whichever form it names. The
+  search matches ingredients by name, not by form.
+- **The rows rank for the variant's form** (`rankForForm`): an ingredient
+  coming in a form that folds alike is listed first, then one with a form in
+  the same curated group, then the rest, each tier in the search's order,
+  and within each ingredient its forms run in the same order after its
+  any-form row. Every row stays, since anything may stand in for a form.
+- **The ingredient's own substitutes keep their second picker**,
+  `SubstituteForms`: a linked ingredient in forms gets "Form of Mockwort",
+  Any Form until one of its forms is chosen, sent as the entry's
+  `substituteVariantId`. A variant's substitutes have none: their row names
+  the form.
 - **An edit opens with its variants**, each carrying its row's id as
   `variantId` (not `id`, which `useFieldArray` keys rows by), sent back as
   the input's `id` so a respelt form keeps its row.
@@ -1102,7 +1122,9 @@ refused beside its box, focused, with nothing sent; a variant removed by its
 own button; a repeat form refused at Add, no second fieldset added; a server
 issue at `['variants', 1, 'form']` on that variant's box alone; an edit's
 variant sent back by its `id`; and a variant's substitutes ranked for its
-form, with the second picker sending `substituteVariantId`.
+form, offered form by form after an any-form row, a form row sending
+`substituteVariantId` and an any-form row none, the variant itself never
+offered (MB.115).
 
 `tests/components/IngredientForm/index.test.tsx` mounts the whole form and
 answers `CreateWorkspaceIngredient` through MSW: `mockGraphQLMutation` for a

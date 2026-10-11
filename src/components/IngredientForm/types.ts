@@ -151,6 +151,11 @@ export type AnyListEntry = ListEntry | SubstituteListEntry | DeityListEntry;
  */
 export interface ListOption extends ComboboxOption {
   link?: SubstituteLink | DeityLink;
+  /**
+   * The form of the linked ingredient a pick names: a variant's substitute
+   * rows offer each form of an ingredient on its own (MB.115).
+   */
+  variantId?: string;
 }
 
 /**

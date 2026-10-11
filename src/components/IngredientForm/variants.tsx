@@ -16,7 +16,6 @@ import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
-import { SubstituteForms } from './substitute-forms';
 import {
   FormField,
   LookupListField,
@@ -36,7 +35,7 @@ import type {
   VariantFormValues,
   VariantsFieldProps,
 } from './types';
-import { EMPTY_VARIANT, rankForForm, repeatedForm } from './values';
+import { EMPTY_VARIANT, formRows, rankForForm, repeatedForm } from './values';
 
 // The Variants section (MB.221): the forms an ingredient comes in, each a
 // group of what that form adds to the ingredient — never overrides
@@ -276,10 +275,12 @@ function VariantFieldset({
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
   const legend = form.trim() || 'Unnamed Form';
-  // An ingredient in this form is the likeliest stand-in, then one in its group.
+  // An ingredient in this form is the likeliest stand-in, then one in its
+  // group; each is offered form by form, this variant itself left out.
+  const own = variant.variantId;
   const rank = useCallback(
-    (options: ListOption[]) => rankForForm(options, form, group),
-    [form, group],
+    (options: ListOption[]) => formRows(rankForForm(options, form, group), form, group, own),
+    [form, group, own],
   );
   const id = useId();
   const legendId = `${id}-legend`;
@@ -413,7 +414,9 @@ function VariantFieldset({
         <CategoryField at={at} />
         {/* Any ingredient may stand in for a form, this one's other forms
           included, so nothing is left out; those in this form, or in its
-          group, are offered first, and one in forms names which (MB.215). */}
+          group, are offered first (MB.215). Each row is one form of an
+          ingredient, or any form of it, so a pick names the form at once
+          (MB.115, the owner's call) and needs no second picker. */}
         <LookupListField
           workspaceId={workspaceId}
           // Fixed for the form's life, since its tier is, so the hook called is always the same.
@@ -424,7 +427,6 @@ function VariantFieldset({
           entry="Substitute Ingredient"
           placeholder="Add a substitute"
         />
-        <SubstituteForms name={`${at}.substitutes`} />
         <ReferencesField workspaceId={workspaceId} at={at} />
         <div className="ingredient-form__variant-done">
           <button

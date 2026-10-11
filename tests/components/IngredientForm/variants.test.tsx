@@ -524,36 +524,95 @@ describe('IngredientForm’s variants', () => {
         .map((option) => option.textContent ?? '');
       expect(named.map((text) => text.match(/^(Plainwort|Tinctwort|Oilwort)/)?.[0])).toEqual([
         'Oilwort',
+        'Oilwort',
+        'Tinctwort',
         'Tinctwort',
         'Plainwort',
       ]);
     });
 
-    it('names the linked ingredient’s form chosen in its second picker, sent as substituteVariantId', async () => {
+    // MB.115, the owner's call: a variant's substitute is picked form by form.
+    it('offers each form of an ingredient as its own row, after one for any form of it', async () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+
+      const list = await openSubstitutes(await addOil());
+
+      await waitFor(() => within(list).getByRole('option', { name: /^Plainwort/ }));
+      // Tinctwort comes in one form: a row for it, and one for any form.
+      expect(within(list).getAllByRole('option', { name: /^Tinctwort · / })).toHaveLength(2);
+      // Plainwort comes in none: its one row, with nothing to choose between.
+      expect(within(list).getAllByRole('option', { name: /^Plainwort/ })).toHaveLength(1);
+      // There is no second picker to name a form with.
+      expect(within(variant('Oil')).queryByRole('combobox', { name: /^Form of / })).toBeNull();
+    });
+
+    it('links the form a row names, sent as substituteVariantId, its pill naming the form', async () => {
       const calls = acceptCreate();
       renderForm({ workspaceId: WORKSPACE_ID });
       type(document.body, 'Name', 'Testwort');
       const oil = await addOil();
 
       const list = await openSubstitutes(oil);
-      fireEvent.click(await within(list).findByRole('option', { name: /^Oilwort/ }));
-      fireEvent.click(control(oil, 'Form of Oilwort'));
-      fireEvent.click(
-        within(screen.getByRole('listbox', { name: 'Form of Oilwort choices' })).getByRole(
-          'option',
-          { name: 'OIL' },
-        ),
-      );
+      const [, form] = await within(list).findAllByRole('option', { name: /^Oilwort · / });
+      fireEvent.click(form);
       save();
 
-      // The pill tells the form chosen.
-      expect(
-        within(oil).getByRole('button', { name: 'Remove Oilwort' }),
-      ).toHaveAccessibleDescription(expect.stringContaining('OIL'));
+      // One pill, for Oilwort's form rather than Oilwort whole.
+      expect(within(oil).getAllByRole('button', { name: /^Remove Oilwort/ })).toHaveLength(1);
+      expect(within(oil).queryByRole('button', { name: 'Remove Oilwort' })).toBeNull();
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
         { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
       ]);
+    });
+
+    it('links the ingredient alone from its any-form row, sending no form', async () => {
+      const calls = acceptCreate();
+      renderForm({ workspaceId: WORKSPACE_ID });
+      type(document.body, 'Name', 'Testwort');
+      const oil = await addOil();
+
+      const list = await openSubstitutes(oil);
+      const [any] = await within(list).findAllByRole('option', { name: /^Oilwort · / });
+      fireEvent.click(any);
+      save();
+
+      expect(within(oil).getByRole('button', { name: 'Remove Oilwort' })).toBeInTheDocument();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ ingredientId: OILWORT_ID }]);
+    });
+
+    it('never offers the variant itself as its own substitute, its sibling forms still offered', async () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const asks: unknown[] = [];
+      mockGraphQLQuery<Record<string, unknown>>('CompendiumSubstitutes', () => {
+        asks.push(true);
+        return {
+          compendium: {
+            edges: [
+              {
+                node: substitute(ENTRY_ID, 'Testwort', [
+                  { id: HERB_VARIANT_ID, form: 'Oil', formChoice: null },
+                  { id: OILWORT_OIL_ID, form: 'Herb', formChoice: null },
+                ]),
+              },
+            ],
+          },
+        };
+      });
+      const oil = openVariant('Oil');
+
+      act(() => control(oil, 'Substitute Ingredient').focus());
+      await waitFor(() => expect(asks.length).toBeGreaterThan(0));
+      fireEvent.click(
+        within(oil).getByRole('button', { name: 'Show Substitute Ingredient suggestions' }),
+      );
+      const list = await within(oil).findByRole('listbox', {
+        name: 'Substitute Ingredient suggestions',
+      });
+
+      await waitFor(() => within(list).getByRole('option', { name: /^Testwort · Herb/ }));
+      expect(within(list).queryByRole('option', { name: /^Testwort · Oil/ })).toBeNull();
     });
   });
 });
