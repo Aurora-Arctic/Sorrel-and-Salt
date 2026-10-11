@@ -1,10 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
 import { hasVerifiedFlag, verifyErrorMessage } from '../../../lib/account-email';
 import { requireSession } from '../../../lib/request-session';
-import { postSignInLanding, safeReturnPath } from '../../../lib/sign-in';
+import { ACCOUNT_PATH, postSignInLanding, safeReturnPath } from '../../../lib/sign-in';
 import type { EmailPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -12,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 // No AppShell exists yet; the narrow page frame centres the form, on a panel
-// as the account page's sections are (the owner's call, MB.116), and below it
-// the way back to the account page, the forms' column wide.
+// as the account page's sections are (the owner's call, MB.116), with the way
+// on to the account page inside the card.
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const me = await getMe(session);
@@ -35,17 +34,11 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
           landing={postSignInLanding(session.role)}
           error={verifyErrorMessage(params.error)}
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
+          // Inside the card, as a secondary button (the owner, 2026-10-11); the
+          // form offers it only to a verified account.
+          accountPath={ACCOUNT_PATH}
         />
       </div>
-      {/* An unverified account reaches no other page, so it is offered none; a
-          verified one is offered the way on as a button (the owner, 2026-10-11). */}
-      {me.emailVerified && (
-        <p>
-          <Link href="/account" className="btn">
-            Continue to Account
-          </Link>
-        </p>
-      )}
     </main>
   );
 }

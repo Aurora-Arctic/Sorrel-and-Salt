@@ -9,15 +9,28 @@
 // Children stretch to the column, and the button grid centres its own.
 .sign-in-panel {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
+  // One `max-content` column, centred, as the button list below is: the
+  // column is as wide as the widest button, and the head and the error
+  // take that width rather than the card's (the owner, at the sign-off).
+  display: grid;
+  grid-template-columns: max-content;
+  justify-content: center;
   gap: space(4);
   width: 100%;
 
   // The narrow frame's whole column, and a step more room inside than the
-  // `.panel` default: the card is the one thing on the page, and the owner
-  // asked for it bigger (MB.116, 2026-10-11).
-  padding: space(6);
+  // `.panel` default, a step more again below: the card is the one thing on
+  // the page, and the owner asked for it bigger (MB.116, 2026-10-11).
+  padding: space(6) space(6) space(7);
+
+  // The lede and the error wrap at the buttons' width instead of widening
+  // the column: zero intrinsic width, then stretched to the column.
+  > .notice,
+  > .header > .lede {
+    box-sizing: border-box;
+    width: 0;
+    min-width: 100%;
+  }
 }
 
 .sign-in-panel__header {

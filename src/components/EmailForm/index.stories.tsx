@@ -39,11 +39,13 @@ export const NoEmail: Story = () => <Page email="" verified={false} landing="/co
 
 // A followed link's landing: the proved address and the way on, nothing to edit.
 export const Confirmed: Story = () => (
-  <Page email="ada@example.test" verified confirmed landing="/coven" />
+  <Page email="ada@example.test" verified confirmed landing="/coven" accountPath="/account" />
 );
 
 // A verified account back to change its address: nothing to send until edited.
-export const ChangeLater: Story = () => <Page email="ada@example.test" verified landing="/coven" />;
+export const ChangeLater: Story = () => (
+  <Page email="ada@example.test" verified landing="/coven" accountPath="/account" />
+);
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale against src/lib/account-email.ts.

@@ -464,9 +464,9 @@ the tests [`tests.md`](tests.md).
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
-  address, since the row's is unchanged until the link is followed. Below
-  the form, a verified account gets a link to the account page, reading
-  "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
+  address, since the row's is unchanged until the link is followed. Inside
+  the card, a verified account gets a secondary button to the account page,
+  reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
@@ -516,9 +516,10 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
-  and a link opened from the wrong browser is explained there. Its link
-  across, offered to a verified account, reads "Continue to Account", below the
-  form's `.panel`, the ground the account page's sections stand on too.
+  and a link opened from the wrong browser is explained there. Its way
+  across, offered to a verified account, is a secondary "Continue to Account"
+  button inside the form's `.panel`, the ground the account page's sections
+  stand on too.
 - **The Email section is EmailForm, not a second form.** The same field,
   `setEmail` mutation, one-a-minute cooldown and field errors, with
   `embedded` set: no page heading, which the section gives, and never the

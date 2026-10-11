@@ -60,6 +60,7 @@ const EmailForm = ({
   error,
   waitSeconds = 0,
   embedded = false,
+  accountPath,
 }: EmailFormProps): ReactElement => {
   const inputId = useId();
   const fieldErrorId = useId();
@@ -139,6 +140,11 @@ const EmailForm = ({
           <a className="btn btn--solid" href={next ?? landing}>
             Continue
           </a>
+          {accountPath && (
+            <a className="btn" href={accountPath}>
+              Continue to Account
+            </a>
+          )}
         </p>
       </div>
     );
@@ -198,6 +204,15 @@ const EmailForm = ({
           </button>
         </div>
       </form>
+      {/* The way on for an account that can leave: an unverified one reaches
+          no other page, so it is offered none. */}
+      {accountPath && verified && !embedded && (
+        <p className="email-form__continue">
+          <a className="btn" href={accountPath}>
+            Continue to Account
+          </a>
+        </p>
+      )}
     </div>
   );
 };
