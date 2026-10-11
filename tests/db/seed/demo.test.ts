@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
 import { WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
-import { COMPENDIUM_INGREDIENTS } from '@/db/seed/standard';
+import { COMPENDIUM_INGREDIENTS, identityOf } from '@/db/seed/standard';
 
 // What running the `demo` scenario, `standard` inside it, leaves between an
 // entry and its forms (MB.216, MB.222): every seeded entry holds exactly the
@@ -16,10 +16,13 @@ import { COMPENDIUM_INGREDIENTS } from '@/db/seed/standard';
 
 let sql: ReturnType<typeof postgres>;
 
-/** Each seeded entry's live forms, in form order, keyed by tier and label. */
+/**
+ * Each seeded entry's live forms, in form order, keyed by tier and identity:
+ * a label alone repeats (the three Cat's Claws).
+ */
 async function formsPerEntry(): Promise<Map<string, string[]>> {
   const rows = await sql<{ entry: string; forms: string[] }[]>`
-    select (case when i.workspace_id is null then 'compendium' else 'W' end) || '|' || i.name
+    select (case when i.workspace_id is null then 'compendium' else 'W' end) || '|' || i.identity_key
              as entry,
            coalesce(
              array_agg(v.form order by lower(v.form)) filter (where v.id is not null),
@@ -35,10 +38,14 @@ async function formsPerEntry(): Promise<Map<string, string[]>> {
 /** What the literals name, keyed as `formsPerEntry` keys the rows. */
 function formsOfLiterals(
   tier: string,
-  entries: readonly { name: string; variants: readonly { form: string }[] }[],
+  entries: readonly {
+    name: string;
+    canonicalName?: string | null;
+    variants: readonly { form: string }[];
+  }[],
 ): [string, string[]][] {
   return entries.map((entry) => [
-    `${tier}|${entry.name}`,
+    `${tier}|${identityOf(entry)}`,
     entry.variants
       .map((variant) => variant.form)
       .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())),
@@ -65,8 +72,8 @@ describe('seed(db, { scenario: "demo" })', () => {
         ...formsOfLiterals('W', WORKSPACE_W_INGREDIENTS),
       ]),
     );
-    expect(forms.get('compendium|Rosemary')).toEqual(['Herb', 'Oil']);
-    expect(forms.get('W|Ginger')).toEqual(['rhizome']);
+    expect(forms.get('compendium|salvia rosmarinus')).toEqual(['Herb', 'Oil']);
+    expect(forms.get('W|zingiber officinale')).toEqual(['rhizome']);
     const [ginger] = await sql`
       select v.form_id from ingredient_variants v join ingredients i on i.id = v.ingredient_id
       where i.workspace_id is not null and i.name = 'Ginger'`;
