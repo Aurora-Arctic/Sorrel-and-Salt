@@ -662,12 +662,6 @@
           }
         ]
       }
-    },
-    {
-      "files": ["src/db/repository/*.ts"],
-      "rules": {
-        "import/no-cycle": "off"
-      }
     }
   ]
 }
