@@ -233,9 +233,11 @@
 // named container query as the primitive): a card is no scrolling row, so the
 // one-line rule gives way and an address or a reason wraps within the card.
 // The Impersonate cell gives up its sticky place, which would sit over the
-// card's other cells, and stands as the card's foot, its red rule drawn
-// above it rather than down its side, on the card's own ground rather than
-// a tint mixed for a band. claude-docs/styling.md, "Tables at phone width".
+// card's other cells, and stands at the card's top right, beside the name
+// (the owner's call, MB.115), on the card's own ground rather than a tint
+// mixed for a band. Placed by the grid, not moved in the markup, so the
+// table's columns and the keyboard order stay as the desktop has them.
+// claude-docs/styling.md, "Tables at phone width".
 @container data-table (max-width: #{$table-stack-width}) {
   .user-list .data-table--stack {
     th,
@@ -243,16 +245,30 @@
       white-space: normal;
     }
 
-    .user-list__impersonate {
+    // Two tracks: the name and Impersonate share the first line, and every
+    // other cell spans both beneath. An admin's card, with no Impersonate,
+    // leaves the second track empty, so it takes no width.
+    > tbody > tr {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    > tbody > tr > :is(td, th) {
+      grid-column: 1 / -1;
+    }
+
+    > tbody > tr > :first-child {
+      grid-column: 1;
+    }
+
+    > tbody > tr > .user-list__impersonate {
+      grid-row: 1;
+      grid-column: 2;
+      align-self: start;
       position: static;
-      padding-top: space(2);
-      border-top: 1px solid $secondary;
       border-left: 0;
       background-color: transparent;
     }
 
-    // An admin's row has no Impersonate, and an empty foot would draw its
-    // red rule under nothing.
     .user-list__impersonate:empty {
       display: none;
     }

@@ -132,8 +132,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   heading's hairline is red where every other is the muted ink, with a faded
   red tint and red text (kept at MB.115 on the owner's call). It is sticky at the table's right edge, so on a narrow
   frame the other columns scroll beneath it (on the owner's call, during
-  MB.59), until the table stacks into cards at phone width, where it is the
-  card's foot instead (Styling, below). Its ground is therefore opaque: the
+  MB.59), until the table stacks into cards at phone width, where it sits at the
+  card's top right instead (Styling, below). Its ground is therefore opaque: the
   tint mixed into the band it sits on, the page or a banded row's card. Every tip
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
@@ -316,9 +316,12 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   of its frame the primitive turns each row into a card on `$surface-card`,
   every fact led by its column's name from its `data-label`. The list's own
   rule, under the same named container query, lets the cells wrap, sets the
-  Impersonate cell back to `position: static` with its red rule drawn above
-  it rather than beside it, on the card's own ground, as the card's foot, and
-  hides it on an admin's card, which has no Impersonate.
+  Impersonate cell back to `position: static`, on the card's own ground, and
+  places it at the card's top right beside the name (MB.115, the owner's
+  call): the card's grid takes two tracks, the name and Impersonate share the
+  first line and every other cell spans both. The grid places it, not the
+  markup, so the columns and the keyboard order stay the desktop's. An
+  admin's card, with no Impersonate, hides the empty cell.
 - **The role and creation cells** each hold the value or mark on the left and
   the control on the right, centred on one line (MB.59, MB.63, on the
   owner's call). **The pause** is a row, `.user-list__pause`, centred with a
