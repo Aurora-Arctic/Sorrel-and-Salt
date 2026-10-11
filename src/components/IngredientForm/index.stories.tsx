@@ -659,16 +659,18 @@ function WhatToTry() {
         </li>
         <li>
           <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
-          repeat is refused at the box. The new variant opens first, just beneath the box; Done
-          folds it to its summary line, and Edit opens it again, closing any other. Save with a
-          variant&rsquo;s box holding text while it is folded, and it opens on the error. Remove
-          takes a variant out. In a variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists
-          the Testwort that comes in oil first, one row for each of its forms, and never Mockleaf,
-          which comes in none; pick a form, and its pill names it. Each of a variant&rsquo;s fields
-          has Copy From Ingredient, shut while the ingredient&rsquo;s own field is empty: fill the
-          ingredient&rsquo;s, and press it to add what the variant lacks. Its Substitute Ingredients
-          links the same form of each, and names beneath the list those in no such form, with Copy
-          Anyway to add them as names.
+          repeat is refused at the box. The new variant opens first, just beneath the box, with
+          every one of its sections open; each heading folds its own, as the ingredient&rsquo;s do,
+          and Open All / Close All reaches them too. Done folds the variant to its summary line, and
+          Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text while
+          it or its section is folded, and both open on the error. Remove takes a variant out. In a
+          variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
+          oil first, one row for each of its forms, and never Mockleaf, which comes in none; pick a
+          form, and its pill names it. Each of a variant&rsquo;s fields has Copy From Ingredient,
+          shut while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and
+          press it to add what the variant lacks. Its Substitute Ingredients links the same form of
+          each, and names beneath the list those in no such form, with Copy Anyway to add them as
+          names.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -877,12 +879,20 @@ const ENTRY = {
 /**
  * Opens the form's section titled `title` once the story is drawn, as a
  * person opens it, by its heading: an edit opens with every section closed
- * (MB.115), and which are open is the form's own state.
+ * (MB.115), and which are open is the form's own state. Within `root`, an
+ * open variant's card, it opens that variant's section of the name.
  */
-function openSection(title: string): void {
-  [...document.querySelectorAll<HTMLButtonElement>('.ingredient-form__fold-toggle')]
+function openSection(title: string, root: ParentNode = document): void {
+  [...root.querySelectorAll<HTMLButtonElement>('.ingredient-form__fold-toggle')]
     .find((button) => button.textContent === title && button.ariaExpanded === 'false')
     ?.click();
+}
+
+/** Opens the entry's Dried leaf by its Edit, its sections closed as an edit's are, and returns its card. */
+function openDriedLeaf(): HTMLElement | null {
+  const edit = document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]');
+  edit?.click();
+  return edit?.closest<HTMLElement>('.ingredient-form__variant') ?? null;
 }
 
 /** What the compendium form adds to the coven's, beside it in the workshop. */
@@ -1001,28 +1011,74 @@ export const CompendiumEntrySaveError: Story = () => {
   );
 };
 
-/** The same entry with its first form open, as its Edit leaves it. */
+/**
+ * The same entry with its first form open, as its Edit leaves it: the form's
+ * own sections closed, as an edit's are, each summarising what it holds
+ * (MB.115).
+ */
 export const CompendiumEntryVariantOpen: Story = () => {
   useCannedApi();
   // Pressed once it is drawn: which form is open is the form's own state.
   useEffect(() => {
     openSection('Variants');
-    document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]')?.click();
+    openDriedLeaf();
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+// The open form at a phone's width, in each theme.
+export const VariantOpenPhoneDark: Story = () => <CompendiumEntryVariantOpen />;
+VariantOpenPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const VariantOpenPhoneLight: Story = () => <CompendiumEntryVariantOpen />;
+VariantOpenPhoneLight.meta = { theme: 'light', width: 375 };
+
+/** The same form open, with its own Correspondences opened by its heading, the rest summarised. */
+export const CompendiumEntryVariantSectionOpen: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Variants');
+    const card = openDriedLeaf();
+    if (card) openSection('Correspondences', card);
   }, []);
   return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
 };
 
 /**
+ * A coven's new ingredient with a form just added from the New Form box: it
+ * opens first of the cards with every one of its sections open, as a new
+ * entry's are (MB.115). Typed and added once drawn, as a person would.
+ */
+export const VariantAdded: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    const box = document.querySelector<HTMLInputElement>('input[name="drafts.variants"]');
+    if (!box) return;
+    // React reads a typed value through the input's own setter, not the property.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(box, 'Oil');
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    // Once the typed text has reached the form, as a press after typing would.
+    const timer = setTimeout(() =>
+      document.querySelector<HTMLButtonElement>('button[aria-label="Add Variant"]')?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  return <IngredientForm workspaceId={WORKSPACE_ID} />;
+};
+
+/**
  * The same entry, Mockleaf, in no form at all, among its substitutes, with its
- * first form open and that form's Substitute Ingredients copied (MB.115):
- * Testwort links its Dried leaf, and the notice beneath the list names
- * Mockleaf, skipped, with Copy Anyway. Pressed once drawn, as a person would.
+ * first form open, its Relations opened, and that form's Substitute
+ * Ingredients copied (MB.115): Testwort links its Dried leaf, and the notice
+ * beneath the list names Mockleaf, skipped, with Copy Anyway. Pressed once
+ * drawn, as a person would.
  */
 export const CompendiumEntryCopySkipped: Story = () => {
   useCannedApi();
   useEffect(() => {
     openSection('Variants');
-    document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]')?.click();
+    const card = openDriedLeaf();
+    if (card) openSection('Relations', card);
     const timer = setTimeout(() =>
       document
         .querySelector<HTMLButtonElement>(
