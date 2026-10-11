@@ -1,5 +1,6 @@
-import { globSync } from 'node:fs';
+import { globSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
@@ -28,14 +29,47 @@ export const DB_FREE = [
   'tests/modules/ingredients/schema/units.test.ts',
 ];
 
-// What `db` runs, listed at config load: Vitest's `exclude` takes no
-// negation, so `unit` cannot exclude the two trees and carve DB_FREE back out
-// of them. A file added under them during a watch session is in both projects
-// until the session restarts.
-const DB_FILES = globSync(DB_INCLUDE, {
-  cwd: fileURLToPath(new URL('.', import.meta.url)),
-  exclude: DB_FREE,
-});
+const ROOT = fileURLToPath(new URL('.', import.meta.url));
+
+// What `db` and `db-mocking` run, listed at config load: Vitest's `exclude`
+// takes no negation, so `unit` cannot exclude the two trees and carve DB_FREE
+// back out of them. A file added under them during a watch session is in both
+// `unit` and `db` until the session restarts.
+const DB_FILES = globSync(DB_INCLUDE, { cwd: ROOT, exclude: DB_FREE });
+
+// What a file does that outlives it once a worker keeps its module registry
+// from one file to the next: a module mock or a hoisted value for one, a stub
+// of a global or of the environment, a reset of the registry itself, or a fake
+// clock (MB.238). A mention in a comment counts too, which errs toward
+// isolation.
+const LEAKS_PAST_ITS_FILE =
+  /\bvi\.(mock|doMock|unmock|hoisted|stubGlobal|stubEnv|resetModules|useFakeTimers)\(/;
+
+// The tests/support helpers that do one of those for their caller, so that a
+// file calling one counts as doing it: auth-module.ts's `importAuth` resets the
+// registry and builds `@/lib/auth` under another environment, and the next
+// file in the worker would import that build.
+const LEAKING_HELPERS = globSync('tests/support/**/*.{ts,mts}', { cwd: ROOT })
+  .filter((file) => LEAKS_PAST_ITS_FILE.test(readFileSync(path.join(ROOT, file), 'utf8')))
+  .map((file) => file.replace(/\.m?ts$/, ''));
+
+function leaksPastItsFile(file: string): boolean {
+  const source = readFileSync(path.join(ROOT, file), 'utf8');
+  if (LEAKS_PAST_ITS_FILE.test(source)) return true;
+  return [...source.matchAll(/from '(\.{1,2}\/[^']+)'/g)].some(([, specifier]) =>
+    LEAKING_HELPERS.includes(path.join(path.dirname(file), specifier.replace(/\.m?ts$/, ''))),
+  );
+}
+
+// The `db` files split in two by a scan of their source. Most share one module
+// registry per worker (`isolate: false`), so the hundred-odd modules every
+// file imports are evaluated once per worker rather than once per file — the
+// database is still re-cloned before each file, so no row outlives one. A file
+// that does what LEAKS_PAST_ITS_FILE matches runs in `db-mocking`, isolated
+// as every file was before. A scan rather than a list, so a file that starts
+// mocking moves on its own and never runs unisolated by mistake
+// (claude-docs/testing/db-harness.md, "Two db projects").
+const DB_MOCKING = DB_FILES.filter(leaksPastItsFile);
 
 // What neither `unit` nor `dom` runs: the other projects' files, the
 // acceptance suite, and Playwright's (its specs end `.spec.ts`, but say so).
@@ -46,11 +80,12 @@ export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/acceptance/**', 'te
 // helpers' test fetches the relative `/api/graphql` the helpers match.
 export const DOM_TS = ['tests/lib/auth-client.test.ts', 'tests/support/msw/graphql.test.ts'];
 
-// Four projects: `unit` in node and `dom` in jsdom, both with MSW refusing any
-// request a test did not register; `db` against local Postgres through
-// tests/support/db-project.mts's `dbHarness`, which the acceptance config
-// spreads too; and `rsc` for what can only be observed from inside a server
-// render. The acceptance suite is deliberately not a fifth project, and the
+// Five projects: `unit` in node and `dom` in jsdom, both with MSW refusing any
+// request a test did not register; `db` and `db-mocking` against local
+// Postgres through tests/support/db-project.mts's `dbHarness`, which the
+// acceptance config spreads too, split by whether a file mocks (DB_MOCKING
+// above); and `rsc` for what can only be observed from inside a server
+// render. The acceptance suite is deliberately not a sixth project, and the
 // first two exclude it so their globs do not sweep those files up:
 // claude-docs/testing/acceptance.md, "Acceptance".
 //
@@ -174,8 +209,21 @@ export default defineConfig({
         test: {
           name: 'db',
           include: DB_INCLUDE,
-          exclude: DB_FREE,
+          exclude: [...DB_FREE, ...DB_MOCKING],
           ...dbHarness,
+          isolate: false,
+        },
+      },
+      {
+        extends: true,
+        // As `db`: the same harness and pool cap, and its own run of the
+        // global setup, which builds the template only once between them.
+        plugins: [boundedPostgres()],
+        test: {
+          name: 'db-mocking',
+          include: DB_MOCKING,
+          ...dbHarness,
+          isolate: true,
         },
       },
       {

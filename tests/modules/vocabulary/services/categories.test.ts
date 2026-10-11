@@ -365,10 +365,10 @@ describe('updateCategory', () => {
       where seed_key is not null and deleted_at is null order by name limit 1`;
     expect(seeded.seed_key).toEqual(expect.any(String));
 
-    await updateCategory(admin, seeded.id, input({ name: 'Renamed Seed, Testcraft' }));
+    await updateCategory(admin, seeded.id, input({ name: 'Fixture Renamed Seed' }));
 
     expect(await rowOf(seeded.id)).toMatchObject({
-      name: 'Renamed Seed, Testcraft',
+      name: 'Fixture Renamed Seed',
       seed_key: seeded.seed_key,
     });
   });

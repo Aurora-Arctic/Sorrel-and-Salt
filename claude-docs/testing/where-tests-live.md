@@ -185,7 +185,11 @@ what it scans — an empty listing satisfies every `toEqual([])`.
     override from one test never leaks into the next.
     `tests/support/msw/graphql.test.ts` holds the loud failure, the one harness
     behaviour a test could otherwise pass without.
-- **`db`** — `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
+- **`db`** and **`db-mocking`** (MB.238) — one project split in two: the
+  files that mock, stub or reset modules run isolated in `db-mocking`, the rest
+  share a module registry per worker in `db`, chosen by a scan of each file's
+  source ([`db-harness.md`](db-harness.md#two-db-projects-mb238)); everything
+  below holds for both. `environment: 'node'`. `include`s `tests/db/**/*.test.ts` and
   `tests/modules/**/*.test.ts`, and `exclude`s the config's `DB_FREE`
   (MB.189): the files under those trees that never reach a database, which
   run in `unit` instead of waiting on a fresh clone before each. They are
@@ -343,7 +347,7 @@ own timeout instead: charged to a test, it overran the 5 s budget on CI's
 loaded runner (#737).
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
-(`vitest run --coverage`) both run all four projects — and neither runs
+(`vitest run --coverage`) both run all five projects — and neither runs
 `tests/acceptance/`, which `unit` and `dom` exclude and only
 `npm run test:stories` includes (["Acceptance"](acceptance.md)). Neither is
 wired into `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.

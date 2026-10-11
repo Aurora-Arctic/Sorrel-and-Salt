@@ -166,7 +166,7 @@ Replacing the barrel with the ten per-component packages (`@react-email/body`, `
 
 ### The rest
 
-- **`isolate: false`** (Vitest's own hint, 36s of worker time): breaks `providers.test.tsx` today and 15 unit files rely on module mocks/global stubs. A later task could try it on the `unit` (node) project alone once every mocking file is in `dom`. Measure, do not assume.
+- **`isolate: false`** (Vitest's own hint, 36s of worker time): breaks `providers.test.tsx` today and 15 unit files rely on module mocks/global stubs. A later task could try it on the `unit` (node) project alone once every mocking file is in `dom`. Measure, do not assume. (MB.238 tried it on the `db` project, routing the mocking files to an isolated `db-mocking`.)
 - **`pool: 'vmThreads'` for `dom`**: Vitest's hint for environment-dominated runs; `instanceof`/memory caveats and MSW under a VM context are untested here. Same later task.
 - **`fsModuleCache`**: transform is 2% in CI and the image is fresh every run.
 - **Coverage**: report under 1s, instrumentation a few percent. No `--coverage`-less fast path.
