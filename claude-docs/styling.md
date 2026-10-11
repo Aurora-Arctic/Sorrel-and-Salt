@@ -53,7 +53,7 @@ to.
   says so in a comment.
 - **A length with a role of its own is a token**, under "Motion and layout"
   in `_variables.scss`, so the components that share the role share the
-  number (MB.115): `$wide-column` (the admin area's column, 64rem),
+  number (MB.115): `$wide-column` (the admin area's column, 80rem),
   `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
   48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
   target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
@@ -501,7 +501,11 @@ open on one side so its turn reads, slowed rather than stopped where motion is
 reduced. It sits ahead of the label, which says what is happening ("Saving
 Category"). A `.btn[aria-busy='true']` brings its left padding in a step,
 since padding sized for a word reads as a gap before a small round mark.
-IngredientForm's two saves and its reference panel use the same one.
+Every spinner button is a `BusyButton`
+([`components/busy-button.md`](components/busy-button.md)), which draws the
+`aria-busy`, the spinner and the label swap from its `busy` and
+`busyLabel` props, so no form writes the markup by hand. The one exception
+is the pager's link while its page loads, an anchor rather than a button.
 
 **Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
@@ -536,9 +540,13 @@ Add Category beside its H1. The row is centred and the action brought down
 so a centred button reads high and one on the baseline low. The row wraps on
 a narrow screen rather than squeezing the heading. The header is a size
 container, so it measures its own width rather than the screen's: under
-28rem of it, the forms' column, the action goes beneath the heading at its
-natural width and loses the quarter-rem drop, which only lined it up beside
-the heading (MB.115).
+28rem of it, the forms' column, the action goes beneath the heading and loses
+the quarter-rem drop, which only lined it up beside the heading (MB.115). In
+the admin area it then spans the line, so on a phone every admin page's Add
+stretches across the column (the owner's call at MB.115's review, over the
+natural width recommended); elsewhere, as on the account page, it keeps its
+natural width. The markup is the `PageHeader` component's
+([`components/page-header.md`](components/page-header.md)).
 
 **The admin tables are banded at desktop width, and stack into cards on a
 phone.** Wide, every even body row sits on `$surface-card`, the surface a
@@ -577,8 +585,15 @@ The class layer every form is built from, in `_primitives.scss`:
   with the field whether open or not, and the tip opens while the field has
   focus, so a keyboard that skips the ⓘ still shows it. `.field__hint` remains for a line that
   must stay in view, such as why a field is disabled, since a shut field that
-  does not say why reads as broken. `IngredientForm` is the first form built
-  this way; an older form adopts it at its design review.
+  does not say why reads as broken. `IngredientForm` was the first form built
+  this way, and the Reason fields of the user list's confirmations and the
+  admin invite form took it at MB.115's review; any other form adopts it at
+  its own design review.
+- **A field is optional unless it carries the required mark**, so no label
+  says "(Optional)": the asterisk, `.field__required`, marks the fields a
+  save asks for, and every other field may be left empty (the owner's call at
+  MB.115's review). The label stays the field's name, "Reason", not
+  "Reason (Optional)".
 - **The error sits beneath its control**, nearest what was typed, and is
   drawn the same whichever side found it: the resolver before a request, or
   the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
@@ -620,16 +635,18 @@ The class layer every form is built from, in `_primitives.scss`:
 
 The pieces around a field and a form's buttons that more than one form
 shares (MB.115), each written once in `_primitives.scss` where every admin
-form had kept its own copy:
+form had kept its own copy. The `Field` component draws the first two around
+a control ([`components/field.md`](components/field.md)), and `FilterForm`
+draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 
-| Class               | What it is                                                                                                                                                                                                                                     |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.field__label-row` | A label and what stands beside it on its line, an `InfoTip`'s ⓘ or the required mark, a `space(1)` apart. It is the position a tip opens from, so the tip lines up with its field                                                              |
-| `.field__required`  | The asterisk hard against a label whose field a save asks for, in the error red. The markup hides it from a screen reader, which hears the control's `aria-required` instead of "star"                                                         |
-| `.form__confirm`    | A question standing where a form's buttons were, "Delete this?", with its own `.modal__actions` row; as far from the fields as the buttons it replaces, and stacked with them in a narrow form                                                 |
-| `.form__aside`      | The button set apart at the row's far end, an edit's Delete, so it is not pressed for Save. A `margin-inline-start: auto`, which the narrow form's stacking takes back                                                                         |
-| `.filter-row`       | A list's filter form: the query, its selects and checks and the Filter button, wrapping, level on the line's end. A size container: under 28rem of its own width the query, its first child, takes the whole line and the rest wrap beneath it |
-| `.list-frame`       | A list page's root: its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own                                                                                                        |
+| Class               | What it is                                                                                                                                                                                                                                                                                                                                                |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.field__label-row` | A label and what stands beside it on its line, an `InfoTip`'s ⓘ or the required mark, a `space(1)` apart. It is the position a tip opens from, so the tip lines up with its field                                                                                                                                                                         |
+| `.field__required`  | The asterisk hard against a label whose field a save asks for, in the error red. The markup hides it from a screen reader, which hears the control's `aria-required` instead of "star"                                                                                                                                                                    |
+| `.form__confirm`    | A question standing where a form's buttons were, "Delete this?", with its own `.modal__actions` row; as far from the fields as the buttons it replaces, and stacked with them in a narrow form                                                                                                                                                            |
+| `.form__aside`      | The button set apart at the row's far end, an edit's Delete, so it is not pressed for Save. A `margin-inline-start: auto`, which the narrow form's stacking takes back                                                                                                                                                                                    |
+| `.filter-row`       | A list's filter form: the query, its selects and checks and the Filter button, wrapping, level on the line's end. A size container: under 28rem of its own width, as on a phone, the query, its first child, takes the whole line and the rest wrap beneath it, the stacked filter the owner chose at MB.115's review over one folded behind a disclosure |
+| `.list-frame`       | A list page's root: its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own                                                                                                                                                                                                                   |
 
 ## The page frame
 
@@ -665,14 +682,20 @@ does not scroll by its own padding or the banner above it.
 
 `.admin-layout` is the frame every `/admin` page sits in (MB.115): the admin
 nav above, the page below, a `space(5)` apart. It is a column as wide as
-`$wide-column` (64rem), centred, with `space(6)` above and below and
+`$wide-column` (80rem), centred, with `space(6)` above and below and
 `space(4)` at the sides, `border-box`. It is wider than `.page-frame`
 because its pages hold tables, and it is neither full height nor centred
-down the window, since a list page runs as long as its rows. Its paragraphs
+down the window, since a list page runs as long as its rows. The width is
+the owner's call at MB.115's review: the user list's seven columns need
+about 77rem before they stop scrolling inside their frame, the privilege
+ledger has seven too, and at the old 64rem the user list's sticky Impersonate
+column sat over Signed Up on a 1280px window. Only `.admin-layout` reads the
+token, so nothing outside `/admin` widens with it. Its paragraphs
 still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive
-rather than AdminNav's own rule because the admin layout and three stories
-(AdminNav, AdminInvitations and UserList) use the class as their frame.
+rather than AdminNav's own rule because the admin layout and the admin
+components' stories use the class as their frame. Inside it a page header's
+action spans the line at phone width ("Buttons", above).
 
 ## Tables at phone width
 
@@ -796,6 +819,13 @@ What each section review (MB.115 to MB.124) designs to:
   the same name everywhere: a "sign-in method", never a "sign-in option", and
   an email "address". Every label, button and heading is title case
   (`.claude/rules/components.md`, "Copy").
+- **Use the shared pieces rather than their markup.** A field is `Field`'s
+  `TextField` or `SelectField`, or its `FieldShell` around a control of
+  the form's own; a button with a spinner is a `BusyButton`; a list's filter
+  is a `FilterForm`; a page's heading and its action are a `PageHeader`;
+  and a modal opened by its page's address is a `RouteModal`
+  ([`components/modal.md`](components/modal.md)). Each is in
+  `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,
   its filter form a `.filter-row`, and its table a `.data-table` in a
   `.data-table-frame` with the `--stack` modifier, its explicit roles and a

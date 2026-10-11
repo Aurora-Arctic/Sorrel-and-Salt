@@ -27,14 +27,20 @@ beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
 ## Styling
 
 None of its own: `.page-header` is the primitive ([`styling.md`](../styling.md),
-"Buttons"), the row centred, the action brought down to sit level with the
-heading's letters, and wrapping beneath the heading on a narrow screen.
+"Buttons"), the row centred and the action brought down to sit level with the
+heading's letters. Under 28rem of its own width the action goes beneath the
+heading, and in the admin area it spans the line there, so on a phone every
+admin page's Add stretches across the column (the owner's call at MB.115's
+review; [`styling.md`](../styling.md), "The admin layout"). The full width is
+scoped to `.admin-layout`: the account page's raw `.page-header` keeps its
+Sign Out at its natural width.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PageHeader/index.stories.tsx),
 `Layout / Page Header`: `WithAnAction`, `HeadingAlone`, and `PhoneDark` and
-`PhoneLight` with a longer heading at 375px.
+`PhoneLight` with a longer heading at 375px, the action full width beneath
+it. Each sits in `.admin-layout`, the frame that full width keys off.
 
 ## Testing
 

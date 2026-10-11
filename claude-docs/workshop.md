@@ -161,7 +161,9 @@ without a page routed to it.
   the filter row and the page header are each drawn twice: at the page's
   width, and inside a 375px box (`.fd-phone`), so their container queries,
   which measure the element's own frame rather than the window, show the
-  phone layout at any window size; the boxed table is the stacking one. It lives in
+  phone layout at any window size; the boxed table is the stacking one, and
+  the page header's box also carries `.admin-layout`, so its action spans the
+  line as on an admin page. It lives in
   `.ladle/` because the app never imports it; `foundations.scss` holds only
   reference-page chrome, nested under `.fd`.
 

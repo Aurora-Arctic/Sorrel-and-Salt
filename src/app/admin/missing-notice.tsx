@@ -10,6 +10,8 @@ import type { MissingNoticeProps } from './types';
 /** "No category has that address…", for the row the page lists, in the singular. */
 export default function MissingNotice({ noun }: MissingNoticeProps): ReactElement {
   return (
-    <Notice kind="error">No {noun} has that address — it may have been renamed or deleted.</Notice>
+    <Notice kind="error">
+      No {noun} has that address. It may have been renamed or deleted, so search for it in the list.
+    </Notice>
   );
 }

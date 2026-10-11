@@ -111,8 +111,10 @@ still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
 in CSS so no listener can leave the page locked, with `scrollbar-gutter:
 stable` so nothing shifts sideways as the scrollbar goes; the dialog's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
-out of reach. Nothing goes
-past the tokens before the admin area's design review (MB.115).
+out of reach.
+
+**On a phone it stays inset**, the same gap on every side, rather than
+becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
 
 `size="wide"` adds `.modal-dialog--wide`, a 48rem column (`$dialog-column-wide`), for a long form that the default column
 would crowd. M5.5's compendium form is its first owner, and M8.16's

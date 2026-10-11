@@ -321,9 +321,9 @@
   }
 
   // Under the forms' column, 28rem of its own width, the action goes
-  // beneath the heading at its natural width (MB.115), rather than squeezing
-  // a long heading onto three lines beside it. On a line of its own it needs
-  // no bringing down to the heading's letters.
+  // beneath the heading (MB.115), rather than squeezing a long heading onto
+  // three lines beside it. On a line of its own it needs no bringing down to
+  // the heading's letters.
   @container page-header (max-width: #{$narrow-column}) {
     .page-header > h1 {
       flex-basis: 100%;
@@ -331,6 +331,16 @@
 
     .page-header > :not(h1) {
       translate: none;
+    }
+
+    // In the admin area the action then spans the line (the owner's call at
+    // MB.115's review, against the natural width recommended), so it reads
+    // as the page's one primary action, as a narrow form's stacked buttons
+    // do. Scoped to `.admin-layout` because the call was the admin area's,
+    // and because the account page's header sits in the 28rem column at every
+    // window size, so an unscoped rule would stretch its Sign Out on desktop.
+    .admin-layout .page-header > :not(h1) {
+      flex-basis: 100%;
     }
   }
 
