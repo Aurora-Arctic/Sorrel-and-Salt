@@ -30,7 +30,7 @@ under it, and whether this admin is held by the pause
   `invitationsHref(filter, invite)` builds every address the tab links to.
   Filter opens the filtered list as a soft navigation, the row greyed and the
   list a skeleton until it arrives: the tab has no pager whose plain anchors
-  it must agree with. Clear Filters opens `/admin/invitations`, or empties
+  it must agree with. Clear opens `/admin/invitations`, or empties
   the fields in place when neither is applied. The list keys the filter by
   the one shown, so a page showing another starts it again from that one.
   There is no pager: the list is the handful still pending.
@@ -103,7 +103,7 @@ the user list's does (the owner's call during MB.59). Under
 `$table-stack-width` of its frame each invitation is a card, its cells
 wrapping, each led by its column's name, and Revoke across the card's foot
 with no label. The filter row is the `.filter-row` primitive, which stacks at phone
-width: the Email box across the line, the switch, Filter and Clear Filters
+width: the Email box across the line, the switch, Filter and Clear
 beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet holds the tab's column, the sent
 notice and the list's frame `space(5)` apart as the tab's content is, the
 muted "None given", the Reason field's wrapper (`.admin-invitations__note`,
@@ -125,7 +125,7 @@ alert (MB.116).
 `Admin / Admin Invitations`, inside the admin layout's frame and the People
 page with its Invitations tab open and Invite Admin beside the heading:
 `Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
-applied, Clear Filters offered, one invitation left), `NoMatch` (the
+applied, Clear offered, one invitation left), `NoMatch` (the
 empty state naming the filter), `Inviting` (the form open, its Reason's
 hint in a tip), `Paused` (both controls locked with the pause's reason),
 `PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the
@@ -143,7 +143,7 @@ asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
 Revoke after its confirmation; both controls locked with the pause's
 reason; and the filter: the address Filter opens, the email trimmed and the
-switch a bare flag, which values offer Clear Filters, the fields emptied in
+switch a bare flag, which values offer Clear, the fields emptied in
 place, and Invite Admin and the form's close keeping the filter. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address
