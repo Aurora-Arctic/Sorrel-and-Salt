@@ -1,4 +1,5 @@
 import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
+import type { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import type { spells } from '@/modules/grimoire/schema/spells';
@@ -59,6 +60,24 @@ export interface IngredientFixture extends Required<
   deities: string[];
   categories: string[];
 }
+
+/**
+ * One more form of an ingredient, as `insertVariant` writes it beside the
+ * fixture's own (MB.215): the form, whatever it adds, and the categories and
+ * typed substitutes it owns (MB.217).
+ */
+export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
+  Partial<
+    Pick<
+      typeof ingredientVariants.$inferInsert,
+      'formId' | 'description' | 'safetyNotes' | 'elements' | 'planets' | 'zodiacSigns' | 'colors'
+    >
+  > & {
+    /** Categories this form adds, named as `IngredientFixture.categories` are. */
+    categories?: string[];
+    /** Substitutes typed as names for this form; a test links one with `insertSubstituteLink`. */
+    substitutes?: string[];
+  };
 
 /**
  * One layer of the stack: it points at an ingredient *or* names one of its own

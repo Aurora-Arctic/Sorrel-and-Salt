@@ -175,6 +175,7 @@ type Ingredient {
   safetyNotes: String
   slug: String!
   substitutes: [Substitute!]!
+  variants: [IngredientVariant!]!
   zodiacSigns: [String!]
 }
 
@@ -281,6 +282,29 @@ input IngredientUpdateInput {
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
   zodiacSigns: [String!]!
+}
+
+"""
+One form an ingredient comes in, and what that form adds to the ingredient: its lists add to the ingredient's, and nothing overrides it.
+"""
+type IngredientVariant {
+  audit: AuditInfo!
+  categories: [Category!]!
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+  form: String!
+
+  """
+  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
+  """
+  formChoice: IngredientFormValue
+  id: ID!
+  planets: [String!]
+  references: [ReferenceLink!]!
+  safetyNotes: String
+  substitutes: [Substitute!]!
+  zodiacSigns: [String!]
 }
 
 """
@@ -629,7 +653,7 @@ type QueryCompendiumConnectionEdge {
   node: Ingredient!
 
   """
-  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
+  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name, folk names and forms. Null without a query.
   """
   score: Float
 }
@@ -908,6 +932,11 @@ type Substitute {
   The linked ingredient's label, its last once deleted; the typed name otherwise.
   """
   name: String!
+
+  """
+  The linked ingredient's form the link names: null when it names none, on a typed name, and once that ingredient or form is deleted.
+  """
+  variant: IngredientVariant
 }
 
 """

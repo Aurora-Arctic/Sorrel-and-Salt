@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNotNull, not, or, sql, type SQL } from 'drizzle-orm';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import {
   referenceLinks,
@@ -9,7 +10,7 @@ import { references } from '../../modules/ingredients/schema/references';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { findPageInTiers } from './finders';
-import { readableIngredientParent } from './ingredient-parent';
+import { readableIngredientParent, readableVariantParent } from './ingredient-parent';
 import { foldedWordMatch, inCompendium, notSoftDeleted, readableInTiers } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type {
@@ -32,7 +33,9 @@ import type {
  * exactly when it is, as `findManyOfIngredients` reads it — live, and in the
  * compendium or a coven one of `memberships` proves — and only where the
  * reference is one its readers may read: the compendium's, or its own
- * coven's. Every other sourced table is global reference data, so its links
+ * coven's. A variant's the same, through the variant to its ingredient
+ * (`readableVariantParent`, MB.218): a variant is a coven's where its
+ * ingredient is, though it carries no `workspace_id`. Every other sourced table is global reference data, so its links
  * read while the row is live, and only to a compendium reference, the one
  * tier every reader shares. A link to a soft-deleted reference reads as
  * nothing and is left in place, so a restore returns it (DESIGN.md §5,
@@ -48,14 +51,18 @@ export async function findReferencesOf(
   if (ids.length === 0) return [];
   const column = referenceLinks[key];
   const { table } = SOURCED[key];
+  // An ingredient's reference, or one form's, may be the compendium's or the
+  // ingredient's own coven's; `ingredients` is the parent the EXISTS reads.
+  const inParentsTier = or(
+    inCompendium(references),
+    eq(references.workspaceId, ingredients.workspaceId),
+  );
   const readable =
     table === ingredients
-      ? readableIngredientParent(
-          memberships,
-          column,
-          or(inCompendium(references), eq(references.workspaceId, ingredients.workspaceId)),
-        )
-      : and(existsIn(table, eq(table.id, column)), inCompendium(references));
+      ? readableIngredientParent(memberships, column, inParentsTier)
+      : table === ingredientVariants
+        ? readableVariantParent(memberships, column, inParentsTier)
+        : and(existsIn(table, eq(table.id, column)), inCompendium(references));
   const rows: JoinedRow<ReferenceLinkRow, ReferenceRow>[] = await selectFrom(
     referenceLinks,
     and(
@@ -128,22 +135,28 @@ export function findReferenceSuggestions(
 }
 
 /**
+ * A row of the sourced table `key` names that shows a reference: a live link
+ * to a live compendium reference. Correlated on the outer row of that table.
+ */
+export function cites(key: SourcedKey): SQL {
+  return existsIn(
+    referenceLinks,
+    and(
+      eq(referenceLinks[key], SOURCED[key].table.id),
+      existsIn(
+        references,
+        and(eq(references.id, referenceLinks.referenceId), inCompendium(references)),
+      ),
+    ),
+  );
+}
+
+/**
  * A row of the sourced table `key` names with no reference it shows: no
  * live link to a live compendium reference, the bibliography a compendium
  * entry reads as empty — the admin's to-do list (M5.5). Correlated on the
  * outer row of that table.
  */
 export function citesNothing(key: SourcedKey): SQL {
-  return not(
-    existsIn(
-      referenceLinks,
-      and(
-        eq(referenceLinks[key], SOURCED[key].table.id),
-        existsIn(
-          references,
-          and(eq(references.id, referenceLinks.referenceId), inCompendium(references)),
-        ),
-      ),
-    ),
-  );
+  return not(cites(key));
 }

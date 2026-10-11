@@ -27,8 +27,10 @@ holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 The second, decided by MB.138 and built by MB.140, is the ingredient a
 substitute links: `findSubstitutesIncludingSoftDeleted` reads it past its
 tombstone so that the substitute shows its last name, and nothing else past
-one (DESIGN.md §5, `ingredient_substitutes`). The substitute's own tombstone
-filters, the parent is live by `existsIn` and in a tier the proofs read, and
+one (DESIGN.md §5, `ingredient_substitutes`), for an ingredient's own rows or,
+with `of: 'variant'`, a variant's (MB.218). The substitute's own tombstone
+filters, the parent — the ingredient, or the variant and its ingredient — is
+live by `existsIn` and in a tier the proofs read, and
 the link must point at the compendium or the parent's own coven, so a row
 written past the service's tier rule reads as nothing.
 

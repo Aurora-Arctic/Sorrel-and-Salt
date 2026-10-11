@@ -1,7 +1,7 @@
 import { and, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
-import type { SoftDeletable, WordMatch, WorkspaceScoped } from './types';
+import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
 
 // The `where` predicates the finders and the writer share: a proof's workspace,
 // the compendium tier and the two read together, the soft-delete filter, and
@@ -68,6 +68,18 @@ export function readableInTiers<TTable extends PgTable & WorkspaceScoped>(
 export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined {
   const deletedAt = (table as Partial<SoftDeletable>).deletedAt;
   return deletedAt ? isNull(deletedAt) : undefined;
+}
+
+/**
+ * An ingredient's own rows, `variant_id IS NULL`, on a table where one form
+ * of it can own rows too, or `undefined` for a table with no variant column
+ * (MB.218). The union rule as a predicate (DESIGN.md §5): an ingredient's
+ * lists are its own rows and a form's are its additions, and nothing reads
+ * the two as one. Decided by the table's shape, as `notSoftDeleted` is.
+ */
+export function ownedByIngredient<TTable extends PgTable>(table: TTable): SQL | undefined {
+  const variantId = (table as Partial<VariantScoped>).variantId;
+  return variantId ? isNull(variantId) : undefined;
 }
 
 /**

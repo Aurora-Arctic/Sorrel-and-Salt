@@ -60,6 +60,14 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
+// And for the rows one form of an ingredient owns beside it (MB.217):
+// `ingredient_categories` and `ingredient_substitutes` carry a `variant_id`
+// too, null on the ingredient's own rows. `findManyOfVariants` reads a form's
+// under its ingredient's tier, reached through the variant, and
+// `findManyOfIngredients` reads the ingredient's own, `variant_id IS NULL`
+// (the union rule, MB.215).
+export type VariantScoped = { variantId: AnyPgColumn };
+
 // And for a table written only through its own named calls: the schema file
 // marks it `namedWrites` (MB.198), and every generic method below, unscoped,
 // workspace-scoped and compendium-tier, takes `Generic` and so refuses it.
