@@ -4,6 +4,8 @@ import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
+import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
+import type { ValidationIssue } from '../../lib/types';
 import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
@@ -37,11 +39,62 @@ export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
  */
 export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
 
+/** One `ingredient_variants` row as the table holds it. */
+export type VariantRecord = typeof ingredientVariants.$inferSelect;
+
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
   LocalIngredientInput,
-  'folkNames' | 'substitutes' | 'deities' | 'references'
+  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
 >;
+
+/** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
+export type IssuePath = ValidationIssue['path'];
+
+/** One form of the ingredient as the schema parses it (MB.215). */
+export type VariantEntry = NonNullable<LocalIngredientInput['variants']>[number];
+
+/**
+ * One form as a save writes it, once `resolvePicks` has checked its pick and
+ * its categories: every `""` and `[]` the input sent as none, as the row
+ * holds it, and `at`, where the input sent it, `['variants', i]`, which every
+ * issue about it is pathed beneath. The one form the top-level `form` stands
+ * for when no list is sent is at `[]`, so its issues land on `form` and
+ * `formId` as they did before variants (until MB.222).
+ */
+export interface PickedVariant {
+  id: string | null;
+  form: string;
+  formId: string | null;
+  description: string | null;
+  safetyNotes: string | null;
+  elements: VariantRecord['elements'];
+  planets: string[] | null;
+  zodiacSigns: string[] | null;
+  colors: string[] | null;
+  categoryIds: string[];
+  substitutes: SubstituteEntry[];
+  references: ReferenceLinkEntry[];
+  at: IssuePath;
+}
+
+/**
+ * Whose child rows a write brings to a list (MB.219): the ingredient's own,
+ * with no variant, or one of its forms', each still carrying the ingredient,
+ * as the composite keys hold them (MB.217). `at` is where the input sent the
+ * owner, which an issue about one of its rows is pathed beneath.
+ */
+export interface ChildOwner {
+  ingredientId: string;
+  variantId: string | null;
+  at: IssuePath;
+}
+
+/** The lists `resolvePicks` checks against the database before they are written. */
+export interface PickedLists {
+  deities: readonly DeityEntry[];
+  variants: readonly VariantEntry[] | null | undefined;
+}
 
 /** The tier a write is in, which decides what a pick must be (MB.167). */
 export type Tier = 'compendium' | 'coven';
@@ -71,6 +124,8 @@ export interface IngredientChildren extends Pick<
 > {
   deities: readonly PickedDeity[];
   heldDeities?: readonly DeityRecord[];
+  /** Its forms, each with its own children (MB.219); none on a write that names none. */
+  variants?: readonly PickedVariant[];
 }
 
 /**

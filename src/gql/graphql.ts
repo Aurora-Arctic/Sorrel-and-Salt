@@ -35,6 +35,8 @@ export type CompendiumIngredientInput = {
   references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
+  /** Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form. */
+  variants?: Array<IngredientVariantInput> | null | undefined;
   zodiacSigns?: Array<string> | null | undefined;
 };
 
@@ -57,6 +59,8 @@ export type CompendiumIngredientUpdateInput = {
   references: Array<ReferenceLinkInput>;
   safetyNotes: string;
   substitutes: Array<SubstituteInput>;
+  /** Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form. */
+  variants?: Array<IngredientVariantInput> | null | undefined;
   zodiacSigns: Array<string>;
 };
 
@@ -114,7 +118,28 @@ export type IngredientInput = {
   references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
+  /** Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form. */
+  variants?: Array<IngredientVariantInput> | null | undefined;
   zodiacSigns?: Array<string> | null | undefined;
+};
+
+/** One form of the ingredient, replacing the form it names. Every field but id is sent, and "" or [] clears one. */
+export type IngredientVariantInput = {
+  /** The categories this form is filed under. */
+  categoryIds: Array<string | number>;
+  colors: Array<string>;
+  description: string;
+  elements: Array<IngredientElement>;
+  form: string;
+  /** The curated form picked for `form`; "" when it was typed. */
+  formId: string | number;
+  /** The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added. */
+  id?: string | number | null | undefined;
+  planets: Array<string>;
+  references: Array<ReferenceLinkInput>;
+  safetyNotes: string;
+  substitutes: Array<SubstituteInput>;
+  zodiacSigns: Array<string>;
 };
 
 export type Nomenclature =
@@ -169,6 +194,8 @@ export type ReferenceLinkInput = {
 export type SubstituteInput = {
   ingredientId?: string | number | null | undefined;
   name?: string | null | undefined;
+  /** One of the linked ingredient's forms, when the substitute is that form alone. */
+  substituteVariantId?: string | number | null | undefined;
 };
 
 export type UserRole =

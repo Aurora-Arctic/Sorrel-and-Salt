@@ -225,9 +225,32 @@ describe('the ingredient fields, on the local variant', () => {
       });
 
       expect(parsed.substitutes).toEqual([
-        { ingredientId: LINKED, name: null },
-        { ingredientId: null, name: 'Mock Root' },
+        { ingredientId: LINKED, substituteVariantId: null, name: null },
+        { ingredientId: null, substituteVariantId: null, name: 'Mock Root' },
       ]);
+    });
+
+    // MB.215: a link may name one form of the ingredient it links. Whether
+    // the form is that ingredient's reads the database, so it is the service's.
+    it('takes a link naming one of its forms, and refuses a form that is not an id or has no link, beside it', () => {
+      const parsed = Schema.parse({
+        ...base,
+        substitutes: [{ ingredientId: LINKED, substituteVariantId: OTHER }],
+      });
+      expect(parsed.substitutes).toEqual([
+        { ingredientId: LINKED, substituteVariantId: OTHER, name: null },
+      ]);
+
+      for (const entry of [
+        { ingredientId: LINKED, substituteVariantId: 'oil' },
+        { name: 'Mock Root', substituteVariantId: OTHER },
+      ]) {
+        const result = Schema.safeParse({ ...base, substitutes: [entry] });
+
+        expect(failedPaths(result), JSON.stringify(entry)).toEqual([
+          ['substitutes', 0, 'substituteVariantId'],
+        ]);
+      }
     });
 
     it('refuses an entry that links and names, does neither, names a blank or links a non-id, at the entry', () => {
@@ -600,6 +623,138 @@ describe('the ingredient fields, on the local variant', () => {
     it('takes no deities, absent or empty, as none', () => {
       expect(Schema.parse(base).deities ?? []).toEqual([]);
       expect(Schema.parse({ ...base, deities: [] }).deities ?? []).toEqual([]);
+    });
+  });
+
+  // MB.215: the forms an ingredient comes in, each a list entry carrying its
+  // own fields and its own substitutes, references and categories. A rule a
+  // variant shares with the ingredient runs on one row here, pathed beneath
+  // the variant; whether a form's pick, link or category names a live row is
+  // the service's.
+  describe('variants', () => {
+    const base = { name: 'Testwort', nomenclature: 'none' };
+    const KEPT = '00000000-0000-4000-8000-0000000000b1';
+    const LINKED = '00000000-0000-4000-8000-0000000000b2';
+    /** One whole form, as the input type requires every field but its id. */
+    const formOf = (form: string, fields: Record<string, unknown> = {}) => ({
+      form,
+      formId: '',
+      description: '',
+      safetyNotes: '',
+      elements: [],
+      planets: [],
+      zodiacSigns: [],
+      colors: [],
+      categoryIds: [],
+      substitutes: [],
+      references: [],
+      ...fields,
+    });
+
+    it('takes each form with its fields and lists, dropping blank list entries', () => {
+      const parsed = Schema.parse({
+        ...base,
+        variants: [
+          formOf(' Dried leaf ', { id: KEPT, description: ' Pressed. ', planets: ['Venus', ' '] }),
+          formOf('Testoil', {
+            elements: ['fire'],
+            categoryIds: [LINKED],
+            substitutes: [{ ingredientId: LINKED, substituteVariantId: KEPT }],
+            references: [{ referenceId: LINKED, locator: ' p. 3 ' }],
+          }),
+        ],
+      });
+
+      expect(parsed.variants).toMatchObject([
+        { id: KEPT, form: 'Dried leaf', description: 'Pressed.', planets: ['Venus'] },
+        {
+          form: 'Testoil',
+          elements: ['fire'],
+          categoryIds: [LINKED],
+          substitutes: [{ ingredientId: LINKED, substituteVariantId: KEPT, name: null }],
+          references: [{ referenceId: LINKED, locator: 'p. 3' }],
+        },
+      ]);
+    });
+
+    it('requires a form, beside it', () => {
+      expect(
+        failedPaths(Schema.safeParse({ ...base, variants: [formOf('Herb'), formOf(' ')] })),
+      ).toEqual([['variants', 1, 'form']]);
+    });
+
+    // Each entry replaces the row it names, so a field left out would clear it (MB.159).
+    it('refuses a form leaving a field out, beside the field', () => {
+      const { description: _left, ...short } = formOf('Herb');
+
+      expect(failedPaths(Schema.safeParse({ ...base, variants: [short] }))).toEqual([
+        ['variants', 0, 'description'],
+      ]);
+    });
+
+    // `ingredient_variants_form_unique` would refuse the second; saying so
+    // here keeps its 23505 from being what a user sees.
+    it('refuses two forms folding alike, at the repeat', () => {
+      const result = Schema.safeParse({
+        ...base,
+        variants: [formOf('Herb'), formOf('Oil'), formOf(' herb ')],
+      });
+
+      expect(failedPaths(result)).toEqual([['variants', 2, 'form']]);
+    });
+
+    it('refuses an id that is not one, or one sent twice, beside it', () => {
+      expect(
+        failedPaths(Schema.safeParse({ ...base, variants: [formOf('Herb', { id: 'herb' })] })),
+      ).toEqual([['variants', 0, 'id']]);
+      expect(
+        failedPaths(
+          Schema.safeParse({
+            ...base,
+            variants: [formOf('Herb', { id: KEPT }), formOf('Oil', { id: KEPT })],
+          }),
+        ),
+      ).toEqual([['variants', 1, 'id']]);
+    });
+
+    it('refuses a pick that is not an id, beside it', () => {
+      expect(
+        failedPaths(Schema.safeParse({ ...base, variants: [formOf('Herb', { formId: 'herb' })] })),
+      ).toEqual([['variants', 0, 'formId']]);
+    });
+
+    // One row each for the ingredient's own rules, run on the variant's lists.
+    it.each([
+      ['a repeated planet', { planets: ['Venus', 'venus'] }, ['planets', 1]],
+      ['a repeated element', { elements: ['fire', 'fire'] }, ['elements', 1]],
+      ['a substitute neither linked nor named', { substitutes: [{}] }, ['substitutes', 0]],
+      [
+        'a substitute form with no link',
+        { substitutes: [{ name: 'Mock Root', substituteVariantId: KEPT }] },
+        ['substitutes', 0, 'substituteVariantId'],
+      ],
+      [
+        'a reference cited twice',
+        { references: [{ referenceId: LINKED }, { referenceId: LINKED }] },
+        ['references', 1],
+      ],
+      ['a category that is not an id', { categoryIds: ['herb'] }, ['categoryIds', 0]],
+    ])('refuses %s, pathed beneath the variant', (_case, fields, path) => {
+      const result = Schema.safeParse({
+        ...base,
+        variants: [formOf('Herb'), formOf('Oil', fields)],
+      });
+
+      expect(failedPaths(result)).toEqual([['variants', 1, ...path]]);
+    });
+
+    // The transition shim (MB.219 to MB.222): with no list sent, the
+    // top-level `form` is the one form, which the service reads.
+    it('leaves the list absent when none is sent, keeping the top-level form', () => {
+      const parsed = Schema.parse({ ...base, form: 'Herb' });
+
+      expect(parsed.variants ?? null).toBeNull();
+      expect(parsed.form).toBe('Herb');
     });
   });
 });

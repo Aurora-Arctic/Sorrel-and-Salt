@@ -39,6 +39,7 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
+import { liveFormsOf, variantChildrenOf, variantRowsOf } from '../../../support/db/read-variants';
 import {
   type IngredientFixture,
   type Overrides,
@@ -1193,4 +1194,125 @@ describe('the curated vocabularies a compendium entry is held to', () => {
       planets: ['venus'],
     });
   });
+});
+
+// MB.219: a compendium entry's forms are written inside its own save, each a
+// curated pick with its own curated planets and signs (DESIGN.md §5, "The
+// compendium is held to the vocabularies"). The write's mechanics — matching,
+// unchanged rows, the shim — are the coven's file's, on the one shared path.
+describe('its forms', () => {
+  let herb: string;
+  let oil: string;
+  let leaf: string;
+  let protection: string;
+  beforeEach(async () => {
+    [herb, oil, leaf] = await Promise.all(
+      ['Herb', 'Oil', 'Leaf'].map((f) => curatedFormId(sql, f)),
+    );
+    const [row] =
+      await sql`select id from categories where name = 'Protection' and deleted_at is null`;
+    protection = row.id as string;
+  });
+
+  /** One whole form as the admin's input sends it: every field, `overrides` over blanks. */
+  const formOf = (overrides: Record<string, unknown>) => ({
+    form: 'Herb',
+    formId: herb,
+    description: '',
+    safetyNotes: '',
+    elements: [],
+    planets: [],
+    zodiacSigns: [],
+    colors: [],
+    categoryIds: [],
+    substitutes: [],
+    references: [],
+    ...overrides,
+  });
+
+  const withForms = (...variants: Record<string, unknown>[]) => ({
+    ...entry({ form: null, formId: null }),
+    variants: variants.map(formOf),
+  });
+
+  it('creates two picked forms with the entry, each with its own categories, substitutes and references', async () => {
+    const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });
+    const [rootHerb] = await variantRowsOf(sql, testroot);
+    const source = await insertReference(sql, {}, A.id);
+
+    const created = await createCompendiumEntry(
+      admin,
+      withForms(
+        { form: 'herb', categoryIds: [protection], planets: ['venus'] },
+        {
+          form: 'Oil',
+          formId: oil,
+          safetyNotes: 'Dilute.',
+          substitutes: [{ ingredientId: testroot, substituteVariantId: rootHerb.id }],
+          references: [{ referenceId: source }],
+        },
+      ),
+    );
+
+    const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
+    // Each in its curated row's spelling, the planet's too.
+    expect([herbRow, oilRow]).toMatchObject([
+      { form: 'Herb', form_id: herb, planets: ['Venus'] },
+      { form: 'Oil', form_id: oil, safety_notes: 'Dilute.' },
+    ]);
+    expect(await rowOf(created.id)).toMatchObject({ form: 'Herb', form_id: herb });
+    expect((await variantChildrenOf(sql, herbRow.id)).categories).toMatchObject([
+      { category_id: protection },
+    ]);
+    expect(await variantChildrenOf(sql, oilRow.id)).toMatchObject({
+      substitutes: [{ substitute_id: testroot, substitute_variant_id: rootHerb.id }],
+      references: [{ reference_id: source, ingredient_id: null }],
+    });
+  });
+
+  it('keeps a form by its id across a repick, drops the one left out and adds the new', async () => {
+    const created = await createCompendiumEntry(
+      admin,
+      withForms({ form: 'Herb' }, { form: 'Oil', formId: oil }),
+    );
+    const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
+
+    await updateCompendiumEntry(
+      admin,
+      created.id,
+      withForms(
+        { id: herbRow.id, form: 'Leaf', formId: leaf },
+        { form: 'Root', formId: await curatedFormId(sql, 'Root') },
+      ),
+    );
+
+    const after = await variantRowsOf(sql, created.id);
+    expect(after.find((row) => row.id === herbRow.id)).toMatchObject({
+      form: 'Leaf',
+      form_id: leaf,
+      deleted_at: null,
+    });
+    expect(after.find((row) => row.id === oilRow.id)).toMatchObject({ deleted_by: E.id });
+    expect(await liveFormsOf(sql, created.id)).toEqual(['Leaf', 'Root']);
+  });
+
+  it.each([
+    ['a typed form, curated or not', { form: 'Testform', formId: '' }, ['form']],
+    ['an uncurated planet', { planets: ['Venus', 'Testplanet'] }, ['planets', 1]],
+  ])('refuses %s on a form, beside it, that a coven saves', async (_case, fields, path) => {
+    const input = withForms({ form: 'Herb' }, { form: 'Oil', formId: oil, ...fields });
+    await savesInACoven(input);
+
+    const attempt = createCompendiumEntry(admin, input);
+
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({ issues: [{ path: ['variants', 1, ...path] }] });
+    expect(await countIngredients()).toBe(1);
+  });
+
+  /** Saves `input` on a coven's ingredient: the precondition that only the tier refuses it. */
+  async function savesInACoven(input: Parameters<typeof createWorkspaceIngredient>[2]) {
+    const saved = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input);
+    expect(saved.workspaceId).toBe(WORKSPACE_W_ID);
+  }
 });

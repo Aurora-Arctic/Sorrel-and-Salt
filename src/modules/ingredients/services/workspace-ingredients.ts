@@ -25,7 +25,7 @@ import type { IngredientFields, IngredientRow, IngredientValues } from '../types
 
 /**
  * Creates an ingredient in this coven, with its folk names, substitutes,
- * deities, references and categories, in one transaction. The slug is set here from the
+ * deities, references, categories and forms, in one transaction. The slug is set here from the
  * label, the form and the formal name.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
@@ -40,8 +40,8 @@ export async function createWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
-  const { fields: parsed, lists, deities } = splitChildren(parseInput(LocalIngredientInput, input));
-  const picks = await resolvePicks('coven', parsed, deities, []);
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
+  const picks = await resolvePicks('coven', parsed, picked, []);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
@@ -49,13 +49,7 @@ export async function createWorkspaceIngredient(
 
   return withAudit(session, async (write) => {
     const [row] = await write.insertInWorkspace(membership, ingredients, columns);
-    await writeChildren(
-      write,
-      [membership],
-      row.id,
-      { ...lists, categoryIds: fields.categoryIds, deities: picks.deities },
-      'add',
-    );
+    await writeChildren(write, [membership], row.id, { ...lists, ...picks.children }, 'add');
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, columns.slug));
 }
@@ -63,10 +57,11 @@ export async function createWorkspaceIngredient(
 /**
  * Replaces an ingredient of this coven with `input` — the whole ingredient as
  * the form submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities, references and categories with the input's, in one
- * transaction. A folk name, substitute, deity, reference or category still
- * listed keeps its row; one dropped is soft-deleted, and a category's
- * hard-deleted (MB.34). The slug follows the label, the form and the formal
+ * substitutes, deities, references, categories and forms with the input's, in
+ * one transaction. A folk name, substitute, deity, reference, category or
+ * form still listed keeps its row; one dropped is soft-deleted, and a
+ * category's hard-deleted (MB.34). A form is matched by its id, else by its
+ * text folded, and keeps its own children when dropped (MB.219). The slug follows the label, the form and the formal
  * name, and nothing redirects from the old one: no route reads a coven
  * ingredient's slug.
  *
@@ -85,11 +80,11 @@ export async function updateWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
-  const { fields: parsed, lists, deities } = splitChildren(parseInput(LocalIngredientInput, input));
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const held = await heldDeities([membership], id);
-  const picks = await resolvePicks('coven', parsed, deities, held);
+  const picks = await resolvePicks('coven', parsed, picked, held);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
@@ -102,7 +97,7 @@ export async function updateWorkspaceIngredient(
       write,
       [membership],
       id,
-      { ...lists, categoryIds: fields.categoryIds, deities: picks.deities, heldDeities: held },
+      { ...lists, ...picks.children, heldDeities: held },
       'replace',
     );
     return row;
