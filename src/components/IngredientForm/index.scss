@@ -34,16 +34,19 @@
 // are to each other, and a step further from the section before than any two
 // fields are, so the sections read as groups. The Variants section's heading
 // is its fieldset's legend, drawn the same.
-.ingredient-form__section {
+// Nested, to outweigh layout-base's bare `body section`, whose gap and
+// margins would otherwise set the spacing in the app.
+.ingredient-form .ingredient-form__section {
   display: flex;
   flex-direction: column;
   gap: space(5);
   min-width: 0;
+  margin: 0;
 
-  // A step on top of the form's gap between sections.
-  & + &,
+  // Two steps on top of the form's gap between sections.
+  & + .ingredient-form__section,
   & + .ingredient-form__variants {
-    margin-top: space(4);
+    margin-top: space(6);
   }
 
   // The one field's label repeats the heading, so it is the heading the eye
