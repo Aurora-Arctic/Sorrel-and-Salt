@@ -11,14 +11,15 @@ compendium page wrap it rather than containing their own form.
 
 | File                   | What it holds                                                                                                                                                                              |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.tsx`            | The form: the mutations, the fields in order, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                                   |
+| `index.tsx`            | The form: the mutations, the fields in order in their titled sections, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question          |
 | `fields.tsx`           | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`          |
 | `suggestions.tsx`      | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                               |
 | `duplicates.tsx`       | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                               |
-| `references.tsx`       | The References field (MB.154): its search's query, and `ReferencesField`, the box, New Reference, the rows beneath and their locators                                                      |
+| `references.tsx`       | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators           |
 | `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                    |
 | `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                   |
-| `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, and each variant's fieldset of the fields that form adds                                                |
+| `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                         |
+| `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                   |
 | `substitute-forms.tsx` | `SubstituteForms`, a substitute list's second pickers: which form of each linked ingredient a substitute names                                                                             |
 | `values.ts`            | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
 | `options.ts`           | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                           |
@@ -49,6 +50,20 @@ description, safety notes, elements, planets, zodiac signs, colours,
 categories, substitutes and references — every field `IngredientInput`
 takes (["The variants"](#the-variants)). The ingredient has no form of its
 own: its forms are its variants (MB.222).
+
+**The fields run in seven titled sections** (MB.115, the owner's call, once
+the form read as one long column): Identity (name, classification, formal
+name, folk names), Description, Correspondences (element, planets, zodiac
+signs, colours, deities), Relations (substitute ingredients, categories),
+Safety (safety notes), Sources (references) and Variants. No field moved:
+the sections cut the order the fields already ran in, so Relations keeps
+substitutes ahead of categories. Each is a `<section>` under a small `h3`,
+the dialog's title being the `h2`; it has no accessible name, so it is no
+landmark, and a screen reader moves by the headings. The Variants section's
+heading is its fieldset's legend, an `h3` inside the `<legend>`, so the
+group keeps its name. The Description section's one field would repeat its
+heading as its label, so the label is hidden from the eye alone and stays
+the textarea's name. Inside a variant the fields are not sectioned.
 
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
@@ -336,7 +351,7 @@ already recorded or written new in the panel beneath. `ReferencesField` in
 `references.tsx` is a fieldset named "References", with its info tip in the
 legend as a list's is.
 
-- **The box searches, and never adds what was typed.** It is the
+- **One box searches, and never adds what was typed.** It is the
   [`Combobox`](combobox.md), labelled "Reference", over
   `referenceSuggestions` through `useLookup`, debounced and asking nothing
   until the box is focused, as every lookup. A row is the source's plain
@@ -344,26 +359,39 @@ legend as a list's is.
   note, in the search's ranked order, so the tier is a note rather than a
   heading. A source already listed is not offered again. Typed text is a
   search and never a source, so the list has no "Use what you typed" row:
-  its first row is "Add a reference", the combobox's create row
+  its last row is "New Reference…", the combobox's create row
   ([`combobox.md`](combobox.md), "The create row"), which opens the panel.
-  Enter with nothing highlighted does nothing but close the list, and never
-  reaches the form.
-- **New Reference stands where a list has Add**, opening the panel as the
-  create row does, `aria-expanded` while it is open. Add has nothing to add
-  here.
-- **Each source picked is a row beneath the box, not a chip inside it**, the
-  owner's call: a citation is long, and a row reads it whole, as a
-  bibliography does. A row is the citation, wrapping and broken anywhere
-  so an address never runs the page sideways at 320px; its tier beneath; a
-  "Locator" box, "p. 112", described by the citation so a column of them is
-  told apart, with an info tip beside its label saying what a locator is and
+  It replaced MB.154's first row, "Add a reference", and the New Reference
+  button that stood beside the box where a list has Add (MB.115, the owner's
+  call, the field having read as busy): one control both finds a source and
+  makes one, the sources found first, since a source is far more often
+  picked than written. Enter with nothing highlighted does nothing but close
+  the list, and never reaches the form.
+- **Each source picked is a one-line row beneath the box, not a chip inside
+  it**: the citation, cut where the line ends with an ellipsis, then its
+  locator in the muted ink if it has one, "p. 112", then two icon buttons,
+  an edit (a pencil) named "Edit" and the citation, and a remove (×) named
+  "Remove" and the citation (MB.115, the owner's call). The cut is the
+  stylesheet's: the citation's whole text is still the element's, so a
+  screen reader reads it whole, and the pointer's tooltip (`title`) shows it.
+  Chicago's short form, author and short title, would need the source's
+  fields rather than its rendered citation, which the field does not hold;
+  the citation's start, author and title, is what the line shows.
+- **The edit opens the row**, `aria-expanded` and controlling what it opens:
+  the citation whole, wrapping and broken anywhere so an address never runs
+  the page sideways at 320px; its tier beneath; and a "Locator" box, focused
+  as the row opens, described by the citation so a column of them is told
+  apart, with an info tip beside its label saying what a locator is and
   that every place the source is cited at goes in the one box, "pp. 12–19,
   40; chap. 3" — a source is listed once, the owner's call — and tidied as
-  it is left, `formatLocator`, its ranges dashed; and an × named "Remove"
-  and the citation, after which the box keeps the focus. Backspace in the empty box takes the last row, as in every
-  list, and each add and removal is announced in a "References changes"
-  region. The rows keep the order picked: the service reads them back
-  alphabetical by citation (MB.153), so nothing here moves them.
+  it is left, `formatLocator`, its ranges dashed. One row is open at a time,
+  and the edit pressed again closes it. A row whose locator is in error
+  stays open whatever was pressed, so the focus after a save can reach the
+  box. The × removes the row, after which the box keeps the focus.
+  Backspace in the empty box takes the last row, as in every list, and each
+  add and removal is announced in a "References changes" region. The rows
+  keep the order picked: the service reads them back alphabetical by
+  citation (MB.153), so nothing here moves them.
 - **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
   the citation, which is shown and never sent, `link` the source's id and
   tier, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
@@ -427,8 +455,8 @@ provides them, and its errors render through `FieldError`.
   Enter in a form of its own would. Cancel closes it, the box taking the
   focus. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
-- **Asked for again while open, it takes you back**, the owner's call: New
-  Reference or "Add a reference" scrolls the panel's top into view, its
+- **Asked for again while open, it takes you back**, the owner's call:
+  "New Reference…" scrolls the panel's top into view, its
   legend clear of the edge, and focuses Kind again, keeping everything
   typed. The field counts each request and the panel focuses on each new
   count, as it does when it opens.
@@ -447,15 +475,45 @@ sits beside the herb's description, not in place of it (MB.215,
 The form holds them in a Variants section after the ingredient's own fields,
 as the ingredient's page shows its forms after it (MB.221).
 
-- **Each variant is a fieldset named by its form**, its legend the form as
-  typed ("Unnamed Form" while its Form box is empty), with a Remove named for
-  it, "Remove Oil". It holds the variant's Form, Description, Safety Notes,
+- **Each variant is one summary line until it is opened** (MB.115, the
+  owner's call, once every variant's ten fields made the section busy). The
+  line is a card: the form as typed ("Unnamed Form" while its Form box is
+  empty) with its curated group after it in the muted ink, "Dried leaf
+  (Plant part)", as the Form box reads; beneath, what it carries,
+  `variantSummary`, in its fields' order — "Safety note · 1 planet · 2
+  categories · 1 reference" — or "No details yet"; and at the end an Edit
+  and a Remove, named for the form, "Edit Oil" and "Remove Oil". The card is
+  a fieldset named by the form alone, through `aria-labelledby`.
+- **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
+  and `aria-controls`, naming the region of the variant's fields, and is
+  described by the summary while closed. Opening one closes any other; the
+  focus moves to the opened variant's first field, its Form box. A Done at
+  the foot of the fields, "Done with Oil", folds it back to its line and
+  returns the focus to its Edit; Edit pressed while open folds it too. A
+  variant added from the New Form box opens, closing the one open, while
+  the New Form box keeps the focus for the next, as before. An edit opens
+  with every variant closed.
+- **A closed variant's fields stay in the page, hidden**, rather than
+  unmounted, so nothing in them is lost by closing it: a box's text, a
+  sortable list's place, or an open new reference panel and what was typed
+  in it. Its values are the form's either way.
+- **An error in a closed variant opens it.** A save, the resolver's or the
+  server's, that finds an error under a variant opens the first such
+  variant, unless the one open has an error too, so the form's focus on the
+  first field marked invalid reaches its field. The variant opens while the
+  section renders the save's result, in the same commit that draws the
+  error, since the focus runs as that commit lands. Any other variant with
+  an error stays closed, its card edged in the error red and its line saying
+  it has an error to fix, read with its Edit.
+- **Its fields** are the variant's Form, Description, Safety Notes,
   Element, Planets, Zodiac Signs, Colours, Categories, Substitute Ingredients
   and References, the ingredient's own field components at the variant's
   place in the values, `variants.1.planets`, so each validates, errs, focuses
   and is held by text left in its box as the ingredient's is. Deities and
   folk names are the plant's, and stay on the ingredient alone.
-- **The New Form box adds one**, a list's box for whole variants: a pick from
+- **The New Form box adds one**, a list's box for whole variants, beneath
+  the cards, its label hidden as a list box's is and its placeholder "Add a
+  form" saying what it is for: a pick from
   the form vocabulary adds a variant carrying the pick, and on a coven Add or
   Enter adds the text typed. A form the ingredient already comes in, folded
   as `ingredient_variants_form_unique` folds it (trimmed, case aside), is
@@ -883,10 +941,24 @@ legend and its box a step further apart than a single field's label and
 control. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap
 back, with a step more padding beneath Create Anyway than the notice's own.
-The references are rows with a 2px muted bar, the locator a 10rem box beside
-its label; the new reference panel and each variant are groups set off by a
-1px muted edge. Lengths come from `space()` and `radius()`, and the three
-left raw, the bar, the locator's width and the edges, say why in a comment.
+The sections are columns at the form's own gap, a `space(4)` step further
+apart than any two fields, under an `h3` in the display face at 1.25rem, a
+step under `h4`, set `space(3)` above its first field (MB.115). The
+references are one-line rows on the card surface with a 2px muted bar, the
+citation cut with an ellipsis and its locator in the muted caption, then two
+24px icon buttons in the muted ink, the remove answering in the wax as a
+chip's × does; an open row wraps the citation and shows its tier and the
+locator, a 10rem box beside its label. Each variant is a card on the card
+surface with a 1px muted edge, the error red's when it holds an error, its
+line the form in weight 500, the group and the summary muted, and its Edit
+and Remove `.btn--small`, the Remove quiet, which wrap beneath the line on a
+phone; open, its fields follow at the form's gap, Done at their foot. The
+new reference panel is a group set off by the same 1px muted edge. The
+hidden variant fields and a row's closed detail are hidden by the `hidden`
+attribute, which each restates as `display: none` because its own display
+rule would otherwise undo it. Lengths come from `space()` and `radius()`,
+and those left raw, the bar, the locator's width, the edges and the
+section heading's size, say why in a comment.
 The box, its entries and its list are the
 [`Combobox`](combobox.md)'s: an entry is a filled, square-cornered chip in
 the muted ink's wash, neutral since a free-text entry has no category group
@@ -953,7 +1025,11 @@ compendium's substitute search and its three writes: a name holding
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
-`PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
+`CompendiumEntry` holds two sources, one with a locator, and two forms,
+Dried leaf carrying a safety note, a planet, two categories and a source of
+its own and Whole root carrying nothing, so both summary lines show;
+`CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
+Edit (MB.115). `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design
 review. Its shape is `Modal`'s, the wide dialog less the modal gap
@@ -983,7 +1059,12 @@ The panel's `CreateReference` is answered there too, by `acceptReference`.
 Role and label queries only, in the `dom` project.
 
 `tests/components/IngredientForm/variants.test.tsx` mounts the whole form for
-the Variants section (MB.221): a variant added from the New Form box listed as
+the Variants section (MB.221): an edit's variants all closed, a field out of
+reach until Edit opens it (`aria-expanded`, its region shown, the focus on
+its Form box); Done folding it back with the focus on Edit and what was
+typed kept; one open at a time; a variant added opened, the other closed;
+a save finding an error in a closed variant opening it, its field focused
+(MB.115); a variant added from the New Form box listed as
 its own fieldset and sent in `variants`, with no top-level `form`; a
 compendium pick carried into the variant's Form box; a typed compendium form
 refused beside its box, focused, with nothing sent; a variant removed by its
@@ -1152,14 +1233,16 @@ fake timers would couple to the dnd sensor.
 `QueryClientProvider` and a form on the form's resolver, as `lookups.test.tsx`
 renders a list's box, and reads what the field sends from what the resolver
 hands the submit: the search asking about this coven only once the box is
-used; "Add a reference" first, then each source by its citation and tier, none
-already listed and no typed row; a pick adding a row
-beneath the box, announced, the box emptied and focused; each row's locator
+used; each source by its citation and tier, none already listed and no typed
+row, then "New Reference…" last; a pick adding a row
+beneath the box, announced, the box emptied and focused; a row kept to one
+line until its edit opens it (`aria-expanded`, the Locator focused) and
+closes it again (MB.115); each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
 × and Backspace removing a row; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
-from the field: opened by New Reference and by the create row, each taking you
-to Kind, the row again while it is open; a source it saves listed by its id,
+from the field: opened by the create row, "New Reference…", taking you to
+Kind, and again while it is open; a source it saves listed by its id,
 the panel closed, the box focused, and sent with the ingredient; and Cancel
 closing it, adding nothing, the focus back in the box. Two tests mount the
 whole form, for what only it does with the field: each source sent by its id
@@ -1171,7 +1254,7 @@ references branch and the form's focus, which no list entry's test reaches.
 
 `tests/components/IngredientForm/reference-panel.test.tsx` renders
 `ReferencePanel` alone, asked for again by a rerender that raises its
-`summons`, as New Reference does: Kind focused and nothing else shown as it
+`summons`, as "New Reference…" does: Kind focused and nothing else shown as it
 opens, and Kind focused again, what was typed kept, when it is asked for
 again; each of the five kinds showing exactly its fields in order, the
 required ones marked; a resolver error beside its field, focused, with nothing
