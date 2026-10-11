@@ -16,7 +16,7 @@ const PATHS: Record<GroupKind, string> = {
   tradition: '/admin/deity-traditions',
 };
 
-/** The page itself, unfiltered: where the filter submits, and what Clear Filters opens. */
+/** The page itself, unfiltered: where the filter submits, and what Clear opens. */
 export function groupsPath(kind: GroupKind): Route {
   return PATHS[kind] as Route;
 }

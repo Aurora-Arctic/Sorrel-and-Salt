@@ -9,7 +9,7 @@ import type { GroupListFilterProps } from './types';
 
 // A group list's filter (MB.115): a name search alone, as a flat value list's
 // is (GroupedValueListFilter, on the planets). `FilterForm` holds the form,
-// the Filter button, Clear Filters and the soft navigation; this holds what
+// the Filter button, Clear and the soft navigation; this holds what
 // the field says and whether it differs from the search the page shows. A
 // GET form to the page itself, so before hydration it submits natively as
 // `query=`, which the page reads as no search. The list keys this by the
