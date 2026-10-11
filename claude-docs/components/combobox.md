@@ -365,8 +365,7 @@ so that every list draws the same one:
   being cut off is wrong. The entry shifts it left as it opens, through
   `--entry-tip-shift`, by however far it would run off the screen.
 - **A detail tells what the chip leaves out** (MB.164). `detail`, a string
-  such as a linked substitute's "Dried leaf · Compendium entry — A fixture
-  herb.", sits on its own line beneath the text in the tooltip, at the
+  such as a linked substitute's "Dried leaf · Compendium entry", sits on its own line beneath the text in the tooltip, at the
   caption size and in the bubble's own colour, since a muted one is not
   checked against the bubble's ground. An entry with a detail always has
   something to show, so its tooltip opens on hover and on its ×'s focus

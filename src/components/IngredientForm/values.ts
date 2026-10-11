@@ -258,19 +258,19 @@ export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =
 
 /**
  * What a linked entry's pill leaves out, for its tooltip. A substitute's is
- * "Dried leaf, Oil · Compendium entry — A fixture herb.": the form of it
- * picked, or else the forms it comes in (MB.222), its tier and its
- * description (MB.164). A deity's is its description (MB.169). Undefined for
- * a typed entry, which has nothing more to tell.
+ * "Dried leaf · Compendium entry": the form of it linked, or "Any form",
+ * and its tier. Kept to that one short line, the owner's call (MB.115): the
+ * rest is the chip's summary, a press away. A deity's
+ * is its description (MB.169). Undefined for a typed entry, which has
+ * nothing more to tell.
  */
 export function entryDetail(entry: AnyListEntry): string | undefined {
   const link = linkOf(entry);
   if (!link) return undefined;
   if (isDeityLink(link)) return link.description ?? undefined;
-  // The form of it picked, when one is (MB.215), else every form it comes in.
+  // The form of it linked, when one is (MB.215).
   const picked = 'variantId' in entry ? formNamed(link, entry.variantId) : undefined;
-  const facts = [picked ?? link.forms.join(', '), tierOf(link)].filter(Boolean).join(' · ');
-  return link.description ? `${facts} — ${link.description}` : facts;
+  return `${picked ?? 'Any form'} · ${tierOf(link)}`;
 }
 
 /** The text of the linked ingredient's form `id`, when it knows one by that id. */

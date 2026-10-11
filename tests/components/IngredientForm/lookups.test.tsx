@@ -529,10 +529,11 @@ describe('LookupListField', () => {
       }),
     );
     // The chip reads as the compendium's Mockwort would; its detail says
-    // which was picked (MB.164).
+    // which was picked (MB.164), in one short line that leaves the
+    // description to the summary (MB.115).
     const picked = removeButton('Mockwort (Fixtura vulgaris)');
-    expect(picked).toHaveAccessibleDescription(expect.stringContaining('Tincture'));
-    expect(picked).toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
+    expect(picked).toHaveAccessibleDescription(expect.stringContaining('This coven’s entry'));
+    expect(picked).not.toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
     expect(changes('Substitute Ingredients')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect((await send()).substitutes).toEqual([{ ingredientId: COVEN_ID }]);
   });

@@ -186,10 +186,11 @@ field shows none: the browser draws its own format there.
   "Mugwort (Artemisia vulgaris) · Dried leaf" (`entryText`, MB.115), read
   from the values watched, so a form chosen beside the list redraws it.
   What the pill leaves out is its `detail`, from `entryDetail` (MB.164): the
-  form of it picked, when one is, or else every form it comes in, so two
-  pills reading alike, a compendium entry and a coven's copy, are told apart;
-  "Compendium entry" or "This coven’s entry", as its lookup row said; and the
-  description, "Dried leaf, Oil · Compendium entry — A fixture herb." It shows in the pill's tooltip and
+  form of it linked, or "Any form"; and "Compendium entry" or "This coven’s
+  entry", as its lookup row said, so two pills reading alike, a compendium
+  entry and a coven's copy, are told apart: "Dried leaf · Compendium entry".
+  It stays that one short line, the owner's call (MB.115); the description
+  and the rest are the summary a linked pill opens. It shows in the pill's tooltip and
   describes its ×, as the combobox's "An entry" sets out; a typed entry has
   none. The pill itself stays as it reads, the owner's call. A linked
   substitute's pill is a button, led by a link mark, that opens a summary of
@@ -364,11 +365,11 @@ first, so the tier is a note and not a heading, which would reorder them. Each
 row carries its ingredient's id as its key, since a compendium entry and a
 coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
 its `link`: picking one adds an entry linked to that ingredient, reading as
-the label and formal name, its tooltip telling its forms, tier and
-description (MB.164), and sent as `{ ingredientId }`. The lookup asks for
-each ingredient's `description` for that tooltip alone, and its forms
-through `variants`, which the tooltip and the ranking read; the row shows
-neither. The typed row,
+the label and formal name, its tooltip telling its form and tier
+(MB.164; MB.115), and sent as `{ ingredientId }`. The lookup asks for
+each ingredient's `description`, which the link still carries though no
+tooltip shows it since MB.115, and its forms through `variants`, which the
+tooltip and the ranking read; the row shows neither. The typed row,
 Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 **A lookup leaves out what its list holds** (MB.174), as the Element
 multi-select and the References search do, through the same `repeatOf`:
