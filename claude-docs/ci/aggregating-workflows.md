@@ -81,6 +81,7 @@
   deployment. `deploy.yml`'s `migrate` job holds a repo-wide `migrate`
   lock, so two merges never migrate at once.
 - **`close-task-on-merge.yml`** (MB.89) — closes the issue a merged PR's body names with `Closes #N` when the PR merges into `staging`, because GitHub's own closing keywords fire only on the default branch.
+- **`e2e-cache.yml`** (MB.234) — on a push to `staging` that touches the e2e build's inputs, calls `build-e2e-image.yml`, `build-db-image.yml` and `playwright.yml` with `build-only: true`, so the e2e build cache is saved where every pull request's Playwright job can restore it. Its job names are not `pr-gate.yml`'s, so it publishes no check name the gate does ([Reusable checks](reusable-checks.md)).
 - **`merge-queue.yml` was deleted by MB.32, and is restored from git history
   when M7.A.1 fires.** It was the `merge_group` counterpart, re-expressing this
   entire job graph — the same checks with `merge-queue: true`, plus

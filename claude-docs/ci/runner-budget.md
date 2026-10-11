@@ -33,6 +33,17 @@ follows is enough to redo the sum.
   actions](composite-actions.md)).
 - **The Blacksmith GitHub App must stay installed on the organisation.** A
   `runs-on` label with no app behind it queues forever rather than failing.
+- **`e2e-cache.yml` costs about 2½ GitHub-hosted minutes per push to
+  `staging` that touches the e2e build's inputs, and no Blacksmith minutes**
+  (MB.234). It saves the e2e build cache a pull request's Playwright job
+  restores ([Reusable checks](reusable-checks.md)). Estimated from
+  `pr-gate.yml`'s jobs on run 38102191294: the two image jobs take about 16s
+  and 31s when the image is already published, and the warm job about
+  1½–2 minutes — 51s to pull the e2e image and start Postgres and Mailpit,
+  2s of checkout, a few seconds to restore about 160 MB, 25–40s to build and
+  start the servers with no spec run, and 10s to save. Those minutes are free
+  on a public repo; the return is the build time each pull request's
+  Playwright job no longer spends cold.
 
 | Option                        | Allowance per run                     | Month at ~245 runs   | Verdict                                                  |
 | ----------------------------- | ------------------------------------- | -------------------- | -------------------------------------------------------- |
