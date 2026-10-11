@@ -67,9 +67,7 @@ export function ingredientColumns(fields: IngredientFields) {
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
-    // No form since MB.220: a form is no part of an entry's address. The
-    // middle parameter goes with MB.223.
-    slug: ingredientSlug(fields.name, null, fields.canonicalName),
+    slug: ingredientSlug(fields.name, fields.canonicalName),
   };
 }
 
