@@ -1,6 +1,6 @@
-# MB.239 to MB.248 — the approved plan
+# MB.240 to MB.249 — the approved plan
 
-_Copied verbatim from the approved plan on 2026-10-11 (the owner's rule: a scoping plan is recorded beside the decision it led to), its headings moved down one level. Where MB.239 built something differently, [`mb.239-compendium-seed.md`](mb.239-compendium-seed.md) says so._
+_Copied verbatim from the approved plan on 2026-10-11 (the owner's rule: a scoping plan is recorded beside the decision it led to), its headings moved down one level, and every task id one higher than the plan wrote it: the plan named these tasks MB.239 to MB.248, and MB.239 was taken on `staging` by another task ("Two tests that depend on the order of the tests in their file", PR #853) while this one was in progress. Where MB.240 built something differently, [`mb.240-compendium-seed.md`](mb.240-compendium-seed.md) says so._
 
 ## Plan: a researched, sourced compendium seed (614 ingredients)
 
@@ -77,7 +77,7 @@ Projection at 614 ingredients, Cunningham depth (estimate: ~2 KB per ingredient 
 - No test parses the seed docs any more (MB.225); comments in `deities.ts` and `sources.ts` saying otherwise are stale. Coverage excludes `src/db/seed/**`. Lint is oxlint with no `max-lines`; prettier formats seed TS and `claude-docs` markdown at printWidth 100 and never breaks strings. TypeScript ^7 (native) makes 10k lines of annotated literals cheap to check.
 - Seeds are never in the app bundle: only `scripts/db-seed.ts` (tsx) and tests import them.
 - The container has `unzip` and `node`, no `pdftotext`, `pandoc` or calibre. The Read tool reads PDFs page by page (20 pages per request); an EPUB is unpacked with `unzip` to HTML chapters.
-- **Next free task id is MB.239**: MB.235–MB.238 are claimed by branches `feature/mb.235…238` (not yet in any `mb.md`). Re-check at minting.
+- **Next free task id is MB.240**: MB.235–MB.238 are claimed by branches `feature/mb.235…238` (not yet in any `mb.md`). Re-check at minting.
 
 ### Design decisions
 
@@ -91,27 +91,27 @@ Projection at 614 ingredients, Cunningham depth (estimate: ~2 KB per ingredient 
 8. **Order in `migrate.yml`:** a sixth line, `db:seed:compendium`, after `sources`. Like `sources`, it throws if the curated seeds have not run. Inserts are chunked at 1,000 rows inside the shared helper, under Postgres's 65,535-parameter statement limit.
 9. **Formal-name rules (README).** Plants by POWO's accepted name, genus alone where practice does not split species. Minerals as `<Species> var. <variety>` as `standard` does (`Quartz var. amethyst`), so amethyst, citrine and rose quartz stay three identities. Metals and salts as `chemical`. Animal products as variants under the animal's binomial (honey and beeswax are both _Apis mellifera_). Preparations no system names (black salt, moon water) as `none`.
 10. **A substitute whose target is in a later shard** is recorded as a typed `name`, which the table allows, never as a link the seed cannot yet make; a lane may link only identities in its own or an earlier shard, and the guard checks it.
-11. **A pilot before the lanes.** MB.241 seeds 14 real ingredients, one of each kind (botanical, fungal, zoological with two variants, mineral variety, chemical metal, salt, resin, wood, a `none` water…), researched to the full rule with their own doc, so the shape, the guard and the CI path are proven on real data before six lanes depend on them. They count toward the 614.
+11. **A pilot before the lanes.** MB.242 seeds 14 real ingredients, one of each kind (botanical, fungal, zoological with two variants, mineral variety, chemical metal, salt, resin, wood, a `none` water…), researched to the full rule with their own doc, so the shape, the guard and the CI path are proven on real data before six lanes depend on them. They count toward the 614.
 
 ### Tasks (execution order)
 
 Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `**MB.N — title** · Nh`, `_Story:_`, "Minted on 2026-10-11 …" prose, "Tests are written first:", `_Acceptance criteria:_` ending with the per-file coverage line, then mb.md's summary table, TASKS.md's wave 8 row, a wave-08 paragraph, the milestone description line, `task-board.mjs estimate/sync/reorder`. Hours are estimates of agent execution, calibrated as stated.
 
-#### MB.239 — The compendium seed: scope, sourcing rules, the candidate list and the library · 3h
+#### MB.240 — The compendium seed: scope, sourcing rules, the candidate list and the library · 3h
 
 - **Story:** As a site admin, I want the compendium's starting entries decided and their sourcing rules written down, so that six research lanes fill one list without overlapping or inventing anything.
 - **Builds (docs and minting only; can start now on staging):**
   - `claude-docs/db/compendium-seed/README.md`: the entry template with a worked invented example; the field-to-`supports` names; the closed lists by reference to their seed files; the sourcing rules (below); write-once and the correction rule; mineral naming in `standard`'s form (`Quartz var. amethyst`); the library layout and reading method; the 26 `standard` names so lanes spell their formal names the same way.
   - **The candidate list** (`claude-docs/db/compendium-seed/candidates.md`): ~614 rows of label, formal name, nomenclature and shard, drawn from several works (the owner's books' indexes, Grieve's and Culpeper's indexes, Wikipedia lists), each list source a Chicago row, so the seed mirrors no single book's selection.
-  - This plan copied to `claude-docs/design-decisions/mb.239-plan.md`.
+  - This plan copied to `claude-docs/design-decisions/mb.240-plan.md`.
   - `.gitignore` gains `.library/` **in the branch's first commit**; `tests/guards/` gains the no-tracked-books test.
   - `pdfjs-dist` devDependency and `scripts/library-text.mts` (extract PDFs page by page, unpack EPUBs), with a `library:text` npm script; the README lists each file's exact edition read from its title page.
-  - Corrections: `wave-08.md:3` reversed; DESIGN.md §11 gains a sentence (the production compendium is seeded as reference data, not a scenario); §14 gains a row ("Is the compendium seeded? Yes, sharded, write-once, MB.239"); `claude-docs/db/seed-module.md` names the target.
-  - Mints MB.239–MB.248.
+  - Corrections: `wave-08.md:3` reversed; DESIGN.md §11 gains a sentence (the production compendium is seeded as reference data, not a scenario); §14 gains a row ("Is the compendium seeded? Yes, sharded, write-once, MB.240"); `claude-docs/db/seed-module.md` names the target.
+  - Mints MB.240–MB.249.
 - **Acceptance:** no two candidate rows share an identity, every row names its shard, every list source is a Chicago row; DESIGN, the wave file and §14 agree; the guard refuses a tracked `.pdf`/`.epub`.
 - **Calibrated against:** MB.127 (2.5h, a 216-row researched list with sources), MB.215 (2h, a model record).
 
-#### MB.240 — `seed_key` on `ingredients` · 1h
+#### MB.241 — `seed_key` on `ingredients` · 1h
 
 - **Story:** As a maintainer, I want a seeded compendium entry to carry the key the seed gave it, so that an entry an admin renames is not seeded again beside itself.
 - **Builds:** `seedKey: seedKeyColumn()` and `seedKeyUnique('ingredients_seed_key_unique', table)` in `src/modules/ingredients/schema/ingredients.ts` (builders in `src/db/schema-parts.ts`); `db:generate` → migration 0065, additive, no sidecar.
@@ -119,7 +119,7 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
 - **Acceptance:** exactly one column and one partial unique index; drift test green; nothing reads or writes the column yet.
 - **Waits for:** MB.223 (0064). **Calibrated against:** MB.171 (1.5h, nine tables), MB.223 (1h).
 
-#### MB.241 — `db:seed:compendium`, the guard, CI and a 14-ingredient pilot · 6h
+#### MB.242 — `db:seed:compendium`, the guard, CI and a 14-ingredient pilot · 6h
 
 - **Story:** As a site admin, I want the compendium seeded on staging and production the way the curated vocabularies are, so that every entry arrives sourced and nothing an admin changed is undone.
 - **Builds:**
@@ -130,20 +130,20 @@ Every entry follows `.claude/rules/task-tracking.md` "Minting a task": heading `
   - The pilot: `src/db/seed/compendium/pilot.ts` and `claude-docs/db/compendium-seed/pilot.md`, 14 ingredients researched to the full rule from the library and the online sources, which also calibrates the lanes' hours.
 - **Tests first:** guard rules each fail once on an invented fixture and `COMPENDIUM` yields `[]` (`tests/db/seed/compendium-literals.test.ts`, DB-free); `tests/db/seed/compendium.test.ts` on an invented two-entry fixture shard: seeds whole (variants with picks, children, entry- and variant-level links); a reference `sources.ts` wrote is linked not twinned; an entry present by `seed_key` (live or deleted), live identity or live slug is untouched with nothing beneath it written and no key stamped; a soft-deleted pick is skipped; an unknown form throws; the seed runs cleanly after `standard`. `SEED_ENTRIES` gains a sixth entry over the fixture shard owning `ingredients`, `ingredient_variants`, the four child tables, `references` and `reference_links`.
 - **Acceptance:** the guard fails any entry or variant citing no reference, any field no citation supports, any value outside the closed lists, in the test and before the transaction; a reseed adds, moves and resurrects nothing; bootstrap stamps on every row; `migrate.yml` runs the target after `sources` and `deploy.yml` reseeds when the folder changes; the sources seed's tests unchanged and green.
-- **Waits for:** MB.222 and MB.240. **Calibrated against:** MB.156 (6h), MB.172 (2h), MB.129 (2h).
+- **Waits for:** MB.222 and MB.241. **Calibrated against:** MB.156 (6h), MB.172 (2h), MB.129 (2h).
 
-#### MB.242–MB.247 — Content shards, one PR each, one Opus lane each, in parallel across worktrees
+#### MB.243–MB.248 — Content shards, one PR each, one Opus lane each, in parallel across worktrees
 
 | Id     | Shard (`src/db/seed/compendium/<shard>.ts` + `claude-docs/db/compendium-seed/<shard>.md`) | Ingredients (target) | Hours |
 | ------ | ----------------------------------------------------------------------------------------- | -------------------- | ----- |
-| MB.242 | `plants-a-c`                                                                              | ~100                 | 6     |
-| MB.243 | `plants-d-k`                                                                              | ~100                 | 6     |
-| MB.244 | `plants-l-r`                                                                              | ~100                 | 6     |
-| MB.245 | `plants-s-z`                                                                              | ~100                 | 6     |
-| MB.246 | `resins-woods-and-other` (resins, woods, incense; animal, salts, waters)                  | ~80                  | 5     |
-| MB.247 | `stones-and-metals`                                                                       | ~135                 | 8     |
+| MB.243 | `plants-a-c`                                                                              | ~100                 | 6     |
+| MB.244 | `plants-d-k`                                                                              | ~100                 | 6     |
+| MB.245 | `plants-l-r`                                                                              | ~100                 | 6     |
+| MB.246 | `plants-s-z`                                                                              | ~100                 | 6     |
+| MB.247 | `resins-woods-and-other` (resins, woods, incense; animal, salts, waters)                  | ~80                  | 5     |
+| MB.248 | `stones-and-metals`                                                                       | ~135                 | 8     |
 
-Split points come from MB.239's list, balanced by count. Each shard is ~200–300 KB and 2,500–3,500 lines (estimate), inside every GitHub limit. Each lane conflicts with the others on one line of `compendium/index.ts`; MB.242 merges first because it switches `SEED_ENTRIES` to `COMPENDIUM` and adds the precondition `COMPENDIUM.length > 0`.
+Split points come from MB.240's list, balanced by count. Each shard is ~200–300 KB and 2,500–3,500 lines (estimate), inside every GitHub limit. Each lane conflicts with the others on one line of `compendium/index.ts`; MB.243 merges first because it switches `SEED_ENTRIES` to `COMPENDIUM` and adds the precondition `COMPENDIUM.length > 0`.
 
 - **Story (per shard):** As a reader, I want [shard] in the compendium with its forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
 - **Tests first:** none new; the guard and the `SEED_ENTRIES` sweeps run over the real list.
@@ -151,7 +151,7 @@ Split points come from MB.239's list, balanced by count. Each shard is ~200–30
 - **The lane brief** (in every content task): the README's closed vocabularies by curated spelling; the entry template; 100–250 words, British spelling, written fresh. Hard rules: every field value traces to a source **read during the task** (the owner's book by page, or a fetched URL); a claim with no source is left out, never filled from memory; never invent a page, URL, edition or year; locators only from what was read; `accessed` is the real fetch date; an entry that cannot be sourced at depth goes to "What is left out, and why". Source standing: academic preferred (POWO for plant names, Mindat for minerals, NCBI LiverTox and NCCIH for safety); Wikipedia (as `entry`, revision permalink), Grieve, Culpeper, Kunz, Folkard, Dyer and the owner's books are all first-class. No prose copied from any source. Shared works by handle from `works.ts`. Substitutes link only to identities in the same or an earlier shard. Every seeded entry carries at least its primary form as a variant; further variants only where a read source attaches something to that form.
 - **Calibrated against:** MB.127's rate (216 deity rows plus sources in 2.5h, ~96 KB/h); a 100-entry shard is ~270 KB of literal and doc, ~3h at that rate, doubled for read-before-cite and per-field sourcing. The pilot's actual time re-calibrates the six before they are briefed.
 
-#### MB.248 — Close the compendium seed · 1h
+#### MB.249 — Close the compendium seed · 1h
 
 - **Builds:** reconcile seeded totals against the candidate list; consolidate "left out" across shards; DESIGN §14 and the wave file gain the final count; confirm on staging the admin's unsourced filter lists no seeded entry; a `SEED_SCENARIO`/`db:reset` note ("run `db:seed:compendium` for a populated local compendium").
 - **Acceptance:** counts recorded; a test proves every seeded entry has ≥1 `ingredient_id` link.
@@ -161,13 +161,13 @@ Split points come from MB.239's list, balanced by count. Each shard is ~200–30
 
 | Task       | Starts                    | Hours (estimate) |
 | ---------- | ------------------------- | ---------------- |
-| MB.239     | now, on staging           | 3                |
-| MB.240     | after MB.223 merges       | 1                |
-| MB.241     | after MB.222 and MB.240   | 6                |
-| MB.242–245 | after MB.241, in parallel | 24               |
-| MB.246     | after MB.241, in parallel | 5                |
-| MB.247     | after MB.241, in parallel | 8                |
-| MB.248     | after all six shards      | 1                |
+| MB.240     | now, on staging           | 3                |
+| MB.241     | after MB.223 merges       | 1                |
+| MB.242     | after MB.222 and MB.241   | 6                |
+| MB.243–245 | after MB.242, in parallel | 24               |
+| MB.247     | after MB.242, in parallel | 5                |
+| MB.248     | after MB.242, in parallel | 8                |
+| MB.249     | after all six shards      | 1                |
 | **Total**  |                           | **48**           |
 
 ### Risks
@@ -182,7 +182,7 @@ Split points come from MB.239's list, balanced by count. Each shard is ~200–30
 | MB.162's curated-value rule, bypassed by the seed                                  | The guard plus `seed_key` picks; a soft-deleted curated row is skipped.                                                                                                          |
 | Spelling drift in colours and signs                                                | Closed lists in the guard.                                                                                                                                                       |
 | Citation drift across lanes                                                        | Shared works in `works.ts`; the guard requires distinct citation texts.                                                                                                          |
-| Reseed cost in CI and the db test (the full list seeded three times by the sweeps) | Batched inserts in one transaction; MB.242 records the run time.                                                                                                                 |
+| Reseed cost in CI and the db test (the full list seeded three times by the sweeps) | Batched inserts in one transaction; MB.243 records the run time.                                                                                                                 |
 
 ### Execution: worktrees and parallel Opus agents (the owner's call)
 
@@ -190,25 +190,25 @@ Every task runs in its own worktree under `/home/node/worktrees/` with its own `
 
 | Stage | Worktree, branch                                                                     | Task                                                                                           | Starts                                                                   | Base                                                                                              |
 | ----- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| 1     | `cs-scope`, `feature/mb.239-compendium-seed-scope`                                   | MB.239: `.gitignore` first commit, extractor, README, roster, mint MB.239–248, doc corrections | now                                                                      | `origin/staging`                                                                                  |
-| 1     | `cs-schema`, `feature/mb.240-ingredients-seed-key`                                   | MB.240 (and MB.223 before it if still unstarted when the lane opens, as its own PR)            | now, stacked                                                             | MB.222's branch until it merges (the stacking rule: ask once, this plan's approval is the answer) |
-| 2     | `cs-seed`, `feature/mb.241-compendium-seed`                                          | MB.241: mechanism, guard, CI, pilot                                                            | when MB.240 is green                                                     | MB.240's branch until it merges                                                                   |
-| 3     | `cs-plants-a`, `cs-plants-b`, `cs-plants-c`, `cs-plants-d`, `cs-others`, `cs-stones` | MB.242–MB.247, six Opus lanes in parallel                                                      | when MB.241's pilot is green and its hours have re-calibrated the briefs | MB.241's branch until it merges; MB.242 merges first                                              |
-| 4     | `cs-close`                                                                           | MB.248                                                                                         | after the last shard merges                                              | `origin/staging`                                                                                  |
+| 1     | `cs-scope`, `feature/mb.240-compendium-seed-scope`                                   | MB.240: `.gitignore` first commit, extractor, README, roster, mint MB.240–248, doc corrections | now                                                                      | `origin/staging`                                                                                  |
+| 1     | `cs-schema`, `feature/mb.241-ingredients-seed-key`                                   | MB.241 (and MB.223 before it if still unstarted when the lane opens, as its own PR)            | now, stacked                                                             | MB.222's branch until it merges (the stacking rule: ask once, this plan's approval is the answer) |
+| 2     | `cs-seed`, `feature/mb.242-compendium-seed`                                          | MB.242: mechanism, guard, CI, pilot                                                            | when MB.241 is green                                                     | MB.241's branch until it merges                                                                   |
+| 3     | `cs-plants-a`, `cs-plants-b`, `cs-plants-c`, `cs-plants-d`, `cs-others`, `cs-stones` | MB.243–MB.248, six Opus lanes in parallel                                                      | when MB.242's pilot is green and its hours have re-calibrated the briefs | MB.242's branch until it merges; MB.243 merges first                                              |
+| 4     | `cs-close`                                                                           | MB.249                                                                                         | after the last shard merges                                              | `origin/staging`                                                                                  |
 
 Board writes: auto mode blocks `gh` label, issue and project writes, so the minting lane prepares the issue bodies and hands the owner the `task-board.mjs` commands to apply, or asks for a permission rule once.
 
 ### Verification
 
-- MB.239: `npm run pre-commit`; `node scripts/task-board.mjs find MB.239 … MB.248` each match one issue; the guard test fails on a staged `.pdf` and passes without.
-- MB.240: `npm run db:migrate` applies 0065; `npm run test:coverage` (db project: partial-unique-indexes, schema-drift).
-- MB.241: `npm run test:coverage`; `npm run db:reset` then `npm run db:seed:compendium` twice with the fixture shard, the second run writing nothing; `npm run build`.
+- MB.240: `npm run pre-commit`; `node scripts/task-board.mjs find MB.240 … MB.249` each match one issue; the guard test fails on a staged `.pdf` and passes without.
+- MB.241: `npm run db:migrate` applies 0065; `npm run test:coverage` (db project: partial-unique-indexes, schema-drift).
+- MB.242: `npm run test:coverage`; `npm run db:reset` then `npm run db:seed:compendium` twice with the fixture shard, the second run writing nothing; `npm run build`.
 - Each shard: the guard test; `npm run db:seed:compendium` from empty and after `SEED_SCENARIO=standard npm run db:reset`; `npm run test:coverage`; `npm run e2e` once per lane, since the compendium pages read the seeded tier; a spot check on the dev server at `/compendium`.
-- MB.248: on staging, the admin compendium page's unsourced filter is empty.
+- MB.249: on staging, the admin compendium page's unsourced filter is empty.
 
 ### The library the owner provides (`/app/.library/`)
 
-**Warning, to act on first:** `/app/.library/` exists with nine in-copyright files (85 MB) and is **not yet in `.gitignore`**; `git status` shows it untracked. Until MB.239's first commit adds the ignore line, nothing may run `git add -A` or `git add .` in `/app`. (Plan mode forbade editing `.gitignore` in this session.)
+**Warning, to act on first:** `/app/.library/` exists with nine in-copyright files (85 MB) and is **not yet in `.gitignore`**; `git status` shows it untracked. Until MB.240's first commit adds the ignore line, nothing may run `git add -A` or `git add .` in `/app`. (Plan mode forbade editing `.gitignore` in this session.)
 
 **What is in the folder on 2026-10-11** (identified from EPUB metadata; PDFs from their filenames until the extractor below reads their title pages):
 
@@ -225,7 +225,7 @@ Board writes: auto mode blocks `gh` label, issue and project writes, so the mint
 | `the_book_of_herbs_1903.pdf`                                              | _The Book of Herbs_ (1903), public domain; author from title page                                                                              | extra; lore                         |
 | —                                                                         | Beyerl, _A Compendium of Herbal Magick_ (1998); Melody, _Love Is in the Earth_                                                                 | absent                              |
 
-**Reading method.** The container has no poppler, so the Read tool cannot open a PDF here (confirmed 2026-10-11). MB.239 adds `pdfjs-dist` as a devDependency (pure JavaScript, no native build, the standard Mozilla extractor) and `scripts/library-text.mts`, which writes one text file per page into `.library/text/<book>/<page>.txt` (inside the ignored folder) for every PDF, and unpacks each EPUB with `unzip` into `.library/text/<book>/` as HTML chapters. A lane then reads with `grep` and the Read tool: a PDF page's number is its locator, an EPUB entry's heading is. The README records each file's exact edition once the title pages are read.
+**Reading method.** The container has no poppler, so the Read tool cannot open a PDF here (confirmed 2026-10-11). MB.240 adds `pdfjs-dist` as a devDependency (pure JavaScript, no native build, the standard Mozilla extractor) and `scripts/library-text.mts`, which writes one text file per page into `.library/text/<book>/<page>.txt` (inside the ignored folder) for every PDF, and unpacks each EPUB with `unzip` into `.library/text/<book>/` as HTML chapters. A lane then reads with `grep` and the Read tool: a PDF page's number is its locator, an EPUB entry's heading is. The README records each file's exact edition once the title pages are read.
 
 The editions below were verified against bookseller or publisher pages on 2026-10-11; the README names whichever edition is actually supplied.
 
@@ -246,4 +246,4 @@ Grieve (botanical.com) and Culpeper (Gutenberg #49513) are online and need no co
 
 - Whether Beyerl's _Compendium_ or Melody will be added later (the lanes work without them).
 - The variant description ceiling (120 words proposed).
-- Whether MB.248 stays separate or folds into MB.247.
+- Whether MB.249 stays separate or folds into MB.248.

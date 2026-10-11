@@ -1,10 +1,10 @@
-## The compendium seed (MB.239 to MB.248)
+## The compendium seed (MB.240 to MB.249)
 
-The compendium's starting entries are seeded on staging and production, as reference data, by `npm run db:seed:compendium` (MB.241), the way the five curated vocabularies are. Until 2026-10-11 the plan was for an admin to type every entry by hand; the owner reversed that and asked for a researched, sourced list of **614 ingredients**. This folder holds the rules every entry is written to, the candidate list the entries are drawn from, and one doc per shard recording each entry's sources.
+The compendium's starting entries are seeded on staging and production, as reference data, by `npm run db:seed:compendium` (MB.242), the way the five curated vocabularies are. Until 2026-10-11 the plan was for an admin to type every entry by hand; the owner reversed that and asked for a researched, sourced list of **614 ingredients**. This folder holds the rules every entry is written to, the candidate list the entries are drawn from, and one doc per shard recording each entry's sources.
 
 - [`candidates.md`](candidates.md): the 614 candidate entries, each with its label, formal name, naming system and shard, and the works the list was drawn from.
-- `<shard>.md`, one per content task (MB.242 to MB.247): the shard's scope, its bibliography, one source line per entry, and what was left out and why.
-- The plan that scoped the work: [`design-decisions/mb.239-plan.md`](../../design-decisions/mb.239-plan.md). Why it is shaped this way: [`design-decisions/mb.239-compendium-seed.md`](../../design-decisions/mb.239-compendium-seed.md).
+- `<shard>.md`, one per content task (MB.243 to MB.248): the shard's scope, its bibliography, one source line per entry, and what was left out and why.
+- The plan that scoped the work: [`design-decisions/mb.240-plan.md`](../../design-decisions/mb.240-plan.md). Why it is shaped this way: [`design-decisions/mb.240-compendium-seed.md`](../../design-decisions/mb.240-compendium-seed.md).
 
 **The owner's rule, which every other rule here serves: "Do not make stuff up. All claims must have sources."** A field holds a value only if a source the lane read during its task says so. A claim with no source is left out, never filled from memory.
 
@@ -16,19 +16,19 @@ The entries are written as TypeScript literals in **shards**, one file of about 
 
 | Task   | Shard                                                                            | Entries (target) |
 | ------ | -------------------------------------------------------------------------------- | ---------------- |
-| MB.241 | `pilot`: one of each kind, proving the shape and the guard                       | 14               |
-| MB.242 | `plants-a-c`                                                                     | ~100             |
-| MB.243 | `plants-d-k`                                                                     | ~100             |
-| MB.244 | `plants-l-r`                                                                     | ~100             |
-| MB.245 | `plants-s-z`                                                                     | ~100             |
-| MB.246 | `resins-woods-and-other`: resins, woods, incense; animal products, salts, waters | ~80              |
-| MB.247 | `stones-and-metals`                                                              | ~135             |
+| MB.242 | `pilot`: one of each kind, proving the shape and the guard                       | 14               |
+| MB.243 | `plants-a-c`                                                                     | ~100             |
+| MB.244 | `plants-d-k`                                                                     | ~100             |
+| MB.245 | `plants-l-r`                                                                     | ~100             |
+| MB.246 | `plants-s-z`                                                                     | ~100             |
+| MB.247 | `resins-woods-and-other`: resins, woods, incense; animal products, salts, waters | ~80              |
+| MB.248 | `stones-and-metals`                                                              | ~135             |
 
 Each shard is `src/db/seed/compendium/<shard>.ts`, its doc `claude-docs/db/compendium-seed/<shard>.md`. The pilot's 14 count toward the 614. The candidate list fixes which entry falls in which shard; the targets above are the plan's estimate, and the list's split points balance them by count.
 
 ### An entry, field by field
 
-The literal's type is `SeedCompendiumEntry`, which MB.241 adds to `src/db/seed/types.ts`. The shape below is the plan's; if MB.241 names a field differently, it corrects this section in its own pull request.
+The literal's type is `SeedCompendiumEntry`, which MB.242 adds to `src/db/seed/types.ts`. The shape below is the plan's; if MB.242 names a field differently, it corrects this section in its own pull request.
 
 A worked example, **invented**, as the repo's fixtures are (CLAUDE.md, Testing). Testwort, _Fixtura testalis_, does not exist, and nor do its sources.
 
@@ -125,7 +125,7 @@ A citation's `supports` lists the fields it backs, using the literal's own field
 
 ### The closed lists
 
-A compendium entry may only name values the curated vocabularies hold (MB.162, MB.167), spelt exactly as their seed files spell them. The guard (MB.241) checks every value against these files, by slug:
+A compendium entry may only name values the curated vocabularies hold (MB.162, MB.167), spelt exactly as their seed files spell them. The guard (MB.242) checks every value against these files, by slug:
 
 | Field           | The list                                                                      | Where it is                                                                 |
 | --------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
@@ -136,7 +136,7 @@ A compendium entry may only name values the curated vocabularies hold (MB.162, M
 | `zodiacSigns`   | 13 signs, Ophiuchus included                                                  | `src/db/seed/astrology.ts`, `ZODIAC_SIGNS`                                  |
 | `elements`      | `earth`, `air`, `fire`, `water`, `spirit`                                     | `src/modules/ingredients/schema/ingredient-enums.ts`, `INGREDIENT_ELEMENTS` |
 | `nomenclature`  | `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none` | the same file, `NOMENCLATURE_KINDS`                                         |
-| `colors`        | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.241)                                |
+| `colors`        | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.242)                                |
 
 A value a source gives that is not on the list is left out of the field, and the shard doc's "What is left out, and why" names it, so the owner can decide whether the list should grow. A lane never adds to a curated list itself: a list is its own task.
 
@@ -209,7 +209,7 @@ These are the lane brief's hard rules, repeated in every content task:
 
 The seed writes each entry once. The run that inserts an entry writes everything beneath it in the same pass: its forms, folk names, deities, categories, substitutes and source links. On every later run, an entry already present is skipped along with everything beneath it. Present means any of:
 
-- a row carrying the entry's seed key (`seed_key`, which MB.240 adds: the identity key as the seed wrote it, the formal name lower-cased or the label where there is none), live or deleted;
+- a row carrying the entry's seed key (`seed_key`, which MB.241 adds: the identity key as the seed wrote it, the formal name lower-cased or the label where there is none), live or deleted;
 - a live compendium row with the same identity, an admin's or the `standard` fixture's;
 - a live compendium row already holding the entry's address (its slug).
 
@@ -242,7 +242,7 @@ Run it again after a book is added. On 2026-10-11 every PDF yielded text and non
 
 Paul Beyerl's _A Compendium of Herbal Magick_ and Melody's _Love Is in the Earth_ are not in the library. The lanes work without them.
 
-**How to cite each one.** These are the Chicago bibliography forms, for MB.241 to transcribe into `src/db/seed/compendium/works.ts`. Each names the edition in hand. An e-book is cited as the e-book, with its format last, as Chicago does.
+**How to cite each one.** These are the Chicago bibliography forms, for MB.242 to transcribe into `src/db/seed/compendium/works.ts`. Each names the edition in hand. An e-book is cited as the e-book, with its format last, as Chicago does.
 
 - Cunningham, Scott. _Cunningham's Encyclopedia of Magical Herbs_. 2nd ed. Woodbury, MN: Llewellyn Publications, 2012. EPUB.
 - Cunningham, Scott. _Cunningham's Encyclopedia of Crystal, Gem & Metal Magic_. Llewellyn's Sourcebook Series. St. Paul, MN: Llewellyn Publications, 1988.

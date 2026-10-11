@@ -1,8 +1,8 @@
-# MB.239 — A researched, sourced compendium seed
+# MB.240 — A researched, sourced compendium seed
 
 **Status:** decided · **Date:** 2026-10-11 (settled with the owner the same day)
 
-Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium an admin fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.239-plan.md`](mb.239-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.240 to MB.248 build it.
+Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium an admin fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
 
 ## The problem
 
@@ -19,7 +19,7 @@ The owner reversed the wave file on 2026-10-11 and asked for "a decently large c
 | What must a value rest on?                | A source the lane read during its task: a page of the owner's book, or a page it fetched. Wikipedia is a valid source beside the others. A value with no source is left out.                                                                           |
 | Is it a scenario?                         | No. It is reference data with its own target, `db:seed:compendium`, run by `migrate.yml` after the five vocabularies and their sources. `standard` is cloned for every db test, so it stays the fixture it is.                                         |
 | What happens on a reseed?                 | Nothing, for an entry already there. The run that inserts an entry writes everything beneath it, and a present entry is skipped with all its children. A correction is made in the admin page and the literal edited to match.                         |
-| How does the seed know an entry it wrote? | `seed_key` on `ingredients` alone (MB.240), the identity key as the seed wrote it. Present also means a live row with that identity or that slug.                                                                                                      |
+| How does the seed know an entry it wrote? | `seed_key` on `ingredients` alone (MB.241), the identity key as the seed wrote it. Present also means a live row with that identity or that slug.                                                                                                      |
 | How is it split?                          | Six content shards of about 80 to 135 entries, one task, one pull request and one research lane each, after a 14-entry pilot that proves the shape on real data.                                                                                       |
 | Where do the facts live?                  | In the TypeScript literal. Every citation carries `supports`, the fields it backs, and a guard fails any populated field no citation covers. Each shard's doc records its bibliography and one source line per entry, not the entries again.           |
 | How are the books read?                   | The owner's copies, in `/app/.library/`, ignored by git and guarded by a test; `npm run library:text` turns them into text a lane can search. A citation names the edition in hand.                                                                    |
@@ -32,7 +32,7 @@ The owner reversed the wave file on 2026-10-11 and asked for "a decently large c
 - **One file per entry.** 614 files and an index importing each. A shard of 100 entries would then be over 100 files in one pull request, against GitHub's 300-files-per-PR limit the plan recorded, and six lanes would each add about a hundred lines to the one index, where with shards each adds one. Shards keep each pull request to one literal and one doc.
 - **The entries repeated in markdown.** The deity seed doc holds each row with its sources at about 1.1 KB per row; at 614 entries that is about 700 KB of markdown nothing checks against the literal (the plan's estimate). The literal is the source of truth, and `supports` is checked by the guard; the doc records which source backs which fields, one line per entry.
 
-## What MB.239 found and built differently
+## What MB.240 found and built differently
 
 - **The extractor is `scripts/library-text.ts`, not `.mts`.** Every script in `scripts/` is a `.ts` file run by Node's own type stripping under `scripts/package.json`'s `"type": "module"`, so the new one follows them.
 - **One of the owner's nine files is not the book it is named for.** `Master Book Of Herbalism PDF.pdf` is a 34-page summary "Written by Bookey", not Paul Beyerl's text; the README says never to cite it.
@@ -43,6 +43,6 @@ The owner reversed the wave file on 2026-10-11 and asked for "a decently large c
 
 ## Sources
 
-- The plan's research, reported by three agents on 2026-10-11, with the provenance each figure carries there: [`mb.239-plan.md`](mb.239-plan.md), "What the research found".
+- The plan's research, reported by three agents on 2026-10-11, with the provenance each figure carries there: [`mb.240-plan.md`](mb.240-plan.md), "What the research found".
 - The books' editions: each file's own title and copyright pages, read on 2026-10-11 and recorded in [`db/compendium-seed/README.md`](../db/compendium-seed/README.md), "The library".
 - The repo's own precedents: `src/db/seed/sources.ts` (Wikipedia as an `entry`), [`mb.171-seed-keys.md`](mb.171-seed-keys.md) (seed keys), [`mb.215-ingredient-variants.md`](mb.215-ingredient-variants.md) (an entry and its forms).
