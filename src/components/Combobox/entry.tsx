@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { GripIcon } from './icons';
-import { useTip } from './tip';
+import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
 // An entry a list holds, inside the control: its text, and the x that takes

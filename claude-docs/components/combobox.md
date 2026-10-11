@@ -14,7 +14,6 @@ movable, on dnd-kit.
 | `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
 | `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit      |
 | `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one     |
-| `tip.ts`           | `useTip`, the open state an entry's tooltip and the qualifier's share             |
 | `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
 | `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
 | `icons.tsx`        | The chevron and the clear's ×, which every box draws, and a sortable chip's grip  |
@@ -418,10 +417,11 @@ call.
   there is no tooltip. Open on focus, the bubble covers what sits above the
   control, a field's label; the owner left that to the admin area's design
   review (MB.115), the keyboard still to reach it.
-- **The open state is `useTip`** (`tip.ts`), shared with `ComboboxEntry`:
-  open while `canOpen` says there is something to show, closed at once on
-  blur and on Escape anywhere in the document, and after 150ms when the
-  pointer leaves.
+- **The open state is `useTip`**, InfoTip's hook (`../InfoTip/use-tip.ts`),
+  shared with `ComboboxEntry`: open while the `canOpen` it is given says there
+  is something to show, closed at once on blur and on Escape anywhere in the
+  document, and after 150ms when the pointer leaves. Combobox kept a copy of
+  its own in `tip.ts` until MB.115 made the two one ([`info-tip.md`](info-tip.md)).
 
 ## The debounce
 
