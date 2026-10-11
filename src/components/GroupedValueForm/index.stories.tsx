@@ -10,17 +10,21 @@ export default {
   title: 'Admin / Grouped Value Form',
 };
 
+// Enough of each to narrow: every group field is typed into (MB.115).
 const CATEGORY_GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Healing' },
   { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Protection' },
+  { id: '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f', name: 'Mock Divination' },
+  { id: '3e6c3c3b-5a79-4a48-8d2f-0d8b2a5b3e1e', name: 'Stub Prosperity' },
 ];
 
 const FORM_GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
   { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Substance' },
+  { id: '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f', name: 'Mock Preparation' },
+  { id: '3e6c3c3b-5a79-4a48-8d2f-0d8b2a5b3e1e', name: 'Stub Plant Part' },
 ];
 
-// Enough to narrow: the deity's Tradition is typed into (MB.115).
 const TRADITIONS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
   { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
@@ -121,14 +125,10 @@ export const EditingAZodiacSign: Story = () => (
 );
 
 // At a phone's width in each theme: the modal inset from the screen's edge,
-// and the form under 28rem of its own width, so its buttons stack.
+// and the form under 28rem of its own width, so its buttons stack. Type into
+// Group to see its list narrow beneath it, inside the modal.
 export const PhoneDark: Story = () => <EditingACategory />;
 export const PhoneLight: Story = () => <EditingACategory />;
-
-// The deity's type-ahead Tradition at a phone's width: type into it to see
-// the list narrow beneath it, inside the modal.
-export const DeityPhoneDark: Story = () => <EditingADeity />;
-export const DeityPhoneLight: Story = () => <EditingADeity />;
 
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
@@ -142,5 +142,3 @@ AddingAPlanet.meta = { iframed: true };
 EditingAZodiacSign.meta = { iframed: true };
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-DeityPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-DeityPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

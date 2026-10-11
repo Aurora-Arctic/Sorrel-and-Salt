@@ -110,6 +110,33 @@ export const ADDING: GroupedValueFormCase[] = [
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     },
   ],
+  // The owner's call (MB.115): the group is typed into, the list narrowing
+  // as it is, and only a listed group is ever the value.
+  [
+    'takes its group by typing, the list narrowing to the groups holding the text',
+    async (subject) => {
+      const calls: { input: object }[] = [];
+      mockGraphQLMutation(subject.create.operation, (variables: { input: object }) => {
+        calls.push(variables);
+        return subject.create.data;
+      });
+      const onDone = renderSubject(subject);
+      const [, chosen] = subject.groups;
+
+      type(name(), subject.value.name);
+      type(description(), 'Typed');
+      type(group(subject), chosen.name.slice(-4).toUpperCase());
+      const list = screen.getByRole('listbox', { name: `${subject.groupLabel} choices` });
+      expect(within(list).getAllByRole('option')).toHaveLength(1);
+      fireEvent.keyDown(group(subject), { key: 'Enter' });
+      expect(group(subject)).toHaveValue(chosen.name);
+      press(`Save ${subject.noun}`);
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      // Under the kind's own key for its group, `groupId` or `traditionId`.
+      expect(Object.values(calls[0]?.input ?? {})).toContain(chosen.id);
+    },
+  ],
   [
     "lands the server's slug refusal beside Name",
     async (subject) => {
@@ -143,6 +170,21 @@ export const EDITING: GroupedValueFormCase[] = [
       expect(save()).toBeEnabled();
       chooseGroup(subject, subject.groups[1].name);
       expect(save()).toBeDisabled();
+    },
+  ],
+  [
+    'holds no group while the text names none, and refuses it on Save',
+    async (subject) => {
+      // No answer is set up: the form refuses it before asking the server.
+      const onDone = renderSubject(subject, true);
+
+      expect(group(subject)).not.toHaveAttribute('aria-invalid');
+      type(group(subject), subject.groups[1].name.slice(0, -1));
+      press(`Save ${subject.noun}`);
+
+      await waitFor(() => expect(group(subject)).toHaveAttribute('aria-invalid', 'true'));
+      expect(group(subject)).toHaveAccessibleDescription(/\S/);
+      expect(onDone).not.toHaveBeenCalled();
     },
   ],
   [
