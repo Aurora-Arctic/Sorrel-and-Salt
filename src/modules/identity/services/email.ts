@@ -44,7 +44,7 @@ export function validateEmailAddress(email: string): ValidationIssue | null {
   if (email.length > MAX_LENGTH || !SHAPE.test(email)) {
     return { path, message: "That doesn't look like an email address" };
   }
-  if (email.endsWith('.invalid')) return { path, message: "That address can't receive mail" };
+  if (email.endsWith('.invalid')) return { path, message: "That email address can't receive mail" };
   return null;
 }
 
@@ -118,7 +118,7 @@ export async function setEmail(
 
   if (!unchanged && (await isEmailHeldByVerifiedAccount(email))) {
     throw new ValidationError([
-      { path: ['email'], message: 'That address is already in use by another account' },
+      { path: ['email'], message: 'That email address is already in use by another account' },
     ]);
   }
 

@@ -205,7 +205,7 @@ describe('EmailForm', () => {
     mockGraphQLError('SetEmail', {
       code: 'VALIDATION',
       fieldErrors: [
-        { path: ['email'], message: 'That address is already in use by another account' },
+        { path: ['email'], message: 'That email address is already in use by another account' },
       ],
     });
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
