@@ -194,17 +194,15 @@ async function refuseCollision(
 
   switch (index) {
     case 'ingredients_workspace_label_unique':
-      refuse('name', `This coven already has an ingredient called "${name}"`);
-      break;
+      return refuse('name', `This coven already has an ingredient called "${name}"`);
     case 'ingredients_workspace_identity_unique':
     case 'ingredients_workspace_identity_key_unique':
-      refuse(
+      return refuse(
         canonicalName == null ? 'name' : 'canonicalName',
         `This coven already has an ingredient that is ${canonicalName ?? name}`,
       );
-      break;
     case 'ingredients_workspace_slug_unique':
-      refuse(
+      return refuse(
         'name',
         addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
       );

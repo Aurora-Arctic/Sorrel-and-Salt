@@ -329,6 +329,29 @@ describe('a collision with another of the coven’s ingredients', () => {
     ).toEqual([{ path: ['name'], message: expect.any(String) }]);
   });
 
+  // The identity holder looked up on an address collision is the row itself
+  // when the update keeps its formal name, and is no collision of its own.
+  it("refuses a relabel onto another ingredient's address on `name`, though its own formal name is held, by itself", async () => {
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
+    const id = await seed(
+      local({ name: 'Testleaf', nomenclature: 'unknown', canonicalName: 'Root' }),
+    );
+
+    const issues = await issuesOf(
+      updateWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        id,
+        inputOf(
+          local({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+        ),
+      ),
+    );
+
+    expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+    expect((await rowOf(id)).name).toBe('Testleaf');
+  });
+
   it('refuses a relabel onto a label already in the coven, leaving the row as it was', async () => {
     await seed(local({ name: 'Taken Wort' }));
     const id = await seed(local());

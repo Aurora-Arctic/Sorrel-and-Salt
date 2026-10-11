@@ -744,6 +744,24 @@ describe('a collision with another compendium entry', () => {
     ).toEqual([{ path: ['name'], message: expect.any(String) }]);
   });
 
+  // The identity holder looked up on an address collision is the entry itself
+  // when the update keeps its formal name, and is no collision of its own.
+  it("refuses a relabel onto another entry's address on `name`, though its own formal name is held, by itself", async () => {
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
+    const id = await seed({ name: 'Testleaf', nomenclature: 'unknown', canonicalName: 'Root' });
+
+    const issues = await issuesOf(
+      updateCompendiumEntry(
+        admin,
+        id,
+        entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+      ),
+    );
+
+    expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+    expect((await rowOf(id)).name).toBe('Testleaf');
+  });
+
   it('lets two entries share a label, told apart by their formal names', async () => {
     await seed();
 
