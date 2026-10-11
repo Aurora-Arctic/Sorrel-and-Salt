@@ -226,7 +226,13 @@ row's own id, and refuses another user's row (`ACCOUNT_NOT_FOUND`).
 `allowUnlinkingAll` stays off, so it refuses the last one
 (`FAILED_TO_UNLINK_LAST_ACCOUNT`) and a user is never left with no way in.
 The endpoint also wants a session younger than Better Auth's `freshAge`, a
-day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
+day (`SESSION_NOT_FRESH`). The page reads the session's age first
+(`sessionIsFresh()`, `src/lib/request-session.ts`) and, from a stale one,
+offers Sign In Again in place of every Remove, which signs out and returns
+through `/sign-in` to `/account` with a fresh session; a refusal that still
+happens, from a page left open past the day, says to sign in again
+([`components/sign-in-methods.md`](../components/sign-in-methods.md), "A
+stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
@@ -235,7 +241,8 @@ rule 4, and leaves `users` alone.
 `requireSession()`, so an unverified account never reaches it, though
 Better Auth itself would link to an unverified row. The page reads
 `linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
-`listUserAccounts` with the request headers) and renders `SignInMethods`
+`listUserAccounts` with the request headers) and `sessionIsFresh()`, and
+renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
 and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
@@ -459,7 +466,7 @@ the tests [`tests.md`](tests.md).
   account changes its address later. Its success message names the typed
   address, since the row's is unchanged until the link is followed. Below
   the form, a verified account gets a link to the account page, reading
-  "Your account" (["The account page"](#the-account-page-mb88) below), where
+  "Your Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
@@ -480,20 +487,22 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/sign-in-methods.md`](../components/sign-in-methods.md).
 
 - **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
-  unverified account is sent to the email page instead, and reads `getMe`
-  and `linkedAccounts()`. Under its `<h1>` "Your Account" are three
-  sections, each a region named by its own `<h2>`, which the page writes in
-  a `.header` with the section's intro as its `.lede`: Name ("Change your
-  name.", then `NameForm`), Email (`EmailForm`, embedded, whose own status
-  line says what the section is for) and Sign-In Methods ("Any of these signs
-  you in to this account.", then `SignInMethods`). It carries no link to
-  `/account/email`. Between the heading and the first section, a nav
-  labelled "On this page" links to each section by its prefixed id
-  (`#account-name`, `#account-email`, `#account-sign-in-methods`), and a
-  hairline `<hr>` rules each section from the next (on the owner's call). A
+  unverified account is sent to the email page instead, and reads `getMe`,
+  `linkedAccounts()` and `sessionIsFresh()`. Under its `<h1>` "Your
+  Account" are three sections, each a region named by its own `<h2>`, which
+  the page writes in a `.header` with the section's intro as its `.lede`:
+  Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
+  (`EmailForm`, embedded, whose own status line says what the section is
+  for) and Sign-In Methods ("You can sign in to this account with any of
+  these.", then `SignInMethods`). It carries no link to `/account/email`.
+  Between the heading and the first section, a nav labelled "On this page"
+  links to each section by its prefixed id (`#account-name`,
+  `#account-email`, `#account-sign-in-methods`). Each section stands on its
+  own `.panel`, which parts it from the next, so no rule is drawn between
+  them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
   section a link lands on stops clear of the top inset. The frame, the
-  sections, the rules and the nav's row are primitives (`.page-frame--narrow`,
-  `.page-frame__section`, `.page-frame__rule`, `.link-row`;
+  sections, the panels and the nav's row are primitives
+  (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
   [`styling.md`](../styling.md), "The page frame" and "Link rows and
   provider marks"), so the page has no stylesheet of its own. A failed link
   lands back with `?error=` and `?provider=`: the page turns the code into
@@ -508,7 +517,8 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
   and a link opened from the wrong browser is explained there. Its link
-  across, offered to a verified account, reads "Your account".
+  across, offered to a verified account, reads "Your Account", below the
+  form's `.panel`, the ground the account page's sections stand on too.
 - **The Email section is EmailForm, not a second form.** The same field,
   `setEmail` mutation, one-a-minute cooldown and field errors, with
   `embedded` set: no page heading, which the section gives, and never the

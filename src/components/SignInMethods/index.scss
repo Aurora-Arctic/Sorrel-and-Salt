@@ -56,3 +56,13 @@
 .sign-in-methods__error {
   flex-basis: 100%;
 }
+
+// A stale session's way to a fresh one, above the rows: the line saying why
+// no row offers Remove, then Sign In Again at its own width, and a failure
+// beneath.
+.sign-in-methods__fresh {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(2);
+}

@@ -13,11 +13,13 @@ export default {
   title: 'Forms / Email',
 };
 
-// Inside the page's own frame, so the workshop shows what the page shows;
-// nothing here is the workshop's alone.
+// Inside the page's own frame and panel, so the workshop shows what the page
+// shows; nothing here is the workshop's alone.
 const Page = (props: EmailFormProps) => (
   <main className="page-frame page-frame--narrow">
-    <EmailForm {...props} />
+    <div className="panel">
+      <EmailForm {...props} />
+    </div>
   </main>
 );
 
@@ -58,7 +60,7 @@ export const WithError: Story = () => (
 // form has no heading of its own, and it never shows the confirmed view.
 export const Embedded: Story = () => (
   <main className="page-frame page-frame--narrow">
-    <section className="page-frame__section" aria-labelledby="email-story-heading">
+    <section className="page-frame__section panel" aria-labelledby="email-story-heading">
       <div className="header">
         <h2 id="email-story-heading">Email</h2>
       </div>

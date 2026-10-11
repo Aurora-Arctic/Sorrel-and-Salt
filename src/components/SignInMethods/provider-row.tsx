@@ -7,13 +7,13 @@ import type { ProviderRowProps } from './types';
 // One provider in the account's list of sign-in methods, in one of three
 // states, each told apart by its control and its words rather than by hue:
 // linked has Remove (or, the only method left, a line saying why it has
-// none), addable has Add, and unavailable has a greyed Add with the note
-// saying why. A failure about this provider sits in its row, beneath the
+// none; or, from a stale session, nothing, since the list says why once),
+// addable has Add, and unavailable has a greyed Add with the note saying why. A failure about this provider sits in its row, beneath the
 // controls. claude-docs/components/sign-in-methods.md, "The rows".
 export function ProviderRow({
   provider,
   state,
-  removable,
+  removal,
   pending,
   error,
   onAdd,
@@ -33,15 +33,21 @@ export function ProviderRow({
       <ProviderMark id={provider.id} />
       <span className="sign-in-methods__label">{provider.label}</span>
       {state === 'linked' ? (
-        // Better Auth refuses the last one too; this only keeps the offer
-        // honest, and the line says why there is nothing to press.
-        removable ? (
-          <button type="button" className="btn" disabled={pending} onClick={onRemove}>
+        // Better Auth refuses the last one, and any from a stale session, too;
+        // this only keeps the offer honest. The last says why in its row; a
+        // withheld one is explained once, above the list.
+        removal === 'offered' ? (
+          <button
+            type="button"
+            className="btn btn--destructive"
+            disabled={pending}
+            onClick={onRemove}
+          >
             Remove {provider.label}
           </button>
-        ) : (
+        ) : removal === 'last' ? (
           <p className="meta sign-in-methods__line">Your only sign-in method</p>
-        )
+        ) : null
       ) : (
         <button
           type="button"

@@ -24,11 +24,15 @@ export interface Session extends AuditSession {
   role: UserRole;
 }
 
-// `emailVerified` stays off the service-level session: only `requireSession`
-// reads it, to keep an unverified account on the email page.
+// `emailVerified` and `sessionFresh` stay off the service-level session:
+// pages read them and services never do. `requireSession` keeps an unverified
+// account on the email page; the account page withholds Remove while Better
+// Auth would refuse it as stale (claude-docs/components/sign-in-methods.md).
 export interface SessionState {
   session: Session | null;
   emailVerified: boolean;
+  /** Younger than Better Auth's `freshAge`, so `/unlink-account` would take it. */
+  sessionFresh: boolean;
 }
 
 /** What a Better Auth hook handler is handed: the request, and the session once there is one. */

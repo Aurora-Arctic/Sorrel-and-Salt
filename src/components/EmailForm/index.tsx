@@ -36,13 +36,19 @@ function normalise(input: string): string {
   return input.trim().toLowerCase();
 }
 
-export const VERIFIED_STATUS = 'Verified: we will send emails to this address.';
+// The status line, one per state of the address: the only rendering of that
+// state, so the tests read them from here rather than restating the words.
+export const VERIFIED_STATUS = "Your email address is confirmed. We'll send your emails here.";
+export const NO_EMAIL_STATUS = 'No email address yet. Enter the one we should write to.';
+export const UNVERIFIED_STATUS =
+  "Your email address isn't confirmed yet. Open the link we sent you, or send a new one.";
+export const CHANGE_STATUS = "Enter a new email address and we'll send it a confirmation link.";
 
 function statusLine(email: string, verified: boolean): string {
-  if (email === '') return 'No email yet. Enter the address Sorrel & Salt should write to.';
+  if (email === '') return NO_EMAIL_STATUS;
   // A verified account back to change it: the confirmation is the other view.
-  if (verified) return "Enter a new address and we'll send it a confirmation link.";
-  return 'Not yet verified. Check your inbox for a confirmation link, or send a new one.';
+  if (verified) return CHANGE_STATUS;
+  return UNVERIFIED_STATUS;
 }
 
 const EmailForm = ({

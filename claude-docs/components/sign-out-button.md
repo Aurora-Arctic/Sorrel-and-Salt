@@ -23,6 +23,12 @@ with no props.
   is Better Auth's, not GraphQL's, but it has no more to say about why than a
   lost request does, so it takes the same sentence.
 - **A plain full-size `.btn`**, its label in title case, "Sign Out".
+- **SignInMethods' Sign In Again makes the same call** in the same shape,
+  a refusal or a dropped connection said in `GENERIC_FAILURE`, but lands on
+  `/sign-in?next=%2Faccount` rather than `/`, so a stale session comes back
+  to the account page fresh
+  ([`sign-in-methods.md`](sign-in-methods.md), "A stale session signs in
+  again").
 
 ## Styling
 
