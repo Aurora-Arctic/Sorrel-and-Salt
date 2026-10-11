@@ -1,4 +1,4 @@
-import { and, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import { and, eq, gt, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
@@ -128,13 +128,20 @@ export function trigramMatch(text: SQLWrapper, query: string): SQL {
  * A search for `query` — trimmed, never blank — by word similarity: `matches`
  * holds where it is word-similar (`<%`) to a text and `similarity` scores it,
  * each side folded through `unaccent_immutable`, so the expression indexes of
- * migration 0027 answer the match. The compendium search and the reference
- * picker's (claude-docs/db/compendium-read.md, "The compendium read").
+ * migration 0027 answer the match. `contains` holds where the text holds the
+ * query verbatim, folded the same way and lower-cased, since `<%` ignores
+ * case: `word_similarity` scores against whole words, so a caller ranks a
+ * fragment inside a longer word — `wood` in Sandalwood — as a full hit with
+ * it. `strpos` rather than `ilike`: it reads the query as plain text, where a
+ * pattern would need its `%`, `_` and `\` escaped as `containsText`
+ * escapes them. The compendium search and the reference picker's
+ * (claude-docs/db/compendium-read.md, "The compendium read").
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;
   return {
     matches: (text) => sql`${folded} <% unaccent_immutable(${text})`,
     similarity: (text) => sql<number>`word_similarity(${folded}, unaccent_immutable(${text}))`,
+    contains: (text) => gt(sql`strpos(lower(unaccent_immutable(${text})), lower(${folded}))`, 0),
   };
 }

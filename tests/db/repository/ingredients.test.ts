@@ -293,19 +293,23 @@ describe('findCompendiumPage', () => {
 
     /**
      * The answer key, written independently of the finder: every live
-     * compendium row's best weighted word similarity — the label at 1, the
-     * formal name at 0.9, a live folk name at 0.8, a live variant's form at 0.6
-     * and its description at 0.2 — counting a field only where it matches at
-     * 0.5 or better, best first, then by name and id. The weights are restated
-     * here on purpose rather than imported, and each is cast to `real` as the
+     * compendium row's best weighted score — the label at 1, the formal name
+     * at 0.9, a live folk name at 0.8, a live variant's form at 0.6 and its
+     * description at 0.2 — counting a field only where its word similarity is
+     * 0.5 or better, best first, then by name and id. A field scores its word
+     * similarity, or 1 where it holds the query verbatim, case and accents
+     * folded. The weights and the containment rule are restated here on
+     * purpose rather than imported, and each number is cast to `real` as the
      * finder's are, so a product rounds as the finder's does.
      */
     async function rankedOrder(query: string): Promise<{ id: string; score: number }[]> {
       const q = sql`unaccent_immutable(${query})`;
       const ws = (text: postgres.Fragment) =>
         sql`word_similarity(${q}, unaccent_immutable(${text}))`;
+      const raw = (text: postgres.Fragment) =>
+        sql`greatest(${ws(text)}, case when position(lower(${q}) in lower(unaccent_immutable(${text}))) > 0 then 1::real end)`;
       const weighted = (text: postgres.Fragment, weight: number) =>
-        sql`case when ${ws(text)} >= 0.5 then ${ws(text)} * ${weight}::real end`;
+        sql`case when ${ws(text)} >= 0.5 then ${raw(text)} * ${weight}::real end`;
       return sql<{ id: string; score: number }[]>`
         select id, score from (
           select i.id, i.name, greatest(
@@ -450,7 +454,7 @@ describe('findCompendiumPage', () => {
         canonicalName: 'Fixtura quandle',
       });
       await add('Fixture Wimble', { folkNames: ['Quandle'] });
-      await add('Fixture Quandles');
+      await add('Fixture Quandly');
       await add('Fixture Thrum', { variants: [makeVariant({ form: 'Quandle' })] });
       await add('Fixture Sprocket', {
         variants: [makeVariant({ description: 'Steeped with quandle' })],
@@ -458,41 +462,64 @@ describe('findCompendiumPage', () => {
     });
 
     it('ranks the label above the formal name, the folk name, the form and the description', async () => {
-      // The preconditions: the plural label matches, but short of a whole word,
-      // so its rank sits between the formal name's and the folk name's; and
-      // the entry with the formal name does not match by its label, so it is
-      // found by the formal name alone.
-      const [similarity] = await sql<{ plural: number; label: number }[]>`
-        select word_similarity(${QUERY}, 'Fixture Quandles') as plural,
+      // The preconditions: the near-miss label matches, but neither as a whole
+      // word nor holding the query, so its rank sits between the folk name's
+      // and the form's; and the entry with the formal name does not match by
+      // its label, so it is found by the formal name alone.
+      const [similarity] = await sql<{ nearMiss: number; label: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss",
                word_similarity(${QUERY}, 'Fixture Kettlebrim') as label`;
-      expect(similarity.plural).toBeGreaterThanOrEqual(0.5);
-      expect(similarity.plural).toBeLessThan(0.9);
+      expect(similarity.nearMiss).toBeGreaterThan(0.6);
+      expect(similarity.nearMiss).toBeLessThan(0.8);
       expect(similarity.label).toBeLessThan(0.5);
 
       expect(await namesOf({ query: QUERY })).toEqual([
         'Fixture Quandle',
         'Fixture Kettlebrim',
-        'Fixture Quandles',
         'Fixture Wimble',
+        'Fixture Quandly',
         'Fixture Thrum',
         'Fixture Sprocket',
       ]);
     });
 
     it('carries the weighted rank on each edge', async () => {
-      const [{ plural }] = await sql<{ plural: number }[]>`
-        select word_similarity(${QUERY}, 'Fixture Quandles') as plural`;
+      const [{ nearMiss }] = await sql<{ nearMiss: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss"`;
 
       const page = await pageOf({ query: QUERY }, { first: 100 });
 
       expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
         ['Fixture Quandle', 1],
         ['Fixture Kettlebrim', 0.9],
-        ['Fixture Quandles', expect.closeTo(plural, 5)],
         ['Fixture Wimble', 0.8],
+        ['Fixture Quandly', expect.closeTo(nearMiss, 5)],
         ['Fixture Thrum', 0.6],
         ['Fixture Sprocket', 0.2],
       ]);
+    });
+
+    // `word_similarity` scores the query against whole words, so a fragment
+    // inside a longer word scores by the trigrams it shares, under the same
+    // fragment standing as a word of its own in a lighter field.
+    it('scores a field holding the query verbatim, case and accents folded, as a full hit', async () => {
+      await add('Fixture Mockleaf', { folkNames: ['Sweet Brim'] });
+      // The precondition: by word similarity alone, the label holding `brim`
+      // mid-word scores under the folk name's whole word at its weight, so
+      // without the containment rule the folk name would rank first.
+      const [{ label }] = await sql<{ label: number }[]>`
+        select word_similarity('brim', 'Fixture Kettlebrim') as label`;
+      expect(label).toBeGreaterThanOrEqual(0.5);
+      expect(label).toBeLessThan(0.8);
+
+      for (const query of ['brim', 'BRÍM']) {
+        const page = await pageOf({ query }, { first: 100 });
+
+        expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+          ['Fixture Kettlebrim', 1],
+          ['Fixture Mockleaf', 0.8],
+        ]);
+      }
     });
 
     it('walks the weighted order across a cursor, neither losing nor repeating a row', async () => {

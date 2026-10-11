@@ -384,7 +384,8 @@ const SEARCH_WEIGHTS = {
  * the match; the threshold is the keyset read's (`wordMatch`). The three
  * arms are a `UNION ALL`, for `findSimilarIngredients`'s reason, each
  * scoring what it matched with `word_similarity` — which the index's recheck
- * has just computed — times that field's `SEARCH_WEIGHTS` entry, and the
+ * has just computed — or 1 where the field holds the query verbatim, times
+ * that field's `SEARCH_WEIGHTS` entry, and the
  * rank is the best of them, `max … group by id`, so an entry two of whose
  * forms match is still one row. A field only scores where it matched itself,
  * so a weak hit in a heavier field never outranks the field that matched. A plain
@@ -398,16 +399,18 @@ function searchMatch(
 ): { join: { source: SQL; on: SQL }; score: SQL<number> } | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
-  const { matches, similarity } = foldedWordMatch(trimmed);
+  const { matches, similarity, contains } = foldedWordMatch(trimmed);
   const candidate = alias(ingredients, 'candidate');
   const arms = sql.identifier('arms');
   const matched = sql.identifier('matched');
-  // A field's weighted similarity where it matched, else null. The weight is a
-  // parameter cast to `real`: `real` times a bare number is `double
-  // precision`, and the rank carried onto the edge is not cast as the
-  // keyset's sort is.
+  // A field's weighted score where it matched, else null: its word
+  // similarity, or 1 where it holds the query verbatim, since word similarity
+  // scores a fragment inside a longer word by the trigrams it shares. The
+  // weight and the 1 are cast to `real`: `real` times a bare number is
+  // `double precision`, and the rank carried onto the edge is not cast as
+  // the keyset's sort is.
   const weighted = (text: AnyPgColumn, weight: number) =>
-    sql`case when ${matches(text)} then ${similarity(text)} * ${weight}::real end`;
+    sql`case when ${matches(text)} then greatest(${similarity(text)}, case when ${contains(text)} then 1::real end) * ${weight}::real end`;
   // `greatest` skips nulls, so an entry with no formal name scores on its
   // label, and a variant with no description on its form.
   const source = sql`(

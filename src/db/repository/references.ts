@@ -1,4 +1,5 @@
 import { and, eq, inArray, isNotNull, not, or, sql, type SQL } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import {
@@ -121,11 +122,16 @@ export function findReferenceSuggestions(
     return findPageInTiers(memberships, references, byTitle, page);
   }
 
-  const { matches, similarity } = foldedWordMatch(trimmed);
+  const { matches, similarity, contains } = foldedWordMatch(trimmed);
   const fields = [references.authors, references.title, references.container];
-  // `greatest` skips nulls, so a source without authors or a container
-  // scores on what it has.
-  const score = sql<number>`greatest(${sql.join(fields.map(similarity), sql`, `)})`;
+  // A field's word similarity, or 1 where it matched and holds the query
+  // verbatim, as the compendium search scores a field before its weight: word
+  // similarity scores a fragment inside a longer word by the trigrams it
+  // shares. `greatest` skips nulls, so a source without authors or a
+  // container scores on what it has.
+  const scored = (field: AnyPgColumn) =>
+    sql`greatest(${similarity(field)}, case when ${and(matches(field), contains(field))} then 1::real end)`;
+  const score = sql<number>`greatest(${sql.join(fields.map(scored), sql`, `)})`;
   const bestMatch: ListOrder<CompendiumScore> = {
     sort: [{ expression: sql`-${score}`, type: 'real' }, references.title],
     wordMatch: true,

@@ -160,6 +160,8 @@ export interface WordMatch {
   matches: (text: AnyPgColumn) => SQL;
   /** How word-similar, for a best-match order. */
   similarity: (text: AnyPgColumn) => SQL<number>;
+  /** `text` holds the query verbatim, case and accents aside: a full hit, wherever it falls in a word. */
+  contains: (text: AnyPgColumn) => SQL;
 }
 
 /**
