@@ -544,8 +544,8 @@ shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by
 default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
 reaches compendium and coven entries alike. It is a plain anchor,
-as [`AdminNav`](admin-nav.md)'s are, since typed routes refuse a page the
-build does not contain; M8.19 builds the page, and the link becomes a
+as [`AdminNav`](admin-nav.md)'s were until each of their pages had landed,
+since typed routes refuse a page the build does not contain; M8.19 builds the page, and the link becomes a
 `<Link>`. Nothing refuses the create on the server: the warning is the
 form's alone.
 
