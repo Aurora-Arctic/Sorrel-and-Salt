@@ -513,8 +513,9 @@ as the ingredient's page shows its forms after it (MB.221).
   empty) with its curated group after it in the muted ink, "Dried leaf
   (Plant part)", as the Form box reads; beneath, what it carries,
   `variantSummary`, in its sections' order — "1 planet · 2 categories ·
-  Safety note · 1 reference" — or "No details yet"; and at the end an Edit
-  and a Remove, named for the form, "Edit Oil" and "Remove Oil". The card is
+  Safety note · 1 reference" — or "No details yet"; and at the end the reference
+  rows' two icon buttons, a pencil and a × (MB.115, the owner's call),
+  named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
   and `aria-controls`, naming the region of the variant's fields, and is
@@ -1020,9 +1021,11 @@ locator in the muted caption, then two
 chip's × does; an open row wraps the citation and shows its tier and the
 locator, a 10rem box beside its label. Each variant is a card on the card
 surface with a 1px muted edge, the error red's when it holds an error, its
-line the form in weight 500, the group and the summary muted, and its Edit
-and Remove `.btn--small`, the Remove quiet, which wrap beneath the line on a
-phone; open, its fields follow at the form's gap, Done at their foot. The
+line the form in weight 500, the group and the summary muted, and its pencil
+and × the reference rows' 24px icon buttons, level with the form's name at
+every width: the × as a reference row's, and the pencil in `$accent`, on a
+tint of it 20% into the card while pointed at, focused or open, each clearing
+3:1 on the card (`tests/scss/tokens.test.ts`); open, its fields follow at the form's gap, Done at their foot. The
 new reference panel is a group set off by the same 1px muted edge. The
 hidden variant fields and a row's closed detail are hidden by the `hidden`
 attribute, which each restates as `display: none` because its own display

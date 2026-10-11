@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react';
 
-// The form's two row icons, a reference row's edit and remove (MB.115):
-// drawn at the glyph size in the button's own ink, and hidden from assistive
-// technology, since the button around each is what names it.
+// The form's two row icons, a reference row's and a variant's edit and
+// remove (MB.115): drawn at the glyph size in the button's own ink, and
+// hidden from assistive technology, since the button around each is what
+// names it.
 
 /** A pencil: open this row to change it. */
 export function EditIcon(): ReactElement {

@@ -12,6 +12,7 @@ import {
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
+import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
@@ -335,11 +336,12 @@ function VariantFieldset({
           )}
         </div>
         <div className="ingredient-form__variant-actions">
-          {/* Named for its form, as a list entry's × is for its entry. */}
+          {/* The reference rows' pencil and × (MB.115, the owner's call),
+            each named for its form, as a list entry's × is for its entry. */}
           <button
             ref={editButton}
             type="button"
-            className="btn btn--small"
+            className="ingredient-form__icon-button ingredient-form__edit"
             aria-label={`Edit ${legend}`}
             aria-expanded={open}
             aria-controls={fieldsId}
@@ -352,15 +354,15 @@ function VariantFieldset({
               onToggle(!open);
             }}
           >
-            Edit
+            <EditIcon />
           </button>
           <button
             type="button"
-            className="btn btn--small btn--quiet"
+            className="ingredient-form__icon-button ingredient-form__remove"
             aria-label={`Remove ${legend}`}
             onClick={() => onRemove(index)}
           >
-            Remove
+            <RemoveIcon />
           </button>
         </div>
       </div>

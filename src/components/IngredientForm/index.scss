@@ -242,6 +242,21 @@
     color: $text-primary;
   }
 
+  // A variant's pencil, drawn in the accent green, the owner's call
+  // (MB.115): the open way into a variant, set apart from its ×. Pointed at,
+  // focused or open, it sits on a tint of its own green, as the × does on
+  // the wax's.
+  &.ingredient-form__edit {
+    color: $accent;
+  }
+
+  &.ingredient-form__edit:hover,
+  &.ingredient-form__edit:focus-visible,
+  &.ingredient-form__edit[aria-expanded='true'] {
+    background-color: color-mix(in srgb, $accent 20%, $surface-card);
+    color: $accent;
+  }
+
   // Remove destroys, so it answers in the wax as a chip's × does.
   &.ingredient-form__remove:hover,
   &.ingredient-form__remove:focus-visible {
@@ -335,12 +350,12 @@
   }
 }
 
-// The summary line: the form and what it carries, the buttons at the end,
-// wrapping beneath on a phone rather than squeezing the form's name.
+// The summary line: the form and what it carries, the two icon buttons at
+// the end, level with the form's name; a long name wraps rather than
+// pushing them beneath it.
 .ingredient-form__variant-head {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: space(2);
 }
@@ -379,7 +394,8 @@
 
 .ingredient-form__variant-actions {
   display: flex;
-  gap: space(2);
+  flex-shrink: 0;
+  gap: space(1);
 }
 
 // Open, its fields at the form's own spacing beneath the line, Done at the end.
