@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "jsx-a11y", "import"],
+  "jsPlugins": ["./lint/sorrel-lint.js"],
   "settings": {
     "react": {
       "version": "19.2.8"
@@ -25,7 +26,7 @@
           },
           {
             "group": ["@/db/repository/*", "**/db/repository/*"],
-            "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
+            "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
           },
           {
             "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -56,11 +57,36 @@
               "@/modules/*/loaders/**",
               "@/modules/*/types"
             ],
-            "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+            "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+          },
+          {
+            "group": ["@apollo/*", "apollo-*"],
+            "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+          }
+        ],
+        "paths": [
+          {
+            "name": "slugify",
+            "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+          },
+          {
+            "name": "next/cache",
+            "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
           }
         ]
       }
-    ]
+    ],
+    "import/no-cycle": [
+      "error",
+      {
+        "ignoreTypes": true
+      }
+    ],
+    "sorrel/no-use-server": "error",
+    "sorrel/service-server-only": "error",
+    "sorrel/route-allowlist": "error",
+    "sorrel/pagination-helper": "error",
+    "sorrel/module-boundaries": "error"
   },
   "ignorePatterns": ["public", ".next", "out"],
   "overrides": [
@@ -117,6 +143,14 @@
               {
                 "name": "better-auth/cookies",
                 "message": "A service receives the session as its first argument and never reads the request (claude-docs/auth.md, \"Route protection\"). The page or GraphQL context calls getSession()/requireSession() and passes the result in."
+              },
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              },
+              {
+                "name": "next/cache",
+                "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ],
             "patterns": [
@@ -142,7 +176,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["drizzle-orm", "drizzle-orm/*"],
@@ -173,7 +207,11 @@
                   "@/modules/*/loaders/**",
                   "@/modules/*/types"
                 ],
-                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
               }
             ]
           }
@@ -238,7 +276,21 @@
                   "@/modules/*/loaders/**",
                   "@/modules/*/types"
                 ],
-                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              },
+              {
+                "name": "next/cache",
+                "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -297,12 +349,26 @@
                   "@/modules/*/loaders/**",
                   "@/modules/*/types"
                 ],
-                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
               },
               {
                 "group": ["**/lib/errors", "**/lib/errors.ts"],
                 "importNames": ["Forbidden"],
                 "message": "A resolver narrows the session with sessionOf(context) from src/graphql/context-helpers.ts, never `if (!session) throw new Forbidden()` inline (MB.212): the narrowing is written once, and refusing is the service's (CLAUDE.md rule 1), so a module's resolver has no Forbidden to throw. A loader over a signed-in service is defineSignedInLoader, which answers the refusal itself."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              },
+              {
+                "name": "next/cache",
+                "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
               }
             ]
           }
@@ -337,7 +403,7 @@
               },
               {
                 "group": ["@/db/repository/*", "**/db/repository/*"],
-                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). tests/guards/module-boundaries.test.ts catches the spellings this glob cannot."
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
               },
               {
                 "group": ["dataloader"],
@@ -354,11 +420,253 @@
                   "@/modules/*/loaders/**",
                   "@/modules/*/types"
                 ],
-                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. tests/guards/module-boundaries.test.ts catches the relative spellings this glob cannot."
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
               }
             ]
           }
         ]
+      }
+    },
+    {
+      "files": ["src/modules/*/validation/**/*.ts", "src/lib/validation.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "allowTypeImports": true,
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+              },
+              {
+                "group": [
+                  "**/social-providers-config",
+                  "**/social-providers-config.ts",
+                  "./social-providers-config",
+                  "./social-providers-config.ts"
+                ],
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**",
+                  "@/modules/*/types"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["**/db/**", "@/db", "@/db/*"],
+                "allowTypeImports": true,
+                "message": "A validation schema loads in the browser as well as the service, so it reaches nothing under src/db at runtime (claude-docs/validation.md, \"Where the schemas live\"). `import type` is allowed."
+              },
+              {
+                "group": ["**/services/**", "**/services"],
+                "allowTypeImports": true,
+                "message": "A validation schema loads in the browser as well as the service, so it imports no service: the service imports it (claude-docs/validation.md, \"Where the schemas live\")."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "server-only",
+                "message": "A validation schema loads in the browser as well as the service, so nothing it imports may be server-only (claude-docs/validation.md, \"Where the schemas live\")."
+              },
+              {
+                "name": "postgres",
+                "message": "A validation schema loads in the browser as well as the service, so it imports no database driver (claude-docs/validation.md, \"Where the schemas live\")."
+              },
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              },
+              {
+                "name": "next/cache",
+                "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/lib/slugify.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "allowTypeImports": true,
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+              },
+              {
+                "group": [
+                  "**/social-providers-config",
+                  "**/social-providers-config.ts",
+                  "./social-providers-config",
+                  "./social-providers-config.ts"
+                ],
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**",
+                  "@/modules/*/types"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "next/cache",
+                "message": "Only src/lib/compendium-cache.ts caches (CLAUDE.md rule 6): it holds the reads that are the same for every viewer under the one `compendium` tag, so nothing workspace-scoped is cached and no tag is spelled twice (claude-docs/db/compendium-cache.md, \"What is cached\")."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/lib/compendium-cache.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/db/connection",
+                  "**/db/connection.ts",
+                  "./connection",
+                  "./connection.ts",
+                  "../connection",
+                  "../connection.ts"
+                ],
+                "message": "Import the database client only in src/db/repository/ (CLAUDE.md rule 2) — everything else reaches the database through a service, and writes go through withAudit(session, fn). The handful of files that legitimately need a client rather than a writer carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["@/db/repository/*", "**/db/repository/*"],
+                "message": "Import the repository through its index (`@/db/repository`) — the other files in src/db/repository/ are internal: `selectFrom` is exported only for the finders beside it, and a caller reaching it skips the soft-delete filter (claude-docs/db.md, \"Soft-delete filtering\"). The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the spellings this glob cannot."
+              },
+              {
+                "group": ["drizzle-orm", "drizzle-orm/*"],
+                "allowTypeImports": true,
+                "message": "Build queries only in src/db/repository/ (CLAUDE.md rule 4) — a Drizzle query cannot be built without importing drizzle-orm at runtime, so this is that rule rather than a style. Reach the database through a service; `import type` is allowed everywhere, which is how the GraphQL layer names Drizzle types (DESIGN.md §7)."
+              },
+              {
+                "group": [
+                  "**/social-providers-config",
+                  "**/social-providers-config.ts",
+                  "./social-providers-config",
+                  "./social-providers-config.ts"
+                ],
+                "message": "This file maps a provider to its env var names — import it only from src/lib/auth.ts or a server component (claude-docs/auth.md, \"Social providers\"). A client component needs the roster's id/label pairs, which live in social-providers.ts instead; even an env var *name* has no reason to reach the browser bundle. Legitimate imports carry an oxlint-disable-next-line saying why."
+              },
+              {
+                "group": ["dataloader"],
+                "allowTypeImports": true,
+                "message": "Build a DataLoader only through defineLoader (src/graphql/loaders/define-loader.ts) — a loader's cache lives as long as its instance, so one built at module level serves one request's answers to the next (CLAUDE.md rule 9). Register the factory in src/graphql/loaders/index.ts and read the instance off the request context. `import type` is allowed everywhere."
+              },
+              {
+                "group": [
+                  "@/modules/*/services",
+                  "@/modules/*/services/**",
+                  "@/modules/*/graphql",
+                  "@/modules/*/graphql/**",
+                  "@/modules/*/loaders",
+                  "@/modules/*/loaders/**",
+                  "@/modules/*/types"
+                ],
+                "message": "Reach a module through `@/modules/<name>` (its index) or its `schema/` files — its services, GraphQL registrations, loaders and types file are internal, so a deep import is a boundary violation rather than a style (claude-docs/modules.md, \"The boundary\"). The index re-exports every service the module means to offer; a name missing from it is a decision to make in the module, not to bypass here. The `sorrel/module-boundaries` lint rule (lint/sorrel-lint.js) catches the relative spellings this glob cannot."
+              },
+              {
+                "group": ["@apollo/*", "apollo-*"],
+                "message": "The browser's GraphQL client is graphql-request under TanStack Query, not Apollo (DESIGN.md §7): Apollo's normalized cache would duplicate TanStack Query's."
+              }
+            ],
+            "paths": [
+              {
+                "name": "slugify",
+                "message": "Every slug comes from src/lib/slugify.ts (M4.3), the only file that imports the package or knows its options: two slug rules do not collide, they disagree, and that surfaces only as a lookup finding nothing (claude-docs/db/category-seed.md, \"The category seed\")."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/db/repository/*.ts"],
+      "rules": {
+        "import/no-cycle": "off"
       }
     }
   ]
