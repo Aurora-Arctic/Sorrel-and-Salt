@@ -319,6 +319,8 @@ keeps the order chosen, and nothing sorts it.
   as none stands behind any list; it ANDs onto the compendium read's other
   predicates over one tier.
 
+**MB.215: identity moves onto the formal name alone, and each form becomes a variant.** DESIGN.md §5 now keys an ingredient on `identity_key`, `lower(coalesce(canonical_name, name))`, unique per tier, and holds each form it comes in as a row of `ingredient_variants` beneath it, one live row per ingredient and folded form, so Rosemary the herb and Rosemary the oil become one entry with two variants. A variant adds to its ingredient and never overrides it, and carries its own description, safety notes, correspondences, categories, substitutes and references, while deities and folk names stay on the ingredient ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)). This file describes the model as built until that lands: MB.216 adds the table, fills one variant from each row's form and adds `identity_key` with its two unique indexes beside `canonical_key`; MB.220 moves the identity finder, the collision mapping and the slug onto it; MB.222 stops reading `form` and `form_id`; and MB.223 drops `canonical_key`, `form`, `form_id`, their two CHECKs and the indexes over them, and gives this file its final wording. A variant's `form` stays text and not a foreign key, for the reason above: the curated vocabulary remains an autofill.
+
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
 **Ingredient slugs** has a file of its own: [`ingredient-slugs.md`](ingredient-slugs.md).
@@ -367,5 +369,37 @@ deploying it; it must return no row:
 ingredients where deleted_at is null group by 1, 2 having count(*) > 1`.
 `tests/db/migrations/0062-ingredient-variants-fill.test.ts` re-runs the
 migration's own fill and guard, and retires once `0062` is in production's
+journal (claude-docs/testing/layer-ownership.md, "What a test may assert",
+rule 7).
+
+**MB.217: what names a variant, as built.** Migration `0063_variant-children.sql`
+gives four tables a `variant_id` held to their `ingredient_id` by a composite
+foreign key, `(variant_id, ingredient_id) → ingredient_variants (id,
+ingredient_id)`, declared with Drizzle's `foreignKey` against MB.216's
+non-partial `(id, ingredient_id)` index, so no row pairs one ingredient with
+another's form. The key is `MATCH SIMPLE`, which skips the check when either
+column is null, so a CHECK closes the gap wherever the ingredient may be null.
+
+- `inventory_items.variant_id`, NOT NULL; one live row per coven and variant.
+- `spell_ingredients.variant_id`, set exactly when `ingredient_id` is; one
+  live layer per jar and variant. `0063` filled every linked layer from its
+  ingredient's one live variant, behind a guard refusing a database where one
+  has none or several.
+- `ingredient_categories.variant_id`, nullable: the pair primary key became
+  two unique indexes, one on the parent's pairs and one on a form's
+  ([`ingredient_categories`](ingredient-categories.md)).
+- `ingredient_substitutes.variant_id`, the form a row stands in for, and
+  `substitute_variant_id`, the linked ingredient's form, under its own
+  composite key against `substitute_id` and a CHECK that it has one beside
+  it. `ingredient_substitutes_not_itself` narrowed to the same ingredient
+  _and_ the same form, so a sibling form may stand in, and the link and name
+  uniqueness split by whether `variant_id` is set.
+- `reference_links.ingredient_variant_id`, one entry in the `SOURCED` registry
+  ([References](references.md)).
+
+Nothing writes `variant_id` on stock yet (M9.4), nor on layers but the demo
+seed and the test fixtures (the grimoire tasks); MB.219 writes a form's
+categories, substitutes and references. `tests/db/migrations/0063-variant-children.test.ts`
+re-runs the fill and the guard, and retires once `0063` is in production's
 journal (claude-docs/testing/layer-ownership.md, "What a test may assert",
 rule 7).

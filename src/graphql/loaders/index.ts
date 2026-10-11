@@ -2,10 +2,14 @@ import { membershipsByUser } from '@/modules/coven';
 import { providersByUser, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
+  categoriesByVariant,
   deitiesByIngredient,
   folkNamesByIngredient,
   referencesByIngredient,
+  referencesByVariant,
   substitutesByIngredient,
+  substitutesByVariant,
+  variantsByIngredient,
 } from '@/modules/ingredients';
 import {
   categoryGroupsById,
@@ -28,6 +32,10 @@ const LOADERS = {
   substitutesByIngredient,
   deitiesByIngredient,
   referencesByIngredient,
+  variantsByIngredient,
+  categoriesByVariant,
+  substitutesByVariant,
+  referencesByVariant,
   categoryGroupsById,
   ingredientFormGroupsById,
   ingredientFormsById,

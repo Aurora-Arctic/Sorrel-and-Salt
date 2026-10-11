@@ -92,9 +92,16 @@ this is what holds it in the database.
   the `ingredients_form_not_blank` idiom, since a blank name would satisfy
   `num_nonnulls` and name nothing.
 - **Two partial unique indexes, one per kind of row.**
-  `spell_ingredients_spell_id_ingredient_id_unique` on
-  `(spell_id, ingredient_id) WHERE ingredient_id IS NOT NULL` is one ingredient
-  per jar — what the M10.2 key used to give — and
+  `spell_ingredients_spell_id_variant_id_unique` on
+  `(spell_id, variant_id)`, live rows only, is one form per jar since MB.217,
+  where `spell_ingredients_spell_id_ingredient_id_unique` was one ingredient
+  per jar — what the M10.2 key used to give. A linked layer names its form in
+  `variant_id`, set exactly when `ingredient_id` is
+  (`spell_ingredients_variant_with_ingredient`) and held to it by the
+  composite key `spell_ingredients_variant_fk`, so a jar may lay Rosemary
+  herb and Rosemary oil. Migration `0063` filled each existing linked layer
+  from its ingredient's one live variant, refusing a database where one had
+  none or several; and
   `spell_ingredients_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
   jar, the shape of `ingredients_workspace_label_unique`. Both are partial on

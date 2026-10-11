@@ -28,6 +28,7 @@ vi.mock('@/db/connection', async () => {
 
 const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
 const FOLK_NAMES_UNACCENT_INDEX = 'ingredient_folk_names_unaccent_trgm';
+const VARIANTS_UNACCENT_INDEX = 'ingredient_variants_unaccent_trgm';
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: postgres.Sql;
@@ -64,9 +65,10 @@ describe('the ranked search plan over ~20,000 rows', () => {
   let pageTwo: Logged;
   let suggestions: Logged;
 
-  // Seeded once per file (MB.184): twenty thousand entries and as many folk
-  // names that share no word with `mugwort`, and a thousand that do — by
-  // label, by formal name and by folk name — at several scores.
+  // Seeded once per file (MB.184): twenty thousand entries, as many folk
+  // names and as many variants that share no word with `mugwort`, and some
+  // thirteen hundred that do — by label, by formal name, by folk name and by a
+  // variant's description (MB.218) — at several scores.
   beforeAll(async () => {
     await sql`
       insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
@@ -85,8 +87,17 @@ describe('the ranked search plan over ~20,000 rows', () => {
       insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
       select id, 'Mugwort Kin', ${AUTHOR}, ${AUTHOR}
       from ingredients where name like 'Decoy %' order by name limit 300`;
+    await sql`
+      insert into ingredient_variants (ingredient_id, form, description, created_by, updated_by)
+      select id, 'Form ' || md5(name), 'Note ' || md5(name), ${AUTHOR}, ${AUTHOR}
+      from ingredients where name like 'Decoy %'`;
+    await sql`
+      insert into ingredient_variants (ingredient_id, form, description, created_by, updated_by)
+      select id, 'Infusion', 'Steeped with mugwort', ${AUTHOR}, ${AUTHOR}
+      from ingredients where name like 'Decoy %' order by name desc limit 300`;
     await sql`analyze ingredients`;
     await sql`analyze ingredient_folk_names`;
+    await sql`analyze ingredient_variants`;
 
     pageOne = await statementFor(() => findCompendiumPage({ query: 'mugwort' }, FIRST));
     const first = await findCompendiumPage({ query: 'mugwort' }, FIRST);
@@ -104,11 +115,12 @@ describe('the ranked search plan over ~20,000 rows', () => {
     ['page after a cursor', () => pageTwo],
     ['ingredient suggestion page', () => suggestions],
   ] as const) {
-    it(`starts the ${label} from both expression indexes, with no subplan`, async () => {
+    it(`starts the ${label} from the three expression indexes, with no subplan`, async () => {
       const plan = await explain(statement());
 
       expect(plan).toContain(`Index Scan on ${UNACCENT_INDEX}`);
       expect(plan).toContain(`Index Scan on ${FOLK_NAMES_UNACCENT_INDEX}`);
+      expect(plan).toContain(`Index Scan on ${VARIANTS_UNACCENT_INDEX}`);
       expect(plan).not.toContain('SubPlan');
       expect(plan).not.toContain('Seq Scan');
     });

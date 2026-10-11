@@ -12,6 +12,7 @@ const OWN_COLUMNS = [
   'id',
   'spell_id',
   'ingredient_id',
+  'variant_id',
   'name',
   'form',
   'quantity',
@@ -24,7 +25,9 @@ const OWN_COLUMNS = [
 // surrogate id and the layer is unique among live rows — claude-docs/db/grimoire.md,
 // "Layer order is the identity, and what that costs the reorder".
 const LAYER_INDEX = 'spell_ingredients_spell_id_layer_order_unique';
-const INGREDIENT_INDEX = 'spell_ingredients_spell_id_ingredient_id_unique';
+const VARIANT_INDEX = 'spell_ingredients_spell_id_variant_id_unique';
+const VARIANT_KEY = 'spell_ingredients_variant_fk';
+const CHECK_VARIANT_WITH_INGREDIENT = 'spell_ingredients_variant_with_ingredient';
 const CUSTOM_NAME_INDEX = 'spell_ingredients_spell_id_custom_name_unique';
 
 const CHECK_INGREDIENT_OR_NAME = 'spell_ingredients_ingredient_or_name';
@@ -53,9 +56,16 @@ let ROSEMARY: string;
 let hearthGuard: string;
 let otherSpell: string;
 
+/** The ingredient's seeded variant, the first it was given, as a subquery, for a layer that names no other. */
+const liveVariantOf = (ingredientId: string) => sql`
+  select id from ingredient_variants where ingredient_id = ${ingredientId} and deleted_at is null
+  order by created_at, id limit 1
+`;
+
 async function layer({
   spellId = hearthGuard,
   ingredientId = MUGWORT,
+  variantId,
   name = null,
   form = null,
   quantity = '2.000',
@@ -65,8 +75,11 @@ async function layer({
 }: LayerRow = {}): Promise<void> {
   await sql`
     insert into spell_ingredients
-      (spell_id, ingredient_id, name, form, quantity, unit, layer_order, note, created_by, updated_by)
-    values (${spellId}, ${ingredientId}, ${name}, ${form}, ${quantity}, ${unit}::inventory_unit,
+      (spell_id, ingredient_id, variant_id, name, form, quantity, unit, layer_order, note,
+       created_by, updated_by)
+    values (${spellId}, ${ingredientId},
+            ${variantId === undefined && ingredientId !== null ? sql`(${liveVariantOf(ingredientId)})` : (variantId ?? null)},
+            ${name}, ${form}, ${quantity}, ${unit}::inventory_unit,
             ${layerOrder}, ${note}, ${AUTHOR}, ${AUTHOR})
   `;
 }
@@ -272,21 +285,64 @@ describe('spell_ingredients table', () => {
     });
   });
 
-  // The old primary key's guarantee, now a partial index over linked rows and
-  // its mirror over custom rows: inside one jar an ambiguous label is a
-  // mistake, not a distinction.
-  describe('one ingredient per jar, one custom name per jar', () => {
-    // The pair is unique, not either half: another ingredient in the spell,
-    // and the same one in another spell, are both admitted.
-    it('refuses the same ingredient twice in one spell', async () => {
+  // MB.217: a linked layer names the form it lays, a custom layer none.
+  describe('a linked layer names a variant of its ingredient', () => {
+    it('refuses a linked layer without a variant, and a custom one with a variant', async () => {
+      const [mugwortHerb] = await liveVariantOf(MUGWORT);
+
+      const linked = await failureOf(layer({ variantId: null }));
+      const customWithOne = await failureOf(
+        layer({ ingredientId: null, variantId: mugwortHerb.id as string, name: 'Garden dust' }),
+      );
+
+      for (const error of [linked, customWithOne]) {
+        expect(error.code).toBe('23514');
+        expect(error.constraint_name).toBe(CHECK_VARIANT_WITH_INGREDIENT);
+      }
+    });
+
+    // Why it could have been admitted: the variant exists and is live, only
+    // another ingredient's.
+    it("refuses another ingredient's variant beside its ingredient", async () => {
+      const [rosemaryHerb] = await liveVariantOf(ROSEMARY);
+
+      const error = await failureOf(layer({ variantId: rosemaryHerb.id as string }));
+
+      // 23503 is foreign_key_violation, named: the composite key refused.
+      expect(error.code).toBe('23503');
+      expect(error.constraint_name).toBe(VARIANT_KEY);
+    });
+  });
+
+  // The old primary key's guarantee, now a partial index over linked rows'
+  // variants and its mirror over custom rows: inside one jar an ambiguous
+  // label is a mistake, not a distinction.
+  describe('one variant per jar, one custom name per jar', () => {
+    // The pair is unique, not either half: another form of the ingredient in
+    // the spell, and the same one in another spell, are both admitted, so a
+    // jar may lay Mugwort herb and Mugwort oil (MB.217).
+    it('refuses the same variant twice in one spell, and admits another form of it', async () => {
+      const [oil] = await sql`
+        insert into ingredient_variants ${sql({
+          ingredient_id: MUGWORT,
+          form: 'Testoil',
+          created_by: AUTHOR,
+          updated_by: AUTHOR,
+        })}
+        returning id
+      `;
       await layer();
 
       const error = await failureOf(layer({ layerOrder: 2 }));
-      await layer({ ingredientId: ROSEMARY, layerOrder: 2 });
+      await layer({ variantId: oil.id as string, layerOrder: 2 });
       await layer({ spellId: otherSpell });
 
       expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(INGREDIENT_INDEX);
+      expect(error.constraint_name).toBe(VARIANT_INDEX);
+      const forms = await sql`
+        select count(*)::int as count from spell_ingredients where spell_id = ${hearthGuard}
+      `;
+      expect(forms[0].count).toBe(2);
     });
 
     it('refuses the same custom name twice in one spell, whatever its case', async () => {

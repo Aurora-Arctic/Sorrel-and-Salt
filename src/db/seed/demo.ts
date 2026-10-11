@@ -1,6 +1,7 @@
 import { eq, isNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
@@ -208,7 +209,7 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     const ingredientIds = await ingredientIdByIdentity(tx);
     // W's entries' forms; the compendium's `standard` wrote already.
     await insertMissingVariants(tx, [...ingredientIds.values()]);
-    await insertMissingLayers(tx, ingredientIds);
+    await insertMissingLayers(tx, ingredientIds, await variantIdByIngredient(tx));
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
   });
 }
@@ -269,6 +270,18 @@ async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, 
 }
 
 /**
+ * Each ingredient's one live variant (MB.217), what a linked layer lays: every
+ * seeded entry has exactly one, written by `insertMissingVariants`.
+ */
+async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, string>> {
+  const rows = await tx
+    .select({ id: ingredientVariants.id, ingredientId: ingredientVariants.ingredientId })
+    .from(ingredientVariants)
+    .where(isNull(ingredientVariants.deletedAt));
+  return new Map(rows.map((row) => [row.ingredientId, row.id]));
+}
+
+/**
  * Unreachable today, but a silent `undefined` would make a null
  * `ingredient_id` — a *custom* row under the CHECK — so the failure would be a
  * blank-named layer rather than an error.
@@ -284,16 +297,27 @@ function ingredientIdFor(
   );
 }
 
-/** Exactly one of `ingredientId` and `name` is set, and `form` rides with `name`. */
+/**
+ * Exactly one of `ingredientId` and `name` is set, `variantId` rides with the
+ * first (MB.217) and `form` with the second.
+ */
 function layerIdentity(
   ingredient: SeedLayerIngredient,
   ingredientIds: Map<string, string>,
+  variantIds: Map<string, string>,
 ):
-  | { ingredientId: string; name: null; form: null }
-  | { ingredientId: null; name: string; form: string } {
-  return ingredient.tier === 'custom'
-    ? { ingredientId: null, name: ingredient.name, form: ingredient.form }
-    : { ingredientId: ingredientIdFor(ingredient, ingredientIds), name: null, form: null };
+  | { ingredientId: string; variantId: string; name: null; form: null }
+  | { ingredientId: null; variantId: null; name: string; form: string } {
+  if (ingredient.tier === 'custom') {
+    return { ingredientId: null, variantId: null, name: ingredient.name, form: ingredient.form };
+  }
+  const ingredientId = ingredientIdFor(ingredient, ingredientIds);
+  const variantId = requireFrom(
+    variantIds,
+    ingredientId,
+    () => `A demo layer names "${ingredient.entry.name}", which has no variant to lay.`,
+  );
+  return { ingredientId, variantId, name: null, form: null };
 }
 
 /**
@@ -305,6 +329,7 @@ function layerIdentity(
 async function insertMissingLayers(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
+  variantIds: Map<string, string>,
 ): Promise<void> {
   const wanted = DEMO_SPELLS.flatMap((spell) =>
     spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
@@ -316,7 +341,7 @@ async function insertMissingLayers(
     columns: ['spellId'],
     toRow: ({ spellId, layer, index }) => ({
       spellId,
-      ...layerIdentity(layer.ingredient, ingredientIds),
+      ...layerIdentity(layer.ingredient, ingredientIds, variantIds),
       quantity: layer.quantity,
       unit: layer.unit,
       // The position in the array, one per jar from 1.

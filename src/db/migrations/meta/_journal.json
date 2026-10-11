@@ -442,6 +442,13 @@
       "when": 1791686942981,
       "tag": "0062_ingredient-variants-fill",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1791689448951,
+      "tag": "0063_variant-children",
+      "breakpoints": true
     }
   ]
 }

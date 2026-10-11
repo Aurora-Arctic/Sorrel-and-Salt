@@ -5,6 +5,7 @@ import { auditColumns } from '../../identity/schema/users';
 import { deities, deityTraditions } from '../../vocabulary/schema/deities';
 import { planets, zodiacSigns } from '../../vocabulary/schema/astrology';
 import { ingredients } from './ingredients';
+import { ingredientVariants } from './ingredient-variants';
 import { references } from './references';
 import { idColumn } from '../../../db/schema-parts';
 
@@ -34,6 +35,8 @@ export const SOURCED = {
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
   planetId: { column: 'planet_id', table: planets },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
+  // One form's own sources, beside its ingredient's (MB.217).
+  ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
 } as const;
 
 /** A sourced entity's property on `referenceLinks`: `ingredientId`, `deityId`, … */

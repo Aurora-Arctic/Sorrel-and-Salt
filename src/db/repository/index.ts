@@ -36,6 +36,7 @@ export {
   findDeitiesOfIngredients,
   findIngredientSuggestions,
   findManyOfIngredients,
+  findManyOfVariants,
   findOneIngredient,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,

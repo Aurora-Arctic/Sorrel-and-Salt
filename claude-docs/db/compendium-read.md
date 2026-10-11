@@ -12,7 +12,8 @@ A search pages best match first, `(score DESC, name, id)`, and a list without
 one pages `(name, id)`; each entry carries a `score`, null on the second:
 
 - **`query`** is word similarity, case- and accent-folded, against the display
-  name, the formal name or a live folk name:
+  name, the formal name, a live folk name, or the form or description of a
+  live variant (MB.218):
   `unaccent_immutable($query) <% unaccent_immutable(column)`, true when the query
   is at least **0.5** word-similar to some run of the text. That forgives a
   transposed pair (`mugwrot` is exactly 0.5 to Mugwort), matches a
@@ -21,28 +22,34 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   typo. A query of punctuation alone has no trigrams and matches nothing.
   pg_trgm's GIN answers `<%` when the text side is the index's own
   expression, which is what `ingredients_unaccent_trgm` and
-  `ingredient_folk_names_unaccent_trgm` (migration 0027) are for, and
+  `ingredient_folk_names_unaccent_trgm` (migration 0027) and
+  `ingredient_variants_unaccent_trgm` (0061) are for, and
   `unaccent_immutable` (0026) is the `IMMUTABLE` wrapper an expression index
   needs; `compendium-search-query.test.ts` proves by `EXPLAIN` that the
-  statement the finder sends reaches both (below), and
+  statement the finder sends reaches all three (below), and
   `ingredients-unaccent.test.ts` keeps the two indexes' expressions, the
   wrapper's volatility and the fold (MB.184, MB.226). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
-  the scope.
-- **The score is the row's best word similarity** across the three, and it is
+  the scope: the entry's own label and formal name, its folk names, and its
+  variants. A word in a form matches every entry holding that form, so a bare
+  "oil" scores each entry with an oil variant 1.0; the form filter (M8.13) is
+  the precise tool for that question, and the search is not.
+- **The score is the row's best word similarity** across the three arms, and it is
   the search's order. Each `UNION ALL` arm selects
   `word_similarity(query, text)` beside the id it matched — the value the GIN
   recheck has just computed to test `<%` — and the union is folded to
   `max(score) … group by id` and joined to `ingredients` as `matched`. So the
   score is a plain column, read by the order, the page bound and the edge
-  alike, once per matched row. The alternative, a `greatest(…)` over the three
+  alike, once per matched row, and an entry two of whose forms match is still
+  one row. The alternative, a `greatest(…)` over the three
   with a correlated subquery for the folk names, is a `SubPlan` that a page
   bound evaluates against every compendium row. `compendium-search-query.test.ts`
   runs `EXPLAIN` on the statement the finder sends, over ~20,000 entries and
-  as many folk names seeded once per file, under `enable_seqscan = off`: the
-  first page and the page after a cursor both start from
-  `ingredients_unaccent_trgm` and `ingredient_folk_names_unaccent_trgm`, with
-  no `SubPlan` and no sequential scan. When it was written the ranked page
+  as many folk names and variants seeded once per file, under
+  `enable_seqscan = off`: the first page and the page after a cursor both
+  start from `ingredients_unaccent_trgm`, `ingredient_folk_names_unaccent_trgm`
+  and `ingredient_variants_unaccent_trgm`, with no `SubPlan` and no sequential
+  scan. When it was written the ranked page
   ran in about 7 ms against the unranked shape's 5 ms; the test that printed
   those timings asserted only that they were positive, and went with MB.184.
 - **A keyset, not a capped top-N or pg_trgm's `<<->`.** A top-N would leave
@@ -136,6 +143,8 @@ takes an optional `workspaceId`; with one it asks
 admin and a non-member get `Forbidden` — and reads both tiers, without one it
 reads the compendium alone, and a miss is `NotFound` either way.
 
+**MB.215: the read reaches an entry's forms.** Once each form is a row of `ingredient_variants` (DESIGN.md §5), MB.218 adds a third `UNION ALL` arm to the `query` match, over each live variant's accent-folded form and description through `foldedWordMatch`, keyed on the variant's ingredient, so the existing `max(score) … group by id` still folds an entry with two matching forms into one row; the variant table's trigram index serves it, and `compendium-search-query.test.ts`'s plan loop gains the arm. A bare "oil" then ranks every entry with an oil variant at 1.0, and the form filter is the precise tool for that question. MB.220 makes `formId` an `EXISTS` over live variants, so a form's delete and rename find every entry holding a variant that picked it, and MB.222 does the same for `form`, folded on both sides. The category arms need no change: a variant's category pair also carries its `ingredient_id`, so `categoryIds` already matches the union of an entry's categories and its forms'. Under the same union rule an entry counts as sourced, for `withoutReferences`, if it or one of its live variants cites a reference. M8.14's sort becomes `(lower(name), identity_key, id)`, and `findIngredientSuggestions` reaches the new arm through `compendiumList`.
+
 ## The ingredient picker's search (MB.138)
 
 **`findIngredientSuggestions(membership, query, page)`** is what a coven's
@@ -148,8 +157,8 @@ of the proof's workspace, never another, so it is on
 
 - **It is `findCompendiumPage` under a wider scope.** It takes the same
   private `compendiumList({ query })`, so the match is the compendium
-  search's: word similarity at 0.5 against the label, the formal name and the
-  live folk names, accent-folded, best match first, with a blank query
+  search's: word similarity at 0.5 against the label, the formal name, the
+  live folk names and the live variants' forms and descriptions, accent-folded, best match first, with a blank query
   listing by `(name, id)`. The service parses the query through
   `CompendiumFilter`, so a query under `MIN_QUERY_LENGTH` is a blank one here
   too. Only the tier predicate differs: `workspace_id IS NULL OR

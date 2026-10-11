@@ -60,6 +60,11 @@ input CompendiumIngredientInput {
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]
 }
 
@@ -86,6 +91,11 @@ input CompendiumIngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]!
 }
 
@@ -175,6 +185,7 @@ type Ingredient {
   safetyNotes: String
   slug: String!
   substitutes: [Substitute!]!
+  variants: [IngredientVariant!]!
   zodiacSigns: [String!]
 }
 
@@ -253,6 +264,11 @@ input IngredientInput {
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]
 }
 
@@ -275,6 +291,59 @@ input IngredientUpdateInput {
   formId: ID!
   name: String!
   nomenclature: Nomenclature!
+  planets: [String!]!
+  references: [ReferenceLinkInput!]!
+  safetyNotes: String!
+  substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
+  zodiacSigns: [String!]!
+}
+
+"""
+One form an ingredient comes in, and what that form adds to the ingredient: its lists add to the ingredient's, and nothing overrides it.
+"""
+type IngredientVariant {
+  audit: AuditInfo!
+  categories: [Category!]!
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+  form: String!
+
+  """
+  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
+  """
+  formChoice: IngredientFormValue
+  id: ID!
+  planets: [String!]
+  references: [ReferenceLink!]!
+  safetyNotes: String
+  substitutes: [Substitute!]!
+  zodiacSigns: [String!]
+}
+
+"""
+One form of the ingredient, replacing the form it names. Every field but id is sent, and "" or [] clears one.
+"""
+input IngredientVariantInput {
+  """The categories this form is filed under."""
+  categoryIds: [ID!]!
+  colors: [String!]!
+  description: String!
+  elements: [IngredientElement!]!
+  form: String!
+
+  """The curated form picked for `form`; "" when it was typed."""
+  formId: ID!
+
+  """
+  The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added.
+  """
+  id: ID
   planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
@@ -628,7 +697,7 @@ type QueryCompendiumConnectionEdge {
   node: Ingredient!
 
   """
-  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
+  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name, folk names and forms. Null without a query.
   """
   score: Float
 }
@@ -907,6 +976,11 @@ type Substitute {
   The linked ingredient's label, its last once deleted; the typed name otherwise.
   """
   name: String!
+
+  """
+  The linked ingredient's form the link names: null when it names none, on a typed name, and once that ingredient or form is deleted.
+  """
+  variant: IngredientVariant
 }
 
 """
@@ -915,6 +989,11 @@ An ingredient to link, or the name of one not entered: exactly one of the two.
 input SubstituteInput {
   ingredientId: ID
   name: String
+
+  """
+  One of the linked ingredient's forms, when the substitute is that form alone.
+  """
+  substituteVariantId: ID
 }
 
 type SuggestionClaimant {

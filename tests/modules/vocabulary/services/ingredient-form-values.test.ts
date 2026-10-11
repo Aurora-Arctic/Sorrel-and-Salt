@@ -511,13 +511,13 @@ describe('updateIngredientFormValue', () => {
     it('carries the new name onto every compendium variant picking it, moving no slug and retiring none', async () => {
       const id = await seed('Fixture Resin');
       const first = await entry('Testwort', 'Fixture Resin', id);
-      await insertVariant(sql, first, 'Fixture Bark', null, A.id);
+      await insertVariant(sql, first, { form: 'Fixture Bark' }, A.id);
       // Its second form picked the resin, its first another.
       const second = await entry('Testleaf', 'Fixture Root', null, {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura testalis',
       });
-      await insertVariant(sql, second, 'Fixture Resin', id, A.id);
+      await insertVariant(sql, second, { form: 'Fixture Resin', formId: id }, A.id);
       const slugs = await Promise.all(
         [first, second].map(async (at) => (await ingredientOf(at)).slug),
       );
@@ -578,7 +578,7 @@ describe('updateIngredientFormValue', () => {
     it('is refused on `name`, naming the entry, when it would give an entry two forms of one name', async () => {
       const id = await seed('Fixture Resin');
       const doubled = await entry('Testwort', 'Fixture Resin', id);
-      await insertVariant(sql, doubled, 'fixture amber', null, A.id);
+      await insertVariant(sql, doubled, { form: 'fixture amber' }, A.id);
       const before = await Promise.all([formOf(id), variantsOf(doubled)]);
 
       const issues = await issuesOf(
@@ -595,7 +595,7 @@ describe('updateIngredientFormValue', () => {
     it('rolls the form back with the variants when the index refuses a rewrite, naming the entry', async () => {
       const id = await seed('Fixture Resin');
       const doubled = await entry('Testwort', 'Fixture Resin', id);
-      await insertVariant(sql, doubled, 'Fixture Amber', null, A.id);
+      await insertVariant(sql, doubled, { form: 'Fixture Amber' }, A.id);
       const before = await Promise.all([formOf(id), variantsOf(doubled)]);
       repository.findCompendiumFormRenameClashes.mockResolvedValueOnce([]);
 
@@ -661,7 +661,7 @@ describe('deleteIngredientFormValue', () => {
     it('refuses while only a second form of an entry picks it', async () => {
       const id = await seed('Fixture Held');
       const held = await entry('Testwort', 'Fixture Root', null);
-      await insertVariant(sql, held, 'Fixture Held', id, A.id);
+      await insertVariant(sql, held, { form: 'Fixture Held', formId: id }, A.id);
       // Why only the variant can hold it: the row picks nothing.
       expect((await ingredientOf(held)).form_id).toBeNull();
 
@@ -702,7 +702,12 @@ describe('deleteIngredientFormValue', () => {
     const gone = await entry('Testleaf', 'Fixture Lapsed', id);
     await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
     const dropping = await entry('Testroot', 'Fixture Root', null);
-    const dropped = await insertVariant(sql, dropping, 'Fixture Lapsed', id, A.id);
+    const dropped = await insertVariant(
+      sql,
+      dropping,
+      { form: 'Fixture Lapsed', formId: id },
+      A.id,
+    );
     await sql`
       update ingredient_variants set deleted_at = now(), deleted_by = ${E.id} where id = ${dropped}`;
     // Why it could have been held: the deleted entry's and the dropped form's picks are still there.

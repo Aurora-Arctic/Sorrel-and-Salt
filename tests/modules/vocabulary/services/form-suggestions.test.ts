@@ -220,9 +220,9 @@ describe('suggestForms', () => {
         workspaceId: WORKSPACE_W_ID,
         form: 'tuber',
       });
-      await insertVariant(sql, id, 'rhizome', null, A.id);
-      await insertVariant(sql, id, 'Root', null, A.id);
-      const dropped = await insertVariant(sql, id, 'caudex', null, A.id);
+      await insertVariant(sql, id, { form: 'rhizome' }, A.id);
+      await insertVariant(sql, id, { form: 'Root' }, A.id);
+      const dropped = await insertVariant(sql, id, { form: 'caudex' }, A.id);
       await sql`
         update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
       // Why the second forms could only come from the variants: the row holds the first.

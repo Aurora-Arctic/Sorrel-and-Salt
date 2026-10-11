@@ -61,6 +61,14 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
+// And for the rows one form of an ingredient owns beside it (MB.217):
+// `ingredient_categories` and `ingredient_substitutes` carry a `variant_id`
+// too, null on the ingredient's own rows. `findManyOfVariants` reads a form's
+// under its ingredient's tier, reached through the variant, and
+// `findManyOfIngredients` reads the ingredient's own, `variant_id IS NULL`
+// (the union rule, MB.215).
+export type VariantScoped = { variantId: AnyPgColumn };
+
 // And for a table written only through its own named calls: the schema file
 // marks it `namedWrites` (MB.198), and every generic method below, unscoped,
 // workspace-scoped and compendium-tier, takes `Generic` and so refuses it.
@@ -469,13 +477,17 @@ export interface AuditWriter {
 
 /**
  * What `delete` names its rows by: a value per column, or a list the column
- * is in. Values rather than an `SQL` predicate, since a service may not
- * build one (MB.33), and a join table keyed on its pair needs no other
- * comparison (MB.125). The stamps are not columns to match on.
+ * is in, or `null` for a nullable column that must be null — the parent's
+ * own category pairs beside a form's (MB.217). Values rather than an `SQL`
+ * predicate, since a service may not build one (MB.33), and a join table
+ * keyed on its pair needs no other comparison (MB.125). The stamps are not
+ * columns to match on.
  */
 export type ColumnMatch<TTable extends PgTable> = {
   [K in keyof Writable<TTable>]?:
-    NonNullable<Writable<TTable>[K]> | readonly NonNullable<Writable<TTable>[K]>[];
+    | NonNullable<Writable<TTable>[K]>
+    | readonly NonNullable<Writable<TTable>[K]>[]
+    | (null extends Writable<TTable>[K] ? null : never);
 };
 
 /** What a possible duplicate carries onto its edge: its trigram similarity to the name. */

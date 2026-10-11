@@ -41,15 +41,18 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
   renders, reorders and prints both kinds of row, and this is its row of the
   second kind.
 
+Layer order is the position in the `layers` array, never a number written
+beside it: one list, so the stack and its depths cannot disagree, and each jar
+is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
+
+**MB.215: W's ingredients take variants, and Fresh Ginger becomes Ginger.** MB.216 writes a variant beside each of W's ingredients' forms (Hearth Ash's `ash`, House Chamomile's `flower`), so every linked layer in the two jars can name one, and MB.217's migration fills each layer's `variant_id` from its ingredient's one variant. Identity on the formal name alone changes two of the fixtures above. Fresh Ginger and the compendium's Ginger are now one identity, _Zingiber officinale_, in two tiers, which the identity indexes permit, so W's entry shadows the compendium's under M8.3 as Garden Rosemary does; MB.222 renames it Ginger, with an uncurated `rhizome` variant, so it stays the coven's example of a form no admin has curated. Garden Rosemary shadows the compendium's Rosemary on the formal name, whatever forms either holds. MB.222 corrects this section ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 **W's entries have their variants too (MB.216).** After W's entries,
 `insertMissingVariants` from `standard.ts` writes one variant per entry of its
 form, lower-case as the entries spell it (Hearth Ash is `ash`, House Chamomile
 `flower`), so every linked layer's ingredient has a variant a layer can name
-once MB.217 gives layers one.
-
-Layer order is the position in the `layers` array, never a number written
-beside it: one list, so the stack and its depths cannot disagree, and each jar
-is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
+now that MB.217 gives layers one: each linked layer is seeded with its
+ingredient's one live variant, read back after the variants are written.
 
 ### A jar's stack is seeded whole or not at all
 
@@ -74,7 +77,8 @@ edited and the arithmetic is against you both ways: a layer pulled out of the
 middle leaves the ones below it renumbered, so the depth the seed wants is
 occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
-(`spell_ingredients_spell_id_ingredient_id_unique`). Either collision fails the
+(`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
+ingredient's variant). Either collision fails the
 whole scenario rather than the row.
 
 So a jar that already has layers is left exactly as it is — removed ones

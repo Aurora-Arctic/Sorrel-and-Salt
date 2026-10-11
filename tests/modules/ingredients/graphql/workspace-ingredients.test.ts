@@ -36,7 +36,7 @@ const FIELDS = `
   id name slug canonicalName nomenclature form formChoice { id name group { name } } description
   elements planets zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
   substitutes { name ingredient { id } } isGlobal folkNames
-  categories { name }
+  categories { name } variants { form }
   audit { createdBy updatedBy }
 `;
 
@@ -294,7 +294,9 @@ describe('updateIngredient', () => {
 
   // An empty value clears every field, `elements` too since it became a list
   // (MB.159), so none is left nullable and none may be left out.
-  it('declares every field of its input required', () => {
+  // But `variants`, until MB.222: an input without it reads `form` and
+  // `formId` as the one form, which is how IngredientForm still saves (MB.219).
+  it('declares every field of its input required, but its forms', () => {
     const input = schema.getType('IngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
@@ -304,7 +306,7 @@ describe('updateIngredient', () => {
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      [],
+      ['variants'],
     );
   });
 
@@ -492,5 +494,79 @@ describe('deleteIngredient', () => {
     expect((await remove(asUser(A), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
       'NOT_FOUND',
     );
+  });
+});
+
+// MB.219 over the wire: `variants` on both inputs, each an
+// `IngredientVariantInput`, answered back on `Ingredient.variants`. How a save
+// matches, keeps and drops forms is services/workspace-ingredients.test.ts's.
+describe('variants', () => {
+  /** One whole form as the input type requires it: every field but its id. */
+  const formOf = (form: string, description = '') => ({
+    form,
+    formId: '',
+    description,
+    safetyNotes: '',
+    elements: [],
+    planets: [],
+    zodiacSigns: [],
+    colors: [],
+    categoryIds: [],
+    substitutes: [],
+    references: [],
+  });
+
+  // Root mutation fields run one after another in one request, so the second
+  // must not answer the forms the first one read.
+  it('answers its own forms when one request updates the entry twice', async () => {
+    const id = await seed(local());
+    const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
+      first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) { variants { form description } }
+      second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) { variants { form description } }
+    }`;
+
+    const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
+      asUser(B),
+      twice,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        id,
+        first: { ...wholeInput(local()), variants: [formOf('Testleaf', 'Pressed.')] },
+        second: {
+          ...wholeInput(local()),
+          variants: [formOf('Testleaf', 'Pressed.'), formOf('Testoil')],
+        },
+      },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.first.variants).toEqual([{ form: 'Testleaf', description: 'Pressed.' }]);
+    expect(result.data?.second.variants).toEqual([
+      { form: 'Testleaf', description: 'Pressed.' },
+      { form: 'Testoil', description: null },
+    ]);
+  });
+
+  // The shim, until MB.222: the field is optional on every input, so a caller
+  // sending only `form` passes the schema and saves it as the one form.
+  it('takes an input without variants, answering its top-level form as the one form', async () => {
+    const result = await create(asUser(B), { name: 'Testwort', form: 'root' });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.createWorkspaceIngredient.variants).toEqual([{ form: 'root' }]);
+  });
+
+  it("answers a form's refusal as VALIDATION pathed to that form, writing nothing", async () => {
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      variants: [formOf('Testleaf'), formOf(' testleaf ')],
+    });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['variants', 1, 'form'] }],
+    });
+    expect(await countIngredients()).toBe(0);
   });
 });

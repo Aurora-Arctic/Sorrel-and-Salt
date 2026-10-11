@@ -49,9 +49,8 @@ import type {
   DeityRecord,
   IngredientFields,
   IngredientRow,
-  PickedDeity,
+  PickedLists,
 } from '../types';
-import type { DeityEntry } from '../validation/types';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db/compendium-read.md, "The compendium read");
@@ -121,8 +120,8 @@ export async function getIngredient(
 
 /**
  * Creates a compendium entry, with its folk names, substitutes, deities,
- * references and categories, in one transaction. Its form and deities are picked from their
- * curated vocabularies and its planets and signs named from theirs, each
+ * references, categories and forms, in one transaction. Its forms and deities are picked from their
+ * curated vocabularies and its planets and signs, and its forms', named from theirs, each
  * written in its curated row's spelling. The slug is set here from the label,
  * the form and the formal name, and the compendium's lapsed retirements are
  * cleared in the same write.
@@ -144,9 +143,9 @@ export async function createCompendiumEntry(
   const {
     fields: parsed,
     lists,
-    deities,
+    picked,
   } = splitChildren(parseInput(CompendiumIngredientInput, input));
-  const curated = await inCuratedValues(input, parsed, deities, []);
+  const curated = await inCuratedValues(input, parsed, picked, []);
   const { fields } = curated;
 
   const columns = ingredientColumns(fields);
@@ -157,13 +156,7 @@ export async function createCompendiumEntry(
   const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
     const [row] = await write.insertInCompendium(admin, ingredients, columns);
-    await writeChildren(
-      write,
-      [],
-      row.id,
-      { ...lists, categoryIds: fields.categoryIds, deities: curated.deities },
-      'add',
-    );
+    await writeChildren(write, [], row.id, { ...lists, ...curated.children }, 'add');
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug));
   expireCompendium();
@@ -173,8 +166,8 @@ export async function createCompendiumEntry(
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities, references and categories with the input's, in one
- * transaction.
+ * substitutes, deities, references, categories and forms with the input's, in
+ * one transaction, a form kept by its id or else its text folded (MB.219).
  * The slug follows the label, the form and the formal name; when it moves, the
  * old one is retired as this admin's, and redirects to the entry for 180 days.
  * The curated fields are held as `createCompendiumEntry` holds them.
@@ -201,12 +194,12 @@ export async function updateCompendiumEntry(
   const {
     fields: parsed,
     lists,
-    deities,
+    picked,
   } = splitChildren(parseInput(CompendiumIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
   const held = await heldDeities([], id);
-  const curated = await inCuratedValues(input, parsed, deities, held);
+  const curated = await inCuratedValues(input, parsed, picked, held);
   const { fields } = curated;
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
@@ -232,7 +225,7 @@ export async function updateCompendiumEntry(
       write,
       [],
       id,
-      { ...lists, categoryIds: fields.categoryIds, deities: curated.deities, heldDeities: held },
+      { ...lists, ...curated.children, heldDeities: held },
       'replace',
     );
     return row;
@@ -268,13 +261,14 @@ const NOUN_OF: Record<CuratedField, string> = { planets: 'planet', zodiacSigns: 
 const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
 
 /**
- * `fields` and `deities` holding curated values alone, as a compendium entry
- * does where a coven's ingredient keeps what was typed (MB.162; DESIGN.md
- * §5): its form and each deity a pick of a curated row (MB.167), and its
- * planets and signs each in the spelling of the live curated row it folds to.
- * A list's refusal is placed at the entry `input` sent, blanks counted, since
- * parsing drops blank planets and signs and the form numbers its rows by what
- * it sent. Read before the write rather than inside it, so an admin retiring a
+ * `fields` and the checked lists holding curated values alone, as a
+ * compendium entry does where a coven's ingredient keeps what was typed
+ * (MB.162; DESIGN.md §5): each form and each deity a pick of a curated row
+ * (MB.167), and the planets and signs of the entry and of each of its forms
+ * (MB.219) each in the spelling of the live curated row it folds to. A list's
+ * refusal is placed at the entry `input` sent, blanks counted, since parsing
+ * drops blank planets and signs and the form numbers its rows by what it
+ * sent. Read before the write rather than inside it, so an admin retiring a
  * row while another saves an entry naming it can leave that entry holding it.
  *
  * @throws {ValidationError} beside each value not picked or no live curated
@@ -284,43 +278,69 @@ const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedFiel
 async function inCuratedValues(
   input: CompendiumWrite,
   parsed: IngredientFields,
-  deities: readonly DeityEntry[],
+  picked: PickedLists,
   held: readonly DeityRecord[],
-): Promise<{ fields: IngredientFields; deities: PickedDeity[] }> {
+): Promise<{
+  fields: IngredientFields;
+  children: Awaited<ReturnType<typeof resolvePicks>>['children'];
+}> {
+  const variants = picked.variants ?? [];
+  const valuesOf = (field: CuratedField) => [
+    ...(parsed[field] ?? []),
+    ...variants.flatMap((variant) => variant[field] ?? []),
+  ];
   const [picks, planets, zodiacSigns] = await Promise.all([
-    resolvePicks('compendium', parsed, deities, held),
-    curatedSpellings('planets', parsed.planets ?? []),
-    curatedSpellings('zodiacSigns', parsed.zodiacSigns ?? []),
+    resolvePicks('compendium', parsed, picked, held),
+    curatedSpellings('planets', valuesOf('planets')),
+    curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
   const spellingsOf = { planets, zodiacSigns };
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
+  // The entry's own lists, then each form's, as `input` sent them.
+  const sent = [
+    { at: [], lists: input },
+    ...(input.variants ?? []).map((lists, index) => ({ at: ['variants', index], lists })),
+  ];
   const spelled: ValidationIssue[] = [];
-  for (const field of SPELLED_FIELDS) {
-    (input[field] ?? []).forEach((value, index) => {
-      if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
-      spelled.push({
-        path: [field, index],
-        message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+  for (const { at, lists } of sent) {
+    for (const field of SPELLED_FIELDS) {
+      (lists[field] ?? []).forEach((value, index) => {
+        if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
+        spelled.push({
+          path: [...at, field, index],
+          message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+        });
       });
-    });
+    }
   }
   const issues = [...picks.issues, ...spelled].sort(
     (a, b) => FIELD_ORDER.indexOf(String(a.path[0])) - FIELD_ORDER.indexOf(String(b.path[0])),
   );
   if (issues.length > 0) throw new ValidationError(issues);
 
-  const spell = (field: CuratedField) =>
-    picks.fields[field]?.map((value) => spellingOf(field, value) ?? value);
+  const spell = <T extends Partial<Record<CuratedField, string[] | null>>>(lists: T): T => ({
+    ...lists,
+    planets: lists.planets?.map((value) => spellingOf('planets', value) ?? value),
+    zodiacSigns: lists.zodiacSigns?.map((value) => spellingOf('zodiacSigns', value) ?? value),
+  });
   return {
-    fields: { ...picks.fields, planets: spell('planets'), zodiacSigns: spell('zodiacSigns') },
-    deities: picks.deities,
+    fields: spell(picks.fields),
+    children: { ...picks.children, variants: picks.children.variants?.map(spell) },
   };
 }
 
 /** The curated fields in the order the form shows them, which is the order refusals are listed in. */
-const FIELD_ORDER = ['form', 'formId', 'planets', 'zodiacSigns', 'deities', 'categoryIds'];
+const FIELD_ORDER = [
+  'form',
+  'formId',
+  'planets',
+  'zodiacSigns',
+  'deities',
+  'categoryIds',
+  'variants',
+];
 
 /**
  * Refuses a write whose slug another entry's redirect runs from, unless the

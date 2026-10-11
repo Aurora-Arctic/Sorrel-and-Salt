@@ -22,13 +22,16 @@ the compendium alone, which is how a signed-out request reads it. It reads both
 tiers in one statement, so it is on [the tier seam](../modules.md#the-tier-seam).
 
 **Substitutes have a finder of their own,
-`findSubstitutesIncludingSoftDeleted(memberships, ingredientIds)`** (MB.140).
+`findSubstitutesIncludingSoftDeleted(memberships, of, ids)`** (MB.140; `of`,
+`'ingredient'` or `'variant'`, since MB.218).
 It reads the same rows `findManyOfIngredients` would, the parent's `EXISTS`
 and tier included, and left-joins each row's linked ingredient, deleted or
 not, so a link to a deleted ingredient reads under its last name (DESIGN.md
 §5, `ingredient_substitutes`). The `EXISTS` also holds the link to the
 compendium or the parent's own coven, the tier rule a write is held to, so a
-row written past the service reads as nothing. It is the substitute's
+row written past the service reads as nothing. With `of: 'variant'` the ids
+are variants, and the parent is read as `findManyOfVariants` reads it (below).
+It is the substitute's
 `…IncludingSoftDeleted` hatch, beside M5.3's two for what a spell holds
 ([`soft-delete.md`](soft-delete.md)), and on the tier seam too. `replaceSubstitutes` reads the live rows it compares
 against through `findManyOfIngredients`, since a write needs no linked
@@ -66,7 +69,12 @@ reference it cites in one statement, through the same left join, and holds
 the reference to the compendium or the parent's own coven inside the
 parent's `EXISTS`, so a link written past the service's tier rule, or one
 to a soft-deleted reference, reads as nothing. It is no hatch: every row it
-answers is live. `replaceReferenceLinks` compares against what it answers,
+answers is live. A variant's links, `'ingredientVariantId'`, are read the same
+way through `readableVariantParent` (MB.218): the registry gave the column
+(MB.217), and the finder's one branch per parent table gives the tier, since a
+variant is a coven's where its ingredient is though it carries no
+`workspace_id`; read as global reference data, a coven's variant's links
+would answer anyone. `replaceReferenceLinks` compares against what it answers,
 so a link the ingredient does not show is left in place for a restore to
 return ([`references.md`](references.md)).
 
@@ -82,13 +90,35 @@ hard-deleted through `write.delete`, the table carrying no tombstone
 ([`hard-delete-join-tables.md`](hard-delete-join-tables.md)); one new is
 inserted, stamped from the session.
 
-**Five services and five loaders over them**, in `ingredients`:
-`categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167) and
-`referencesOf` (MB.153) in `services/ingredient-children.ts`, batched as
+**A variant's own rows, and the union rule** (MB.218). A category pair or a
+substitute that one form of an ingredient owns carries its `variant_id`
+beside the `ingredient_id` (MB.217), and a reference link its
+`ingredient_variant_id` alone. `findManyOfVariants(memberships, table,
+variantIds)` reads a form's rows under `readableVariantParent(memberships,
+variantColumn)`, beside `readableIngredientParent` in `ingredient-parent.ts`:
+an `EXISTS` over the live variant, holding an `EXISTS` over its readable
+ingredient. Never by the variant's bare id, which carries no tier. Through the
+variant rather than the row's own `ingredient_id`, so a soft-deleted form
+hides its rows, which stay for a restore. `findManyOfIngredients` reads an
+ingredient's own rows only, `variant_id IS NULL` (`ownedByIngredient` in
+`predicates.ts`, decided by the table's shape as `notSoftDeleted` is), so
+`Ingredient.categories` and `Ingredient.substitutes` never answer a form's
+additions and a save comparing against them never drops one. Nothing merges
+the two lists on read: a client shows a form's beside its ingredient's
+(DESIGN.md §5, the union rule).
+
+**Nine services and nine loaders over them**, in `ingredients`:
+`categoriesOf`, `folkNamesOf`, `substitutesOf`, `deitiesOf` (MB.167),
+`referencesOf` (MB.153) and `variantsOf` (MB.218), and a variant's
+`categoriesOfVariants`, `substitutesOfVariants` and `referencesOfVariants`
+(MB.218), in `services/ingredient-children.ts`, batched as
 `categoriesByIngredient`, `folkNamesByIngredient`, `substitutesByIngredient`,
-`deitiesByIngredient` and `referencesByIngredient`
+`deitiesByIngredient`, `referencesByIngredient` and `variantsByIngredient`, and
+`categoriesByVariant`, `substitutesByVariant` and `referencesByVariant`
 ([`graphql/loaders.md`](../graphql/loaders.md), "Loaders"). A key is the parent
-row's `{ id, workspaceId }`. The `workspaceId` decides which proof to ask for,
+row's `{ id, workspaceId }`, a variant's `{ id, ingredientId, workspaceId }`,
+its ingredient's tier carried on the row `variantsOf` answers. The
+`workspaceId` decides which proof to ask for,
 one `assertMembership(…, { ingredient: ['read'] })` per coven the batch names,
 and a coven the caller may not read answers `Forbidden` in its own keys' slots
 while the rest of the batch stands. It is never the scope. A key that lies about
@@ -102,8 +132,12 @@ Folk names come back as strings, flattened as §7's `folkNames: [String!]!`
 exposes them; categories come back as rows, with a soft-deleted category
 dropped by `findManyByIds`; substitutes come back as §7's `Substitute`, the
 name each shows and the live ingredient it leads to, or null; deities come
-back as §7's `IngredientDeity`, the name and the curated deity, or null. Each
-list is sorted by name, but the deities, which keep the order entered by
-`position`. The cost is one read each for folk names, substitutes and deities,
-and two for categories, plus one role lookup per coven in the batch, whatever the
+back as §7's `IngredientDeity`, the name and the curated deity, or null;
+variants come back as their rows, each carrying the tier of the key it was
+read under, which a variant's own children's loaders ask a proof for (MB.218).
+Each list is sorted by name, but the deities, which keep the order entered by
+`position`, and the variants, sorted by form, case aside. The cost is one read
+each for folk names, substitutes, deities and variants, and two for categories, plus one role lookup per coven in the batch, whatever the
 number of ingredients.
+
+**MB.215: variants are a child, with children of their own.** `ingredient_variants`, an ingredient's forms, is `IngredientScoped` and read through `findManyOfIngredients` under the parent's tier like the tables above (MB.216). A variant's own categories, substitutes and references carry its `variant_id` beside the `ingredient_id` (MB.217), and MB.218 reads them through `readableVariantParent(memberships, variantColumn)`, beside `readableIngredientParent` in `ingredient-parent.ts`, which reaches the parent ingredient through the variant, and through `findManyOfVariants(memberships, table, variantIds)`, built on it and never by a bare id. `findSubstitutesIncludingSoftDeleted` gains `of: 'ingredient' | 'variant'`, and a variant's references come through `findReferencesOf(memberships, 'ingredientVariantId', ids)`. Four services join the five — `variantsOf`, sorted by folded form, `categoriesOfVariants`, `substitutesOfVariants` and `referencesOfVariants` — each through `admit()`, keyed `{ id, ingredientId, workspaceId }`, with their loaders in the record `clearIngredientChildren` clears. An ingredient's own lists are its rows with no variant, and nothing merges a variant's into them: a form adds to its ingredient (DESIGN.md §5, the union rule).

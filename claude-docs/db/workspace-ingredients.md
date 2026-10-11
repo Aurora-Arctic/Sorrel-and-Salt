@@ -79,6 +79,13 @@ substitutes, deities, references and categories, `'add'` on a create and
 same call with none. A sixth child table costs one writer, one loader and one
 input field, and no edit to this service or its mutations
 (["Compendium writes"](compendium-writes.md) says which three).
+A coven's ingredient takes its forms the same way (MB.219): `variants`
+through the same `writeChildren` call, matched by id and then by folded text,
+each with its own substitutes, references and categories. A coven's form is
+free text, its pick checked only when one is sent. A substitute may name one
+form of the ingredient it links, `substituteVariantId`, which must be a live
+form of that ingredient in the writer's scope, refused on that field
+otherwise. And a form may not stand in for itself, though a sibling may.
 
 **The slug follows the label, the form and the formal name.** `slug` is
 `NOT NULL`, so a create writes `ingredientSlug` of the three, through
@@ -101,3 +108,5 @@ finder that builds the key from the values
 (["Compendium writes"](compendium-writes.md)); inside one
 coven the label index makes the case that needs it rarer, and a coven-scoped
 twin of that finder is the change that would add it here.
+
+**MB.215: a coven's ingredient takes variants too.** The coven's writes take the same `variants` list through the same `writeChildren` call (MB.219), so this service changes only by what the shared recipe gives it; a coven's form stays free text, an uncurated one included. Its identity becomes the formal name alone, `identity_key`, unique per coven through `ingredients_workspace_identity_key_unique`, which MB.220 maps to `canonicalName`, or to `name` for an entry with no formal name, as the identity index lands today. A second form of a plant the coven already holds is a variant of that ingredient, not an entry beside it, and the slug drops the form (["Ingredient slugs"](ingredient-slugs.md)). Stock arrives with M9.4 naming a variant: `addIngredientToWorkspace(variantId)`, one live stock row per coven and variant ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).

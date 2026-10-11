@@ -19,9 +19,12 @@ merely absent:
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
   `.actor`, MB.199),
   `categoriesByIngredient`, `folkNamesByIngredient`,
-  `substitutesByIngredient`, `deitiesByIngredient` and `referencesByIngredient`
-  (`ingredients`, for `Ingredient.categories`, `Ingredient.folkNames`,
-  `Ingredient.substitutes`, `Ingredient.deities` and `Ingredient.references`),
+  `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`
+  and `variantsByIngredient` (`ingredients`, for `Ingredient.categories`,
+  `Ingredient.folkNames`, `Ingredient.substitutes`, `Ingredient.deities`,
+  `Ingredient.references` and `Ingredient.variants`, the last MB.218's),
+  `categoriesByVariant`, `substitutesByVariant` and `referencesByVariant`
+  (`ingredients`, for `IngredientVariant`'s three, MB.218),
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `Ingredient.formChoice`;
@@ -32,12 +35,15 @@ merely absent:
   through the module's index, and spread into `LOADERS` here
   ([`modules.md`](../modules.md)).
 - **A loader keyed by an object** passes `cacheKeyFn`, and `defineLoader`'s
-  third type parameter names what it returns. The five ingredient loaders are
+  third type parameter names what it returns. The six ingredient loaders are
   keyed by the parent row's `{ id, workspaceId }` and cached by `id`. They are
   one record in `loaders/ingredient-children.ts`, each exported by name for
   `LOADERS`, and `clearIngredientChildren(loaders, row)` clears a row from
   every one in it, so an ingredient write clears a loader added there without
-  naming it (MB.211). The
+  naming it (MB.211). A variant's three child loaders are keyed by the variant
+  row's `{ id, ingredientId, workspaceId }` in a record of their own, which
+  `clearIngredientChildren` empties whole: a write knows its ingredient, not
+  which of its variants the request has loaded (MB.218). The
   service needs the `workspaceId` to know which coven to check without a read
   of its own, and it never trusts it as the scope
   ([`db/ingredient-children.md`](../db/ingredient-children.md),

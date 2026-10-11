@@ -11,8 +11,11 @@ import type { SpellFixture } from '../fixtures/types';
  * `author`, and returns the spell's id. `author` is `created_by`, which is
  * whom a private spell is readable by. A layer names its ingredient by id and
  * nothing checks the id's tier, which is how a test writes the cross-coven
- * link a finder has to withhold. Categories are named as §6 does; a name with
- * no live row is a thrown error naming it.
+ * link a finder has to withhold. A linked layer lays its ingredient's first
+ * live variant (MB.217), which the shared inserter wrote from the fixture's
+ * form; an ingredient with none leaves it null, for the CHECK to refuse.
+ * Categories are named as §6 does; a name with no live row is a thrown error
+ * naming it.
  */
 export async function insertSpell(
   sql: postgres.Sql,
@@ -30,8 +33,21 @@ export async function insertSpell(
     const id = row.id as string;
 
     if (fixture.layers.length > 0) {
+      const linked = fixture.layers.flatMap((layer) =>
+        layer.ingredientId === null ? [] : [layer.ingredientId],
+      );
+      const variants =
+        linked.length === 0
+          ? []
+          : await tx`
+              select distinct on (ingredient_id) ingredient_id, id from ingredient_variants
+              where ingredient_id in ${tx(linked)} and deleted_at is null
+              order by ingredient_id, created_at, id`;
+      const variantOf = new Map(variants.map((row) => [row.ingredient_id as string, row.id]));
       const layers = fixture.layers.map((layer) => ({
         ...spellLayerColumns(layer),
+        variant_id:
+          layer.ingredientId === null ? null : (variantOf.get(layer.ingredientId) ?? null),
         spell_id: id,
         ...stamps,
       }));

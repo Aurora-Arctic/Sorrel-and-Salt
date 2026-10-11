@@ -218,9 +218,27 @@ and colours have no list and are not checked
 ([`db/identity-model.md`](db/identity-model.md), "The ingredient identity
 model").
 
+**An ingredient's forms are `variants`** (MB.219). Each entry is a whole
+form, every field but `id` sent, as `IngredientVariantInput` declares it,
+since an entry replaces the row it names: `form` through `requiredText`,
+`""` and `[]` for none elsewhere, and the parse keeps them as sent, so what
+it gives back is still an input the type takes. `resolvePicks` reads each
+blank as none. Its `id` and `formId` must be uuids, beside each. Its lists
+take the ingredient's own rules, run inside the form's schema so each issue is
+pathed beneath it — `['variants', 1, 'substitutes', 0]`. Across the list, two
+forms folding alike are refused at the repeat's `form`, and one id sent twice
+at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
+one form of the ingredient it links: an id, and only beside a link, refused at
+`['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
+form reads the database, so it is the service's. With no `variants` sent the
+list is left absent, and the service reads the top-level `form` as the one
+form until MB.222.
+
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
 default would otherwise overwrite a kind the input merely left out.
+
+**MB.215: both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 now adds are an ingredient's forms, and MB.219 gives each schema them as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. Until MB.222 the top-level `form` and `formId` still parse, and become one variant when `variants` is absent ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Stock
 

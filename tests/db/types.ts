@@ -87,6 +87,11 @@ export type Row = Record<string, unknown>;
 export interface PartialIndexRow {
   row: () => Promise<Row>;
   clash?: string[];
+  /**
+   * The table has no tombstone (MB.34): its index is partial on something
+   * else, so the holder is deleted outright to free the slot (MB.217).
+   */
+  hardDeleted?: true;
 }
 
 /** A partial unique index as the catalogue reports it: every column it reads, predicate included. */
