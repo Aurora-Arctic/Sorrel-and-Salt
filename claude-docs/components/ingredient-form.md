@@ -941,8 +941,9 @@ legend and its box a step further apart than a single field's label and
 control. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap
 back, with a step more padding beneath Create Anyway than the notice's own.
-The sections are columns at the form's own gap, a `space(4)` step further
-apart than any two fields, under an `h3` in the display face at 1.25rem, a
+The sections are columns at the form's own gap, `space(6)` further
+apart than any two fields (the margin outweighing layout-base's bare `section`
+rule), under an `h3` in the display face at 1.25rem, a
 step under `h4`, set `space(3)` above its first field (MB.115). The
 references are one-line rows on the card surface with a 2px muted bar, the
 citation cut with an ellipsis and its locator in the muted caption, then two
