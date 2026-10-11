@@ -8,13 +8,16 @@ export const metadata: Metadata = {
 export default async function AdminPage() {
   await requireAdminSession();
 
+  // A `<p>` stays in `main` whatever the index becomes: tests/e2e/admin.spec.ts
+  // measures it against the reading measure on this layout (MB.115, 1d.9).
   return (
     <main>
       <h1>Admin</h1>
       <p>
-        The shared reference every coven reads from: the compendium, its categories, and the
-        vocabularies of forms, planets and zodiac signs, with the groups that organise categories
-        and forms.
+        Here you curate what every coven reads from: the compendium, its categories, and the
+        vocabularies of forms, planets, zodiac signs and deities, with the groups that organise
+        categories, forms and deities. You also manage who uses the site, and can see who changed
+        whose privileges.
       </p>
     </main>
   );

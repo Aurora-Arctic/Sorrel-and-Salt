@@ -4,7 +4,6 @@ import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
 import type { CompendiumListProps } from './types';
-import './index.scss';
 
 // `/admin/compendium`'s filter, table and pager (M5.5), as the category
 // list's. Render-only: the page reads one page of the compendium under the
@@ -21,6 +20,19 @@ const NONE = '—';
 /** Each kind by the label the filter and the form give it: Botanical, Unknown. */
 const KIND_LABELS = new Map(NOMENCLATURE_OPTIONS.map(({ value, label }) => [value, label]));
 
+// Each part's own role, written out because the table stacks into cards at
+// phone width (`.data-table--stack`), and WebKit drops a table's meaning once
+// `display` changes on its parts (claude-docs/styling.md, "Tables at phone
+// width"). Spread rather than written as `role="table"`, which lint refuses
+// as redundant: it cannot know the stylesheet takes the implicit role away.
+const ROLE = {
+  table: { role: 'table' },
+  rowgroup: { role: 'rowgroup' },
+  row: { role: 'row' },
+  columnheader: { role: 'columnheader' },
+  cell: { role: 'cell' },
+} as const;
+
 const CompendiumList = ({
   entries,
   filter,
@@ -28,7 +40,7 @@ const CompendiumList = ({
   nextHref,
   position,
 }: CompendiumListProps): ReactElement => (
-  <div className="compendium-list">
+  <div className="list-frame">
     {/* Keyed by the filter shown, so another one starts the form again from it. */}
     <CompendiumListFilter
       key={`${filter.query}\n${filter.nomenclature}\n${filter.withoutReferences}`}
@@ -37,26 +49,44 @@ const CompendiumList = ({
 
     {entries.length ? (
       <div className="data-table-frame">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Classification</th>
-              <th scope="col">Formal Name</th>
-              <th scope="col">Form</th>
-              <th scope="col">
+        <table className="data-table data-table--stack" {...ROLE.table}>
+          <thead {...ROLE.rowgroup}>
+            <tr {...ROLE.row}>
+              <th scope="col" {...ROLE.columnheader}>
+                Name
+              </th>
+              <th scope="col" {...ROLE.columnheader}>
+                Classification
+              </th>
+              <th scope="col" {...ROLE.columnheader}>
+                Formal Name
+              </th>
+              <th scope="col" {...ROLE.columnheader}>
+                Form
+              </th>
+              <th scope="col" {...ROLE.columnheader}>
                 <span className="visually-hidden">Edit</span>
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody {...ROLE.rowgroup}>
             {entries.map((entry) => (
-              <tr key={entry.id}>
-                <td>{entry.name}</td>
-                <td>{KIND_LABELS.get(entry.nomenclature)}</td>
-                <td>{entry.canonicalName ?? NONE}</td>
-                <td>{entry.forms.length ? entry.forms.join(', ') : NONE}</td>
-                <td>
+              // Each cell names its column for the card it becomes; the Edit
+              // cell's empty name spans the card without one.
+              <tr key={entry.id} {...ROLE.row}>
+                <td data-label="Name" {...ROLE.cell}>
+                  {entry.name}
+                </td>
+                <td data-label="Classification" {...ROLE.cell}>
+                  {KIND_LABELS.get(entry.nomenclature)}
+                </td>
+                <td data-label="Formal Name" {...ROLE.cell}>
+                  {entry.canonicalName ?? NONE}
+                </td>
+                <td data-label="Form" {...ROLE.cell}>
+                  {entry.forms.length ? entry.forms.join(', ') : NONE}
+                </td>
+                <td data-label="" {...ROLE.cell}>
                   {/* Soft navigation: the page renders again with the modal open.
                       Named with the formal name too, as two entries can share a
                       label but never a formal name. */}

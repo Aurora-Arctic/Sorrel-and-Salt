@@ -1,5 +1,6 @@
 import type { IngredientFormValues } from '../../../components/IngredientForm/types';
 import type { CompendiumPlace } from '../../../components/CompendiumList/types';
+import type { ListSearchParams } from '../types';
 
 export interface AdminCompendiumPageProps {
   // A promise in Next 16 (node_modules/next/dist/docs/01-app/03-api-reference/
@@ -8,18 +9,13 @@ export interface AdminCompendiumPageProps {
 }
 
 /**
- * The page's address: the filter — a name query, a classification, and the
- * entries citing nothing — at most one cursor, and the modal open over it —
- * `new` by presence, or `edit` by slug.
+ * The page's address: every list page's name query, cursor and modal
+ * (`list-page.ts`), and the compendium's own two filters, a classification
+ * and the entries citing nothing.
  */
-export interface CompendiumSearchParams {
-  query?: string | string[];
+export interface CompendiumSearchParams extends ListSearchParams {
   nomenclature?: string | string[];
   withoutReferences?: string | string[];
-  after?: string | string[];
-  before?: string | string[];
-  new?: string | string[];
-  edit?: string | string[];
 }
 
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */

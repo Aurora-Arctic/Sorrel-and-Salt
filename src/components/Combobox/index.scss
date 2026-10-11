@@ -83,7 +83,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   min-width: 0;
 }
 
-// The text itself, unboxed: the control around it is the box.
+// The text itself, unboxed: the control around it is the box. It takes the
+// line's rest, and wraps onto a row of its own under 6rem, a few letters'
+// room, the control's own geometry rather than a step of space.
 .combobox__input {
   flex: 1 1 6rem;
   min-width: 6rem;
@@ -129,6 +131,7 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // below its content, so a long text gives way inside the control.
 .combobox__text {
   display: grid;
+  // The text's own few letters' room, as `.combobox__input`'s.
   flex: 1 1 6rem;
   grid-template-columns: minmax(0, 1fr);
   min-width: 6rem;
@@ -192,15 +195,15 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   background-color: $text-muted;
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a control at the input's
-// height. It fades and takes its hover on focus as `.btn` does, so the
+// `$icon-size`: WCAG 2.2's 24px minimum target, inside a control at the
+// input's height. It fades and takes its hover on focus as `.btn` does, so the
 // keyboard sees what the pointer sees.
 .combobox__indicator {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $icon-size;
+  height: $icon-size;
   padding: 0;
   border: 0;
   border-radius: radius('sharp');
@@ -210,8 +213,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   @include theme-transition(color);
 
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: $glyph-size;
+    height: $glyph-size;
   }
 
   &:hover,
@@ -233,7 +236,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // Downshift keeps its ref.
 // Placed by `useListPosition` (position.ts), its position, width and side
 // set inline as there is room; here, its look, and no taller than 20rem —
-// the eight seeded category groups without a scroll (M5.6, the owner's call) — or
+// the eight seeded category groups without a scroll (M5.6, the owner's call),
+// a measure of rows rather than a step of space — or
 // the room it has, `--combobox-list-room`. A row never scrolls it sideways:
 // an unbroken text — an address — breaks anywhere instead (MB.154).
 .combobox__list {
@@ -313,6 +317,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
     // Its left edge level with the group heading's text.
     background-position: space(3) center;
     background-repeat: no-repeat;
+    // The bar's own widths, 3px and 5px on hover: a mark's geometry, off the
+    // scale.
     background-size: 3px calc(100% - #{space(2)});
     // The text a step clear of the bar at its widest, so the hover pushes nothing.
     padding-inline-start: calc(#{space(3)} + 5px + #{space(2)});
@@ -434,7 +440,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   }
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a chip too short for 44px.
+// `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for
+// 44px.
 // Its hover is the warning's wash and ink, as react-select's remove is, faded
 // in and drawn on focus too, as `.btn`'s is.
 .combobox__entry-remove {
@@ -442,8 +449,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $icon-size;
+  height: $icon-size;
   padding: 0;
   border: 0;
   border-radius: 0 radius('sharp') radius('sharp') 0;
@@ -532,8 +539,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // body ink while it is held.
 .combobox__entry-grip {
   flex: none;
+  // Two columns of dots, half a glyph wide: the mark's own geometry.
   width: 0.5rem;
-  height: 1rem;
+  height: $glyph-size;
   color: $text-muted;
 
   // The chip's own inverted ink on a coloured fill; `:where` keeps the held
@@ -570,7 +578,7 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;
   width: max-content;
-  max-width: min(18rem, calc(100vw - #{space(6)}));
+  max-width: min($tip-width, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
   overflow-wrap: anywhere;
 

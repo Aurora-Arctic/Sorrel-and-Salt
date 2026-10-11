@@ -173,7 +173,7 @@ export function ReferencesField({
   return (
     // Named by the legend's text alone, as a list's fieldset is.
     <fieldset className="fieldset ingredient-form__list" aria-labelledby={legendId}>
-      <legend className="fieldset__legend ingredient-form__label-row">
+      <legend className="fieldset__legend field__label-row">
         <span id={legendId}>References</span>
         <InfoTip id={hintId} label="References">
           Where what this entry says comes from: a book, an article, a web page. Search for one
@@ -239,7 +239,7 @@ export function ReferencesField({
                 {/* Read with the source it locates, then what a locator is: a
                     column of bare "Locator"s is no help to a screen reader. The
                     tip beside the label, as every field's is. */}
-                <div className="ingredient-form__locator ingredient-form__label-row">
+                <div className="ingredient-form__locator field__label-row">
                   <label className="field__label" htmlFor={locatorId}>
                     Locator
                   </label>

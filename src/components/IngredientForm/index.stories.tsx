@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { useLayoutEffect, useState } from 'react';
+import { type ReactElement, useId, useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -22,6 +22,7 @@ import type { CitationFields } from '../../lib/types';
 import IngredientForm from '.';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
+import './proposals.scss';
 
 // Render-only; behaviour is asserted in tests/components/IngredientForm. The
 // workshop has no API, and on staging its pages may not fetch at all
@@ -771,3 +772,56 @@ export const CompendiumEntry: Story = () => {
     </>
   );
 };
+
+// A phone's width, in each theme: the admin's edit, bare, as at desktop.
+export const PhoneDark: Story = () => <CompendiumEntry />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <CompendiumEntry />;
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// MB.115's open call on the compendium's modal at phone width (1d.11), side
+// by side; the losing pair and `proposals.scss` are deleted at sign-off. A
+// static stand-in for the open dialog, `Modal`'s own markup and classes
+// without `showModal()`, which would cover the workshop: the form inside is
+// the real one, on the canned answers.
+const PhoneModal = ({ sheet }: { sheet: boolean }): ReactElement => {
+  useCannedApi();
+  const titleId = useId();
+  return (
+    <div
+      className={
+        sheet
+          ? 'ingredient-form-proposal__screen ingredient-form-proposal--sheet'
+          : 'ingredient-form-proposal__screen'
+      }
+    >
+      {/* `open` rather than `showModal()`: shown in the page, not the top layer. */}
+      <dialog open className="modal modal-dialog modal-dialog--wide" aria-labelledby={titleId}>
+        <div className="modal-dialog__header">
+          <h2 id={titleId} className="modal-dialog__title">
+            Edit Ingredient
+          </h2>
+          <button type="button" className="modal-dialog__close" aria-label="Close">
+            ×
+          </button>
+        </div>
+        <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />
+      </dialog>
+    </div>
+  );
+};
+
+/** A (recommended): today's inset dialog, the page in view on every side (the owner's call in M5.5). */
+export const ProposalModalInsetDark: Story = () => <PhoneModal sheet={false} />;
+ProposalModalInsetDark.meta = { theme: 'dark', width: 375 };
+
+export const ProposalModalInsetLight: Story = () => <PhoneModal sheet={false} />;
+ProposalModalInsetLight.meta = { theme: 'light', width: 375 };
+
+/** B: a full-height sheet, edge to edge, a phone's width more for the form's lists. */
+export const ProposalModalSheetDark: Story = () => <PhoneModal sheet />;
+ProposalModalSheetDark.meta = { theme: 'dark', width: 375 };
+
+export const ProposalModalSheetLight: Story = () => <PhoneModal sheet />;
+ProposalModalSheetLight.meta = { theme: 'light', width: 375 };

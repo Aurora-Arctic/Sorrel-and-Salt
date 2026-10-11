@@ -7,6 +7,7 @@ import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -156,7 +157,7 @@ const IngredientForm = ({
   // handler passes the input alone, and drawn from state as the busy button.
   const next = useRef<AfterSave>('open');
   const [pressed, setPressed] = useState<AfterSave>('open');
-  const busy = (button: AfterSave) => (isSubmitting && pressed === button) || undefined;
+  const busy = (button: AfterSave): boolean => isSubmitting && pressed === button;
   useEffect(() => {
     if (saves === 0) return;
     reset(EMPTY_VALUES);
@@ -419,48 +420,46 @@ const IngredientForm = ({
           // MB.82: the address this save takes is another entry's redirect.
           // Asked in place of the saves, so nothing else is pressed until it
           // is answered; Keep It leaves the entry as typed, unsaved.
-          <div className="ingredient-form__confirm">
+          <div className="form__confirm">
             <p>{question.message}</p>
             <div className="form__actions">
-              <button
-                type="button"
+              <BusyButton
                 className="btn btn--solid"
                 disabled={mutation.isPending}
-                aria-busy={mutation.isPending || undefined}
+                busy={mutation.isPending}
+                busyLabel="Saving Ingredient"
                 onClick={() => void endRedirect()}
               >
-                {mutation.isPending && <span className="spinner" aria-hidden="true" />}
-                {mutation.isPending ? 'Saving Ingredient' : 'End Redirect & Save'}
-              </button>
+                End Redirect & Save
+              </BusyButton>
               <button type="button" className="btn btn--quiet" onClick={() => setQuestion(null)}>
                 Keep It
               </button>
             </div>
           </div>
         ) : deleting ? (
-          <div className="ingredient-form__confirm">
+          <div className="form__confirm">
             <p>
               Delete &quot;{entry?.values.name}&quot;? It leaves the compendium; a spell holding it
               keeps it.
             </p>
             <div className="form__actions">
-              <button
-                type="button"
+              <BusyButton
                 className="btn btn--destructive"
                 disabled={remove.isPending}
-                aria-busy={remove.isPending || undefined}
+                busy={remove.isPending}
+                busyLabel="Deleting"
                 onClick={() => void confirmDelete()}
               >
-                {remove.isPending && <span className="spinner" aria-hidden="true" />}
-                {remove.isPending ? 'Deleting' : 'Delete'}
-              </button>
+                Delete
+              </BusyButton>
               <button type="button" className="btn btn--quiet" onClick={() => setDeleting(false)}>
                 Keep It
               </button>
             </div>
           </div>
         ) : (
-          <div className="form__actions ingredient-form__actions">
+          <div className="form__actions">
             {/* Two saves, both held down from the press to the answer, the
                 duplicate check included: Save Ingredient, first and so the
                 default Enter presses, opens what it made; Save & Add Another
@@ -469,27 +468,26 @@ const IngredientForm = ({
                 call during MB.131. Both are off until something is entered or
                 changed, the owner's rule for every form (M5.6). An edit has
                 the first alone, and Delete apart at the far end. */}
-            <button
+            <BusyButton
               type="submit"
               value="open"
               className="btn btn--solid"
               disabled={!isDirty || isSubmitting}
-              aria-busy={busy('open')}
+              busy={busy('open')}
+              busyLabel="Saving Ingredient"
             >
-              {busy('open') && <span className="spinner" aria-hidden="true" />}
-              {busy('open') ? 'Saving Ingredient' : 'Save Ingredient'}
-            </button>
+              Save Ingredient
+            </BusyButton>
             {!editing && (
-              <button
+              <BusyButton
                 type="submit"
                 value="another"
-                className="btn"
                 disabled={!isDirty || isSubmitting}
-                aria-busy={busy('another')}
+                busy={busy('another')}
+                busyLabel="Saving Ingredient"
               >
-                {busy('another') && <span className="spinner" aria-hidden="true" />}
-                {busy('another') ? 'Saving Ingredient' : 'Save & Add Another'}
-              </button>
+                Save & Add Another
+              </BusyButton>
             )}
             {onCancel && (
               <button type="button" className="btn btn--quiet" onClick={onCancel}>
@@ -499,7 +497,7 @@ const IngredientForm = ({
             {editing && (
               <button
                 type="button"
-                className="btn btn--destructive ingredient-form__delete"
+                className="btn btn--destructive form__aside"
                 onClick={() => {
                   setRefusal(undefined);
                   setDeleting(true);

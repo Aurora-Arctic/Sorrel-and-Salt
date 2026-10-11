@@ -31,7 +31,7 @@ otherwise a `NomenclatureKind`.
 ## Contracts
 
 - **The filter is a GET form to `/admin/compendium`** (MB.178), as the
-  category list's is: named "Filter the compendium" inside a `<search>`
+  category list's is: named "Filter the Compendium" inside a `<search>`
   landmark, a search box labelled "Name" (`query`), a native `<select>`
   labelled "Classification" (`nomenclature`), a checkbox labelled "Without
   References", title case as the owner asked (`withoutReferences`, valued `1`), and a Filter button. The
@@ -39,7 +39,9 @@ otherwise a `NomenclatureKind`.
   every entry whose naming system is unsettled, and Without References every
   entry that cites no source yet. A filtered page is an address, and filtering
   starts again from the first page, since the form carries no cursor. It is
-  `filter.tsx`, the one client file here. M8.10 turns the Name box into its
+  `filter.tsx`, the one client file here, its fields inside the shared
+  `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
+  the Filter button and the soft navigation. M8.10 turns the Name box into its
   typeahead, a picked row opening the entry's `?edit=` modal, with this form
   kept underneath.
 - **Classification offers "Any", valued `""`, then every kind in
@@ -52,13 +54,15 @@ otherwise a `NomenclatureKind`.
 - **Filter is offered only when there is a new filter to apply**: `disabled`
   while the trimmed query, the classification and the checkbox all match the
   filter the page shows, enabled once any differs. With JavaScript, a submit
-  builds the address with `compendiumHref` and pushes it as a soft navigation
-  inside a transition: Filter wears the shared `.spinner`, `aria-busy` and the
-  label "Filtering" until the filtered list arrives. The list keys the form by
+  builds the address with `compendiumHref`, and `FilterForm` pushes it as a
+  soft navigation inside a transition: Filter is a `BusyButton`, wearing the
+  `.spinner`, `aria-busy` and the label "Filtering" until the filtered list
+  arrives. The list keys the form by
   the filter shown, so a page showing another starts it again from that one.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
-  builds both, the pager's links and the filter's submit too. `place` is
+  builds both, the pager's links and the filter's submit too, a typed wrapper
+  on the shared `listHref` (`src/lib/list-href.ts`). `place` is
   `{ query, nomenclature, withoutReferences, after, before }`, written in that
   order before the modal, a blank one left out and Without References as
   `withoutReferences=1`. `dialog` is `'new'`, a bare flag, or
@@ -83,23 +87,29 @@ otherwise a `NomenclatureKind`.
 
 ## Styling
 
-The category list's, under its own block: the filter is a wrapping row of the
-fields, the checkbox and the button, `.compendium-list__search`, on the
+None of its own; the stylesheet went in MB.115. The list's root is
+`.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
 `.field`, `.input`, `.select`, `.checkbox` and `.btn` primitives, Filter
-`.btn--solid`. The table is the `.data-table` primitive (M5.6a): it scrolls
-inside its `.data-table-frame` on a narrow screen, a 1px `$text-muted`
-hairline runs under the header row, and the rows are banded on
-`$surface-card`. Each row's Edit is `.btn--small.btn--quiet`, and the pager
-is `Pager` ([`pager.md`](pager.md)), soft. The formal name is plain, not
-italic: a binomial is italicised, a mineral's or a chemical's name is not, and
-the row does not carry its kind. Nothing goes past the tokens before the
-admin area's design review (MB.115).
+`.btn--solid` ([`styling.md`](../styling.md), "Form fields"). The table is
+the `.data-table` primitive with the `--stack` modifier: banded on
+`$surface-card` with a 1px `$text-muted` hairline under the header row at
+desktop width, and each row a card once its frame is under
+`$table-stack-width`, as on a phone ("Tables at phone width" there). So every
+part carries its role written out, `table`, `rowgroup`, `row`,
+`columnheader` and `cell`, spread from `ROLE` since lint refuses a literal
+role it takes for redundant, and every cell names its column in
+`data-label`, the Edit cell's empty so it spans the card. Each row's Edit is
+`.btn--small.btn--quiet`, and the pager is `Pager` ([`pager.md`](pager.md)),
+soft. The formal name is plain, not italic: a binomial is italicised, a
+mineral's or a chemical's name is not, and the row does not carry its kind.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx) —
-`OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`. The
-filter reaches `/admin/compendium`, which the workshop does not serve.
+`OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`, and
+`PhoneDark` and `PhoneLight`, the middle page at 375px with every row a
+card, each inside the admin layout's frame. The filter reaches
+`/admin/compendium`, which the workshop does not serve.
 Render-only, no test ids, no snapshots.
 
 ## Testing

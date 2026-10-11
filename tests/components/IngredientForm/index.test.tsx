@@ -124,15 +124,8 @@ const chooseEach = (name: string, ...labels: string[]) => {
   for (const label of labels) fireEvent.click(within(list).getByRole('option', { name: label }));
   fireEvent.keyDown(select(name), { key: 'Escape' });
 };
-/**
- * A button among the form's saves, looked for there alone for the reason the
- * controls are found by label; a field's own harness, with no such row, is
- * searched whole.
- */
-const saveButton = (name: string) => {
-  const actions = document.querySelector<HTMLElement>('.ingredient-form__actions');
-  return (actions ? within(actions) : screen).getByRole('button', { name });
-};
+/** A button among the form's saves, by its role and name. */
+const saveButton = (name: string) => screen.getByRole('button', { name });
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
 const save = () => {
   const button = saveButton('Save Ingredient');

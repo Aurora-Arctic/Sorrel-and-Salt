@@ -9,6 +9,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+// AdminNav marks the page you are on from the address, which Next reads from
+// the App Router's state; a test mounts no router, so the address is given.
+vi.mock('next/navigation', () => ({ usePathname: () => '/admin' }));
 
 const { default: AdminLayout } = await import('@/app/admin/layout');
 const { default: AdminPage } = await import('@/app/admin/page');

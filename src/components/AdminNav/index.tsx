@@ -1,14 +1,14 @@
-import Link from 'next/link';
-import type { Route } from 'next';
 import type { ReactElement } from 'react';
-import './index.scss';
+import NavLinks from './nav-links';
+import type { AdminResource } from './types';
 
 // The `/admin` layout's nav: one entry per admin-curated resource, the user
 // list and the privilege ledger. It renders only inside the guarded layout, so only an admin ever
-// sees it (claude-docs/components/admin-nav.md).
+// sees it (claude-docs/components/admin-nav.md). The list stays here, on the
+// server; only the links, which mark the page you are on, are a client part.
 
 // Each href is checked against the built routes (typedRoutes).
-const RESOURCES: readonly { href: Route; label: string }[] = [
+const RESOURCES: readonly AdminResource[] = [
   { href: '/admin/compendium', label: 'Compendium' },
   { href: '/admin/categories', label: 'Categories' },
   // Each group vocabulary beside the one it organises (M5.6b).
@@ -25,16 +25,8 @@ const RESOURCES: readonly { href: Route; label: string }[] = [
 ];
 
 const AdminNav = (): ReactElement => (
-  <nav className="admin-nav" aria-label="Admin">
-    {/* The `.link-row` primitive: a row of links, not a bulleted list. */}
-    <ul className="link-row">
-      {RESOURCES.map(({ href, label }) => (
-        <li key={href}>
-          {/* Every route is built, so typed routes accept each (M5.6b). */}
-          <Link href={href}>{label}</Link>
-        </li>
-      ))}
-    </ul>
+  <nav aria-label="Admin">
+    <NavLinks resources={RESOURCES} />
   </nav>
 );
 

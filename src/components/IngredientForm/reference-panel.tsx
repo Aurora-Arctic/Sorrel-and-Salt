@@ -13,6 +13,7 @@ import {
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
@@ -362,16 +363,15 @@ export default function ReferencePanel({
             Reference is off until something is entered, and Cancel is quiet,
             the owner's rules for every form (M5.6). */}
         <div className="form__actions">
-          <button
-            type="button"
+          <BusyButton
             className="btn btn--solid"
             onClick={submit}
             disabled={!isDirty || isSubmitting}
-            aria-busy={isSubmitting || undefined}
+            busy={isSubmitting}
+            busyLabel="Saving Reference"
           >
-            {isSubmitting && <span className="spinner" aria-hidden="true" />}
-            {isSubmitting ? 'Saving Reference' : 'Save Reference'}
-          </button>
+            Save Reference
+          </BusyButton>
           <button
             type="button"
             className="btn btn--quiet"

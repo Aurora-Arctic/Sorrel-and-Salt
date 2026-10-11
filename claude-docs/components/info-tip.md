@@ -58,7 +58,8 @@ it is open.
 The tip is placed against its **nearest positioned ancestor**, not against the
 button, from that ancestor's left edge, **above** it: beneath the label it would
 cover the field, and what is typed in it. It is as
-wide as its text, up to 18rem and never more than the viewport less 2rem. In
+wide as its text, up to `$tip-width` (18rem) and never more than the
+viewport less 2rem. In
 `IngredientForm` that ancestor is the field's label row, which starts at the
 column's edge, so an open tip lies above the label, over the end of the field
 before, and never runs off a phone the way a bubble hung off an icon at the
@@ -69,8 +70,10 @@ control that precedes it in the page.
 ## Styling
 
 Tokens only. The button is the muted ink, the body ink on hover and focus,
-with the focus ring, and a 24px target, WCAG 2.2's minimum, around a 1rem
-glyph that sits beside a label without raising its line much.
+with the focus ring, and a 24px target, WCAG 2.2's minimum, the `$icon-size`
+token, around a `$glyph-size` (1rem) glyph that sits beside a label without
+raising its line much. Both tokens, and `$tip-width`, are shared with
+Combobox's marks and the user list's (MB.115).
 
 The tip is drawn as the low-stock badge is: the `low-stock` palette's tinted
 ground, edge and ink, the `sharp` radius, `caption` size at weight 500. That
@@ -89,8 +92,9 @@ tip's position and width stay its own.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InfoTip/index.stories.tsx):
-`BesideALabel`, in a positioned column a form's width. Hover, focus or tap the
-ⓘ to open it.
+`BesideALabel`, beside a label in a `.field__label-row`, the positioned row a
+form's field gives it, in a column a form's width; and `PhoneDark` and
+`PhoneLight`, the same at 375px. Hover, focus or tap the ⓘ to open it.
 
 ## Testing
 

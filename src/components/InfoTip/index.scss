@@ -6,14 +6,14 @@
   vertical-align: middle;
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, around a 1rem glyph that sits
-// beside a label without raising its line much.
+// `$icon-size`: WCAG 2.2's 24px minimum target, around a `$glyph-size`
+// glyph that sits beside a label without raising its line much.
 .info-tip__button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $icon-size;
+  height: $icon-size;
   padding: 0;
   border: 0;
   border-radius: radius('pill');
@@ -22,8 +22,8 @@
   cursor: help;
 
   svg {
-    width: 1rem;
-    height: 1rem;
+    width: $glyph-size;
+    height: $glyph-size;
   }
 
   &:hover,
@@ -42,7 +42,7 @@
 //
 // Placed against the nearest positioned ancestor rather than the button, from
 // its left edge: a form's label row, which starts at the column's edge, so a
-// tip no wider than 18rem never runs off a phone the way one hung off an icon
+// tip no wider than `$tip-width` (18rem) never runs off a phone the way one hung off an icon
 // at the end of a long label would. Above the row, not below it: the tip
 // opens while its field has focus, and below it would cover what is typed.
 .info-tip__bubble {
@@ -51,7 +51,7 @@
   left: 0;
   z-index: 1;
   width: max-content;
-  max-width: min(18rem, calc(100vw - #{space(6)}));
+  max-width: min($tip-width, calc(100vw - #{space(6)}));
   margin-bottom: space(1);
 
   @include tip-bubble;
