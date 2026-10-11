@@ -115,7 +115,9 @@ at the one width.
   is in the muted caption above the page at weight 500, and the chevron,
   Combobox's `ChevronIcon` in a `$glyph-size` box, turns over while the
   menu is open. The browser's own disclosure triangle is removed. It takes
-  the focus ring on `:focus-visible`.
+  the focus ring on `:focus-visible`, and while pressed, a tap included
+  (`pressFeedback`, [`styling.md`](../styling.md), "Buttons"), the muted
+  ink 18% into the card, the combobox's quiet fill.
 - **Open**, the sections sit `space(3)` apart beneath it, each caption in the
   muted caption size over its `.link-row`.
 - **The index** lists each section's pages in a column without bullets, a

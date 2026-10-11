@@ -475,6 +475,14 @@ included. No tapped control shows the platform's tap highlight, the blue box
 iOS and Android Chrome draw: `body` sets `-webkit-tap-highlight-color:
 transparent` (`src/app/globals.scss`), so a control's own `:active` and focus
 styles are its only feedback, and each control that can be tapped needs one.
+A phone applies `:active` late or not at all, though: Chromium only once it
+has ruled out a scroll, Safari only where a touch listener is attached. So a
+control that must answer a tap at once spreads `pressFeedback`
+(`src/lib/press-feedback.ts`), which marks it `data-pressed` from a
+pointer's press until it lifts, leaves or turns into a scroll, and its
+stylesheet draws `:active` and `[data-pressed]` alike: the tab row's
+segments ([`components/tabbed-page.md`](components/tabbed-page.md)) and the
+admin nav's summary ([`components/admin-nav.md`](components/admin-nav.md)).
 Four variants:
 
 - **The outline (`.btn`)**, the default: the accent on an edge, filling on
@@ -778,6 +786,12 @@ tells a screen reader, and `.link-row` draws it by shape rather than hue
 letters, where every other link has the browser's hairline. A colour alone
 would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
 nav is the first to mark its current page.
+
+**A tabbed page's tab row is not a `.link-row`** but a segmented control
+of its own: one rounded track, the open tab a raised pill inside it, the
+segments scrolling within the track where they run past it rather than
+wrapping ([`components/tabbed-page.md`](components/tabbed-page.md),
+"Styling"). Its links are still a `nav` of links marked by `aria-current`.
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
 ground**, as its sign-in button gives it one: the marks are drawn for those
