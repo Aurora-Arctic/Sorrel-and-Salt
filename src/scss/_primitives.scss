@@ -1016,26 +1016,30 @@
   // checkbox, which stood small and out of place among the row's boxes: a
   // native checkbox with `role="switch"`, drawn as a rounded track whose thumb
   // slides from the start, off, to the end, on. Native, so it submits with
-  // its form before hydration and keeps Space and the label's click, and a
-  // screen reader hears its checked state as the switch's. A `<label>`
-  // wrapping it and its name, as `.checkbox` is, so the whole line is the
-  // target; a control's height, so it stands level with the fields beside
-  // it; and the name in a field label's type, since that is what it is
-  // (claude-docs/styling.md, "Form fields").
+  // its form before hydration and keeps Space and its label's click, and a
+  // screen reader hears its checked state as the switch's. A `.field` block,
+  // its `.field__label` above and the toggle beneath in `.switch__control`,
+  // a control's height, so it lines up under its label level with the boxes
+  // beside it, as the owner asked (claude-docs/styling.md, "Form fields").
   .switch {
     // From the track's inner edge to the thumb, on every side.
     $inset: calc((#{$icon-size} - 2px - #{$glyph-size}) / 2);
     // Pressed, the thumb stretches by a step, back from the end it sits at.
     $stretch: space(1);
 
-    display: inline-flex;
-    align-items: center;
-    gap: space(3);
-    box-sizing: border-box;
-    min-height: $control-height;
-    font-size: type-size('small');
-    font-weight: 500;
-    cursor: pointer;
+    > .field__label {
+      cursor: pointer;
+    }
+
+    // The row the toggle stands in: a field's height, the toggle centred in
+    // it, and no wider than the toggle, so only the toggle and its label are
+    // pressed.
+    .switch__control {
+      display: flex;
+      align-items: center;
+      align-self: flex-start;
+      min-height: $control-height;
+    }
 
     // The track: off, the field's ground and its muted 1px edge, so it reads
     // as one of the row's controls.
@@ -1050,7 +1054,7 @@
       border-radius: radius('pill');
       background-color: $surface-card;
       appearance: none;
-      cursor: inherit;
+      cursor: pointer;
       // The state's colour keeps pace with the thumb, rather than trailing it
       // at the theme's 400ms.
       transition:
@@ -1090,11 +1094,18 @@
         @include focus-ring;
       }
 
-      // Dashed and unfilled, as a disabled field is.
+      // Dashed and unfilled, as a disabled field is, on or off: the thumb in
+      // the muted ink either way, so it still shows on the unfilled track,
+      // and where it sits still says which.
       &:disabled {
+        border-color: $text-muted;
         border-style: dashed;
         background-color: transparent;
         opacity: 0.7;
+
+        &::before {
+          background-color: $text-muted;
+        }
       }
 
       @include reduced-motion {
@@ -1124,12 +1135,12 @@
       }
     }
 
-    // Hover and press, on the label as a whole, never on a switch that is
-    // off: `disabled`, or `aria-disabled` while a filter row's list is on its
-    // way, which refuses the press itself.
+    // Hover and press, on the toggle or its label, never on a switch that
+    // is off: `disabled`, or `aria-disabled` while a filter row's list is on
+    // its way, which refuses the press itself.
     &:not(:has(input:disabled, input[aria-disabled='true'])) {
       // The edge in the body ink, as a field's; on, the solid button's hover.
-      &:hover input {
+      &:has(> .field__label:hover, input:hover) input {
         border-color: $text-primary;
 
         &:checked {
@@ -1142,7 +1153,7 @@
       // marks a tap, which `:active` alone misses on a phone): the thumb
       // stretches towards the end it would go to, so a press answers before
       // the switch turns.
-      &:is(:active, [data-pressed]) input {
+      &:has(> .field__label:is(:active, [data-pressed]), input:is(:active, [data-pressed])) input {
         &::before {
           inline-size: calc(#{$glyph-size} + #{$stretch});
         }
@@ -1153,13 +1164,12 @@
       }
     }
 
-    // The name dims with a disabled switch, as a disabled field's label does.
-    &:has(input:disabled) {
-      color: $text-muted;
+    // The label dims with a disabled switch through `.field`'s own rule.
+    &:has(input:disabled, input[aria-disabled='true']) > .field__label {
       cursor: not-allowed;
     }
 
-    &:has(input[aria-disabled='true']) {
+    input:is(:disabled, [aria-disabled='true']) {
       cursor: not-allowed;
     }
   }
