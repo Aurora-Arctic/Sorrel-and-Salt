@@ -9,7 +9,8 @@ finders, the three that read the compendium tier named on
 **`findCompendiumPage(filter, page)`** is one keyset page of the compendium
 under an `IngredientFilter`, every part optional and absent meaning no filter.
 A search pages best match first, `(score DESC, name, id)`, and a list without
-one pages `(name, id)`; each entry carries a `score`, null on the second:
+one pages `(name, id)`; each entry carries a `score`, its rank, null on the
+second:
 
 - **`query`** is word similarity, case- and accent-folded, against the display
   name, the formal name, a live folk name, or the form or description of a
@@ -31,13 +32,42 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   wrapper's volatility and the fold (MB.184, MB.226). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope: the entry's own label and formal name, its folk names, and its
-  variants. A word in a form matches every entry holding that form, so a bare
-  "oil" scores each entry with an oil variant 1.0; the form filter (M8.13) is
-  the precise tool for that question, and the search is not.
-- **The score is the row's best word similarity** across the three arms, and it is
-  the search's order. Each `UNION ALL` arm selects
-  `word_similarity(query, text)` beside the id it matched — the value the GIN
-  recheck has just computed to test `<%` — and the union is folded to
+  variants. Each arm scores what it matched as the word similarity times the
+  field's weight (the next bullet). A word in a form matches every entry
+  holding that form, so a bare "oil" ranks each entry with an oil variant at
+  0.6, below any entry whose own name holds the word; the form filter (M8.13)
+  is the precise tool for that question, and the search is not.
+- **The score is the row's best weighted word similarity** across the three
+  arms, and it is the search's order, its rank. Each field the search reads
+  carries a weight, `SEARCH_WEIGHTS` beside `searchMatch` in
+  `src/db/repository/ingredients.ts` (MB.115):
+
+  | Field                        | Weight | Why                                                              |
+  | ---------------------------- | ------ | ---------------------------------------------------------------- |
+  | The label, `name`            | 1      | What the entry is called, the name a reader looks for            |
+  | The formal name              | 0.9    | The entry's identity (MB.215), so just under its own label       |
+  | A live folk name             | 0.8    | Still a name of this entry, though another entry can share it    |
+  | A live variant's form        | 0.6    | A form word, Oil or Resin, is shared by every entry in that form |
+  | A live variant's description | 0.2    | Prose, which names other things in passing                       |
+
+  The weights fix a tie the unweighted score broke alphabetically. Searching
+  "storax" matched both Storax, by its label, and Sweet Gum, whose folk name
+  _American Storax_ and resin's description ("liquid storax") both hold the
+  word whole, so both scored 1, tied, with only the name between them. Weighted, Storax is
+  first at 1 and Sweet Gum below at 0.8. Every field has its own weight rather
+  than the label alone taking a boost, because a boost on the label would
+  still leave the formal name, a folk name, a form and a description tied
+  with each other. The weight lowers the rank and never the match: a field
+  matches at 0.5 or better, as above, so a form matching at 0.5 ranks at 0.3.
+  Each `UNION ALL` arm selects, for each field,
+  `case when query <% text then word_similarity(query, text) * weight end`
+  beside the id it matched — the similarity being the value the GIN recheck
+  has just computed to test `<%` — and an arm reading two fields keeps the
+  greater with `greatest`, which skips the null of a field with no value. The
+  `case` keeps a field that did not match out of the rank: without it, a
+  description matching at 1 beside a form at 0.45, short of the match, would
+  rank at 0.27 by the form rather than 0.2 by the description that found it.
+  The union is folded to
   `max(score) … group by id` and joined to `ingredients` as `matched`. So the
   score is a plain column, read by the order, the page bound and the edge
   alike, once per matched row, and an entry two of whose forms match is still
@@ -52,6 +82,7 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   scan. When it was written the ranked page
   ran in about 7 ms against the unranked shape's 5 ms; the test that printed
   those timings asserted only that they were positive, and went with MB.184.
+
 - **A keyset, not a capped top-N or pg_trgm's `<<->`.** A top-N would leave
   every match past the cap unreachable and give a search a different shape
   from a browse, against rule 8. `<<->` is a nearest-neighbour order: it needs
@@ -60,7 +91,10 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   plus the id — negated so one ascending row comparison bounds it, and `real`,
   as `word_similarity` returns it, because a `real` prints shortest-exact and
   its cursor text casts back to the same value (`1 - score` would promote to
-  `double precision`). A browse's cursor has one part and a search's two, so
+  `double precision`). Each weight goes into the statement as a parameter
+  cast `::real` for the same reason: `real` times a bare number is `double
+precision`, and while the keyset casts its sort back to `real`, the score
+  carried onto the edge is not cast. A browse's cursor has one part and a search's two, so
   neither is a position in the other, and each is `InvalidCursor` there.
 - **The 0.5 is set by `selectFrom`, as every threshold is.** The finder marks
   its keyset `wordMatch` when there is a query, and `selectFrom` then reads the
@@ -152,7 +186,7 @@ takes an optional `workspaceId`; with one it asks
 admin and a non-member get `Forbidden` — and reads both tiers, without one it
 reads the compendium alone, and a miss is `NotFound` either way.
 
-**MB.215: the read reaches an entry's forms.** Once each form is a row of `ingredient_variants` (DESIGN.md §5), MB.218 adds a third `UNION ALL` arm to the `query` match, over each live variant's accent-folded form and description through `foldedWordMatch`, keyed on the variant's ingredient, so the existing `max(score) … group by id` still folds an entry with two matching forms into one row; the variant table's trigram index serves it, and `compendium-search-query.test.ts`'s plan loop gains the arm. A bare "oil" then ranks every entry with an oil variant at 1.0, and the form filter is the precise tool for that question. MB.220 makes `formId` an `EXISTS` over live variants, so a form's delete finds every entry holding a variant that picked it, and MB.222 did the same for `form`, folded on both sides, so the row's own `form` column is read by nothing. A variant's category pair also carries its `ingredient_id`, so `categoryIds` matches the union of an entry's categories and its forms'; MB.220 holds it to the live forms', since a dropped form's pairs outlive it. Under the same union rule an entry counts as sourced, for `withoutReferences`, if it or one of its live variants cites a reference. M8.14's sort becomes `(lower(name), identity_key, id)`, and `findIngredientSuggestions` reaches the new arm through `compendiumList`.
+**MB.215: the read reaches an entry's forms.** Once each form is a row of `ingredient_variants` (DESIGN.md §5), MB.218 adds a third `UNION ALL` arm to the `query` match, over each live variant's accent-folded form and description through `foldedWordMatch`, keyed on the variant's ingredient, so the existing `max(score) … group by id` still folds an entry with two matching forms into one row; the variant table's trigram index serves it, and `compendium-search-query.test.ts`'s plan loop gains the arm. A bare "oil" then ranks every entry with an oil variant at 1.0, and the form filter is the precise tool for that question. Since MB.115 the arm carries the form's weight, 0.6, and the description's, 0.2, so an oil ranks at 0.6, below a label holding the word. MB.220 makes `formId` an `EXISTS` over live variants, so a form's delete finds every entry holding a variant that picked it, and MB.222 did the same for `form`, folded on both sides, so the row's own `form` column is read by nothing. A variant's category pair also carries its `ingredient_id`, so `categoryIds` matches the union of an entry's categories and its forms'; MB.220 holds it to the live forms', since a dropped form's pairs outlive it. Under the same union rule an entry counts as sourced, for `withoutReferences`, if it or one of its live variants cites a reference. M8.14's sort becomes `(lower(name), identity_key, id)`, and `findIngredientSuggestions` reaches the new arm through `compendiumList`.
 
 ## The ingredient picker's search (MB.138)
 
@@ -167,7 +201,7 @@ of the proof's workspace, never another, so it is on
 - **It is `findCompendiumPage` under a wider scope.** It takes the same
   private `compendiumList({ query })`, so the match is the compendium
   search's: word similarity at 0.5 against the label, the formal name, the
-  live folk names and the live variants' forms and descriptions, accent-folded, best match first, with a blank query
+  live folk names and the live variants' forms and descriptions, accent-folded, best match first, under the compendium's weights, with a blank query
   listing by `(name, id)`. The service parses the query through
   `CompendiumFilter`, so a query under `MIN_QUERY_LENGTH` is a blank one here
   too. Only the tier predicate differs: `workspace_id IS NULL OR
