@@ -18,7 +18,7 @@ import type { FilterFormProps, FilterValue } from './types';
 // hydration it still submits natively, each field under the name the page
 // reads. Once hydrated, Filter is offered only when the form differs from the
 // filter the page shows (MB.53, the owner's word), and opens the new filter
-// from the first page. Clear Filters, after it, is a link to the page itself
+// from the first page. Clear, after it, is a link to the page itself
 // with no filter, offered while the page shows one or a field holds a value
 // not yet applied (the owner's calls at MB.115's review): with a filter shown
 // it opens the unfiltered list, and with only unapplied values it empties the
@@ -60,7 +60,7 @@ const FilterForm = ({
   const [emptied, setEmptied] = useState(0);
 
   // An in-place clear takes the focus to the first field once the fields are
-  // drawn again: the pressed Clear Filters has nothing left to do and is no
+  // drawn again: the pressed Clear has nothing left to do and is no
   // longer focusable.
   useEffect(() => {
     if (emptied === 0) return;
@@ -127,40 +127,44 @@ const FilterForm = ({
         onSubmit={submit}
       >
         <Fragment key={emptied}>{children}</Fragment>
-        {/* `disabled` with nothing to send, a submit with nothing to do;
-            `aria-disabled` while a list is on its way, so a focus on it stays. */}
-        <button
-          type="submit"
-          className="btn btn--solid"
-          disabled={disabled}
-          aria-disabled={pending || undefined}
-        >
-          Filter
-        </button>
-        {filtered || drafted ? (
-          // A link, not a submit: the unfiltered first page is the page
-          // itself, which works before hydration as an address, and a submit
-          // would send the fields as they stand. Before hydration the fields
-          // hold the filter shown, so it is offered only for that.
-          <a
-            className="btn btn--quiet"
-            href={action}
-            onClick={clear}
+        {/* The two controls, one block, so on a phone they wrap together and
+            share the line the fields above it fill. */}
+        <div className="filter-row__actions">
+          {/* `disabled` with nothing to send, a submit with nothing to do;
+              `aria-disabled` while a list is on its way, so a focus on it stays. */}
+          <button
+            type="submit"
+            className="btn btn--solid"
+            disabled={disabled}
             aria-disabled={pending || undefined}
           >
-            Clear Filters
-          </a>
-        ) : (
-          // Disabled rather than hidden with nothing to clear, as
-          // Filter is with nothing to send and the pager's end with no page,
-          // so neither control moves. An anchor cannot be `disabled`: no
-          // address and `aria-disabled`, with the role kept so it still reads
-          // as the link it is (claude-docs/components/pager.md).
-          // oxlint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/no-redundant-roles
-          <a className="btn btn--quiet" role="link" aria-disabled="true">
-            Clear Filters
-          </a>
-        )}
+            Filter
+          </button>
+          {filtered || drafted ? (
+            // A link, not a submit: the unfiltered first page is the page
+            // itself, which works before hydration as an address, and a submit
+            // would send the fields as they stand. Before hydration the fields
+            // hold the filter shown, so it is offered only for that.
+            <a
+              className="btn btn--quiet"
+              href={action}
+              onClick={clear}
+              aria-disabled={pending || undefined}
+            >
+              Clear
+            </a>
+          ) : (
+            // Disabled rather than hidden with nothing to clear, as
+            // Filter is with nothing to send and the pager's end with no page,
+            // so neither control moves. An anchor cannot be `disabled`: no
+            // address and `aria-disabled`, with the role kept so it still reads
+            // as the link it is (claude-docs/components/pager.md).
+            // oxlint-disable-next-line jsx-a11y/anchor-is-valid, jsx-a11y/no-redundant-roles
+            <a className="btn btn--quiet" role="link" aria-disabled="true">
+              Clear
+            </a>
+          )}
+        </div>
       </form>
     </search>
   );

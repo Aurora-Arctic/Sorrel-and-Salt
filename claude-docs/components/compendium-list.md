@@ -58,7 +58,7 @@ different groups, so the page offers each name once, whatever its case.
   starts again from the first page, since the form carries no cursor. It is
   `filter.tsx`, the one client file here, its fields inside the shared
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
-  the Filter button, the Clear Filters link and the soft navigation; Clear
+  the Filter button, the Clear link and the soft navigation; Clear
   Filters is offered while the page shows a name, a form, a classification or
   No Refs, and opens `/admin/compendium` with none, and while
   only the fields hold one it empties them in place, the Form type-ahead and
@@ -151,7 +151,7 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 `OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`, and
 `PhoneDark` and `PhoneLight`, the middle page at 375px with every row a
 card, and `FilteredPhoneDark` and `FilteredPhoneLight`, `Filtered` at 375px
-with Clear Filters offered, each inside the admin layout's frame. The filter reaches
+with Clear offered, each inside the admin layout's frame. The filter reaches
 `/admin/compendium`, which the workshop does not serve.
 Render-only, no test ids, no snapshots.
 
@@ -169,12 +169,12 @@ the loading state while the filtered list loads (the list's status, the
 row `aria-busy` and its controls `aria-disabled`, a second press refused,
 the list back once it arrives, and none of it for typing), the reset to the
 filter shown,
-Clear Filters (its address with each control set, off with nothing set,
+Clear (its address with each control set, off with nothing set,
 every field emptied in place when nothing is applied, a type-ahead's text
 naming no choice too, and the loading state while the unfiltered list
 loads), and `compendiumHref`. It is the one list test of the filter's
 loading state, its
-reset and Clear Filters; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
+reset and Clear; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once.

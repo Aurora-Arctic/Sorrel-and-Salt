@@ -167,6 +167,6 @@ No file of its own: the forms that use it cover it (claude-docs/testing/layer-ow
 `tests/support/grouped-value-form.tsx`) its `typeahead`; the NameForm and EmailForm tests cover the
 shell around a plain control. The CompendiumList and UserList tests cover
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
-form, the server's before hydration included, emptied by Clear Filters, and
+form, the server's before hydration included, emptied by Clear, and
 `aria-disabled` while a list is on its way. Space is the platform's and
 jsdom does not run it, so it was checked in the workshop's Chromium.

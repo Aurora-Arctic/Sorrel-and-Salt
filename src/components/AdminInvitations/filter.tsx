@@ -9,7 +9,7 @@ import type { AdminInvitationsFilterProps } from './types';
 // The Invitations tab's filter (MB.115, on the owner's ask: "search the
 // Invitations by email and expires in 24 hrs"), on the shared FilterForm as
 // the user list's is: Filter offered only when the fields differ from the
-// filter the page shows, and Clear Filters after it. A soft navigation, as
+// filter the page shows, and Clear after it. A soft navigation, as
 // the compendium's: the tab has no pager whose plain anchors it must agree
 // with. Before hydration the form submits natively, the email as `email=`
 // and Expires in 24 Hrs, a native checkbox, as `expiring=`, which the page

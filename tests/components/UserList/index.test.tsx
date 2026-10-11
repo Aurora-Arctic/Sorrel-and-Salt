@@ -307,24 +307,18 @@ describe('UserList filter', () => {
     expect(assignMock).toHaveBeenCalledWith('/admin/users');
   });
 
-  // Clear Filters is CompendiumList's to test; this asserts which of the
+  // Clear is CompendiumList's to test; this asserts which of the
   // list's values count as a filter, and its full load.
-  it('offers Clear Filters to the unfiltered list while the query, a role or Needs Approval is shown', () => {
+  it('offers Clear to the unfiltered list while the query, a role or Needs Approval is shown', () => {
     for (const filter of [{ query: 'bo' }, { role: 'user' as const }, { awaitingApproval: true }]) {
       const { unmount } = render(<UserList {...props(filter)} />);
 
-      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
-        'href',
-        '/admin/users',
-      );
+      expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', '/admin/users');
       unmount();
     }
 
     render(<UserList {...props()} />);
-    expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('empties the query, the role and Needs Approval in place when none is applied yet', () => {
@@ -334,7 +328,7 @@ describe('UserList filter', () => {
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'bo' } });
     fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
     fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
-    fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
 
     expect(assignMock).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Name or Email')).toHaveValue('');
@@ -348,7 +342,7 @@ describe('UserList filter', () => {
     render(
       <UserList {...props({ query: 'bo', previousHref: '/admin/users?query=bo&before=x' })} />,
     );
-    const clear = screen.getByRole('link', { name: 'Clear Filters' });
+    const clear = screen.getByRole('link', { name: 'Clear' });
 
     fireEvent.click(clear);
 

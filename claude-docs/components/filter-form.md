@@ -2,7 +2,7 @@
 
 `src/components/FilterForm/` — a list's filter form: the fields the caller
 supplies, then a Filter button that opens the filtered list from its first
-page, and a Clear Filters link that opens it with no filter. Five admin lists (CompendiumList, GroupedValueList, the flat
+page, and a Clear link that opens it with no filter. Five admin lists (CompendiumList, GroupedValueList, the flat
 vocabularies' list it has since absorbed, UserList, PrivilegeLedger) each
 wrote this form for themselves until MB.115; three navigated softly with a spinner, two with a
 full page load and none. It renders inside its list's
@@ -18,9 +18,9 @@ full page load and none. It renders inside its list's
 | `action`     | The page itself, which the form submits to natively before hydration                         |
 | `href`       | Builds the filtered list's address from the caller's field state, usually through `listHref` |
 | `disabled`   | The caller's "nothing changed": true while the form matches the filter the page shows        |
-| `shown`      | Each value of the filter the page shows, for Clear Filters                                   |
-| `draft`      | Each value the fields hold now, applied or not, for Clear Filters                            |
-| `onClear`    | Empties every field the caller holds, for Clear Filters with nothing applied                 |
+| `shown`      | Each value of the filter the page shows, for Clear                                           |
+| `draft`      | Each value the fields hold now, applied or not, for Clear                                    |
+| `onClear`    | Empties every field the caller holds, for Clear with nothing applied                         |
 | `navigation` | `soft` or `full`, below                                                                      |
 | `children`   | The fields, each with the `name` the page reads                                              |
 
@@ -41,12 +41,12 @@ full page load and none. It renders inside its list's
   nothing to do. Enter in a field is refused the same way.
 - **While the new list reads, the row is off and the list is a skeleton**
   (the owner's call at MB.115's review: "Filters should trigger the same
-  type of loading state as tabs"). Filter and Clear Filters navigate
+  type of loading state as tabs"). Filter and Clear navigate
   through the list's `ListFrame` ([`list-frame.md`](list-frame.md)), whose
   body shows the tabs' skeleton in place of the table and the pager, its
   one status, until the new list renders. Meanwhile the form is
   `aria-busy`, as the tab row is, and every control in it is
-  `aria-disabled`: Filter and Clear Filters by their own props, the
+  `aria-disabled`: Filter and Clear by their own props, the
   caller's fields by a layout effect that marks each `input` (not a
   hidden one), `select`, `textarea`, `button` and `a[href]` in the form
   and unmarks it after. `aria-disabled` rather than `disabled`, as the
@@ -68,7 +68,7 @@ full page load and none. It renders inside its list's
   loading state, and its status the one a screen reader hears. Typing in a
   field navigates nowhere and shows nothing.
 
-- **Clear Filters clears whatever is set** (the owner's calls at MB.115's
+- **Clear clears whatever is set** (the owner's calls at MB.115's
   review), after Filter in the row: a filter on the address, or a value in a
   field not yet applied. It is a link, not a submit: its
   address is `action`, the page itself with no query, so every filter
@@ -107,16 +107,19 @@ full page load and none. It renders inside its list's
 None of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
 "Form fields"), the row the five lists' `__search` rules were, and the
 fields and button are the primitives'. On a phone the row stacks: under 28rem of
-its own width the query takes the whole line and the selects, switches,
-Filter and Clear Filters wrap beneath it, Clear Filters beside Filter or
-under it as the width allows, the owner's call at MB.115's review over a filter
-folded behind a disclosure.
+its own width the query takes the whole line and the selects and switches
+wrap beneath it, the owner's call at MB.115's review over a filter folded
+behind a disclosure. Filter and Clear are one block, `.filter-row__actions`,
+so they wrap together, and on that narrow row they take a line of their own
+at the fields' full width, Filter two thirds and Clear one; once a third is
+too narrow for Clear's label (`$filter-clear-width`, 5.5rem, three times over
+and the gap) they take half each (the owner's calls).
 
 **The row while a list is on its way** is `.filter-row[aria-busy='true']`,
 in the primitives under `body` so it outweighs the fields' own hover in
 the app: every field faded to 55% with its colour taken out
 (`grayscale`) and the not-allowed cursor, as the tab row's tabs are, and a
-field's hover changing nothing. Filter and Clear Filters are left out of the
+field's hover changing nothing. Filter and Clear are left out of the
 fade, since `.btn[aria-disabled='true']` already draws them dashed and
 faded, and faded twice they would all but vanish.
 
@@ -148,9 +151,9 @@ either.
 
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),
 `Forms / Filter Form`: `Default`, a name and a group as a value list's filter
-has them, with `PhoneDark` and `PhoneLight`, Clear Filters off; type a name to
+has them, with `PhoneDark` and `PhoneLight`, Clear off; type a name to
 offer Filter. `Filtered`, with `FilteredPhoneDark` and `FilteredPhoneLight`, a
-page showing a filter, Clear Filters offered. Each sits in a `ListFrame`, whose
+page showing a filter, Clear offered. Each sits in a `ListFrame`, whose
 navigation it needs; the workshop's router goes nowhere, so a press shows
 nothing on its way here. The row greyed over a list on its way is
 GroupedValueList's `CategoriesPending`, `PendingPhoneDark` and
@@ -164,7 +167,7 @@ assert", rule 6): a filter's loading state and reset are tested once, in
 marks the form `aria-busy` and every control `aria-disabled`, refuses a
 second press or submit, and gives the list back once the page arrives;
 typing does none of it. Each list asserts the address its filter builds.
-Clear Filters is tested there too, its address, its disabled state, its
+Clear is tested there too, its address, its disabled state, its
 soft navigation with the list's status and its in-place emptying, the
 type-ahead included; each other list asserts which of its values offer it
 and that its fields empty in place, and `UserList` its full load: the

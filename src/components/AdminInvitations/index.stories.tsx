@@ -61,7 +61,7 @@ export const Pending: Story = () => <Frame invitations={INVITATIONS} />;
 export const NoneWaiting: Story = () => <Frame invitations={[]} />;
 
 // Filtered by part of an address and Expires in 24 Hrs: the fields hold the
-// filter shown, Clear Filters is offered, and one invitation is left.
+// filter shown, Clear is offered, and one invitation is left.
 export const Filtered: Story = () => <Frame invitations={INVITATIONS.slice(1)} filter={FILTER} />;
 
 // A filter that leaves none: the empty state names it.
@@ -78,7 +78,7 @@ export const Paused: Story = () => (
 
 // At phone width: Invite Admin across the line beneath the heading, the
 // filter row stacked, the Email box across the line and the switch, Filter
-// and Clear Filters beneath it, and each invitation a card, Revoke across its
+// and Clear beneath it, and each invitation a card, Revoke across its
 // foot.
 export const PhoneDark: Story = () => <Frame invitations={INVITATIONS} />;
 PhoneDark.meta = { theme: 'dark', width: 375 };

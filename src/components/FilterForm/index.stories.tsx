@@ -10,7 +10,7 @@ import FilterForm from '.';
 // goes nowhere, so a press shows nothing on its way here (GroupedValueList's
 // `Pending` stories draw that). The fields are the caller's: a name and a group here, as
 // a value list's are, with Filter offered once either differs from the
-// filter shown, and Clear Filters while the filter shown or the fields are
+// filter shown, and Clear while the filter shown or the fields are
 // not blank.
 export default {
   title: 'Forms / Filter Form',
@@ -72,7 +72,7 @@ const ValueFilter = ({ shown = NO_FILTER }: { shown?: typeof NO_FILTER }) => {
   );
 };
 
-// Type in Name, or pick a group, to offer Filter and Clear Filters, which
+// Type in Name, or pick a group, to offer Filter and Clear, which
 // empties the fields where they are: the filter shown is blank.
 export const Default: Story = () => <ValueFilter />;
 
@@ -82,7 +82,7 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <ValueFilter />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// A page showing a filter: Clear Filters links to the page itself.
+// A page showing a filter: Clear links to the page itself.
 const FILTER = { query: 'test', group: 'testwort-wards' };
 
 export const Filtered: Story = () => <ValueFilter shown={FILTER} />;

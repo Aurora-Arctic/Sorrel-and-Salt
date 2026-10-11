@@ -72,7 +72,7 @@ for a rule only one kind's rows need.
   an address, and filtering starts again from the first page, since the form
   carries no cursor. It is `filter.tsx`, the one client file here, holding
   the fields and what counts as a change; the shared `FilterForm` holds the
-  form, the button and the navigation, and the Clear Filters link after
+  form, the button and the navigation, and the Clear link after
   Filter, offered while the page shows a name or a group and opening the
   page itself with neither, and while only the fields hold one emptying
   them in place, the type-ahead and its hidden input included ([`filter-form.md`](filter-form.md)).
@@ -182,7 +182,7 @@ deities under invented traditions and slugged by `deitySlug`; for the flat
 kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
-with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear Filters offered, the
+with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear offered, the
 full-width Add and the rows as cards. `CategoriesPending`, with
 `PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
 Filter pressed and the list on its way: a `ListNavigationContext` holding
@@ -201,7 +201,7 @@ their group, the Edit links, no table when there are none, the filter form's
 action, method, names and kept values, the group a native select in the
 server's markup and a type-ahead once hydrated, its list narrowing as it is
 typed into, a group picked from it and its clear, the Filter button's disabled and
-enabled states, the address it opens, Clear Filters offered by a name or a
+enabled states, the address it opens, Clear offered by a name or a
 group shown, off with neither, and emptying both in place when neither is
 applied, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's

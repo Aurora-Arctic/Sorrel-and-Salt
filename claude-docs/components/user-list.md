@@ -375,7 +375,7 @@ People page with its Users tab open:
   `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
 - **Phone width**: `PhoneDark` and `PhoneLight`, the page's header and the
   list with Impersonate at 375px, every row a card; `FilteredPhoneDark` and
-  `FilteredPhoneLight`, `Filtered` at 375px with Clear Filters offered.
+  `FilteredPhoneLight`, `Filtered` at 375px with Clear offered.
   In the workshop no confirmation reaches a server, so confirming one shows the
   refusal. Render-only, no test ids, no snapshots.
 
@@ -387,7 +387,7 @@ address's marks the one rendering of their state; a provider outside the
 roster; no table when no user matches; the filter form's action, method,
 names and kept values, Needs Approval found as a `switch`; the Filter button's disabled and enabled states, the
 bare `awaiting` it opens, the Role select's values and the `role` it opens;
-Clear Filters offered by each filter shown, off with none, emptying the
+Clear offered by each filter shown, off with none, emptying the
 fields in place when none is applied, and its full load;
 the history link before every name and its address; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel

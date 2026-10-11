@@ -358,22 +358,55 @@
     min-width: 0;
   }
 
+  // Filter and Clear, one block, so they wrap together: on a wide row they
+  // sit after the fields as two buttons, a row's gap apart.
+  .filter-row__actions {
+    display: flex;
+    gap: space(3) space(5);
+  }
+
+  // On a phone they take the whole line, the fields' width above them,
+  // Filter two thirds and Clear one, the owner's call at MB.115's review;
+  // halves once a third is too narrow for Clear's label, its own width
+  // `$filter-clear-width` three times over and the gap. A size container
+  // only here, where the line sets its width: on a wide row its width is its
+  // buttons', which a size container would not count.
   @container filter-row (max-width: #{$narrow-column}) {
     .filter-row > :first-child,
-    .filter-row > .filter-row__typeahead {
+    .filter-row > .filter-row__typeahead,
+    .filter-row > .filter-row__actions {
       flex-basis: 100%;
+    }
+
+    .filter-row__actions {
+      container: filter-actions / inline-size;
+    }
+
+    .filter-row__actions > .btn {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    .filter-row__actions > .btn:first-child {
+      flex-grow: 2;
+    }
+  }
+
+  @container filter-actions (max-width: #{$filter-clear-width * 3 + space(5)}) {
+    .filter-row__actions > .btn:first-child {
+      flex-grow: 1;
     }
   }
 
   // The row while the list it filters is on its way, greyed as a tabbed
   // page's tabs are (claude-docs/components/filter-form.md): every field
   // faded to 55% with its colour taken out and the not-allowed cursor, and
-  // hover changing nothing. Filter and Clear Filters are `aria-disabled`
+  // hover changing nothing. Filter and Clear are `aria-disabled`
   // meanwhile, so `.btn`'s own disabled look greys them, and they are left
   // out here rather than faded twice. Here, under `body`, so it outweighs
   // the fields' own hover.
   .filter-row[aria-busy='true'] {
-    > :not(.btn) {
+    > :not(.filter-row__actions) {
       opacity: 0.55;
       filter: grayscale(1);
     }

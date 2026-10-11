@@ -152,13 +152,13 @@ describe('PrivilegeLedger', () => {
       expect(assign).not.toHaveBeenCalled();
     });
 
-    // Clear Filters is CompendiumList's to test; this asserts which of the
+    // Clear is CompendiumList's to test; this asserts which of the
     // ledger's values count as a filter.
-    it('offers Clear Filters to the unfiltered ledger while the query or the privilege is shown', () => {
+    it('offers Clear to the unfiltered ledger while the query or the privilege is shown', () => {
       for (const filter of [{ query: 'ada' }, { privilege: 'admin' as const }]) {
         const { unmount } = render(<PrivilegeLedger changes={[GRANT]} filter={filter} />);
 
-        expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
+        expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute(
           'href',
           '/admin/privilege-changes',
         );
@@ -166,10 +166,7 @@ describe('PrivilegeLedger', () => {
       }
 
       render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
-      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
-        'aria-disabled',
-        'true',
-      );
+      expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('aria-disabled', 'true');
     });
 
     it('empties the query and the privilege in place when neither is applied yet', () => {
@@ -180,7 +177,7 @@ describe('PrivilegeLedger', () => {
 
       fireEvent.change(query, { target: { value: 'ada' } });
       fireEvent.change(privilege, { target: { value: 'admin' } });
-      fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
 
       expect(assign).not.toHaveBeenCalled();
       expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('');

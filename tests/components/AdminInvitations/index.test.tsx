@@ -217,7 +217,7 @@ describe('AdminInvitations', () => {
   });
 });
 
-// The filter (MB.115): FilterForm's loading state and Clear Filters are
+// The filter (MB.115): FilterForm's loading state and Clear are
 // CompendiumList's to test; this asserts the address this one builds, which
 // of its values count as a filter, and that the invite form keeps it.
 describe('AdminInvitations filter', () => {
@@ -225,7 +225,7 @@ describe('AdminInvitations filter', () => {
   const email = () => screen.getByRole('searchbox', { name: 'Email' });
   const soon = () => screen.getByRole('switch', { name: 'Expires in 24 Hrs' });
   const filterButton = () => screen.getByRole('button', { name: 'Filter' });
-  const clearLink = () => screen.getByRole('link', { name: 'Clear Filters' });
+  const clearLink = () => screen.getByRole('link', { name: 'Clear' });
 
   it('opens the filtered list, the email trimmed and Expires in 24 Hrs a bare flag', () => {
     render(<AdminInvitations invitations={INVITATIONS} />);
@@ -238,7 +238,7 @@ describe('AdminInvitations filter', () => {
     expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
   });
 
-  it('starts from the filter shown, and offers Clear Filters to the unfiltered list while either part is shown', () => {
+  it('starts from the filter shown, and offers Clear to the unfiltered list while either part is shown', () => {
     for (const filter of [
       { email: 'fern', expiringSoon: false },
       { email: '', expiringSoon: true },

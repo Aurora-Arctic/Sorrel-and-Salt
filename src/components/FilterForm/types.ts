@@ -16,17 +16,17 @@ export type FilterValue = string | boolean | null | undefined;
 export interface FilterFormProps {
   /** The form's accessible name: "Filter Users". */
   label: string;
-  /** The page itself, which the form submits to natively before hydration, and the unfiltered first page Clear Filters opens. */
+  /** The page itself, which the form submits to natively before hydration, and the unfiltered first page Clear opens. */
   action: Route;
   /** The filtered list's address, from the caller's own field state, from its first page. */
   href: () => Route;
   /** The caller's "nothing changed": Filter is offered only when the form differs from the filter shown. */
   disabled: boolean;
-  /** Each value of the filter the page shows: while any is set, Clear Filters opens the unfiltered list. */
+  /** Each value of the filter the page shows: while any is set, Clear opens the unfiltered list. */
   shown: readonly FilterValue[];
-  /** Each value the fields hold now, applied or not: while any is set and none is shown, Clear Filters empties the fields in place. */
+  /** Each value the fields hold now, applied or not: while any is set and none is shown, Clear empties the fields in place. */
   draft: readonly FilterValue[];
-  /** Empties every field the caller holds, for Clear Filters with nothing applied. */
+  /** Empties every field the caller holds, for Clear with nothing applied. */
   onClear: () => void;
   navigation: FilterNavigation;
   /** The filter's fields, each carrying the `name` the page reads. */

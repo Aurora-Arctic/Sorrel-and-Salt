@@ -117,7 +117,7 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <PageOfSeveral />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// The filtered list at a phone's width, Clear Filters beside Filter.
+// The filtered list at a phone's width, Clear beside Filter.
 export const FilteredPhoneDark: Story = () => <Filtered />;
 FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
 

@@ -435,16 +435,16 @@ describe('CompendiumList filter', () => {
   });
 });
 
-// Clear Filters (MB.115, the owner's call): a link to the unfiltered first
+// Clear (MB.115, the owner's call): a link to the unfiltered first
 // page, offered while the page shows a filter and off, not gone, while it
 // shows none. Tested here once for every list, as the filter's spinner is;
 // each other list asserts only which of its values count as a filter.
-describe('CompendiumList Clear Filters', () => {
+describe('CompendiumList Clear', () => {
   beforeEach(() => {
     router.push.mockReset();
   });
 
-  const clearLink = () => screen.getByRole('link', { name: 'Clear Filters' });
+  const clearLink = () => screen.getByRole('link', { name: 'Clear' });
   const filterButton = () => screen.getByRole('button', { name: 'Filter' });
 
   it('links to the unfiltered first page while the page shows any filter', () => {

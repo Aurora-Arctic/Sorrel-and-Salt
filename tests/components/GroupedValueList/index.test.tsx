@@ -254,24 +254,21 @@ describe('GroupedValueList', () => {
       expect(router.push).toHaveBeenCalledWith(path);
     });
 
-    // Clear Filters is CompendiumList's to test; this asserts which of the
+    // Clear is CompendiumList's to test; this asserts which of the
     // list's values count as a filter.
-    it('offers Clear Filters to the unfiltered list while the name or the group is shown', () => {
+    it('offers Clear to the unfiltered list while the name or the group is shown', () => {
       for (const filter of [
         { query: DEITIES.query, group: '' },
         { query: '', group: groups[0].slug },
       ]) {
         const { unmount } = render(<GroupedValueList {...props({ filter })} />);
 
-        expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute('href', path);
+        expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', path);
         unmount();
       }
 
       render(<GroupedValueList {...props()} />);
-      expect(screen.getByRole('link', { name: 'Clear Filters' })).toHaveAttribute(
-        'aria-disabled',
-        'true',
-      );
+      expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('aria-disabled', 'true');
     });
 
     it('empties the name and the group in place when neither is applied yet', () => {
@@ -280,7 +277,7 @@ describe('GroupedValueList', () => {
       fireEvent.change(searchbox(), { target: { value: 'draft' } });
       fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
       fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
-      fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+      fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
 
       expect(router.push).not.toHaveBeenCalled();
       expect(searchbox()).toHaveValue('');

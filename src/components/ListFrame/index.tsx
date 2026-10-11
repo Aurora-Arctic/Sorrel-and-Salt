@@ -15,7 +15,7 @@ import type { ListBodyProps, ListFrameProps, ListNavigation } from './types';
 
 // A list page's root, `.list-frame`, and the one record of whether another
 // of its pages is on its way (MB.115, the owner's call: "Filters should
-// trigger the same type of loading state as tabs"). Filter, Clear Filters and
+// trigger the same type of loading state as tabs"). Filter, Clear and
 // the pager's ends each navigate through it, so while the new page reads the
 // filter row greys out and the list beneath it, table and pager, is the
 // tabs' own skeleton; the new list fades in as a tab's content does. A
