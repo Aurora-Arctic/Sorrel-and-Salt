@@ -213,7 +213,13 @@ order, labelled by the field's label through `aria-labelledby`, with the
 field's hint and error, `aria-invalid` and `aria-required` on it. A press,
 ArrowDown or ArrowUp opens the list on the current choice; the arrows move,
 Enter or Space chooses, Escape closes and keeps the choice, and a letter
-jumps to the choice it starts.
+jumps to the choice it starts. Escape on the open list closes the list
+alone: the box marks the key handled (`keepEscapeInList`, `escape.ts`),
+which `useSelect`, unlike `useCombobox`'s typed box, does not, so a modal
+around it does not take the key as a close request and shut, or ask a
+changed form to discard (MB.115). With the list shut, Escape reaches the
+modal as ever. The Modal workshop's `WithPickers` story holds both pickers
+in a modal to try it.
 
 | Prop                 | Meaning                                                                                         |
 | -------------------- | ----------------------------------------------------------------------------------------------- |
@@ -291,7 +297,7 @@ It is Downshift's `useSelect` with `useMultipleSelection`, the pairing
 Downshift documents for a multi-select, rather than keys handled by hand.
 `useSelect` owns the box and its list as `ComboboxSelect`'s does: a press,
 ArrowDown or ArrowUp opens it, the arrows move, Enter or Space chooses,
-Escape closes, and a letter jumps. `useMultipleSelection` holds the chosen
+Escape closes the list alone, as `ComboboxSelect`'s does, and a letter jumps. `useMultipleSelection` holds the chosen
 list and gives the box Backspace, which takes the last chip. Its own chip
 focus, the arrows moving between chips, is held off (`activeIndex` at -1):
 each chip's × is already a button in the tab order, as every list's is, and

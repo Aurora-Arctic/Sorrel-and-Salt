@@ -3,6 +3,7 @@
 import { useMultipleSelection, useSelect, type UseSelectStateChangeOptions } from 'downshift';
 import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
+import { keepEscapeInList } from './escape';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
@@ -152,6 +153,7 @@ export function ComboboxMultiSelect({
               getDropdownProps({
                 ref: inputRef,
                 onBlur,
+                onKeyDown: keepEscapeInList(isOpen),
                 'aria-label': labelId ? undefined : label,
                 'aria-describedby': describedBy,
                 'aria-invalid': invalid,

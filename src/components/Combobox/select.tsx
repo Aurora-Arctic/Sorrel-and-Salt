@@ -1,6 +1,7 @@
 'use client';
 
 import { useSelect } from 'downshift';
+import { keepEscapeInList } from './escape';
 import type { ReactElement } from 'react';
 import { ChevronIcon } from './icons';
 import { useListPosition } from './position';
@@ -56,6 +57,7 @@ export function ComboboxSelect({
         {...getToggleButtonProps({
           ref: inputRef,
           onBlur,
+          onKeyDown: keepEscapeInList(isOpen),
           'aria-label': labelId ? undefined : label,
           'aria-describedby': describedBy,
           'aria-invalid': invalid,
