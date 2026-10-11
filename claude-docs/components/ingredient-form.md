@@ -186,7 +186,8 @@ field shows none: the browser draws its own format there.
   "Mugwort (Artemisia vulgaris) · Dried leaf" (`entryText`, MB.115), read
   from the values watched, so a form chosen beside the list redraws it.
   What the pill leaves out is its `detail`, from `entryDetail` (MB.164): the
-  form of it linked, or "Any form"; and "Compendium entry" or "This coven’s
+  form of it linked, or "Any form" (the ingredient's own list alone, since a
+  variant's link always names a form); and "Compendium entry" or "This coven’s
   entry", as its lookup row said, so two pills reading alike, a compendium
   entry and a coven's copy, are told apart: "Dried leaf · Compendium entry".
   It stays that one short line, the owner's call (MB.115); the description
@@ -739,26 +740,37 @@ as the ingredient's page shows its forms after it (MB.221).
   has no form the section says one is wanted: an entry with none saves, but
   as information only, which nothing can stock.
 - **A variant's substitutes are picked form by form** (`formRows`, MB.115,
-  the owner's call). The lookups already read each ingredient's forms, so
+  the owner's calls). The lookups already read each ingredient's forms, so
   the box shows each ingredient it found as a row per form, "Mockwort ·
   Dried leaf (Plant part)", which links that form and is sent as the
-  entry's `substituteVariantId`, after a row for any form of it, "Mockwort
-  · Any form", which links the ingredient alone, since a whole ingredient
-  may stand in for a form (MB.215). An ingredient in no form keeps its one
-  plain row. The pill names what was picked, "Mockwort · Dried leaf", and an
-  any-form pick reads as the ingredient alone, "Mockwort", as a link
-  naming no form reads everywhere. A typed name that matches nothing is
-  still added as a name, its pill the text as typed. The variant itself is
+  entry's `substituteVariantId`. **A variant's link always names a form**:
+  a form stands in for a form, so there is no row for the ingredient whole,
+  and an ingredient in no form at all, which only a coven's
+  information-only entry can be, is not offered, having nothing to link.
+  The pill names what was picked, "Mockwort · Dried leaf". Typed text is
+  still added as a name only, its pill the text as typed: a name links
+  nothing, so it needs no form. The variant itself is
   never offered, as `ingredient_substitutes_not_itself` refuses it; its
   sibling forms are. Once an ingredient is listed, every row of it leaves
   the box, since `ingredient_substitutes_variant_link_unique` holds one
   link per ingredient in a form's list, whichever form it names. The
   search matches ingredients by name, not by form.
+- **A link naming no form is refused at save.** Old data can hold one, a
+  link made before the rule. Its chip still reads, as the ingredient alone,
+  "Mockwort", but the save is refused with an error on that entry, as any
+  entry's error is placed (its `errorId` on the chip's ×, its line in the
+  list's error element): the admin removes it and picks a form from the
+  box. The refusal is the schema's, `formLinkRules` in
+  `validation/ingredient.ts`, which runs on a variant's substitutes alone,
+  so the resolver refuses it in the browser and both services on the
+  server, at `['variants', i, 'substitutes', j, 'substituteVariantId']`,
+  which `fieldNameOf` places on the same entry
+  ([`validation.md`](../validation.md)).
 - **The rows rank for the variant's form** (`rankForForm`): an ingredient
   coming in a form that folds alike is listed first, then one with a form in
   the same curated group, then the rest, each tier in the search's order,
-  and within each ingredient its forms run in the same order after its
-  any-form row. Every row stays, since anything may stand in for a form.
+  and within each ingredient its forms run in the same order. Every form's
+  row stays, since a form of anything may stand in for a form.
 - **The ingredient's own substitutes keep their second picker**,
   `SubstituteForms`: a linked ingredient in forms gets "Form of Mockwort",
   Any Form until one of its forms is chosen, sent as the entry's
@@ -807,9 +819,25 @@ References. The ingredient's own fields have none.
   line, unless it holds it already, so nothing typed is overwritten.
   **Substitutes copy "the same form"**: each of the ingredient's linked
   substitutes links the linked ingredient's form that folds alike to this
-  variant's form, as a variant's form row does, or, where it comes in no
-  such form, the ingredient alone, in any form; a name copies as a name.
-  One already listed, by link or by folded name, is skipped.
+  variant's form, Oil for Oil, as a variant's form row does; a name copies
+  as a name. One already listed, by link or by folded name, is left out.
+  **One in no such form is skipped**, the owner's call, since a variant's
+  link must name a form: the announcement adds how many, "Skipped 1 with
+  no Oil form", and a notice beneath the list names them.
+- **The skipped notice** (`SkippedNotice` and `useSkippedCopy`, the
+  owner's call). A `.notice--warn` inside an `output` labelled
+  "Substitute Ingredients skipped", always in the page, as a live region
+  must be to be heard (the duplicate warning's pattern), and empty, its gap
+  cancelled, until a copy skips something. It names what was skipped, "No
+  Oil form to link, so not copied: Mockwort.", beside a small quiet **Copy
+  Anyway**, which adds them as names only, typed text with no link, so the
+  rule holds and the admin can swap a name for a form later, and a ×,
+  "Dismiss". Either one takes the notice away and the focus back to Copy
+  From Ingredient, since the pressed button goes with it. Any other change
+  to the list, an entry added or removed, takes it away too: the variant
+  keeps the list as the copy left it (`listKey`), and the notice goes
+  once the list no longer matches. It sits in `ListField`'s `after`
+  slot, beneath the box and its error.
 - **After a press** the field shows the result and the form is dirty, so
   Save opens; once a save has been tried the field is revalidated. A polite
   announcement says what was copied, "Copied 3 planets from the
@@ -1341,10 +1369,15 @@ stand-in answers `IngredientSummary` for each invented ingredient, and
 summary open (MB.115). It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
-Dried leaf carrying a safety note, a planet, two categories and a source of
-its own and Whole root carrying nothing, so both summary lines show;
+Dried leaf carrying a safety note, a planet, two categories, a source and
+two substitutes of its own, Fixturewort in its Whole root form and the name
+Hedge Mockroot, and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
-Edit (MB.115), and `CompendiumEntryEditSource` the same entry with its first
+Edit (MB.115). `CompendiumEntryCopySkipped` adds Mockleaf, in no form, to
+the ingredient's substitutes, opens Dried leaf and presses its Substitute
+Ingredients' Copy From Ingredient: Testwort links its Dried leaf, and the
+notice beneath the list names Mockleaf with Copy Anyway;
+`CopySkippedPhoneDark` and `CopySkippedPhoneLight` are it at 375px. And `CompendiumEntryEditSource` the same entry with its first
 source's row open and Edit Source pressed, the panel prefilled; the stand-in
 answers `Reference` from each source's whole fields and keeps what
 `UpdateReference` saves. `EditSourcePhoneDark` and `EditSourcePhoneLight` are
