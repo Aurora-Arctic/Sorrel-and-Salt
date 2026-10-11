@@ -34,7 +34,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   Filter button. The switch is `SwitchField`, a slide toggle with its label
   above as the other fields have, over a native checkbox; it was a checkbox
   until the owner found it out of place in the row, and the compendium's
-  Without References changed with it, so the filters match (MB.115;
+  No Refs changed with it, so the filters match (MB.115;
   [`field.md`](field.md)). All Roles submits natively as `role=`, which the page reads
   as no role. A
   filtered page is an address, and filtering starts again from the first page,

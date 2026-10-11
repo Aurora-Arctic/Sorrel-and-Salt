@@ -52,14 +52,15 @@ different groups, so the page offers each name once, whatever its case.
   checkbox until the owner found it out of place in the row (MB.115;
   [`field.md`](field.md)). The
   classification and the switch are the admin's two to-do lists: Unknown is
-  every entry whose naming system is unsettled, and Without References every
+  every entry whose naming system is unsettled, and No Refs (shortened from
+  Without References, the owner's call at MB.115) every
   entry that cites no source yet. A filtered page is an address, and filtering
   starts again from the first page, since the form carries no cursor. It is
   `filter.tsx`, the one client file here, its fields inside the shared
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
   the Filter button, the Clear Filters link and the soft navigation; Clear
   Filters is offered while the page shows a name, a form, a classification or
-  Without References, and opens `/admin/compendium` with none, and while
+  No Refs, and opens `/admin/compendium` with none, and while
   only the fields hold one it empties them in place, the Form type-ahead and
   its hidden input included. M8.10 turns the Name box into its
   typeahead, a picked row opening the entry's `?edit=` modal, with this form
@@ -97,7 +98,7 @@ different groups, so the page offers each name once, whatever its case.
   builds both, the pager's links and the filter's submit too, a typed wrapper
   on the shared `listHref` (`src/lib/list-href.ts`). `place` is
   `{ query, form, nomenclature, withoutReferences, after, before }`, written in that
-  order before the modal, a blank one left out and Without References as
+  order before the modal, a blank one left out and No Refs as
   `withoutReferences=1`. `dialog` is `'new'`, a bare flag, or
   `{ edit: slug }`.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
@@ -118,7 +119,7 @@ different groups, so the page offers each name once, whatever its case.
   empty. Add the first entry with Add Ingredient." A filtered list with no
   rows names each filter in use, so an admin sees what to change, then says
   to change or clear it: "No entry matches “wort”, the form “Oil”, the
-  classification Botanical and Without References. Change or clear the
+  classification Botanical and No Refs. Change or clear the
   filter to see more." The query and the form are quoted, the
   classification is its label, and Without
   References is the switch's (MB.115, the owner's call; the user list's
@@ -160,7 +161,7 @@ Render-only, no test ids, no snapshots.
 links and their names, no table when there are none, the filter form's
 action, method, names, kept values and classification values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
-Without References found as a `switch`, sent by the server-drawn form and
+No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
 its narrowing as a name is typed, its pick and its clear, the Filter
 button's disabled and enabled states for each control, the address it opens,

@@ -6,7 +6,7 @@ import type { CompendiumDialog, CompendiumPlace } from './types';
 // open over it or not: the list's links, the pager, the filter's submit and
 // the modal's way back all build it. A typed wrapper on `listHref`, which
 // writes a blank filter as none and `new` as a bare flag; the form is its
-// text, `form=Oil`, and Without References is `withoutReferences=1`, the
+// text, `form=Oil`, and No Refs is `withoutReferences=1`, the
 // value its checkbox submits natively.
 
 const PATH = '/admin/compendium';

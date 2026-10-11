@@ -40,7 +40,7 @@ function emptyText({ query, form, nomenclature, withoutReferences }: Filter): st
     query && `“${query}”`,
     form && `the form “${form}”`,
     nomenclature && `the classification ${KIND_LABELS.get(nomenclature)}`,
-    withoutReferences && 'Without References',
+    withoutReferences && 'No Refs',
   ].filter((filter): filter is string => Boolean(filter));
   return filters.length
     ? `No entry matches ${and(filters)}. Change or clear the filter to see more.`

@@ -134,7 +134,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
         </select>
       </FieldShell>
       <SwitchField
-        label="Without References"
+        label="No Refs"
         name="withoutReferences"
         value="1"
         checked={draftUnsourced}

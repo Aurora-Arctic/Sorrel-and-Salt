@@ -123,7 +123,7 @@ const Toggle = ({
 
 export const Switch: Story = () => (
   <div className="form" style={{ maxWidth: '32rem' }}>
-    <Toggle label="Without References" />
+    <Toggle label="No Refs" />
     <Toggle label="Needs Approval" on />
     <Toggle label="Off and Shut" disabled />
     <Toggle label="On and Shut" on disabled />

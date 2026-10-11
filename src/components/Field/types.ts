@@ -113,7 +113,7 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
 
 /**
  * An on-or-off choice in a plain-state form, held by the caller: a list
- * filter's Without References or Needs Approval. Not a react-hook-form field,
+ * filter's No Refs or Needs Approval. Not a react-hook-form field,
  * since no such form has one yet.
  */
 export interface SwitchFieldProps {

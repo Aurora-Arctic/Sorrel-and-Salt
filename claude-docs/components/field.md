@@ -16,7 +16,7 @@ It has three ways in:
   `<FormProvider>`. Each draws the shell around its control and reads its own
   error out of the form state.
 - **The switch**, `SwitchField`, an on-or-off choice held in the caller's
-  own state: a list filter's Without References and Needs Approval (MB.115).
+  own state: a list filter's No Refs and Needs Approval (MB.115).
 
 `IngredientForm`'s three fields of its own, `SuggestField`,
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on

@@ -170,7 +170,7 @@ describe('CompendiumList filter', () => {
     const kind = within(search).getByRole('combobox', { name: 'Classification' });
     expect(kind).toHaveValue('unknown');
     expect(kind).toHaveAttribute('name', 'nomenclature');
-    const unsourced = within(search).getByRole('switch', { name: 'Without References' });
+    const unsourced = within(search).getByRole('switch', { name: 'No Refs' });
     expect(unsourced).toBeChecked();
     expect(unsourced).toHaveAttribute('name', 'withoutReferences');
     expect(unsourced).toHaveAttribute('value', '1');
@@ -218,20 +218,20 @@ describe('CompendiumList filter', () => {
   // The owner's call (MB.115): a slide toggle rather than a checkbox, but a
   // native checkbox beneath it, so the server's form sends it and a press
   // turns it before any JavaScript runs.
-  it('draws Without References as a switch the server-drawn form sends, turned by a press before hydration', () => {
+  it('draws No Refs as a switch the server-drawn form sends, turned by a press before hydration', () => {
     const container = document.createElement('div');
     container.innerHTML = renderToString(<CompendiumList {...props({ filter: SHOWN })} />);
     document.body.append(container);
     onTestFinished(() => container.remove());
     const search = within(container).getByRole('form', { name: 'Filter the Compendium' });
 
-    const served = within(search).getByRole('switch', { name: 'Without References' });
+    const served = within(search).getByRole('switch', { name: 'No Refs' });
     expect(served).toBeChecked();
     expect(new FormData(search as HTMLFormElement).get('withoutReferences')).toBe('1');
 
     fireEvent.click(served);
 
-    expect(within(search).getByRole('switch', { name: 'Without References' })).not.toBeChecked();
+    expect(within(search).getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
     expect(new FormData(search as HTMLFormElement).has('withoutReferences')).toBe(false);
   });
 
@@ -290,9 +290,9 @@ describe('CompendiumList filter', () => {
     expect(filterButton()).toBeDisabled();
   });
 
-  it('enables once Without References differs, and disables again when it is put back', () => {
+  it('enables once No Refs differs, and disables again when it is put back', () => {
     render(<CompendiumList {...props()} />);
-    const unsourced = screen.getByRole('switch', { name: 'Without References' });
+    const unsourced = screen.getByRole('switch', { name: 'No Refs' });
 
     fireEvent.click(unsourced);
     expect(filterButton()).toBeEnabled();
@@ -312,7 +312,7 @@ describe('CompendiumList filter', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
       target: { value: 'unknown' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Without References' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
     fireEvent.click(filterButton());
 
     expect(router.push).toHaveBeenCalledWith(
@@ -328,7 +328,7 @@ describe('CompendiumList filter', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
       target: { value: '' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Without References' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
     fireEvent.click(filterButton());
 
     expect(router.push).toHaveBeenCalledWith('/admin/compendium');
@@ -353,10 +353,10 @@ describe('CompendiumList filter', () => {
       screen.getByRole('searchbox', { name: 'Name' }),
       formBox(),
       screen.getByRole('combobox', { name: 'Classification' }),
-      screen.getByRole('switch', { name: 'Without References' }),
+      screen.getByRole('switch', { name: 'No Refs' }),
       filterButton(),
     ];
-    fireEvent.click(screen.getByRole('switch', { name: 'Without References' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
     // Before the press: the list shows, and every control can be used.
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(listStatus()).toEqual([]);
@@ -419,7 +419,7 @@ describe('CompendiumList filter', () => {
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test');
     expect(formBox()).toHaveValue('Fixture Oil');
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
-    expect(screen.getByRole('switch', { name: 'Without References' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
     expect(filterButton()).toBeDisabled();
   });
 
@@ -487,7 +487,7 @@ describe('CompendiumList Clear Filters', () => {
     fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
       target: { value: 'mineral' },
     });
-    fireEvent.click(screen.getByRole('switch', { name: 'Without References' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
     fireEvent.click(clearLink());
 
     expect(router.push).not.toHaveBeenCalled();
@@ -498,7 +498,7 @@ describe('CompendiumList Clear Filters', () => {
       nomenclature: '',
     });
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
-    expect(screen.getByRole('switch', { name: 'Without References' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveFocus();
     expect(filterButton()).toBeDisabled();
     expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
