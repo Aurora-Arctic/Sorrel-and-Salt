@@ -218,7 +218,7 @@ export async function resolvePicks(
   held: readonly DeityRecord[],
 ): Promise<{
   fields: IngredientFields;
-  children: Pick<IngredientChildren, 'categoryIds' | 'deities' | 'variants'>;
+  children: Required<Pick<IngredientChildren, 'categoryIds' | 'deities' | 'variants'>>;
   issues: ValidationIssue[];
 }> {
   const { deities } = picked;
@@ -614,7 +614,8 @@ async function bringSubstitutesTo(
     current.filter((row) => !listed.has(keyOf(row.substituteId, row.name))).map((row) => row.id),
   );
   const { ingredientId, variantId } = owner;
-  for (const { ingredientId: substituteId, substituteVariantId = null, name } of entries) {
+  for (const { ingredientId: substituteId, name, ...entry } of entries) {
+    const substituteVariantId = entry.substituteVariantId ?? null;
     const row = held.get(keyOf(substituteId, name));
     if (!row) {
       await write.insert(ingredientSubstitutes, {

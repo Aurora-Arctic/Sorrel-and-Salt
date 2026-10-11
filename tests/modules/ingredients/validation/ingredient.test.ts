@@ -677,10 +677,17 @@ describe('the ingredient fields, on the local variant', () => {
       ]);
     });
 
-    it('requires a form, beside it', () => {
+    it('requires a form, blank or left out, beside it', () => {
+      const { form: _left, ...formless } = formOf('Herb');
+
       expect(
-        failedPaths(Schema.safeParse({ ...base, variants: [formOf('Herb'), formOf(' ')] })),
-      ).toEqual([['variants', 1, 'form']]);
+        failedPaths(
+          Schema.safeParse({ ...base, variants: [formOf('Herb'), formOf(' '), formless] }),
+        ),
+      ).toEqual([
+        ['variants', 1, 'form'],
+        ['variants', 2, 'form'],
+      ]);
     });
 
     // Each entry replaces the row it names, so a field left out would clear it (MB.159).

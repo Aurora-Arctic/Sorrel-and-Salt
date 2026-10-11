@@ -74,7 +74,7 @@ transaction writes carries its id.
 
 **Every child is written by one call, the compendium's own** (MB.211). Each
 write hands `writeChildren` in `services/ingredient-rows.ts` its folk names,
-substitutes, deities, references and categories, `'add'` on a create and
+substitutes, deities, references, categories and forms, `'add'` on a create and
 `'replace'` on an update, under `[membership]`; the compendium's make the
 same call with none. A sixth child table costs one writer, one loader and one
 input field, and no edit to this service or its mutations

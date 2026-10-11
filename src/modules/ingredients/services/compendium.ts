@@ -287,7 +287,7 @@ async function inCuratedValues(
   const variants = picked.variants ?? [];
   const valuesOf = (field: CuratedField) => [
     ...(parsed[field] ?? []),
-    ...variants.flatMap((variant) => variant[field] ?? []),
+    ...variants.flatMap((variant) => variant[field]),
   ];
   const [picks, planets, zodiacSigns] = await Promise.all([
     resolvePicks('compendium', parsed, picked, held),
@@ -320,14 +320,19 @@ async function inCuratedValues(
   );
   if (issues.length > 0) throw new ValidationError(issues);
 
-  const spell = <T extends Partial<Record<CuratedField, string[] | null>>>(lists: T): T => ({
-    ...lists,
-    planets: lists.planets?.map((value) => spellingOf('planets', value) ?? value),
-    zodiacSigns: lists.zodiacSigns?.map((value) => spellingOf('zodiacSigns', value) ?? value),
-  });
+  // Each list in its rows' spellings: every value has one, or it was refused above.
+  const spell = <T extends Partial<Record<CuratedField, string[] | null>>>(lists: T): T => {
+    const spelt = { ...lists };
+    for (const field of SPELLED_FIELDS) {
+      spelt[field] = lists[field]?.map(
+        (value) => spellingOf(field, value) ?? value,
+      ) as T[CuratedField];
+    }
+    return spelt;
+  };
   return {
     fields: spell(picks.fields),
-    children: { ...picks.children, variants: picks.children.variants?.map(spell) },
+    children: { ...picks.children, variants: picks.children.variants.map(spell) },
   };
 }
 
