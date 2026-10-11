@@ -60,6 +60,11 @@ input CompendiumIngredientInput {
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]
 }
 
@@ -86,6 +91,11 @@ input CompendiumIngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]!
 }
 
@@ -255,6 +265,11 @@ input IngredientInput {
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]
 }
 
@@ -281,6 +296,11 @@ input IngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  """
+  variants: [IngredientVariantInput!]
   zodiacSigns: [String!]!
 }
 
@@ -305,6 +325,31 @@ type IngredientVariant {
   safetyNotes: String
   substitutes: [Substitute!]!
   zodiacSigns: [String!]
+}
+
+"""
+One form of the ingredient, replacing the form it names. Every field but id is sent, and "" or [] clears one.
+"""
+input IngredientVariantInput {
+  """The categories this form is filed under."""
+  categoryIds: [ID!]!
+  colors: [String!]!
+  description: String!
+  elements: [IngredientElement!]!
+  form: String!
+
+  """The curated form picked for `form`; "" when it was typed."""
+  formId: ID!
+
+  """
+  The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added.
+  """
+  id: ID
+  planets: [String!]!
+  references: [ReferenceLinkInput!]!
+  safetyNotes: String!
+  substitutes: [SubstituteInput!]!
+  zodiacSigns: [String!]!
 }
 
 """
@@ -945,6 +990,11 @@ An ingredient to link, or the name of one not entered: exactly one of the two.
 input SubstituteInput {
   ingredientId: ID
   name: String
+
+  """
+  One of the linked ingredient's forms, when the substitute is that form alone.
+  """
+  substituteVariantId: ID
 }
 
 type SuggestionClaimant {

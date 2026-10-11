@@ -218,6 +218,22 @@ and colours have no list and are not checked
 ([`db/identity-model.md`](db/identity-model.md), "The ingredient identity
 model").
 
+**An ingredient's forms are `variants`** (MB.219). Each entry is a whole
+form, every field but `id` sent, as `IngredientVariantInput` declares it,
+since an entry replaces the row it names: `form` through `requiredText`,
+`""` and `[]` for none elsewhere, and the parse keeps them as sent, so what
+it gives back is still an input the type takes. `resolvePicks` reads each
+blank as none. Its `id` and `formId` must be uuids, beside each. Its lists
+take the ingredient's own rules, run inside the form's schema so each issue is
+pathed beneath it — `['variants', 1, 'substitutes', 0]`. Across the list, two
+forms folding alike are refused at the repeat's `form`, and one id sent twice
+at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
+one form of the ingredient it links: an id, and only beside a link, refused at
+`['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
+form reads the database, so it is the service's. With no `variants` sent the
+list is left absent, and the service reads the top-level `form` as the one
+form until MB.222.
+
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
 default would otherwise overwrite a kind the input merely left out.

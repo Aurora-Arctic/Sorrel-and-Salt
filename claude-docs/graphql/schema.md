@@ -551,7 +551,7 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
-**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -677,6 +677,18 @@ the route's `maskedErrors`, and reads a refusal as `extensions.code`, never as
 the thrown type — the ingredients files since MB.185, the vocabulary, identity
 and coven files since MB.186. A test that watches a loader or shares one across
 operations, or records what a sender was asked to mail, hands `run` its own.
+
+**`variants` on all four inputs** (MB.219): `[IngredientVariantInput!]`, each
+a whole form whose every field but `id` is non-null, `""` or `[]` clearing
+one, as MB.159 holds every row-replacing input. The list itself is optional
+on all four, the update inputs included, until MB.222. An input without it
+reads `form` and `formId` as the one form, which is how `IngredientForm`
+still saves. MB.222 makes it required on the two update inputs when it
+removes those two fields. `SubstituteInput` gains `substituteVariantId`, one
+form of the linked ingredient. A form's refusal is `VALIDATION` pathed to it,
+`['variants', 1, 'form']`. Both update mutations clear `variantsByIngredient`
+with the other child loaders, so a second update in one request answers its
+own forms.
 
 `tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
 mutations' half: the input that names a tier, or leaves a field out, refused

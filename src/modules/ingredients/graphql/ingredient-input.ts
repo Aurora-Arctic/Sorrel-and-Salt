@@ -6,8 +6,8 @@ import type { Tier } from '../types';
 
 // The fields of the ingredient's four input types — a coven's and the
 // compendium's, each a create and a whole-row update — declared once, so the
-// two tiers' writes cannot take different fields. A sixth child table is one
-// field here. The types themselves stay beside their mutations.
+// two tiers' writes cannot take different fields. A child table is one
+// field here, as `variants` is (MB.219). The types themselves stay beside their mutations.
 
 /**
  * One substitute: an ingredient to link, or the name of one not entered —
@@ -18,6 +18,9 @@ const SubstituteInput = builder.inputType('SubstituteInput', {
   description: 'An ingredient to link, or the name of one not entered: exactly one of the two.',
   fields: (t) => ({
     ingredientId: t.id(),
+    substituteVariantId: t.id({
+      description: "One of the linked ingredient's forms, when the substitute is that form alone.",
+    }),
     name: t.string(),
   }),
 });
@@ -31,6 +34,41 @@ const IngredientDeityInput = builder.inputType('IngredientDeityInput', {
   fields: (t) => ({
     deityId: t.id(),
     name: t.string(),
+  }),
+});
+
+/**
+ * One form of the ingredient, and what it adds (DESIGN.md §5,
+ * `ingredient_variants`; MB.219): written inside the ingredient's own save,
+ * never by a mutation of its own. Every field but `id` is non-null, since an
+ * entry replaces the form it names in a create and an update alike, so
+ * leaving one out is a schema error rather than a silent clear (MB.159).
+ */
+const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
+  description:
+    'One form of the ingredient, replacing the form it names. Every field but id is sent, and "" or [] clears one.',
+  fields: (t) => ({
+    id: t.id({
+      description:
+        'The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added.',
+    }),
+    form: t.string({ required: true }),
+    formId: t.id({
+      required: true,
+      description: 'The curated form picked for `form`; "" when it was typed.',
+    }),
+    description: t.string({ required: true }),
+    safetyNotes: t.string({ required: true }),
+    elements: t.field({ type: [IngredientElementEnum], required: true }),
+    planets: t.stringList({ required: true }),
+    zodiacSigns: t.stringList({ required: true }),
+    colors: t.stringList({ required: true }),
+    categoryIds: t.idList({
+      required: true,
+      description: 'The categories this form is filed under.',
+    }),
+    substitutes: t.field({ type: [SubstituteInput], required: true }),
+    references: t.field({ type: [ReferenceLinkInput], required: true }),
   }),
 });
 
@@ -87,6 +125,15 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
       description: whole
         ? 'The categories it is filed under; [] when none.'
         : 'The categories it is filed under.',
+    }),
+    // Optional on every type, the whole row's included, until MB.222: an
+    // input without it reads `form` and `formId` as the one form, which is
+    // how a caller sending only those still saves (MB.219's shim).
+    variants: t.field({
+      type: [IngredientVariantInput],
+      required: false,
+      description:
+        'Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.',
     }),
   };
 }

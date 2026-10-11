@@ -211,7 +211,9 @@ describe('updateCompendiumIngredient', () => {
     expect(await categoriesOf(id)).toEqual(['Protection']);
   });
 
-  it('declares every field of its input required', () => {
+  // But `variants`, until MB.222: an input without it reads `form` and
+  // `formId` as the one form, which is how IngredientForm still saves (MB.219).
+  it('declares every field of its input required, but its forms', () => {
     const input = schema.getType('CompendiumIngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
@@ -221,7 +223,7 @@ describe('updateCompendiumIngredient', () => {
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      [],
+      ['variants'],
     );
   });
 
@@ -354,5 +356,63 @@ describe('deleteCompendiumIngredient', () => {
     expect((await remove(asUser(E), 'not-an-ingredient')).errors?.[0]?.extensions?.code).toBe(
       'NOT_FOUND',
     );
+  });
+});
+
+// MB.219 over the wire: a compendium entry's forms through the update input,
+// answered back on `Ingredient.variants`, and a form the compendium refuses
+// pathed to it. The matching and the curated rules are the service file's.
+describe('variants', () => {
+  /** One whole form as the input type requires it: every field but its id. */
+  const formOf = (form: string, formId: string) => ({
+    form,
+    formId,
+    description: '',
+    safetyNotes: '',
+    elements: [],
+    planets: [],
+    zodiacSigns: [],
+    colors: [],
+    categoryIds: [],
+    substitutes: [],
+    references: [],
+  });
+  const VARIANTS = `mutation ($id: ID!, $input: CompendiumIngredientUpdateInput!) {
+    updateCompendiumIngredient(id: $id, input: $input) { variants { form formChoice { id } } }
+  }`;
+
+  it('replaces its forms with the ones sent, answering each with its pick', async () => {
+    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
+    const oil = await curatedFormId(sql, 'Oil');
+
+    const result = await run<{ updateCompendiumIngredient: WorkspaceIngredientNode }>(
+      asUser(E),
+      VARIANTS,
+      { id, input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Oil', oil)] }) },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.updateCompendiumIngredient.variants).toEqual([
+      { form: 'Herb', formChoice: { id: herb } },
+      { form: 'Oil', formChoice: { id: oil } },
+    ]);
+  });
+
+  it('answers a typed form as VALIDATION pathed to that form, changing nothing', async () => {
+    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
+
+    const result = await run(asUser(E), VARIANTS, {
+      id,
+      input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Testform', '')] }),
+    });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['variants', 1, 'form'] }],
+    });
+    const forms = await sql`
+      select form from ingredient_variants where ingredient_id = ${id} and deleted_at is null`;
+    expect(forms).toEqual([{ form: 'herb' }]);
   });
 });

@@ -19,6 +19,7 @@ import type {
   ReferenceLinkFields,
   SubstituteEntry,
   SubstituteFields,
+  VariantFields,
 } from './types';
 
 // One ingredient as IngredientForm submits it and the service parses it: the
@@ -33,9 +34,12 @@ import type {
  */
 const textList = z.array(z.string().trim()).nullish();
 
+/** The entries of a list that are not blank, in order. */
+const nonBlank = <T extends string>(list: T[]) => list.filter((entry) => entry !== '');
+
 function withoutBlanks<T extends string>(list: T[] | null | undefined) {
   if (list == null) return list;
-  const entries = list.filter((entry) => entry !== '');
+  const entries = nonBlank(list);
   return entries.length > 0 ? entries : null;
 }
 
@@ -54,7 +58,7 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
  * a repeat is refused at the repeat rather than dropped, since the form never
  * offers a chosen element twice, so one arriving is a caller to correct.
  */
-const elementList = z
+const elementArray = z
   .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
   .superRefine((elements, ctx) => {
     elements.forEach((element, index) => {
@@ -65,8 +69,8 @@ const elementList = z
         message: `${element[0]?.toUpperCase()}${element.slice(1)} is already chosen`,
       });
     });
-  })
-  .nullish();
+  });
+const elementList = elementArray.nullish();
 
 /**
  * A substitute links an ingredient or names one (DESIGN.md §5,
@@ -75,7 +79,13 @@ const elementList = z
  * than dropped, so a service's refusal, made after the parse, still counts
  * the entries the caller sent.
  */
-const substitute = z.object({ ingredientId: optionalText(), name: optionalText() });
+const substitute = z.object({
+  ingredientId: optionalText(),
+  // The linked ingredient's form it names (MB.215): whether it is a form of
+  // that ingredient reads the database, so it is the service's.
+  substituteVariantId: optionalText(),
+  name: optionalText(),
+});
 
 /**
  * A deity links the curated one picked or names one (DESIGN.md §5,
@@ -100,6 +110,14 @@ const referenceLink = z.object({
 /** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
 function asLinkOrName<IdKey extends string>(
   idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[],
+): LinkOrName<IdKey>[];
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[] | null | undefined,
+): LinkOrName<IdKey>[] | undefined;
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
   entries: LinkOrNameFields<IdKey>[] | null | undefined,
 ): LinkOrName<IdKey>[] | undefined {
   // A computed key widens to a string index, so the shape is asserted back.
@@ -109,6 +127,19 @@ function asLinkOrName<IdKey extends string>(
       id ? { [idKey]: id, name: null } : { [idKey]: null, name: entry.name ?? '' }
     ) as LinkOrName<IdKey>;
   });
+}
+
+/** Each substitute as the one half it carries, with the form a link names. */
+function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
+  return asLinkOrName('ingredientId', entries).map((entry, index) => ({
+    ...entry,
+    substituteVariantId: entry.ingredientId ? (entries[index].substituteVariantId ?? null) : null,
+  }));
+}
+
+/** Each reference as its id and locator, once `referenceRules` has held it to an id. */
+function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
+  return entries.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
 }
 
 /**
@@ -130,14 +161,63 @@ function asEntries<
 } {
   return {
     ...value,
-    substitutes: asLinkOrName('ingredientId', value.substitutes),
+    substitutes: value.substitutes ? asSubstitutes(value.substitutes) : undefined,
     deities: asLinkOrName('deityId', value.deities),
-    references: value.references?.map(({ referenceId, locator }): ReferenceLinkEntry => ({
-      referenceId,
-      locator: locator ?? null,
-    })),
+    references: value.references ? asReferences(value.references) : undefined,
   };
 }
+
+/**
+ * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`;
+ * MB.215): its text, never blank, and its pick, its own description, safety
+ * note and lists, and its own substitutes, references and categories, each
+ * held to the ingredient's own rules and pathed beneath the variant. `id`
+ * names a form the ingredient already holds, so a save keeps that row across
+ * a respelling; whether it is this ingredient's is the service's to read.
+ * Every field but `id` is sent, `""` or `[]` for none, as the input type
+ * declares it: an entry replaces the row it names, so a field left out would
+ * be a silent clear (MB.159). The parse keeps `""` and `[]` as sent, blank
+ * list entries dropped after the rules, so what it gives back is still an
+ * input the type takes; `resolvePicks` reads each as none.
+ */
+const variant = z
+  .object({
+    id: optionalText(),
+    form: requiredText('Name the form'),
+    formId: z.string().trim(),
+    description: z.string().trim(),
+    safetyNotes: z.string().trim(),
+    elements: elementArray,
+    planets: z.array(z.string().trim()),
+    zodiacSigns: z.array(z.string().trim()),
+    colors: z.array(z.string().trim()),
+    categoryIds: z.array(z.string().trim()),
+    substitutes: z.array(substitute),
+    references: z.array(referenceLink),
+  })
+  .superRefine((value, ctx) => {
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    for (const key of ['id', 'formId'] as const) {
+      const id = value[key];
+      if (id && !RowId.safeParse(id).success) {
+        ctx.addIssue({ code: 'custom', path: [key], message: 'No such form' });
+      }
+    }
+    for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
+      refuseRepeats(field, value[field], ctx);
+    }
+    substituteRules(value.substitutes, ctx);
+    referenceRules(value.references, ctx);
+    categoryRules(value.categoryIds, ctx);
+  })
+  .transform((value) => ({
+    ...value,
+    planets: nonBlank(value.planets),
+    zodiacSigns: nonBlank(value.zodiacSigns),
+    colors: nonBlank(value.colors),
+    substitutes: asSubstitutes(value.substitutes),
+    references: asReferences(value.references),
+  }));
 
 const fields = {
   name: requiredText('Give the ingredient a name'),
@@ -163,6 +243,9 @@ const fields = {
   // The categories it is filed under (MB.125): whether each names a live
   // category is the service's to read, and a repeat is written once there.
   categoryIds: z.array(z.string().trim()).nullish(),
+  // Its forms (MB.215). Absent, until MB.222, the top-level `form` and
+  // `formId` are the one form, which the service reads as such.
+  variants: z.array(variant).nullish(),
 };
 
 const nomenclature = z.enum(NOMENCLATURE_KINDS, {
@@ -224,6 +307,35 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   deityRules(value.deities ?? [], ctx);
   referenceRules(value.references ?? [], ctx);
   categoryRules(value.categoryIds ?? [], ctx);
+  variantRules(value.variants ?? [], ctx);
+}
+
+/**
+ * The forms across the list (MB.215): each folded form once, as
+ * `ingredient_variants_form_unique` holds it, and each id once, since two
+ * entries keeping one row would each rewrite it. Refused at the repeat; each
+ * variant's own rules ran in its schema.
+ */
+function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
+  for (const index of repeatsOf(entries.map((entry) => entry.form))) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['variants', index, 'form'],
+      message: 'This form is already listed',
+    });
+  }
+  const ids = new Set<string>();
+  entries.forEach(({ id }, index) => {
+    if (id == null) return;
+    if (ids.has(id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['variants', index, 'id'],
+        message: 'This form is already listed',
+      });
+    }
+    ids.add(id);
+  });
 }
 
 /**
@@ -317,13 +429,31 @@ const deityRules = linkOrNameRules('deities', 'deityId', {
 });
 
 /** A substitute linking an ingredient, or naming one that is not entered. */
-const substituteRules = linkOrNameRules('substitutes', 'ingredientId', {
+const substituteLinkRules = linkOrNameRules('substitutes', 'ingredientId', {
   both: 'A substitute links an ingredient or names one, not both',
   neither: 'Name the substitute, or choose an ingredient',
   noSuchLink: 'No such ingredient to link',
   linkRepeated: 'This ingredient is already listed',
   nameRepeated: 'This substitute is already listed',
 });
+
+/**
+ * Each substitute a link or a name, and a form it names an id beside a link,
+ * as `ingredient_substitutes_substitute_variant_has_link` holds it (MB.215).
+ */
+function substituteRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
+  substituteLinkRules(entries, ctx);
+  entries.forEach(({ ingredientId, substituteVariantId }, index) => {
+    if (!substituteVariantId) return;
+    const path = ['substitutes', index, 'substituteVariantId'];
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    if (!RowId.safeParse(substituteVariantId).success) {
+      ctx.addIssue({ code: 'custom', path, message: 'No such form to pick' });
+    } else if (!ingredientId) {
+      ctx.addIssue({ code: 'custom', path, message: 'Choose the ingredient this is a form of' });
+    }
+  });
+}
 
 /**
  * Each reference names one by its id, and is listed once whatever its locator:
