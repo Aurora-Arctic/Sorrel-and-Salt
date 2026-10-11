@@ -1,0 +1,152 @@
+@use '../../../scss/variables' as *;
+@use '../../../scss/mixins' as *;
+
+// PROPOSAL, MB.115: the ingredient form's sections as disclosures, for the
+// owner to look at (./index.stories.tsx). Tokens only. Nested under
+// `.ingredient-proposal`, the proposal's form, to outweigh the form's own
+// section rules (../index.scss) and layout-base's bare `body section`.
+
+.ingredient-proposal {
+  // The sections sit flush, parted by their hairlines rather than the form's gap.
+  gap: 0;
+
+  // Each section between two hairlines: the muted ink, thinned, so the rule
+  // parts the sections without boxing them.
+  .ingredient-proposal__section {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin: 0;
+    border-top: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+
+    &:last-of-type {
+      border-bottom: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+    }
+  }
+
+  // The heading, its summary and its flag, the whole block one target: the
+  // toggle's `::after` stretches over it, so a press on the summary opens
+  // the section too, while the button alone is what a keyboard reaches.
+  .ingredient-proposal__head {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: space(1);
+    padding-block: space(3);
+  }
+
+  .ingredient-proposal__title {
+    margin: 0;
+  }
+
+  .ingredient-proposal__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(2);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible::after {
+      @include focus-ring;
+    }
+  }
+
+  // The chevron at the end, down while closed and turned over while open,
+  // as the admin menu's is.
+  .ingredient-proposal__chevron {
+    display: inline-flex;
+    flex: none;
+    width: $glyph-size;
+    height: $glyph-size;
+    color: $text-muted;
+    @include theme-transition(color);
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .ingredient-proposal__section.is-open .ingredient-proposal__chevron {
+    rotate: 180deg;
+  }
+
+  .ingredient-proposal__head:hover .ingredient-proposal__chevron {
+    color: $text-primary;
+  }
+
+  // What has been entered, one line in the muted ink at the caption size,
+  // cut with an ellipsis when it runs past the column.
+  .ingredient-proposal__summary {
+    max-width: none;
+    margin: 0;
+    overflow: hidden;
+    color: $text-muted;
+    font-size: type-size('caption');
+    font-weight: 300;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  // An error inside, open or closed, as a variant card flags one.
+  .ingredient-proposal__flag {
+    margin: 0;
+    color: $secondary;
+    font-size: type-size('caption');
+  }
+
+  // A section holding an error takes the field's error edge along its top.
+  .ingredient-proposal__section.is-invalid {
+    border-top-color: $secondary;
+  }
+
+  // Open, its fields beneath the heading at the form's own spacing, as far
+  // from the next section's hairline as the heading is from its own.
+  .ingredient-proposal__fields {
+    padding-block: space(1) space(5);
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  // The Variants section's own heading is the disclosure's, so its
+  // fieldset's legend leaves the eye and stays the group's name for a
+  // screen reader.
+  .ingredient-form__variants > .ingredient-form__section-head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .ingredient-proposal__actions {
+    margin-top: space(5);
+  }
+}
