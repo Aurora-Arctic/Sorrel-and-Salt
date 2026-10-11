@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
-import { type ReactNode, useId } from 'react';
+import { type ReactNode, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
-import { FieldShell, TextField, fieldDescription } from '.';
+import { FieldShell, SwitchField, TextField, fieldDescription } from '.';
 
 // Render-only; the fields are exercised by the forms that use them
 // (IngredientForm, the admin forms, NameForm, EmailForm). Each TextField sits
@@ -94,3 +94,37 @@ export const PlainShell: Story = () => {
     </div>
   );
 };
+
+// An on-or-off choice as a slide toggle, held in the caller's state as a
+// list filter holds it: off, on, and shut either way. Tab to one for the
+// focus ring; press and hold for the stretched thumb.
+const Toggle = ({
+  label,
+  on = false,
+  disabled,
+}: {
+  label: string;
+  on?: boolean;
+  disabled?: boolean;
+}) => {
+  const [checked, setChecked] = useState(on);
+  return (
+    <SwitchField
+      label={label}
+      name="flag"
+      value="1"
+      checked={checked}
+      onChange={setChecked}
+      disabled={disabled}
+    />
+  );
+};
+
+export const Switch: Story = () => (
+  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+    <Toggle label="Without References" />
+    <Toggle label="Needs Approval" on />
+    <Toggle label="Off and Shut" disabled />
+    <Toggle label="On and Shut" on disabled />
+  </div>
+);

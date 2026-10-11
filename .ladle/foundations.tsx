@@ -1,7 +1,8 @@
-import { type ReactElement, type ReactNode, useId } from 'react';
+import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
 import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
+import { SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
 import Pager from '../src/components/Pager';
 import ProviderMark from '../src/components/ProviderMark';
@@ -324,8 +325,31 @@ function DataTable({ label, stack = false }: { label: string; stack?: boolean })
   );
 }
 
+// A `.switch` through `SwitchField`, holding its own state as a filter does.
+function Switch({
+  label,
+  on = false,
+  disabled,
+}: {
+  label: string;
+  on?: boolean;
+  disabled?: boolean;
+}): ReactElement {
+  const [checked, setChecked] = useState(on);
+  return (
+    <SwitchField
+      label={label}
+      name="flag"
+      value="1"
+      checked={checked}
+      onChange={setChecked}
+      disabled={disabled}
+    />
+  );
+}
+
 // A list's filter form on the `.filter-row` primitive: the query first, as
-// the row's narrow rule expects, then a select, a check and the button.
+// the row's narrow rule expects, then a select, a switch and the button.
 function FilterRow(): ReactElement {
   const id = useId();
   return (
@@ -351,10 +375,7 @@ function FilterRow(): ReactElement {
             <option value="sight">Sight</option>
           </select>
         </div>
-        <label className="checkbox">
-          <input type="checkbox" />
-          Unused Only
-        </label>
+        <Switch label="Unused Only" />
         <button type="submit" className="btn btn--solid">
           Filter
         </button>
@@ -574,6 +595,23 @@ export default function Foundations(): ReactElement {
           <code>aria-required</code> instead.
         </SectionHead>
         <Fields />
+      </section>
+
+      <section id="fd-switch">
+        <SectionHead eyebrow="_primitives.scss · .switch" title="The Switch">
+          An on-or-off choice, a filter's, as a slide toggle: a native checkbox with the switch
+          role, so it submits with its form and keeps Space and its name's click. Off is the field's
+          ground and muted edge with the thumb at the start; on fills the track with the accent and
+          the thumb slides to the end, so where it sits says which without its colour. Tab to one
+          for the focus ring; press and hold for the stretched thumb. Disabled is dashed and faded,
+          its name dimmed, as a field is.
+        </SectionHead>
+        <div className="panel fd-buttons">
+          <Switch label="Off" />
+          <Switch label="On" on />
+          <Switch label="Disabled Off" disabled />
+          <Switch label="Disabled On" on disabled />
+        </div>
       </section>
 
       <section id="fd-page-frame">
