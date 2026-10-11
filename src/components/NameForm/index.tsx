@@ -5,6 +5,8 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
@@ -24,8 +26,6 @@ const SetNameDocument = graphql(`
 `);
 
 const NameForm = ({ name }: NameFormProps): ReactElement => {
-  const inputId = useId();
-  const fieldErrorId = useId();
   // What the row holds: the props' name until a save answers with another.
   const [saved, setSaved] = useState(name);
   const [value, setValue] = useState(name);
@@ -47,6 +47,8 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
     },
   });
 
+  const { aria, ...field } = fieldDescription({ id: useId(), error: fieldError });
+
   // Outer whitespace is no change: the server trims it, as it would store it.
   const unchanged = value.trim() === saved;
 
@@ -67,38 +69,29 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <div className="field">
-          <label className="field__label" htmlFor={inputId}>
-            Name
-          </label>
+        <FieldShell label="Name" {...field}>
           <input
-            id={inputId}
+            id={field.controlId}
             className="input"
             type="text"
             autoComplete="name"
             value={value}
             onChange={(event) => setValue(event.target.value)}
-            aria-invalid={fieldError ? true : undefined}
-            aria-describedby={fieldError ? fieldErrorId : undefined}
+            {...aria}
           />
-          {fieldError && (
-            <p id={fieldErrorId} className="field__error">
-              {fieldError}
-            </p>
-          )}
-        </div>
+        </FieldShell>
         <div className="form__actions">
           {/* Offered only when there is something to save, and busy, saying
               so, from the press to the answer — the owner's rule for every form. */}
-          <button
+          <BusyButton
             type="submit"
             className="btn btn--solid"
             disabled={unchanged || mutation.isPending}
-            aria-busy={mutation.isPending || undefined}
+            busy={mutation.isPending}
+            busyLabel="Saving Name"
           >
-            {mutation.isPending && <span className="spinner" aria-hidden="true" />}
-            {mutation.isPending ? 'Saving Name' : 'Save Name'}
-          </button>
+            Save Name
+          </BusyButton>
         </div>
       </form>
     </div>

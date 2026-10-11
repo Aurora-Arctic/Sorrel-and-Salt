@@ -5,6 +5,7 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
@@ -56,16 +57,15 @@ const Accept = ({
       <p className="invitation-acceptance__text">{GRANTS[tier]}</p>
       {failure && <Notice kind="error">{failure}</Notice>}
       <p className="invitation-acceptance__actions">
-        <button
+        <BusyButton
           className="btn btn--solid"
-          type="button"
           disabled={sending}
-          aria-busy={sending || undefined}
+          busy={sending}
+          busyLabel="Accepting Invitation"
           onClick={() => void accept()}
         >
-          {sending && <span className="spinner" aria-hidden="true" />}
-          {sending ? 'Accepting Invitation' : 'Accept Invitation'}
-        </button>
+          Accept Invitation
+        </BusyButton>
       </p>
     </>
   );

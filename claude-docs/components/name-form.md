@@ -21,7 +21,8 @@ by its own `<label>`, so the label and the heading read the same.
 - **Save Name stays disabled until there is something to save.** The typed
   value, trimmed, must differ from the saved name, so outer whitespace alone
   is no change, since the service trims it away.
-- **Busy while it saves.** The button reads "Saving Name", carries
+- **Busy while it saves.** The button, a `BusyButton`
+  ([`busy-button.md`](busy-button.md)), reads "Saving Name", carries
   `aria-busy` and the `.spinner`, and is disabled from the press to the
   answer: the owner's rule for every Save button.
 - **The answer is the new baseline.** `setName` answers the renamed row, and
@@ -47,7 +48,8 @@ The reading is the shared `readGraphqlFailure(error, ['name'])`
 Designed in the sign-in and account pages' review (MB.116). `.name-form` is
 a column; its width is the account page's `.page-frame--narrow`, its ground
 the section's `.panel`, and the field, notices and button are the form
-primitives'. The stories (`Prefilled`, `LongName`, `PhoneDark`,
+primitives', the field drawn by the shared `FieldShell` around the form's own
+input ([`field.md`](field.md)). The stories (`Prefilled`, `LongName`, `PhoneDark`,
 `PhoneLight`) render inside the page's real frame, section and panel.
 
 ## Testing
