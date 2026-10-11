@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
-import Modal, { RouteModal } from '.';
+import Modal, { DiscardQuestion, RouteModal, useDiscardGuard } from '.';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
@@ -101,3 +101,74 @@ export const OpenedByItsAddress: Story = () => (
 );
 
 OpenedByItsAddress.meta = { iframed: true };
+
+/**
+ * A form with a change, asked on opening whether to discard it, as Cancel,
+ * Close, Escape or a click outside would ask (MB.115). Keep Editing goes back
+ * to the form, whose Cancel asks again; Discard Changes closes.
+ */
+function ChangedForm({ close }: { close: () => void }) {
+  const [name, setName] = useState('Testwort Renamed');
+  const discard = useDiscardGuard(name !== 'Testwort');
+  const { request } = discard;
+  // The question shown from the start, once, as a press of Cancel would show it.
+  const shown = useRef(false);
+  useEffect(() => {
+    if (shown.current) return;
+    shown.current = true;
+    request(close);
+  }, [request, close]);
+  return (
+    <form className="form" onSubmit={(event) => event.preventDefault()}>
+      <div className="field">
+        <label className="field__label" htmlFor="story-discard-name">
+          Name
+        </label>
+        <input
+          id="story-discard-name"
+          className="input"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+      </div>
+      {discard.asking ? (
+        <DiscardQuestion guard={discard} />
+      ) : (
+        <div className="form__actions">
+          <button type="submit" className="btn btn--solid">
+            Save Category
+          </button>
+          <button type="button" className="btn btn--quiet" onClick={() => request(close)}>
+            Cancel
+          </button>
+        </div>
+      )}
+    </form>
+  );
+}
+
+export const AskingToDiscardChanges: Story = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Edit Category" onClose={() => setOpen(false)}>
+          {(done) => <ChangedForm close={done} />}
+        </Modal>
+      )}
+    </>
+  );
+};
+
+AskingToDiscardChanges.meta = { iframed: true };
+
+// The question at a phone's width in each theme: its buttons stack, full
+// width, as the form's own do under 28rem.
+export const PhoneDark: Story = () => <AskingToDiscardChanges />;
+export const PhoneLight: Story = () => <AskingToDiscardChanges />;
+
+PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

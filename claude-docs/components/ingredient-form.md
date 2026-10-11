@@ -39,7 +39,7 @@ so the union cannot say one yet.
 | `entry`         | With a null `workspaceId` only: the compendium entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`. Left out, the form creates.                                                                                                                 |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                         |
-| `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it.                                                                                                                                                                                             |
+| `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                     |
 | `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                           |
 
 ## The fields
@@ -867,6 +867,17 @@ site admin's, through the compendium mutations
   actions: the server's message, then **End Redirect & Save**, which sends
   the same input again with `endRedirect: true`, and **Keep It**, which
   drops the question and sends nothing, the entry left as typed.
+- **Unsaved changes** (MB.115, the owner's call). While the form has
+  changes, its `formState.isDirty`, the flag that turns the saves on,
+  Cancel asks "You have unsaved changes. Discard them?" in place of the
+  actions, before any other question, with **Discard Changes**,
+  destructive, which closes as Cancel did, and **Keep Editing**, quiet,
+  which goes back to the form as it was. The modal's Close button, Escape
+  and a click outside ask the same, since the form's guard is the modal's
+  (`useDiscardGuard`, [`modal.md`](modal.md), "Unsaved changes"); with
+  nothing changed every way out closes at once, and a save or a delete never
+  asks. The question's buttons stand on `.form__actions`, as the form's
+  other questions' do.
 
 **On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
 size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
@@ -1358,7 +1369,8 @@ web page with no address or day, and a published date with no year — with the 
 mutations answered by MSW. A new entry: the classification marked required and
 a save refused without one, then a create sent with `categoryIds: []` and
 `'open'`, Save & Add Another kept; Cancel, and where a near match links, taken
-from the page. The lookups: every one asked with a null `workspaceId`, the
+from the page, Cancel after Discard Changes since a name typed is a change;
+and, in a modal, Cancel and Escape asking before a change is discarded. The lookups: every one asked with a null `workspaceId`, the
 New Form box offering no typed row; substitutes
 from `compendium`, less the entry itself. A variant's Form box and a deity's box
 alone, on `compendiumResolver`: the Form box offering the curated forms alone,

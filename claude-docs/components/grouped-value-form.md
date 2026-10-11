@@ -25,12 +25,12 @@ long form the owner chose at MB.115's sign-off.
 
 `GroupedValueFormProps` (`types.ts`):
 
-| Prop     | What it is                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------- |
-| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says  |
-| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind |
-| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35); none for a flat kind   |
-| `onDone` | Called after a save or a delete, and on Cancel; the owner closes it                          |
+| Prop     | What it is                                                                                                     |
+| -------- | -------------------------------------------------------------------------------------------------------------- |
+| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says                    |
+| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind                   |
+| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35); none for a flat kind                     |
+| `onDone` | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it |
 
 Without `value`, the form adds one.
 
@@ -137,10 +137,19 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
   shown in the alert notice, and the form stays open with the
   confirmation withdrawn. Per DESIGN.md §7, a refusal that names its remedy is
   not a bad value in a box, so it gets no field.
+- **Unsaved changes are asked about** (MB.115, the owner's call). While the
+  form has changes, its `formState.isDirty`, the flag that turns Save on,
+  Cancel replaces the actions with "You have unsaved changes. Discard them?",
+  beside Discard Changes, which calls `onDone`, and Keep Editing, which goes
+  back to the form as it was. The modal's Close button, Escape and a click
+  outside ask the same through the form's guard (`useDiscardGuard`,
+  [`modal.md`](modal.md), "Unsaved changes"). With nothing changed, Cancel
+  calls `onDone` at once; a save or a delete never asks.
 - **Buttons are title case**: Save and Delete with the kind's `noun` (Save
-  Category, Delete Zodiac Sign and so on), Cancel, Delete, Keep It. Save is
-  solid; Cancel and Keep It are quiet, since they change nothing; the two
-  deletes are destructive.
+  Category, Delete Zodiac Sign and so on), Cancel, Delete, Keep It, Discard
+  Changes, Keep Editing. Save is solid; Cancel, Keep It and Keep Editing are
+  quiet, since they change nothing; the two deletes and Discard Changes are
+  destructive.
 
 ## On the admin pages
 
@@ -217,7 +226,10 @@ the save rules, the schema's refusal, the busy Save, the group typed into
 and narrowing, text naming no group refused on Save, the slug refusal, Cancel
 and the confirmed delete — are rows of `tests/support/grouped-value-form.tsx`,
 run once, on the category: a kind shares that code path, so another kind's
-run would prove nothing more (MB.189). What only one kind does stays under
+run would prove nothing more (MB.189). Its unsaved-changes wiring is one test, the form in a modal
+(`tests/support/discard-guard.tsx`): Cancel and Escape asking after a
+change, and Discard Changes closing; the guard's shape is the Modal's test.
+What only one kind does stays under
 that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's

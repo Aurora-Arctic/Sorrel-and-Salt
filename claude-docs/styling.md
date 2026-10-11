@@ -495,10 +495,10 @@ Four variants:
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
-- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Back.
+- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
   The body ink on an edge, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either.
-- **`.btn--destructive`**, what destroys something: Delete, Remove. The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
@@ -686,6 +686,16 @@ The class layer every form is built from, in `_primitives.scss`:
   one on a dim screen. The label dims for a disabled control only, not any
   disabled descendant, since a select's placeholder is a disabled option. A
   component never restates it.
+
+**Cancel asks when there are changes** (MB.115, the owner's call, for every
+admin form). While a form has unsaved changes, the same flag that turns its
+Save on, Cancel, and the modal's Close button, Escape and a click outside,
+put "You have unsaved changes. Discard them?" in a `.form__confirm` where
+the buttons were, with **Discard Changes** (`.btn--destructive`) and
+**Keep Editing** (`.btn--quiet`), the question scrolled into view and the
+focus on Keep Editing. With nothing changed they close at once; a save or a
+delete never asks. One guard draws it for every form
+([`components/modal.md`](components/modal.md), "Unsaved changes").
 
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
