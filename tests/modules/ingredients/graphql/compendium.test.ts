@@ -145,9 +145,11 @@ describe('compendium', () => {
     const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
 
     expect(edges.map((edge) => [edge.node.name, edge.score])).toEqual([
-      ['Black Salt', 1],
+      // Each label holds `sal` verbatim, so all three score a full hit and
+      // rank by where: Saltpetre at 1, Sea Salt at 5, Black Salt at 7.
       ['Saltpetre', 1],
       ['Sea Salt', 1],
+      ['Black Salt', 1],
       // 1 × 0.9, which `real` holds only approximately.
       ['Rosemary', expect.closeTo(0.9, 5)],
       ['Mugwort', 0.4],
