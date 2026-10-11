@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
 export interface ModalProps {
@@ -26,3 +27,17 @@ export interface ModalProps {
  * over and its owner to be asked; or asked already, with no fade to wait on.
  */
 export type ModalPhase = 'open' | 'fading' | 'closed' | 'asked';
+
+/** A modal opened by its page's address, which closing navigates away from. */
+export interface RouteModalProps {
+  /** The heading, and so the dialog's accessible name. */
+  title: string;
+  /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
+  closeHref: Route;
+  size?: ModalProps['size'];
+  /**
+   * What it holds, given `done`: the modal's own close, for a form's save or
+   * delete, so the modal fades out before the page goes back.
+   */
+  children: (done: () => void) => ReactNode;
+}

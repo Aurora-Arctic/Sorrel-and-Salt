@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { useState } from 'react';
-import Modal from '.';
+import type { Route } from 'next';
+import Modal, { RouteModal } from '.';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
@@ -83,3 +84,20 @@ export const Wide: Story = () => {
 };
 
 Wide.meta = { iframed: true };
+
+// The address-driven wrapper the admin pages open: the workshop's router goes
+// nowhere, so Close, Escape and Done fade it out and leave it gone until the
+// story is reloaded. Done stands for a form's save.
+export const OpenedByItsAddress: Story = () => (
+  <RouteModal title="Edit Category" closeHref={'/admin/categories' as Route}>
+    {(done) => (
+      <div className="modal__actions">
+        <button type="button" className="btn btn--solid" onClick={done}>
+          Done
+        </button>
+      </div>
+    )}
+  </RouteModal>
+);
+
+OpenedByItsAddress.meta = { iframed: true };
