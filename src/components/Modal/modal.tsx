@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import type { ModalPhase, ModalProps } from './types';
 import './index.scss';
 
@@ -80,9 +81,19 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
     return () => clearTimeout(limit);
   }, [phase, finish]);
 
+  // The Close button, Escape and a click outside ask the contents' guard
+  // first: a form with unsaved changes asks before it goes, and closes the
+  // modal itself if the answer is to (claude-docs/components/modal.md,
+  // "Unsaved changes"). The close handed to the contents is not guarded, so
+  // a save or a delete goes at once. Nothing is asked once it is closing.
+  const [guard] = useState(closeGuardSlot);
+  const request = (): void => {
+    if (phase === 'open' && guard.consult(close)) close();
+  };
+
   const handleCancel = (event: SyntheticEvent<HTMLDialogElement>): void => {
     event.preventDefault();
-    close();
+    request();
   };
 
   // A click outside asks the owner to close it, as Escape does, the owner's
@@ -95,7 +106,7 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
   };
   const handleClick = (event: MouseEvent<HTMLDialogElement>): void => {
     const outside = event.target === event.currentTarget && isOutside(event.currentTarget, event);
-    if (outside && pressedOutside.current) close();
+    if (outside && pressedOutside.current) request();
     pressedOutside.current = false;
   };
 
@@ -121,11 +132,13 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
         <h2 id={titleId} className="modal-dialog__title">
           {title}
         </h2>
-        <button type="button" className="modal-dialog__close" aria-label="Close" onClick={close}>
+        <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      {typeof children === 'function' ? children(close) : children}
+      <CloseGuardContext.Provider value={guard}>
+        {typeof children === 'function' ? children(close) : children}
+      </CloseGuardContext.Provider>
     </dialog>
   );
   // oxlint-enable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions

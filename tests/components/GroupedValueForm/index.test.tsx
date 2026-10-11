@@ -22,6 +22,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
 import type { GroupedValueFormSubject } from '../../support/types';
+import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
 
 // The admin's form for a grouped curated value, one per kind: a category
 // (M5.6), an ingredient form (M5.6a) or a deity (MB.132) — a name, a description and a group,
@@ -130,6 +131,18 @@ describe('GroupedValueForm, what every kind shares', () => {
 
   describe('deleting', () => {
     it.each(DELETING)('%s', (_, run) => run(SUBJECT));
+  });
+});
+
+// Every way out asks first while the form has changes (MB.115): the
+// guard's shape is tests/components/Modal's, and this its wiring.
+describe('GroupedValueForm, its unsaved changes', () => {
+  it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+    const onClose = renderInModal((done) => (
+      <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
+    ));
+
+    expectGuardedWaysOut(onClose, () => type(description(), 'A change'));
   });
 });
 

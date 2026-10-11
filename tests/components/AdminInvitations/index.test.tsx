@@ -119,6 +119,36 @@ describe('AdminInvitations', () => {
     ).toHaveLength(1);
   });
 
+  // Every way out asks first while the form has anything typed (MB.115): the
+  // guard's shape is tests/components/Modal's, and this its wiring; the close
+  // it makes is the modal's, back to the tab.
+  it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', () => {
+    render(<AdminInvitations invitations={[]} inviting />);
+    const cancel = () => within(dialog()).getByRole('button', { name: 'Cancel' });
+    const discard = () => within(dialog()).queryByRole('button', { name: 'Discard Changes' });
+
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
+      target: { value: 'Knows the planets' },
+    });
+    fireEvent.click(cancel());
+    expect(discard()).toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Keep Editing' }));
+    fireEvent(dialog(), new Event('cancel', { cancelable: true }));
+    expect(discard()).toBeInTheDocument();
+    expect(router.replace).not.toHaveBeenCalled();
+
+    fireEvent.click(discard()!);
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
+  });
+
+  it('closes at once on Cancel with nothing typed', () => {
+    render(<AdminInvitations invitations={[]} inviting />);
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
+
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
+  });
+
   it('says a refused address beside the field and keeps the form open', async () => {
     mockGraphQLError('CreateAdminInvitation', {
       code: 'VALIDATION',

@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { type ReactElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Modal from '@/components/Modal';
+import Modal, { DiscardQuestion, useDiscardGuard } from '@/components/Modal';
 
 // A dialog over the page, on the native element's modal mode, which brings
 // the focus trap, Escape and the inert page (claude-docs/components/modal.md).
@@ -171,5 +172,165 @@ describe('Modal', () => {
     unmount();
 
     expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  // The guard over a form's unsaved changes (MB.115, the owner's call): every
+  // way out asks first while the form has changes. Its shape is asserted
+  // here, on a form of the test's own; each admin form's test asserts only
+  // its wiring.
+  describe('guarding unsaved changes', () => {
+    /** A form as the admin forms are: a field, a save that closes, and Cancel. */
+    function GuardedForm({ close }: { close: () => void }): ReactElement {
+      const [name, setName] = useState('');
+      const [note, setNote] = useState('');
+      const discard = useDiscardGuard(name !== '' || note !== '');
+      return (
+        <form className="form">
+          <label>
+            Name <input value={name} onChange={(event) => setName(event.target.value)} />
+          </label>
+          <label>
+            Note <input value={note} onChange={(event) => setNote(event.target.value)} />
+          </label>
+          {discard.asking ? (
+            <DiscardQuestion guard={discard} />
+          ) : (
+            <div className="modal__actions">
+              <button type="button" onClick={close}>
+                Save
+              </button>
+              <button type="button" onClick={() => discard.request(close)}>
+                Cancel
+              </button>
+            </div>
+          )}
+        </form>
+      );
+    }
+
+    function renderGuarded() {
+      const onClose = vi.fn();
+      render(
+        <Modal title="Edit Category" onClose={onClose}>
+          {(done) => <GuardedForm close={done} />}
+        </Modal>,
+      );
+      return onClose;
+    }
+
+    const field = (name: string) => screen.getByRole('textbox', { name });
+    const button = (name: string) => screen.getByRole('button', { name });
+    const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
+    const escape = () =>
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+    const change = (name: string, value: string) => {
+      field(name).focus();
+      fireEvent.change(field(name), { target: { value } });
+    };
+
+    it('closes at once on Cancel, the Close button and Escape when nothing has changed', () => {
+      const onClose = renderGuarded();
+
+      fireEvent.click(button('Cancel'));
+      fireEvent.click(button('Close'));
+      escape();
+
+      expect(asking()).not.toBeInTheDocument();
+      // Once, however many ways: the modal is already closing.
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('asks on Cancel with a change, the dialog open and the focus on Keep Editing', () => {
+      const onClose = renderGuarded();
+      change('Name', 'Testwort');
+
+      fireEvent.click(button('Cancel'));
+
+      expect(asking()).toBeInTheDocument();
+      expect(button('Keep Editing')).toHaveFocus();
+      expect(screen.getByRole('dialog')).toHaveAttribute('open');
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['the Close button', () => fireEvent.click(button('Close'))],
+      ['Escape', escape],
+      [
+        'a click outside',
+        () => {
+          const at = { clientX: 20, clientY: 150 };
+          fireEvent.mouseDown(screen.getByRole('dialog'), at);
+          fireEvent.click(screen.getByRole('dialog'), at);
+        },
+      ],
+    ])('asks on %s with a change, as Cancel does', (_, leave) => {
+      const onClose = renderGuarded();
+      change('Name', 'Testwort');
+
+      leave();
+
+      expect(asking()).toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('does nothing more for a way out pressed while it is asking', () => {
+      const onClose = renderGuarded();
+      change('Name', 'Testwort');
+      fireEvent.click(button('Cancel'));
+
+      fireEvent.click(button('Close'));
+      escape();
+
+      expect(asking()).toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('goes back to the form on Keep Editing, the change kept and the focus where it was', () => {
+      const onClose = renderGuarded();
+      change('Note', 'Kept');
+
+      escape();
+      fireEvent.click(button('Keep Editing'));
+
+      expect(asking()).not.toBeInTheDocument();
+      expect(field('Note')).toHaveValue('Kept');
+      expect(field('Note')).toHaveFocus();
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // Cancel, the button pressed, went with the question: the first field instead.
+    it('focuses the first field on Keep Editing after Cancel', () => {
+      renderGuarded();
+      change('Note', 'Kept');
+      button('Cancel').focus();
+
+      fireEvent.click(button('Cancel'));
+      fireEvent.click(button('Keep Editing'));
+
+      expect(field('Name')).toHaveFocus();
+    });
+
+    it.each([
+      ['Cancel', () => fireEvent.click(button('Cancel'))],
+      ['Escape', escape],
+    ])('closes on Discard Changes after %s', (_, leave) => {
+      const onClose = renderGuarded();
+      change('Name', 'Testwort');
+      leave();
+
+      fireEvent.click(button('Discard Changes'));
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('closes without asking for a save, changes and all', () => {
+      const onClose = renderGuarded();
+      change('Name', 'Testwort');
+
+      fireEvent.click(button('Save'));
+
+      expect(asking()).not.toBeInTheDocument();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
   });
 });

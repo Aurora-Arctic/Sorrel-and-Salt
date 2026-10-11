@@ -22,6 +22,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
 
 // The admin's form for a group (M5.6b), for every group vocabulary, a deity's
 // traditions included (MB.132): a name, a
@@ -74,6 +75,18 @@ const choose = (box: string, label: string) => {
     }),
   );
 };
+
+// Every way out asks first while the form has changes (MB.115): the
+// guard's shape is tests/components/Modal's, and this its wiring.
+describe('GroupForm, its unsaved changes', () => {
+  it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+    const onClose = renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} onDone={done} />
+    ));
+
+    expectGuardedWaysOut(onClose, () => type(description(), 'A change'));
+  });
+});
 
 describe('GroupForm, for a category group', () => {
   describe('adding', () => {

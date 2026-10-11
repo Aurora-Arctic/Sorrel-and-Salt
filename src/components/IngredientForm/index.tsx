@@ -8,6 +8,7 @@ import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from 
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -190,6 +191,10 @@ const IngredientForm = ({
     button.focus({ preventScroll: true });
   }, [asking]);
   const [refusal, setRefusal] = useState<string>();
+  // Cancel, and every other way out of the modal, asks first while the form
+  // has changes (MB.115, the owner's call), ahead of any other question; a
+  // save or a delete does not.
+  const discard = useDiscardGuard(isDirty);
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -465,7 +470,9 @@ const IngredientForm = ({
         {/* After the ingredient's own fields, as the page shows its forms
             after it (MB.215): each form, and what it adds. */}
         <VariantsField workspaceId={workspaceId} />
-        {question ? (
+        {discard.asking ? (
+          <DiscardQuestion guard={discard} row="form__actions" />
+        ) : question ? (
           // MB.82: the address this save takes is another entry's redirect.
           // Asked in place of the saves, so nothing else is pressed until it
           // is answered; Keep It leaves the entry as typed, unsaved.
@@ -549,7 +556,11 @@ const IngredientForm = ({
               </BusyButton>
             )}
             {onCancel && (
-              <button type="button" className="btn btn--quiet" onClick={onCancel}>
+              <button
+                type="button"
+                className="btn btn--quiet"
+                onClick={() => discard.request(onCancel)}
+              >
                 Cancel
               </button>
             )}

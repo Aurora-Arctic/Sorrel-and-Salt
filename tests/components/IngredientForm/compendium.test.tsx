@@ -38,6 +38,7 @@ import type {
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
 import {
   offerDeities,
   offerDuplicates,
@@ -305,8 +306,21 @@ describe('IngredientForm on the compendium', () => {
         'href',
         '/admin/compendium?edit=testworts',
       );
+      // A name typed is a change, which Cancel asks before discarding (MB.115).
       fireEvent.click(button('Cancel'));
+      fireEvent.click(button('Discard Changes'));
       expect(onCancel).toHaveBeenCalledOnce();
+    });
+
+    // Every way out asks first while the form has changes (MB.115): the
+    // guard's shape is tests/components/Modal's, and this its wiring.
+    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+      offerNothing();
+      const onClose = renderInModal((done) => (
+        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+      ));
+
+      expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
     });
   });
 
