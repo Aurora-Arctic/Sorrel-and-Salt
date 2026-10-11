@@ -17,7 +17,7 @@ $modal-padding: space(5) * 2;
 // tokens before the section's design review.
 .modal-dialog {
   box-sizing: border-box;
-  width: min(calc(32rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+  width: min(calc($dialog-column + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
   max-height: calc(100dvh - #{$modal-gap} * 2);
   overflow: auto;
   border: 0;
@@ -83,9 +83,9 @@ $modal-fade: 150ms ease-out;
 }
 
 // A long form's width (M5.5), the compendium entry's first: its list fields
-// and nested References panel are cramped in the 32rem column.
+// and nested References panel are cramped in the default `$dialog-column`.
 .modal-dialog--wide {
-  width: min(calc(48rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+  width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
 // The × centred on the title, at its larger size (M5.5).
@@ -101,14 +101,16 @@ $modal-fade: 150ms ease-out;
   margin: 0;
 }
 
-// A 2rem × in a 2.5rem square, the owner's call during M5.5, in the
-// proportion it began at: well past WCAG 2.2's 24px minimum target.
+// A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
+// in the proportion it began at: well past WCAG 2.2's 24px minimum target.
+// The glyph's 2rem is on no scale: it is the × drawn at the size of the
+// target it sits in, not a length of the layout.
 .modal-dialog__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: $close-target;
+  height: $close-target;
   padding: 0;
   border: 0;
   border-radius: radius('pill');

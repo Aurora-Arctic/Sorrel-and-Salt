@@ -3,7 +3,15 @@
 `src/components/Modal/` — a dialog over the page (M5.6), the project's first.
 It is the native `<dialog>` in its modal mode, with the `.modal` primitive's
 surface and a heading that names it. M5.6's category page opens it from the
-address; M8.16, M8.17 and M7.4 are its next owners.
+address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
+is the wrapper every admin page opens it through (below).
+
+| File              | What it holds                                               |
+| ----------------- | ----------------------------------------------------------- |
+| `modal.tsx`       | `Modal`, the default export                                 |
+| `route-modal.tsx` | `RouteModal`                                                |
+| `index.tsx`       | Both exports; two files, since `RouteModal` renders `Modal` |
+| `types.ts`        | `ModalProps`, `RouteModalProps`, `ModalPhase`               |
 
 ## Props
 
@@ -42,7 +50,7 @@ address; M8.16, M8.17 and M7.4 are its next owners.
 - **Named by its heading.** `aria-labelledby` points at the `<h2>`, so
   `getByRole('dialog', { name })` finds it. The Close button is `×`, hidden
   from assistive technology, inside a button named "Close". It is a 2rem ×
-  in a 2.5rem square, the owner's call during M5.5, and the header centres it
+  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and the header centres it
   on the title.
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
@@ -55,10 +63,38 @@ address; M8.16, M8.17 and M7.4 are its next owners.
   URL-driven modal's trigger is a link that the navigation re-renders. M8.16,
   whose criteria ask for focus restored, adds that to the modal it builds.
 
+## RouteModal
+
+A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape
+every admin page's add and edit modal takes. Eight wrappers under
+`src/app/admin/` each wrote the same lines until MB.115, and the planets and
+zodiac signs' one handed the navigation straight to its form, so a save there
+skipped the fade.
+
+`RouteModalProps` (`types.ts`):
+
+| Prop        | What it is                                                                      |
+| ----------- | ------------------------------------------------------------------------------- |
+| `title`     | The heading, and so the dialog's accessible name                                |
+| `closeHref` | The page it opened over, its modal parameter dropped                            |
+| `size`      | As `Modal`'s                                                                    |
+| `children`  | A function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+
+- **Closing is a navigation back.** Close, Escape, a click outside and
+  `done` all fade the modal out, then `router.replace(closeHref)`, so Back
+  does not open it again, and `router.refresh()`, so the list beneath re-reads
+  after a save or a delete.
+- **`done` fades first.** It is `Modal`'s own close, so a form that closes
+  the modal itself fades out as Close does, and the page goes back once the
+  fade ends.
+- **A caller needing more of the router keeps its own.** The compendium's
+  form moves from `?new` to `?edit=` after a save without closing, through
+  its own `useRouter`.
+
 ## Styling
 
 Only what the native element needs beyond `.modal`: no border, a 32rem
-column so it fits a phone, scrolling within the viewport's height, and a
+column (`$dialog-column`) so it fits a phone, scrolling within the viewport's height, and a
 `::backdrop` of the page surface at 75%.
 
 **The page stays in view around it** (M5.5, the owner's call): a gap of
@@ -78,7 +114,7 @@ scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach. Nothing goes
 past the tokens before the admin area's design review (MB.115).
 
-`size="wide"` adds `.modal-dialog--wide`, a 48rem column, for a long form that the default column
+`size="wide"` adds `.modal-dialog--wide`, a 48rem column (`$dialog-column-wide`), for a long form that the default column
 would crowd. M5.5's compendium form is its first owner, and M8.16's
 IngredientForm modal its next. It changes only the width; the dialog scrolls
 within the viewport's height either way.
@@ -99,3 +135,7 @@ axe against it while it is open. `admin-compendium.spec.ts` closes one by a
 click on the backdrop, holds the wide one to its gap on a desktop and at
 375px, and the page behind still while it is open and scrolling again once it
 closes.
+
+`RouteModal` has no file of its own (claude-docs/testing/layer-ownership.md,
+"What a test may assert", rule 6): each admin page test asserts its modal's
+close href, and the e2e specs close the modals in a real browser.

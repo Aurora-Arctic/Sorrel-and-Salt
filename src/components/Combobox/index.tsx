@@ -12,7 +12,7 @@ import {
 import { chipColors } from '../../lib/chip-colors';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
-import { useTip } from './tip';
+import { useTip } from '../InfoTip/use-tip';
 import type {
   Bucket,
   ComboboxOption,

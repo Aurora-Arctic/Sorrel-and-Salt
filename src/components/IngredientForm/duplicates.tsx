@@ -5,8 +5,8 @@ import { Fragment, type MouseEvent, type ReactElement, useId, useState } from 'r
 import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
-import { TextField } from './fields';
-import type { Duplicate, DuplicateWarning, NameFieldProps } from './types';
+import { TextField } from '../Field';
+import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
 // the typing settles, on the debounce the other lookups wait on, and each
@@ -127,7 +127,7 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
   };
 
   return (
-    <TextField
+    <TextField<IngredientFormValues>
       name="name"
       label="Name"
       autoComplete="off"

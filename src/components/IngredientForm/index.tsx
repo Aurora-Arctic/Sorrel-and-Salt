@@ -13,7 +13,8 @@ import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
 import { SubstituteForms } from './substitute-forms';
-import { ListField, MultiSelectField, SelectField, TextField } from './fields';
+import { SelectField, TextField } from '../Field';
+import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
 import {
   LookupListField,
@@ -301,7 +302,7 @@ const IngredientForm = ({
             name at all, so choosing it empties the field and shuts it, with
             the reason in view rather than in a tip: a shut field that does
             not say why reads as broken. */}
-        <SelectField
+        <SelectField<IngredientFormValues>
           name="nomenclature"
           label="Classification"
           hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
@@ -313,7 +314,7 @@ const IngredientForm = ({
             if (value === NAMELESS_KIND) setValue('canonicalName', '');
           }}
         />
-        <TextField
+        <TextField<IngredientFormValues>
           name="canonicalName"
           label="Formal Name"
           hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
@@ -331,7 +332,7 @@ const IngredientForm = ({
           entry="Folk Name"
           hint="Other names it goes by. A search finds it by any of them."
         />
-        <TextField name="description" label="Description" multiline />
+        <TextField<IngredientFormValues> name="description" label="Description" multiline />
         {/* Several at once, in the order chosen (MB.159); none chosen is
             the answer "none", so there is no None to choose. */}
         <MultiSelectField
@@ -402,7 +403,7 @@ const IngredientForm = ({
         {/* After the lists (MB.126): every live category, picked from chips
             grouped by category group. */}
         <CategoryField />
-        <TextField
+        <TextField<IngredientFormValues>
           name="safetyNotes"
           label="Safety Notes"
           hint="Toxicity, allergies, and anything to take care over when handling or burning it."

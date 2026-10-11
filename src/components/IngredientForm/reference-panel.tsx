@@ -17,7 +17,7 @@ import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
-import { SelectField, TextField } from './fields';
+import { SelectField, TextField } from '../Field';
 import type {
   ReferenceFieldName,
   ReferenceFieldSpec,

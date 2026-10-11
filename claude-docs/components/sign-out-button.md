@@ -16,7 +16,7 @@ with no props.
   survives it, and a protected page asked for next sends the visitor to sign
   in.
 - **While it runs** the button is disabled, `aria-busy`, with a spinner and
-  "Signing Out".
+  "Signing Out": a `BusyButton` ([`busy-button.md`](busy-button.md)).
 - **A failure**, a refusal or a connection that drops, says "That didn't
   work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`)
   in an error `Notice` beside the button, which is offered again. The call

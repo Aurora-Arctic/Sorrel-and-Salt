@@ -2,7 +2,7 @@ import {
   INGREDIENT_ELEMENTS,
   NOMENCLATURE_KINDS,
 } from '@/modules/ingredients/schema/ingredient-enums';
-import type { SelectOption } from './types';
+import type { SelectOption } from '../Field/types';
 
 // The closed sets' choices, each value by its capitalised self: the form's,
 // and the admin compendium filter's Classification, which offers the same.

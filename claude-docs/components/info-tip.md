@@ -40,7 +40,12 @@ It follows WCAG 1.4.13, content on hover or focus:
 handlers and the Escape listener, so another tip beside a control behaves the
 same without being an ⓘ: `UserList`'s history link, the primary admin's
 crown and its locked Revoke use it too ([`user-list.md`](user-list.md),
-MB.200, MB.59).
+MB.200, MB.59), as do Combobox's entry and qualifier tooltips
+([`combobox.md`](combobox.md)). It takes an optional `canOpen`, asked each
+time the tip would open rather than watched, for a tip that has nothing to
+show at some moments: a Combobox entry whose text fits, a qualifier with no
+detail. Left out, the tip always opens. MB.115 made Combobox's copy of the
+hook, which differed only by `canOpen`, this one.
 
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its

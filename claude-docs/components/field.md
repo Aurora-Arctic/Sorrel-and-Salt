@@ -1,0 +1,118 @@
+# Field
+
+`src/components/Field/` — one form field's block, written once: the label,
+the required mark, the hint's info tip, a note, the control, and its error,
+tied to each other by id. MB.115 lifted it out of `IngredientForm`, which had
+the one good copy, once the same block had been written by hand fifteen
+times across the admin forms and the account forms.
+
+It has two ways in:
+
+- **The shell**, `FieldShell` with `fieldDescription`, knows no form library.
+  A plain-state form (one holding its values in `useState`, such as NameForm
+  and EmailForm) renders it around its own control.
+- **The react-hook-form fields**, `TextField` and `SelectField`, read the
+  form through `useFormContext`, so they work inside any form wrapped in a
+  `<FormProvider>`. Each draws the shell around its control and reads its own
+  error out of the form state.
+
+`IngredientForm`'s three fields of its own, `SuggestField`,
+`MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
+the same shell until its design review (MB.120).
+
+| File               | What it holds                                                                       |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `index.tsx`        | The exports, below                                                                  |
+| `shell.tsx`        | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them |
+| `description.ts`   | `fieldDescription`                                                                  |
+| `use-field.ts`     | `useField`, `fieldDescription` over a react-hook-form field's own error             |
+| `text-field.tsx`   | `TextField`                                                                         |
+| `select-field.tsx` | `SelectField`                                                                       |
+| `types.ts`         | The props, and `SelectOption`                                                       |
+
+## The exports
+
+| Name               | What it is                                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `FieldShell`       | The `.field` block around a control the caller renders                                                        |
+| `FieldError`       | The `.field__error` paragraph, rendered only when there is a message                                          |
+| `Required`         | The `*` after a label, hidden from assistive technology                                                       |
+| `fieldDescription` | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it |
+| `useField`         | `fieldDescription` for a react-hook-form field, its error read by name                                        |
+| `TextField`        | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
+| `SelectField`      | A closed set on Combobox's select-only box, in a react-hook-form form                                         |
+
+## Props
+
+Every field takes `FieldProps` (`types.ts`):
+
+| Prop       | What it is                                                                             |
+| ---------- | -------------------------------------------------------------------------------------- |
+| `label`    | The label, title case: "Email Address"                                                 |
+| `hint`     | Optional: what the field is for, behind an info tip beside the label                   |
+| `note`     | Optional: a state the field is in, such as why it is shut, as a line beneath the label |
+| `required` | Optional: marked required beside its label, and to assistive technology                |
+
+`FieldShell` adds what `fieldDescription` returns (`controlId`, `labelId`,
+`hintId`, `noteId`, `errorId`, `error`), `children` (the control) and `after`
+(drawn beneath the error).
+
+`fieldDescription({ id, hint, note, describedBy, error, invalid })` takes a
+base id from `useId()` and returns those ids, the error, and `aria`, to spread
+on the control:
+
+```tsx
+const { aria, ...field } = fieldDescription({ id: useId(), error });
+<FieldShell label="Name" required {...field}>
+  <input id={field.controlId} className="input" aria-required {...aria} />
+</FieldShell>;
+```
+
+`TextField` adds `name`, `multiline`, `type` (`text`, `date`, `url`),
+`disabled`, `deps`, `describedBy`, `invalid`, `after`, `format` (a tidy run
+as the field is left) and `autoComplete`. `SelectField` adds `name`,
+`options`, `placeholder`, `deps` and `onChange`. Both are generic over the
+form's values, `TextField<IngredientFormValues>`, so `name` is checked
+against the form's own paths; left out, any string passes.
+
+## Contracts
+
+- **The control names its hint, note and error** in `aria-describedby`, and
+  carries `aria-invalid` while there is an error. `aria-invalid` is what draws
+  the error edge, so the markup that makes the error announced is the markup
+  that makes it visible ([`styling.md`](../styling.md), "Form fields").
+- **The hint is read whether its tip is open or not**: the tip's text stays in
+  the page, `aria-hidden` while closed, and the control lists its id
+  ([`info-tip.md`](info-tip.md)).
+- **Required is `aria-required` on the control and a `*` for the eye.** The
+  asterisk is `aria-hidden`, so a screen reader hears "Name, required" rather
+  than "Name star". The control takes `aria-required`, not `required`, whose
+  `:invalid` would mark an empty field before anyone tried to save. Putting
+  `aria-required` on the control is the caller's part when it renders its
+  own; `TextField` and `SelectField` do it themselves.
+- **A react-hook-form field re-renders for its own error only**: `useField`
+  reads the form state by the field's name.
+- **`disabled` is the attribute**, not react-hook-form's option, which would
+  also drop the value from what is validated and sent.
+
+## Styling
+
+None of its own: the block is the field primitives (`.field`,
+`.field__label`, `.field__hint`, `.field__error`, `.input`, `.textarea`),
+with `.field__label-row` holding the label and its tip, positioned so the tip
+can place itself above it, and `.field__required` the asterisk
+([`styling.md`](../styling.md), "Form fields").
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
+Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
+`WithError`, `Multiline` and `Disabled`, each in a `FormProvider`; and
+`PlainShell`, the shell around a native input with an error.
+
+## Testing
+
+No file of its own: the forms that use it cover it (claude-docs/testing/layer-ownership.md,
+"What a test may assert", rule 5). `tests/components/IngredientForm/` covers
+`TextField` and `SelectField`; the NameForm and EmailForm tests cover the
+shell around a plain control.

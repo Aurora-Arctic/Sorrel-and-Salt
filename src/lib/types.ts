@@ -185,3 +185,9 @@ export interface CitationPart {
   text: string;
   italic: boolean;
 }
+
+/**
+ * A list address's query, for `listHref`: a string is a pair, `true` a bare
+ * flag (`new`, `awaiting`), and `undefined`, `false` or `''` is left out.
+ */
+export type ListHrefParams = Readonly<Record<string, string | boolean | undefined>>;

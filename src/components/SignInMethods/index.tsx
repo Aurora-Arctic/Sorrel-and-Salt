@@ -11,6 +11,7 @@ import {
 } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import { ProviderRow } from './provider-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
@@ -106,17 +107,16 @@ const SignInMethods = ({
           <Notice kind="plain" id={freshNoteId}>
             Removing a sign-in method needs a recent sign-in.
           </Notice>
-          <button
-            type="button"
+          <BusyButton
             className="btn"
             disabled={signingOut}
-            aria-busy={signingOut || undefined}
+            busy={signingOut}
+            busyLabel="Signing Out"
             aria-describedby={freshNoteId}
             onClick={() => void handleSignInAgain()}
           >
-            {signingOut && <span className="spinner" aria-hidden="true" />}
-            {signingOut ? 'Signing Out' : 'Sign In Again'}
-          </button>
+            Sign In Again
+          </BusyButton>
           {signOutFailed && <Notice kind="error">{GENERIC_FAILURE}</Notice>}
         </div>
       )}
