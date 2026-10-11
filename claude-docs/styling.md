@@ -694,7 +694,8 @@ put "You have unsaved changes. Discard them?" in a `.form__confirm` where
 the buttons were, with **Discard Changes** (`.btn--destructive`) and
 **Keep Editing** (`.btn--quiet`), the question scrolled into view and the
 focus on Keep Editing; a way out tried again while it asks flashes it, the
-secondary's tint fading over 600ms, a still outline under reduced motion.
+secondary's tint fading twice in 600ms, a still outline shown twice under
+reduced motion.
 With nothing changed they close at once; a save or a
 delete never asks. One guard draws it for every form
 ([`components/modal.md`](components/modal.md), "Unsaved changes").

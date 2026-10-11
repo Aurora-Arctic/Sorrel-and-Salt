@@ -107,9 +107,10 @@ each form.
   the person sees why nothing closed. Each try by Close, Escape or the
   backdrop counts in `guard.flashes`, which the question carries as
   `data-flash`, and draws a fresh `.discard-question__flash` layer behind it,
-  keyed on the count so the animation runs every time: the secondary's tint,
-  fading over `$motion-short * 4`, 600ms. Under reduced motion nothing fades:
-  a solid secondary outline shows for as long, then goes (`step-end`). Each
+  keyed on the count so the animation runs every time: twice, the owner's
+  call, the secondary's tint fading over 300ms each time, 600ms in all
+  (`$motion-short * 4`). Under reduced motion nothing fades: a solid
+  secondary outline shows and goes, twice, in the same time (`step-end`). Each
   try also scrolls the question into view and puts the focus back on Keep
   Editing, and says "You have unsaved changes." in a visually hidden
   `<output>`, a polite live region, alternating a trailing no-break space so

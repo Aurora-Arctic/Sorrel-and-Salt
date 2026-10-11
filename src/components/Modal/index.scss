@@ -149,10 +149,10 @@ $modal-fade: 150ms ease-out;
 }
 
 // A way out tried again while the discard question shows flashes it, the
-// owner's call during MB.115, so the person sees why nothing closed: the
-// secondary's tint behind it, fading over four of the short motion's steps.
-// Under reduced motion nothing fades: a solid edge shows for as long, then
-// goes. A layer of its own behind the question, remade on each try so the
+// owner's call during MB.115, so the person sees why nothing closed: twice,
+// the owner's call, the secondary's tint behind it fading over two of the
+// short motion's steps each time. Under reduced motion nothing fades: a solid
+// edge shows and goes, twice, in the same time. A layer of its own behind the question, remade on each try so the
 // animation runs again (claude-docs/components/modal.md, "Unsaved changes").
 $discard-flash: $motion-short * 4;
 
@@ -167,7 +167,7 @@ $discard-flash: $motion-short * 4;
   z-index: -1;
   border-radius: radius('control');
   pointer-events: none;
-  animation: discard-question-flash $discard-flash ease-out both;
+  animation: discard-question-flash $discard-flash * 0.5 ease-out 2 both;
 
   @include reduced-motion {
     animation: discard-question-mark $discard-flash step-end both;
@@ -185,11 +185,14 @@ $discard-flash: $motion-short * 4;
 }
 
 @keyframes discard-question-mark {
-  from {
+  0%,
+  50% {
     outline: 2px solid $secondary;
   }
 
-  to {
+  25%,
+  75%,
+  100% {
     outline: 0 solid transparent;
   }
 }
