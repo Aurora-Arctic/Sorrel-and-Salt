@@ -54,6 +54,7 @@ test('an admin invites an address with a reason, mailed the link and listed as p
   await expect(send).toBeDisabled();
   await dialog.getByLabel('Email Address').fill(invited);
   await dialog.getByLabel('Reason').fill('Curates the resins');
+  await expect(send).toBeEnabled();
   await assertNoAccessibilityViolations(page);
   await send.click();
 
@@ -66,7 +67,7 @@ test('an admin invites an address with a reason, mailed the link and listed as p
   await assertNoAccessibilityViolations(page);
 });
 
-test('an admin revokes a pending invitation after confirming, and its link says so', async ({
+test('an admin revokes a pending invitation after confirming, and its link is refused', async ({
   page,
 }) => {
   const invited = address('withdrawn');

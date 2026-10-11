@@ -43,7 +43,7 @@ async function privilegeChanges(userId: string) {
   }
 }
 
-test('a signed-in non-admin is refused at /admin with a 403 page that says why', async ({
+test('a signed-in non-admin is refused at /admin with a 403 page and no admin markup', async ({
   page,
 }) => {
   await signInAs(page, 'not-an-admin@admin-guard.test');

@@ -13,9 +13,10 @@ ports.
 navigation and redirects, server render and status codes, cookies, mail,
 the data cache, the production build's config, a layout a browser measures,
 and one axe scan per page state. It never re-runs a flow a component or
-service test proves wholesale — filtering a list, which compendium entries
-hold a value, a dialog's states — and every admin route keeps its 403 test
-and one flow with its scan. It asserts state as Vitest does: a `status`,
+service test proves wholesale — a second filter or CRUD flow on a page
+template another spec already drives, which compendium entries hold a
+value, a dialog's states — and every admin route keeps its 403 test and one
+flow with its scan, even where a lower layer proves that flow too. It asserts state as Vitest does: a `status`,
 `alert`, `tooltip`, row or description is present, or carries the data the
 action used, and never a page title, a heading on a plain load or a
 sentence. A level-1 heading stays where it identifies the destination a
@@ -25,8 +26,9 @@ navigation reached, or the 403 page.
 it scans whatever the page holds at that instant. So the last web-first
 assertion before each scan must be one that waits for the state being
 scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
-never a negative such as `toHaveCount(0)`, which passes before the page
-has rendered anything.
+never a negative such as `toHaveCount(0)` on something that was never there,
+which passes before the page has rendered anything. A removal of what was
+there — a dialog closing, a table emptied by a filter — does wait.
 
 **Each worker slot has a server and a database of its own** (MB.112), as each
 Vitest pool slot has a database. A database each, because each spec file
