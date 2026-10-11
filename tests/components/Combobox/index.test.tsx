@@ -608,6 +608,32 @@ describe('Combobox', () => {
       act(() => box().blur());
       expect(tooltip()).not.toBeInTheDocument();
     });
+
+    // MB.115: the tip gets out of the way of typing, and comes back on focus
+    // or a hover; the detail stays in the box's description throughout.
+    it('closes its tooltip at the first printable key and when the list opens', () => {
+      render(
+        <Harness
+          initial="Wax"
+          suggestions={TWO_BUCKETS}
+          qualifier={{ text: 'Substance', detail: DETAIL }}
+        />,
+      );
+
+      act(() => box().focus());
+      expect(tooltip()).toBeInTheDocument();
+      key('Shift');
+      expect(tooltip()).toBeInTheDocument();
+      key('x');
+      expect(tooltip()).not.toBeInTheDocument();
+      expect(box()).toHaveAccessibleDescription(expect.stringContaining(DETAIL));
+
+      fireEvent.mouseEnter(qualifier());
+      expect(tooltip()).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+      expect(tooltip()).not.toBeInTheDocument();
+    });
   });
   // The entry a list draws inside the control: moved here from IngredientForm
   // (MB.133), whose tests still cover it in the form.

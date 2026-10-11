@@ -497,9 +497,11 @@ the row's id, the name picked, its group and its description (MB.169).
   picked did, "Wax (Substance)", the owner's call. This is the
   combobox's `qualifier` ([`combobox.md`](combobox.md), "A qualifier").
   The form's description is the qualifier's tooltip. It opens on hover and
-  while the box has focus, and closes on Escape. Open on focus, it covers the
-  Form label; MB.115's design review settles that, on the owner's word. The group and the
-  description are also the box's accessible description, after its hint.
+  while the box has focus, above the box from its right edge so the Form
+  label stays in view, and closes on Escape, at the first printable key and
+  when the list opens (MB.115, the owner's call). The group and the
+  description are also the box's accessible description, after its hint, so
+  a screen reader hears them while typing.
 - **An edit away from the picked name drops the link, the owner's call.**
   `FormField` hears each edit through `SuggestField`'s `onEdit`. Once the
   text is no longer exactly the name picked, the link goes, and the group
@@ -542,8 +544,8 @@ shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by
 default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
 reaches compendium and coven entries alike. It is a plain anchor,
-as [`AdminNav`](admin-nav.md)'s are, since typed routes refuse a page the
-build does not contain; M8.19 builds the page, and the link becomes a
+as [`AdminNav`](admin-nav.md)'s were until each of their pages had landed,
+since typed routes refuse a page the build does not contain; M8.19 builds the page, and the link becomes a
 `<Link>`. Nothing refuses the create on the server: the warning is the
 form's alone.
 
@@ -731,7 +733,7 @@ site admin's, through the compendium mutations
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
   `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
-"Testwort"? It leaves the compendium; a spell holding it keeps it.`, with
+"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks. Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
@@ -951,14 +953,11 @@ compendium's substitute search and its three writes: a name holding
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
-`PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. MB.115's
-proposals for the compendium's modal at phone width, until its sign-off
-deletes the losing pair with `proposals.scss`, their story-only stylesheet,
-draw the edit in a static stand-in for the open dialog, `Modal`'s markup
-opened in the page rather than the top layer: `ProposalModalInsetDark` and
-`ProposalModalInsetLight`, today's inset dialog with the page in view on
-every side, and `ProposalModalSheetDark` and `ProposalModalSheetLight`, a
-full-height sheet edge to edge.
+`PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
+compendium's modal stays inset, the page in view on every side, rather than
+a full-height sheet: the owner's call in M5.5, kept at MB.115's design
+review. Its shape is `Modal`'s, the wide dialog less the modal gap
+([`modal.md`](modal.md)).
 
 ## Testing
 

@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  useEffect,
   useId,
   useMemo,
   useState,
@@ -173,7 +174,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const detail = qualifier?.detail;
   // Opened on the box's focus as well as the qualifier's hover: the
   // qualifier is no stop of its own, and the box is what the keyboard reaches.
+  // It gets out of the way of typing (MB.115): the first printable key and the
+  // list opening both close it, and focus or a hover opens it again. The
+  // detail stays in the box's description, so a screen reader still hears it.
   const tip = useTip(() => Boolean(detail));
+  const hideTip = tip.hide;
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
@@ -184,6 +189,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
+
+  // The list opens where the tip would be read, and is what typing is for.
+  useEffect(() => {
+    if (isOpen) hideTip();
+  }, [isOpen, hideTip]);
 
   const {
     getInputProps,
@@ -222,6 +232,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // or Delete in an empty box takes the last entry, as react-select's does.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
+    // A printable key is one character long; a shortcut is not typing.
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
     if ((event.key === 'Backspace' || event.key === 'Delete') && value === '') {
       onRemoveLast?.();
       return;

@@ -4,7 +4,7 @@ import { stackCell, tableRole } from '../../lib/table-roles';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
-import type { CompendiumListProps } from './types';
+import type { CompendiumListFilter as Filter, CompendiumListProps } from './types';
 
 // `/admin/compendium`'s filter, table and pager (M5.5), as the category
 // list's. Render-only: the page reads one page of the compendium under the
@@ -20,6 +20,30 @@ const NONE = '—';
 
 /** Each kind by the label the filter and the form give it: Botanical, Unknown. */
 const KIND_LABELS = new Map(NOMENCLATURE_OPTIONS.map(({ value, label }) => [value, label]));
+
+/** A list as prose, without the serial comma: "a", "a and b", "a, b and c". */
+function and(items: readonly string[]): string {
+  return items.length < 2
+    ? items.join('')
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * The empty list, naming the filters in use (MB.115, on the owner's call), so
+ * an admin sees what to change: "No entry matches “wort” and the
+ * classification Botanical. Change or clear the filter to see more." With no
+ * filter, the compendium itself is empty, and says how to begin it.
+ */
+function emptyText({ query, nomenclature, withoutReferences }: Filter): string {
+  const filters = [
+    query && `“${query}”`,
+    nomenclature && `the classification ${KIND_LABELS.get(nomenclature)}`,
+    withoutReferences && 'Without References',
+  ].filter((filter): filter is string => Boolean(filter));
+  return filters.length
+    ? `No entry matches ${and(filters)}. Change or clear the filter to see more.`
+    : 'The compendium is empty. Add the first entry with Add Ingredient.';
+}
 
 const CompendiumList = ({
   entries,
@@ -83,11 +107,7 @@ const CompendiumList = ({
         </table>
       </div>
     ) : (
-      <p>
-        {filter.query || filter.nomenclature || filter.withoutReferences
-          ? 'No compendium entry matches.'
-          : 'No compendium entries yet.'}
-      </p>
+      <p>{emptyText(filter)}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

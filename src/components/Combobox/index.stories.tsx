@@ -8,7 +8,6 @@ import Combobox, {
   ComboboxSortableEntries,
 } from '.';
 import type { ComboboxOption } from './types';
-import './proposals.scss';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
 // suggestions are fixed, so typing filters nothing: the rows are the shape
@@ -278,15 +277,15 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <List />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// MB.115's open call on the qualifier's tooltip (1d.3), side by side; the
-// losing stories and `proposals.scss` are deleted at sign-off. Each is the
-// ingredient form's Form box as `FormField` draws it, under the field before
-// it, with "Wax" picked under Substance and a detail long enough to wrap, the
-// tip held open as focus in the box opens it today.
+// The qualifier as the ingredient form draws it: the Form box under the field
+// before it, "Wax" picked under Substance, with a detail long enough to wrap.
+// Focus in the box or a hover on "(Substance)" opens the tooltip above the
+// box from its right edge, so the Form label stays clear; the first printable
+// key and the list opening close it (MB.115).
 const LONG_DETAIL =
   'A long description, as a curated form can carry: what the form is, how it is prepared, and what sets it apart from another form of the same name.';
 
-const QualifiedField = ({ className }: { className: string }): ReactElement => {
+const QualifiedField = (): ReactElement => {
   const nameField = fieldDescription({ id: useId() });
   const formField = fieldDescription({
     id: useId(),
@@ -294,7 +293,7 @@ const QualifiedField = ({ className }: { className: string }): ReactElement => {
   });
   const [value, setValue] = useState('Wax');
   return (
-    <div className={`form combobox-proposal ${className}`} style={{ maxWidth: '32rem' }}>
+    <div className="form" style={{ maxWidth: '32rem' }}>
       <FieldShell label="Name" {...nameField}>
         <input
           id={nameField.controlId}
@@ -320,46 +319,8 @@ const QualifiedField = ({ className }: { className: string }): ReactElement => {
   );
 };
 
-/** A: today. Above the box from its left edge, open while the box has focus: it covers the Form label, and the Name box above. */
-export const ProposalTipToday: Story = () => <QualifiedField className="" />;
+export const QualifierInForm: Story = () => <QualifiedField />;
 
-/** B (recommended): above the box from its right edge, under the qualifier, at most 60% of the control's width, so the label stays clear. */
-export const ProposalTipRight: Story = () => (
-  <QualifiedField className="combobox-proposal--right" />
-);
-
-/**
- * C (recommended with B): placed as B, and it also gets out of the way of typing. The tip
- * closes at the first keystroke in the box and when the list opens; focus or a hover on the
- * qualifier opens it again, and Escape closes it. Behaviour, which a static story cannot
- * show: drawn here as B at rest, and built in Phase 2 if chosen. The detail stays in the
- * box's description whichever wins, so a screen reader hears it while typing.
- */
-export const ProposalTipCloseOnTyping: Story = () => (
-  <>
-    <QualifiedField className="combobox-proposal--right" />
-    <p className="story-note">
-      C: placed as B. Closes at the first keystroke and when the list opens; focus or hover on the
-      qualifier reopens it; Escape closes it.
-    </p>
-  </>
-);
-
-/** D: beneath the box, where the list opens too, so the two collide once typing starts. */
-export const ProposalTipBelow: Story = () => (
-  <QualifiedField className="combobox-proposal--below" />
-);
-
-// Each at a phone's width, where the tip's cap at the window shows.
-export const ProposalTipTodayPhone: Story = () => <QualifiedField className="" />;
-ProposalTipTodayPhone.meta = { width: 375 };
-
-export const ProposalTipRightPhone: Story = () => (
-  <QualifiedField className="combobox-proposal--right" />
-);
-ProposalTipRightPhone.meta = { width: 375 };
-
-export const ProposalTipBelowPhone: Story = () => (
-  <QualifiedField className="combobox-proposal--below" />
-);
-ProposalTipBelowPhone.meta = { width: 375 };
+// At a phone's width, where the tooltip's cap at 60% of the box shows.
+export const QualifierInFormPhone: Story = () => <QualifiedField />;
+QualifierInFormPhone.meta = { width: 375 };

@@ -45,7 +45,10 @@ MB.200, MB.59), as do Combobox's entry and qualifier tooltips
 time the tip would open rather than watched, for a tip that has nothing to
 show at some moments: a Combobox entry whose text fits, a qualifier with no
 detail. Left out, the tip always opens. MB.115 made Combobox's copy of the
-hook, which differed only by `canOpen`, this one.
+hook, which differed only by `canOpen`, this one. A caller may close a tip
+for reasons of its own through `hide`: Combobox's qualifier closes its tip
+at the first printable key and when its list opens, so it never sits over
+what is being typed.
 
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its

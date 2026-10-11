@@ -409,15 +409,21 @@ call.
   tooltip, and the reference reads the detail although its tooltip is
   `aria-hidden` while closed.
 - **The detail is a tooltip**, `role="tooltip"`, in the entry tooltip's
-  bubble and fade, above the control from its left edge, no wider than the
-  control. It opens while the qualifier is hovered and while the box has
-  focus: the qualifier is not a tab stop of its own, and the box is what the
-  keyboard reaches. Escape closes it (WCAG 1.4.13), as do a blur and the
-  pointer leaving, after the same 150ms the entry's waits. With no detail
-  there is no tooltip. Open on focus, the bubble covers what sits above the
-  control, a field's label. MB.115's design review offers four placements as
-  proposal stories ("Stories", below), the owner to choose at its sign-off;
-  until then it stays where it is.
+  bubble and fade, above the control from its right edge, on the qualifier's
+  side, and no wider than 60% of the control. Above, because the list opens
+  beneath the box; from the right, so the field's label at the left stays in
+  view while it shows (MB.115, the owner's call at the design review). It
+  opens while the qualifier is hovered and while the box has focus: the
+  qualifier is not a tab stop of its own, and the box is what the keyboard
+  reaches. Escape closes it (WCAG 1.4.13), as do a blur and the pointer
+  leaving, after the same 150ms the entry's waits. With no detail there is
+  no tooltip.
+- **It gets out of the way of typing.** The first printable key in the box (a
+  one-character key with no Ctrl, Alt or Meta held) closes the tooltip, and
+  so does the list opening, by typing, an arrow key or the chevron. Focus
+  coming back to the box or a hover on the qualifier opens it again. The
+  detail is still the box's description meanwhile, so a screen reader hears
+  it while typing (MB.115).
 - **The open state is `useTip`**, InfoTip's hook (`../InfoTip/use-tip.ts`),
   shared with `ComboboxEntry`: open while the `canOpen` it is given says there
   is something to show, closed at once on blur and on Escape anywhere in the
@@ -495,20 +501,12 @@ Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; and
 `MultiSelect`, the multi-select box with two elements chosen;
 `CreateRow`, "Add a reference" first whatever is typed, saying beneath the
-box each time it is picked; and `PhoneDark` and `PhoneLight`, `List` at
-375px. The suggestions are fixed, so typing filters nothing.
-
-MB.115's proposals for the qualifier's tooltip, until its sign-off deletes
-the losers with `proposals.scss`, their story-only stylesheet: each is the
-ingredient form's Form box under a Name field, "Wax" picked under Substance
-with a long detail, the tip held open. `ProposalTipToday` (A: above, from
-the left edge, over the label), `ProposalTipRight` (B: above, from the right
-edge, at most 60% of the control), `ProposalTipCloseOnTyping` (C: placed as
-B, and closing at the first keystroke and when the list opens, reopening on
-focus or hover; behaviour, so described in a note under B's drawing) and
-`ProposalTipBelow` (D: beneath the box, where the list opens), with
-`ProposalTipTodayPhone`, `ProposalTipRightPhone` and `ProposalTipBelowPhone`
-at 375px.
+box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
+375px; and `QualifierInForm`, the ingredient form's Form box under a Name
+field, "Wax" picked under Substance with a detail long enough to wrap, whose
+tooltip opens on focus or hover above the box from its right edge, with
+`QualifierInFormPhone` at 375px. The suggestions are fixed, so typing
+filters nothing.
 
 ## Testing
 
@@ -530,7 +528,9 @@ blur and a pick keeping the text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
 the box's description after the field's own, a press on it putting the caret
 in the text, its detail's tooltip on hover
-and on the box's focus, closed by Escape and blur; the entry's ×, its
+and on the box's focus, closed by Escape and blur, and closed by a
+printable key and by the list opening, the detail still the box's
+description; the entry's ×, its
 tooltip on a cut-off text and on a detail, and its error read by its ×; the
 select-only box, its name, placeholder, list and choices, "None" among them,
 chosen by the keyboard, the arrows opening and moving, Enter choosing and

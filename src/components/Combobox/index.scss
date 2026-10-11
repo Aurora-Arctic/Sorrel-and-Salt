@@ -170,16 +170,18 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 }
 
 // The qualifier's detail, in InfoTip's bubble and its fade, above the control
-// from its left edge, as an entry's is: positioned on `.combobox`, so its
-// 100% is the control's width.
+// from its right edge, on the qualifier's side, and no wider than 60% of the
+// control, so the field's label at the left stays in view while it shows
+// (MB.115). Positioned on `.combobox`, so its percentages are the control's
+// width. Not beneath the box: the list opens there.
 .combobox__qualifier-tip {
   position: absolute;
-  left: 0;
+  right: 0;
   bottom: 100%;
   z-index: 1;
   box-sizing: border-box;
   width: max-content;
-  max-width: 100%;
+  max-width: 60%;
   margin-bottom: space(1);
   white-space: normal;
   overflow-wrap: anywhere;
