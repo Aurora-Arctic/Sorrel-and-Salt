@@ -206,4 +206,48 @@ describe('ingredient', () => {
       }),
     ]);
   });
+
+  // `Substitute.variant` is the resolver's own: the linked ingredient's form,
+  // found among that ingredient's variants (MB.218).
+  it("answers a substitute's form, null without one and once that form is deleted", async () => {
+    const formed = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Formed', nomenclature: 'none' }),
+      A.id,
+    );
+    const bare = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Bare', nomenclature: 'none' }),
+      A.id,
+    );
+    const [{ id: formedHerb }] = await sql<{ id: string }[]>`
+      select id from ingredient_variants where ingredient_id = ${formed}`;
+    await insertSubstituteLink(sql, compendiumId, formed, A.id, {
+      substituteVariantId: formedHerb,
+    });
+    await insertSubstituteLink(sql, compendiumId, bare, A.id);
+    const read = async () =>
+      (
+        await runOperation<{
+          ingredient: { substitutes: { name: string; variant: { id: string } | null }[] };
+        }>(
+          null,
+          `query ($id: ID!) { ingredient(id: $id) { substitutes { name variant { id } } } }`,
+          { id: compendiumId },
+        )
+      ).data?.ingredient.substitutes;
+
+    expect(await read()).toEqual([
+      { name: 'Fixture Bare', variant: null },
+      { name: 'Fixture Formed', variant: { id: formedHerb } },
+    ]);
+
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${formedHerb}`;
+
+    expect(await read()).toEqual([
+      { name: 'Fixture Bare', variant: null },
+      { name: 'Fixture Formed', variant: null },
+    ]);
+  });
 });
