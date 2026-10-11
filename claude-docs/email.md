@@ -54,8 +54,10 @@ await send(await verifyEmailMessage({ to, url, providers }));
   a sibling `<name>.stories.tsx`. The frame every mail shares is `src/emails/parts/layout.tsx`
   (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in `parts/types.ts`, and the
   templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the link, the origin and the part. Not in `src/components/`: a mail is
-  not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
-  project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
+  not a page component. Tests mirror the path, in `dom` since each is a
+  `.tsx` (MB.97), and assert what a mail carries — its recipient, its link,
+  the providers it names — never its wording or its look, which the stories
+  show (MB.229).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
   short sentences, everyday vocabulary, and one thing to do.
 
@@ -82,11 +84,12 @@ does it, so each piece has an email-safe stand-in.
   carries `ss-body` and its own light rule for the surround, which is
   readable whichever way it goes. `tests/emails/verify-email.test.tsx` pins
   the shape.
-- **The palette is copied, and checked.** A client reads neither Sass nor
-  custom properties, so `src/emails/theme.ts` carries each theme's hexes by
-  hand. `tests/emails/theme.test.ts` compiles the site's `theme-dark` and
-  `theme-light` mixins and fails when a value there disagrees, so a palette
-  change either reaches the mail or fails CI.
+- **The palette is copied.** A client reads neither Sass nor custom
+  properties, so `src/emails/theme.ts` carries each theme's hexes by hand,
+  and a palette change edits it in the same PR. No test compares the two: a
+  mail's colours are presentation, which the stories show
+  ([`testing/layer-ownership.md`](testing/layer-ownership.md), "What a test
+  may assert").
 - **Type.** Headings are Cormorant Unicase 700 and body Lexend, as on the site,
   from `@font-face` rules that list **our own copy first and Google's second**:
   a client asks Google only when our file fails to load. The files are the
