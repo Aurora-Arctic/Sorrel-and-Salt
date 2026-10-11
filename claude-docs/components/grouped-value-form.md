@@ -88,35 +88,25 @@ its three mutation documents, and nothing else:
   `aria-busy`, with the shared `.spinner` ahead of the label. The
   confirmation's Delete does the same, as "Deleting".
 - **A form's or a deity's rename says it carries onto the compendium.**
-  Renaming a form rewrites every live compendium entry that picked it, and a
-  form is part of an entry's identity and slug, so the rewrite can move those
-  entries' public addresses ([`mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
-  Renaming a deity rewrites the name on every live compendium entry's
-  `ingredient_deities` row that picked it, but a deity is no part of an
-  entry's identity, so no address moves
+  Renaming a form rewrites every live compendium variant that picked it
+  ([`mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)),
+  and renaming a deity the name on every live compendium entry's
+  `ingredient_deities` row that picked it
   ([`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)).
-  On an existing value of a kind with a `renameNote`, whose name, trimmed,
-  differs from the saved one, a `.field__hint` sits above the actions: for a
-  form, "Saving renames it on every compendium entry that picked it, which
-  can move those entries' addresses."; for a deity, "Saving renames it on
-  every compendium entry that picked it." Save's `aria-describedby` points
+  Neither is part of an entry's identity or address — a form not since
+  MB.215 — so no address moves (MB.220). On an existing value of a kind with
+  a `renameNote`, whose name, trimmed, differs from the saved one, a
+  `.field__hint` sits above the actions, for both kinds "Saving renames it
+  on every compendium entry that picked it." Save's `aria-describedby` points
   at it. Putting the name back removes it. A new value has no entries, so it
   never shows there; nor does a change of group, which moves no entry. A
   category has no note.
-- **A rename that would end a redirect asks first** (MB.82;
-  [`db/ingredient-slugs.md`](../db/ingredient-slugs.md)). When a re-slugged
-  entry would take an address another entry's redirect still runs from, the
-  service refuses with a `VALIDATION` issue at `['endRedirect']`, naming the
-  entries and when their windows close. Today only the form kind's service
-  sends one — a deity's rename moves no entry's address, so its service
-  never does — but the question is the refusal's, not the kind's, so every
-  kind asks it. The form shows the service's sentence in a `role="alert"`
-  paragraph in place of the actions, beside Rename Anyway and Keep Editing.
-  Rename Anyway sends the same input again with `endRedirect: true`, busy as
-  "Renaming" with the shared `.spinner`. Keep Editing withdraws the question,
-  and so does any edit to a field, since the question was about the input
-  that was refused. The compendium's admin form, M5.5, is the other place
-  this question is asked; it has no component to share.
+- **No rename asks to end a redirect.** Until MB.220 a form's rename could
+  move a compendium entry onto an address another entry's redirect ran from,
+  and the form asked first, sending `endRedirect`. A rename moves no address
+  now, so the question went with the field; the compendium's admin form, M5.5,
+  is where it is still asked, of an entry's own save
+  ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)).
 - **A delete asks first, and says what it does.** Delete Category, Delete
   Form or Delete Deity replaces the actions with `Delete "<name>"?` and the
   kind's note,
@@ -132,12 +122,9 @@ changes.` A deity's is the form's, word for word. A refusal comes back as a
   confirmation withdrawn. Per DESIGN.md §7, a refusal that names its remedy is
   not a bad value in a box, so it gets no field.
 - **Buttons are title case**: Save Category, Save Form or Save Deity, Cancel,
-  Delete Category, Delete Form or Delete Deity, Delete, Keep It, Rename
-  Anyway, Keep Editing. Save
-  and Rename Anyway are solid; Cancel, Keep It and Keep Editing are quiet,
-  since they change nothing; the two deletes are destructive. Rename Anyway
-  is not destructive: the entry whose redirect it ends keeps a link from the
-  page at its old address until the window closes.
+  Delete Category, Delete Form or Delete Deity, Delete, Keep It. Save is
+  solid; Cancel and Keep It are quiet, since they change nothing; the two
+  deletes are destructive.
 
 ## On the admin pages
 
@@ -203,9 +190,7 @@ run once, on the category: a kind shares that code path, so another kind's
 run would prove nothing more (MB.189). What only one kind does stays under
 that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's
-group refusal and pathless one placed, its rename note, and the redirect
-question sent again with `endRedirect` and withdrawn by an edit or Keep
-Editing; and, under `describe('GroupedValueForm, a deity')`, the deity's
+group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's
 create sending its tradition as `traditionId`, its rename saved under its
 id after the note, a `traditionId` refusal landing beside Tradition, and
 its delete refusal. The pages' half is

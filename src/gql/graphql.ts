@@ -91,7 +91,6 @@ export type IngredientFormGroupInput = {
 
 export type IngredientFormValueInput = {
   description: string;
-  endRedirect?: boolean | null | undefined;
   groupId: string | number;
   name: string;
 };

@@ -780,7 +780,7 @@ vocabulary adds is told to it:
   form's `group`, a deity's `tradition`: the field, read through its loader,
   and the id column, which is also the input's required `ID`.
 - **`fields` and `input`**, the type's and the input's own: a category
-  group's two colours, a form's `endRedirect`.
+  group's two colours.
 - **`services`**, the three exported writes, each calling `assertSiteAdmin`
   itself; the input reaches them through `definedArgs`.
 - **`moveTo`**, present for a group whose delete moves its rows first: the
@@ -850,16 +850,15 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
   **`ingredientFormGroups`** is public too, the live groups by name, a form's
   group picked from them; six are seeded, so it carries no count.
 - **One input, `IngredientFormValueInput`, for both writes**: `name`,
-  `description` and `groupId`, required, and `endRedirect`, the admin's
-  answer to a rename that would end another entry's redirect (MB.82). No
-  slug: a form's is its name and its group, `formSlug`, and follows either.
+  `description` and `groupId`, required. No `endRedirect` since MB.220: a
+  rename moves no compendium entry's address. No slug: a form's is its name
+  and its group, `formSlug`, and follows either.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
   service. A slug collision is `VALIDATION` on `name`, naming the form holding
   the address; a retired or unknown group is `VALIDATION` on `groupId`; a
-  rename that would make a compendium entry another's identity or address is
-  `VALIDATION` on `name`, naming both; one that would end a redirect is
-  `VALIDATION` on `endRedirect`; an unknown, deleted or malformed id is
-  `NOT_FOUND`.
+  rename that would give a compendium entry two forms of one name is
+  `VALIDATION` on `name`, naming the entry (MB.220); an unknown, deleted or
+  malformed id is `NOT_FOUND`.
 - **`deleteIngredientFormValue` answers the deleted id**, and is `FORBIDDEN`
   while a live compendium entry picked the form, naming the entries and how
   many more. Update and delete clear `ingredientFormsById`, which an earlier
@@ -867,8 +866,7 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
 
 `tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` holds their
 half as `categories.test.ts` does, with the groups' page, `ingredientFormsById`
-cleared by an update, and `endRedirect` reaching the update as its
-`VALIDATION`; the rules are `services/ingredient-form-values.test.ts`'s.
+cleared by an update; the rules are `services/ingredient-form-values.test.ts`'s.
 
 ### Planets and signs: `planets`, `zodiacSigns` and the six writes
 

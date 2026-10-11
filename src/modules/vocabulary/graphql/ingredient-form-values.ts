@@ -27,10 +27,8 @@ export const IngredientFormValueRef = curatedVocabularyWrites({
     type: IngredientFormGroupRef,
     loader: (loaders) => loaders.ingredientFormGroupsById,
   },
-  // The slug follows the name and the group. `endRedirect` confirms a rename
-  // that moves a compendium entry onto an address another entry's redirect
-  // still runs from (MB.82).
-  input: (t) => ({ endRedirect: t.boolean({ required: false }) }),
+  // The slug follows the name and the group. No `endRedirect`: a rename moves
+  // no compendium entry's address since MB.220, so ends no redirect.
   services: {
     create: createIngredientFormValue,
     update: updateIngredientFormValue,
@@ -40,7 +38,7 @@ export const IngredientFormValueRef = curatedVocabularyWrites({
   clears: ['ingredientFormsById'],
   descriptions: {
     update:
-      'Replaces the form; the slug follows the name and the group. A rename is carried onto every live compendium entry that picked the form.',
+      'Replaces the form; the slug follows the name and the group. A rename is carried onto every form of a live compendium entry that picked it, moving no entry address.',
     delete:
       'A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.',
   },
