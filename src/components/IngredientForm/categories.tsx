@@ -7,7 +7,7 @@ import { graphql } from '../../gql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
 import type { PickerCategory } from '../CategoryPicker/types';
-import { FieldError } from './fields';
+import { FieldError } from '../Field';
 import type { IngredientFormValues, SharedFieldProps } from './types';
 
 // The categories an ingredient is filed under (MB.126): every live category,

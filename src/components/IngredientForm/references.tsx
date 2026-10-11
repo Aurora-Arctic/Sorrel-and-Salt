@@ -15,7 +15,7 @@ import { graphql } from '../../gql';
 import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
-import { FieldError } from './fields';
+import { FieldError } from '../Field';
 import ReferencePanel from './reference-panel';
 import { useLookup } from './suggestions';
 import type {

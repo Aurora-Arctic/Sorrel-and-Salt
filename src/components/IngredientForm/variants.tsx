@@ -12,7 +12,8 @@ import {
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
-import { FieldError, ListField, MultiSelectField, TextField } from './fields';
+import { FieldError, TextField } from '../Field';
+import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
 import { SubstituteForms } from './substitute-forms';
@@ -224,8 +225,8 @@ function VariantFieldset({ workspaceId, index, onRemove }: VariantFieldsetProps)
       </legend>
       {/* On the compendium the form must be a pick (MB.162). */}
       <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
-      <TextField name={`${at}.description`} label="Description" multiline />
-      <TextField
+      <TextField<IngredientFormValues> name={`${at}.description`} label="Description" multiline />
+      <TextField<IngredientFormValues>
         name={`${at}.safetyNotes`}
         label="Safety Notes"
         hint="What to take care over with this form in particular: an oil diluted, a resin burned."

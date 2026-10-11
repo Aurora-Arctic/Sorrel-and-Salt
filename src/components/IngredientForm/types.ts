@@ -1,5 +1,4 @@
-import type { HTMLInputTypeAttribute, ReactNode, Ref } from 'react';
-import type { FieldPath, FieldValues } from 'react-hook-form';
+import type { Ref } from 'react';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -16,6 +15,7 @@ import type {
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
+import type { FieldProps, SelectOption } from '../Field/types';
 
 interface IngredientFormCallbacks {
   /**
@@ -273,65 +273,12 @@ export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListNa
 /** A list's box, as `draftOf` names it: `drafts.planets`, or `variants.1.drafts.planets`. */
 export type DraftPath = `drafts.${DraftName}` | `${VariantPath}.drafts.${VariantDraftName}`;
 
-/** What every field shares: what it is called, and what it is told about it. */
-interface FieldProps {
-  label: string;
-  /** What the field is for, behind an info tip beside the label. */
-  hint?: string;
-  /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
-  note?: string;
-  /** Marked required beside its label, and to assistive technology. */
-  required?: boolean;
-}
-
-/**
- * A text field, in the ingredient form or another one providing it: the
- * reference panel's (MB.154). Its name is one of that form's paths.
- */
-export interface TextFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
-  name: FieldPath<V>;
-  /** A textarea, for prose. */
-  multiline?: boolean;
-  /** The input's type, for a single line: a reference's days are `date`s. */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
-  /** Shut, for a field the rest of the form has ruled out; its hint says why. */
-  disabled?: boolean;
-  /** Fields whose errors this one's value decides as well, revalidated when it changes. */
-  deps?: FieldPath<V>[];
-  /** Another element read with the field while it shows: the name's duplicate warning. */
-  describedBy?: string;
-  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
-  invalid?: boolean;
-  /** Drawn beneath the field, after its error: the name's duplicate warning. */
-  after?: ReactNode;
-  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
-  format?: (text: string) => string;
-  /** The browser's autofill: `off` for the name, which Chrome otherwise takes for a person's. */
-  autoComplete?: 'off';
-}
-
-/** A closed set, in the ingredient form or the reference panel's, whose kind is one. */
-export interface SelectFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
-  name: FieldPath<V>;
-  /** Shown until a choice is made, and not itself a choice. */
-  placeholder?: string;
-  options: readonly SelectOption[];
-  deps?: FieldPath<V>[];
-  /** Runs on a new choice, before the field and its `deps` revalidate. */
-  onChange?: (value: string) => void;
-}
-
 /** A closed set holding several values, chosen as chips on the select-only box. */
 export interface MultiSelectFieldProps extends FieldProps {
   name: MultiSelectFieldName;
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
-}
-
-export interface SelectOption {
-  value: string;
-  label: string;
 }
 
 /** A text field whose box suggests as it is typed in; picking fills it. */
@@ -514,21 +461,4 @@ export type Duplicate = PossibleDuplicatesQuery['possibleDuplicates']['edges'][n
 export interface Claimant {
   name: string;
   canonicalName: string | null;
-}
-
-export interface FieldErrorProps {
-  id: string;
-  message?: string;
-}
-
-export interface FieldShellProps extends FieldProps {
-  controlId: string;
-  labelId: string;
-  hintId: string;
-  noteId: string;
-  errorId: string;
-  error?: string;
-  children: ReactNode;
-  /** Beneath the error: what a field adds of its own. */
-  after?: ReactNode;
 }

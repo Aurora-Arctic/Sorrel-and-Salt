@@ -1,8 +1,5 @@
-import { type FocusEvent, type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import {
-  type FieldPath,
-  type FieldValues,
-  type PathValue,
   get,
   useController,
   useFieldArray,
@@ -10,177 +7,26 @@ import {
   useFormState,
   useWatch,
 } from 'react-hook-form';
-import Combobox, {
-  ComboboxEntry,
-  ComboboxMultiSelect,
-  ComboboxSelect,
-  ComboboxSortableEntries,
-} from '../Combobox';
+import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSortableEntries } from '../Combobox';
 import type { ComboboxOption } from '../Combobox/types';
+import { FieldError, FieldShell, useField } from '../Field';
 import InfoTip from '../InfoTip';
 import type {
   AnyListEntry,
-  FieldErrorProps,
-  FieldShellProps,
   IngredientFormValues,
   ListFieldProps,
   ListOption,
   MultiSelectFieldProps,
-  SelectFieldProps,
   SuggestFieldProps,
-  TextFieldProps,
 } from './types';
 import { addEntry, commitDraft, draftOf, entryDetail, entryText, repeatOf } from './values';
 
-// IngredientForm's fields, on the form primitives (claude-docs/styling.md,
-// "Form fields"). Each reads its own error out of the form state, so a field
-// re-renders for its own error and not for every other field's. The text and
-// select fields read whichever form provides them, so the reference panel's
-// own form draws its fields and errors through the same ones (MB.154).
-
-/** The one element a field's error renders through, whether the resolver found it or the server did. */
-export function FieldError({ id, message }: FieldErrorProps): ReactElement | null {
-  if (!message) return null;
-  return (
-    <p id={id} className="field__error">
-      {message}
-    </p>
-  );
-}
-
-/**
- * A field's ids, its current error, and the attributes that tie the control
- * to its hint, note and error: `aria-describedby` makes each read with the
- * field — the hint too, though its tip is closed — and `aria-invalid` is what
- * draws the error edge, so one cannot ship without the other.
- */
-function useField<V extends FieldValues>(
-  name: FieldPath<V>,
-  hint?: string,
-  note?: string,
-  describedBy?: string,
-  invalid?: boolean,
-) {
-  const id = useId();
-  const { errors } = useFormState<V>({ name });
-  const error: string | undefined = get(errors, name)?.message;
-  const hintId = `${id}-hint`;
-  const noteId = `${id}-note`;
-  const errorId = `${id}-error`;
-  const description = [hint && hintId, note && noteId, describedBy, error && errorId]
-    .filter(Boolean)
-    .join(' ');
-  return {
-    controlId: `${id}-control`,
-    labelId: `${id}-label`,
-    hintId,
-    noteId,
-    errorId,
-    error,
-    aria: {
-      'aria-invalid': error || invalid ? true : undefined,
-      'aria-describedby': description || undefined,
-    },
-  };
-}
-
-function FieldShell({
-  label,
-  hint,
-  note,
-  required,
-  controlId,
-  labelId,
-  hintId,
-  noteId,
-  errorId,
-  error,
-  children,
-  after,
-}: FieldShellProps): ReactElement {
-  return (
-    <div className="field">
-      <div className="ingredient-form__label-row">
-        <label className="field__label" id={labelId} htmlFor={controlId}>
-          {label}
-          {/* For the eye, hard against the label: "Name*". Hidden from the
-              field's name, so a screen reader hears "Name" and the control's
-              `aria-required` rather than "Name star". */}
-          {required && (
-            <span className="ingredient-form__required" aria-hidden="true">
-              *
-            </span>
-          )}
-        </label>
-        {hint && (
-          <InfoTip id={hintId} label={label}>
-            {hint}
-          </InfoTip>
-        )}
-      </div>
-      {note && (
-        <p className="field__hint" id={noteId}>
-          {note}
-        </p>
-      )}
-      {children}
-      <FieldError id={errorId} message={error} />
-      {after}
-    </div>
-  );
-}
-
-export function TextField<V extends FieldValues = IngredientFormValues>({
-  name,
-  label,
-  hint,
-  note,
-  required,
-  multiline,
-  type,
-  disabled,
-  deps,
-  describedBy,
-  invalid,
-  after,
-  format,
-  autoComplete,
-}: TextFieldProps<V>): ReactElement {
-  const { register, setValue, getFieldState } = useFormContext<V>();
-  const { aria, ...field } = useField<V>(name, hint, note, describedBy, invalid);
-  // Tidied as it is left, the way the server will store it (MB.154); an
-  // error it was showing is judged again on the tidied text.
-  const tidy = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const text = event.target.value;
-    const formatted = format?.(text) ?? text;
-    if (formatted === text) return;
-    setValue(name, formatted as PathValue<V, FieldPath<V>>, {
-      shouldDirty: true,
-      shouldValidate: getFieldState(name).invalid,
-    });
-  };
-  // The attribute, not register's `disabled`, which would also drop the value
-  // from what is validated and sent: the form decides that itself. And
-  // `aria-required` rather than `required`, whose `:invalid` would mark an
-  // empty field before anyone has tried to save.
-  const control = {
-    id: field.controlId,
-    disabled,
-    autoComplete,
-    'aria-required': required || undefined,
-    ...aria,
-    ...register(name, { deps, onBlur: format ? tidy : undefined }),
-  };
-  return (
-    <FieldShell label={label} hint={hint} note={note} required={required} after={after} {...field}>
-      {multiline ? (
-        <textarea className="textarea" {...control} />
-      ) : (
-        <input className="input" type={type} {...control} />
-      )}
-    </FieldShell>
-  );
-}
+// IngredientForm's own fields, on the shared field shell (../Field,
+// claude-docs/components/field.md). Each reads its own error out of the form
+// state, so a field re-renders for its own error and not for every other
+// field's. The text and select fields every form shares moved to ../Field in
+// MB.115; these three are the ingredient form's alone until its design review
+// (MB.120) says otherwise.
 
 /**
  * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
@@ -224,47 +70,6 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
         offerTyped={offerTyped}
         inputRef={field.ref}
         name={field.name}
-        {...aria}
-      />
-    </FieldShell>
-  );
-}
-
-/**
- * A closed set, on the combobox's select-only box (DESIGN.md §14): the same
- * control and list as a suggesting field, with nothing to type.
- */
-export function SelectField<V extends FieldValues = IngredientFormValues>({
-  name,
-  label,
-  hint,
-  placeholder,
-  options,
-  required,
-  deps,
-  onChange,
-}: SelectFieldProps<V>): ReactElement {
-  const { control } = useFormContext<V>();
-  const { field } = useController({ control, name, rules: { deps } });
-  const { aria, ...shell } = useField<V>(name, hint);
-  return (
-    <FieldShell label={label} hint={hint} required={required} {...shell}>
-      <ComboboxSelect
-        id={shell.controlId}
-        label={label}
-        labelId={shell.labelId}
-        value={field.value}
-        // Before the field and its `deps` revalidate: None empties the formal
-        // name first, so its error is judged on the empty value.
-        onChange={(value) => {
-          onChange?.(value);
-          field.onChange(value);
-        }}
-        onBlur={field.onBlur}
-        choices={options}
-        placeholder={placeholder}
-        required={required}
-        inputRef={field.ref}
         {...aria}
       />
     </FieldShell>
