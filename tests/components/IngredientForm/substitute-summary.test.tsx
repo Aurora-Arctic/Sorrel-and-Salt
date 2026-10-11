@@ -42,6 +42,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   id: MOCKWORT_ID,
   name: 'Mockwort',
   canonicalName: 'Fixtura vulgaris',
+  description: 'A fixture herb, invented for the tests.',
   nomenclature: 'botanical',
   isGlobal: true,
   slug: 'mockwort-fixtura-vulgaris',
@@ -135,6 +136,7 @@ describe('a substitute list’s chips', () => {
     await waitFor(() => expect(fact('Classification')).toHaveTextContent('Botanical'));
     expect(calls).toEqual([{ id: MOCKWORT_ID, workspaceId: WORKSPACE_ID }]);
     expect(within(summary()).getByText('Fixtura vulgaris')).toBeInTheDocument();
+    expect(within(summary()).getByText(MOCKWORT.description ?? '')).toBeInTheDocument();
     expect(fact('Form')).toHaveTextContent('Dried leaf');
     expect(fact('Elements')).toHaveTextContent('Water');
     // The ingredient's planet and the form's own, together.

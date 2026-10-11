@@ -414,7 +414,9 @@ links. In both substitute lists, the ingredient's and each variant's:
   the compendium's modal around the form does not take it as its own
   cancel and ask about unsaved changes.
 - **What it shows** (`SubstituteSummary`, `substitute-summary.tsx`): the
-  ingredient's name and formal name, then its Classification, the Form the
+  ingredient's name and formal name, its description cut to three lines
+  with an ellipsis on screen (`line-clamp`) and read whole by a screen
+  reader, the owner's call, then its Classification, the Form the
   entry names when it names one, its Elements, Planets, Zodiac Signs and
   Colours, each left out when empty, and whose entry it is, "Compendium
   entry" or "This coven’s entry". With a form named, each list is the

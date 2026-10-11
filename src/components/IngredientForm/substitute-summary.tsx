@@ -24,6 +24,7 @@ const IngredientSummaryDocument = graphql(`
       id
       name
       canonicalName
+      description
       nomenclature
       isGlobal
       slug
@@ -115,6 +116,11 @@ export function SubstituteSummary({
           <span className="entry-summary__formal">{ingredient.canonicalName}</span>
         )}
       </p>
+      {/* Cut to its first lines on screen, the owner's call (MB.115); read
+          whole, since a screen reader has no ellipsis to see. */}
+      {ingredient.description && (
+        <p className="entry-summary__description">{ingredient.description}</p>
+      )}
       <dl className="entry-summary__facts">
         {facts
           .filter(([, value]) => value !== '')

@@ -221,6 +221,9 @@ const SUMMARIES = Object.fromEntries(
       id: row.id,
       name: row.name,
       canonicalName: row.canonicalName,
+      // Long enough to run past the panel's three lines and be cut.
+      description:
+        'An invented herb for the workshop, gathered at dusk from the hedge and hung to dry in bundles. Its leaf is used in washes, its root in sachets, and its smoke to clear a room before working.',
       nomenclature: row.canonicalName ? 'botanical' : 'unknown',
       isGlobal: row.isGlobal,
       slug: row.name.toLowerCase(),

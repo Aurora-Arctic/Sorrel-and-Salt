@@ -637,7 +637,8 @@
 }
 
 // A linked substitute's summary (MB.115), inside the Combobox's panel: the
-// name, the formal name muted beneath it, then a term and its value to a
+// name, the formal name muted beneath it, the description cut to three
+// lines, then a term and its value to a
 // line, the term muted, and a link to the entry. Muted text on the card, the
 // panel's ground, clears 4.5:1 (tests/scss/tokens.test.ts).
 .entry-summary__name {
@@ -648,6 +649,17 @@
 
 .entry-summary__formal {
   color: $text-muted;
+}
+
+// The description, three lines at most and then an ellipsis: a glance, the
+// whole of it being the entry's own page.
+.entry-summary__description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 space(2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .entry-summary__facts {
