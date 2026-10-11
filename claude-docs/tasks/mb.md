@@ -229,6 +229,10 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8  | —                      |
 | MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8  | —                      |
 | MB.234 | The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it                              | Wave 8  | —                      |
+| MB.235 | Playwright restores the e2e build cache on a pull request and saves it only from `staging`                               | Wave 8  | —                      |
+| MB.236 | Four Playwright workers on the gate's 4-vCPU runner, kept only if measured faster                                        | Wave 8  | —                      |
+| MB.237 | A Chromium-only e2e image on `node:26.6.0-bookworm-slim`                                                                 | Wave 8  | —                      |
+| MB.238 | The `db` project's files that register no mock run without isolation, measured                                           | Wave 8  | —                      |
 | MB.215 | Ingredient variants: the model, the record and the re-scoped tasks                                                       | Wave 8  | MB.216                 |
 | MB.216 | `ingredient_variants`, the fill, and identity on the formal name (schema)                                                | Wave 8  | MB.217                 |
 | MB.217 | A variant beneath stock, layers, categories, substitutes and references (schema)                                         | Wave 8  | MB.218                 |
@@ -837,6 +841,82 @@ _Acceptance criteria:_
 - `npm run check:destructive-ddl -- --all` green with the sidecar
 - The drift test green with no `PENDING_DROPS` entry for these objects
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.235 — Playwright restores the e2e build cache on a pull request and saves it only from `staging`** · 1h
+
+_Story:_ As a maintainer, I want a pull request's Playwright job to stop uploading a build cache that no other run can read, so that those seconds come off the gate's slowest job.
+
+`actions/cache` saves at the end of the job whenever its exact key was not found. On a pull request the key's source hash changes with almost every push, so every run saves about 160 MB of `/app/.next-e2e/cache` under the pull request's merge ref, where only a re-run of that same pull request could read it (the restriction MB.234 records). Measured on run 38110758509 (PR #837): the save took 17 s, from 04:13:34 to 04:13:51, after the tests had finished. MB.234 already moved the save that matters to `staging`: `e2e-cache.yml` calls `playwright.yml` with `build-only` on every push there, and a pull request's run restores what it saved (the same run logged `Cache restored from key`, 3 s).
+
+The fix splits the step: `actions/cache/restore@v6` runs on every run with the same key and restore-keys, and `actions/cache/save@v6` runs only when `inputs.build-only` is set, so the `staging` warm run keeps saving and a pull request's run never does.
+
+`checks.yml`'s build leg has the same defect: it caches `/app/.next/cache` under a key nothing on `staging` ever saves, so it has never restored across pull requests and spends about 4 s saving. The agent measures `next build` there warm and cold; if a `staging`-side save is a small addition (a second build-only call beside the e2e one), it rides here, and otherwise the cache step goes and the choice is named in the PR body.
+
+The measurements this session took ride along in [`ci/runner-budget.md`](../ci/runner-budget.md): the per-step table for the gate's jobs from six successful runs on 10–11 October (Playwright 143 s: pull 48, restore 3, build and boot 29, tests 55, save 15; vitest 68 s; the checks legs 25–49 s, of which 22–28 s is the image pull), which replaces the 17 s and 51 s figures measured at MB.96 on a 131-file suite; the gate runs about 300 times a month, not 245; a job cancelled while queued (47 vitest jobs on 28 September, no runner, no steps) bills nothing; and the Blacksmith question — moving the three image builds and Playwright there would add roughly 4,000 two-vCPU minutes a month to save about a minute, and a per-branch registry cache tag buys nothing because the content-hash tag already skips every build whose inputs are unchanged. `testing/layer-ownership.md` says CI's figures come from a GitHub-hosted runner; the vitest job has run on Blacksmith since MB.96.
+
+No test is added: a workflow is harness (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 1).
+
+_Acceptance criteria:_
+
+- The PR's own Playwright job logs `Cache restored from key` and has no save step; its job time is measured against the 143 s six-run mean and recorded in this entry
+- `e2e-cache.yml`'s warm job still saves, proved on the first push to `staging` after the merge and pasted into the closing comment on the issue
+- The build leg's `/app/.next/cache` is either saved from `staging` or removed, with the warm and cold `next build` times in the PR body
+- `ci/runner-budget.md` carries the per-step table, the run count, the queued-job note and the Blacksmith conclusion; `testing/layer-ownership.md` names the runner correctly; `testing/e2e.md` and `ci/reusable-checks.md` describe the restore and save split
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.236 — Four Playwright workers on the gate's 4-vCPU runner, kept only if measured faster** · 1h
+
+_Story:_ As a maintainer, I want the e2e tests to use the time a worker spends waiting on the browser, so that the gate's slowest step gets shorter.
+
+The 56 tests take 55 s on two workers (run 38110758509: `Running 56 tests using 2 workers` at 04:12:38, `56 passed` at 04:13:33), about a second each, so most of the step is per-worker serial time. `tests/e2e/slots.ts` sets the worker count to `E2E_WORKERS`, or else `floor(cpus / 2)`, which is 2 on GitHub's 4-vCPU runner. A Playwright test spends most of its second waiting on page loads, not on the runner's cores, so four workers may finish sooner even though they oversubscribe the cores. Each extra slot is one more `next start` (about 180 MB and 0.5 s to boot, `testing/e2e.md`) and one more database clone. [`design-decisions/mb.224-plan.md`](../design-decisions/mb.224-plan.md) lists this as an experiment for after its measurement.
+
+The change is one line, `E2E_WORKERS: 4` in `playwright.yml`'s job env, and the task is the measurement: the `Run Playwright e2e tests` step and the span from `Running 56 tests` to `passed` on at least three gate runs of the PR against the six-run baseline (71 s step mean, 55 s of tests), and the retry count from the JSON report, since contention would show first as retries. If the tests are not faster, or retries rise, the task closes unmerged and this entry records the numbers. `e2e-cache.yml`'s build-only run starts the same servers and runs no spec, so it is unaffected either way.
+
+No test is added: a workflow is harness (layer-ownership.md, rule 1).
+
+_Acceptance criteria:_
+
+- The step and the test span are measured on at least three gate runs of the PR and recorded in this entry against the baseline
+- Merged only if the test span is shorter with no rise in retries; otherwise closed unmerged with the numbers here
+- `testing/e2e.md` and `ci/reusable-checks.md` say four workers on 4 vCPU, with the reason
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.237 — A Chromium-only e2e image on `node:26.6.0-bookworm-slim`** · 3h
+
+_Story:_ As a maintainer, I want the e2e image to carry only the browser the suite uses, so that the pull at the head of every Playwright job shrinks.
+
+`Docker/Dockerfile.e2e` builds on `mcr.microsoft.com/playwright:v1.63.0-noble`, which ships Chromium, Firefox and WebKit with the system libraries for all three, and then runs its own `npm ci`. Pulling it and starting Postgres and Mailpit is the first 48 s of every Playwright job on GitHub's runner (six successful runs, 10–11 October), the largest fixed cost on the gate's critical path. The suite runs Chromium only.
+
+The new base is `node:26.6.0-bookworm-slim`, the Node pinned in `Dockerfile.node`'s `NODE_VERSION`, with `npx playwright install --with-deps chromium` after `npm ci` so the browser is the one `@playwright/test`'s pinned version expects. Alpine stays out: Chromium has no musl build (`Dockerfile.node`'s own comment). The `headed` stage keeps xvfb, x11vnc, noVNC, websockify and openbox working for the devcontainer's headed browser. The content hash already covers the Dockerfile, so the new image publishes on the PR's first gate run, and that run is the measurement: `Initialize containers` against 48 s, and the image's compressed size from the build log or GHCR against the old tag's.
+
+A doc fix rides along: [`ci/composite-actions.md`](../ci/composite-actions.md), MB.99's entry in this file and [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md) all say the e2e image reuses `development`'s `npm ci` layer through the registry cache. It is a separate Dockerfile on a different base and never did.
+
+No test is added: a Dockerfile is harness (layer-ownership.md, rule 1). The devcontainer's e2e runs use the remote `playwright-server`, not this image, so the local proof is the build and the CI run.
+
+_Acceptance criteria:_
+
+- `Dockerfile.e2e` builds from `node:26.6.0-bookworm-slim` with Chromium only, and the `headed` stage still builds
+- The PR's Playwright job passes on the new image, with `Initialize containers` and the compressed image size recorded in this entry against 48 s and the old size
+- The three docs no longer claim the e2e image shares `development`'s layer; `testing/e2e.md` names the base
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
+
+**MB.238 — The `db` project's files that register no mock run without isolation, measured** · 4h
+
+_Story:_ As a developer, I want the database tests to stop re-evaluating the same module graph for every file, so that the suite runs faster locally and on CI.
+
+`Run vitest` is 47 s of wall on CI's seven workers, and the run's own breakdown puts 30 % of it in imports (run 38110758509: tests 38 %, import 30 %, transform 13 %, setup 10 %, environment 8 %). Its import hint for the `db` project reads "387 modules were evaluated 16,386 times · 69.31s total": 134 files, each evaluating the same hundred-odd modules again because every file gets a fresh module registry. With `isolate: false` a worker keeps its registry from one file to the next, and the import cost is paid once per worker.
+
+The known issue, from [`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md): `--no-isolate` on the `unit` project halved it locally but broke `tests/app/providers.test.tsx`, because a `vi.stubGlobal` leaked through the shared graph, and a mock one file registers stays registered for the next. Today 38 of the `db` project's 134 files call `vi.mock`, `vi.doMock`, `vi.stubGlobal`, `vi.stubEnv` or `vi.resetModules`. So it is not a blanket switch. The shape: the config scans each `db` file's source for those calls when it loads, as it already globs the file list, and puts the files that register a mock in a `db-mocking` project with the same harness and `isolate: true`, and the rest in `db` with `isolate: false`. A scan rather than a maintained list, so a file that starts mocking moves on its own and never runs unisolated by mistake. The database harness already gives each file a fresh clone, so what remains is JavaScript module state: the `src` files holding a module-level `Map` or `Set`, React `cache()` or `unstable_cache` (18 at the time of writing) are each shown to be per-request or reset by the harness, or their test files join the isolated project.
+
+The proof is three local runs of the full coverage suite under `--sequence.shuffle`, serialised on the shared lock, and the PR's CI run: the gain is the `Run vitest` wall and the import share. If the wall is under 5 s better on CI, the task closes unmerged and this entry records why. `unit` and `dom` stay isolated; `unit` is a follow-up only if `db` pays. `test:stories` has its own config and is unaffected.
+
+_Acceptance criteria:_
+
+- The `db` files that register no mock run with `isolate: false` and the ones that do keep isolation, decided by the config's scan and not by hand
+- The full coverage run passes three times shuffled locally and once on CI
+- `Run vitest` wall and the import share before and after are recorded in this entry; merged only if the CI wall is at least 5 s shorter
+- `testing/db-harness.md` or `testing/where-tests-live.md` describes the two projects and what moves a file between them
+- No test is added for the config: the harness is not tested (layer-ownership.md, rule 1)
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
