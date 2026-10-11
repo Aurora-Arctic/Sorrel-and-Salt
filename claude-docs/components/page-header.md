@@ -4,9 +4,10 @@
 on the same line, the action at the end: `/admin/compendium`'s Add Ingredient
 beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
 `.page-header` row and its heading by hand until MB.115. Since MB.115's
-tabbed pages, the compendium is the one admin page that renders it: a tabbed
-page's heading is `TabbedPage`'s and its action the tab's, in `TabActions`
-([`tabbed-page.md`](tabbed-page.md)).
+tabbed pages, `TabbedPage` renders it too, with the open tab's action beside
+its heading, which changes with the tab
+([`tabbed-page.md`](tabbed-page.md)); the compendium, with no tabs, renders
+it directly.
 
 ## Props
 

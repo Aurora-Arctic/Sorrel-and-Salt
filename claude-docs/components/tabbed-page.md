@@ -1,8 +1,8 @@
 # TabbedPage
 
 `src/components/TabbedPage/` — a page divided into tabs, each tab at its own
-address: the page's `h1`, a row of links, one per tab, and the open tab's
-content beneath. On the owner's call after MB.115's design review, each admin
+address: the page's `h1` with the open tab's action at the end of its line,
+a row of links, one per tab, and the open tab's content beneath. On the owner's call after MB.115's design review, each admin
 list shares a page with the group list that organises it: the Categories page
 has a Categories tab at `/admin/categories` and a Groups tab at
 `/admin/category-groups`. Every admin page but the compendium is one
@@ -16,15 +16,12 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 | ---------- | ------------------------------------------------------------------------ |
 | `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories" |
 | `tabs`     | Each tab's `href` and short label ("Groups", "Traditions"), in row order |
+| `action`   | Optional: the open tab's one action, beside the heading                  |
 | `children` | The open tab's content                                                   |
 
-One more part is exported beside it, **`TabActions`**: the open tab's own
-action, at the end of the line above its content: Add Category, Add Group,
-Invite Admin, Pause Admin Changes.
-
-Inside, `tab-switch.tsx` holds the client parts the tab row and the content
-area share: `TabSwitchProvider`, `TabPanel` (the content area) and
-`useTabSwitch`. `panel-loading.tsx` is `TabPanelLoading`, what the
+Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
+the content area share: `TabSwitchProvider`, `TabAction` (the action's
+wrapper), `TabPanel` (the content area) and `useTabSwitch`. `panel-loading.tsx` is `TabPanelLoading`, what the
 content area shows while a pressed tab is on its way.
 
 ## Contracts
@@ -38,7 +35,32 @@ content area shows while a pressed tab is on its way.
   component: `src/app/admin/(categories)/layout.tsx` around `categories/` and
   `category-groups/`. A layout stays mounted while the address moves between
   its child routes, so the heading and the tab row stay put and only the
-  content beneath swaps.
+  action and the content swap.
+- **The action belongs to the tab, beside the page's heading** (the owner's
+  call): Add Category on Categories, Add Group on its Groups tab, Add Form,
+  Add Deity, Add Tradition, Add Planet, Add Zodiac Sign, Pause Admin Changes
+  on Users, Invite Admin on Invitations, and nothing on Privilege Changes.
+  The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md)),
+  the action at the end of its line. Each route group's layout takes the
+  action from an `@action` slot, a Next parallel route
+  (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/parallel-routes.md`):
+  `src/app/admin/(categories)/@action/categories/page.tsx` renders Add
+  Category beside `categories/page.tsx`'s list, and so on, one slot page per
+  tab. A slot page is a page, so it renders on the server with the rest of a
+  direct request, and Next renders it again on every client-side navigation
+  that changes its address, a tab switch, `?new`, `?edit=` or a cursor
+  alike, since a page segment's key carries its search parameters. Every tab
+  has a slot page, Privilege Changes one that renders nothing, because on a
+  client-side navigation Next keeps a slot's last page where the new address
+  has none; each slot's `default.tsx`, what Next asks for on a full load it
+  cannot match, renders nothing too. A slot page calls the guard as every
+  admin page does. The value and group pages' actions are `ValueAction` and
+  `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same
+  address the same way, so the Add keeps the list's filter and cursor. Pause
+  Admin Changes reads the pause through a per-request cache the Users page
+  shares (`src/app/admin/(people)/pause-state.ts`), so it is read once.
+  Invite Admin is a link to `?invite`, which opens its form over the list
+  ([`admin-invitations.md`](admin-invitations.md)).
 - **A direct request renders the whole page on the server** (the owner's
   call): a typed address, a bookmark, a refresh or a link from outside the
   tabs gets the heading, the tabs and the tab's content in the first
@@ -52,8 +74,10 @@ content area shows while a pressed tab is on its way.
   and the content area share. Next runs its navigation inside the caller's
   transition, so it stays pending until the new tab has rendered. Until
   then the content area shows `TabPanelLoading` in place of the old tab's
-  content, and every tab is `aria-disabled` and ignores a press; the row is
-  `aria-busy`. Both clear when the new tab renders. The pager's soft ends
+  content, every tab is `aria-disabled` and ignores a press, and the
+  action beside the heading is `inert`, out of reach of a press or focus;
+  the row is `aria-busy`. All clear when the new tab renders, its action
+  replacing the old one in the same render. The pager's soft ends
   hold their own page the same way ([`pager.md`](pager.md)).
 - **Only a plain press is the row's.** A Ctrl, Cmd, Shift or Alt click and a
   middle click keep the browser's behaviour, a new tab or window, by the
@@ -78,16 +102,18 @@ content area shows while a pressed tab is on its way.
   `tab-links.tsx` is the one client part; the rest renders on the server.
 - **Each tab keeps its own `metadata` title**, set in its `page.tsx`:
   "Category Groups — Admin — Sorrel & Salt" on the Groups tab.
-- **The action belongs to the tab, not the heading**, since it changes from
-  tab to tab and the heading does not. A tab with no action, Privilege
-  Changes, has no `TabActions`.
 
 ## Styling
 
 `index.scss`, imported by `index.tsx`.
 
-- **The heading** sits `space(4)` above the tab row, which sits `space(5)`
-  above the content.
+- **The heading line** is the `.page-header` primitive
+  ([`styling.md`](../styling.md), "Buttons"): the action at the end of the
+  heading's line, beneath it under 28rem and spanning that line in the admin
+  area, the owner's call for an admin page's primary action at a phone's
+  width. The action's wrapper, `.tabbed-page__action`, spans it with its
+  action, and is taken out of the line when a tab has none. The line sits
+  `space(4)` above the tab row, which sits `space(5)` above the content.
 - **The tab row** is the `.link-row` primitive
   ([`styling.md`](../styling.md), "Link rows and provider marks"), so the open
   tab is drawn as the admin nav's current page is: weight 500 and the
@@ -97,13 +123,10 @@ content area shows while a pressed tab is on its way.
 - **A tab while one is on its way** takes the muted, faded look of a
   disabled control ([`styling.md`](../styling.md), "Disabled is dashed and
   faded"): the muted ink at 55% and the not-allowed cursor, with no edge to
-  dash.
+  dash. The action beside the heading fades to 55% with them and loses its
+  colour (`grayscale`), so a solid button greys as the tabs do.
 - **The content** is a column `space(5)` apart, as `.list-frame` spaces a
   list's.
-- **`TabActions`** is a wrapping row at the end of the line, and a size
-  container, as `.page-header` is: under 28rem of its own width, inside
-  `.admin-layout`, its action spans the line, the owner's call for an admin
-  page's primary action at a phone's width.
 - **The loading state** is the muted ink with the buttons' spinner. It fades
   in after 150ms, so a tab that loads quickly never flashes it. It fades by
   opacity rather than `visibility`, so a screen reader still hears the
@@ -113,26 +136,33 @@ content area shows while a pressed tab is on its way.
 
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Admin / Tabbed Page`: the People page under the admin nav with its
-Invitations tab open, as `/admin/invitations` draws it. `Default`;
-`PhoneDark` and `PhoneLight` at 375px; and `LoadingState` with
-`LoadingPhoneDark` and `LoadingPhoneLight`, a tab on its way: the row
-greyed out over the content area's loading state. The workshop's stub
+Invitations tab open and Invite Admin beside the heading, as
+`/admin/invitations` draws it. `Default`; `PhoneDark` and `PhoneLight` at
+375px, Invite Admin across the line beneath the heading; and `LoadingState`
+with `LoadingPhoneDark` and `LoadingPhoneLight`, a tab on its way: the
+action and the row greyed out over the content area's loading state. The workshop's stub
 router goes nowhere, so those stories provide `TabSwitchContext` above the
 page, holding a tab on its way; the stub `usePathname` says which address is
 open ([`workshop.md`](../workshop.md), ".ladle/"). The admin lists' own stories
 (`UserList`, `AdminInvitations`, `PrivilegeLedger`, `GroupedValueList`'s
-phone pair) sit in their tabbed page too.
+phone pair) sit in their tabbed page too, each with its tab's action.
 
 ## Testing
 
 `tests/components/TabbedPage/index.test.tsx`, with `usePathname` mocked:
-the heading inside `main`, a link per tab at its own address in order, no
-tablist, the content shown; which tab is open for a given address, its own,
+the heading inside `main` with the action beside it, neither a tab nor the
+content, a link per tab at its own address in order, no tablist, the content
+shown; which tab is open for a given address, its own,
 one beneath it, and none for an address in no tab. A press on another tab,
 through the shared `Navigating` helper (`tests/support/navigating.tsx`),
 which holds the navigation pending as Next does, leaves every tab
-`aria-disabled`, a status in the content area with the old content gone,
+`aria-disabled`, the action `inert`, a status in the content area with the old content gone,
 and a second press going nowhere; a Ctrl, Cmd or Shift press is not
 intercepted. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
-is current on each of its tabs. How the layout keeps the heading in place is
-Next's, and is the e2e suite's to see.
+is current on each of its tabs. The page tests render each tab's slot page
+beside its page, as the layout does: `tests/app/admin/value-page.test.tsx`
+and `group-page.test.tsx` find the Add keeping the filter and cursor,
+`(people)/users/page.test.tsx` the switch, and
+`(people)/invitations/page.test.tsx` Invite Admin and its `?invite`. How
+the layout keeps the heading in place and swaps the slot is Next's, and is
+the e2e suite's to see.

@@ -215,10 +215,14 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 - **The switch on admin changes is the Users tab's action** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
-  page draws it in `TabActions`, at the end of the line above the list, where
-  the other admin tabs put their primary action
+  People page draws it beside its heading while Users is open, where the
+  other admin tabs put their primary action, from
+  `src/app/admin/(people)/@action/users/page.tsx`
   ([`tabbed-page.md`](tabbed-page.md)), and keys it by the state so the
-  refresh after a flip mounts a fresh one (all on the owner's call). It is
+  refresh after a flip mounts a fresh one (all on the owner's call). That
+  page and the Users page read the pause through
+  `src/app/admin/(people)/pause-state.ts`, cached per request, so it is
+  read once. It is
   one row, `.user-list__pause`, centred with a `space(3)` gap, which spans
   the line at a phone's width. While
   changes are on it shows the button alone; while paused it first says so in

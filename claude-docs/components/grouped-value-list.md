@@ -107,8 +107,10 @@ for a rule only one kind's rows need.
   stale draft. In the workshop, `next/navigation` is stubbed
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
-  page's Add Category, Add Planet and the rest, the tab's action in
-  `TabActions` and so the page's rather than this component's, is `?new`.
+  page's Add Category, Add Planet and the rest, the tab's action beside the
+  page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
+  route group's `@action` slot) and so the page's rather than this
+  component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
   `listHref` (`src/lib/list-href.ts`), builds both, the
   pager's links and the filter's submit too. `place` is `{ query, group, after, before }`,
@@ -153,12 +155,12 @@ What the list has of its own: a description keeps to `$measure`; and under
 `.grouped-value-list--category`, while the table is wider than
 `$table-stack-width`, the cells take `space(3)` above and below and centre
 their contents, for the chip. As cards they keep the card's own spacing. The
-page's Add is `.btn--solid` in its `TabActions`, its one primary action, and
+page's Add is `.btn--solid` beside its heading, its one primary action, and
 each row's Edit is `.btn--small.btn--quiet`: a row action that changes
 nothing, small enough to keep the row short. The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
 full width and the Add spans its line, the sign-off's two phone calls,
-which `FilterForm` and `TabActions` own
+which `FilterForm` and `TabbedPage` own
 ([`filter-form.md`](filter-form.md), [`tabbed-page.md`](tabbed-page.md)),
 so the list adds no rule for either.
 
