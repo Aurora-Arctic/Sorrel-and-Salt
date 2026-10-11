@@ -664,11 +664,13 @@
       }
 
       // Every card on the card surface, so the bands give way: each row is
-      // already its own box.
+      // already its own box. Room around and between the cells, a step more
+      // than a table row's, the owner's call (MB.115): a card of text alone,
+      // as the privilege ledger's, read cramped at the row's spacing.
       > tbody > tr {
         display: grid;
-        gap: space(2);
-        padding: space(3);
+        gap: space(3);
+        padding: space(4);
         border-radius: radius('surface');
         background-color: $surface-card;
       }
@@ -682,7 +684,7 @@
         content: attr(data-label);
         content: attr(data-label) / '';
         display: block;
-        // A step from its value, half the gap between cells, so a label sits
+        // A step from its value, well inside the gap between cells, so a label sits
         // with its own value: a row of logos would otherwise touch it (MB.115,
         // the owner's call).
         margin-bottom: space(1);

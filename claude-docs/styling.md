@@ -795,8 +795,10 @@ column's cell names its column in a `data-label` attribute:
 - **It stacks by its frame's width, not the screen's.** `.data-table-frame`
   is a size container named `data-table`, and under `$table-stack-width`
   (40rem) of it each row becomes a card: a grid on `$surface-card` with
-  `radius('surface')` and `space(3)` of padding, a `space(3)` gap between
-  cards, every cell a block beneath the last. Every card is on the card
+  `radius('surface')` and `space(4)` of padding, a `space(3)` gap between
+  cards and between the cells in a card (the owner's call at MB.115, a card
+  of text alone having read cramped at a table row's spacing), every cell a
+  block beneath the last. Every card is on the card
   surface, so the bands give way. A frame measures its own width only while
   that width does not come from the table inside it, so it sits as a block or
   a stretched flex item, never in a row that shrinks to fit.
