@@ -392,6 +392,10 @@ legend as a list's is.
   description, through a hidden element holding it, and the pointer's
   tooltip (`title`), so a screen reader still has it whole. The add and
   removal announcements and an error naming the row use the short form.
+- **A source just added opens at once**, its Locator focused, picked or
+  saved through the panel alike, since a page is what it most often needs
+  next (MB.115, the owner's call); the box empties but no longer keeps the
+  focus.
 - **The edit opens the row**, `aria-expanded` and controlling what it opens:
   the citation whole, wrapping and broken anywhere so an address never runs
   the page sideways at 320px; its tier beneath; and a "Locator" box, focused
@@ -1275,7 +1279,7 @@ a search left in the box, and an open panel, each stopping the save. The panel
 from the field: opened by the create row, "New Reference…", taking you to
 Kind, and again while it is open; a source it saves listed by its id and
 shown by its short form,
-the panel closed, the box focused, and sent with the ingredient; and Cancel
+the panel closed, the new row open on its Locator, and sent with the ingredient; and Cancel
 closing it, adding nothing, the focus back in the box. Two tests mount the
 whole form, for what only it does with the field: each source sent by its id
 with its locator as typed and no citation, parsed by `LocalIngredientInput`,

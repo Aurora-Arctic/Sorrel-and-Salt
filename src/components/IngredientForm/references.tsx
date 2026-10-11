@@ -125,6 +125,18 @@ export function ReferencesField({
     document.getElementById(`${id}-${openRow}-locator`)?.focus();
   }, [openRow, id]);
   const focusBox = () => boxElement.current?.focus();
+  // A source just added opens at once, its Locator focused, since a page is
+  // what it most often needs next (MB.115, the owner's call). The field
+  // array keys the new row on the next render, so this waits for it.
+  const openAdded = useRef(false);
+  useEffect(() => {
+    if (!openAdded.current) return;
+    openAdded.current = false;
+    const added = fields[fields.length - 1];
+    if (!added) return;
+    focusLocator.current = true;
+    setOpenRow(added.id);
+  }, [fields]);
 
   // A source already listed is not offered again: listing it twice is refused.
   const found = useReferenceSuggestions(workspaceId, field.value, active);
@@ -164,8 +176,9 @@ export function ReferencesField({
     if (isSubmitted) void trigger([list, box]);
   };
   const add = (citation: string, link: ReferenceLink) => {
-    // Not focused by the field array, which would take its locator: the box keeps it.
+    // Not focused by the field array: the row opens, and its Locator takes the focus.
     append({ value: citation, link, locator: '' }, { shouldFocus: false });
+    openAdded.current = true;
     setAnnouncement(`Added ${shortCitationText(link)}`);
   };
   const pick = (_value: string, option: ReferenceOption | null) => {
@@ -174,7 +187,6 @@ export function ReferencesField({
     add(option.value, option.link);
     setValue(box, '');
     revalidate();
-    focusBox();
   };
   const removeAt = (index: number) => {
     setAnnouncement(`Removed ${shortCitationText(fields[index].link)}`);
@@ -196,7 +208,9 @@ export function ReferencesField({
   };
   const saved = ({ citation, ...link }: SavedReference) => {
     add(citation, link);
-    closePanel();
+    // Closed without handing the focus back to the box: the new row takes it.
+    setValue(panel, false);
+    revalidate();
     // The new source is one the search can now find.
     void queryClient.invalidateQueries({ queryKey: ['ReferenceSuggestions'] });
   };

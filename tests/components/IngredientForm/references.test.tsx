@@ -146,8 +146,13 @@ const waitFor: typeof waitForDom = (callback, options) =>
 const box = () => screen.getByLabelText('Reference', { selector: '[role="combobox"]' });
 const references = () => box().closest('fieldset') as HTMLElement;
 const rows = () => within(references()).queryAllByRole('listitem');
+/** A row by its citation, whole or short: an open row shows it whole, and its Edit is named by the short form. */
 const row = (citation: string) =>
-  rows().find((item) => item.textContent?.includes(citation)) ??
+  rows().find(
+    (item) =>
+      item.textContent?.includes(citation) ||
+      within(item).queryByRole('button', { name: `Edit ${citation}` }) !== null,
+  ) ??
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
@@ -279,11 +284,15 @@ describe('ReferencesField', () => {
       await pick(calls, 'testwort', HERBAL.citation);
 
       expect(rows()).toHaveLength(1);
-      expect(shownIn(row(HERBAL_SHORT))).toBe(HERBAL_SHORT);
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
-      // The box empties and keeps the focus, for the next one.
       expect(box()).toHaveValue('');
-      expect(box()).toHaveFocus();
+      // The new row opens on its Locator, a page being what it most often needs next (MB.115).
+      const inRow = within(row(HERBAL_SHORT));
+      expect(inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
     });
 
     it('shows a row as its short form, its title in real italics, then its locator, described by its whole citation', async () => {
@@ -298,32 +307,31 @@ describe('ReferencesField', () => {
       expect(
         inRow.getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
       ).toHaveAccessibleDescription(HERBAL.citation);
-      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
 
-      // Open, the row reads the citation whole; closed, its locator follows.
+      // Open, as it is added, the row reads the citation whole; closed, its locator follows.
       typeIn(locatorOf(HERBAL_SHORT), 'p. 112');
       expect(shownIn(item)).toContain(HERBAL.citation);
       press(edit);
       expect(shownIn(item)).toBe(`${HERBAL_SHORT}, p. 112`);
+      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
     });
 
-    it('keeps a row to one line until its edit opens it on its Locator, and closes it again', async () => {
+    it('opens a row as it is added, then keeps it to one line until its edit opens it on its Locator again', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const inRow = within(row(HERBAL.citation));
+      const inRow = within(row(HERBAL_SHORT));
       const edit = inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
+      expect(edit).toHaveAttribute('aria-expanded', 'true');
+
+      press(edit);
       expect(edit).toHaveAttribute('aria-expanded', 'false');
       expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
 
       press(edit);
       expect(edit).toHaveAttribute('aria-expanded', 'true');
       expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
-
-      press(edit);
-      expect(edit).toHaveAttribute('aria-expanded', 'false');
-      expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
     });
 
     it("gives each row a locator, labelled and read with its source's citation and the tip beside it", async () => {
@@ -426,7 +434,7 @@ describe('ReferencesField', () => {
       expect(kindBox()).toHaveFocus();
     });
 
-    it('lists a new source saved to this coven by its id, closing, the box focused', async () => {
+    it('lists a new source saved to this coven by its id, closing, the new row open on its Locator', async () => {
       const calls = acceptReference();
       const onSubmit = renderField();
       newReference();
@@ -441,9 +449,8 @@ describe('ReferencesField', () => {
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
       // Shown by its short form, as a source picked is.
       const short = 'Mock, Fixture Grimoire';
-      expect(shownIn(row(short))).toBe(short);
       expect(changes()).toHaveTextContent(short);
-      expect(box()).toHaveFocus();
+      expect(within(row(short)).getByRole('textbox', { name: 'Locator' })).toHaveFocus();
 
       save();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
