@@ -24,7 +24,7 @@ Three consequences worth knowing before writing a test:
   mapping tsconfig already declared; each project spells out `extends: true`
   to inherit it. Imports _within_ `tests/` stay relative.
 - **A test that reads a file from disk goes through `tests/support/paths.ts`**
-  — `REPO_ROOT`, `fromRoot('…')`, `MIGRATIONS_DIR` — rather than counting
+  — `REPO_ROOT` and `fromRoot('…')` — rather than counting
   `../` from its own location. The chain is counted once, there.
 - **The project split is a path glob**, so where a file sits — and what it is
   called — decides how it runs. A test that touches Postgres and is not under

@@ -9,6 +9,3 @@ export const REPO_ROOT = resolve(import.meta.dirname, '../..');
 export function fromRoot(...segments: string[]): string {
   return join(REPO_ROOT, ...segments);
 }
-
-/** Drizzle's generated SQL, for the tests that read a migration's text. */
-export const MIGRATIONS_DIR = fromRoot('src/db/migrations');
