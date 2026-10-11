@@ -72,3 +72,5 @@ row an admin created under a seed name does not trip the slug index.
   re-estimated to 6h for the doc normalisation it also carries.
 - `db/expand-contract.md` records `0045_seed-keys` as a column added while
   MB.168's drop was pending.
+- MB.241 later widened the set to `ingredients`, for the compendium seed
+  (MB.242), in migration `0065_ingredients-seed-key`.

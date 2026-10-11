@@ -98,6 +98,8 @@ row as present by its key, live or soft-deleted, or by a live row's slug, so
 an admin's own row under a seed name is not met by a second the slug index
 would refuse; each row they insert carries its key; and an item finds its
 group by the group's key, so a renamed group still takes it.
+`ingredients` carries the column too since MB.241, for the compendium seed
+(MB.242) to key its entries by; the `standard` fixture writes none.
 `0047_refill-seed-keys` keys any bootstrap-created row still unkeyed, one
 seeded between the two deploys. The sources seed keys on it from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
 
