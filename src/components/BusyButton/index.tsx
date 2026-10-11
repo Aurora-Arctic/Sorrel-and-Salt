@@ -7,7 +7,7 @@ import type { BusyButtonProps } from './types';
 // Written once because the same three pieces had been copied into
 // twenty-three buttons, and one that forgot `aria-busy` looked busy without
 // saying so. It leaves `disabled` to the caller: most turn it on while busy,
-// but one whose focus must stay (Impersonate) uses `aria-disabled` instead
+// but one whose focus must stay (Stop Impersonating) uses `aria-disabled` instead
 // (claude-docs/components/busy-button.md).
 const BusyButton = ({
   busy,
