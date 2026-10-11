@@ -229,6 +229,12 @@
       background-color: transparent;
     }
 
+    // An admin's row has no Impersonate, and an empty foot would draw its
+    // red rule under nothing.
+    .user-list__impersonate:empty {
+      display: none;
+    }
+
     // Two classes past the banded row's rule above, so the card's ground wins.
     tbody tr:nth-child(even) .user-list__impersonate {
       background-color: transparent;
