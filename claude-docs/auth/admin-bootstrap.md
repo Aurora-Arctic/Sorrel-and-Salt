@@ -482,15 +482,24 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 - **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`
   and `linkedAccounts()`. Under its `<h1>` "Your Account" are three
-  sections, each under its own `<h2>`: Name ("Change your name." beneath its
-  heading, then `NameForm`), Email
-  (`EmailForm`, embedded) and Sign-In Methods (`SignInMethods`, whose
-  heading is the section's). It carries no link to `/account/email`.
-  Between the heading and the first section, a nav labelled "On this page"
-  links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-sign-in-methods`), and a hairline `<hr>`
-  rules each section from the next (on the owner's call). A section a link
-  lands on stops clear of the top inset. Beside the heading, in a
+  sections, each a region named by its own `<h2>`, which the page writes in
+  a `.header` with the section's intro as its `.lede`: Name ("Change your
+  name.", then `NameForm`), Email (`EmailForm`, embedded, whose own status
+  line says what the section is for) and Sign-In Methods ("Any of these signs
+  you in to this account.", then `SignInMethods`). It carries no link to
+  `/account/email`. Between the heading and the first section, a nav
+  labelled "On this page" links to each section by its prefixed id
+  (`#account-name`, `#account-email`, `#account-sign-in-methods`), and a
+  hairline `<hr>` rules each section from the next (on the owner's call). A
+  section a link lands on stops clear of the top inset. The frame, the
+  sections, the rules and the nav's row are primitives (`.page-frame--narrow`,
+  `.page-frame__section`, `.page-frame__rule`, `.link-row`;
+  [`styling.md`](../styling.md), "The page frame" and "Link rows and
+  provider marks"), so the page has no stylesheet of its own. A failed link
+  lands back with `?error=` and `?provider=`: the page turns the code into
+  a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
+  the provider, when it is one on the roster, so the sentence shows in that
+  provider's row. Beside the heading, in a
   `.page-header`, is Sign Out (`SignOutButton`,
   [`components/sign-out-button.md`](../components/sign-out-button.md)):
   Better Auth's own sign-out, then a full load of `/` (added in MB.63's PR,
