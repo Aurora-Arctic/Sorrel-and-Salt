@@ -1,8 +1,9 @@
 'use client';
 
-import { type ReactElement, useContext, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useContext, useEffect, useId, useRef, useState } from 'react';
 import { CloseGuardContext } from './close-guard';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
+import './index.scss';
 
 // A form's unsaved changes, kept from every way out of its modal: Cancel, the
 // Close button, Escape and a click outside each ask "Discard them?" first
@@ -25,6 +26,9 @@ const FIRST_FIELD =
 export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const slot = useContext(CloseGuardContext);
   const [asking, setAsking] = useState(false);
+  // How many times a way out was tried again while asking: each flashes the
+  // question, so the person sees why nothing closed (MB.115, the owner's call).
+  const [flashes, setFlashes] = useState(0);
   // The close the question holds back, made by Discard Changes.
   const held = useRef<(() => void) | null>(null);
   // Where the focus was when the question came, for Keep Editing to go back to.
@@ -36,8 +40,9 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const consult = (close: () => void): boolean => {
     if (!dirty) return true;
     held.current = close;
-    // Asked again while asking: it is already asking.
-    if (!asking) {
+    // Tried again while asking: it is already asking, so it flashes.
+    if (asking) setFlashes((count) => count + 1);
+    else {
       returnTo.current = document.activeElement;
       setAsking(true);
     }
@@ -58,9 +63,10 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
   // The question is brought into view and takes the focus on its safe
   // answer, Keep Editing, as the forms' Delete questions do (MB.115): the
   // button pressed has gone, and in a long form the question would sit below
-  // the fold. Smooth unless motion is reduced; jsdom has no scrollIntoView,
-  // hence the optional call. Put away, the focus goes back where it was, or
-  // to the form's first field if that has gone, as Cancel has.
+  // the fold. Again on each flash, wherever the focus had gone meanwhile.
+  // Smooth unless motion is reduced; jsdom has no scrollIntoView, hence the
+  // optional call. Put away, the focus goes back where it was, or to the
+  // form's first field if that has gone, as Cancel has.
   useEffect(() => {
     if (asking) {
       const button = keepEditingRef.current;
@@ -79,7 +85,7 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
     returnTo.current = null;
     if (back instanceof HTMLElement && back.isConnected && back !== document.body) back.focus();
     else form.current?.querySelector<HTMLElement>(FIRST_FIELD)?.focus();
-  }, [asking]);
+  }, [asking, flashes]);
 
   return {
     asking,
@@ -87,7 +93,11 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
       if (consult(close)) close();
     },
     discard: () => held.current?.(),
-    keepEditing: () => setAsking(false),
+    flashes,
+    keepEditing: () => {
+      setAsking(false);
+      setFlashes(0);
+    },
     keepEditingRef,
   };
 }
@@ -97,15 +107,31 @@ export function DiscardQuestion({
   guard,
   row = 'modal__actions',
 }: DiscardQuestionProps): ReactElement {
-  const { discard, keepEditing, keepEditingRef } = guard;
+  const { discard, keepEditing, keepEditingRef, flashes } = guard;
+  const id = useId();
   return (
-    <div className="form__confirm">
-      <p>You have unsaved changes. Discard them?</p>
+    <div className="form__confirm discard-question" data-flash={flashes}>
+      {/* The flash, a fresh element per try so its animation runs each time. */}
+      {flashes > 0 && <span key={flashes} className="discard-question__flash" aria-hidden />}
+      <p id={id}>You have unsaved changes. Discard them?</p>
+      {/* Said again on each try, for a screen reader: the focus may already
+          be on Keep Editing, and moving it there again says nothing. A live
+          region speaks only a change, so a trailing no-break space alternates. */}
+      <output className="visually-hidden">
+        {flashes > 0 && `You have unsaved changes.${flashes % 2 ? '' : '\u00a0'}`}
+      </output>
       <div className={row}>
         <button type="button" className="btn btn--destructive" onClick={discard}>
           Discard Changes
         </button>
-        <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={keepEditing}>
+        {/* Described by the question, so the focus it takes reads it. */}
+        <button
+          ref={keepEditingRef}
+          type="button"
+          className="btn btn--quiet"
+          aria-describedby={id}
+          onClick={keepEditing}
+        >
           Keep Editing
         </button>
       </div>

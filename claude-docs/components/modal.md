@@ -103,8 +103,19 @@ each form.
   with nothing lost and the focus back where it was (the field Escape was
   pressed in, the Close button), or on the form's first field when that has
   gone, as Cancel has.
-- **Asked again while asking**, by Close, Escape or the backdrop, it does
-  nothing more.
+- **Tried again while asking, it flashes** (MB.115, the owner's call), so
+  the person sees why nothing closed. Each try by Close, Escape or the
+  backdrop counts in `guard.flashes`, which the question carries as
+  `data-flash`, and draws a fresh `.discard-question__flash` layer behind it,
+  keyed on the count so the animation runs every time: the secondary's tint,
+  fading over `$motion-short * 4`, 600ms. Under reduced motion nothing fades:
+  a solid secondary outline shows for as long, then goes (`step-end`). Each
+  try also scrolls the question into view and puts the focus back on Keep
+  Editing, and says "You have unsaved changes." in a visually hidden
+  `<output>`, a polite live region, alternating a trailing no-break space so
+  a repeat is a change and is read again. Keep Editing is described by the
+  question, so the focus it takes reads it. Keep Editing sets the count back
+  to 0.
 - **The browser's own ways out are not covered.** Back, a reload or closing
   the tab leave without asking: no `beforeunload` handler is added, since the
   modals are opened by their address and Back is how one is left.
@@ -202,10 +213,12 @@ The unsaved-changes guard's shape is asserted there too, on a form of the
 test's own: Cancel, Close, Escape and a click outside asking only once
 something changed, the dialog staying open, Keep Editing keeping the value
 and returning the focus, Discard Changes closing, a save closing without
-asking, and nothing more asked while asking. Each admin form's own test
+asking, and a try while asking flashing the question (its `data-flash`
+count rising each time), the focus back on Keep Editing and the status
+speaking. Each admin form's own test
 asserts only its wiring, through `tests/support/discard-guard.tsx`. The
 `AskingToDiscardChanges` story, and its `PhoneDark` and `PhoneLight` pair,
-show the question.
+show the question; pressing Escape or Close there flashes it.
 
 `RouteModal` has no file of its own (claude-docs/testing/layer-ownership.md,
 "What a test may assert", rule 6): each admin page test asserts its modal's
