@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
@@ -29,6 +29,10 @@ vi.mock('@/modules/ingredients', () => ({
   resolveCompendiumSlug,
   variantsOf,
 }));
+
+// The curated forms the Form box offers, read through the vocabulary module.
+const listIngredientFormValues = vi.fn();
+vi.mock('@/modules/vocabulary', () => ({ listIngredientFormValues }));
 
 const entryValues = vi.fn();
 vi.mock('@/app/admin/compendium/entry-values', () => ({ entryValues }));
@@ -101,11 +105,26 @@ function lastFilter(): unknown {
   return listed;
 }
 
-const NO_FILTER = { query: undefined, nomenclature: undefined, withoutReferences: false };
+const NO_FILTER = {
+  query: undefined,
+  form: undefined,
+  nomenclature: undefined,
+  withoutReferences: false,
+};
 
 /** The filter every link below keeps, as the address spells it. */
-const FILTERED = { query: 'test', nomenclature: 'unknown', withoutReferences: '1' };
-const FILTERED_HREF = '/admin/compendium?query=test&nomenclature=unknown&withoutReferences=1';
+const FILTERED = {
+  query: 'test',
+  form: 'Fixture Oil',
+  nomenclature: 'unknown',
+  withoutReferences: '1',
+};
+const FILTERED_HREF =
+  '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1';
+
+/** A curated form as its service lists it, keyed by name as the finder pages it. */
+const curatedForm = (name: string, index: number) =>
+  entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
 beforeEach(() => {
   requireAdminSession.mockReset();
@@ -121,6 +140,9 @@ beforeEach(() => {
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
     refs.map(() => [{ form: 'Herb' }]),
   );
+  // Two curated forms, on one page.
+  listIngredientFormValues.mockReset();
+  listIngredientFormValues.mockResolvedValue(['Fixture Oil', 'Fixture Powder'].map(curatedForm));
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
   redirect.mockClear();
@@ -175,36 +197,40 @@ describe('the /admin/compendium page', () => {
 });
 
 describe('the /admin/compendium filter', () => {
-  it('reads ?query= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
-    await renderPage({ query: '  test wort ', nomenclature: 'unknown', withoutReferences: '1' });
+  it('reads ?query= and ?form= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
+    await renderPage({
+      query: '  test wort ',
+      form: ' Fixture Oil ',
+      nomenclature: 'unknown',
+      withoutReferences: '1',
+    });
 
     expect(lastFilter()).toEqual({
       query: 'test wort',
+      form: 'Fixture Oil',
       nomenclature: 'unknown',
       withoutReferences: true,
     });
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
     expect(screen.getByRole('checkbox', { name: 'Without References' })).toBeChecked();
   });
 
   // A native submit sends every field, blank or not.
-  it('reads a blank ?query= and ?nomenclature= as no filter', async () => {
-    await renderPage({ query: '   ', nomenclature: '' });
+  it('reads a blank ?query=, ?form= and ?nomenclature= as no filter', async () => {
+    await renderPage({ query: '   ', form: '  ', nomenclature: '' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
   });
 
   // As a hand-edited cursor gets the first page.
   it('ignores a ?nomenclature= no kind is called, and drops it from every link', async () => {
     await renderPage({ query: 'test', nomenclature: 'herbal' });
 
-    expect(lastFilter()).toEqual({
-      query: 'test',
-      nomenclature: undefined,
-      withoutReferences: false,
-    });
+    expect(lastFilter()).toEqual({ ...NO_FILTER, query: 'test' });
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
@@ -218,6 +244,53 @@ describe('the /admin/compendium filter', () => {
 
     expect(lastFilter()).toEqual(NO_FILTER);
     expect(screen.getByRole('checkbox', { name: 'Without References' })).not.toBeChecked();
+  });
+
+  it('offers every curated form in the Form box, read once for the request', async () => {
+    await renderPage();
+
+    expect(listIngredientFormValues).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getByRole('option', { name: 'Fixture Oil' })).toBeInTheDocument();
+    expect(within(choices).getByRole('option', { name: 'Fixture Powder' })).toBeInTheDocument();
+  });
+
+  // 84 forms are seeded against a page of at most 100, so one page is not a
+  // safe assumption: the read walks on while there are more.
+  it('reads the forms past their first page', async () => {
+    const forms = Array.from({ length: 101 }, (_, index) =>
+      curatedForm(`Fixture Form ${String(index).padStart(3, '0')}`, index),
+    );
+    // As the finder pages: the rows after the cursor, as many as asked for.
+    listIngredientFormValues.mockImplementation(async (_filter: unknown, request: PageRequest) => {
+      const start = request.after
+        ? forms.findIndex(({ node }) => node.id === request.after?.id) + 1
+        : 0;
+      return forms.slice(start, start + request.limit);
+    });
+
+    await renderPage();
+
+    expect(listIngredientFormValues).toHaveBeenCalledTimes(2);
+    expect(listIngredientFormValues.mock.lastCall?.[1]).toMatchObject({ after: forms[99].cursor });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getAllByRole('option')).toHaveLength(forms.length);
+  });
+
+  // Two live forms may share a name in different groups; the filter matches
+  // the text, so one choice filters by both.
+  it('offers a form name two groups share once', async () => {
+    listIngredientFormValues.mockResolvedValue(
+      ['Fixture Oil', 'Fixture Wax', 'Fixture Wax'].map(curatedForm),
+    );
+
+    await renderPage();
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getAllByRole('option', { name: 'Fixture Wax' })).toHaveLength(1);
   });
 
   it('keeps the filter on each Edit, the pager and Add Ingredient', async () => {
@@ -238,10 +311,10 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&nomenclature=unknown&withoutReferences=1&before=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&nomenclature=unknown&withoutReferences=1&after=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&after=[^&]+$/,
     );
   });
 });

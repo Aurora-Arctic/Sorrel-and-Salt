@@ -30,13 +30,14 @@ function and(items: readonly string[]): string {
 
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
- * an admin sees what to change: "No entry matches “wort” and the
- * classification Botanical. Change or clear the filter to see more." With no
+ * an admin sees what to change: "No entry matches “wort”, the form “Oil” and
+ * the classification Botanical. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
-function emptyText({ query, nomenclature, withoutReferences }: Filter): string {
+function emptyText({ query, form, nomenclature, withoutReferences }: Filter): string {
   const filters = [
     query && `“${query}”`,
+    form && `the form “${form}”`,
     nomenclature && `the classification ${KIND_LABELS.get(nomenclature)}`,
     withoutReferences && 'Without References',
   ].filter((filter): filter is string => Boolean(filter));
@@ -48,6 +49,7 @@ function emptyText({ query, nomenclature, withoutReferences }: Filter): string {
 const CompendiumList = ({
   entries,
   filter,
+  forms,
   previousHref,
   nextHref,
   position,
@@ -55,8 +57,9 @@ const CompendiumList = ({
   <div className="list-frame">
     {/* Keyed by the filter shown, so another one starts the form again from it. */}
     <CompendiumListFilter
-      key={`${filter.query}\n${filter.nomenclature}\n${filter.withoutReferences}`}
+      key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
       filter={filter}
+      forms={forms}
     />
 
     {entries.length ? (

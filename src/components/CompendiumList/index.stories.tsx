@@ -17,7 +17,17 @@ const Frame = ({ children }: { children: ReactNode }): ReactElement => (
   <div className="admin-layout">{children}</div>
 );
 
-const NO_FILTER: CompendiumListFilter = { query: '', nomenclature: '', withoutReferences: false };
+const NO_FILTER: CompendiumListFilter = {
+  query: '',
+  form: '',
+  nomenclature: '',
+  withoutReferences: false,
+};
+
+// The curated forms the Form box offers, in name order.
+const FORMS = ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name) => ({
+  name,
+}));
 
 const entry = (
   name: string,
@@ -50,6 +60,7 @@ const PageOfSeveral = (): ReactElement => (
     <CompendiumList
       entries={ENTRIES}
       filter={NO_FILTER}
+      forms={FORMS}
       previousHref={compendiumHref({ before: 'cursor' })}
       nextHref={compendiumHref({ after: 'cursor' })}
       position={{ page: 2, pages: 3 }}
@@ -65,17 +76,20 @@ export const FirstPage: Story = () => (
     <CompendiumList
       entries={ENTRIES.slice(0, 2)}
       filter={NO_FILTER}
+      forms={FORMS}
       nextHref={compendiumHref({ after: 'cursor' })}
     />
   </Frame>
 );
 
-// The admin's two to-do lists at once: the unknown kind, and the unsourced.
+// The admin's two to-do lists at once, the unknown kind and the unsourced,
+// narrowed to one form.
 export const Filtered: Story = () => (
   <Frame>
     <CompendiumList
       entries={[entry('Fixture Salt', 'unknown', null, ['Powder'])]}
-      filter={{ query: '', nomenclature: 'unknown', withoutReferences: true }}
+      filter={{ query: '', form: 'Powder', nomenclature: 'unknown', withoutReferences: true }}
+      forms={FORMS}
     />
   </Frame>
 );
@@ -84,14 +98,15 @@ export const NoMatch: Story = () => (
   <Frame>
     <CompendiumList
       entries={[]}
-      filter={{ query: 'nothing', nomenclature: 'mineral', withoutReferences: false }}
+      filter={{ query: 'nothing', form: 'Oil', nomenclature: 'mineral', withoutReferences: false }}
+      forms={FORMS}
     />
   </Frame>
 );
 
 export const Empty: Story = () => (
   <Frame>
-    <CompendiumList entries={[]} filter={NO_FILTER} />
+    <CompendiumList entries={[]} filter={NO_FILTER} forms={FORMS} />
   </Frame>
 );
 

@@ -10,10 +10,11 @@ export interface AdminCompendiumPageProps {
 
 /**
  * The page's address: every list page's name query, cursor and modal
- * (`list-page.ts`), and the compendium's own two filters, a classification
- * and the entries citing nothing.
+ * (`list-page.ts`), and the compendium's own three filters, a form by its
+ * text, a classification and the entries citing nothing.
  */
 export interface CompendiumSearchParams extends ListSearchParams {
+  form?: string | string[];
   nomenclature?: string | string[];
   withoutReferences?: string | string[];
 }
