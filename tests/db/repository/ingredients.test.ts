@@ -948,11 +948,16 @@ describe('findWorkspaceIngredientByIdentity', () => {
     const identity = { name: 'Another label', canonicalName: 'Fixtura testalis' };
     const mine = await add('Testwort', {
       canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
       workspaceId: WORKSPACE_W_ID,
     });
     // Why another row could have answered: the compendium and X each hold the formal name.
-    await add('Testwort', { canonicalName: 'Fixtura testalis' });
-    await add('Testwort', { canonicalName: 'Fixtura testalis', workspaceId: WORKSPACE_X_ID });
+    await add('Testwort', { canonicalName: 'Fixtura testalis', nomenclature: 'botanical' });
+    await add('Testwort', {
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+      workspaceId: WORKSPACE_X_ID,
+    });
     const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
     const inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
 

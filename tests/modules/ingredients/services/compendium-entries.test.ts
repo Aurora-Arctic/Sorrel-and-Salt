@@ -845,7 +845,7 @@ describe('the slug', () => {
     const updated = await updateCompendiumEntry(admin, id, entry({ description: 'Redescribed' }));
 
     expect(updated.slug).toBe('testwort-fixtura-testalis');
-    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).resolves.toEqual({
+    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
       kind: 'moved',
       slug: 'testwort-fixtura-testalis',
     });
