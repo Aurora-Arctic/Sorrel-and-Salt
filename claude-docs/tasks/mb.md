@@ -500,6 +500,8 @@ _Acceptance criteria:_
 - `npm run pre-commit` passes
 - No doc or comment names a deleted declaration file as present
 
+_As built:_ all six went: `doc-citations`, `doc-overlap`, `repoint-doc-citations`, `split-doc`, `task-board` and `tasks-md`, each `scripts/<name>.d.mts`. Before deleting them, a search of `src/`, `tests/`, `scripts/`, `lint/` and `.github/` found no TypeScript file importing any of the six scripts. The only hits were the declarations naming each other, `task-board.d.mts` importing types from `./tasks-md.mjs`, and a comment in `tests/support/unit-global-setup.ts` that names `doc-citations.mjs` without importing it. `tsconfig.json` keeps `allowJs` off, and its `include` lists `src/`, `tests/` and the Next.js type folders, never `scripts/`, so nothing but the deleted `tests/scripts/` ever read them. No script header pointed at its declaration. Two lines named a deleted file as present and are corrected: the opening comment of `.github/scripts/lib/slowest-files.d.mts`, which cited `scripts/doc-citations.d.mts` as its model, and the count in [`design-decisions/mb.108-plan.md`](../design-decisions/mb.108-plan.md), which now says 11 declarations were there then and that MB.232 removed the last six. MB.224's plan lists this task as a follow-up it found, and MB.103's criterion that `tasks-md.mjs` comes with its `.d.mts` is what that task required at the time; both are records and stay.
+
 **MB.233 — `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`** · 0.5h
 
 _Story:_ As a developer, I want a test run's database drops to succeed whatever Postgres is doing in the background, so that a green suite is not failed by its own teardown.

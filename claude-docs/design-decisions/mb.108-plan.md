@@ -4,9 +4,10 @@
 
 Types are declared inline beside the code that uses them: 139 `type`/`interface`
 declarations across 66 files under `src/`, about 137 in 86 files under `tests/`,
-and 17 under `scripts/` (11 already in hand-written `.d.mts` files). The only
-type-only file today is `src/lib/session.ts`; `src/db/repository/shapes.ts` is
-mostly types plus three runtime predicates. No doc, lint rule or guard names a
+and 17 under `scripts/` (11 then in hand-written `.d.mts` files; MB.232 removed
+the last six once nothing imported their scripts). The only type-only file today
+is `src/lib/session.ts`; `src/db/repository/shapes.ts` is mostly types plus
+three runtime predicates. No doc, lint rule or guard names a
 convention for where a type lives, so nothing stops the next one landing inline.
 
 The user wants types in their own type files wherever possible. Decisions taken
