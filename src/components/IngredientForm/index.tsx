@@ -49,8 +49,9 @@ import {
   ingredientResolver,
   openingValues,
   sectionsWithErrors,
+  variantsWithErrors,
 } from './values';
-import { VariantsField } from './variants';
+import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
 
 // Every property of an ingredient, validated by the shared schema before the
@@ -154,6 +155,9 @@ const IngredientForm = ({
   const [open, setOpen] = useState<ReadonlySet<SectionKey>>(
     () => new Set(editing ? [] : SECTION_KEYS),
   );
+  // Each variant's own sections, which fold the same way (MB.115): one added
+  // here opens with every one open, one an edit opened with, every one closed.
+  const variantFolds = useVariantFolds();
   const erring = sectionsWithErrors(errors);
   // A save held on the duplicate warning is the name's to answer.
   if (blocking) erring.add('identity');
@@ -167,6 +171,8 @@ const IngredientForm = ({
   if (seenSubmit !== submitCount) {
     setSeenSubmit(submitCount);
     if ([...erring].some((key) => !open.has(key))) setOpen(new Set([...open, ...erring]));
+    // A variant's too, inside it: the Variants section opens the card.
+    variantFolds.openErring(variantsWithErrors(errors));
   }
   const fold = (key: SectionKey): SectionFold => ({
     open: open.has(key),
@@ -180,14 +186,19 @@ const IngredientForm = ({
   });
   // Open All / Close All: Close All while any section is open, so a press
   // from any mix folds the form to its summary lines, the view the sections
-  // are for, and a new entry, all open, offers it at once.
+  // are for, and a new entry, all open, offers it at once. It reaches every
+  // variant's sections too; a variant's are in view only while Variants is
+  // open, which already reads Close All.
   const anyOpen = open.size > 0;
   const headerSlot = useModalHeaderSlot();
   const foldAll = (
     <button
       type="button"
       className="btn btn--small btn--quiet"
-      onClick={() => setOpen(new Set(anyOpen ? [] : SECTION_KEYS))}
+      onClick={() => {
+        setOpen(new Set(anyOpen ? [] : SECTION_KEYS));
+        variantFolds.setAll(!anyOpen, getValues('variants').length);
+      }}
     >
       {anyOpen ? 'Close All' : 'Open All'}
     </button>
@@ -313,6 +324,7 @@ const IngredientForm = ({
         setSaves((count) => count + 1);
         // The next entry is a new one, so every section opens, as for this one.
         setOpen(new Set(SECTION_KEYS));
+        variantFolds.setAll(true, 0);
       } else if (entry) reset(getValues());
     } catch (error) {
       // setError, as the resolver's own errors are set: the next submit or an
@@ -558,7 +570,11 @@ const IngredientForm = ({
               </CollapsibleSection>
               {/* After the ingredient's own fields, as the page shows its forms
             after it (MB.215): each form, and what it adds. */}
-              <VariantsField workspaceId={workspaceId} fold={fold('variants')} />
+              <VariantsField
+                workspaceId={workspaceId}
+                fold={fold('variants')}
+                folds={variantFolds}
+              />
             </div>
             {discard.asking ? (
               <DiscardQuestion guard={discard} row="form__actions" />

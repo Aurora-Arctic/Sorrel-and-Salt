@@ -20,7 +20,7 @@ import type {
   UpdateCompendiumIngredientMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { openSections } from '../../support/ingredient-sections';
+import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
@@ -162,6 +162,20 @@ const openVariant = (form: string) => {
   if (edit.getAttribute('aria-expanded') !== 'true') fireEvent.click(edit);
   return variant(form);
 };
+/** Opens a closed variant and every one of its own sections, closed as an edit's are (MB.115). */
+const openWhole = (form: string) => {
+  const card = openVariant(form);
+  openSectionsIn(card, ...VARIANT_SECTIONS);
+  return card;
+};
+/** A variant's section heading's button, which opens and closes it. */
+const sectionOf = (card: HTMLElement, title: string) =>
+  within(card).getByRole('button', { name: title });
+/** Which of a variant's sections are open, by title, in page order. */
+const openIn = (card: HTMLElement) =>
+  VARIANT_SECTIONS.filter(
+    (title) => sectionOf(card, title).getAttribute('aria-expanded') === 'true',
+  );
 /** An entry with two closed forms, Oil and Herb, Oil carrying a colour left in its box. */
 const twoForms = (oil: Partial<IngredientFormValues['variants'][number]> = {}) => ({
   ...EMPTY_VALUES,
@@ -433,15 +447,18 @@ describe('IngredientForm’s variants', () => {
       expect(edit).toHaveAttribute('aria-expanded', 'true');
       const region = document.getElementById(edit.getAttribute('aria-controls') ?? '');
       expect(region).toBeVisible();
+      // The focus goes into the opened fields, to the first: Identity's
+      // heading, its section closed as an edit's are (MB.115).
+      expect(sectionOf(variant('Oil'), 'Identity')).toHaveFocus();
+      openSectionsIn(variant('Oil'), 'Safety');
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
-      // The focus goes into the opened fields, to the first.
-      expect(control(variant('Oil'), 'Form')).toHaveFocus();
     });
 
     it('closes on Done, the focus back on its Edit, and keeps what was typed', () => {
       renderForm({ workspaceId: null, values: twoForms() });
 
       const oil = openVariant('Oil');
+      openSectionsIn(oil, 'Safety');
       type(oil, 'Safety Notes', 'Dilute before use.');
       fireEvent.click(within(oil).getByRole('button', { name: 'Done with Oil' }));
 
@@ -532,6 +549,141 @@ describe('IngredientForm’s variants', () => {
       expect(colour).toHaveFocus();
       expect(editOf('Herb')).toHaveAttribute('aria-expanded', 'false');
       expect(calls).toHaveLength(0);
+    });
+  });
+
+  // MB.115, the owner's ask: an open variant's sections fold as the
+  // ingredient's do, under its own headings.
+  describe('a variant’s sections', () => {
+    it('opens an existing variant with every section closed, each summarising what it holds', () => {
+      renderForm({
+        workspaceId: null,
+        values: twoForms({ safetyNotes: 'Dilute before use.', planets: [{ value: 'Venus' }] }),
+      });
+
+      const oil = openVariant('Oil');
+
+      expect(openIn(oil)).toEqual([]);
+      for (const title of VARIANT_SECTIONS)
+        expect(sectionOf(oil, title)).toHaveAccessibleDescription(/\S/);
+      expect(sectionOf(oil, 'Safety')).toHaveAccessibleDescription(/Dilute before use\./);
+      expect(sectionOf(oil, 'Correspondences')).toHaveAccessibleDescription(/Venus/);
+      expect(within(oil).queryByRole('textbox', { name: 'Safety Notes' })).toBeNull();
+    });
+
+    it('opens a variant added here with every section open, its fields in view', () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+
+      addVariant('Oil');
+
+      const oil = variant('Oil');
+      expect(openIn(oil)).toEqual(VARIANT_SECTIONS);
+      expect(within(oil).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
+    });
+
+    it('opens and closes one section by its heading, leaving the variant’s others and the ingredient’s alone', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const oil = openVariant('Oil');
+
+      fireEvent.click(sectionOf(oil, 'Correspondences'));
+
+      expect(openIn(oil)).toEqual(['Correspondences']);
+      expect(control(oil, 'Planet')).toBeVisible();
+      // The ingredient's own Correspondences, a level up, stays closed.
+      expect(screen.getAllByRole('button', { name: 'Correspondences' })[0]).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+
+      fireEvent.click(sectionOf(oil, 'Correspondences'));
+      expect(openIn(oil)).toEqual([]);
+    });
+
+    it('opens the closed section a save finds the schema’s error in, in the variant it opens, its field focused', async () => {
+      const calls = acceptUpdate();
+      renderForm({
+        workspaceId: null,
+        values: twoForms({ drafts: { ...EMPTY_VARIANT.drafts, colors: 'Fixture Red' } }),
+      });
+      const herb = openVariant('Herb');
+      openSectionsIn(herb, 'Description');
+      type(herb, 'Description', 'Dug in autumn.');
+
+      save();
+
+      await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
+      const oil = variant('Oil');
+      expect(openIn(oil)).toEqual(['Correspondences']);
+      const colour = control(oil, 'Colour');
+      expect(colour).toBeVisible();
+      expect(colour).toHaveFocus();
+      expect(calls).toHaveLength(0);
+    });
+
+    it('opens the closed section the server refuses a variant’s field in, its field focused', async () => {
+      mockGraphQLError('UpdateCompendiumIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['variants', 0, 'safetyNotes'], message: 'Too long' }],
+      });
+      renderForm({ workspaceId: null, values: twoForms() });
+      const herb = openVariant('Herb');
+      openSectionsIn(herb, 'Description');
+      type(herb, 'Description', 'Dug in autumn.');
+
+      save();
+
+      await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
+      const oil = variant('Oil');
+      expect(openIn(oil)).toEqual(['Safety']);
+      const notes = within(oil).getByRole('textbox', { name: 'Safety Notes' });
+      expect(notes).toBeInvalid();
+      expect(notes).toHaveFocus();
+    });
+
+    it('opens Relations on a save refusing a substitute link that names no form', async () => {
+      const calls = acceptUpdate();
+      renderForm({
+        workspaceId: null,
+        values: twoForms({
+          substitutes: [
+            {
+              value: 'Plainwort',
+              link: {
+                id: PLAINWORT_ID,
+                canonicalName: null,
+                forms: [],
+                description: null,
+                isGlobal: true,
+                variants: [],
+              },
+            },
+          ],
+        }),
+      });
+      const oil = openVariant('Oil');
+      type(oil, 'Description', 'A fixture oil.');
+
+      save();
+
+      await waitFor(() => expect(openIn(oil)).toEqual(['Relations']));
+      expect(control(oil, 'Substitute Ingredient')).toBeVisible();
+      expect(calls).toHaveLength(0);
+    });
+
+    it('closes every variant’s sections with Close All, and opens every one with Open All', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const oil = openVariant('Oil');
+      fireEvent.click(sectionOf(oil, 'Correspondences'));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
+      openSections('Variants');
+      expect(openIn(variant('Oil'))).toEqual([]);
+
+      // Variants open, so the control reads Close All: closed first, then opened.
+      fireEvent.click(screen.getByRole('button', { name: 'Close All' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+      expect(openIn(variant('Oil'))).toEqual(VARIANT_SECTIONS);
+      expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
     });
   });
 
@@ -689,6 +841,7 @@ describe('IngredientForm’s variants', () => {
         };
       });
       const oil = openVariant('Oil');
+      openSectionsIn(oil, 'Relations');
 
       act(() => control(oil, 'Substitute Ingredient').focus());
       await waitFor(() => expect(asks.length).toBeGreaterThan(0));
@@ -798,7 +951,7 @@ describe('IngredientForm’s variants', () => {
     it('gives each copied field its own button, named for the field, none of them a submit', () => {
       renderForm({ workspaceId: null, values: filled() });
 
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
 
       const buttons = within(oil).getAllByRole('button', { name: /^Copy From Ingredient: / });
       expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(
@@ -812,7 +965,7 @@ describe('IngredientForm’s variants', () => {
 
     it('shuts each button while the ingredient’s field is empty, and opens it as the field gains a value', () => {
       renderForm({ workspaceId: null, values: twoForms() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
 
       for (const field of COPIED) expect(copyOf(oil, field)).toBeDisabled();
 
@@ -829,7 +982,7 @@ describe('IngredientForm’s variants', () => {
     it('adds the ingredient’s entries the variant lacks after its own, removing none, and sends them', async () => {
       const calls = acceptUpdate();
       renderForm({ workspaceId: null, values: filled() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
       expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
 
       for (const field of [
@@ -871,7 +1024,7 @@ describe('IngredientForm’s variants', () => {
 
     it('fills an empty text box with the ingredient’s text, and adds it after a blank line to a filled one', () => {
       renderForm({ workspaceId: null, values: filled() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
 
       fireEvent.click(copyOf(oil, 'Description'));
       act(() => copyOf(oil, 'Safety Notes').focus());
@@ -891,7 +1044,7 @@ describe('IngredientForm’s variants', () => {
     it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {
       const calls = acceptUpdate();
       renderForm({ workspaceId: null, values: filled() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
       expect(skippedNotice(oil)).toBeEmptyDOMElement();
 
       fireEvent.click(copyOf(oil, 'Substitute Ingredients'));
@@ -916,7 +1069,7 @@ describe('IngredientForm’s variants', () => {
     it('adds what a copy skipped as names only at Copy Anyway, the focus back on the copy', async () => {
       const calls = acceptUpdate();
       renderForm({ workspaceId: null, values: filled() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
       const copy = copyOf(oil, 'Substitute Ingredients');
       fireEvent.click(copy);
 
@@ -937,7 +1090,7 @@ describe('IngredientForm’s variants', () => {
 
     it('takes the notice away at its dismiss, and once the list changes otherwise', () => {
       renderForm({ workspaceId: null, values: filled() });
-      const oil = openVariant('Oil');
+      const oil = openWhole('Oil');
       const copy = copyOf(oil, 'Substitute Ingredients');
 
       fireEvent.click(copy);

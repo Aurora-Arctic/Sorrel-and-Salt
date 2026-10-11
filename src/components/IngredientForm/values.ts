@@ -28,6 +28,7 @@ import type {
   SubstituteListEntry,
   VariantFormValues,
   VariantListName,
+  VariantSectionKey,
 } from './types';
 
 // The form's values against the shape the schema and the mutation take, and
@@ -701,19 +702,76 @@ const SECTION_OF: Readonly<Record<string, SectionKey>> = {
   variants: 'variants',
 };
 
+/** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
+export const VARIANT_SECTION_KEYS: readonly VariantSectionKey[] = [
+  'identity',
+  'description',
+  'correspondences',
+  'relations',
+  'safety',
+  'sources',
+];
+
+/**
+ * The section each of a variant's values sits in, as the ingredient's value
+ * of the same name does; its Form is its Identity. A server issue on the
+ * variant as a whole, or on its kept id, is placed on its Form box.
+ */
+const VARIANT_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
+  form: 'identity',
+  formLink: 'identity',
+  description: 'description',
+  elements: 'correspondences',
+  planets: 'correspondences',
+  zodiacSigns: 'correspondences',
+  colors: 'correspondences',
+  categoryIds: 'relations',
+  substitutes: 'relations',
+  safetyNotes: 'safety',
+  references: 'sources',
+  referencePanelOpen: 'sources',
+};
+
+/** The sections `errors` names in `sectionOf`, by the first key of each error's path, a box's draft by its list's. */
+function sectionsIn<K extends SectionKey>(
+  errors: object,
+  sectionOf: Readonly<Record<string, K>>,
+): Set<K> {
+  const found = new Set<K>();
+  for (const [key, error] of Object.entries(errors)) {
+    const keys = key === 'drafts' && error ? Object.keys(error as object) : [key];
+    for (const named of keys) {
+      const section = sectionOf[named];
+      if (section) found.add(section);
+    }
+  }
+  return found;
+}
+
 /**
  * The sections holding an error, the schema's or the server's, by the
  * first key of each error's path (the list's, for a box's draft). The form's
  * `root` error names no field, and so no section.
  */
 export function sectionsWithErrors(errors: FieldErrors<IngredientFormValues>): Set<SectionKey> {
-  const found = new Set<SectionKey>();
-  for (const [key, error] of Object.entries(errors)) {
-    const keys = key === 'drafts' && error ? Object.keys(error) : [key];
-    for (const named of keys) {
-      const section = SECTION_OF[named];
-      if (section) found.add(section);
-    }
+  return sectionsIn(errors, SECTION_OF);
+}
+
+/** One variant's sections holding an error, read from its errors, `errors.variants[i]`. */
+export function variantSectionsWithErrors(errors: unknown): Set<VariantSectionKey> {
+  return errors && typeof errors === 'object' ? sectionsIn(errors, VARIANT_SECTION_OF) : new Set();
+}
+
+/** Each variant holding an error, by its place in the list, and the sections it holds them in. */
+export function variantsWithErrors(
+  errors: FieldErrors<IngredientFormValues>,
+): Map<number, Set<VariantSectionKey>> {
+  const found = new Map<number, Set<VariantSectionKey>>();
+  // An array's own error sits on it as `root`, beside the variants' places.
+  for (const [key, error] of Object.entries(errors.variants ?? {})) {
+    const index = Number(key);
+    const sections = variantSectionsWithErrors(error);
+    if (Number.isInteger(index) && sections.size > 0) found.set(index, sections);
   }
   return found;
 }
