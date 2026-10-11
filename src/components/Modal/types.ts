@@ -71,6 +71,8 @@ export interface DiscardGuard {
    * changed, and otherwise asks first.
    */
   request: (close: () => void) => void;
+  /** Ways out tried again while asking, each a flash of the question; 0 when none. */
+  flashes: number;
   /** Discard Changes: makes the close the question held back. */
   discard: () => void;
   /** Keep Editing: puts the question away, the form as it was. */

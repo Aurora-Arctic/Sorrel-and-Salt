@@ -273,14 +273,29 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it('does nothing more for a way out pressed while it is asking', () => {
+    // The owner's call during MB.115: a way out tried again flashes the
+    // question, so the person sees why nothing closed, and each try does.
+    it('flashes the question for a way out tried again while asking, the focus back on Keep Editing', () => {
       const onClose = renderGuarded();
       change('Name', 'Testwort');
       fireEvent.click(button('Cancel'));
+      // The question's count of tries, 0 until one.
+      const flashes = () =>
+        button('Keep Editing').closest('[data-flash]')?.getAttribute('data-flash');
+      expect(flashes()).toBe('0');
+      expect(screen.getByRole('status')).toBeEmptyDOMElement();
 
+      field('Name').focus();
       fireEvent.click(button('Close'));
-      escape();
+      const first = flashes();
+      expect(first).not.toBe('0');
+      expect(button('Keep Editing')).toHaveFocus();
+      expect(screen.getByRole('status')).not.toBeEmptyDOMElement();
 
+      field('Name').focus();
+      escape();
+      expect(flashes()).not.toBe(first);
+      expect(button('Keep Editing')).toHaveFocus();
       expect(asking()).toBeInTheDocument();
       expect(onClose).not.toHaveBeenCalled();
     });

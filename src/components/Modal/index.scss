@@ -147,3 +147,49 @@ $modal-fade: 150ms ease-out;
     color: $text-primary;
   }
 }
+
+// A way out tried again while the discard question shows flashes it, the
+// owner's call during MB.115, so the person sees why nothing closed: the
+// secondary's tint behind it, fading over four of the short motion's steps.
+// Under reduced motion nothing fades: a solid edge shows for as long, then
+// goes. A layer of its own behind the question, remade on each try so the
+// animation runs again (claude-docs/components/modal.md, "Unsaved changes").
+$discard-flash: $motion-short * 4;
+
+.form__confirm.discard-question {
+  position: relative;
+  isolation: isolate;
+}
+
+.discard-question__flash {
+  position: absolute;
+  inset: calc(-1 * #{space(2)});
+  z-index: -1;
+  border-radius: radius('control');
+  pointer-events: none;
+  animation: discard-question-flash $discard-flash ease-out both;
+
+  @include reduced-motion {
+    animation: discard-question-mark $discard-flash step-end both;
+  }
+}
+
+@keyframes discard-question-flash {
+  from {
+    background-color: color-mix(in srgb, $secondary 22%, transparent);
+  }
+
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes discard-question-mark {
+  from {
+    outline: 2px solid $secondary;
+  }
+
+  to {
+    outline: 0 solid transparent;
+  }
+}

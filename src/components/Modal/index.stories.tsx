@@ -105,8 +105,9 @@ OpenedByItsAddress.meta = { iframed: true };
 
 /**
  * A form with a change, asked on opening whether to discard it, as Cancel,
- * Close, Escape or a click outside would ask (MB.115). Keep Editing goes back
- * to the form, whose Cancel asks again; Discard Changes closes.
+ * Close, Escape or a click outside would ask (MB.115). Escape, Close or a
+ * click outside now flashes it, as each try while asking does. Keep Editing
+ * goes back to the form, whose Cancel asks again; Discard Changes closes.
  */
 function ChangedForm({ close }: { close: () => void }) {
   const [name, setName] = useState('Testwort Renamed');
