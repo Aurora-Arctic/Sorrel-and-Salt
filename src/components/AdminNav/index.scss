@@ -10,7 +10,7 @@
 }
 
 // The `.link-row` with its column gap a step tighter than the primitive's,
-// so more links share a line before it wraps (the owner's call at sign-off).
+// so more links share a line before it wraps (MB.115, the owner's call).
 .admin-nav__row {
   column-gap: space(4);
 }
