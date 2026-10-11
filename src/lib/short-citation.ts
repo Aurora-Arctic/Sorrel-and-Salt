@@ -1,13 +1,13 @@
 import { marked, merge } from './citation';
 import type { CitationKind, CitationPart, ShortCitationFields } from './types';
 
-// A source's Chicago short form (CMOS 17th ed., 14.29–14.32, 14.76): its
-// authors' surnames and a short title, "Fixture, _Testwort Herbal_", which
-// a surface listing sources shows where the whole bibliography entry would
-// not fit. Pure and client-safe beside the full renderer, `citation.ts`,
-// whose `_…_` marks it reads the same way. The rules, and where a field
-// cannot say what Chicago would, are claude-docs/db/references.md, "The
-// short form".
+// A source's Chicago short form, as the notes-bibliography style shortens
+// a note: its authors' surnames and a short title, "Fixture, _Testwort
+// Herbal_", which a surface listing sources shows where the whole
+// bibliography entry would not fit. Pure and client-safe beside the full
+// renderer, `citation.ts`, whose `_…_` marks it reads the same way. The
+// rules, and where a field cannot say what Chicago would, are
+// claude-docs/db/references.md, "The short form".
 
 /** The kinds that are part of a larger work, whose title is set in quotation marks. */
 const PART_KINDS: ReadonlySet<CitationKind> = new Set(['chapter', 'article', 'entry', 'web_page']);
@@ -70,7 +70,7 @@ const DANGLING = new Set([
   'with',
 ]);
 
-/** Chicago's limit on a short title (CMOS 14.32). */
+/** Chicago's limit on a short title, in words. */
 const SHORT_TITLE_WORDS = 4;
 
 /**

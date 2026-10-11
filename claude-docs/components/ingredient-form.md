@@ -369,15 +369,18 @@ legend as a list's is.
   picked than written. Enter with nothing highlighted does nothing but close
   the list, and never reaches the form.
 - **Each source picked is a one-line row beneath the box, not a chip inside
-  it**: the citation, cut where the line ends with an ellipsis, then its
-  locator in the muted ink if it has one, "p. 112", then two icon buttons,
-  an edit (a pencil) named "Edit" and the citation, and a remove (×) named
-  "Remove" and the citation (MB.115, the owner's call). The cut is the
-  stylesheet's: the citation's whole text is still the element's, so a
-  screen reader reads it whole, and the pointer's tooltip (`title`) shows it.
-  Chicago's short form, author and short title, would need the source's
-  fields rather than its rendered citation, which the field does not hold;
-  the citation's start, author and title, is what the line shows.
+  it**: the source's Chicago short form, "Fixture, _Testwort Herbal_", its
+  italics real `<i>` markup, then its locator in the muted ink if it has
+  one, the short form taking the comma before it, "p. 112", then two icon
+  buttons, an edit (a pencil) named "Edit" and the short form, and a remove
+  (×) named "Remove" and the short form (MB.115, the owner's call). The
+  short form is `renderShortCitation`'s
+  ([`db/references.md`](../db/references.md), "The short form"), from the
+  four fields each row's `link` carries; a row too narrow for it is cut with
+  an ellipsis by the stylesheet. The whole citation is each button's
+  description, through a hidden element holding it, and the pointer's
+  tooltip (`title`), so a screen reader still has it whole. The add and
+  removal announcements and an error naming the row use the short form.
 - **The edit opens the row**, `aria-expanded` and controlling what it opens:
   the citation whole, wrapping and broken anywhere so an address never runs
   the page sideways at 320px; its tier beneath; and a "Locator" box, focused
@@ -394,8 +397,11 @@ legend as a list's is.
   keep the order picked: the service reads them back alphabetical by
   citation (MB.153), so nothing here moves them.
 - **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
-  the citation, which is shown and never sent, `link` the source's id and
-  tier, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
+  the citation, which describes the row and is never sent, `link` the
+  source's id and tier and the four fields its short form is made of —
+  `kind`, `authors`, `title`, `container` — which `referenceSuggestions`,
+  `createReference` and the compendium entry's values (`entry-values.ts`)
+  each read beside the citation, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
   free text. The box's text is `drafts.references`, and whether the panel is
   open is `referencePanelOpen`, both the form's own.
 - **A search left in the box stops the save**, as text left in any list's
@@ -953,7 +959,8 @@ apart than any two fields (the margin outweighing layout-base's bare `section`
 rule), under an `h3` in the display face at 1.25rem, a
 step under `h4`, set `space(3)` above its first field (MB.115). The
 references are one-line rows on the card surface with a 2px muted bar, the
-citation cut with an ellipsis and its locator in the muted caption, then two
+short form, cut with an ellipsis where the row is too narrow, and its
+locator in the muted caption, then two
 24px icon buttons in the muted ink, the remove answering in the wax as a
 chip's × does; an open row wraps the citation and shows its tier and the
 locator, a 10rem box beside its label. Each variant is a card on the card
@@ -1033,7 +1040,9 @@ compendium's substitute search and its three writes: a name holding
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
-`CompendiumEntry` holds two sources, one with a locator, and two forms,
+`CompendiumEntry` holds three sources, so its rows show each short form —
+a book with a locator, an article by two authors with one, and an
+authorless web page — and two forms,
 Dried leaf carrying a safety note, a planet, two categories and a source of
 its own and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
@@ -1243,14 +1252,18 @@ renders a list's box, and reads what the field sends from what the resolver
 hands the submit: the search asking about this coven only once the box is
 used; each source by its citation and tier, none already listed and no typed
 row, then "New Reference…" last; a pick adding a row
-beneath the box, announced, the box emptied and focused; a row kept to one
+beneath the box showing its short form, announced, the box emptied and
+focused; a row's title in real italics, its buttons named by its short form
+and described by its whole citation, and, closed, its locator after the
+short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
 closes it again (MB.115); each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
 × and Backspace removing a row; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
 from the field: opened by the create row, "New Reference…", taking you to
-Kind, and again while it is open; a source it saves listed by its id,
+Kind, and again while it is open; a source it saves listed by its id and
+shown by its short form,
 the panel closed, the box focused, and sent with the ingredient; and Cancel
 closing it, adding nothing, the focus back in the box. Two tests mount the
 whole form, for what only it does with the field: each source sent by its id

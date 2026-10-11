@@ -294,6 +294,50 @@ drops each missing piece with its punctuation.
   - Cartwright, Mark. "Greek Mythology." World History Encyclopedia. July 29, 2012. Accessed October 6, 2026. https://www.worldhistory.org/Greek_Mythology/.
   - Cartwright, Mark. "Seven Lucky Gods." World History Encyclopedia. June 24, 2013; last modified September 27, 2024. Accessed October 6, 2026. https://www.worldhistory.org/Shichifukujin/.
 
+### The short form
+
+`renderShortCitation(fields, continued?)` in `src/lib/short-citation.ts`
+(MB.115), beside the renderer and as pure, gives a source's Chicago short
+form, as the notes-bibliography style shortens a note, as the same `{ text, italic }`
+parts, and `shortCitationText` as one plain string. The ingredient form's
+reference rows show it where the whole entry would not fit on a line
+([`ingredient-form.md`](../components/ingredient-form.md), "The
+references"); nothing stores it, and the server does not render it: it
+reads four fields, `kind`, `authors`, `title` and `container`
+(`ShortCitationFields`), which `Reference` already exposes, so a read
+that shows it selects them beside `citation` and the schema is unchanged.
+
+- **The authors' surnames.** `authors` is one text field written as a
+  bibliography prints it, the first name inverted and the rest not, so the
+  first comma ends the first surname and each later name's surname is its
+  last word, with a particle before it kept ("van der Testwort") and a
+  suffix ("Jr.", "III") dropped. A role after the names, ", ed.",
+  ", eds.", ", ed. and trans.", is dropped. One name stands alone, two
+  are joined by "and", three are a series, "Fixture, Testwort, and
+  Mockley", and four or more, or a field ending "et al.", are the first
+  and "et al.". A field with no comma is one name as written, an
+  organisation's or a single name, "Wellcome Collection": the field
+  cannot tell a corporate name holding a comma from an inverted person's,
+  and reads it as the person's.
+- **The short title.** The main title, less a subtitle after a colon, or
+  after a question or exclamation the title asks, whose mark stays; less an
+  initial _A_, _An_ or _The_ unless that is the whole title; cut to four
+  words, and a cut title ends on no "and", "of" or other short
+  function word and on no comma. Its `_…_` marks are read as the renderer
+  reads them, before the cut, so a mark the cut splits is never printed.
+- **Italics or quotation marks, by the kind.** A `book` is a whole work,
+  its short title italic; a `chapter`, `article`, `entry` and
+  `web_page` are each part of a larger one, theirs in quotation marks. No
+  kind is a website as a whole, so nothing else is italic.
+- **No authors: the title leads**, `_Testwort Herbal_`, `"Testwort"` —
+  except a reference-work `entry`, which Chicago cites by its work, "s.v."
+  and its headword whole, `Fixture Encyclopedia, s.v. "Testwort"`, since
+  its title alone would not say which work.
+- **Continued by a locator**, the form takes the comma before it, inside
+  the quotation marks, `Placeholder, "Notes on Mockleaf," p. 14`, and none
+  after a title ending in "?" or "!". Unlike a note, it ends in no period:
+  the row is a label.
+
 ### How the seed reads the docs (MB.156)
 
 `src/db/seed/sources.ts` seeds the sources the vocabulary seed docs record
