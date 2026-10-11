@@ -9,13 +9,8 @@ import { references } from '../../modules/ingredients/schema/references';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { findPageInTiers } from './finders';
-import {
-  foldedWordMatch,
-  inCompendium,
-  notSoftDeleted,
-  readableIngredientParent,
-  readableInTiers,
-} from './predicates';
+import { readableIngredientParent } from './ingredient-parent';
+import { foldedWordMatch, inCompendium, notSoftDeleted, readableInTiers } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type {
   CitingLink,
