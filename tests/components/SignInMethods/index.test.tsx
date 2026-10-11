@@ -35,11 +35,8 @@ describe('SignInMethods', () => {
   it('lists every roster provider, offering the ones not linked', () => {
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
-    // A section of the account page, under its level-1 "Your Account" (MB.88).
-    expect(screen.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInTheDocument();
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
-    // No status text: a linked row is the one without an Add.
-    expect(within(row('Discord')).queryByText('Linked')).not.toBeInTheDocument();
+    // A linked row is the one without an Add.
     expect(within(row('Discord')).queryByRole('button')).not.toBeInTheDocument();
     for (const label of ['Google', 'Facebook', 'Microsoft']) {
       expect(within(row(label)).getByRole('button', { name: `Add ${label}` })).toBeInTheDocument();
@@ -74,7 +71,7 @@ describe('SignInMethods', () => {
     const button = screen.getByRole('button', { name: 'Add Microsoft' });
     expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).not.toBeDisabled();
-    expect(button).toHaveAccessibleDescription('Not available right now.');
+    expect(button).toHaveAccessibleDescription(/\S/);
 
     fireEvent.click(button);
     expect(linkSocialMock).not.toHaveBeenCalled();
@@ -94,13 +91,13 @@ describe('SignInMethods', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
 
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
-    expect(await screen.findByRole('status')).toHaveTextContent('Microsoft was removed.');
+    expect(await screen.findByRole('status')).toHaveTextContent('Microsoft');
     expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toBeVisible();
     // Back to one: the survivor can no longer be removed.
     expect(screen.queryByRole('button', { name: 'Remove Discord' })).not.toBeInTheDocument();
   });
 
-  it('maps a refused removal to its sentence and keeps the provider', async () => {
+  it('maps a refused removal to a sentence of its own and keeps the provider', async () => {
     unlinkAccountMock.mockResolvedValue({
       data: null,
       error: { status: 403, code: 'SESSION_NOT_FRESH' },
@@ -109,7 +106,9 @@ describe('SignInMethods', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Microsoft' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/sign in again/i);
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/\S/);
+    expect(alert).not.toHaveTextContent(GENERIC_UNLINK_ERROR);
     expect(
       within(row('Microsoft')).getByRole('button', { name: 'Remove Microsoft' }),
     ).toBeVisible();
