@@ -77,10 +77,10 @@ const readCompendium = cache(
 );
 
 /**
- * Every curated form, for the Form box: read page by page rather than as one
- * page of the maximum, as the curated lists read their groups
- * (`allGroups`, `value-kinds.ts`), because 84 forms are seeded against
- * `MAX_PAGE_SIZE`'s 100 and an admin adds them as the compendium grows. Two
+ * Every curated form, for the Form box, read page by page: the curated lists
+ * read their few groups as one page of the maximum (`allGroups`,
+ * `value-kinds.ts`), but 84 forms are seeded against `MAX_PAGE_SIZE`'s 100
+ * and an admin adds more as the compendium grows. Two
  * live forms may share a name in different groups; the filter matches the
  * text, folded, so that name is one choice. Cached, so the request reads them
  * once.
