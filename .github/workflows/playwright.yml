@@ -114,6 +114,11 @@ jobs:
       # Read at send time by the runner and the served site alike; no secret.
       MAIL_TRANSPORT: mailpit
       MAILPIT_URL: http://mailpit:8025
+      # Four workers, so four slot servers, on the runner's four cores rather
+      # than tests/e2e/slots.ts's half-the-CPUs default, which stays for local
+      # runs: a test mostly waits on the browser, not on the cores. MB.236
+      # measured it; claude-docs/testing/e2e.md, "E2E".
+      E2E_WORKERS: 4
     steps:
       - name: Checkout into /app
         if: inputs.should-run

@@ -187,10 +187,11 @@
   filter lists `vitest.stories.config.mts` and the script, so editing either
   reruns the job.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
-  `webServer` builds and starts: one per worker slot on 8001 and up — two
-  on GitHub's 4-vCPU runner, since `E2E_WORKERS` is unset and defaults to
-  half the CPUs — and the configured-providers server on 8100 (see
-  `testing/e2e.md`). Runs in `build-e2e-image.yml`'s dedicated
+  `webServer` builds and starts: one per worker slot on 8001 and up — four
+  on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the
+  half-the-CPUs default, because a test mostly waits on the browser rather
+  than the cores (MB.236) — then the configured-providers server on 8100 and
+  the compendium-cache server on 8101 (see `testing/e2e.md`). Runs in `build-e2e-image.yml`'s dedicated
   image, **not** `build-image.yml`'s — same
   `inputs.db-image`/`services: postgres:` shape
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one

@@ -69,13 +69,22 @@ worker starts for itself, and one server picking a database per request.
 - **The worker count is `E2E_WORKERS`, not `--workers`**, because the servers
   are declared up front, one per slot. `playwright.config.ts` sets `workers`
   to `E2E_SLOTS`: `E2E_WORKERS` if it is set, otherwise half the CPUs floored
-  at one — Playwright's own default, so two on CI's four-vCPU runner.
+  at one — Playwright's own default, which serves local runs.
   Anything but a whole number from 1 to `MAX_SLOTS` (99) throws, naming the
   variable. A `--workers` above the count would put a worker on a slot with
   no server, so `tests/e2e/fixtures.ts`'s worker-scoped auto fixture `slot`
   fails every test such a worker runs, with a message naming the limit and
   saying to raise `E2E_WORKERS` instead — before anything reaches for a
   server or a database that was never started.
+- **CI runs four workers on its four-vCPU runner** (MB.236):
+  `.github/workflows/playwright.yml` sets `E2E_WORKERS: 4` rather than take
+  the default's two. A test spends most of its time waiting on the browser
+  and the server, not computing in its worker, so four workers finish sooner
+  than two even though they share four cores with the servers. On two, the 56
+  tests took 55 s, each about a second on its worker in turn. Locally, on 12
+  cores, the tests' own span fell from about 49 s to about 34 s; the gate's run
+  on the real runner is the measurement the change was kept on. The two
+  extra slots cost what any further slot does (below).
 - **Slot `n` serves on `8001 + n`, from `sorrel_e2e_<n>`.** Slot 0's entry
   builds; each further slot's runs `npm run start` over that build.
   Playwright starts `webServer` entries one after another, which is what lets
