@@ -52,7 +52,7 @@ import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 /**
  * The parsed input as columns, every optional one written — `null` where the
  * input has nothing — so an update replaces the row rather than merging into
- * it; and the slug, derived from the label, the form and the formal name
+ * it; and the slug, derived from the label and the formal name
  * (M4.3) rather than sent beside them.
  *
  * `form` and `formId` are the first form's once `resolvePicks` has run, so
@@ -72,7 +72,9 @@ export function ingredientColumns(fields: IngredientFields) {
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
-    slug: ingredientSlug(fields.name, fields.form, fields.canonicalName),
+    // No form since MB.220: a form is no part of an entry's address. The
+    // middle parameter goes with MB.223.
+    slug: ingredientSlug(fields.name, null, fields.canonicalName),
   };
 }
 

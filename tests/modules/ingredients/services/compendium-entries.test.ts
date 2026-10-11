@@ -155,7 +155,7 @@ describe('createCompendiumEntry', () => {
       updatedBy: E.id,
       deletedAt: null,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', 'herb', 'Fixtura testalis'));
+    expect(created.slug).toBe(ingredientSlug('Testwort', null, 'Fixtura testalis'));
   });
 
   it('saves several elements, planets, signs and colours, each in the order entered', async () => {
@@ -397,7 +397,7 @@ describe('deleteCompendiumEntry', () => {
 describe('a deleted entry', () => {
   /** Room for every row a test here writes, so one page is the whole answer. */
   const PAGE: PageRequest = { limit: 26, inverted: false };
-  const SLUG = 'testwort-herb-fixtura-testalis';
+  const SLUG = 'testwort-fixtura-testalis';
   const MOVED_OFF = 'testwort-before-a-relabel';
 
   /** Whether `read` answers, rather than refusing with NotFound. */
@@ -560,7 +560,7 @@ describe('a deleted entry', () => {
   // NULL`, deleting an entry would reserve its identity for good. On the
   // formal name, since two live entries may share a label anyway, so a label
   // coming back proves nothing about the index.
-  it('frees its formal name and form for a new entry under another label', async () => {
+  it('frees its formal name for a new entry under another label', async () => {
     const id = await seed();
     const again = entry({ name: 'Fixture Leaf' });
     // Why the write could only go through by the delete: while the entry is
@@ -578,7 +578,7 @@ describe('a deleted entry', () => {
       form: 'Herb',
     });
     const keys = await sql`
-      select distinct canonical_key from ingredients where id in ${sql([id, created.id])}`;
+      select distinct identity_key from ingredients where id in ${sql([id, created.id])}`;
     expect(keys).toHaveLength(1);
   });
 
@@ -666,10 +666,16 @@ describe('a collision with another compendium entry', () => {
     return (error as ValidationError).issues;
   }
 
-  it('refuses a formal name and form already in the compendium, on `canonicalName`, naming the entry', async () => {
+  // MB.220: one formal name is one entry, so an oil beside the herb is a form
+  // of it, not a second entry. Under the herb's own label, the address index
+  // breaks first, and the refusal is still the formal name's.
+  it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
     await seed();
+    // Why it could have been admitted: Oil is a curated pick, so no vocabulary
+    // rule refuses it, and until MB.220 a differing form was another identity.
+    expect(entry({ form: 'Oil' }).formId).toEqual(expect.any(String));
 
-    const issues = await issuesOf(createCompendiumEntry(admin, entry({ name: 'Fixture Leaf' })));
+    const issues = await issuesOf(createCompendiumEntry(admin, entry({ form: 'Oil' })));
 
     expect(issues).toEqual([
       {
@@ -703,7 +709,9 @@ describe('a collision with another compendium entry', () => {
     const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis', form: 'root' });
     const before = await rowOf(id);
 
-    const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ form: 'Root' })));
+    const issues = await issuesOf(
+      updateCompendiumEntry(admin, id, entry({ name: 'Testleaf', form: 'Root' })),
+    );
 
     expect(issues).toEqual([{ path: ['canonicalName'], message: expect.any(String) }]);
     expect(await rowOf(id)).toEqual(before);
@@ -719,18 +727,18 @@ describe('a collision with another compendium entry', () => {
   });
 
   it('refuses a name whose address another entry already has, on `name`', async () => {
-    await seed({ name: 'Testwort', nomenclature: 'none', form: 'root' });
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
+      ingredientSlug('Testwort', null, 'Fixtura root'),
     );
 
     expect(
       await issuesOf(
         createCompendiumEntry(
           admin,
-          entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
+          entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
         ),
       ),
     ).toEqual([{ path: ['name'], message: expect.any(String) }]);
@@ -754,7 +762,7 @@ describe('a collision with another compendium entry', () => {
 });
 
 // MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
-// label, the form and the formal name; the one it leaves redirects to the entry
+// label and the formal name, never the form (MB.220); the one it leaves redirects to the entry
 // for 180 days; and a write that would take another entry's redirected address
 // ends that redirect only once the admin confirms it. The clock is pinned, so
 // every window below is exact.
@@ -787,9 +795,8 @@ describe('the slug', () => {
   }
 
   it.each([
-    ['label', { name: 'Testwort, relabelled' }, 'testwort-relabelled-herb-fixtura-testalis'],
-    ['form', { form: 'root' }, 'testwort-root-fixtura-testalis'],
-    ['formal name', { canonicalName: 'Fixtura altera' }, 'testwort-herb-fixtura-altera'],
+    ['label', { name: 'Testwort, relabelled' }, 'testwort-relabelled-fixtura-testalis'],
+    ['formal name', { canonicalName: 'Fixtura altera' }, 'testwort-fixtura-altera'],
   ] as const)(
     'moves with the %s, retiring the old one as the admin',
     async (_part, change, moved) => {
@@ -802,7 +809,7 @@ describe('the slug', () => {
         {
           ingredient_id: id,
           workspace_id: null,
-          slug: 'testwort-herb-fixtura-testalis',
+          slug: 'testwort-fixtura-testalis',
           retired_at: NOW,
           expires_at: EXPIRES,
           created_by: E.id,
@@ -811,13 +818,37 @@ describe('the slug', () => {
     },
   );
 
-  it('stays put, retiring nothing, when none of the three changes', async () => {
+  it('stays put, retiring nothing, when neither changes, a form change included', async () => {
     const id = await seed();
+
+    const updated = await updateCompendiumEntry(
+      admin,
+      id,
+      entry({ description: 'Redescribed', form: 'Root' }),
+    );
+
+    expect(updated).toMatchObject({ slug: 'testwort-fixtura-testalis', form: 'Root' });
+    expect(await retirements()).toEqual([]);
+  });
+
+  // MB.220: no SQL rewrites a slug, so a row saved before keeps its form in
+  // the address until its own next save, which moves it and retires the old.
+  it('moves a form-bearing slug on the next save, the old one redirecting to the entry', async () => {
+    const id = await seed();
+    await sql`update ingredients set slug = 'testwort-herb-fixtura-testalis' where id = ${id}`;
+    // Why it is still there: nothing but a save moves it.
+    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toMatchObject({
+      kind: 'entry',
+      entry: { id },
+    });
 
     const updated = await updateCompendiumEntry(admin, id, entry({ description: 'Redescribed' }));
 
-    expect(updated.slug).toBe('testwort-herb-fixtura-testalis');
-    expect(await retirements()).toEqual([]);
+    expect(updated.slug).toBe('testwort-fixtura-testalis');
+    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).resolves.toEqual({
+      kind: 'moved',
+      slug: 'testwort-fixtura-testalis',
+    });
   });
 
   it('takes its own old slug back at once, without a confirmation', async () => {
@@ -826,7 +857,7 @@ describe('the slug', () => {
 
     const back = await updateCompendiumEntry(admin, id, entry());
 
-    expect(back.slug).toBe('testwort-herb-fixtura-testalis');
+    expect(back.slug).toBe('testwort-fixtura-testalis');
   });
 
   describe('an address another entry moved off, inside its window', () => {
@@ -865,21 +896,21 @@ describe('the slug', () => {
     it('lets a confirmed write take it, keeping the retirement that says where the old entry went', async () => {
       const created = await createCompendiumEntry(admin, { ...taker(), endRedirect: true });
 
-      expect(created.slug).toBe('testdirt-earth');
+      expect(created.slug).toBe('testdirt');
       expect((await retirements()).map((row) => row.ingredient_id)).toEqual([movedId]);
     });
 
     it('answers the new entry there, naming the one that moved, until the window closes', async () => {
       const created = await createCompendiumEntry(admin, { ...taker(), endRedirect: true });
 
-      await expect(resolveCompendiumSlug('testdirt-earth')).resolves.toEqual({
+      await expect(resolveCompendiumSlug('testdirt')).resolves.toEqual({
         kind: 'entry',
         entry: expect.objectContaining({ id: created.id }),
-        movedAway: expect.objectContaining({ id: movedId, slug: 'testsoil-earth' }),
+        movedAway: expect.objectContaining({ id: movedId, slug: 'testsoil' }),
       });
 
       vi.setSystemTime(EXPIRES);
-      await expect(resolveCompendiumSlug('testdirt-earth')).resolves.toMatchObject({
+      await expect(resolveCompendiumSlug('testdirt')).resolves.toMatchObject({
         kind: 'entry',
         movedAway: null,
       });
@@ -889,13 +920,13 @@ describe('the slug', () => {
       vi.setSystemTime(EXPIRES);
 
       await expect(createCompendiumEntry(admin, taker())).resolves.toMatchObject({
-        slug: 'testdirt-earth',
+        slug: 'testdirt',
       });
     });
   });
 
   it("refuses a rewrite onto another entry's current address, on `name`, naming it", async () => {
-    await seed({ name: 'Testwort', nomenclature: 'none', form: 'root' });
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
     const id = await seed({ name: 'Testleaf', nomenclature: 'none', form: 'leaf' });
 
     expect(
@@ -903,10 +934,10 @@ describe('the slug', () => {
         updateCompendiumEntry(
           admin,
           id,
-          entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
+          entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
         ),
       ),
-    ).toEqual([{ path: ['name'], message: expect.stringContaining('testwort-root') }]);
+    ).toEqual([{ path: ['name'], message: expect.stringContaining('Testwort') }]);
     expect(await retirements()).toEqual([]);
   });
 
@@ -930,7 +961,7 @@ describe('resolveCompendiumSlug', () => {
   it('answers the entry at its slug, with no session and no moved-away entry', async () => {
     const id = await seed();
 
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
+    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).resolves.toEqual({
       kind: 'entry',
       entry: expect.objectContaining({ id }),
       movedAway: null,
@@ -940,9 +971,9 @@ describe('resolveCompendiumSlug', () => {
   it("answers NotFound for a coven's slug — its existence is private — and for one that names nothing", async () => {
     const localId = await seed({ workspaceId: WORKSPACE_W_ID });
     // Why the coven's could have answered: the row is there, at that slug.
-    expect((await rowOf(localId)).slug).toBe('testwort-herb-fixtura-testalis');
+    expect((await rowOf(localId)).slug).toBe('testwort-fixtura-testalis');
 
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).rejects.toThrow(NotFound);
+    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).rejects.toThrow(NotFound);
     await expect(resolveCompendiumSlug('nothing-here')).rejects.toThrow(NotFound);
   });
 });

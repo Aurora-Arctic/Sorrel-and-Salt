@@ -75,7 +75,7 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   union, and since the table is hard-deleted a soft-deleted form's pairs stay
   behind, so the arm reads the form's liveness through a nested `EXISTS`.
 - **`form`** compares `lower(btrim(…))` on both sides, the fold
-  `canonical_key` uses.
+  `ingredient_variants_form_unique` holds.
 - **`formId`** matches an entry holding a live variant that picked the
   curated form, by the variant's `form_id` (MB.167, MB.220): a correlated
   `EXISTS` over `ingredient_variants`, read through
@@ -92,7 +92,7 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   and unindexed: only those two admin writes read it, over the compendium tier.
 
 Names order under the database's own collation (`en_US.utf8` in the image).
-M8.14's `(lower(name), canonical_key, id)` declares its parts on the same
+M8.14's `(lower(name), identity_key, id)` declares its parts on the same
 keyset mechanism (["Keyset pages"](keyset-pages.md)). Moving a cursor's sort
 is harmless, since a cursor lives only as long as the page it came from.
 

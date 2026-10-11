@@ -84,8 +84,8 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
  * `planets` and the other lists are `text[]` columns too. The slug is derived
- * from the label, the form and the formal name, as the seed derives it, never
- * stated. No audit stamps (rule 3).
+ * from the label and the formal name, as the seed derives it, never stated.
+ * No audit stamps (rule 3).
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const {
@@ -98,6 +98,6 @@ export function ingredientColumns(fixture: IngredientFixture): Record<string, un
 
   return {
     ...toColumns(row),
-    slug: ingredientSlug(fixture.name, fixture.form, fixture.canonicalName),
+    slug: ingredientSlug(fixture.name, null, fixture.canonicalName),
   };
 }

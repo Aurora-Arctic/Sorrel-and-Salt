@@ -132,7 +132,7 @@ describe('createWorkspaceIngredient', () => {
       createdBy: user.id,
       updatedBy: user.id,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', 'root', null));
+    expect(created.slug).toBe(ingredientSlug('Testwort', null, null));
   });
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
@@ -273,14 +273,16 @@ describe('a collision with another of the coven’s ingredients', () => {
     expect(await countIngredients()).toBe(1);
   });
 
-  it('refuses a formal name and form already in the coven, on `canonicalName`', async () => {
+  // MB.220: one formal name is one ingredient, so an oil beside the herb is a
+  // form of it. Under the herb's own label the label index breaks first, and
+  // the refusal is still the formal name's, naming the ingredient holding it.
+  it('refuses a formal name already in the coven whatever its form, on `canonicalName`, naming the ingredient', async () => {
     await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis', form: 'herb' }));
 
     expect(
-      await issuesOf(
-        create({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis', form: 'herb' }),
-      ),
-    ).toEqual([{ path: ['canonicalName'], message: expect.any(String) }]);
+      await issuesOf(create({ name: 'Testwort', canonicalName: 'Fixtura testalis', form: 'oil' })),
+    ).toEqual([{ path: ['canonicalName'], message: expect.stringContaining('Testwort') }]);
+    expect(await countIngredients()).toBe(1);
   });
 
   it('refuses an identity that is only a label on `name`, since the label is the identity', async () => {
@@ -292,16 +294,18 @@ describe('a collision with another of the coven’s ingredients', () => {
   });
 
   it('refuses a name whose address another ingredient already has, on `name`', async () => {
-    await seed(local({ name: 'Testwort', form: 'root' }));
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
+      ingredientSlug('Testwort', null, 'Fixtura root'),
     );
 
-    expect(await issuesOf(create({ name: 'Testwort Root', form: null }))).toEqual([
-      { path: ['name'], message: expect.any(String) },
-    ]);
+    expect(
+      await issuesOf(
+        create({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+      ),
+    ).toEqual([{ path: ['name'], message: expect.any(String) }]);
   });
 
   it('refuses a relabel onto a label already in the coven, leaving the row as it was', async () => {
@@ -400,7 +404,7 @@ describe('updateWorkspaceIngredient', () => {
 
   // No route reads a coven ingredient's slug, so it follows the name and
   // nothing redirects from the old one (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
-  it('moves the slug with the label, form and formal name, retiring nothing', async () => {
+  it('moves the slug with the label and formal name, never the form, retiring nothing', async () => {
     const id = await seed(local());
 
     const updated = await updateWorkspaceIngredient(
@@ -410,18 +414,18 @@ describe('updateWorkspaceIngredient', () => {
       inputOf(local({ name: 'Testroot', form: 'root', canonicalName: 'Fixtura radix' })),
     );
 
-    expect(updated.slug).toBe(ingredientSlug('Testroot', 'root', 'Fixtura radix'));
+    expect(updated.slug).toBe('testroot-fixtura-radix');
     const [{ n }] = await sql`select count(*)::int as n from retired_ingredient_slugs`;
     expect(n).toBe(0);
   });
 
   it("refuses a rewrite onto another of the coven's addresses, on `name`, leaving the row", async () => {
-    await seed(local({ name: 'Testwort', form: 'root' }));
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
     const id = await seed(local({ name: 'Testleaf', form: 'leaf' }));
     const before = await rowOf(id);
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', null, 'Root')).toBe(
+      ingredientSlug('Testwort', null, 'Fixtura root'),
     );
 
     await expect(
@@ -429,7 +433,9 @@ describe('updateWorkspaceIngredient', () => {
         asUser(B),
         WORKSPACE_W_ID,
         id,
-        inputOf(local({ name: 'Testwort Root', form: null })),
+        inputOf(
+          local({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+        ),
       ),
     ).rejects.toMatchObject({ issues: [{ path: ['name'] }] });
     expect(await rowOf(id)).toEqual(before);

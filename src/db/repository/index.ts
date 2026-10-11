@@ -40,6 +40,7 @@ export {
   findOneIngredient,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
+  findWorkspaceIngredientByIdentity,
 } from './ingredients';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {

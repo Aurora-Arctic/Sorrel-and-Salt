@@ -5,17 +5,14 @@ import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { IngredientOverrides, Inserted } from './types';
 
-// §5's seven unique indexes, by what each refuses; that each is partial on
-// deleted_at, and frees its slot on a soft delete, is
-// tests/db/partial-unique-indexes.test.ts's. Identity is `canonical_key`, and
-// `identity_key` beside it until MB.223 drops the first, so the compendium is
-// unique on identity and label uniqueness survives only inside a workspace —
+// §5's five declared unique indexes, by what each refuses; that each is
+// partial on deleted_at, and frees its slot on a soft delete, is
+// tests/db/partial-unique-indexes.test.ts's. Identity is `identity_key`, the
+// formal name alone, once per tier whatever the form, which is a variant's
+// (MB.215, MB.220), so the compendium is unique on identity and label
+// uniqueness survives only inside a workspace —
 // claude-docs/db/identity-model.md, "The ingredient identity model".
-const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
-const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
-// MB.216's two: the formal name alone, once per tier, whatever the form —
-// the form is a variant's (claude-docs/db/identity-model.md).
 const COMPENDIUM_IDENTITY_KEY = 'ingredients_compendium_identity_key_unique';
 const WORKSPACE_IDENTITY_KEY = 'ingredients_workspace_identity_key_unique';
 // MB.80's two: the public address unique per tier —
@@ -41,9 +38,9 @@ useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`
-    insert into ingredients ${sql(row(overrides))} returning id, canonical_key
+    insert into ingredients ${sql(row(overrides))} returning id, identity_key
   `;
-  return { id: inserted.id as string, canonicalKey: inserted.canonical_key as string };
+  return { id: inserted.id as string, identityKey: inserted.identity_key as string };
 }
 
 async function liveCount(): Promise<number> {
@@ -72,35 +69,10 @@ describe('ingredients unique indexes', () => {
       });
 
       // Precondition: the labels are identical and the identities are not.
-      expect(vine.canonicalKey).not.toBe(shrub.canonicalKey);
-      const labels = await sql`select name from ingredients order by canonical_key`;
+      expect(vine.identityKey).not.toBe(shrub.identityKey);
+      const labels = await sql`select name from ingredients order by identity_key`;
       expect(labels.map((r) => r.name)).toEqual(["Cat's Claw", "Cat's Claw"]);
       expect(await liveCount()).toBe(2);
-    });
-
-    it('refuses a second entry that shares an identity', async () => {
-      const first = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
-
-      // Proof the colliding row is otherwise insertable and really shares the identity.
-      const elsewhere = await insert({
-        workspaceId: WORKSPACE_A,
-        name: 'Uña de gato',
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
-      expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
-
-      const error = await failureOf(
-        insert({ name: 'Uña de gato', canonicalName: 'Uncaria tomentosa', form: 'bark' }),
-      );
-
-      // The constraint name pins which index refused; the labels differ.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY);
     });
 
     // Valerian root and leaf are one entry with two forms (MB.215), so a
@@ -112,14 +84,15 @@ describe('ingredients unique indexes', () => {
         form: 'root',
       });
 
-      // Why it could have been admitted: the old key, label and slug all differ.
+      // Why it could have been admitted: the label and the slug differ, and
+      // the same formal name stands in a coven.
       const leaf = await insert({
         workspaceId: WORKSPACE_A,
         name: 'Valerian leaf',
         canonicalName: 'Valeriana officinalis',
         form: 'leaf',
       });
-      expect(leaf.canonicalKey).not.toBe(root.canonicalKey);
+      expect(leaf.identityKey).toBe(root.identityKey);
 
       const error = await failureOf(
         insert({ name: 'Valerian leaf', canonicalName: 'Valeriana Officinalis', form: 'leaf' }),
@@ -135,7 +108,7 @@ describe('ingredients unique indexes', () => {
       const global = await insert();
       const local = await insert({ workspaceId: WORKSPACE_A });
 
-      expect(local.canonicalKey).toBe(global.canonicalKey);
+      expect(local.identityKey).toBe(global.identityKey);
       expect(await liveCount()).toBe(2);
     });
   });
@@ -145,28 +118,17 @@ describe('ingredients unique indexes', () => {
       const mine = await insert({ workspaceId: WORKSPACE_A });
       const yours = await insert({ workspaceId: WORKSPACE_B });
 
-      expect(yours.canonicalKey).toBe(mine.canonicalKey);
+      expect(yours.identityKey).toBe(mine.identityKey);
       expect(await liveCount()).toBe(2);
-    });
-
-    it('refuses two locals of one workspace that share an identity', async () => {
-      const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
-
-      const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort' });
-      expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
-
-      const error = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
-
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(WORKSPACE_IDENTITY);
     });
 
     it('refuses two locals of one workspace sharing a formal name under different forms', async () => {
       const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort', form: 'herb' });
 
-      // Why it could have been admitted: the other workspace holds the pair.
+      // Why it could have been admitted: the label differs, and the other
+      // workspace holds the pair.
       const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort', form: 'oil' });
-      expect(elsewhere.canonicalKey).not.toBe(first.canonicalKey);
+      expect(elsewhere.identityKey).toBe(first.identityKey);
 
       const error = await failureOf(
         insert({ workspaceId: WORKSPACE_A, name: 'Cronewort', form: 'oil' }),
@@ -189,7 +151,7 @@ describe('ingredients unique indexes', () => {
         name: 'Mugwort',
         canonicalName: 'Artemisia absinthium',
       });
-      expect(elsewhere.canonicalKey).not.toBe(first.canonicalKey);
+      expect(elsewhere.identityKey).not.toBe(first.identityKey);
 
       const error = await failureOf(
         insert({
@@ -219,12 +181,12 @@ describe('ingredients unique indexes', () => {
     });
   });
 
-  // MB.80/MB.81: the slug is the label, the form and the formal name, so it
+  // MB.80/MB.81: the slug is the label and the formal name (MB.220), so it
   // collides only where `slugify` folds two different identities together —
   // punctuation or accents in a formal name, or a label differing only in
   // punctuation. Those pairs are refused here, not by identity or the label.
   describe('the slug indexes', () => {
-    it('holds two compendium entries that share a label and a form, under distinct slugs', async () => {
+    it('holds two compendium entries that share a label, under distinct slugs', async () => {
       const first = await insert({
         name: "Cat's Claw",
         canonicalName: 'Uncaria tomentosa',
@@ -237,15 +199,15 @@ describe('ingredients unique indexes', () => {
       });
 
       // Precondition: nothing but the formal name separates them.
-      expect(first.canonicalKey).not.toBe(second.canonicalKey);
+      expect(first.identityKey).not.toBe(second.identityKey);
       const rows = await sql`select name, form, slug from ingredients order by slug`;
       expect(rows.map((r) => [r.name, r.form])).toEqual([
         ["Cat's Claw", 'bark'],
         ["Cat's Claw", 'bark'],
       ]);
       expect(rows.map((r) => r.slug)).toEqual([
-        'cats-claw-bark-uncaria-guianensis',
-        'cats-claw-bark-uncaria-tomentosa',
+        'cats-claw-uncaria-guianensis',
+        'cats-claw-uncaria-tomentosa',
       ]);
       expect(await liveCount()).toBe(2);
     });
@@ -253,14 +215,14 @@ describe('ingredients unique indexes', () => {
     it('refuses two compendium entries whose formal names the slug rule folds together', async () => {
       const first = await insert({ canonicalName: 'Fixtura testalis' });
 
-      // Why identity could not refuse it: `canonical_key` keeps the hyphen that
+      // Why identity could not refuse it: `identity_key` keeps the hyphen that
       // `slugify` turns into the same separator a space becomes, so the keys differ.
       const elsewhere = await insert({
         workspaceId: WORKSPACE_A,
         canonicalName: 'Fixtura-testalis',
       });
-      expect(first.canonicalKey).toBe('fixtura testalis :: herb');
-      expect(elsewhere.canonicalKey).toBe('fixtura-testalis :: herb');
+      expect(first.identityKey).toBe('fixtura testalis');
+      expect(elsewhere.identityKey).toBe('fixtura-testalis');
 
       const error = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
 
@@ -285,8 +247,8 @@ describe('ingredients unique indexes', () => {
         nomenclature: 'none',
         form: 'bark',
       });
-      expect(first.canonicalKey).toBe("cat's claw :: bark");
-      expect(elsewhere.canonicalKey).toBe('cats claw :: bark');
+      expect(first.identityKey).toBe("cat's claw");
+      expect(elsewhere.identityKey).toBe('cats claw');
       const [{ same_label }] = await sql`
         select lower('Cats Claw') = lower(${"Cat's Claw"}) as same_label
       `;

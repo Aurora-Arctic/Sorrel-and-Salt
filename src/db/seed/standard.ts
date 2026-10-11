@@ -1,4 +1,5 @@
-import { and, inArray, isNotNull, isNull, max } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, max, ne } from 'drizzle-orm';
+import { applyAudit } from '../audit';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -7,6 +8,7 @@ import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-d
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
+import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import { ingredientSlug, slugify } from '../../lib/slugify';
@@ -108,7 +110,7 @@ const MEMBERSHIPS: SeedMembership[] = [
 
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five
- * "Cat's Claw" rows told apart only by `canonicalKey`, two mineral varieties,
+ * "Cat's Claw" rows told apart only by their formal names, two mineral varieties,
  * three `none` and one `unknown`, two entries worked with more than one
  * element, and comfrey beside foxglove, one carrying a safety note that
  * matters. Every form, planet, zodiac sign and deity names a curated row in
@@ -425,6 +427,7 @@ export async function seedStandardContent(
   await insertMissingMemberships(tx);
 
   const ingredientIds = await insertMissingIngredients(tx);
+  await reslugIngredients(tx, [...ingredientIds.values()]);
   await insertMissingVariants(tx, [...ingredientIds.values()]);
   await insertMissingFolkNames(tx, ingredientIds);
   await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
@@ -508,12 +511,13 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Keys on the three columns `canonical_key` reads rather than recomputing the
- * expression in TypeScript. The form alone is folded as the key folds it: a
- * database seeded before MB.162 spelt the compendium's forms lower-case, and
- * keyed on the spelling a reseed would insert each entry beside itself and fail
- * on the canonical-key index. It says nothing about the tier, so a caller
- * builds its map from one tier's rows.
+ * Keys on the label, the formal name and the form, the parts of the identity
+ * key the seed was written against, rather than recomputing an expression in
+ * TypeScript; MB.222 drops the form from it once the row stops carrying one.
+ * The form alone is folded: a database seeded before MB.162 spelt the
+ * compendium's forms lower-case, and keyed on the spelling a reseed would
+ * insert each entry beside itself and fail on the identity index. It says
+ * nothing about the tier, so a caller builds its map from one tier's rows.
  */
 export function identityOf(entry: {
   name: string;
@@ -550,10 +554,74 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
       toRow: ({ folkNames: _folkNames, categories: _categories, deities: _deities, ...entry }) => ({
         ...entry,
         formId: entry.form ? pickOf(formIds, entry.form, 'form') : null,
-        slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+        slug: ingredientSlug(entry.name, null, entry.canonicalName),
       }),
     },
   );
+}
+
+/**
+ * The backfill a slug without its form needs (MB.220), run on every seed over
+ * the seed's own entries, `ingredientIds`: each live entry's slug re-derived
+ * from its label and formal name and written where it differs, so a reseed
+ * with nothing to change writes nothing. A compendium entry's old slug is
+ * retired, to redirect for 180 days as an admin's save retires one (MB.82); a
+ * coven's retires nothing, since no route reads it. A rewrite in SQL would be
+ * a second slug rule (0025's precedent), so the seed is the backfill for its
+ * own rows, and every other row moves at its next save. A slug another live
+ * row of the tier already holds is left as it is, so a reseed never fails on
+ * a row an admin wrote.
+ */
+export async function reslugIngredients(
+  tx: SeedTransaction,
+  ingredientIds: readonly string[],
+): Promise<void> {
+  if (ingredientIds.length === 0) return;
+  const rows = await tx
+    .select({
+      id: ingredients.id,
+      workspaceId: ingredients.workspaceId,
+      name: ingredients.name,
+      canonicalName: ingredients.canonicalName,
+      slug: ingredients.slug,
+    })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, ingredientIds), isNull(ingredients.deletedAt)));
+
+  for (const { id, workspaceId, name, canonicalName, slug } of rows) {
+    const derived = ingredientSlug(name, null, canonicalName);
+    if (derived === slug) continue;
+    const [holder] = await tx
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(
+        and(
+          workspaceId === null
+            ? isNull(ingredients.workspaceId)
+            : eq(ingredients.workspaceId, workspaceId),
+          eq(ingredients.slug, derived),
+          ne(ingredients.id, id),
+          isNull(ingredients.deletedAt),
+        ),
+      );
+    if (holder) continue;
+
+    await tx
+      .update(ingredients)
+      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION) as never)
+      .where(eq(ingredients.id, id));
+    if (workspaceId === null) {
+      await tx
+        .insert(retiredIngredientSlugs)
+        .values(
+          applyAudit(
+            'insert',
+            { ingredientId: id, workspaceId: null, slug },
+            BOOTSTRAP_SESSION,
+          ) as never,
+        );
+    }
+  }
 }
 
 /**

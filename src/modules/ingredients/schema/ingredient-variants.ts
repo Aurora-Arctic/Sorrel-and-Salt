@@ -37,7 +37,7 @@ export const ingredientVariants = pgTable(
     // NOT NULL alone accepts '': a blank form would key nothing.
     check('ingredient_variants_form_not_blank', sql`btrim(form) <> ''`),
     // A variant's identity: one live row per ingredient and folded form, the
-    // fold `canonical_key` gave the form when it was part of the ingredient's.
+    // fold the form took when it was part of the ingredient's identity.
     liveUnique(
       'ingredient_variants_form_unique',
       table,

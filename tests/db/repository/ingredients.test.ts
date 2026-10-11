@@ -10,6 +10,7 @@ import {
   findOneIngredient,
   findReferencesOf,
   findSubstitutesIncludingSoftDeleted,
+  findWorkspaceIngredientByIdentity,
   type CompendiumScore,
   type IngredientFilter,
   type IngredientRow,
@@ -896,6 +897,8 @@ describe('a variant read under its ingredient', () => {
 // What a colliding compendium write is refused with names this row, so the
 // finder must read the key `ingredients_compendium_identity_unique` holds,
 // folded as the generated column folds it.
+// The entry a colliding write names (MB.220): keyed on the formal name alone,
+// or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {
   let entryId: string;
 
@@ -907,13 +910,9 @@ describe('findCompendiumEntryByIdentity', () => {
     });
   });
 
-  it('finds the entry holding a formal name and form, folded as canonical_key folds them', async () => {
+  it('finds the entry holding a formal name, folded as identity_key folds it, whatever the label', async () => {
     await expect(
-      findCompendiumEntryByIdentity({
-        name: 'Another label',
-        canonicalName: 'FIXTURA Testalis',
-        form: '  Root Bark ',
-      }),
+      findCompendiumEntryByIdentity({ name: 'Another label', canonicalName: 'FIXTURA Testalis' }),
     ).resolves.toMatchObject({ id: entryId, name: 'Testwort' });
   });
 
@@ -921,22 +920,12 @@ describe('findCompendiumEntryByIdentity', () => {
   // keys the same as another entry's formal name.
   it('finds it by a label standing in for the formal name', async () => {
     await expect(
-      findCompendiumEntryByIdentity({
-        name: 'Fixtura testalis',
-        canonicalName: null,
-        form: 'root bark',
-      }),
+      findCompendiumEntryByIdentity({ name: 'Fixtura testalis', canonicalName: null }),
     ).resolves.toMatchObject({ id: entryId });
   });
 
-  it('tells a form apart from no form', async () => {
-    await expect(
-      findCompendiumEntryByIdentity({ name: 'Testwort', canonicalName: 'Fixtura testalis' }),
-    ).resolves.toBeUndefined();
-  });
-
   it('reads the compendium alone, and only its live rows', async () => {
-    const identity = { name: 'Testleaf', canonicalName: null, form: null };
+    const identity = { name: 'Testleaf', canonicalName: null };
     // Why nothing could still be found: both rows hold the key, one in a coven
     // and one deleted, and a live compendium row holding it is found.
     const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, form: null });
@@ -948,8 +937,33 @@ describe('findCompendiumEntryByIdentity', () => {
       update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${deletedId}`;
 
     await expect(findCompendiumEntryByIdentity(identity)).resolves.toBeUndefined();
-    const [local] = await sql`select canonical_key from ingredients where id = ${localId}`;
-    expect(local.canonical_key).toBe('testleaf');
+    const [local] = await sql`select identity_key from ingredients where id = ${localId}`;
+    expect(local.identity_key).toBe('testleaf');
+  });
+});
+
+// The coven's twin of the above, under the proof (MB.220).
+describe('findWorkspaceIngredientByIdentity', () => {
+  it("finds the proof's coven's live ingredient holding the formal name, and never another tier's", async () => {
+    const identity = { name: 'Another label', canonicalName: 'Fixtura testalis' };
+    const mine = await add('Testwort', {
+      canonicalName: 'Fixtura testalis',
+      workspaceId: WORKSPACE_W_ID,
+    });
+    // Why another row could have answered: the compendium and X each hold the formal name.
+    await add('Testwort', { canonicalName: 'Fixtura testalis' });
+    await add('Testwort', { canonicalName: 'Fixtura testalis', workspaceId: WORKSPACE_X_ID });
+    const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    const inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
+
+    await expect(findWorkspaceIngredientByIdentity(inW, identity)).resolves.toMatchObject({
+      id: mine,
+    });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${mine}`;
+    await expect(findWorkspaceIngredientByIdentity(inW, identity)).resolves.toBeUndefined();
+    await expect(findWorkspaceIngredientByIdentity(inX, identity)).resolves.toMatchObject({
+      workspaceId: WORKSPACE_X_ID,
+    });
   });
 });
 

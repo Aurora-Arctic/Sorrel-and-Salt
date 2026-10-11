@@ -427,7 +427,7 @@ type QueryCompendiumConnectionEdge {
   name, a live folk name, or a live variant's form or description (MB.218),
   case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
-  adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
+  adds a mode); the form trimmed and lower-cased on both sides. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
   that task's argument to add, and matches an entry whose `elements` holds
@@ -463,7 +463,7 @@ type QueryCompendiumConnectionEdge {
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
-  and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
+  and never exposes `identityKey` or `workspaceId`. `folkNames`,
   `categories`, `substitutes`, `deities` and `references` go through the five
   ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient` and

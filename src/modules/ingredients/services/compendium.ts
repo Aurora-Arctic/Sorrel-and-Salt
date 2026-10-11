@@ -122,8 +122,8 @@ export async function getIngredient(
  * Creates a compendium entry, with its folk names, substitutes, deities,
  * references, categories and forms, in one transaction. Its forms and deities are picked from their
  * curated vocabularies and its planets and signs, and its forms', named from theirs, each
- * written in its curated row's spelling. The slug is set here from the label,
- * the form and the formal name, and the compendium's lapsed retirements are
+ * written in its curated row's spelling. The slug is set here from the label
+ * and the formal name, and the compendium's lapsed retirements are
  * cleared in the same write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
@@ -158,7 +158,7 @@ export async function createCompendiumEntry(
     const [row] = await write.insertInCompendium(admin, ingredients, columns);
     await writeChildren(write, [], row.id, { ...lists, ...curated.children }, 'add');
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, undefined));
   expireCompendium();
   return written;
 }
@@ -168,7 +168,7 @@ export async function createCompendiumEntry(
  * submits it, so a field left out is cleared — and its folk names,
  * substitutes, deities, references, categories and forms with the input's, in
  * one transaction, a form kept by its id or else its text folded (MB.219).
- * The slug follows the label, the form and the formal name; when it moves, the
+ * The slug follows the label and the formal name; when it moves, the
  * old one is retired as this admin's, and redirects to the entry for 180 days.
  * The curated fields are held as `createCompendiumEntry` holds them.
  *
@@ -229,7 +229,7 @@ export async function updateCompendiumEntry(
       'replace',
     );
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
   return written;
 }
@@ -380,41 +380,54 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
 /**
  * A write that broke one of the compendium's unique indexes, as a
  * `ValidationError` on the field that caused it; any other error unchanged.
- * An identity collision names the entry holding the identity, read after the
- * write rolled back: a label with no formal name keys as another entry's
- * formal name (DESIGN.md §5), so the input alone would not say which entry
- * that is. That collision is reported on `name`, the field the admin filled
- * in. A slug collision names the entry holding the address, as the slug the
- * two fold to is not always one the admin can see in either input.
+ * An identity collision — a second entry under a formal name the compendium
+ * holds, an oil beside the herb (MB.215) — is reported on `canonicalName`, or
+ * on `name` for an entry with none, naming the entry holding it, read after
+ * the write rolled back, and pointing at adding the form to that entry: a
+ * label with no formal name keys as another entry's formal name (DESIGN.md
+ * §5), so the input alone would not say which entry that is. A slug
+ * collision names the entry holding the address, as the slug the two fold to
+ * is not always one the admin can see in either input — unless another entry
+ * holds the identity too, which is the collision to report: Postgres names
+ * the first index it finds broken, and the address index is older than the
+ * identity one, so the oil written under the herb's label meets the address
+ * first. `id` is the entry an update writes, never its own collision.
  */
 async function refuseCollision(
   error: unknown,
   fields: IngredientFields,
   slug: string,
+  id: string | undefined,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
   };
+  const identity = (holder: IngredientRow | undefined) =>
+    refuse(
+      fields.canonicalName == null ? 'name' : 'canonicalName',
+      holder
+        ? `Already in the compendium as ${describeEntry(holder)} — add this form to it instead`
+        : 'Already in the compendium',
+    );
 
   switch (violatedUniqueIndex(error)) {
-    case 'ingredients_compendium_identity_unique': {
-      const holder = await findCompendiumEntryByIdentity(fields);
-      refuse(
-        fields.canonicalName == null ? 'name' : 'canonicalName',
-        holder
-          ? `Already in the compendium as ${describeEntry(holder)}`
-          : 'Already in the compendium',
-      );
+    // The three-part key's index stays in the database until MB.223 drops it,
+    // and refuses nothing the formal name's does not, but Postgres may name
+    // either when both are broken.
+    case 'ingredients_compendium_identity_unique':
+    case 'ingredients_compendium_identity_key_unique':
+      identity(await findCompendiumEntryByIdentity(fields));
       break;
-    }
     case 'ingredients_compendium_slug_unique': {
+      const twin = await findCompendiumEntryByIdentity(fields);
+      if (twin && twin.id !== id) identity(twin);
       const holder = await findCompendiumEntryBySlug(slug);
       refuse(
         'name',
         addressTaken(
           holder ? describeEntry(holder) : 'Another compendium entry',
           slug,
-          'change the name, form or formal name',
+          'change the name or formal name',
         ),
       );
     }

@@ -48,7 +48,23 @@ const PENDING_DROPS: readonly {
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table';
   name: string;
   droppedBy: string;
-}[] = [];
+}[] = [
+  // The three-part identity key and its two indexes, undeclared since MB.220:
+  // identity is the formal name alone, on `identity_key`.
+  { table: 'ingredients', kind: 'column', name: 'canonical_key', droppedBy: 'MB.223' },
+  {
+    table: 'ingredients',
+    kind: 'index',
+    name: 'ingredients_compendium_identity_unique',
+    droppedBy: 'MB.223',
+  },
+  {
+    table: 'ingredients',
+    kind: 'index',
+    name: 'ingredients_workspace_identity_unique',
+    droppedBy: 'MB.223',
+  },
+];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(

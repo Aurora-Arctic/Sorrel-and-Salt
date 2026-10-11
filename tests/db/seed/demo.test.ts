@@ -54,4 +54,40 @@ describe('seed(db, { scenario: "demo" })', () => {
     const [{ after }] = await sql`select count(*)::int as after from ingredient_variants`;
     expect(after).toBe(before);
   });
+
+  // MB.220: a slug carries no form, and no SQL rewrites one, so the seed is
+  // the backfill for its own entries, as it was when slugs arrived (0025).
+  it("moves a seeded entry's older slug on the next run, retiring a compendium one and no coven's", async () => {
+    const pick = (tier: string) => sql`
+      select id, slug from ingredients
+      where ${sql.unsafe(tier)} and form is not null and deleted_at is null
+      order by name limit 1`;
+    const [compendium] = await pick('workspace_id is null');
+    const [coven] = await pick('workspace_id is not null');
+    // As a database seeded before MB.220 holds them: the form in the address.
+    await sql`
+      update ingredients set slug = slug || '-' || lower(form)
+      where id in ${sql([compendium.id, coven.id])}`;
+    await sql`delete from retired_ingredient_slugs`;
+
+    await seed(drizzle(sql), { scenario: 'demo' });
+
+    const moved = await sql`
+      select id, slug from ingredients where id in ${sql([compendium.id, coven.id])}`;
+    expect(new Map(moved.map((row) => [row.id, row.slug]))).toEqual(
+      new Map([
+        [compendium.id, compendium.slug],
+        [coven.id, coven.slug],
+      ]),
+    );
+    const retired =
+      await sql`select ingredient_id, workspace_id, slug from retired_ingredient_slugs`;
+    expect(retired).toEqual([
+      {
+        ingredient_id: compendium.id,
+        workspace_id: null,
+        slug: expect.stringMatching(new RegExp(`^${compendium.slug}-`)),
+      },
+    ]);
+  });
 });

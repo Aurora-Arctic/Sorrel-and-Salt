@@ -5,7 +5,7 @@ import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-d
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import { canonicalKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
@@ -19,6 +19,7 @@ import {
   notSoftDeleted,
   ownedByIngredient,
   readableInTiers,
+  scopedTo,
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -277,22 +278,38 @@ export function findOneIngredient(
 /**
  * The live compendium entry keyed as `identity` would be — the row a
  * compendium write carrying it collides with — or `undefined`. The key is the
+ * formal name, or the label without one (MB.215), compared through the
  * generated column's own expression over the values, so both sides fold alike.
  */
 export function findCompendiumEntryByIdentity(
   identity: IngredientIdentity,
 ): Promise<IngredientRow | undefined> {
-  // A parameter's type is otherwise left to `coalesce` and `btrim` to infer.
-  const text = (value: string | null | undefined) => sql`${value ?? null}::text`;
-  const key = canonicalKeyOf(
-    text(identity.name),
-    text(identity.canonicalName),
-    text(identity.form),
-  );
   return selectOne(
     ingredients,
-    and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.canonicalKey, key)),
+    and(inCompendium(ingredients), notSoftDeleted(ingredients), identityIs(identity)),
   );
+}
+
+/**
+ * The live ingredient of the proof's coven keyed as `identity` would be —
+ * the row a coven write carrying it collides with — or `undefined`, as
+ * `findCompendiumEntryByIdentity` reads the compendium's.
+ */
+export function findWorkspaceIngredientByIdentity(
+  membership: Membership,
+  identity: IngredientIdentity,
+): Promise<IngredientRow | undefined> {
+  return selectOne(
+    ingredients,
+    and(scopedTo(membership, ingredients), notSoftDeleted(ingredients), identityIs(identity)),
+  );
+}
+
+/** The row's `identity_key` is the one `identity` would key as. */
+function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
+  // A parameter's type is otherwise left to `coalesce` to infer.
+  const text = (value: string | null | undefined) => sql`${value ?? null}::text`;
+  return eq(ingredients.identityKey, identityKeyOf(text(name), text(canonicalName)));
 }
 
 /**
@@ -443,7 +460,7 @@ function listArm(list: AnyPgColumn, value: string | undefined): SQL | undefined 
   return inArray(fold(value), listFolds(list));
 }
 
-/** The form compared under the fold `canonical_key` uses, on both sides. Blank means no filter. */
+/** The form trimmed and lower-cased, on both sides. Blank means no filter. */
 function formArm(form: string | undefined): SQL | undefined {
   if (!form?.trim()) return undefined;
   return eq(fold(ingredients.form), fold(form));

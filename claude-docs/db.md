@@ -63,7 +63,7 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is the formal name alone in the generated `identity_key` (MB.220; the form and `canonical_key` until then), unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 

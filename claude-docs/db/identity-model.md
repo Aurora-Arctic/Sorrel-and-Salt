@@ -105,7 +105,8 @@ dirt, moon water, black salt). A CHECK ties the kind to the name —
 enforced in both directions, so `none` never carries a formal name and a
 named kind never lacks one, while `unknown` takes either.
 
-**`canonical_key`**, the generated identity column, is DESIGN.md §5's
+**`canonical_key`**, the generated identity column until MB.220 (undeclared
+since, and dropped by MB.223; below), is DESIGN.md §5's
 `GENERATED ALWAYS AS (…) STORED` expression as written there: the lower-cased
 formal name, or the label where there is none, then `::` and the trimmed,
 lower-cased `form` when one is set.
@@ -150,7 +151,9 @@ of the file needs no database at all and reads `getTableConfig`, the same as
 `workspaces-schema.test.ts`.
 
 **Three partial unique indexes, not two, and indexes rather than
-constraints** — M4.1a, built from DESIGN.md §5's SQL:
+constraints** — M4.1a, built from DESIGN.md §5's SQL; since MB.220 the two
+identity ones stand on `identity_key` (MB.216's pair, below) and the
+`canonical_key` pair is undeclared until MB.223 drops it:
 `ingredients_compendium_identity_unique` on `canonical_key` in the compendium
 tier, and `ingredients_workspace_identity_unique` on `(workspace_id,
 canonical_key)` and `ingredients_workspace_label_unique` on `(workspace_id,
@@ -346,7 +349,7 @@ writes the table yet but migration `0062`, the seeds and the test fixtures; it
 is an ingredient's child, so the unscoped finders refuse it at compile time.
 
 `ingredients.identity_key` is `GENERATED ALWAYS AS (lower(coalesce(canonical_name,
-name))) STORED`, built by `identityKeyOf` beside `canonicalKeyOf`: the formal
+name))) STORED`, built by `identityKeyOf` (beside `canonicalKeyOf` until MB.220): the formal
 name, or the label where there is none, and never the form.
 `ingredients_compendium_identity_key_unique` and
 `ingredients_workspace_identity_key_unique` hold it once per tier, the same
@@ -354,7 +357,28 @@ shape as the `canonical_key` pair, which stays until MB.223 drops it. So since
 `0062` _Valeriana officinalis_ root and leaf are no longer two entries in one
 tier: they are one entry with two variants, and a write of the second as an
 entry of its own is refused by the identity-key index, which the compendium
-and coven services do not map until MB.220.
+and coven services map since MB.220 (below).
+
+**MB.220: identity is the formal name alone, as built.** `identity_key` is
+the key every reader and writer uses. `findCompendiumEntryByIdentity({ name,
+canonicalName })` and its coven twin, `findWorkspaceIngredientByIdentity`
+under the proof, compare it through `identityKeyOf`, and `IngredientIdentity`
+carries no form. Both services' `refuseCollision` map the identity-key
+indexes to `canonicalName`, or to `name` for an entry with no formal name,
+naming the entry already holding it through `describeEntry` and pointing at
+adding the form to it. Postgres names the first index it finds broken, and
+the address index and a coven's label index are older than the identity one,
+so an oil written under the herb's own label meets one of them first: each
+of those branches looks for an identity holder before its own message, so
+the refusal is the formal name's whichever index spoke.
+
+`canonical_key`, `canonicalKeyOf` and the two indexes over the column are
+no longer declared in `ingredients.ts`, and `db:generate` was not run: it
+would emit the drop that is MB.223's. The database keeps the three until
+then, listed in `tests/db/schema-drift.test.ts`'s `PENDING_DROPS` with
+`droppedBy: 'MB.223'`; they refuse nothing `identity_key`'s indexes do not,
+and the services map their names too, since Postgres may report either.
+Nobody runs `db:generate` between MB.220 and MB.223.
 
 `0062_ingredient-variants-fill.sql` fills one variant per row with a form,
 soft-deleted rows included: the trimmed form and its pick, stamped as the

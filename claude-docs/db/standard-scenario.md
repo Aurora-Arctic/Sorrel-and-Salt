@@ -51,7 +51,7 @@ the 26 entries carry §5's own hard cases:
 
 - **Five rows labelled "Cat's Claw"** — _Uncaria tomentosa_, _U. guianensis_,
   _Senegalia greggii_, _Dolichandra unguis-cati_ and a claw from _Felis catus_
-  — told apart only by the generated `canonicalKey`. Under uniqueness on
+  — told apart only by the generated `identityKey`, their formal names. Under uniqueness on
   `lower(name)` the compendium could have held one of them.
 - **Two mineral varieties**, `Quartz var. amethyst` and `Gypsum var. selenite`,
   plus `Lapis lazuli` as a rock rather than a species.

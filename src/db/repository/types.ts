@@ -501,7 +501,7 @@ export interface IngredientFilter {
   query?: string;
   /** Every one of these, not any: an entry must carry each id listed. */
   categoryIds?: readonly string[];
-  /** The form, folded as `canonical_key` folds it. */
+  /** The form, trimmed and lower-cased on both sides. */
   form?: string;
   /**
    * The curated form one of an entry's live variants picked, by its `form_id`
@@ -534,11 +534,14 @@ export interface CompendiumScore {
   score: number | null;
 }
 
-/** An ingredient's identity as a write gives it: the three parts its `canonical_key` is built from. */
+/**
+ * An ingredient's identity as a write gives it: the two parts its
+ * `identity_key` is built from, the formal name and the label it falls back
+ * to. Never the form, which is a variant's since MB.215.
+ */
 export interface IngredientIdentity {
   name: string;
   canonicalName?: string | null;
-  form?: string | null;
 }
 
 /** A vocabulary an admin list pages: every one, filed under a group or under none. */

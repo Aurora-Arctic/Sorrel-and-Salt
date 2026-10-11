@@ -15,7 +15,7 @@ import type { HeldWording } from '../types';
 // form's (M5.6a), a deity's, a planet's or a sign's — and a slug a
 // compendium write would take from another entry's running redirect (MB.82);
 // a form's rename moves no slug since MB.220. The index exports
-// `describeEntry` and `redirectRefusal` for the compendium's service, and no
+// `describeEntry` and `redirectRefusal` for the ingredient services, and no
 // other part of it.
 
 /** How many entries a refused delete names before it counts the rest. */
