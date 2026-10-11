@@ -8,6 +8,14 @@ import type { SeedCompendiumShard } from '../types';
 export const PLANTS_A_CN: SeedCompendiumShard = {
   name: 'plants-a-cn',
   sources: {
+    'grieve-acacia-false': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Acacia (false)',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/a/acaci005.html',
+      accessed: '2026-10-11',
+    },
     'grieve-adders-tongue-american': {
       kind: 'web_page',
       authors: 'Grieve, M.',
@@ -216,12 +224,36 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/b/bistor45.html',
       accessed: '2026-10-11',
     },
+    'grieve-blackberry': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Blackberry',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/b/blaber49.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-cohosh-black': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Cohosh, Black',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/c/cohbla83.html',
+      accessed: '2026-10-11',
+    },
     'grieve-ginseng': {
       kind: 'web_page',
       authors: 'Grieve, M.',
       title: 'Ginseng',
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/g/ginsen15.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-hellebore-black': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Hellebore, Black',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/h/helbla14.html',
       accessed: '2026-10-11',
     },
     'grieve-laurel-bay': {
@@ -240,12 +272,36 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/l/lucern48.html',
       accessed: '2026-10-11',
     },
+    'grieve-mustards': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Mustards',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/m/mustar65.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-nightshade-black': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Nightshade, Black',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/n/nighbl04.html',
+      accessed: '2026-10-11',
+    },
     'grieve-nightshade-deadly': {
       kind: 'web_page',
       authors: 'Grieve, M.',
       title: 'Nightshade, Deadly',
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/n/nighde05.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-nightshade-woody': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Nightshade, Woody',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/n/nighwo06.html',
       accessed: '2026-10-11',
     },
     'grieve-orange-bitter': {
@@ -264,6 +320,14 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/o/oraswe12.html',
       accessed: '2026-10-11',
     },
+    'grieve-pepper': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Pepper',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/p/pepper24.html',
+      accessed: '2026-10-11',
+    },
     'grieve-poplar-trembling': {
       kind: 'web_page',
       authors: 'Grieve, M.',
@@ -272,12 +336,35 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://www.botanical.com/botanical/mgmh/p/poplar61.html',
       accessed: '2026-10-11',
     },
+    'grieve-sanicle-wood': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Sanicle, Wood',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/s/sanwoo14.html',
+      accessed: '2026-10-11',
+    },
+    'grieve-thistles': {
+      kind: 'web_page',
+      authors: 'Grieve, M.',
+      title: 'Thistles',
+      container: 'A Modern Herbal',
+      url: 'https://www.botanical.com/botanical/mgmh/t/thistl11.html',
+      accessed: '2026-10-11',
+    },
     'grieve-unicorn-root-true': {
       kind: 'web_page',
       authors: 'Grieve, M.',
       title: 'Unicorn Root, True',
       container: 'A Modern Herbal',
       url: 'https://www.botanical.com/botanical/mgmh/u/unitru02.html',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-actaea-racemosa': {
+      kind: 'entry',
+      title: 'Actaea racemosa',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Actaea_racemosa&oldid=1354921655',
       accessed: '2026-10-11',
     },
     'wikipedia-agrimonia-eupatoria': {
@@ -469,6 +556,20 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Bitter_orange&oldid=1368703094',
       accessed: '2026-10-11',
     },
+    'wikipedia-black-pepper': {
+      kind: 'entry',
+      title: 'Black pepper',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Black_pepper&oldid=1377161631',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-blackberry': {
+      kind: 'entry',
+      title: 'Blackberry',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Blackberry&oldid=1379287506',
+      accessed: '2026-10-11',
+    },
     'wikipedia-callistephus': {
       kind: 'entry',
       title: 'Callistephus',
@@ -488,6 +589,13 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Celastrus scandens',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Celastrus_scandens&oldid=1359249101',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-centaurea-benedicta': {
+      kind: 'entry',
+      title: 'Centaurea benedicta',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Centaurea_benedicta&oldid=1373844987',
       accessed: '2026-10-11',
     },
     'wikipedia-convolvulus-arvensis': {
@@ -532,6 +640,20 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Geum_urbanum&oldid=1367046657',
       accessed: '2026-10-11',
     },
+    'wikipedia-helleborus-niger': {
+      kind: 'entry',
+      title: 'Helleborus niger',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Helleborus_niger&oldid=1342304803',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-juglans-nigra': {
+      kind: 'entry',
+      title: 'Juglans nigra',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Juglans_nigra&oldid=1375771938',
+      accessed: '2026-10-11',
+    },
     'wikipedia-laurus-nobilis': {
       kind: 'entry',
       title: 'Laurus nobilis',
@@ -572,6 +694,48 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       title: 'Prunus armeniaca',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Prunus_armeniaca&oldid=1346731742',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-prunus-spinosa': {
+      kind: 'entry',
+      title: 'Prunus spinosa',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Prunus_spinosa&oldid=1377031439',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-rhamphospermum-nigrum': {
+      kind: 'entry',
+      title: 'Rhamphospermum nigrum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Rhamphospermum_nigrum&oldid=1364255450',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-robinia-pseudoacacia': {
+      kind: 'entry',
+      title: 'Robinia pseudoacacia',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Robinia_pseudoacacia&oldid=1377028869',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-sanicula-marilandica': {
+      kind: 'entry',
+      title: 'Sanicula marilandica',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Sanicula_marilandica&oldid=1306460855',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-solanum-dulcamara': {
+      kind: 'entry',
+      title: 'Solanum dulcamara',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Solanum_dulcamara&oldid=1379052094',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-solanum-nigrum': {
+      kind: 'entry',
+      title: 'Solanum nigrum',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Solanum_nigrum&oldid=1369644209',
       accessed: '2026-10-11',
     },
     'wikipedia-streptocarpus-ionanthus': {
@@ -5659,6 +5823,1262 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             {
               source: 'wikipedia-bitter-orange',
               supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Bittersweet Nightshade',
+      canonicalName: 'Solanum dulcamara',
+      nomenclature: 'botanical',
+      description:
+        'Bittersweet nightshade is a scrambling, partly woody perennial vine in the same genus as the potato and the tomato. It is native to Europe, northern Africa and eastern Asia and has spread far beyond, North America included, favouring damp ground, hedges and the edges of woods. Its leaves are roughly arrow-shaped, frequently with lobes at the base; small purple, star-like flowers with a jutting yellow centre hang in loose sprays, and the oval berries ripen from green through orange to red. The name records a taste said to turn from bitter to sweet, and the medieval Latin Amara dulcis means the same. Herbalists have prized the plant since Theophrastus, and Grieve notes that its dried young twigs stayed in the British Pharmacopoeia until 1907. In Britain and Ireland it was hung on cattle and horses against witchcraft and the evil eye, and Culpeper, who gives it to Mercury, says it rids both people and animals of witchcraft. In magical practice a small piece is tied on to guard against evil and draw it out, a little laid under the pillow helps a person forget a former love, and its berries serve spells of release and of remembrance at Samhain.',
+      elements: ['air'],
+      planets: ['Mercury', 'Pluto', 'Saturn'],
+      zodiacSigns: ['Aquarius'],
+      safetyNotes:
+        'Poisonous. The whole plant is regarded as poisonous; any medicinal use calls for caution and professional advice, has been recorded for adults only, and should be avoided by anyone allergic to it. Kynes warns that the berries and leaves are toxic if eaten, sometimes fatally, and advises handling every part of the plant with care.',
+      folkNames: [
+        'Bittersweet',
+        'Bitter Nightshade',
+        'Woody Nightshade',
+        'Amara Dulcis',
+        'Dulcamara',
+        'Violet Bloom',
+        'Felonwort',
+        'Felonwood',
+        'Scarlet Berry',
+        'Climbing Nightshade',
+        'Mortal',
+      ],
+      deities: ['Hecate'],
+      categories: [
+        'Protection',
+        'Healing',
+        'Banishing',
+        'Manifestation',
+        'Peace',
+        'Release',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Bittersweet',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Bittersweet',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Amara Dulcis',
+          supports: ['planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-nightshade-woody',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-solanum-dulcamara',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stem',
+          references: [
+            {
+              source: 'grieve-nightshade-woody',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-solanum-dulcamara',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Berry',
+          description:
+            'Kynes uses the berries for letting go: three are held between the palms to take in toxic feelings and then buried outdoors, and a sprig of dried berries on the Samhain altar stands for the mingled bitterness and sweetness of remembering the dead. Culpeper says country people bruised the berries and laid them on felons, the old word Grieve glosses as whitlow, from which the plant took the name Felonwort.',
+          safetyNotes:
+            'The berries are poisonous to people and livestock, and their bright, familiar look makes them a particular danger to children; the poison is thought to be solanine. Poisoning is rare because the fruit tastes intensely bitter.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Bittersweet',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. Amara Dulcis',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-nightshade-woody',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-solanum-dulcamara',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Cohosh',
+      canonicalName: 'Actaea racemosa',
+      nomenclature: 'botanical',
+      description:
+        'Black cohosh is a tall perennial of the buttercup family, found wild in eastern North America, from southernmost Ontario down to Georgia and westward as far as Missouri and Arkansas, where it grows in woodland and small clearings. From a dark, knotted rootstock it raises large, much-divided, toothed leaves and, in early summer, slender spires of white flowers on stems that can pass two metres, with a sweet but fetid scent that draws flies and beetles. That smell earned it the name bugbane, and Kynes notes that when its dry seed heads stir in a breeze they sound faintly like a rattlesnake. She traces the word cohosh to an Algonquian term for rough, after the feel of the root. The Iroquois, Delaware, Algonquin and Cherokee all used it as medicine; it entered the United States Pharmacopoeia as black snakeroot in 1830, and Grieve records the American belief that the root countered poison and rattlesnake bite. Its root extracts are now sold mainly for menopausal complaints. In hoodoo it defends against tricks and conjured trouble. Cunningham puts it in love sachets, has it carried to give the timid courage, and sprinkles an infusion around a room or adds it to the bath to drive away evil presences.',
+      elements: ['fire'],
+      planets: ['Mars', 'Pluto'],
+      zodiacSigns: ['Scorpio'],
+      safetyNotes:
+        'AHPA safety class 2b, with A as its interaction class: not to be used in pregnancy unless a qualified healthcare practitioner supervises, a restriction AHPA bases on reported cases of liver toxicity whose meaning is not yet understood. Liver damage has been reported in people taking black cohosh products; most reports are poorly documented and the link is unproven, and some products involved proved to contain other species, but practitioners and users should keep the possible link in mind. Occasional stomach upset and rashes are the most common reported effects. Cunningham advises against taking it internally when pregnant or nursing, and Kynes says to avoid it during pregnancy and breastfeeding.',
+      folkNames: [
+        'Black Snakeroot',
+        'Bugbane',
+        'Black Bugbane',
+        'Bugwort',
+        'Fairy Candles',
+        'Rattle Weed',
+        'Rattle Root',
+        'Rattle Top',
+        'Rheumatism Weed',
+      ],
+      categories: ['Love', 'Courage', 'Protection', 'Fertility', 'Strength'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Cohosh, Black; p. 266',
+          supports: ['categories', 'folkNames', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Black Cohosh',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 16–17; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-cohosh-black',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-actaea-racemosa',
+          supports: ['canonicalName', 'description', 'folkNames'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          description:
+            'Kynes carries a piece of the dried root in a small pouch as an amulet to strengthen courage, saying it gives the nerve to keep to your own path whatever others say.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 16',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Black Cohosh',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-cohosh-black',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-actaea-racemosa',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Seed',
+          description:
+            'The fruit is a small dry pod holding several seeds. Kynes uses the seeds to cast a circle for defensive magic and to lift any kind of spell aimed at the caster.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Black Cohosh',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-actaea-racemosa',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Hellebore',
+      canonicalName: 'Helleborus niger',
+      nomenclature: 'botanical',
+      description:
+        'Black hellebore, better known as the Christmas rose, is a low evergreen perennial of the buttercup family and no rose at all. It grows wild in the mountains of the Alps, the Apennines and the northern Dinaric Alps. Dark, leathery, deeply cut leaves surround broad white flowers, sometimes flushed pink or green, which open around a yellow centre from midwinter into early spring; the name niger, black, is thought to refer to the dark roots. A legend has it spring up from the snow where a girl with no gift for the Christ child shed her tears. It was the leading purgative of the ancient world, said to have been brought into use by the seer Melampus to cure the daughters of Proteus of their madness, which gave it the old name Melampode. Culpeper places it under Saturn. In medieval Europe it was strewn on floors against evil, cattle were blessed with it to keep spells away, and it served in exorcism, yet witches were believed to use it for hexes and flight, and French sorcerers to throw its powdered root into the air to become invisible. Kynes adds that picking its flowers was unlucky, though the plant protected the house where it grew.',
+      elements: ['water'],
+      planets: ['Saturn', 'Mars'],
+      zodiacSigns: ['Aquarius', 'Capricorn'],
+      safetyNotes:
+        'Poisonous: Cunningham marks it as a poison and calls it too dangerous to use, and Kynes warns that it is dangerously toxic, possibly fatally so, if swallowed, and that the sap can irritate the skin. All parts are considered toxic if eaten or if sap from damaged plant tissue touches the body. The leaves, stems and flowers release protoanemonin, which irritates the skin, mouth and eyes and, in large amounts, can cause blisters in the mouth and throat, gastroenteritis and vomiting of blood, in people and animals alike.',
+      folkNames: [
+        'Christmas Rose',
+        'Winter Rose',
+        'Melampode',
+        'Black Nisewort',
+        'Christe Herbe',
+        'Setterwort',
+        'Setter Grass',
+        'Christmas Herb',
+        'Christmas Flowers',
+      ],
+      deities: ['Helios', 'Saturn'],
+      categories: ['Banishing', 'Courage', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Hellebore, Black',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Hellebore',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Black Hellebore',
+          supports: ['planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-hellebore-black',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-helleborus-niger',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          safetyNotes: 'Grieve warns that the fresh root, put on the skin, is a violent irritant.',
+          references: [
+            {
+              source: 'grieve-hellebore-black',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Hellebore',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-helleborus-niger',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Powder',
+          description:
+            'The powdered root belongs to a charm of invisibility. Grieve recalls an old French romance in which a sorcerer throws powdered hellebore into the air to cross an enemy camp unseen, and Kynes and Cunningham both repeat the belief that strewing it around or ahead of oneself makes one invisible; Cunningham adds that the herb is too dangerous to use.',
+          safetyNotes: 'Grieve notes that the dried powder sets off violent sneezing.',
+          references: [
+            {
+              source: 'grieve-hellebore-black',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Hellebore',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Hellebore, Black',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Locust',
+      canonicalName: 'Robinia pseudoacacia',
+      nomenclature: 'botanical',
+      description:
+        "Black locust, also called false acacia, is a fast-growing deciduous hardwood of the legume family. It is native only to two small parts of the eastern United States, around the Appalachians and the Ozark and Ouachita uplands, but has been planted and naturalised across temperate North America, Europe, Asia and Africa, and in places is counted invasive. Its leaves are divided into many rounded leaflets, young growth carries short spines in pairs, and in May or June it hangs out drooping clusters of fragrant white pea-flowers, the source of the honey sold in Europe as acacia honey. English colonists found it at Jamestown in 1607 and built houses from its timber, and the genus is named for Jean Robin, a royal gardener in France, who is said to have planted one in Paris around 1600. Its very hard, rot-resistant wood was long valued for ships' trenails, fence posts and firewood. Kynes writes that locust trees were thought somewhat sinister for their thorns and for the dense witches'-broom growths taken as signs of bewitchment, and that New England legend has some of those condemned at Salem hanged on a locust. In magic it is used for protection, binding, love, fidelity and strength.",
+      elements: ['earth', 'water'],
+      zodiacSigns: ['Aries'],
+      safetyNotes:
+        'Kynes warns that black locust is poisonous if eaten. Its bark, leaves and wood are poisonous to people and livestock; the main toxin, the toxalbumin robin, loses its toxicity when heated. Horses that eat the plant can show colic, weakness and disturbed heart rhythm about an hour later and need a vet at once.',
+      folkNames: ['False Acacia', 'Yellow Locust', 'Locust Tree'],
+      deities: ['Cerridwen', 'Hecate', 'Morrigan'],
+      categories: ['Harmony', 'Binding', 'Love', 'Fidelity', 'Protection', 'Strength'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Locust',
+          supports: [
+            'canonicalName',
+            'elements',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'grieve-acacia-false',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-robinia-pseudoacacia',
+          supports: ['canonicalName', 'description', 'folkNames', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Wood',
+          safetyNotes:
+            'Sawdust and shavings from the timber may bring on contact dermatitis in people sensitive to them.',
+          references: [
+            {
+              source: 'grieve-acacia-false',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-robinia-pseudoacacia',
+              supports: ['form', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Pod',
+          description:
+            'The flat, smooth pods, five to ten centimetres long, usually hold four to eight seeds, which ripen in late autumn and stay on the tree until early spring. Kynes dries a few large seedpods to shake as rattles in dark-moon rituals.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Locust',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-robinia-pseudoacacia',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Thorn',
+          description:
+            'On black locust the thorns are short spines, up to about two centimetres, set in pairs beside each leaf base, mostly on young trees and root suckers. Kynes uses locust thorns for protection: three laid on a windowsill pointing towards a threat, or three tucked under the front doormat to keep negative energy out of the home.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Locust',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-robinia-pseudoacacia',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Mustard',
+      canonicalName: 'Rhamphospermum nigrum',
+      nomenclature: 'botanical',
+      description:
+        "Black mustard is an upright annual native to the cooler parts of North Africa, temperate Europe and parts of Asia, close enough to cabbage and turnip to share their tribe. It reaches about 1.2 metres, with large stalked leaves that are hairy or bristly at the base, four-petalled yellow flowers in summer and beaked pods of small seeds, dark brown to black, which give the plant its Latin epithet and are the reason it is grown. Carried as a crop to North America's western seaboard, it now runs wild there as an invasive, and Kynes notes that it is reckoned a noxious weed in some places. Columella wrote of it in the first century, and Grieve records that Greek physicians credited its discovery to Aesculapius; the word mustard comes from must, new grape juice, made fiery with the ground seed. It is often taken for the seed of the Gospel parable. Kynes traces it to Sumerian and Sanskrit texts of about 3000 BCE, tells of English brownies grinding the seed by night, and of seed strewn over thresholds in the American South to stop witches, who had to pick up every grain. Cunningham carries the seed in a red sachet against colds and to sharpen the mind, sprinkles or buries it at the door to keep supernatural beings out, and has women eat it for fertility. Culpeper made it an herb of Mars, with a share for Aries.",
+      elements: ['fire'],
+      planets: ['Mars'],
+      zodiacSigns: ['Aries'],
+      safetyNotes:
+        'AHPA safety class 1 taken internally and class 2d used externally. Not to be put on the skin of children under six, or of anyone with varicose veins, severe circulatory damage or another vein disorder. A mustard plaster left on longer than a quarter to half an hour can blister the skin, sometimes leaving weeping, slow-healing ulcers and dead tissue, and the irritation lasts a day or two. Taken by mouth it can irritate the digestive tract, so people with a peptic ulcer or gastric bleeding should take care, and large doses can bring on enteritis, abdominal pain and diarrhoea. Allergic reactions, including hives and anaphylactic shock, have followed both internal and external use. Animal studies suggest the seed may alter blood sugar, so people with diabetes should consult a qualified practitioner first. Safety in pregnancy and while nursing is not established. Cunningham marks it as not to be abused internally or taken long term.',
+      deities: ['Asclepius'],
+      categories: ['Fertility', 'Protection', 'Healing', 'Justice', 'Legal Matters', 'Prosperity'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Mustard, Black; p. 266',
+          supports: ['elements', 'planets', 'categories', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Mustard',
+          supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 145–147; p. xxii',
+          supports: ['safetyNotes'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Mustard',
+          supports: ['planets', 'zodiacSigns', 'description'],
+        },
+        {
+          source: 'grieve-mustards',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-rhamphospermum-nigrum',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Seed',
+          colors: ['black', 'brown'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 145',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Mustard, Black',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mustard',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'grieve-mustards',
+              supports: ['form', 'colors'],
+            },
+            {
+              source: 'wikipedia-rhamphospermum-nigrum',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'Grieve describes two oils. The pungent volatile oil forms only when crushed seed meets water, and is distilled from seed soaked for hours once most of its mild fixed oil has been pressed out. Undiluted it is a fierce irritant that raises blisters almost at once; thinned with spirit or camphorated spirit it was a liniment for chilblains, chronic rheumatism and colic. The bland oil pressed from the husks was used to encourage hair growth and rubbed on rheumatic joints. Kynes lists seed oil among the forms on sale.',
+          references: [
+            {
+              source: 'grieve-mustards',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Mustard',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Nightshade',
+      canonicalName: 'Solanum nigrum',
+      nomenclature: 'botanical',
+      description:
+        "Black nightshade is a herb or short-lived shrubby perennial of the nightshade family, Solanaceae. Native to Eurasia, it has spread to the Americas, to Australasia and to South Africa; Grieve calls it one of the world's most widespread wild plants, and it is a weed of crops in dozens of countries. It grows 30 to 120 centimetres tall, with oval to heart-shaped, wavy-edged leaves, small white flowers round a bright yellow centre, and clusters of berries that ripen from green to black. It has been found in Palaeolithic and Mesolithic deposits in Britain, and Dioscorides knew it. Older herbalists called it petty morel to set it apart from the great morel, deadly nightshade, with which it is still confused: black nightshade carries its berries in bunches and has white petals, where belladonna bears its berries singly and has purple flowers. Culpeper found it under walls and along paths, called it a cold plant of Saturn, and warned readers not to take the deadly kind for it. In several countries its cooked leaves and ripe berries are eaten. Kynes notes that the Anglo-Saxons used it in medicine and in healing charms, and that Central Europeans hung it above cradles to help babies sleep, as Grieve also records of Bohemia. Kynes treats it beside belladonna, advises working with it symbolically, and asks anyone who finds it growing wild to lay an offering for Hecate next to it.",
+      elements: ['water'],
+      planets: ['Pluto', 'Saturn'],
+      zodiacSigns: ['Libra', 'Scorpio'],
+      safetyNotes:
+        'Every part is toxic except the ripe berries. The plant is rarely fatal, but eating unripe green berries or mature leaves raw can cause solanine poisoning, usually 6 to 12 hours later, with fever, sweating, vomiting, abdominal pain, diarrhoea, confusion and drowsiness; very large amounts have killed through heart-rhythm disturbance and respiratory failure. Toxin levels vary with the strain and with growing conditions, so its berries should not be eaten unless they come from a strain known to be edible. Livestock have been poisoned by grazing its mature leaves and green berries.',
+      folkNames: [
+        'Blackberry Nightshade',
+        'Common Nightshade',
+        'European Black Nightshade',
+        'Garden Nightshade',
+        'Petty Morel',
+      ],
+      deities: ['Circe', 'Hecate'],
+      categories: ['Creativity', 'Divination'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Nightshade',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'safetyNotes',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Nightshade',
+          supports: ['planets', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-nightshade-black',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'wikipedia-solanum-nigrum',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'grieve-nightshade-black',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Grieve records the bruised fresh leaves laid on the skin to ease pain and calm inflammation, and Arab healers putting them on burns and ulcers; in Bohemia the leaves went into infants’ cradles to bring sleep. Boiled thoroughly, leaves from edible strains serve as greens in Greece, East Africa and southern India.',
+          safetyNotes:
+            'Mature leaves eaten raw can cause solanine poisoning. Where the young leaves are cooked as a vegetable, they are boiled with the water thrown away and replaced several times.',
+          references: [
+            {
+              source: 'grieve-nightshade-black',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-solanum-nigrum',
+              supports: ['form', 'description', 'safetyNotes'],
+            },
+          ],
+        },
+        {
+          form: 'Berry',
+          colors: ['black'],
+          description:
+            'The berries hang in clusters, green at first and black when ripe. Ripe berries of edible strains are eaten fresh or cooked, and one forager finds them both sweet and salty, with a note of liquorice and melon; in fifteenth-century China they were a famine food, and in parts of India they are cooked with tamarind, onion and cumin.',
+          safetyNotes:
+            'Unripe green berries hold the highest concentration of toxin and should be treated as poisonous. Kynes excepts only the ripe berries from the plant’s toxicity, and even ripe ones should come from a strain known to be edible.',
+          references: [
+            {
+              source: 'wikipedia-solanum-nigrum',
+              supports: ['form', 'colors', 'description', 'safetyNotes'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Nightshade',
+              supports: ['form', 'colors', 'safetyNotes'],
+            },
+            {
+              source: 'grieve-nightshade-black',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Pepper',
+      canonicalName: 'Piper nigrum',
+      nomenclature: 'botanical',
+      description:
+        "Black pepper is the dried fruit of Piper nigrum, a perennial woody vine of the family Piperaceae native to South or South-east Asia; wild vines still grow in the Western Ghats of India. Climbing trees or poles to about four metres, it carries small flowers on hanging spikes that ripen into strings of small drupes. For black pepper the fruit is picked unripe, scalded briefly and dried until its skin shrinks into a wrinkled black coat; white pepper is the seed alone, stripped of the ripe fruit's flesh. Indian cooks have used it since at least 2000 BCE, and peppercorns were packed into the nostrils of the mummified Ramesses II. Rome imported it in bulk: Kynes describes great storehouses, ornate pots of gold and silver, pepper as far off as Hadrian's Wall, and peppercorns given as presents at Saturnalia. In medieval Europe it stood for wealth and paid dowries and taxes, and the token peppercorn rent survives in law; it was also thought an aphrodisiac. In magic, Cunningham adds it to amulets against the evil eye, wears it to free the mind of envy, and mixes it with salt to scatter round a property against evil. Kynes keeps a few peppercorns with her ritual tools to cleanse them and release old energy, and diffuses the oil in spells for justice or to break out of a rut.",
+      elements: ['fire'],
+      planets: ['Mars'],
+      zodiacSigns: ['Aries'],
+      safetyNotes:
+        'AHPA safety class 1 and interaction class B: piperine, its pungent compound, can raise the body’s uptake of certain drugs, so clinically relevant interactions are plausible. Large doses may irritate the urinary tract, and overdoses can cause burning heat in the abdomen, thirst, vomiting, fever and occasionally convulsions; hives have also been reported. A four-year-old who habitually ate non-food items died after inhaling ground pepper. Animal studies found some anti-implantation activity, and safety while nursing is not established. These cautions concern the larger doses taken as medicine, not pepper used in cooking. Cunningham marks it safe.',
+      folkNames: ['Common Pepper', 'Peppercorn', 'Piper', 'True Pepper'],
+      categories: [
+        'Protection',
+        'Banishing',
+        'Binding',
+        'Courage',
+        'Dream Work',
+        'Healing',
+        'Justice',
+        'Legal Matters',
+        'Release',
+        'Strength',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Pepper; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Pepper',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 671–672; p. xxii',
+          supports: ['canonicalName', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-pepper',
+          supports: ['canonicalName', 'folkNames'],
+        },
+        {
+          source: 'wikipedia-black-pepper',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          colors: ['black'],
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 671',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-pepper',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-black-pepper',
+              supports: ['form', 'colors'],
+            },
+          ],
+        },
+        {
+          form: 'Oil',
+          description:
+            'An essential oil can be extracted from crushed dried peppercorns. Grieve describes the volatile oil as colourless at first and yellowing with age, strong-smelling and less sharp to the taste than the peppercorn. Kynes diffuses a little of it in defensive magic when seeking justice, and to get things moving when stuck or facing a problem.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Pepper',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-pepper',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-black-pepper',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Snakeroot',
+      canonicalName: 'Sanicula marilandica',
+      nomenclature: 'botanical',
+      description:
+        'Black snakeroot, also called Maryland sanicle, is Sanicula marilandica, a low North American plant found across much of the continent but rare on the Pacific coast and in Texas, and Washington State lists it as sensitive. Its leaves are cut into deep lobes that spread from one point, most often five to seven of them. In spring a fruiting stalk up to about two feet tall carries tiny green flowers, and in autumn it bears fruits that split open and are covered with small spines. Grieve, writing on its European relative the wood sanicle, notes that the root of this American species holds resin and volatile oil and was given, with what she calls alleged success, for intermittent fever and chorea. It is a different plant from the snakeroot of the genus Aristolochia, which Cunningham treats under its own heading. Cunningham gives black snakeroot to Mars and fire: it is worn to draw lovers, kept in the bedroom or added to the bath, and carried to attract money.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      folkNames: ['Maryland Sanicle', 'Maryland Black Snakeroot'],
+      categories: ['Love', 'Lust'],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Snakeroot, Black',
+          supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-sanicula-marilandica',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'grieve-sanicle-wood',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Root',
+          references: [
+            {
+              source: 'grieve-sanicle-wood',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Black Walnut',
+      canonicalName: 'Juglans nigra',
+      nomenclature: 'botanical',
+      description:
+        'Black walnut is a deciduous tree of the walnut family, native to the middle and east of North America, where it grows mostly beside rivers and streams; it reached Europe, probably in 1629. It can grow thirty to forty metres tall, with grey-black bark cut into ridges that make a diamond pattern and long pinnate leaves of fifteen to twenty-three leaflets. Its round fruit is a hard, ridged brown nut inside a semi-fleshy husk, which Kynes describes as yellow-green, and the leaves, twigs and husks all have a sharp, spicy smell. The kernels are eaten for their strong flavour, though the thick shell makes them hard to get out, and the dark, straight-grained heartwood is prized for furniture, gunstocks and coffins. The husks hold juglone, plumbagin and tannin, which stain pavements, patios and the fingers of whoever shells the nuts, and early American settlers dyed hair with their brownish-black colour. The tree has long been said to poison nearby plants such as apples, tomatoes, pines and birches with the juglone it releases, although research since 2019 has questioned how far that holds. As a herb, the hull and the leaf are the parts used. Kynes describes it within her Walnut entry, beside the English walnut.',
+      safetyNotes:
+        'AHPA safety class 2d: not for long-term use. Juice from the fresh hulls can stain the skin yellow or brown for a time, and the juglone in it is a strong skin irritant that may itch or burn; one case of contact dermatitis followed picking black walnuts. Safety in pregnancy and while nursing has not been established. Horses kept on bedding of black walnut sawdust or shavings can develop laminitis.',
+      folkNames: ['Eastern Black Walnut', 'American Black Walnut', 'Eastern American Black Walnut'],
+      references: [
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Walnut',
+          supports: ['canonicalName', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 485–486; p. xxii',
+          supports: ['canonicalName', 'description', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-juglans-nigra',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Nut',
+          description:
+            'The kernels are rich in fat and protein and go into ice cream, cakes, biscuits, fudge and pies, especially around the autumn holidays. Getting them out is hard work: the husk is often stripped by rolling the nuts underfoot on a driveway, and the thick, ridged shell is too tough for an ordinary nutcracker. The shells are used as an abrasive.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Walnut',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-juglans-nigra',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          safetyNotes: 'The leaf is about 10% tannins.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 485',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'wikipedia-juglans-nigra',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Blackberry',
+      canonicalName: 'Rubus subg. Rubus',
+      nomenclature: 'botanical',
+      description:
+        "Blackberries are the fruit of a large and tangled group of brambles in the rose family, more than 375 species; because they hybridise freely and include many closely related microspecies, botanists have often grouped them as aggregates. They are native across Europe, north-west Africa, the temperate west and centre of Asia, and both Americas. The plant is a perennial whose arching, prickly canes live two years, flowering and fruiting in the second, with white to pink five-petalled flowers; the fruit is not a true berry but a cluster of small drupelets, red before it turns black. Grieve derives 'bramble' from an old word for prickly. People have eaten blackberries for a very long time: a Danish bog body about 2,500 years old had them in her stomach. Folklore in Britain and Ireland forbids picking them after 11 October, Old Michaelmas Day, by which time a púca or the devil is said to have spoiled them, and some traditions say Christ was crowned with bramble thorns. Culpeper places it under Venus, in Aries. Cunningham says it was sacred to old Pagan gods and that some Wiccans bake blackberry pies at Lughnasadh for the harvest; in magic it serves healing, protection and wealth.",
+      elements: ['water'],
+      planets: ['Venus', 'Moon'],
+      zodiacSigns: ['Aries', 'Scorpio', 'Taurus'],
+      safetyNotes: 'Cunningham marks blackberry as safe (code G).',
+      folkNames: [
+        'Bramble',
+        'Bly',
+        'Bramble-Kite',
+        'Bumble-Kite',
+        'Dewberry',
+        'Goutberry',
+        'High Blackberry',
+        'Thimbleberry',
+        'Shrub Blackberry',
+        'Black Heg',
+        'Bramble Thorn',
+        'Brambleberry',
+        'Wild Blackberry',
+        'Brummel',
+        'Brameberry',
+        'Scaldhead',
+        'Shrubby Blackberry',
+      ],
+      deities: ['Brigid', 'Dagda', 'Danu', 'Freya', 'Manannan mac Lir'],
+      categories: [
+        'Healing',
+        'Protection',
+        'Abundance',
+        'Harmony',
+        'Communication',
+        'Fertility',
+        'Intuition',
+        'Knowledge',
+        'Prosperity',
+        'Purification',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Blackberry; p. 266',
+          supports: [
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Blackberry',
+          supports: [
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. The Bramble, or Black-Berry Bush',
+          supports: ['planets', 'zodiacSigns', 'description'],
+        },
+        {
+          source: 'grieve-blackberry',
+          supports: ['folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 754',
+          supports: ['folkNames'],
+        },
+        {
+          source: 'wikipedia-blackberry',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Berry',
+          colors: ['black'],
+          description:
+            'The ripe fruit goes into jams, jellies, pies, wine and liqueurs, and the London Pharmacopoeia of 1696 counted the berries a great cordial. In magic Cunningham uses them, like the leaves, in wealth spells; Kynes suggests eating a handful before magical work to go deeper in consciousness, and dressing candles with the juice when contacting spirits. She notes that Bretons often left them uneaten, since the faeries resented people taking their magical fruit.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackberry',
+              supports: ['form', 'colors', 'description'],
+            },
+            {
+              source: 'grieve-blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-blackberry',
+              supports: ['form', 'colors', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Leaf',
+          description:
+            'Blackberry leaves have long been laid on burns and scalds, once with a spoken charm. Cunningham gives one: dip nine leaves in spring water and lay them on the scald while repeating a chant to Brigit three times over each. The leaves also go into his wealth spells. Herbalists brewed them as an astringent tea for diarrhoea, and Culpeper and Grieve both record a lye of the leaves that dyes hair black.',
+          safetyNotes:
+            'AHPA safety class 1. The leaf holds 8–14% tannins. In animal studies blackberry leaf altered blood sugar, so people with diabetes should watch their levels closely and talk to a qualified practitioner before using it. Safety while nursing has not been established.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 754–755; p. xxii',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackberry',
+              supports: ['form'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Bramble, or Black-Berry Bush',
+              supports: ['description'],
+            },
+            {
+              source: 'grieve-blackberry',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Stem',
+          description:
+            'A bramble cane that arches over and roots its tip makes a loop credited with healing. Cunningham has the sufferer crawl backwards and then forwards through it three times, east to west, against boils, rheumatism and whooping cough; Grieve records children passed through it for hernia, and Northcote cites Markham drawing shrew-struck cattle under one. Kynes makes a wreath of prickly canes for protection, as one was hung in the rafters of a Guernsey barn to scratch any witch flying in, and notes canes laid on English graves to keep the dead in place.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'grieve-blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'northcote-herbs',
+              locator: 'p. 198',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-blackberry',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Root',
+          description:
+            'Grieve lists the root among the parts used and calls it more astringent than the leaf: the bark, peeled and dried, was boiled in water or milk as a remedy for diarrhoea. Culpeper gives a decoction of the root for gravel and stones in the kidneys.',
+          references: [
+            {
+              source: 'grieve-blackberry',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Bramble, or Black-Berry Bush',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Blackthorn',
+      canonicalName: 'Prunus spinosa',
+      nomenclature: 'botanical',
+      description:
+        'Blackthorn, or sloe, is a big deciduous shrub or small tree of the rose family, at home in Europe and western Asia and locally in north-west Africa, and naturalised in eastern North America and Tasmania. It grows to about five metres, a tangle of stiff, spiny branches with very dark bark, and its small creamy-white flowers open early in spring, ahead of the leaves. The name contrasts its dark bark and thorns with the paler hawthorn, or whitethorn, and a cold spell in early spring while it blooms is called a blackthorn winter in rural England. Its thorns made it a traditional cattle-proof hedge in Britain, and its flowering may once have been linked with Imbolc. Lore makes it a guardian against harm: Kynes records that the Greeks thought it shielded against witchcraft, that in Eastern Europe a piece was sewn into clothes for protection, that moon faeries called the Lunantishee watch over it, and that in the Balkans a vampire was to be staked with it. English witches were said to carve spells into its wood. Cunningham says that hung over a door or carried it keeps evil and calamity away and drives out demons and negative energy.',
+      elements: ['fire', 'earth'],
+      planets: ['Mars', 'Saturn'],
+      zodiacSigns: ['Aries', 'Scorpio'],
+      safetyNotes:
+        'AHPA safety class 1. The seeds hold cyanogenic glycosides; Kynes warns that in Prunus species the seeds and leaves release cyanide once swallowed, and Wikipedia notes trace hydrogen cyanide in the seed. Cunningham marks the seeds as not for internal use and the plant as not for long-term or excessive internal use. It is a diuretic. Safety in pregnancy and while nursing has not been established.',
+      folkNames: [
+        'Sloe',
+        'Sloe-Bush',
+        'Mother of the Wood',
+        'Wishing Thorn',
+        'Black Haw',
+        'Blackthorn Plum',
+        'Fairy Tree',
+        'Sloe Plum',
+        'Wild Plum',
+      ],
+      deities: ['Belenus', 'Brigid', 'Dagda', 'Loki'],
+      categories: [
+        'Protection',
+        'Banishing',
+        'Warding',
+        'Fidelity',
+        'Purification',
+        'Strength',
+        'Truth',
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Sloe; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Blackthorn',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. The Black Thorn, or Sloe-Bush',
+          supports: ['folkNames'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'pp. 708–709; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'wikipedia-prunus-spinosa',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Fruit',
+          colors: ['black'],
+          description:
+            'The sloe is a small, single-stoned fruit, black under a purple-blue bloom, too sour and astringent to eat until the first autumn frosts soften it. It flavours sloe gin, Basque patxaran and other liqueurs and makes jams and wines; a sloe was found beside Ötzi, the 5,300-year-old Alpine mummy. Culpeper gave a decoction of the berries for fluxes, and Kynes adds a couple of sloes to strengthen a spell.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 708',
+              supports: ['form'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackthorn',
+              supports: ['form', 'colors', 'description'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Black Thorn, or Sloe-Bush',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-prunus-spinosa',
+              supports: ['form', 'colors', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Wood',
+          categories: ['Divination'],
+          description:
+            'The wood polishes to a fine finish and burns slowly with little smoke. Straight stems become walking sticks and the Irish shillelagh, and Kynes notes that in Ireland a blackthorn stick was preferred because it could drive off any evil, ghosts included. Cunningham names it for divining rods and for wishing rods, which he treats as all-purpose wands.',
+          references: [
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Sloe',
+              supports: ['form', 'categories', 'description'],
+            },
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackthorn',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-prunus-spinosa',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Thorn',
+          description:
+            'Kynes uses the thorns to build defensive energy or to break a spell sent against you, and records the English belief that witches used them in harmful magic.',
+          references: [
+            {
+              source: 'kynes-plants',
+              locator: 's.v. Blackthorn',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Flower',
+          description:
+            'Culpeper prized a water distilled from the flowers, first steeped overnight in sack, as a certain remedy for griping pains in the stomach, sides and bowels.',
+          safetyNotes:
+            'The fresh flower holds cyanogenic glycosides, and Cunningham marks fresh flowers as not for internal use.',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'pp. 708–709',
+              supports: ['form', 'safetyNotes'],
+            },
+            {
+              source: 'cunningham-herbs',
+              locator: 's.v. Sloe; p. 266',
+              supports: ['safetyNotes'],
+            },
+            {
+              source: 'culpeper-herbal',
+              locator: 's.v. The Black Thorn, or Sloe-Bush',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Blessed Thistle',
+      canonicalName: 'Centaurea benedicta',
+      nomenclature: 'botanical',
+      description:
+        "Blessed thistle is an annual, thistle-like member of the daisy family, native to the Mediterranean parts of Europe and to western and central Asia, and introduced elsewhere, where it is often a noxious weed. It sprawls rather than standing upright, reaching about 60 centimetres, with reddish stems, leathery, hairy leaves edged in small spines, and pale yellow flowerheads wrapped in spiny bracts; the whole plant wears a light down. Grieve says the name came from its fame as a heal-all, thought able even to cure the plague, and English plague treatises praised it. In Much Ado About Nothing Margaret prescribes distilled Carduus Benedictus to Beatrice, punning on Benedick. Culpeper calls it a herb of Mars under Aries. Herbalists gave it as a bitter tonic and to bring on sweating in fevers, and Grieve records the warm infusion as a favourite for increasing a nursing mother's milk, a use Wikipedia notes has no scientific support; Northcote calls its medicinal virtues discredited. It is also a flavouring in alcoholic drinks. In magic Cunningham has it worn to protect against evil, added to purifying baths and used in spells to break hexes.",
+      elements: ['fire'],
+      planets: ['Mars'],
+      zodiacSigns: ['Aries'],
+      safetyNotes:
+        'AHPA safety class 1. Allergic reactions have been reported, and anyone allergic to other daisy-family plants, such as feverfew or echinacea, should take care, since cross-reactions are common. Large doses, above about 5 g to a cup of tea, can upset the stomach and bring on vomiting. Cunningham marks it as not to be taken in pregnancy; AHPA finds safety in pregnancy and nursing not established.',
+      folkNames: ['Holy Thistle', "St. Benedict's Thistle", 'Spotted Thistle', 'Blessed Knapweed'],
+      deities: ['Pan'],
+      categories: ['Purification', 'Hex-Breaking', 'Protection'],
+      substitutes: [
+        {
+          name: 'Milk Thistle',
+        },
+        {
+          name: 'Cotton Thistle',
+        },
+        {
+          name: 'Melancholy Thistle',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-herbs',
+          locator: 's.v. Thistle, Holy; p. 266',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'categories',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
+        },
+        {
+          source: 'kynes-plants',
+          locator: 's.v. Thistle',
+          supports: ['zodiacSigns', 'deities', 'folkNames', 'description'],
+        },
+        {
+          source: 'culpeper-herbal',
+          locator: 's.v. Carduus Benedictus',
+          supports: ['planets', 'zodiacSigns', 'folkNames', 'description'],
+        },
+        {
+          source: 'ahpa-safety',
+          locator: 'p. 240; p. xxii',
+          supports: ['canonicalName', 'folkNames', 'safetyNotes'],
+        },
+        {
+          source: 'grieve-thistles',
+          supports: ['folkNames', 'description', 'substitutes'],
+        },
+        {
+          source: 'northcote-herbs',
+          locator: 'pp. 96–97',
+          supports: ['description'],
+        },
+        {
+          source: 'wikipedia-centaurea-benedicta',
+          supports: ['canonicalName', 'folkNames', 'description', 'safetyNotes'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Herb',
+          references: [
+            {
+              source: 'ahpa-safety',
+              locator: 'p. 240',
+              supports: ['form'],
+            },
+            {
+              source: 'grieve-thistles',
+              supports: ['form'],
             },
           ],
         },
