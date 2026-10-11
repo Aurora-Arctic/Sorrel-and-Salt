@@ -59,7 +59,7 @@ to.
   target) around a `$glyph-size` mark (1rem), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
   button, 2.5rem), `$table-stack-width` (the frame width under which a table
-  stacks, 40rem), `$filter-choice-width` (a filter's type-ahead field, 24rem), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
+  stacks, 40rem), `$filter-choice-width` (a filter's type-ahead field, 14rem), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of).
