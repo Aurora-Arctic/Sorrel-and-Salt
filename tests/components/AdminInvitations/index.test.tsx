@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminInvitations from '@/components/AdminInvitations';
+import { ADMIN_CHANGES_PAUSED_REFUSAL } from '@/lib/primary-admin';
 import type {
   CreateAdminInvitationMutation,
   CreateAdminInvitationMutationVariables,
@@ -24,7 +25,8 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-const PAUSED = 'Admin changes are paused by the primary admin.';
+// The pause's reason, as the page passes it.
+const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
 
 const INVITATIONS = [
   {
@@ -46,7 +48,7 @@ beforeEach(() => {
 });
 
 const openInvite = () => fireEvent.click(screen.getByRole('button', { name: 'Invite Admin' }));
-const dialog = () => screen.getByRole('dialog', { name: 'Invite an Admin' });
+const dialog = () => screen.getByRole('dialog', { name: 'Invite Admin' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
 
 describe('AdminInvitations', () => {

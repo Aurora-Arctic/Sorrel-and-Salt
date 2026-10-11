@@ -50,7 +50,10 @@ full page load and none.
 
 None of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
 "Form fields"), the row the five lists' `__search` rules were, and the
-fields and button are the primitives'.
+fields and button are the primitives'. On a phone the row stacks: under 28rem of
+its own width the query takes the whole line and the selects, checks and
+Filter wrap beneath it, the owner's call at MB.115's review over a filter
+folded behind a disclosure.
 
 ## Stories
 

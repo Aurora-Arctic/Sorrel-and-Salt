@@ -475,7 +475,7 @@ describe('GroupedValueForm, a deity', () => {
 // three mutations (claude-docs/testing/layer-ownership.md, rule 5).
 const FLAT = [
   { kind: 'planet', type: 'Planet', noun: 'Planet' },
-  { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Sign' },
+  { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Zodiac Sign' },
 ] as const;
 
 const FLAT_VALUE = {

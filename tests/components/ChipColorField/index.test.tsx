@@ -39,11 +39,11 @@ function Controlled({
 const hex = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const channel = (name: string) =>
   screen.getByRole('spinbutton', { name: `Dark Theme Colour ${name}` });
-const formatButton = () => screen.getByRole('button', { name: /^Dark Theme Colour format:/ });
+const formatButton = () => screen.getByRole('button', { name: /^Dark Theme Colour Format:/ });
 /** Presses the format toggle until it shows `name`, as Chrome's cycles. */
 const showFormat = (name: 'HSB' | 'HSL' | 'RGB') => {
   for (let press = 0; press < 3; press += 1) {
-    if (formatButton().getAttribute('aria-label')?.includes(`format: ${name}.`)) return;
+    if (formatButton().getAttribute('aria-label')?.includes(`Format: ${name}.`)) return;
     fireEvent.click(formatButton());
   }
 };

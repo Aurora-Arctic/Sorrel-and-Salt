@@ -103,8 +103,8 @@ export const AddingAPlanet: Story = () => (
 
 // A flat kind has no group field. Rename it to see the note by Save that the
 // rename carries onto the compendium.
-export const EditingASign: Story = () => (
-  <Modal title="Edit Sign" onClose={done}>
+export const EditingAZodiacSign: Story = () => (
+  <Modal title="Edit Zodiac Sign" onClose={done}>
     <GroupedValueForm
       kind="zodiacSign"
       value={{
@@ -131,6 +131,6 @@ EditingAForm.meta = { iframed: true };
 AddingADeity.meta = { iframed: true };
 EditingADeity.meta = { iframed: true };
 AddingAPlanet.meta = { iframed: true };
-EditingASign.meta = { iframed: true };
+EditingAZodiacSign.meta = { iframed: true };
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

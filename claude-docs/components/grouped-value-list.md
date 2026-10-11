@@ -40,7 +40,8 @@ terms.
 Everything that tells one kind's list from another's is its entry in
 `kinds.ts`'s `KINDS`, so a new kind is an entry there and nothing else:
 `path`, the page's address; `title`, the page's heading and tab title
-("Zodiac Signs"); `label`, one row in title case, as Add says it ("Sign");
+("Zodiac Signs"); `label`, one row in title case, as Add says it ("Zodiac
+Sign", the long form the owner chose at MB.115's sign-off);
 `noun` and `plural`, what a sentence calls one row and several ("category",
 "categories"); and, for a grouped kind only, `group`: its `label`, the
 group column's heading and the filter's label ("Group"), its `plural`, for
@@ -117,9 +118,13 @@ for a rule only one kind's rows need.
   than a column of "Edit". Two live forms may share a name under different
   groups, and two deities under different traditions; the group column
   beside it tells them apart.
-- **An empty list says so, with no table**: "No categories yet.", "No
-  signs yet." and so on, from the kind's `plural`; a filtered list with no rows reads "No
-  category matches." or "No sign matches." instead, from its `noun`.
+- **An empty list says so and what to do, with no table**: "There are no
+  categories yet. Add one with Add Category.", from the kind's `plural`
+  and `label`, which name the page header's Add. A filtered list with no
+  rows says what to change instead, from its `noun` and its group's
+  `label`: "No category matches that filter. Try another name or group.",
+  "…or tradition." for a deity, and "No zodiac sign matches that filter.
+  Try another name." for a flat kind, which has no group to try.
 
 ## Styling
 
@@ -128,7 +133,9 @@ a section"): the root a `.list-frame`; the filter a
 [`FilterForm`](filter-form.md), so a `.filter-row` whose fields are
 `FieldShell`s around a native input and select and whose Filter is a solid
 `BusyButton`; and the table a `.data-table` in its `.data-table-frame`,
-banded at desktop width, with the `--stack` modifier, its roles written out
+banded at desktop width (every even row on the card surface, the owner's
+M5.6 call, kept at MB.115's sign-off over a hairline rule), with the
+`--stack` modifier, its roles written out
 (`tableRole` and `stackCell`, `src/lib/table-roles.ts`, as every admin
 table does) and a `data-label` on every cell, so under `$table-stack-width` of its
 frame each row turns into a card ("Tables at phone width"). The Edit cell's
@@ -141,7 +148,11 @@ their contents, for the chip. As cards they keep the card's own spacing. The
 page's Add is `.btn--solid` in its `PageHeader`, its one primary action, and
 each row's Edit is `.btn--small.btn--quiet`: a row action that changes
 nothing, small enough to keep the row short. The pager is `Pager`
-([`pager.md`](pager.md)), soft.
+([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
+full width and the Add spans the line under the heading, the sign-off's two
+phone calls, which `FilterForm` and `PageHeader` own
+([`filter-form.md`](filter-form.md), [`page-header.md`](page-header.md)),
+so the list adds no rule for either.
 
 ## Stories
 
@@ -150,12 +161,10 @@ nothing, small enough to keep the row short. The pager is `Pager`
 `…NoMatch` and `…Empty`, as `Categories…`, `Forms…` and `Deities…`, the
 deities under invented traditions and slugged by `deitySlug`; for the flat
 kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
-`PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, the
-categories inside `.admin-layout` at 375px. The `Proposal…` stories draw
-MB.115's open calls side by side, each at desktop and as a phone pair, on a
-story-only stylesheet (`proposals.scss`): the rows banded or ruled, the
-filter stacked or behind a disclosure, and the Add button at its natural
-width or full width. The losing ones go once the owner signs off. The filter
+`PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
+categories page inside `.admin-layout` at 375px: the real `PageHeader`
+with its Add over the filtered list, so they show the stacked filter, the
+full-width Add and the rows as cards. The filter
 reaches the admin pages, which the workshop does not serve. Render-only, no
 test ids, no snapshots.
 
@@ -167,7 +176,7 @@ their group, the Edit links, no table when there are none, the filter form's
 action, method, names and kept values, the Filter button's disabled and
 enabled states, the address it opens, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
-parameter, as `groupedValuesHref` rows; the planet and the sign, their page
+parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page
 and no group written, as rows too, and a flat kind's table and filter drawn
 with no group. The filter's busy state and its reset
 are CompendiumList's, paging Pager's, and the category chip's colours

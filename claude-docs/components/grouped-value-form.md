@@ -17,8 +17,9 @@ behind a confirmation. It holds no modal of its own: the page puts it in one.
 
 The form kind is named for the GraphQL type, `IngredientFormValue`, because
 `IngredientForm` is the ingredient entry form (DESIGN.md §7). The copy calls
-a row a "form": Add Form, Save Form. A zodiac sign is a "Sign" on every
-button, as its page's labels say it.
+a row a "form": Add Form, Save Form. A zodiac sign is a "Zodiac Sign" on
+every button, Add Zodiac Sign, Save Zodiac Sign and Delete Zodiac Sign, the
+long form the owner chose at MB.115's sign-off.
 
 ## Props
 
@@ -40,11 +41,11 @@ Everything that tells one kind from another is its entry in `index.tsx`'s
 its three mutation documents, and nothing else:
 
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
-  "Form", "Deity", "Planet", "Sign"); `group`, for a grouped kind only, the
+  "Form", "Deity", "Planet", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label` and `placeholder`, what it shows until one is chosen
   ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
-  whose rename reaches further than its row (the form's and the deity's).
+  whose rename reaches further than its row (every kind but the category).
 - **Its schema and input**: `schema`, the shared schema the values pass
   before any request, and `toInput`, the values as the kind's mutation input.
   The form's values are always `{ name, description, groupId }`. For the
@@ -57,7 +58,7 @@ its three mutation documents, and nothing else:
   one: `DeityInput` calls the group `traditionId`, so its schema is
   `DeityInput` with `traditionId` swapped for `groupId`, and its
   `inputKeys` is `{ groupId: 'traditionId' }`.
-- **No group, for a flat kind.** A planet or a sign has no `group`, so the
+- **No group, for a flat kind.** A planet or a zodiac sign has no `group`, so the
   form draws no group field. Its values still carry `groupId`, always `''`,
   so every kind has one shape; its schema, `PlanetInput` or
   `ZodiacSignInput` (`src/modules/vocabulary/validation/astrology-value.ts`),
@@ -95,17 +96,18 @@ its three mutation documents, and nothing else:
   Category", "Saving Form" and so on, `aria-busy`, with the shared
   `.spinner` ahead of the label. The
   confirmation's Delete does the same, as "Deleting".
-- **A form's or a deity's rename says it carries onto the compendium.**
+- **A rename of any kind but a category says it carries onto the compendium.**
   Renaming a form rewrites every live compendium variant that picked it
   ([`mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)),
   and renaming a deity the name on every live compendium entry's
   `ingredient_deities` row that picked it
   ([`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)).
-  Neither is part of an entry's identity or address — a form not since
-  MB.215 — so no address moves (MB.220). On an existing value of a kind with
-  a `renameNote`, whose name, trimmed, differs from the saved one, a
-  `.field__hint` sits above the actions, for both kinds "Saving renames it
-  on every compendium entry that picked it." Save's `aria-describedby` points
+  A planet's or a zodiac sign's rename reaches every entry listing it the
+  same way (MB.162). None is part of an entry's identity or address — a form
+  not since MB.215 — so no address moves (MB.220). On an existing value of a
+  kind with a `renameNote`, whose name, trimmed, differs from the saved one,
+  a `.field__hint` sits above the actions, for every such kind "Saving
+  renames it on every compendium entry that uses it." Save's `aria-describedby` points
   at it. Putting the name back removes it. A new value has no entries, so it
   never shows there; nor does a change of group, which moves no entry. A
   category has no note.
@@ -116,21 +118,23 @@ its three mutation documents, and nothing else:
   is where it is still asked, of an entry's own save
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)).
 - **A delete asks first, and says what it does.** Delete Category, Delete
-  Form or Delete Deity replaces the actions with `Delete "<name>"?` and the
-  kind's note,
-  beside Delete and Keep It. A category's: `Covens' ingredients and spells
-filed under it lose it too.` A form's: `It can't be deleted while a
-compendium entry picks it. Covens' ingredients keep what they wrote, which
-then counts as their own value rather than a curated one; nothing of theirs
-changes.` A deity's is the form's, word for word. A refusal comes back as a
+  Form, Delete Deity, Delete Planet or Delete Zodiac Sign replaces the
+  actions with `Delete "<name>"?` and the kind's note, beside Delete and
+  Keep It. A category's: `Covens' ingredients and spells filed under it
+stay in their lists, but can no longer be filtered by it.` Deleting a
+  category removes nothing of a coven's: an entry filed under it keeps its
+  link and stops reading the category
+  ([`deleteCategory`](../../src/modules/vocabulary/services/categories.ts)).
+  Every other kind's: `You can't delete it while a compendium entry uses
+it. Covens' ingredients keep what they wrote, as their own value.` A refusal comes back as a
   `FORBIDDEN` naming the compendium entries filed under the category
   ([`db/categories.md`](../db/categories.md), "Category writes"), or as a
   plain message naming the entries that pick the form or the deity. It is
   shown in the alert notice, and the form stays open with the
   confirmation withdrawn. Per DESIGN.md §7, a refusal that names its remedy is
   not a bad value in a box, so it gets no field.
-- **Buttons are title case**: Save Category, Save Form or Save Deity, Cancel,
-  Delete Category, Delete Form or Delete Deity, Delete, Keep It. Save is
+- **Buttons are title case**: Save and Delete with the kind's `noun` (Save
+  Category, Delete Zodiac Sign and so on), Cancel, Delete, Keep It. Save is
   solid; Cancel and Keep It are quiet, since they change nothing; the two
   deletes are destructive.
 
@@ -156,15 +160,15 @@ that fade on a save until the pages shared it.
 
 A form's slug is its name and its group's (`wax-substance`), a deity's its
 name and its tradition's (`hecate-greek`, from `deitySlug`), and a planet's
-or a sign's its name, so a save can move the address; closing after every
+or a zodiac sign's its name, so a save can move the address; closing after every
 save means the modal never sits on a stale one. A deity's address also moves
 when its tradition is renamed, or deleted and its deities moved
 ([`group-form.md`](group-form.md);
 [`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)), so
 an old `?edit=` link can go stale without the deity itself changing. An
 `?edit=` naming no live value opens nothing and says so above the list in
-the shared `MissingNotice`: "No category has that address — it may have
-been renamed or deleted.", or "No sign has…".
+the shared `MissingNotice`, which names the kind by the list's `noun`:
+"No category has that address…", or "No zodiac sign has…".
 
 Why a modal on a URL rather than separate pages or intercepted routes:
 [`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md).
@@ -194,11 +198,11 @@ there is none.
 
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
 — `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
-`AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingASign`, each in
+`AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingAZodiacSign`, each in
 the modal and its own iframe, the deities under invented traditions; and
 `PhoneDark` and `PhoneLight`, the category's edit at 375px in each theme,
 where the buttons stack. Renaming in `EditingAForm`, `EditingADeity` or
-`EditingASign` shows the note. The workshop has no API, so a save answers
+`EditingAZodiacSign` shows the note. The workshop has no API, so a save answers
 with the generic error.
 
 ## Testing
@@ -214,7 +218,7 @@ their variables, their confirmations and their delete refusals; the form kind's
 group refusal and pathless one placed, and its rename note; and, under `describe('GroupedValueForm, a deity')`, the deity's
 create sending its tradition as `traditionId`, its rename saved under its
 id after the note, a `traditionId` refusal landing beside Tradition, and
-its delete refusal. The flat kinds, the planet and the sign, are rows of
+its delete refusal. The flat kinds, the planet and the zodiac sign, are rows of
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
 built from, `TextField`, `SelectField` and `BusyButton`, have no test file

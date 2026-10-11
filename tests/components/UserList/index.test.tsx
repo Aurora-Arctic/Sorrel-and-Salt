@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 const router = { refresh: vi.fn() };
@@ -92,7 +93,7 @@ describe('UserList', () => {
       for (const user of props().users) {
         const row = screen.getByRole('row', { name: new RegExp(user.name) });
         const link = within(row).getByRole('link', {
-          name: `Permissions history for ${user.name}`,
+          name: `Privilege changes for ${user.name}`,
         });
         expect(link).toHaveAttribute(
           'href',
@@ -107,7 +108,7 @@ describe('UserList', () => {
       render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
 
       expect(
-        screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' }),
+        screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
     });
   });
@@ -130,7 +131,7 @@ describe('UserList', () => {
     // The <search> landmark around it is the e2e spec's to find: jsdom's role
     // table predates the element, and a browser's does not. The action and
     // method are what a submit before hydration uses.
-    const search = screen.getByRole('form', { name: 'Filter users' });
+    const search = screen.getByRole('form', { name: 'Filter Users' });
     expect(search).toHaveAttribute('action', '/admin/users');
     expect(search).toHaveAttribute('method', 'get');
     expect(within(search).getByLabelText('Name or Email')).toHaveValue('fixturewort');
@@ -167,30 +168,51 @@ describe('UserList impersonation', () => {
     expect(within(ada).queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 
-  it('impersonates the row’s user and opens the site as them', async () => {
+  const asking = () => screen.getByRole('dialog', { name: 'Impersonate User' });
+  const openFor = (name: string) =>
+    fireEvent.click(screen.getByRole('button', { name: `Impersonate ${name}` }));
+
+  // MB.115, on the owner's call: the row's button asks first, and the modal's
+  // confirm is what calls the endpoint.
+  it('asks before impersonating, in a modal, and Cancel closes it with nothing sent', () => {
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    openFor(BO.name);
+
+    expect(asking()).toHaveTextContent(BO.name);
+    expect(within(asking()).getByRole('button', { name: 'Impersonate' })).toHaveFocus();
+    expect(impersonateUserMock).not.toHaveBeenCalled();
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' })).toHaveFocus();
+    expect(impersonateUserMock).not.toHaveBeenCalled();
+  });
+
+  it('impersonates the row’s user once confirmed, and opens the site as them', async () => {
     impersonateUserMock.mockResolvedValue({ data: {}, error: null });
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<UserList {...props({ canImpersonate: true })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
     expect(impersonateUserMock).toHaveBeenCalledWith({ userId: BO.id });
   });
 
-  it('is busy while pending, keeping its place in the tab order, and sends once', async () => {
+  it('keeps the confirm busy while pending, and sends once', async () => {
     // Never answers, so the request stays in flight.
     impersonateUserMock.mockReturnValue(new Promise(() => {}));
     render(<UserList {...props({ canImpersonate: true })} />);
-    const impersonate = screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' });
 
-    fireEvent.click(impersonate);
+    openFor(BO.name);
+    const confirm = within(asking()).getByRole('button', { name: 'Impersonate' });
+    fireEvent.click(confirm);
 
-    await waitFor(() => expect(impersonate).toHaveAttribute('aria-busy', 'true'));
-    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
-    expect(impersonate).toHaveAttribute('aria-disabled', 'true');
-    expect(impersonate).toBeEnabled();
-    fireEvent.click(impersonate);
+    await waitFor(() => expect(confirm).toHaveAttribute('aria-busy', 'true'));
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
     expect(impersonateUserMock).toHaveBeenCalledTimes(1);
   });
 
@@ -202,10 +224,12 @@ describe('UserList impersonation', () => {
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<UserList {...props({ canImpersonate: true })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
 
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
     expect(await within(bo).findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
   });
 });
@@ -651,7 +675,10 @@ describe('UserList admin changes switch', () => {
 
   // The paused notice is a plain paragraph before the switch, the state's one
   // rendering; while changes are on, the switch stands alone.
-  it('lets the primary admin pause, stating that changes are on, busy until the page is read again', async () => {
+  // MB.115, on the owner's call, reversing MB.63's: Pause asks first.
+  const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
+
+  it('lets the primary admin pause once confirmed, stating that changes are on, busy until the page is read again', async () => {
     let calls = 0;
     mockGraphQLMutation('PauseAdminRoleChanges', () => {
       calls += 1;
@@ -664,11 +691,30 @@ describe('UserList admin changes switch', () => {
     expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
     fireEvent.click(pause);
+    expect(calls).toBe(0);
+    const confirm = within(confirming()).getByRole('button', { name: 'Pause Admin Changes' });
+    fireEvent.click(confirm);
 
-    expect(pause).toBeDisabled();
-    expect(pause).toHaveAttribute('aria-busy', 'true');
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toBe(1);
+  });
+
+  it('sends nothing when the pause is cancelled', () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+    fireEvent.click(within(confirming()).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toHaveFocus();
+    expect(calls).toBe(0);
   });
 
   it('lets the primary admin resume, stating that changes are paused', async () => {
@@ -695,8 +741,10 @@ describe('UserList admin changes switch', () => {
     render(<PauseControl paused={false} canToggle={true} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+    fireEvent.click(within(confirming()).getByRole('button', { name: 'Pause Admin Changes' }));
 
     expect(await screen.findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
     expect(router.refresh).not.toHaveBeenCalled();
   });
@@ -829,7 +877,7 @@ describe('UserList admin role while admin changes are paused', () => {
   });
 
   // The primary admin's own reason holds whether or not changes are paused:
-  // which of the two reasons won is told by its words alone.
+  // which of the two reasons won is told by which of the two strings it reads.
   it('keeps the primary admin’s Revoke on its own reason while paused', () => {
     render(
       <UserList
@@ -844,6 +892,6 @@ describe('UserList admin role while admin changes are paused', () => {
       within(row('Ada Fixturewort')).getByRole('button', {
         name: 'Revoke admin from Ada Fixturewort',
       }),
-    ).toHaveAccessibleDescription(/^This is the primary admin/);
+    ).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);
   });
 });

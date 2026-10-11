@@ -42,6 +42,22 @@ describe('ImpersonationBanner', () => {
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
   });
 
+  it('is busy while pending, keeping its place in the tab order, and sends once', async () => {
+    // Never answers, so the request stays in flight.
+    stopImpersonatingMock.mockReturnValue(new Promise(() => {}));
+    render(<ImpersonationBanner {...BO} />);
+    const stop = screen.getByRole('button', { name: 'Stop Impersonating' });
+
+    fireEvent.click(stop);
+
+    await waitFor(() => expect(stop).toHaveAttribute('aria-busy', 'true'));
+    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
+    expect(stop).toHaveAttribute('aria-disabled', 'true');
+    expect(stop).toBeEnabled();
+    fireEvent.click(stop);
+    expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
+  });
+
   it('says so when stopping fails, and stays', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
     vi.stubGlobal('location', { ...window.location, assign: assignMock });

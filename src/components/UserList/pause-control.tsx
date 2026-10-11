@@ -7,15 +7,17 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
+import ConfirmedAction from './confirmed-action';
 import LockedControl from './locked-control';
 import type { PauseControlProps } from './types';
 
 // The primary admin's switch on admin grants and revokes (MB.63), beside the
 // page's heading: a warning while changes are paused, and the control that
 // flips it. Every admin sees both; only the primary admin can use the
-// control, whose reason the others see in a tip, and again when they try. The
-// service is the guard
-// (claude-docs/components/user-list.md).
+// control, whose reason the others see in a tip, and again when they try.
+// Pause asks first, saying whom it stops (MB.115, on the owner's call, which
+// reverses MB.63's acting at once); Resume gives back, so it acts at once.
+// The service is the guard (claude-docs/components/user-list.md).
 
 const PauseAdminRoleChangesDocument = graphql(`
   mutation PauseAdminRoleChanges {
@@ -52,6 +54,10 @@ const STATES = {
   },
 } as const;
 
+/** Whom a pause stops, asked before it is sent. */
+const PAUSE_QUESTION =
+  'Pause admin changes? Until you resume them, no other admin can grant or revoke admin, approve or revoke coven creation, or invite an admin.';
+
 /** Why the control cannot be used, to an admin who is not the primary one. */
 const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
 
@@ -87,7 +93,11 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {copy.state}
         </Notice>
       )}
-      {canToggle ? (
+      {!canToggle ? (
+        // In view but unusable, its reason in a tip, as the primary admin's
+        // Revoke is (on the owner's call): the notice is the page's one sentence.
+        <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
+      ) : paused ? (
         <BusyButton
           className={copy.buttonClass}
           disabled={sending}
@@ -98,9 +108,17 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
           {copy.label}
         </BusyButton>
       ) : (
-        // In view but unusable, its reason in a tip, as the primary admin's
-        // Revoke is (on the owner's call): the notice is the page's one sentence.
-        <LockedControl label={copy.label} className={copy.buttonClass} reason={NOT_PRIMARY} />
+        // Its refusal is said beside it by the confirmation, as a row's is.
+        <ConfirmedAction
+          label={copy.label}
+          accessibleName={copy.label}
+          openClass={copy.buttonClass}
+          title={copy.label}
+          question={PAUSE_QUESTION}
+          busy={copy.busy}
+          confirmClass={copy.buttonClass}
+          send={copy.send}
+        />
       )}
       {failure && <Notice kind="error">{failure}</Notice>}
     </div>

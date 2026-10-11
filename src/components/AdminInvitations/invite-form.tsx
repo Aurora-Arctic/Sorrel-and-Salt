@@ -24,7 +24,7 @@ const CreateAdminInvitationDocument = graphql(`
   }
 `);
 
-/** The Reason field's line beneath its label, in view rather than in a tip until the section's sign-off (MB.115, 1d.12). */
+/** What the Reason field is for, behind an info tip beside its label (MB.115, on the owner's call). */
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
@@ -43,7 +43,7 @@ const InviteForm = (): ReactElement => {
     id: emailId,
     error: failure.field?.message,
   });
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, note: NOTE_HINT });
+  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, hint: NOTE_HINT });
 
   async function submit(event: FormEvent<HTMLFormElement>, close: () => void) {
     event.preventDefault();
@@ -92,7 +92,7 @@ const InviteForm = (): ReactElement => {
         </Notice>
       )}
       {open && (
-        <Modal title="Invite an Admin" onClose={cancel}>
+        <Modal title="Invite Admin" onClose={cancel}>
           {(close) => (
             <form className="form" noValidate onSubmit={(event) => void submit(event, close)}>
               <p>
@@ -116,7 +116,7 @@ const InviteForm = (): ReactElement => {
               {/* The wrapper holds the field's room above and below, as the
                   confirmation's Reason has; the shell takes no class. */}
               <div className="admin-invitations__note">
-                <FieldShell label="Reason" note={NOTE_HINT} {...noteField}>
+                <FieldShell label="Reason" hint={NOTE_HINT} {...noteField}>
                   <input
                     id={noteField.controlId}
                     className="input"

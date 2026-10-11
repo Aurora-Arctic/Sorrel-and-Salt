@@ -15,15 +15,20 @@ admin is held by the pause, and hands both down. The rules are
   otherwise. The page sets it from `adminRoleChangePauseState`: paused and
   not `canToggle`.
 - **The user list's own parts.** Revoke asks first through
-  `UserList/confirmed-action.tsx`'s `ConfirmedAction`, naming the address,
-  and a locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
+  "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
+  it was revoked." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
-- **Invite Admin** (`invite-form.tsx`) opens a modal with the **Email Address**,
-  required and marked with the shared red asterisk, and an optional
-  **Reason**, its hint a line beneath the label, spaced as the user list's
-  confirmation spaces its own; both are the shared field shell around their
+- **Invite Admin** (`invite-form.tsx`) opens a modal titled "Invite Admin",
+  the button's own name, with the **Email Address**, required and marked
+  with the shared red asterisk, and a **Reason**, labelled plainly: a field
+  is optional unless it carries the required mark, so no label says
+  "(Optional)". What it is for, "Kept with the invitation, and in the record
+  of who changed what once it is accepted.", is its hint, behind an
+  `InfoTip` beside the label (MB.115, on the owner's call), and it is spaced
+  as the user list's confirmation spaces its own; both are the shared field shell around their
   input ([`field.md`](field.md)). **Send Invitation** stays disabled until
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
   a spinner and "Sending" while the request is out; Cancel is quiet. A `VALIDATION` refusal on `email`
@@ -31,6 +36,8 @@ admin is held by the pause, and hands both down. The rules are
   invitation closes the modal, says "Invitation sent to …" beside the button,
   and refreshes the page, whose re-read lists it. No link is ever shown: the
   mutation answers none.
+- **No invitation waiting is a sentence**: "No admin invitations are
+  waiting."
 - **Four columns**: Email, Reason, Expires and Revoke, the headings and each
   cell's `data-label` from one `COLUMNS` list, the table's roles written out
   so it can stack into cards at phone width.
@@ -50,8 +57,8 @@ with no label. Its own stylesheet holds the section's column and its
 muted "None given", the Reason field's wrapper (`.admin-invitations__note`,
 a step of room above and `space(6)` below) and the sent confirmation's
 margin, `.notice.admin-invitations__sent` compounded with its primitive,
-which the app scopes as `body .notice`. The look past the tokens waits for
-the section's sign-off (MB.115).
+which the app scopes as `body .notice`. The section's look is MB.115's,
+signed off as it stands.
 
 The sent confirmation and the modal's refusal are `Notice`s
 ([`notice.md`](notice.md)), the confirmation taking
@@ -65,12 +72,8 @@ alert (MB.116).
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
 `Admin / Admin Invitations`, inside the admin layout's frame: `Pending`,
 `NoneWaiting` and `Paused` (both controls locked with the pause's reason),
-and `PhoneDark`/`PhoneLight`, the invitations as cards at 375px. The
-proposal for MB.115's sign-off on the invite form's Reason (1d.12) is
-`ProposalInviteReasonTipA` (the hint in a tip, the label "Reason
-(Optional)") and `ProposalInviteReasonVisibleB` (today's line), each with
-`PhoneDark` and `PhoneLight`, story-only markup deleted with the loser.
-Invite and Revoke reach the network only when sent, so a send in the workshop
+and `PhoneDark`/`PhoneLight`, the invitations as cards at 375px; Invite
+Admin opens the form, its Reason's hint in a tip. Invite and Revoke reach the network only when sent, so a send in the workshop
 fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests

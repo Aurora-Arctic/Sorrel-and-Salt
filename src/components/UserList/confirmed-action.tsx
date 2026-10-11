@@ -10,13 +10,14 @@ import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
 import './controls.scss';
 
-// A row's action that asks first, in a modal naming the user, shared by the
-// creation control (M5.8) and the role control (MB.59): the modal's confirm
-// sends the write and stays busy until the re-read page replaces the row; a
-// refusal closes it and says why in the row. The service is the guard; this
+// An action that asks first, in a modal, shared by the creation control
+// (M5.8), the role control (MB.59), Impersonate (MB.53), the pause switch
+// (MB.63) and the invitations' Revoke (MB.70): the modal's confirm sends the
+// write and stays busy until the page is read again, or left; a refusal
+// closes it and says why beside the control. The service is the guard; this
 // only puts it where an admin looks (claude-docs/components/user-list.md).
 
-/** The Reason field's line beneath its label, in view rather than in a tip until the section's sign-off (MB.115, 1d.12). */
+/** What the Reason field is for, behind an info tip beside its label (MB.115, on the owner's call). */
 const NOTE_HINT = 'Kept with the change in the record of who changed what.';
 
 const ConfirmedAction = ({
@@ -30,10 +31,12 @@ const ConfirmedAction = ({
   confirmClass,
   withNote = false,
   send,
+  onSent,
+  refusal,
 }: ConfirmedActionProps): ReactElement => {
   const router = useRouter();
   const warningId = useId();
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: useId(), note: NOTE_HINT });
+  const { aria: noteAria, ...noteField } = fieldDescription({ id: useId(), hint: NOTE_HINT });
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState('');
@@ -57,13 +60,16 @@ const ConfirmedAction = ({
     setFailure(undefined);
     try {
       await send(note.trim() || undefined);
-      // Busy until the re-read replaces this row with one offering the other action.
-      router.refresh();
+      // Busy until the re-read replaces this control with one offering the
+      // other action, or until the page is left.
+      if (onSent) onSent();
+      else router.refresh();
     } catch (error) {
       setStep('idle');
       // No fields of its own, so the shared reader always answers an alert:
-      // the service's refusal verbatim, or the one generic sentence.
-      setFailure(readGraphqlFailure(error).alert);
+      // the service's refusal verbatim, or the one generic sentence, unless
+      // the caller says the refusal itself.
+      setFailure(refusal ?? readGraphqlFailure(error).alert);
     }
   }
 
@@ -111,7 +117,7 @@ const ConfirmedAction = ({
                 // The wrapper holds the field's room above and below; the shell
                 // takes no class of its own.
                 <div className="user-list__note">
-                  <FieldShell label="Reason" note={NOTE_HINT} {...noteField}>
+                  <FieldShell label="Reason" hint={NOTE_HINT} {...noteField}>
                     <input
                       id={noteField.controlId}
                       className="input"

@@ -50,7 +50,7 @@ const WHAT_CHANGED: Record<LedgerPrivilege, string> = {
 
 /** The empty state, in plain words for the filter shown. */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
-  const what = privilege ? `${WHAT_CHANGED[privilege]} changes` : 'permission changes';
+  const what = privilege ? `${WHAT_CHANGED[privilege]} changes` : 'privilege changes';
   return query ? `No ${what} for “${query}”.` : `No ${what} yet.`;
 }
 

@@ -57,8 +57,8 @@ const Revoke = ({
       title="Revoke Invitation"
       question={
         <>
-          Withdraw the invitation to <strong>{invitation.email}</strong>? Its link will say it was
-          withdrawn.
+          Revoke the invitation to <strong>{invitation.email}</strong>? Its link will say it was
+          revoked.
         </>
       }
       busy="Revoking"
@@ -81,7 +81,7 @@ const AdminInvitations = ({ invitations, locked }: AdminInvitationsProps): React
         )}
       </div>
       {invitations.length === 0 ? (
-        <p className="admin-invitations__empty">No invitations are waiting.</p>
+        <p className="admin-invitations__empty">No admin invitations are waiting.</p>
       ) : (
         <div className="data-table-frame">
           <table className="data-table data-table--stack" {...tableRole('table')}>

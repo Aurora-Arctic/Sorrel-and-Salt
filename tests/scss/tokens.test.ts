@@ -6,7 +6,9 @@ import { fromRoot } from '../support/paths';
 // The colours the sign-in and account pages depend on stay legible on the
 // page, in both themes (MB.116; claude-docs/styling.md, "Brand colours"): what
 // marks out a control at 3:1 (WCAG 1.4.11), and a button's label on its
-// ground at 4.5:1. One assertion per theme, the functional half of the
+// ground at 4.5:1. The admin area's text and wax hold on the card surface
+// too (MB.115), the ground of a banded row, a stacked table's card and the
+// impersonation banner. One assertion per theme, the functional half of the
 // tokens; how they look is the workshop's and the axe scan's
 // (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
@@ -85,10 +87,11 @@ function brands(): Record<string, Record<string, string>> {
   return byBrand;
 }
 
-describe('MB.116: the brand and text colours clear their floors on the page', () => {
+describe('MB.116, MB.115: the brand and text colours clear their floors on the page and the card', () => {
   it.each(['dark', 'light'] as const)('in the %s theme', (theme) => {
     const tokens = surfaces(theme);
     const page = toHex(tokens['--surface-page'], theme);
+    const card = toHex(tokens['--surface-card'], theme);
     const table: { pair: string; ratio: number; floor: number }[] = [];
     const row = (pair: string, a: string, b: string, floor: number) =>
       table.push({ pair, ratio: contrastRatio(toHex(a, theme), toHex(b, theme)), floor });
@@ -100,9 +103,16 @@ describe('MB.116: the brand and text colours clear their floors on the page', ()
       row(`${brand} ink on its hover`, ink, hover, 4.5);
     }
     // Text, so the text floor, not the 3 a control's edge needs.
-    for (const token of ['--text-muted', '--text-primary', '--accent']) {
+    // The wax is text too: a destructive button's label and edge, and an error.
+    // On the card as well as the page, since a banded row, a stacked card
+    // and the banner all sit on it, with small buttons and muted facts in them.
+    for (const token of ['--text-muted', '--text-primary', '--accent', '--secondary']) {
       row(`${token} on the page`, tokens[token], page, 4.5);
+      row(`${token} on the card`, tokens[token], card, 4.5);
     }
+    // The banner's heavy foot rule, a line rather than text, against the page
+    // beneath it.
+    row('the banner rule on the page', tokens['--secondary'], page, 3);
 
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });

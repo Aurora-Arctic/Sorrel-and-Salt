@@ -29,7 +29,13 @@ const GroupedValueList = ({
   nextHref,
   position,
 }: GroupedValueListProps): ReactElement => {
-  const { title, noun, plural, group } = KINDS[kind];
+  const { title, label, noun, plural, group } = KINDS[kind];
+  // An empty list says how to fill it; a filtered one with no rows, what to
+  // change, naming what this kind can be filtered by.
+  const empty =
+    filter.query || filter.group
+      ? `No ${noun} matches that filter. Try another name${group ? ` or ${group.label.toLowerCase()}` : ''}.`
+      : `There are no ${plural} yet. Add one with Add ${label}.`;
   return (
     // The kind's modifier, so a rule one kind's rows need — the category
     // chip's padding — stays that kind's.
@@ -99,7 +105,7 @@ const GroupedValueList = ({
           </table>
         </div>
       ) : (
-        <p>{filter.query || filter.group ? `No ${noun} matches.` : `No ${plural} yet.`}</p>
+        <p>{empty}</p>
       )}
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

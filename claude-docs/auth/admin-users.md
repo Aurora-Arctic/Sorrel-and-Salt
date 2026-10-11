@@ -180,8 +180,8 @@ person's row on `/admin/users`, so a second admin is no longer an `UPDATE` in
   runs, read from the variable at each check by `isPrimaryAdmin` (in
   `user-role.ts`, over `src/lib/primary-admin.ts`), compared case-insensitively. The refusal is a
   `Forbidden` in plain words that name no variable, the words its row shows:
-  "This is the primary admin and can't be removed. Changing who the primary
-  admin is takes a change to the site's configuration." How to change it is
+  "You can't revoke the primary admin. The site's configuration sets who that
+  is." How to change it is
   below, and in [`admin-bootstrap.md`](admin-bootstrap.md).
 - **The count is the fallback.** A revoke locks every live admin row
   `for update`, in id order, through the writer's `lockLiveAdmins`, then
@@ -252,7 +252,8 @@ the good ones while it is dealt with, and back on. The argument is
   click is not an error. Nothing in v1 lists the rows.
 - **While paused, `setUserRole` refuses every other admin.** It reads the
   open pause first, and refuses a grant or a revoke from any admin but the
-  primary one with "Admin changes are paused by the primary admin.", naming a role and no person. Nothing
+  primary one with "The primary admin has paused admin changes. Ask them to
+  resume changes.", naming a role and no person. Nothing
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good admins is the same attack from the
   other side.
@@ -427,7 +428,7 @@ first, for the admin who suspects misuse (story 61).
   It is the admin's whole row, not MB.10's display-name `usersById`.
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
-  the permissions history icon before each name on `/admin/users` opens with
+  the privilege changes icon before each name on `/admin/users` opens with
   that user's address) and by privilege (`?privilege=admin|create_workspace`,
   a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
