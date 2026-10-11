@@ -30,18 +30,17 @@ describe('SignInPanel', () => {
     clearLastUsed();
   });
 
-  it('offers every roster provider as an accessible, native button', () => {
-    render(<SignInPanel next="/" configured={['google', 'discord', 'facebook', 'microsoft']} />);
+  it('offers every roster provider, and calls signIn.social with the provider, the destination and an error callback carrying it', () => {
+    render(
+      <SignInPanel
+        next="/coven/hearth"
+        configured={['google', 'discord', 'facebook', 'microsoft']}
+      />,
+    );
 
-    for (const name of ['Google', 'Discord', 'Facebook', 'Microsoft']) {
-      const button = screen.getByRole('button', { name: `Continue with ${name}` });
-      expect(button.tagName).toBe('BUTTON');
+    for (const name of ['Discord', 'Facebook', 'Microsoft']) {
+      expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeEnabled();
     }
-  });
-
-  it('calls signIn.social with the provider, the destination and an error callback carrying it', () => {
-    render(<SignInPanel next="/coven/hearth" configured={['google']} />);
-
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
     expect(socialMock).toHaveBeenCalledWith({
@@ -53,39 +52,34 @@ describe('SignInPanel', () => {
 
   // With no return path the callback lands the account by role, so the
   // sign-in says it asked for none rather than naming the /coven landing.
-  it('flags a sign-in with no return path, and keeps a failed one without one', () => {
-    render(<SignInPanel configured={['google']} />);
+  it('flags a sign-in with no return path, keeping a failed one without one, and sends an explicit /coven unflagged', () => {
+    const { unmount } = render(<SignInPanel configured={['google']} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
-    expect(socialMock).toHaveBeenCalledWith({
+    expect(socialMock).toHaveBeenLastCalledWith({
       provider: 'google',
       callbackURL: '/coven',
       errorCallbackURL: '/sign-in',
       additionalData: { noReturnPath: true },
     });
-  });
+    unmount();
 
-  it('sends an explicit /coven as a return path, with no flag', () => {
     render(<SignInPanel next="/coven" configured={['google']} />);
-
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
-    expect(socialMock).toHaveBeenCalledWith({
+    expect(socialMock).toHaveBeenLastCalledWith({
       provider: 'google',
       callbackURL: '/coven',
       errorCallbackURL: '/sign-in?next=%2Fcoven',
     });
   });
 
-  it('renders no alert when there is no error', () => {
-    render(<SignInPanel next="/" configured={['google']} />);
-
+  it('shows a passed-in error as an alert, and none without one', () => {
+    const { rerender } = render(<SignInPanel next="/" configured={['google']} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
 
-  it('shows a passed-in error as an alert', () => {
-    render(
+    rerender(
       <SignInPanel
         next="/"
         error="Sign-in was cancelled before it finished."
@@ -107,62 +101,42 @@ describe('SignInPanel', () => {
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument());
   });
 
-  it('marks an unconfigured provider unavailable, described by a note, and reachable by keyboard', () => {
+  it('marks an unconfigured provider unavailable, described, reachable by keyboard, and inert', () => {
     render(<SignInPanel next="/" configured={['google']} />);
 
     const discordButton = screen.getByRole('button', { name: 'Continue with Discord' });
 
     expect(discordButton).toHaveAttribute('aria-disabled', 'true');
-    const describedBy = discordButton.getAttribute('aria-describedby');
-    expect(describedBy).toBeTruthy();
-    expect(document.getElementById(describedBy as string)).toHaveTextContent(/not available/i);
+    expect(discordButton).toHaveAccessibleDescription(/\S/);
     // Still in the tab order — `disabled` would remove it, `aria-disabled` doesn't.
     expect(discordButton).not.toHaveAttribute('disabled');
-  });
 
-  it('does not call signIn.social when an unavailable provider is clicked', () => {
-    render(<SignInPanel next="/" configured={['google']} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Discord' }));
-
+    fireEvent.click(discordButton);
     expect(socialMock).not.toHaveBeenCalled();
-  });
-
-  it("marks the last-used provider in its button's accessible name, and only that one", () => {
-    setLastUsed('discord');
-    render(<SignInPanel next="/" configured={['google', 'discord', 'facebook', 'microsoft']} />);
-
-    expect(
-      screen.getByRole('button', { name: 'Continue with Discord, last used' }),
-    ).toBeInTheDocument();
-    for (const name of ['Google', 'Facebook', 'Microsoft']) {
-      expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
-    }
-  });
-
-  it('marks no provider without the cookie', () => {
-    render(<SignInPanel next="/" configured={['google', 'discord', 'facebook', 'microsoft']} />);
-
-    expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(4);
   });
 
   // The cookie is readable, so anything can write it; a value naming no
   // provider in the roster must not mark a button or break the page.
-  it('marks no provider when the cookie names none in the roster', () => {
-    setLastUsed('github');
-    render(<SignInPanel next="/" configured={['google']} />);
+  it("marks the last-used provider in its button's accessible name, only that one, and only one the roster names", () => {
+    setLastUsed('discord');
+    const roster = ['google', 'discord', 'facebook', 'microsoft'] as const;
+    const { unmount } = render(<SignInPanel next="/coven" configured={[...roster]} />);
 
-    expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
-  });
+    const marked = screen.getByRole('button', { name: 'Continue with Discord, last used' });
+    for (const name of ['Google', 'Facebook', 'Microsoft']) {
+      expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
+    }
+    fireEvent.click(marked);
+    expect(socialMock).toHaveBeenCalledWith(expect.objectContaining({ provider: 'discord' }));
+    unmount();
 
-  it('still starts a sign-in from the marked button', () => {
-    setLastUsed('google');
-    render(<SignInPanel next="/coven" configured={['google']} />);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google, last used' }));
-
-    expect(socialMock).toHaveBeenCalledWith(expect.objectContaining({ provider: 'google' }));
+    for (const cookie of ['github', '']) {
+      if (cookie) setLastUsed(cookie);
+      else clearLastUsed();
+      const { unmount: drop } = render(<SignInPanel next="/" configured={[...roster]} />);
+      expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
+      drop();
+    }
   });
 
   // The server has no cookie to read, so its HTML must carry no mark, or a

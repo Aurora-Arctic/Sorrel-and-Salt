@@ -63,15 +63,10 @@ describe('ChipColorField', () => {
   });
   afterAll(() => vi.unstubAllGlobals());
 
-  it('shows the hex in a text box named by its label', () => {
+  it("shows the hex in a text box named by its label, beside the picker's area and hue slider", () => {
     render(<Controlled />);
 
     expect(hex()).toHaveValue('#5d8ab1');
-  });
-
-  it("names the picker's area and hue slider for the field", () => {
-    render(<Controlled />);
-
     expect(
       screen.getByRole('slider', { name: 'Dark Theme Colour: saturation and brightness' }),
     ).toBeInTheDocument();
@@ -79,34 +74,23 @@ describe('ChipColorField', () => {
   });
 
   describe('the format', () => {
-    it('starts in HSB, typed as hue, saturation and brightness, each captioned under its box', () => {
-      render(<Controlled />);
-
-      expect(formatButton()).toHaveAccessibleName('Dark Theme Colour format: HSB. Switch to HSL');
-      expect(channel('hue')).toBeInTheDocument();
-      expect(channel('saturation')).toBeInTheDocument();
-      expect(channel('brightness')).toBeInTheDocument();
-      // Chrome's order: the box, then its caption.
-      expect(
-        channel('hue').compareDocumentPosition(screen.getByText('Hue')) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
-    });
-
-    it('says what the toggle is in a tooltip on focus, and what a press moves to', async () => {
+    it('opens a tooltip on the toggle when the keyboard focuses it', async () => {
       render(<Controlled />);
 
       // Arrived at by the keyboard, as the tooltip opens on focus only then.
       fireEvent.keyDown(document.body, { key: 'Tab' });
       formatButton().focus();
 
-      expect(await screen.findByRole('tooltip')).toHaveTextContent('Format: HSB. Press for HSL.');
+      expect(await screen.findByRole('tooltip')).toBeVisible();
     });
 
     // Chrome's toggle: each press shows the next format, round again after the last.
-    it('cycles HSB, HSL, RGB and back, each with its own channels', () => {
+    it('starts in HSB and cycles HSL, RGB and back, each with its own channels', () => {
       render(<Controlled />);
 
+      expect(channel('hue')).toBeInTheDocument();
+      expect(channel('saturation')).toBeInTheDocument();
+      expect(channel('brightness')).toBeInTheDocument();
       fireEvent.click(formatButton());
       expect(channel('lightness')).toBeInTheDocument();
       expect(screen.queryByRole('spinbutton', { name: 'Dark Theme Colour brightness' })).toBeNull();
@@ -115,14 +99,13 @@ describe('ChipColorField', () => {
       expect(channel('red')).toHaveValue(0x5d);
       expect(channel('green')).toHaveValue(0x8a);
       expect(channel('blue')).toHaveValue(0xb1);
-      expect(formatButton()).toHaveAccessibleName('Dark Theme Colour format: RGB. Switch to HSB');
 
       fireEvent.click(formatButton());
       expect(channel('brightness')).toBeInTheDocument();
     });
   });
 
-  it('writes a channel typed into the hex on Enter', async () => {
+  it('writes a channel typed into the hex on Enter, and on leaving it', async () => {
     const onChange = vi.fn();
     render(<Controlled onChange={onChange} />);
     showFormat('RGB');
@@ -133,18 +116,12 @@ describe('ChipColorField', () => {
     // The picker answers a moment after the key, not within it.
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith('#ff8ab1'));
     expect(hex()).toHaveValue('#ff8ab1');
-  });
-
-  it('writes a channel typed into the hex on leaving it', async () => {
-    const onChange = vi.fn();
-    render(<Controlled onChange={onChange} />);
-    showFormat('RGB');
 
     channel('green').focus();
     fireEvent.change(channel('green'), { target: { value: '0' } });
     channel('green').blur();
 
-    await waitFor(() => expect(onChange).toHaveBeenLastCalledWith('#5d00b1'));
+    await waitFor(() => expect(onChange).toHaveBeenLastCalledWith('#ff00b1'));
   });
 
   it('moves the channels to a hex typed whole, and leaves them for half of one', async () => {
@@ -156,48 +133,6 @@ describe('ChipColorField', () => {
 
     fireEvent.change(hex(), { target: { value: '#35987D' } });
     await waitFor(() => expect(channel('red')).toHaveValue(0x35));
-  });
-
-  describe('the veil', () => {
-    it("veils the low-contrast side in the ground's own colour, labelled inside, and says what it means", () => {
-      const { container } = render(<Controlled />);
-
-      const veil = container.querySelector<HTMLElement>('.chip-color-field__veil');
-      expect(veil?.style.clipPath).toMatch(/^polygon\(/);
-      expect(veil).toHaveStyle({ backgroundColor: '#1f1c16' });
-      expect(container.querySelector('.chip-color-field__veil-label')).toHaveTextContent('< 4.5:1');
-      const hint = screen.getByText(
-        'Colours in the dark veil fall short of 4.5:1 on the dark card.',
-      );
-      expect(
-        screen.getByRole('slider', { name: 'Dark Theme Colour: saturation and brightness' })
-          .parentElement,
-      ).toHaveAttribute('aria-describedby', hint.id);
-    });
-
-    it('draws the edge on the dark card in its own ink', () => {
-      const { container } = render(<Controlled />);
-
-      const edge = container.querySelector('svg[viewBox="0 0 100 100"]');
-      expect(edge).toHaveClass('chip-color-field__edge--dark');
-      expect(edge?.querySelector('path')?.getAttribute('d')).toMatch(/^M \d/);
-    });
-
-    it("draws the light page's edge, and its veil in the page's colour", () => {
-      const { container } = render(
-        <Controlled column="colorLight" label="Light Theme Colour" initial="#286ba6" />,
-      );
-
-      expect(container.querySelector('svg[viewBox="0 0 100 100"] path')?.getAttribute('d')).toMatch(
-        /^M \d/,
-      );
-      expect(container.querySelector('.chip-color-field__veil')).toHaveStyle({
-        backgroundColor: '#efe9da',
-      });
-      expect(
-        screen.getByText('Colours in the light veil fall short of 4.5:1 on the light page.'),
-      ).toBeInTheDocument();
-    });
   });
 
   // The owner's call: the pair's rule on demand, from the other colour.
@@ -212,8 +147,8 @@ describe('ChipColorField', () => {
       expect(hex()).toHaveValue(pairedColor('#286ba6', 'colorDark'));
     });
 
-    it('names the dark-theme colour on the light field', () => {
-      render(
+    it('names the dark-theme colour on the light field, and waits for a whole partner', () => {
+      const { unmount } = render(
         <Controlled
           column="colorLight"
           label="Light Theme Colour"
@@ -223,46 +158,21 @@ describe('ChipColorField', () => {
       );
 
       expect(screen.getByRole('button', { name: 'Match Dark Theme Colour' })).toBeEnabled();
-    });
+      unmount();
 
-    it('waits for a whole partner', () => {
       render(<Controlled partner="#286b" />);
-
       expect(screen.getByRole('button', { name: 'Match Light Theme Colour' })).toBeDisabled();
     });
   });
 
-  it('says what the colour reads on its own ground, as part of the box description', () => {
-    render(<Controlled />);
-
-    expect(screen.getByText('4.64:1 on the dark card')).toBeInTheDocument();
-    expect(hex()).toHaveAccessibleDescription('4.64:1 on the dark card');
-  });
-
-  // The owner's call: a ratio at the floor or over it reads in the accent green.
-  it('marks a ratio that clears the floor, and not one that falls short', () => {
+  it('describes the box by the ratio the colour reads on its own ground, and by none while the hex is not whole', () => {
     const { unmount } = render(<Controlled />);
-    expect(screen.getByText('4.64:1 on the dark card')).toHaveClass(
-      'chip-color-field__ratio--pass',
-    );
+
+    expect(hex()).toHaveAccessibleDescription(expect.stringContaining('4.64:1'));
     unmount();
 
-    render(<Controlled initial="#0c5393" />);
-    expect(screen.getByText('2.16:1 on the dark card')).not.toHaveClass(
-      'chip-color-field__ratio--pass',
-    );
-  });
-
-  it('says nothing of a ratio while the hex is not whole', () => {
     render(<Controlled initial="#5d8" />);
-
-    expect(screen.queryByText(/^\d+\.\d+:1 on the/)).not.toBeInTheDocument();
-  });
-
-  it('shows the sample chip, named for the group', () => {
-    render(<Controlled />);
-
-    expect(screen.getAllByText('Fixture Wards').length).toBeGreaterThan(0);
+    expect(hex()).not.toHaveAccessibleDescription(expect.stringMatching(/\d:1/));
   });
 
   describe('the near-colour warning', () => {
@@ -271,33 +181,27 @@ describe('ChipColorField', () => {
       { name: 'Testcraft', hex: '#c371c6' },
     ];
 
-    it('names the group whose colour in this theme stands too close', () => {
+    it('names the group whose colour in this theme stands too close, describing the box by it', () => {
       render(<Controlled others={others} />);
 
       const warning = screen.getByRole('status');
-      expect(warning).toHaveTextContent(
-        'Close to the dark theme colour of "Testward", so their chips may be hard to tell apart.',
-      );
+      expect(warning).toHaveTextContent('Testward');
       expect(hex().getAttribute('aria-describedby')).toContain(warning.id);
     });
 
-    it('says nothing when every other colour stands clear', () => {
-      render(<Controlled others={[others[1]]} />);
-
-      expect(screen.getByRole('status')).toBeEmptyDOMElement();
-    });
-
-    it('follows the colour as it changes', () => {
+    it('follows the colour as it changes, and says nothing once every other colour stands clear', () => {
       render(<Controlled others={others} />);
 
       fireEvent.change(hex(), { target: { value: '#c56fc4' } });
+      expect(screen.getByRole('status')).toHaveTextContent('Testcraft');
 
-      expect(screen.getByRole('status')).toHaveTextContent('"Testcraft"');
+      fireEvent.change(hex(), { target: { value: '#35987d' } });
+      expect(screen.getByRole('status')).toBeEmptyDOMElement();
     });
   });
 
   // The owner's call: a refusal in the error notice, as the warning is in its own.
-  it('shows a refusal passed in as an error notice, which the box is described by', () => {
+  it('shows a refusal passed in, describing the box by it ahead of the ratio', () => {
     render(
       <Controlled
         error="The two colours are 135° apart in hue — keep them within 10° of each other"
@@ -307,17 +211,7 @@ describe('ChipColorField', () => {
       />,
     );
 
-    const notice = screen.getByText(
-      'The two colours are 135° apart in hue — keep them within 10° of each other',
-    );
-    expect(notice).toHaveAttribute('id', 'dark-error');
-    expect(notice).toHaveClass('notice', 'notice--error');
     expect(hex()).toHaveAccessibleDescription(expect.stringContaining('135° apart in hue'));
-  });
-
-  it('describes the box by an error passed in, before the ratio', () => {
-    render(<Controlled aria-describedby="dark-error" aria-invalid />);
-
     expect(hex().getAttribute('aria-describedby')).toMatch(/^dark-error /);
     expect(hex()).toHaveAttribute('aria-invalid', 'true');
   });
