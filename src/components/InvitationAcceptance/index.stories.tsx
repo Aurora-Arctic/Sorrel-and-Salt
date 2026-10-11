@@ -11,7 +11,7 @@ export default {
 
 // Inside the page's own frame, so the workshop shows what the page shows.
 const Page = (props: InvitationAcceptanceProps) => (
-  <main className="invitation-page">
+  <main className="page-frame page-frame--narrow">
     <InvitationAcceptance {...props} />
   </main>
 );

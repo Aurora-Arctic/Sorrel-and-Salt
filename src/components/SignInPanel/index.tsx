@@ -4,26 +4,18 @@ import { type ReactElement, useState, useSyncExternalStore } from 'react';
 import { getLastUsedLoginMethod, signIn } from '../../lib/auth-client';
 import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
-import { DiscordIcon, FacebookIcon, GoogleIcon, MicrosoftIcon } from './icons';
+import Notice from '../Notice';
+import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
+import { PROVIDER_MARKS } from './icons';
 import type { ProviderId } from '../../lib/types';
 import type { SignInPanelProps } from './types';
 import './index.scss';
-
-// The familiar per-provider "Continue with X" mark, matched to each
-// provider's own brand button convention rather than the app's own icon set
-// — claude-docs/components/sign-in-panel.md, "Provider branding".
-const PROVIDER_ICONS: Record<ProviderId, () => ReactElement> = {
-  google: GoogleIcon,
-  discord: DiscordIcon,
-  facebook: FacebookIcon,
-  microsoft: MicrosoftIcon,
-};
 
 // A cookie announces no change, and only a callback, a full navigation away,
 // writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
-const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
+const SignInPanel = ({ next, error, configured, className }: SignInPanelProps): ReactElement => {
   // Seeded from the server-rendered callback error, then replaced by a
   // pre-redirect failure (signIn.social's own `{ error }` result) — the two
   // never show at once, so one field covers both.
@@ -46,18 +38,20 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   };
 
   return (
-    <div className="sign-in-panel">
-      <h1 className="sign-in-panel__heading">Sign In</h1>
-      {message && (
-        <p className="sign-in-panel__error" role="alert">
-          {message}
-        </p>
-      )}
+    <div className={className ? `sign-in-panel ${className}` : 'sign-in-panel'}>
+      <div className="header sign-in-panel__header">
+        <h1>Sign In</h1>
+      </div>
+      {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
         {SOCIAL_PROVIDERS.map((provider) => {
           const isAvailable = configured.includes(provider.id);
           const noteId = `sign-in-panel__note-${provider.id}`;
-          const Icon = PROVIDER_ICONS[provider.id];
+          // The familiar per-provider "Continue with X" mark, matched to each
+          // provider's own brand button rather than the app's own icon set —
+          // claude-docs/components/sign-in-panel.md, "Provider branding".
+          // Facebook's white "f" sits on its blue chip on a button.
+          const Mark = PROVIDER_MARKS[provider.id];
           const isLastUsed = provider.id === lastUsed;
           return (
             <div key={provider.id} className="sign-in-panel__provider">
@@ -85,17 +79,13 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
                 aria-label={isLastUsed ? `Continue with ${provider.label}, last used` : undefined}
                 onClick={() => handleClick(provider.id)}
               >
-                <Icon />
+                <Mark chip />
                 Continue with {provider.label}
                 {isLastUsed && (
                   <span className="badge badge--last-used sign-in-panel__last-used">Last used</span>
                 )}
               </button>
-              {!isAvailable && (
-                <p id={noteId} className="sign-in-panel__note">
-                  Not available right now.
-                </p>
-              )}
+              {!isAvailable && <ProviderUnavailableNote id={noteId} />}
             </div>
           );
         })}

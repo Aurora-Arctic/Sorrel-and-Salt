@@ -1,10 +1,5 @@
 {
   "extends": ["stylelint-config-standard-scss"],
-  "ignoreFiles": [
-    "src/components/SignInPanel/index.scss",
-    "src/components/SignInPanel/icons.scss",
-    "src/components/UserList/index.scss"
-  ],
   "rules": {
     "color-no-hex": true,
     "color-named": "never",

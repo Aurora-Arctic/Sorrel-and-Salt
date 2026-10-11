@@ -97,45 +97,19 @@ $tip-layer: $sticky-column-layer + 1;
   @include tip-bubble-open;
 }
 
-// The linked providers' logos in a row.
+// The linked providers' marks in a row, each on its brand's circle, the
+// `.provider-mark` primitive (claude-docs/styling.md, "Link rows and provider
+// marks").
 .user-list__providers {
   display: inline-flex;
   gap: space(1);
   vertical-align: middle;
-}
 
-// Each logo on a small circle of its brand's own ground, as the sign-in
-// buttons give it one: the marks are drawn for those grounds, Discord's white
-// for its blurple. The colours are the brand's, as hex literals
-// (SignInPanel/icons.tsx). Facebook's mark is its own blue circle with a
-// white "f", so it fills the circle's whole box.
-.user-list__provider {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-
-  > svg {
-    width: 0.875rem;
-    height: auto;
+  // Flex, so the circle sizes the hint that holds it and its tip, rather than
+  // a line box around it adding the text's descender space below.
+  > .user-list__hint {
+    display: inline-flex;
   }
-}
-
-.user-list__provider--google,
-.user-list__provider--microsoft {
-  border: 1px solid #dadce0;
-  background-color: #ffffff;
-}
-
-.user-list__provider--discord {
-  background-color: #5865f2;
-}
-
-.user-list__provider--facebook > svg {
-  width: 100%;
-  height: 100%;
 }
 
 // The history link, then the name, side by side.

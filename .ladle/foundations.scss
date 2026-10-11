@@ -297,10 +297,14 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     $printed: '';
 
     @each $part, $value in $parts {
-      $shown: '#{$value}';
+      // A map cannot be interpolated, so a theme-split part is read apart
+      // theme by theme; declared first so the branches assign the outer one.
+      $shown: null;
 
       @if meta.type-of($value) == map {
         $shown: 'dark #{map.get($value, dark)}, light #{map.get($value, light)}';
+      } @else {
+        $shown: '#{$value}';
       }
 
       $separator: ' · ';
