@@ -9,25 +9,25 @@ compendium mutations, and puts an error from either side beside the field it
 names. It is built standalone: the add and edit modals and the admin
 compendium page wrap it rather than containing their own form.
 
-| File                     | What it holds                                                                                                                                                                                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`              | The form: the mutations, the fields in order in their folding sections and which are open, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                                           |
-| `fields.tsx`             | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                                                               |
-| `suggestions.tsx`        | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                                                                    |
-| `duplicates.tsx`         | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                                                                    |
-| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                                                                |
-| `categories.tsx`         | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                                                         |
-| `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                        |
-| `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                                                              |
-| `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                                                                |
-| `section.tsx`            | `CollapsibleSection`, one of the ingredient's seven sections as a disclosure, and `Section`, one titled section of a variant's fields, at `h4`                                                                                                  |
-| `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields                                                                                                                                                   |
-| `icons.tsx`              | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                                                                        |
-| `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                               |
-| `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it                                                                 |
-| `values.ts`              | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, `SECTION_KEYS` and `sectionsWithErrors`, and the two resolvers, a coven's and the compendium's |
-| `options.ts`             | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                                                                |
-| `types.ts`               | The props, the form's own values, and the input it sends                                                                                                                                                                                        |
+| File                     | What it holds                                                                                                                                                                                                                                                        |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`              | The form: the mutations, the fields in order in their folding sections and which are open, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                                                                |
+| `fields.tsx`             | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                                                                                    |
+| `suggestions.tsx`        | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                                                                                         |
+| `duplicates.tsx`         | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                                                                                         |
+| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                                                                                     |
+| `categories.tsx`         | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                                                                              |
+| `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                                             |
+| `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, `variantSummary`, and `useVariantFolds`, which of each variant's sections are open                                     |
+| `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                                                                                     |
+| `section.tsx`            | `CollapsibleSection`, a section as a disclosure: one of the ingredient's seven at `h3`, or one of an open variant's six at `h4`                                                                                                                                      |
+| `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields, and `variantSectionSummary`, a variant's section's line                                                                                                               |
+| `icons.tsx`              | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                                                                                             |
+| `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                                                    |
+| `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it                                                                                      |
+| `values.ts`              | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, `SECTION_KEYS`, `sectionsWithErrors` and their variant forms, and the two resolvers, a coven's and the compendium's |
+| `options.ts`             | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                                                                                     |
+| `types.ts`               | The props, the form's own values, and the input it sends                                                                                                                                                                                                             |
 
 ## The props contract
 
@@ -76,7 +76,8 @@ call), in the same order and under the same names as far as a form's fields
 go: Identity (its form), Description, Correspondences (element, planets,
 zodiac signs, colours), Relations (categories, substitute ingredients),
 Safety (safety notes) and Sources (references). Their headings are `h4`s,
-a level beneath the Variants `h3`.
+a level beneath the Variants `h3`, and each folds as the ingredient's do
+(["Sections"](#sections)).
 
 **Every field shows a short action while it is empty**, and what it is for
 sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
@@ -307,9 +308,46 @@ where the change is:
   discard guard replace the saves beneath the sections, so they work whatever
   is closed.
 
-A variant's card keeps its own disclosure, one open at a time
-(["The variants"](#the-variants)); its `h4` sections inside stay plain
-`Section`s, since the card is already the fold.
+**A variant's sections fold too** (MB.115, the owner's ask: "The sections
+of the Variants should also collapse"). Inside an open variant card, its six
+`h4` sections are the same `CollapsibleSection` at `level={4}`: a heading
+button with a chevron, a muted line while closed, the error flag, the fields
+kept in the page while hidden. The card keeps its own disclosure, one open
+at a time, around them (["The variants"](#the-variants)).
+
+- **What opens.** A variant added in this session, from the New Form box,
+  opens with every section open, as a new entry does; one an edit opened
+  with opens, by its pencil, with every section closed, as an edit does.
+  Each variant keeps what was opened in it while its card is closed and
+  opened again.
+- **Its closed lines** read as the ingredient's sections of the same name
+  do, through the same functions in `summaries.tsx`, from the variant's own
+  values (`variantSectionSummary`): Correspondences without deities, which
+  are the ingredient's alone, and Identity its form with the group after it,
+  "Dried leaf (Plant part)", as the card's own line reads it.
+- **Where the state lives.** The form holds it beside its own sections',
+  through `useVariantFolds` (`variants.tsx`): a list by each variant's
+  place, kept in step as the New Form box adds a variant first and Remove
+  takes one out, a place past the list's end reading every section closed.
+  The form holds it, not each card, so that Save and Open All / Close All
+  reach it.
+- **Save** opens, in every variant holding an error, each of its sections
+  holding one, the schema's or the server's, as it opens the ingredient's:
+  `variantsWithErrors` (`values.ts`) reads each from `errors.variants`, by
+  the first key beneath the variant, its Form and its kept `id` Identity's.
+  With the card the save opens, that puts the first field marked invalid in
+  view, in the commit that draws it, so the focus lands. A variant's
+  substitute link naming no form opens its Relations.
+- **Open All / Close All** reaches every variant's sections too: Open All
+  opens all six of each, Close All closes them. It opens and closes no card.
+  Its label is unchanged, Close All while any section is open: a variant's
+  sections are in view only while Variants is open, which already reads
+  Close All, so a section open inside a card the Variants section hides
+  never keeps it reading Close All.
+- **Copy From Ingredient** sits in its field's label row as before, so it is
+  hidden with its section and pressed once the section is open. The
+  skipped notice stays in the page with the list, so it outlasts its
+  section closing and opening; what a copy adds shows on the closed line.
 
 ### The lookups
 
@@ -699,7 +737,9 @@ as the ingredient's page shows its forms after it (MB.221).
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
   and `aria-controls`, naming the region of the variant's fields, and is
   described by the summary while closed. Opening one closes any other; the
-  focus moves to the opened variant's first field, its Form box. A Done at
+  focus moves to the first thing in it: its Form box while Identity is
+  open, else Identity's heading, closed, as an edit's variants open
+  (["Sections"](#sections)). A Done at
   the foot of the fields, "Done with Oil", folds it back to its line and
   returns the focus to its Edit; Edit pressed while open folds it too. A
   variant added from the New Form box opens, first of the cards, closing
@@ -711,8 +751,9 @@ as the ingredient's page shows its forms after it (MB.221).
   in it. Its values are the form's either way.
 - **An error in a closed variant opens it.** A save, the resolver's or the
   server's, that finds an error under a variant opens the first such
-  variant, unless the one open has an error too, so the form's focus on the
-  first field marked invalid reaches its field. The variant opens while the
+  variant, unless the one open has an error too, and the form opens the
+  variant's sections holding one, so the form's focus on the first field
+  marked invalid reaches its field. The variant opens while the
   section renders the save's result, in the same commit that draws the
   error, since the focus runs as that commit lands. Any other variant with
   an error stays closed, its card edged in the error red and its line saying
@@ -1273,14 +1314,13 @@ does not have. Each heading block is `space(3)` deep above and below, its
 `h3` in the display face at 1.25rem, a step under `h4`, the summary in the
 muted ink at the caption size, weight 300, and the error flag in the error
 red; open, its fields follow at the form's gap, `space(5)` short of the
-next hairline. A variant's titled sections are columns at the form's own
-gap, `space(6)` further apart than any two fields (the margin outweighing
-layout-base's bare `section` rule). A variant's
-`labelled` section is a two-column grid, its field's block unboxed into it
-(`display: contents`), so the heading and the rest of the label row share
-a line. A variant's sections are a step closer for the narrower card: their
-`h4` at 1.125rem, `space(2)` above the first field, the fields `space(4)`
-apart and the sections the variant's `space(5)` gap plus `space(2)`. The
+next hairline. A variant's sections fold the same way, flush between the
+same hairlines inside the card, a step closer for the narrower card: each
+heading block `space(2)` deep above and below, its `h4` at 1.125rem, the
+fields `space(4)` apart, `space(3)` short of the next hairline, and Done
+`space(3)` beneath the last. A variant's `labelled` Description hides its
+label alone, not its label row, so its tip and Copy From Ingredient stay in
+view above the box. The
 references are one-line rows on the card surface with a 2px muted bar, the
 short form, cut with an ellipsis where the row is too narrow, and its
 locator in the muted caption, then two
@@ -1376,8 +1416,12 @@ Dried leaf carrying a safety note, a planet, two categories, a source and
 two substitutes of its own, Fixturewort in its Whole root form and the name
 Hedge Mockroot, and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
-Edit (MB.115). `CompendiumEntryCopySkipped` adds Mockleaf, in no form, to
-the ingredient's substitutes, opens Dried leaf and presses its Substitute
+Edit (MB.115), its own sections closed to their lines, and
+`VariantOpenPhoneDark` and `VariantOpenPhoneLight` are it at 375px;
+`CompendiumEntryVariantSectionOpen` opens Dried leaf's Correspondences too,
+and `VariantAdded` is a coven's new entry with Oil just added from the New
+Form box, every one of its sections open. `CompendiumEntryCopySkipped` adds Mockleaf, in no form, to
+the ingredient's substitutes, opens Dried leaf and its Relations and presses its Substitute
 Ingredients' Copy From Ingredient: Testwort links its Dried leaf, and the
 notice beneath the list names Mockleaf with Copy Anyway;
 `CopySkippedPhoneDark` and `CopySkippedPhoneLight` are it at 375px. And `CompendiumEntryEditSource` the same entry with its first
@@ -1437,17 +1481,23 @@ section holding the schema's error, or the server's, its field focused. An
 edit opens closed, so a role query finds none of its fields until its
 section is open: the other files open one first through
 `tests/support/ingredient-sections.ts`'s `openSections`, by its heading, as a
-person would.
+person would, and a variant's through its `openSectionsIn`, within the card.
 
 `tests/components/IngredientForm/variants.test.tsx` mounts the whole form for
 the Variants section (MB.221): an edit's variants all closed, a field out of
 reach until Edit opens it (`aria-expanded`, its region shown, the focus on
-its Form box); Done folding it back with the focus on Edit and what was
+its Identity heading); Done folding it back with the focus on Edit and what was
 typed kept; one open at a time; a variant added opened, the other closed;
 a save finding an error in a closed variant opening it, its field focused
 (MB.115); a variant added listed first, after the New Form box (MB.115); an
 open variant's `h4` section headings in the ingredient's order, each field
-in its own section (MB.115); and copying from the ingredient (MB.115): a
+in its own section (MB.115); those sections folding (MB.115): an edit's
+variant opened with every one closed, each heading described by its line,
+the variant's own data in it; a variant added here with every one open; a
+heading opening its own section alone, the ingredient's of the same name
+left as it was; a save opening the closed section holding the schema's
+error, the server's, or a link naming no form, in the variant it opens, its
+field focused; and Close All and Open All reaching each variant's; and copying from the ingredient (MB.115): a
 button per copied field, named for it, a `type="button"`; each shut while
 the ingredient's field is empty and opened as it gains a value; lists
 gaining what they lack after their own, none removed and none repeated,
