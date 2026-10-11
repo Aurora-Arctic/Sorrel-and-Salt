@@ -331,7 +331,10 @@
 
   // The gap alone spaces the column: this outranks `section`'s margins from
   // layout-base and `.page-header`'s own, which would otherwise stack on it.
+  // `border-box`, so a padded child such as a `.panel` keeps its padding
+  // inside the column rather than growing past it at 375px.
   .page-frame > * {
+    box-sizing: border-box;
     margin-block: 0;
   }
 

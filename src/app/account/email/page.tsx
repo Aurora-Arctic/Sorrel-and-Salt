@@ -37,10 +37,13 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
         />
       </div>
-      {/* An unverified account reaches no other page, so it is offered none. */}
+      {/* An unverified account reaches no other page, so it is offered none; a
+          verified one is offered the way on as a button (the owner, 2026-10-11). */}
       {me.emailVerified && (
         <p>
-          <Link href="/account">Your Account</Link>
+          <Link href="/account" className="btn">
+            Continue to Account
+          </Link>
         </p>
       )}
     </main>

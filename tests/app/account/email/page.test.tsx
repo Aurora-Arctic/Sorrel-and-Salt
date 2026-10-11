@@ -62,6 +62,9 @@ describe('the /account/email page', () => {
   it('links a verified account to the account page', async () => {
     await renderPage('user', {});
 
-    expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
+    expect(screen.getByRole('link', { name: 'Continue to Account' })).toHaveAttribute(
+      'href',
+      '/account',
+    );
   });
 });

@@ -466,7 +466,7 @@ the tests [`tests.md`](tests.md).
   account changes its address later. Its success message names the typed
   address, since the row's is unchanged until the link is followed. Below
   the form, a verified account gets a link to the account page, reading
-  "Your Account" (["The account page"](#the-account-page-mb88) below), where
+  "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
@@ -517,7 +517,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
   and a link opened from the wrong browser is explained there. Its link
-  across, offered to a verified account, reads "Your Account", below the
+  across, offered to a verified account, reads "Continue to Account", below the
   form's `.panel`, the ground the account page's sections stand on too.
 - **The Email section is EmailForm, not a second form.** The same field,
   `setEmail` mutation, one-a-minute cooldown and field errors, with
