@@ -80,8 +80,15 @@ otherwise a `NomenclatureKind`.
   testalis", or the label alone without a formal name. The formal name is
   there because it is the entry's identity: two rows can share a label,
   never a formal name.
-- **No entries reads "No compendium entries yet."**, with no table; a
-  filtered list with no rows reads "No compendium entry matches." instead.
+- **An empty list says why, with no table.** With no filter the compendium
+  itself is empty, and the paragraph says how to begin it: "The compendium is
+  empty. Add the first entry with Add Ingredient." A filtered list with no
+  rows names each filter in use, so an admin sees what to change, then says
+  to change or clear it: "No entry matches “wort”, the classification
+  Botanical and Without References. Change or clear the filter to see more."
+  The query is quoted, the classification is its label, and Without
+  References is the checkbox's (MB.115, the owner's call; the user list's
+  says the same of its own filters, [`user-list.md`](user-list.md)).
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 

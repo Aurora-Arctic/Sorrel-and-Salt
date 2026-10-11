@@ -440,8 +440,8 @@ const IngredientForm = ({
         ) : deleting ? (
           <div className="form__confirm">
             <p>
-              Delete &quot;{entry?.values.name}&quot;? It leaves the compendium; a spell holding it
-              keeps it.
+              Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any spell that
+              uses it keeps it.
             </p>
             <div className="form__actions">
               <BusyButton

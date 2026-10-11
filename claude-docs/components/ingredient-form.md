@@ -733,7 +733,7 @@ site admin's, through the compendium mutations
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
   `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
-"Testwort"? It leaves the compendium; a spell holding it keeps it.`, with
+"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks. Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
