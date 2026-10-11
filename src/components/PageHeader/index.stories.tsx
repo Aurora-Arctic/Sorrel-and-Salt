@@ -1,14 +1,21 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import PageHeader from '.';
 
 // Render-only: a heading and its action are the whole component, so the
-// story is for the look, at desktop and at a phone's width, where a long
-// heading pushes the action beneath it.
+// story is for the look, at desktop and at a phone's width, where the action
+// goes beneath the heading and spans the line. Each sits in the admin
+// layout's frame, `.admin-layout`, since the full-width action is the admin
+// area's (claude-docs/styling.md, "The admin layout").
 export default {
   title: 'Layout / Page Header',
 };
+
+const InAdminLayout = ({ children }: { children: ReactNode }) => (
+  <div className="admin-layout">{children}</div>
+);
 
 const AddCategory = () => (
   <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
@@ -16,19 +23,29 @@ const AddCategory = () => (
   </Link>
 );
 
-export const WithAnAction: Story = () => <PageHeader title="Categories" action={<AddCategory />} />;
+export const WithAnAction: Story = () => (
+  <InAdminLayout>
+    <PageHeader title="Categories" action={<AddCategory />} />
+  </InAdminLayout>
+);
 
-export const HeadingAlone: Story = () => <PageHeader title="Privilege Changes" />;
+export const HeadingAlone: Story = () => (
+  <InAdminLayout>
+    <PageHeader title="Privilege Changes" />
+  </InAdminLayout>
+);
 
 const Long = () => (
-  <PageHeader
-    title="Deity Traditions"
-    action={
-      <Link className="btn btn--solid" href={'/admin/deity-traditions?new' as Route}>
-        Add Tradition
-      </Link>
-    }
-  />
+  <InAdminLayout>
+    <PageHeader
+      title="Deity Traditions"
+      action={
+        <Link className="btn btn--solid" href={'/admin/deity-traditions?new' as Route}>
+          Add Tradition
+        </Link>
+      }
+    />
+  </InAdminLayout>
 );
 
 export const PhoneDark: Story = () => <Long />;

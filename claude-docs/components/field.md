@@ -90,6 +90,11 @@ against the form's own paths; left out, any string passes.
   `:invalid` would mark an empty field before anyone tried to save. Putting
   `aria-required` on the control is the caller's part when it renders its
   own; `TextField` and `SelectField` do it themselves.
+- **A field is optional unless it is marked required**, so a label never
+  says "(Optional)": `required` is the only mark, and a field without it may
+  be left empty (the owner's call at MB.115's review; [`styling.md`](../styling.md),
+  "Form fields"). What a field is for goes in `hint`, behind the info tip, not
+  in the label.
 - **A react-hook-form field re-renders for its own error only**: `useField`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would

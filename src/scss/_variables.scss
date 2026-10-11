@@ -334,9 +334,11 @@ $narrow-column: 28rem;
 $control-height: 2.78125rem;
 
 // The admin area's column (MB.115): wider than the measure, for the tables
-// the admin pages hold, whose prose still stops at it. It was `.admin-layout`'s
-// own 64rem in `AdminNav/index.scss`.
-$wide-column: 64rem;
+// the admin pages hold, whose prose still stops at it. 80rem, the owner's
+// call at the design review: the user list's seven columns need about 77rem
+// before they stop scrolling in their frame, and the privilege ledger has
+// seven too. It was `.admin-layout`'s own 64rem in `AdminNav/index.scss`.
+$wide-column: 80rem;
 
 // A dialog's content column, and the wide one for a form with nested panels,
 // such as the ingredient form (M5.5). Each was a raw width in
