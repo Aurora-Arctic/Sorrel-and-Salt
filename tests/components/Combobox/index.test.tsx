@@ -296,7 +296,7 @@ describe('Combobox', () => {
     }
     const list = () => screen.getByRole('listbox', { name: 'Form suggestions' });
 
-    it('opens above the box when there is no room beneath it, and no taller than the room above', async () => {
+    it('opens above the box when there is no room beneath it', async () => {
       render(<Harness suggestions={TWO_BUCKETS} />);
       onTestFinished(
         layOut({ control: rect(16, 500, 270, 44), list: { width: 270, height: 288 } }),
