@@ -17,24 +17,28 @@ const InAdminLayout = ({ children }: { children: ReactNode }) => (
   <div className="admin-layout">{children}</div>
 );
 
-const AddCategory = () => (
-  <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
-    Add Category
+// The compendium's, the one admin page with a heading of its own since the
+// others went into tabs (MB.115).
+const AddIngredient = () => (
+  <Link className="btn btn--solid" href={'/admin/compendium?new' as Route}>
+    Add Ingredient
   </Link>
 );
 
 export const WithAnAction: Story = () => (
   <InAdminLayout>
-    <PageHeader title="Categories" action={<AddCategory />} />
+    <PageHeader title="Compendium" action={<AddIngredient />} />
   </InAdminLayout>
 );
 
 export const HeadingAlone: Story = () => (
   <InAdminLayout>
-    <PageHeader title="Privilege Changes" />
+    <PageHeader title="Compendium" />
   </InAdminLayout>
 );
 
+// A heading long enough to wrap beside its action at a phone's width,
+// standing in for any.
 const Long = () => (
   <InAdminLayout>
     <PageHeader

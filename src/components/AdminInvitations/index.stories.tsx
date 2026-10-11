@@ -1,6 +1,9 @@
 import type { Story } from '@ladle/react';
 import type { PropsWithChildren } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
+import { WorkshopPathname } from '../../../.ladle/navigation';
+import { ADMIN_PAGES } from '../AdminNav/sections';
+import TabbedPage from '../TabbedPage';
 import AdminInvitations from '.';
 import type { AdminInvitationEntry } from './types';
 
@@ -27,11 +30,16 @@ const INVITATIONS: AdminInvitationEntry[] = [
   },
 ];
 
-// The admin layout's frame, as the user list's stories draw it.
+// The admin layout's frame and the People page with its Invitations tab
+// open, as /admin/invitations draws them.
 const Frame = ({ children }: PropsWithChildren) => (
-  <div className="admin-layout">
-    <main>{children}</main>
-  </div>
+  <WorkshopPathname.Provider value="/admin/invitations">
+    <div className="admin-layout">
+      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+        {children}
+      </TabbedPage>
+    </div>
+  </WorkshopPathname.Provider>
 );
 
 export const Pending: Story = () => (

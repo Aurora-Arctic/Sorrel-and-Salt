@@ -1,6 +1,8 @@
 import type { Story } from '@ladle/react';
 import type { PropsWithChildren } from 'react';
-import PageHeader from '../PageHeader';
+import { WorkshopPathname } from '../../../.ladle/navigation';
+import { ADMIN_PAGES } from '../AdminNav/sections';
+import TabbedPage from '../TabbedPage';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
@@ -101,15 +103,16 @@ export const EmptyForASearch: Story = () => (
   />
 );
 
-// The admin layout's frame and the page's heading, as /admin/privilege-changes
-// draws them.
+// The admin layout's frame and the People page with its Privilege Changes
+// tab open, as /admin/privilege-changes draws them.
 const Frame = ({ children }: PropsWithChildren) => (
-  <div className="admin-layout">
-    <main>
-      <PageHeader title="Privilege Changes" />
-      {children}
-    </main>
-  </div>
+  <WorkshopPathname.Provider value="/admin/privilege-changes">
+    <div className="admin-layout">
+      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+        {children}
+      </TabbedPage>
+    </div>
+  </WorkshopPathname.Provider>
 );
 
 // At phone width: each change a card, every fact led by its column's name.

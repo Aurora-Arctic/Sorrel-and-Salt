@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import type { PropsWithChildren } from 'react';
-import PageHeader from '../PageHeader';
+import { ADMIN_PAGES } from '../AdminNav/sections';
+import TabbedPage, { TabActions } from '../TabbedPage';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
@@ -50,10 +51,13 @@ const USERS: readonly UserListEntry[] = [
   },
 ];
 
-// Inside the admin layout's frame, so the workshop shows what the page shows.
+// Inside the admin layout's frame and the People page, its Users tab open
+// (the workshop's address), so the workshop shows what the page shows.
 const Frame = ({ children }: PropsWithChildren) => (
   <div className="admin-layout">
-    <main>{children}</main>
+    <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
+      {children}
+    </TabbedPage>
   </div>
 );
 
@@ -64,7 +68,9 @@ const Frame = ({ children }: PropsWithChildren) => (
 // so confirming shows the refusal.
 export const Default: Story = () => (
   <Frame>
-    <PageHeader title="Users" action={<PauseControl paused={false} canToggle />} />
+    <TabActions>
+      <PauseControl paused={false} canToggle />
+    </TabActions>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );
@@ -149,12 +155,13 @@ export const AdminRoles: Story = () => (
   </Frame>
 );
 
-// MB.63: the page's header with the switch beside the heading, as
-// /admin/users draws it. Paused, to the primary admin: the warning and a
+// MB.63: the switch as the Users tab's action, as /admin/users draws it. Paused, to the primary admin: the warning and a
 // usable Resume, and every row's control usable, since the pause exempts it.
 export const AdminChangesPaused: Story = () => (
   <Frame>
-    <PageHeader title="Users" action={<PauseControl paused canToggle />} />
+    <TabActions>
+      <PauseControl paused canToggle />
+    </TabActions>
     <UserList
       users={USERS}
       query=""
@@ -169,7 +176,9 @@ export const AdminChangesPaused: Story = () => (
 // the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
   <Frame>
-    <PageHeader title="Users" action={<PauseControl paused canToggle={false} />} />
+    <TabActions>
+      <PauseControl paused canToggle={false} />
+    </TabActions>
     <UserList
       users={USERS}
       query=""
@@ -183,7 +192,9 @@ export const AdminChangesNotPrimary: Story = () => (
 // each fact led by its column's name, Impersonate across the card's foot.
 export const PhoneDark: Story = () => (
   <Frame>
-    <PageHeader title="Users" action={<PauseControl paused={false} canToggle />} />
+    <TabActions>
+      <PauseControl paused={false} canToggle />
+    </TabActions>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );
@@ -191,7 +202,9 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
   <Frame>
-    <PageHeader title="Users" action={<PauseControl paused={false} canToggle />} />
+    <TabActions>
+      <PauseControl paused={false} canToggle />
+    </TabActions>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </Frame>
 );
