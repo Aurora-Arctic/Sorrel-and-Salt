@@ -243,6 +243,16 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.221 | IngredientForm's Variants section                                                                                        | Wave 8  | MB.222                 |
 | MB.222 | The form leaves the ingredient row: filters, list, SDL, seeds, fixtures                                                  | Wave 8  | MB.223                 |
 | MB.223 | Drop `canonical_key`, `form`, `form_id` and what indexed them                                                            | Wave 8  | —                      |
+| MB.240 | The compendium seed: scope, sourcing rules, the candidate list and the library                                           | Wave 8  | MB.242                 |
+| MB.241 | `seed_key` on `ingredients`                                                                                              | Wave 8  | MB.242                 |
+| MB.242 | `db:seed:compendium`, the guard, CI and a 14-ingredient pilot                                                            | Wave 8  | MB.243                 |
+| MB.243 | The compendium seed: plants A to C                                                                                       | Wave 8  | MB.249                 |
+| MB.244 | The compendium seed: plants D to K                                                                                       | Wave 8  | MB.249                 |
+| MB.245 | The compendium seed: plants L to R                                                                                       | Wave 8  | MB.249                 |
+| MB.246 | The compendium seed: plants S to Z                                                                                       | Wave 8  | MB.249                 |
+| MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 8  | MB.249                 |
+| MB.248 | The compendium seed: stones and metals                                                                                   | Wave 8  | MB.249                 |
+| MB.249 | Close the compendium seed                                                                                                | Wave 8  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -936,6 +946,199 @@ _Acceptance criteria:_
 
 - Both files pass with seed 1791696601822 under `--sequence.shuffle`, and in file order
 - No new test and no change under `src/`: each fix removes a dependence on sibling order rather than adding an assertion
+
+**MB.240 — The compendium seed: scope, sourcing rules, the candidate list and the library** · 3h
+
+_Story:_ As a site admin, I want the compendium's starting entries decided and their sourcing rules written down, so that six research lanes fill one list without overlapping or inventing anything.
+
+Minted on 2026-10-11 on the owner's call to seed the compendium with a researched, sourced list of 614 entries rather than leave an admin to type them ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md); the record, [`design-decisions/mb.240-compendium-seed.md`](../design-decisions/mb.240-compendium-seed.md)), the first of ten (MB.240 to MB.249). Docs and minting only, so it starts on `staging` without waiting for the variant tasks. The 3 hours are an estimate, calibrated against MB.127 (2.5h, a 216-row researched list with its sources) and MB.215 (2h, a model record).
+
+It writes `claude-docs/db/compendium-seed/README.md`: the entry template with a worked invented example; the field names a citation's `supports` may hold; the closed lists by reference to their seed files; the formal-name rules (mineral varieties in `standard`'s form, `Quartz var. amethyst`); the sourcing rules; write-once and how a correction lands; the library, each of the owner's files identified from its own title and copyright pages, with its Chicago citation and how to cite a place in it; and the `standard` fixture's 26 names, so a lane spells them the same way. Beside it, the candidate list `claude-docs/db/compendium-seed/candidates.md`: about 614 rows of label, formal name, naming system and shard, drawn from several works, each list source a Chicago row, so the seed mirrors no single book's selection.
+
+The library is protected in the branch's first commit: `.gitignore` gains `.library/`, and `tests/guards/no-tracked-books.test.ts` fails on a tracked or unignored `.pdf` or `.epub`. `pdfjs-dist` becomes a devDependency for `scripts/library-text.ts` and its `library:text` npm script, which writes each PDF page as a text file under `/app/.library/text/` and unpacks each EPUB there. The corrections: `waves/wave-08.md` line 3 reversed; DESIGN.md §11's "Seed data" says the production compendium is seeded as reference data, not a scenario; §14 gains "Is the compendium seeded?"; `db/seed-module.md` names the target. The plan is copied beside its record.
+
+Tests are written first:
+
+- `tests/guards/no-tracked-books.test.ts`: fails on a `.pdf` or `.epub` in the repo's listing, and when `.library/` is not ignored
+
+_Acceptance criteria:_
+
+- No two candidate rows share an identity, every row names its shard and a naming system that satisfies the `none` rule, and every list source is a Chicago row
+- DESIGN.md §11 and §14, the wave file and `db/seed-module.md` agree that the compendium is seeded
+- The guard refuses a tracked or unignored `.pdf` or `.epub`, and passes without one
+- `npm run library:text` extracts every PDF in the library and unpacks every EPUB; the README records each file's edition from its own pages
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.241 — `seed_key` on `ingredients`** · 1h
+
+_Story:_ As a maintainer, I want a seeded compendium entry to carry the key the seed gave it, so that an entry an admin renames is not seeded again beside itself.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the table task before MB.242's seed under the table-then-behaviour rule. `ingredients` and `ingredient_variants` carry no `seed_key` today (MB.171 put it on the nine tables `migrate.yml` seeds; [`design-decisions/mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)), so without one an admin's relabel or formal-name edit would make the next reseed insert the original again. Only `ingredients` needs it: the seed is write-once, so a variant is never looked up again. It waits for MB.223, whose migration is `0064`. The hour is an estimate, calibrated against MB.171 (1.5h, nine tables) and MB.223 (1h).
+
+`seedKey: seedKeyColumn()` and `seedKeyUnique('ingredients_seed_key_unique', table)` join `src/modules/ingredients/schema/ingredients.ts`, with the builders in `src/db/schema-parts.ts`; `db:generate` writes migration `0065`, additive, with no sidecar.
+
+Tests are written first:
+
+- `tests/db/partial-unique-indexes.test.ts` gains the index's row; the schema drift test picks the column up
+
+_Acceptance criteria:_
+
+- Exactly one column and one partial unique index are added
+- The drift test is green
+- Nothing reads or writes the column yet
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.242 — `db:seed:compendium`, the guard, CI and a 14-ingredient pilot** · 6h
+
+_Story:_ As a site admin, I want the compendium seeded on staging and production the way the curated vocabularies are, so that every entry arrives sourced and nothing an admin changed is undone.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the mechanism every content shard writes through. It waits for MB.222, which leaves `identityOf` and the variant insert in `standard.ts` as the seed reuses them, and for MB.241's column. The 6 hours are an estimate, calibrated against MB.156 (6h), MB.172 (2h) and MB.129 (2h).
+
+The types, in `src/db/seed/types.ts`: `SeedCompendiumEntry`, the ingredient's fields plus `colors`, `folkNames`, `deities`, `categories`, `substitutes` (`{ identity, form?, substituteForm? }` or a typed `{ name }`), `references` (`{ source, locator?, supports }`, `supports` naming the fields the citation backs) and `variants`, each with its own description, safety notes, the four lists, categories, substitutes and references.
+
+The seed: `src/db/seed/compendium.ts`, `seedCompendium(db, entries = COMPENDIUM)`, and `src/db/seed/compendium/` holding `index.ts` (`COMPENDIUM = []` until the first shard), `works.ts` (the works several shards cite, declared once), `colours.ts` (a closed list of lower-case British colour names) and `guard.ts`. `insertMissingReferences` moves out of `sources.ts` into `src/db/seed/reference-rows.ts` with no change in behaviour, and both seeds key references on their rendered citation, so a work the sources seed already wrote is linked, not written twice. The seed is write-once: the run that inserts an entry writes everything beneath it, and an entry present by `seed_key` (live or deleted), by a live identity or by a live slug is skipped with nothing beneath it written and no key stamped. Forms, deities and categories are picked through the curated rows' `seed_key`, planets and signs stored as the live row's name; a soft-deleted pick is skipped and a name no seed wrote throws. Inserts are chunked at 1,000 rows, under Postgres's 65,535-parameter limit.
+
+The guard, `checkCompendium(entries, sources)`, is a pure function run in a test and again inside `seedCompendium` before its transaction opens. It checks that identities and slugs are unique across shards; the naming system and formal name pair up, and botanical, fungal and zoological names are binomials; every form, category, deity, planet, sign and colour is on its closed list; every entry and every variant cites at least one reference of its own; every populated field is named by some citation's `supports`; every handle resolves; `book` and `chapter` citations carry a locator; citation texts are pairwise distinct; substitutes resolve to an identity in the same or an earlier shard and are never the entry itself; entry descriptions run 100 to 250 words and variant descriptions at most 120.
+
+The wiring: `scripts/db-seed.ts`'s target, usage and error text; `package.json`'s `db:seed:compendium`; `migrate.yml`'s sixth seed line after `sources`, its input description and summary; `deploy.yml`'s reseed list gains `src/db/seed/compendium.ts`, `src/db/seed/compendium/`, `reference-rows.ts` and `idempotent.ts`. The docs: `ci/deploy.md` ("all six"), `db/references.md` (how the compendium links its sources), MB.225's "five production seeds" corrected, and the stale comments in `sources.ts` and `deities.ts` that say a test parses the docs.
+
+The pilot: `src/db/seed/compendium/pilot.ts` and `claude-docs/db/compendium-seed/pilot.md`, 14 real entries, one of each kind (botanical, fungal, zoological with two forms, a mineral variety, a metal, a salt, a resin, a wood, a `none` water and others), researched to the README's full rule. They count toward the 614, prove the shape, the guard and the CI path on real data, and their actual time re-calibrates MB.243 to MB.248 before those are briefed.
+
+Tests are written first:
+
+- `tests/db/seed/compendium-literals.test.ts`, with no database: each guard rule fails once on an invented fixture, and `COMPENDIUM` is checked clean
+- `tests/db/seed/compendium.test.ts`, on an invented two-entry fixture shard: it seeds whole, variants with their picks, children and links at both levels; a reference the sources seed wrote is linked, not written again; an entry present by `seed_key` (live or deleted), live identity or live slug is untouched, with nothing beneath it written and no key stamped; a soft-deleted pick is skipped; an unknown form throws; the seed runs cleanly after `standard`
+- `SEED_ENTRIES` gains a sixth entry over the fixture shard, owning `ingredients`, `ingredient_variants`, the four child tables, `references` and `reference_links`
+
+_Acceptance criteria:_
+
+- The guard fails any entry or variant citing no reference, any field no citation supports and any value outside the closed lists, in the test and before the seed's transaction opens
+- A reseed adds, moves and restores nothing, and every seeded row carries the bootstrap user's stamps
+- `migrate.yml` runs the target after `sources`, and `deploy.yml` reseeds when the compendium folder changes
+- The sources seed's tests are unchanged and green
+- `npm run db:seed:compendium` run twice on a reset database writes nothing the second time
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.243 — The compendium seed: plants A to C** · 6h
+
+_Story:_ As a reader, I want the plants from A to C in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the first of six content shards built side by side by separate research lanes after MB.242. It writes `src/db/seed/compendium/plants-a-c.ts` and `claude-docs/db/compendium-seed/plants-a-c.md`, about 100 entries, the rows `candidates.md` gives this shard. **It merges first** of the six, because it switches the `SEED_ENTRIES` sweep from the fixture shard to `COMPENDIUM` and adds the precondition that `COMPENDIUM` is not empty; the others conflict with it on one line of `compendium/index.ts`. The 6 hours are an estimate, from MB.127's rate (216 rows and their sources in 2.5h, about 96 KB an hour): about 270 KB of literal and doc is about 3 hours, doubled for reading before citing and for sourcing every field; the pilot's measured time re-calibrates it before the lane is briefed.
+
+The lane brief is the README's: every field value traces to a source read during the task, the owner's book by page or a fetched page by URL; a claim with no source is left out; no page, URL, edition or year is invented; `accessed` is the real fetch date; no prose is copied from any source; descriptions are 100 to 250 words, in British spelling, written fresh; shared works are named by their `works.ts` handle; a substitute links only an identity in this shard or an earlier one. Every entry carries at least its primary form; a further form only where a source attaches something to it. An entry that cannot be sourced at depth goes to the doc's "What is left out, and why".
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.244 — The compendium seed: plants D to K** · 6h
+
+_Story:_ As a reader, I want the plants from D to K in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the second content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-d-k.ts` and `claude-docs/db/compendium-seed/plants-d-k.md`, about 100 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.245 — The compendium seed: plants L to R** · 6h
+
+_Story:_ As a reader, I want the plants from L to R in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the third content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-l-r.ts` and `claude-docs/db/compendium-seed/plants-l-r.md`, about 100 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.246 — The compendium seed: plants S to Z** · 6h
+
+_Story:_ As a reader, I want the plants from S to Z in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the fourth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-s-z.ts` and `claude-docs/db/compendium-seed/plants-s-z.md`, about 100 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.247 — The compendium seed: resins, woods and other ingredients** · 5h
+
+_Story:_ As a reader, I want the resins, woods, incense, animal products, salts and waters in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the fifth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/resins-woods-and-other.ts` and `claude-docs/db/compendium-seed/resins-woods-and-other.md`, about 80 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. Animal products are forms beneath the animal's binomial, and a preparation no naming system names, a moon water or a black salt, is `none`. The 5 hours are an estimate on MB.243's calibration, scaled to the shard's size.
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.248 — The compendium seed: stones and metals** · 8h
+
+_Story:_ As a reader, I want the stones, crystals and metals in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the sixth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/stones-and-metals.ts` and `claude-docs/db/compendium-seed/stones-and-metals.md`, about 135 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. A mineral variety is `<Species> var. <variety>` as `standard` writes `Quartz var. amethyst`, with Mindat as the reference for names, and a metal is `chemical`. The 8 hours are an estimate on MB.243's calibration, scaled to the shard's size.
+
+No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
+
+_Acceptance criteria:_
+
+- Seeded entries plus "What is left out" rows equal the shard's candidate rows; a lane that would leave out more than a tenth of them stops and raises it with the owner before opening its pull request
+- Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
+- The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
+- The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- The pull request body states that every cited page or URL was read during the task
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.249 — Close the compendium seed** · 1h
+
+_Story:_ As the owner, I want the seeded compendium counted against the candidate list and every entry shown to be sourced, so that I know what the 614 became and what was left out.
+
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten, after all six shards have merged. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner. The hour is an estimate, calibrated against MB.223 (1h).
+
+Tests are written first:
+
+- every seeded entry has at least one live `reference_links` row on its `ingredient_id`
+
+_Acceptance criteria:_
+
+- The seeded, left-out and candidate counts are recorded and reconcile
+- The test above is green over the full `COMPENDIUM`
+- On staging, the admin compendium page's unsourced filter shows no seeded entry
+- Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
