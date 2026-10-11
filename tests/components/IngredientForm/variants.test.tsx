@@ -32,7 +32,7 @@ import {
   offerReferences,
   offerSigns,
 } from '../../support/msw/ingredient-lookups';
-import type { FormNode } from './types';
+import type { FormNode, IngredientNode } from './types';
 
 // The form's Variants section (MB.221): an entry's forms, each a fieldset of
 // its own fields beneath the ingredient's, added from the New Form box and
@@ -55,6 +55,39 @@ const OIL: FormNode = {
   curated: true,
   claimants: [],
 };
+
+/** Invented substitutes (M1.25): one in no form, one in a form of Oil's group, one in oil itself. */
+const PLAINWORT_ID = '2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d';
+const TINCTWORT_ID = '3b4c5d6e-7f8a-4b9c-8d0e-2f3a4b5c6d7e';
+const OILWORT_ID = '4c5d6e7f-8a9b-4c0d-9e1f-3a4b5c6d7e8f';
+const OILWORT_OIL_ID = '5d6e7f8a-9b0c-4d1e-8f2a-4b5c6d7e8f9a';
+const substitute = (
+  id: string,
+  name: string,
+  variants: IngredientNode['variants'],
+): IngredientNode => ({
+  id,
+  name,
+  canonicalName: null,
+  form: null,
+  description: null,
+  isGlobal: true,
+  variants,
+});
+const SUBSTITUTES = [
+  substitute(PLAINWORT_ID, 'Plainwort', []),
+  substitute(TINCTWORT_ID, 'Tinctwort', [
+    {
+      id: '6e7f8a9b-0c1d-4e2f-9a3b-5c6d7e8f9a0b',
+      form: 'Tincture',
+      formChoice: {
+        id: '7f8a9b0c-1d2e-4f3a-8b4c-6d7e8f9a0b1c',
+        group: { id: 'g', name: 'Preparation' },
+      },
+    },
+  ]),
+  substitute(OILWORT_ID, 'Oilwort', [{ id: OILWORT_OIL_ID, form: ' OIL', formChoice: null }]),
+];
 
 /** Every lookup answered empty; a test about one answers it after rendering. */
 function offerNothing() {
@@ -338,5 +371,67 @@ describe('IngredientForm’s variants', () => {
         safetyNotes: 'Dilute before use.',
       }),
     ]);
+  });
+
+  describe('a variant’s substitutes', () => {
+    /** Picks Oil from the New Form box, so the variant carries Oil's group. */
+    async function addOil() {
+      const forms = offerForms([OIL]);
+      act(() => newForm().focus());
+      await waitFor(() => expect(forms.length).toBeGreaterThan(0));
+      fireEvent.click(screen.getByRole('button', { name: 'Show New Form suggestions' }));
+      fireEvent.click(await screen.findByRole('option', { name: /^Oil \(Preparation\)/ }));
+      return variant('Oil');
+    }
+    /** Opens a variant's substitute box on the lookup's answer. */
+    async function openSubstitutes(oil: HTMLElement) {
+      const asks = offerIngredients(SUBSTITUTES);
+      const box = control(oil, 'Substitute Ingredient');
+      act(() => box.focus());
+      await waitFor(() => expect(asks.length).toBeGreaterThan(0));
+      fireEvent.click(
+        within(oil).getByRole('button', { name: 'Show Substitute Ingredient suggestions' }),
+      );
+      return within(oil).findByRole('listbox', { name: 'Substitute Ingredient suggestions' });
+    }
+
+    it('ranks an ingredient in the same form first, then one in its group, then the rest', async () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+
+      const list = await openSubstitutes(await addOil());
+
+      await waitFor(() => within(list).getByRole('option', { name: /^Plainwort/ }));
+      const named = within(list)
+        .getAllByRole('option')
+        .map((option) => option.textContent ?? '');
+      expect(named.map((text) => text.match(/^(Plainwort|Tinctwort|Oilwort)/)?.[0])).toEqual([
+        'Oilwort',
+        'Tinctwort',
+        'Plainwort',
+      ]);
+    });
+
+    it('names the linked ingredient’s form chosen in its second picker, sent as substituteVariantId', async () => {
+      const calls = acceptCreate();
+      renderForm({ workspaceId: WORKSPACE_ID });
+      type(document.body, 'Name', 'Testwort');
+      const oil = await addOil();
+
+      const list = await openSubstitutes(oil);
+      fireEvent.click(await within(list).findByRole('option', { name: /^Oilwort/ }));
+      fireEvent.click(control(oil, 'Form of Oilwort'));
+      fireEvent.click(
+        within(screen.getByRole('listbox', { name: 'Form of Oilwort choices' })).getByRole(
+          'option',
+          { name: 'OIL' },
+        ),
+      );
+      save();
+
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
+        { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
+      ]);
+    });
   });
 });

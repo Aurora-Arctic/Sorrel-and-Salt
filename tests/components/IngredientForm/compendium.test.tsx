@@ -395,6 +395,7 @@ describe('IngredientForm on the compendium', () => {
           form: null,
           description: null,
           isGlobal: true,
+          variants: [],
         },
         {
           id: OTHER_ID,
@@ -403,6 +404,7 @@ describe('IngredientForm on the compendium', () => {
           form: 'root',
           description: null,
           isGlobal: true,
+          variants: [],
         },
       ]);
 

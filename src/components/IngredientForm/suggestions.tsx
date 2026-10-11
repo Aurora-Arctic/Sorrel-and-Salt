@@ -28,6 +28,7 @@ import type {
   FormFieldProps,
   LookupListFieldProps,
   LookupText,
+  SubstituteForm,
   UseSuggestions,
 } from './types';
 import { draftOf, tierOf } from './values';
@@ -130,6 +131,17 @@ const IngredientSuggestionsDocument = graphql(`
           form
           description
           isGlobal
+          variants {
+            id
+            form
+            formChoice {
+              id
+              group {
+                id
+                name
+              }
+            }
+          }
         }
       }
     }
@@ -147,6 +159,17 @@ const CompendiumSubstitutesDocument = graphql(`
           form
           description
           isGlobal
+          variants {
+            id
+            form
+            formChoice {
+              id
+              group {
+                id
+                name
+              }
+            }
+          }
         }
       }
     }
@@ -244,6 +267,16 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
       : undefined,
   }));
 
+/** An ingredient's forms as a substitute's link carries them, each with its group. */
+const formsOf = (
+  variants: IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node']['variants'],
+): SubstituteForm[] =>
+  variants.map(({ id, form, formChoice }) => ({
+    id,
+    form,
+    group: formChoice?.group.name ?? null,
+  }));
+
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
   data.ingredientSuggestions.edges.map(({ node }) => {
     const canonicalName = node.canonicalName ?? null;
@@ -253,6 +286,7 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
       form: node.form ?? null,
       description: node.description ?? null,
       isGlobal: node.isGlobal,
+      variants: formsOf(node.variants),
     };
     return {
       // The label is what a linked entry reads as; the link is what is saved,
@@ -282,6 +316,7 @@ const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
         form: node.form ?? null,
         description: node.description ?? null,
         isGlobal: node.isGlobal,
+        variants: formsOf(node.variants),
       },
     };
   });
@@ -387,18 +422,19 @@ export function LookupListField({
   workspaceId,
   useSuggestions,
   omit,
+  rank,
   ...list
 }: LookupListFieldProps): ReactElement {
   const { control } = useFormContext();
   const text: string = useWatch({ control, name: draftOf(list.name) });
   const [active, setActive] = useState(false);
   const found = useSuggestions(workspaceId, text, active);
-  const suggestions = useMemo(
-    () =>
+  const suggestions = useMemo(() => {
+    const kept =
       omit === undefined
-        ? found
-        : { ...found, options: found.options.filter((option) => option.link?.id !== omit) },
-    [found, omit],
-  );
+        ? found.options
+        : found.options.filter((option) => option.link?.id !== omit);
+    return { ...found, options: rank ? rank(kept) : kept };
+  }, [found, omit, rank]);
   return <ListField {...list} suggestions={suggestions} onActivate={() => setActive(true)} />;
 }

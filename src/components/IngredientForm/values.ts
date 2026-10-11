@@ -12,6 +12,7 @@ import type {
   IngredientFormValues,
   IngredientListName,
   ListFieldName,
+  ListOption,
   ReferenceLink,
   ReferenceListEntry,
   SubstituteLink,
@@ -239,8 +240,40 @@ export function entryDetail(entry: AnyListEntry): string | undefined {
   const link = linkOf(entry);
   if (!link) return undefined;
   if (isDeityLink(link)) return link.description ?? undefined;
-  const facts = [link.form, tierOf(link)].filter(Boolean).join(' · ');
+  // The form of it picked, when one is (MB.215), else the form the row records.
+  const picked = 'variantId' in entry ? formNamed(link, entry.variantId) : undefined;
+  const facts = [picked ?? link.form, tierOf(link)].filter(Boolean).join(' · ');
   return link.description ? `${facts} — ${link.description}` : facts;
+}
+
+/** The text of the linked ingredient's form `id`, when it knows one by that id. */
+const formNamed = (link: SubstituteLink, id: string | undefined): string | undefined =>
+  link.variants?.find((variant) => variant.id === id)?.form;
+
+/**
+ * A variant's substitute suggestions, ranked for `form` (MB.215): the
+ * ingredients that come in a form folding alike first, then those with a
+ * form in its curated `group`, then the rest, each tier in the order the
+ * search ranked it. Every row is kept, since any ingredient may stand in for
+ * any form; this only puts the likeliest first.
+ */
+export function rankForForm(
+  options: readonly ListOption[],
+  form: string,
+  group: string | null,
+): ListOption[] {
+  const key = fold(form);
+  if (key === '') return [...options];
+  const rankOf = ({ link }: ListOption): number => {
+    const forms = link && 'variants' in link ? (link.variants ?? []) : [];
+    if (forms.some((variant) => fold(variant.form) === key)) return 0;
+    if (group !== null && forms.some((variant) => variant.group === group)) return 1;
+    return 2;
+  };
+  return options
+    .map((option, index) => ({ option, index, tier: rankOf(option) }))
+    .sort((a, b) => a.tier - b.tier || a.index - b.index)
+    .map(({ option }) => option);
 }
 
 /** An issue's path, as zod and the server's `fieldErrors` give it. */

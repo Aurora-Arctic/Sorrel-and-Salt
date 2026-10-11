@@ -71,6 +71,18 @@ export interface SubstituteLink {
   description: string | null;
   /** A compendium entry, rather than this coven's own. */
   isGlobal: boolean;
+  /** The forms it comes in, one of which a substitute may name (MB.215). */
+  variants?: SubstituteForm[];
+}
+
+/**
+ * One form of a linked ingredient: its id, which a pick of it sends, its
+ * text, and its curated group, which ranks the substitutes' suggestions.
+ */
+export interface SubstituteForm {
+  id: string;
+  form: string;
+  group: string | null;
 }
 
 /**
@@ -455,6 +467,13 @@ export interface LookupListFieldProps
   useSuggestions: UseSuggestions;
   /** An ingredient the box never offers: the compendium entry being edited, as its own substitute. */
   omit?: string;
+  /** Reorders what the lookup found, keeping each row: a variant's substitutes, its own form first. */
+  rank?: (options: ListOption[]) => ListOption[];
+}
+
+/** A substitute list's second pickers: which form of each linked ingredient it names. */
+export interface SubstituteFormsProps {
+  name: `${'' | `${VariantPath}.`}substitutes`;
 }
 
 /** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */

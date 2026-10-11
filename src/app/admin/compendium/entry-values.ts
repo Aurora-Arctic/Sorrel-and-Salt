@@ -2,6 +2,7 @@ import 'server-only';
 import type {
   IngredientFormValues,
   ReferenceListEntry,
+  SubstituteForm,
   SubstituteListEntry,
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
@@ -38,21 +39,28 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 const nameOf = (group: { name: string } | Error | undefined): string | null =>
   group === undefined || group instanceof Error ? null : group.name;
 
-/** A substitute as a list entry: its label, and the ingredient and the form of it a link names. */
-const substituteEntry = ({ name, ingredient, variantId }: SubstituteRow): SubstituteListEntry =>
-  ingredient
-    ? {
-        value: name,
-        link: {
-          id: ingredient.id,
-          canonicalName: ingredient.canonicalName,
-          form: ingredient.form,
-          description: ingredient.description,
-          isGlobal: ingredient.workspaceId === null,
-        },
-        ...(variantId ? { variantId } : {}),
-      }
-    : { value: name };
+/**
+ * A substitute as a list entry: its label, and the ingredient and the form of
+ * it a link names, with the forms that ingredient comes in, which its second
+ * picker offers (MB.215).
+ */
+const substituteEntry =
+  (formsOf: ReadonlyMap<string, SubstituteForm[]>) =>
+  ({ name, ingredient, variantId }: SubstituteRow): SubstituteListEntry =>
+    ingredient
+      ? {
+          value: name,
+          link: {
+            id: ingredient.id,
+            canonicalName: ingredient.canonicalName,
+            form: ingredient.form,
+            description: ingredient.description,
+            isGlobal: ingredient.workspaceId === null,
+            variants: formsOf.get(ingredient.id) ?? [],
+          },
+          ...(variantId ? { variantId } : {}),
+        }
+      : { value: name };
 
 /** A reference as its row: the citation, the source it links, and its locator. */
 const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEntry => ({
@@ -89,7 +97,24 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
       referencesOfVariants(null, variantRefs),
     ]);
   const live = forms.flatMap((form) => form ?? []);
-  const groups = await formGroupsOf(live.map((form) => form.groupId));
+  // The forms of every ingredient a substitute links, the entry's and its forms'.
+  const linked = [
+    ...substitutes,
+    ...variantSubstitutes.flatMap((answer) => (answer instanceof Error ? [] : answer)),
+  ].flatMap(({ ingredient }) => ingredient ?? []);
+  const [groups, linkedForms] = await Promise.all([
+    formGroupsOf(live.map((form) => form.groupId)),
+    variantsOf(null, linked),
+  ]);
+  // Its group only ranks a lookup's rows, so a link read here carries none.
+  const formsOfLinked = new Map(
+    linked.map(({ id }, i) => {
+      const answer = linkedForms[i];
+      const rows = answer === undefined || answer instanceof Error ? [] : answer;
+      return [id, rows.map((row) => ({ id: row.id, form: row.form, group: null }))];
+    }),
+  );
+  const toSubstitute = substituteEntry(formsOfLinked);
   const formOf = new Map(live.map((form, i) => [form.id, { form, group: nameOf(groups[i]) }]));
   const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
 
@@ -121,7 +146,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
         zodiacSigns: entries(variant.zodiacSigns),
         colors: entries(variant.colors),
         categoryIds: only([variantCategories[i]]).map((category) => category.id),
-        substitutes: only([variantSubstitutes[i]]).map(substituteEntry),
+        substitutes: only([variantSubstitutes[i]]).map(toSubstitute),
         references: only([variantReferences[i]]).map(referenceEntry),
       };
     }),
@@ -143,7 +168,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
           }
         : { value: name },
     ),
-    substitutes: substitutes.map(substituteEntry),
+    substitutes: substitutes.map(toSubstitute),
     safetyNotes: entry.safetyNotes ?? '',
     references: references.map(referenceEntry),
     categoryIds: categories.map((category) => category.id),

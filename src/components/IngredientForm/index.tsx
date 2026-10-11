@@ -12,6 +12,7 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
+import { SubstituteForms } from './substitute-forms';
 import { ListField, MultiSelectField, SelectField, TextField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
 import {
@@ -399,6 +400,8 @@ const IngredientForm = ({
           entry="Substitute Ingredient"
           hint="Other ingredients to use in its place when this one is not to hand."
         />
+        {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
+        <SubstituteForms name="substitutes" />
         {/* After the lists (MB.126): every live category, picked from chips
             grouped by category group. */}
         <CategoryField />

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useCallback, useId, useMemo, useRef, useState } from 'react';
 import {
   get,
   useController,
@@ -15,6 +15,7 @@ import { CategoryField } from './categories';
 import { FieldError, ListField, MultiSelectField, TextField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
+import { SubstituteForms } from './substitute-forms';
 import {
   FormField,
   LookupListField,
@@ -29,10 +30,11 @@ import type {
   FormLink,
   FormOption,
   IngredientFormValues,
+  ListOption,
   VariantFieldsetProps,
   VariantsFieldProps,
 } from './types';
-import { EMPTY_VARIANT, repeatedForm } from './values';
+import { EMPTY_VARIANT, rankForForm, repeatedForm } from './values';
 
 // The Variants section (MB.221): the forms an ingredient comes in, each a
 // fieldset of what that form adds to the ingredient — never overrides
@@ -197,8 +199,14 @@ function VariantFieldset({ workspaceId, index, onRemove }: VariantFieldsetProps)
   const at = `variants.${index}` as const;
   const { control } = useFormContext<IngredientFormValues>();
   const form = useWatch({ control, name: `${at}.form` });
+  const group = useWatch({ control, name: `${at}.formLink` })?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the fieldset.
   const legend = form.trim() || 'Unnamed Form';
+  // An ingredient in this form is the likeliest stand-in, then one in its group.
+  const rank = useCallback(
+    (options: ListOption[]) => rankForForm(options, form, group),
+    [form, group],
+  );
   const legendId = `${useId()}-legend`;
   return (
     <fieldset className="fieldset ingredient-form__variant" aria-labelledby={legendId}>
@@ -250,15 +258,18 @@ function VariantFieldset({ workspaceId, index, onRemove }: VariantFieldsetProps)
       <ListField name={`${at}.colors`} ordered legend="Colours" entry="Colour" />
       <CategoryField at={at} />
       {/* Any ingredient may stand in for a form, this one's other forms
-          included, so nothing is left out (MB.215). */}
+          included, so nothing is left out; those in this form, or in its
+          group, are offered first, and one in forms names which (MB.215). */}
       <LookupListField
         workspaceId={workspaceId}
         // Fixed for the form's life, since its tier is, so the hook called is always the same.
         useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
+        rank={rank}
         name={`${at}.substitutes`}
         legend="Substitute Ingredients"
         entry="Substitute Ingredient"
       />
+      <SubstituteForms name={`${at}.substitutes`} />
       <ReferencesField workspaceId={workspaceId} at={at} />
     </fieldset>
   );

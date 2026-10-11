@@ -345,6 +345,7 @@ describe('LookupListField', () => {
     form: 'Dried leaf',
     description: 'A fixture herb.',
     isGlobal: true,
+    variants: [],
   };
   // The same label and formal name in another form: only the tooltip tells
   // the two apart once one is picked (MB.164).
@@ -361,6 +362,7 @@ describe('LookupListField', () => {
     form: null,
     description: null,
     isGlobal: false,
+    variants: [],
   };
 
   // A list's box asks its hook's query, with this coven, once it is used:

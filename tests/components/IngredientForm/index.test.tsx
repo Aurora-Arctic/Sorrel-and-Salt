@@ -981,6 +981,7 @@ describe('IngredientForm', () => {
               form: null,
               description: null,
               isGlobal: false,
+              variants: [],
             },
           ]),
           option: /^Mockwort/,
