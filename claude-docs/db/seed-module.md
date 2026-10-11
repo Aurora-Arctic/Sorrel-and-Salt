@@ -54,7 +54,7 @@ toRow })` is the same insert for the two callers that link what they insert —
 `standard`'s compendium entries and the sources seed's references — and
 returns `present` with each inserted row's id under its key; `present` is the
 caller's own read, since each decides what present means.
-`requireFrom(map, key, describe)` is a `Map` lookup that throws
+`insertStamped(tx, table, rows)` inserts rows it is told are missing, stamped, 1,000 to a statement under Postgres's 65,535-parameter limit, and the three helpers above insert through it (MB.242), as the compendium seed does directly, having decided presence per entry itself. `requireFrom(map, key, describe)` is a `Map` lookup that throws
 `describe()`'s message rather than handing `undefined` to a NOT NULL column.
 `insertSeedUser(tx, user)`, in `bootstrap-admin.ts`, inserts a user by fixed
 id as the bootstrap user, the bootstrap user itself and `minimal`'s alike.
