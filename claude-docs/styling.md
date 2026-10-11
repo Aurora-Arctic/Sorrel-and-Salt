@@ -329,27 +329,32 @@ Lightning CSS lowers to the baseline. SignInPanel's buttons and the
 artwork, and stays in `icons.tsx`.
 
 Measured with `contrastRatio` (`src/lib/contrast.ts`), each edge or fill
-against the page at 3:1 (WCAG 1.4.11), each ink against its fill at 4.5:1:
+against the page at 3:1 (WCAG 1.4.11), each ink against its fill and its
+hover at 4.5:1. `tests/scss/tokens.test.ts` checks every pair below that is
+held to a floor, which is all but the rows marked "before MB.116" and the
+hover fills on the page, reading the colours from `$brand-palettes` and the
+theme tokens, in one assertion per theme:
 
 | Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
 | ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
 | Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
 | Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
 | Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
-| Microsoft edge `#808080` (provisional)                | 4.74                                                          | 3.26                    |
-| Microsoft's dark button `#2f2f2f`, light theme only   | —                                                             | 11.05 (ink 13.39)       |
+| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
 | Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
 | Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
 | Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
 | Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
+| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
 
 **Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
 and its states, and a hover ground is neither: the button is already known
 by its resting fill, and keyboard focus is shown by the focus ring, which
 clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
-may sit under 3:1 on the dark page. Microsoft's edge is the owner's call still
-open in MB.116, between `#808080` and Microsoft's own dark button in the light
-theme.
+may sit under 3:1 on the dark page. Microsoft keeps its white face in both
+themes, with the darker `#808080` edge that clears 3:1 on the light page: the
+owner's call at MB.116's sign-off, over Microsoft's own dark button.
 
 ## Type
 
