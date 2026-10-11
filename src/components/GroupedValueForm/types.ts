@@ -45,18 +45,22 @@ export interface GroupedValueFormProps {
   onDone: () => void;
 }
 
-/** A grouped kind's group field: what it is called, and what it shows until one is chosen. */
+/** A grouped kind's group field: what it is called, what it shows until one is chosen, and its hint. */
 export interface GroupedValueGroupField {
   /** The field's label, which also names its list: "Group". */
   label: string;
   /** What the field shows until one is chosen: "Choose a group". */
   placeholder: string;
+  /** What the group does for the value, behind the field's info tip. */
+  hint: string;
 }
 
 /** What a kind's form says: its noun, its group field if it has one, and its confirmations. */
 export interface GroupedValueCopy {
   /** One value in title case, as a button says it: "Save Category", "Delete Form". */
   noun: string;
+  /** What the description is for, behind its info tip: where a reader meets it. */
+  descriptionHint: string;
   /** The group field, for a grouped kind; a flat kind has none. */
   group?: GroupedValueGroupField;
   /** What the delete's confirmation says after `Delete "<name>"?`. */

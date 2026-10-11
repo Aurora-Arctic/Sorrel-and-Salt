@@ -169,9 +169,17 @@ const PARTNER: Record<GroupColorColumn, GroupColorColumn> = {
   colorLight: 'colorDark',
 };
 
-const COLORS: { column: GroupColorColumn; label: string }[] = [
-  { column: 'colorDark', label: 'Dark Theme Colour' },
-  { column: 'colorLight', label: 'Light Theme Colour' },
+const COLORS: { column: GroupColorColumn; label: string; hint: string }[] = [
+  {
+    column: 'colorDark',
+    label: 'Dark Theme Colour',
+    hint: "The colour its categories' chips wear in the dark theme, written as # and six hex digits. It must read at 4.5:1 on the dark card, and the light theme's colour is filled from it until you change that one.",
+  },
+  {
+    column: 'colorLight',
+    label: 'Light Theme Colour',
+    hint: "The colour its categories' chips wear in the light theme, written as # and six hex digits. It must read at 4.5:1 on the light page, and the dark theme's colour is filled from it until you change that one.",
+  },
 ];
 
 /** A one-word noun in title case, as a label says it: "categories" is "Categories". */
@@ -436,12 +444,25 @@ const GroupForm = ({
     <FormProvider {...methods}>
       <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
         {rootError && <Notice kind="error">{rootError}</Notice>}
-        <TextField<GroupValues> name="name" label="Name" autoComplete="off" required />
-        <TextField<GroupValues> name="description" label="Description" multiline required />
+        <TextField<GroupValues>
+          name="name"
+          label="Name"
+          placeholder="Add a name"
+          autoComplete="off"
+          required
+        />
+        <TextField<GroupValues>
+          name="description"
+          label="Description"
+          placeholder="Describe it"
+          multiline
+          required
+        />
         {kind === 'category' &&
-          COLORS.map(({ column, label }) => {
+          COLORS.map(({ column, label, hint }) => {
             const { aria, ...shell } = fieldDescription({
               id: `${id}-${column}`,
+              hint,
               error: errors[column]?.message,
             });
             // The shell draws the label and its mark, naming the hex box by
@@ -449,7 +470,14 @@ const GroupForm = ({
             // itself, between its ratio and its near-colour warning, so the
             // shell's own would show it twice.
             return (
-              <FieldShell key={column} label={label} required {...shell} error={undefined}>
+              <FieldShell
+                key={column}
+                label={label}
+                hint={hint}
+                required
+                {...shell}
+                error={undefined}
+              >
                 <Controller
                   control={control}
                   name={column}
@@ -458,6 +486,7 @@ const GroupForm = ({
                       id={shell.controlId}
                       label={label}
                       column={column}
+                      placeholder="Add hex"
                       value={field.value}
                       onChange={(value) => {
                         field.onChange(value);
