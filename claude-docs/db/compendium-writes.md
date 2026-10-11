@@ -13,7 +13,7 @@ role counts for nothing: a coven's owner is refused as its viewer is.
 the tier. The input is the whole entry, so an update replaces the row. Folk
 names are written in the same transaction, the update's diff reading the live
 ones through `findManyOfIngredients` with no proofs, which is the compendium
-alone. The slug follows the label, the form and the formal name, and the one
+alone. The slug follows the label and the formal name (MB.220), and the one
 an update leaves is retired and redirects for 180 days
 (["Ingredient slugs"](ingredient-slugs.md)).
 The categories are `categoryIds`, written in the same transaction as a
@@ -142,31 +142,32 @@ entry that already holds the identity.** As in the coven's writes, the service
 catches the write's failure and reads the index off it with
 `violatedUniqueIndex`:
 
-- `ingredients_compendium_identity_unique` lands on `canonicalName` when the
-  input declares a formal name, and on `name` when it does not. A `none` or
+- `ingredients_compendium_identity_key_unique` (MB.216; mapped since
+  MB.220), the formal name alone, lands on `canonicalName` when the input
+  declares a formal name, and on `name` when it does not. A `none` or
   `unknown` entry keys as its label, and §5's cross-namespace case is a label
   equal to another entry's formal name, where a message beside the empty
   formal-name field would point at a box the admin never filled in. The
-  message names the holder by its label, formal name and form:
-  `Already in the compendium as Mugwort (Artemisia vulgaris, herb)`.
+  message names the holder by its label, formal name and form, and points at
+  adding the form to it: an oil of a plant the compendium holds is a variant
+  of that entry, not an entry beside it. `ingredients_compendium_identity_unique`,
+  on the undeclared three-part key, is mapped the same way until MB.223 drops
+  it, since Postgres may report either.
 - `ingredients_compendium_slug_unique` lands on `name`, as the coven's does,
-  naming the address and the entry holding it: `Testwort (root) already has
-the address "testwort-root" — change the name, form or formal name`.
-
-`ingredients_compendium_identity_key_unique` (MB.216), the formal name
-alone, is not mapped yet: a write of a second form of one formal name as an
-entry of its own is refused by it and passes through as the raw error until
-MB.220 maps it, a short window on an admin-only write
-([`mb.215-plan.md`](../design-decisions/mb.215-plan.md), "Risks").
+  naming the address and the entry holding it, unless another entry holds
+  the identity too: the address index is older than the identity one, so an
+  oil written under the herb's own label meets it first, and the refusal is
+  then the identity's.
 
 Both name the entry through the vocabulary's `describeEntry`, its label
 unquoted as every vocabulary refusal names one, so a list of entries reads as
 one sentence (MB.210).
 
 The holder is read after the write has rolled back, by
-`findCompendiumEntryByIdentity({ name, canonicalName, form })`: the live
-compendium row whose `canonical_key` equals the key those values would take.
-The key comes from `canonicalKeyOf` in the table's schema file, the builder
+`findCompendiumEntryByIdentity({ name, canonicalName })`: the live
+compendium row whose `identity_key` equals the key those values would take,
+the form no part of it since MB.220.
+The key comes from `identityKeyOf` in the table's schema file, the builder
 the generated column is built from too, so the finder folds the values
 exactly as Postgres folded the row and the key has one spelling. Given the
 bare column names it renders the text the migrations hold, byte for byte, so

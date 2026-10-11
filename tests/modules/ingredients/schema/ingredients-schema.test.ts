@@ -24,7 +24,6 @@ const COLUMNS = [
   'name',
   'canonical_name',
   'nomenclature',
-  'canonical_key',
   'identity_key',
   'form',
   'form_id',
@@ -77,14 +76,14 @@ useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<string> {
   const [inserted] = await sql`
-    insert into ingredients ${sql(row(overrides))} returning id, canonical_key
+    insert into ingredients ${sql(row(overrides))} returning id
   `;
   return inserted.id as string;
 }
 
-async function canonicalKeyOf(id: string): Promise<string> {
-  const [found] = await sql`select canonical_key from ingredients where id = ${id}`;
-  return found.canonical_key as string;
+async function identityKeyOf(id: string): Promise<string> {
+  const [found] = await sql`select identity_key from ingredients where id = ${id}`;
+  return found.identity_key as string;
 }
 
 beforeEach(async () => {
@@ -187,129 +186,35 @@ describe('ingredients table', () => {
     // A blank form is rejected; an *absent* one is not — form is optional.
     it('accepts a null form', async () => {
       const id = await insert({ form: null, canonicalName: 'Artemisia vulgaris' });
-      expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris');
+      const [found] = await sql`select form from ingredients where id = ${id}`;
+      expect(found.form).toBeNull();
     });
 
     // The vocabulary is an autofill, not a constraint: `rhizome` is writable uncurated.
     it('accepts a form absent from the curated vocabulary', async () => {
       const id = await insert({ form: 'rhizome', canonicalName: 'Artemisia vulgaris' });
-      expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: rhizome');
+      const [found] = await sql`select form from ingredients where id = ${id}`;
+      expect(found.form).toBe('rhizome');
     });
   });
 
-  describe('canonical_key', () => {
+  // MB.216, MB.220: identity is the formal name alone, falling back to the
+  // label; the form is a variant's and no part of it.
+  describe('identity_key', () => {
     it('is refused by Postgres on insert and on update', async () => {
       const inserting = await failureOf(sql`
-        insert into ingredients (name, nomenclature, canonical_name, slug, canonical_key, created_by, updated_by)
+        insert into ingredients (name, nomenclature, canonical_name, slug, identity_key, created_by, updated_by)
         values ('Testwort', 'botanical', 'Fixtura testalis', 'testwort', 'forged', ${AUTHOR}, ${AUTHOR})
       `);
       const id = await insert();
       const updating = await failureOf(
-        sql`update ingredients set canonical_key = 'forged' where id = ${id}`,
+        sql`update ingredients set identity_key = 'forged' where id = ${id}`,
       );
 
       // 428C9 is ERRCODE_GENERATED_ALWAYS — the column refusing the write itself.
       expect(inserting.code).toBe('428C9');
       expect(updating.code).toBe('428C9');
     });
-
-    it('folds case and surrounding space, so Root Bark and root bark are one key', async () => {
-      const shouted = await insert({ form: 'Root Bark', canonicalName: 'Artemisia vulgaris' });
-      const muttered = await insert({
-        form: '  root bark  ',
-        name: 'Mugwort (second jar)',
-        canonicalName: 'Artemisia vulgaris',
-        workspaceId: WORKSPACE,
-      });
-
-      expect(await canonicalKeyOf(shouted)).toBe('artemisia vulgaris :: root bark');
-      expect(await canonicalKeyOf(muttered)).toBe(await canonicalKeyOf(shouted));
-    });
-
-    it('falls back to the display label when the row declares no formal name', async () => {
-      const id = await insert({
-        nomenclature: 'none',
-        canonicalName: null,
-        name: 'Graveyard Dirt',
-        form: null,
-      });
-      expect(await canonicalKeyOf(id)).toBe('graveyard dirt');
-    });
-
-    // The key folds the form in, so valerian root and leaf key apart. Two
-    // tiers, since `identity_key` holds one formal name once per tier (MB.216).
-    it('separates two rows sharing a formal name but not a form', async () => {
-      const root = await insert({
-        name: 'Valerian root',
-        canonicalName: 'Valeriana officinalis',
-        form: 'root',
-      });
-      const leaf = await insert({
-        name: 'Valerian leaf',
-        canonicalName: 'Valeriana officinalis',
-        form: 'leaf',
-        workspaceId: WORKSPACE,
-      });
-
-      expect(await canonicalKeyOf(root)).toBe('valeriana officinalis :: root');
-      expect(await canonicalKeyOf(leaf)).toBe('valeriana officinalis :: leaf');
-    });
-
-    describe('recomputation', () => {
-      it('leaves the key unchanged when a row carrying a formal name is relabelled', async () => {
-        const id = await insert({
-          name: 'Mugwort',
-          canonicalName: 'Artemisia vulgaris',
-          form: 'herb',
-        });
-        expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: herb');
-
-        await sql`update ingredients set name = 'Cronewort' where id = ${id}`;
-
-        // Pinned to the value: an ungenerated column would also survive a relabel.
-        expect(await canonicalKeyOf(id)).toBe('artemisia vulgaris :: herb');
-        // And the relabel happened, so a silent no-op update cannot pass either.
-        const [{ name }] = await sql`select name from ingredients where id = ${id}`;
-        expect(name).toBe('Cronewort');
-      });
-
-      it('recomputes the key when a row carrying no formal name is relabelled', async () => {
-        const id = await insert({
-          nomenclature: 'none',
-          canonicalName: null,
-          name: 'Moon water',
-          form: null,
-        });
-        expect(await canonicalKeyOf(id)).toBe('moon water');
-
-        await sql`update ingredients set name = 'Full moon water' where id = ${id}`;
-
-        expect(await canonicalKeyOf(id)).toBe('full moon water');
-      });
-
-      it('recomputes the key whenever the form changes, formal name or not', async () => {
-        const named = await insert({ form: 'herb', canonicalName: 'Artemisia vulgaris' });
-        await sql`update ingredients set form = 'leaf' where id = ${named}`;
-        expect(await canonicalKeyOf(named)).toBe('artemisia vulgaris :: leaf');
-
-        const unnamed = await insert({
-          nomenclature: 'none',
-          canonicalName: null,
-          name: 'Coffin nail',
-          form: 'curio',
-        });
-        await sql`update ingredients set form = 'whole' where id = ${unnamed}`;
-        expect(await canonicalKeyOf(unnamed)).toBe('coffin nail :: whole');
-      });
-    });
-  });
-
-  // MB.216: identity on the formal name alone, the form left to the variants.
-  describe('identity_key', () => {
-    async function identityKeyOf(id: string): Promise<string> {
-      const [found] = await sql`select identity_key from ingredients where id = ${id}`;
-      return found.identity_key as string;
-    }
 
     it('folds the formal name, leaves the form out, and falls back to the label', async () => {
       const named = await insert({ canonicalName: 'Valeriana Officinalis', form: 'Root' });
@@ -324,7 +229,25 @@ describe('ingredients table', () => {
       expect(await identityKeyOf(unnamed)).toBe('graveyard dirt');
     });
 
-    it('follows a relabel only where the row declares no formal name', async () => {
+    // Valerian root and leaf are one identity, so one entry with two forms
+    // (MB.215). Two tiers, since the index holds a formal name once per tier.
+    it('keys two rows of one formal name alike whatever their forms', async () => {
+      const root = await insert({
+        name: 'Valerian root',
+        canonicalName: 'Valeriana officinalis',
+        form: 'root',
+      });
+      const leaf = await insert({
+        name: 'Valerian leaf',
+        canonicalName: 'Valeriana officinalis',
+        form: 'leaf',
+        workspaceId: WORKSPACE,
+      });
+
+      expect(await identityKeyOf(leaf)).toBe(await identityKeyOf(root));
+    });
+
+    it('follows a relabel only where the row declares no formal name, and never a form', async () => {
       const named = await insert({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
       const unnamed = await insert({
         nomenclature: 'none',
@@ -333,11 +256,14 @@ describe('ingredients table', () => {
         form: null,
       });
 
-      await sql`update ingredients set name = 'Cronewort' where id = ${named}`;
+      await sql`update ingredients set name = 'Cronewort', form = 'leaf' where id = ${named}`;
       await sql`update ingredients set name = 'Full moon water' where id = ${unnamed}`;
 
       expect(await identityKeyOf(named)).toBe('artemisia vulgaris');
       expect(await identityKeyOf(unnamed)).toBe('full moon water');
+      // And the writes happened, so a silent no-op update cannot pass.
+      const [{ name, form }] = await sql`select name, form from ingredients where id = ${named}`;
+      expect([name, form]).toEqual(['Cronewort', 'leaf']);
     });
   });
 
@@ -360,7 +286,7 @@ describe('ingredients table', () => {
   });
 
   // MB.165: `form_id` records the curated row a pick named, and only beside
-  // the text it names — a link with no text would key identity on nothing.
+  // the text it names — a link with no text would name nothing.
   describe('form_id', () => {
     async function aForm(): Promise<string> {
       const t = crypto.randomUUID().slice(0, 8);

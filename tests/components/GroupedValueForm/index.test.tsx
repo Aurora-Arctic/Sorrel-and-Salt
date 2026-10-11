@@ -1,5 +1,4 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { HttpResponse } from 'msw';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import GroupedValueForm from '@/components/GroupedValueForm';
@@ -20,8 +19,7 @@ import type {
   UpdateIngredientFormValueMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { server } from '../../support/msw/server';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
 import type { GroupedValueFormSubject } from '../../support/types';
 
@@ -29,9 +27,8 @@ import type { GroupedValueFormSubject } from '../../support/types';
 // (M5.6), an ingredient form (M5.6a) or a deity (MB.132) — a name, a description and a group,
 // saved through the kind's mutations, and on an existing value a delete
 // behind a confirmation. A form's rename says it carries onto the
-// compendium, and one that would end another entry's redirect asks before it
-// is sent again (MB.82). The mutations are answered by MSW in the route's own
-// shape (claude-docs/components/grouped-value-form.md).
+// compendium. The mutations are answered by MSW in the route's own shape
+// (claude-docs/components/grouped-value-form.md).
 
 const CATEGORY_GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Protection' },
@@ -324,8 +321,7 @@ describe('GroupedValueForm, a form', () => {
       ]);
     });
 
-    // MB.162: a rename carries onto every compendium entry that picked the
-    // form, and a form is part of an entry's slug.
+    // MB.162: a rename carries onto every compendium entry that picked the form.
     it('describes Save by the rename note once the name changes, and only then', () => {
       renderFormKind({ value: FORM });
 
@@ -338,143 +334,6 @@ describe('GroupedValueForm, a form', () => {
 
       type(name(), 'Testwort Shard');
       expect(save()).toHaveAccessibleDescription('');
-    });
-  });
-
-  // MB.82: a rename re-slugs the entries that picked the form, and taking a
-  // slug another entry redirects from asks first.
-  describe('a rename that would end a redirect', () => {
-    const REDIRECT =
-      '"testwort-sliver" redirects to Testwort (Fixtura testalis), sliver until 28 August 2026, 00:00 UTC — confirm to end that redirect';
-
-    it('asks, then sends the same input again with endRedirect', async () => {
-      const calls: UpdateIngredientFormValueMutationVariables[] = [];
-      server.use(
-        graphqlLink.mutation<
-          UpdateIngredientFormValueMutation,
-          UpdateIngredientFormValueMutationVariables
-        >('UpdateIngredientFormValue', ({ variables }) => {
-          calls.push(variables);
-          if (variables.input.endRedirect) {
-            return HttpResponse.json({
-              data: { updateIngredientFormValue: { id: FORM.id, slug: 'testwort-sliver' } },
-            });
-          }
-          return HttpResponse.json({
-            data: null,
-            errors: [
-              {
-                message: 'Validation failed',
-                extensions: {
-                  code: 'VALIDATION',
-                  fieldErrors: [{ path: ['endRedirect'], message: REDIRECT }],
-                },
-              },
-            ],
-          });
-        }),
-      );
-      const onDone = renderFormKind({ value: FORM });
-
-      type(name(), 'Testwort Sliver');
-      press('Save Form');
-
-      expect(await screen.findByRole('alert')).toBeVisible();
-      expect(screen.queryByRole('button', { name: 'Save Form' })).not.toBeInTheDocument();
-      expect(onDone).not.toHaveBeenCalled();
-
-      press('Rename Anyway');
-
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-      const input = {
-        name: 'Testwort Sliver',
-        description: 'A form the test holds',
-        groupId: FORM_GROUPS[1].id,
-      };
-      expect(calls).toEqual([
-        { id: FORM.id, input },
-        { id: FORM.id, input: { ...input, endRedirect: true } },
-      ]);
-    });
-
-    it('is busy in the question until the confirmed answer', async () => {
-      let release = () => {};
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      server.use(
-        graphqlLink.mutation<
-          UpdateIngredientFormValueMutation,
-          UpdateIngredientFormValueMutationVariables
-        >('UpdateIngredientFormValue', async ({ variables }) => {
-          if (!variables.input.endRedirect) {
-            return HttpResponse.json({
-              data: null,
-              errors: [
-                {
-                  message: 'Validation failed',
-                  extensions: {
-                    code: 'VALIDATION',
-                    fieldErrors: [{ path: ['endRedirect'], message: REDIRECT }],
-                  },
-                },
-              ],
-            });
-          }
-          await held;
-          return HttpResponse.json({
-            data: { updateIngredientFormValue: { id: FORM.id, slug: 'testwort-sliver' } },
-          });
-        }),
-      );
-      const onDone = renderFormKind({ value: FORM });
-      type(name(), 'Testwort Sliver');
-      press('Save Form');
-      const busy = await screen.findByRole('button', { name: 'Rename Anyway' });
-
-      press('Rename Anyway');
-
-      await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
-      expect(busy).toBeDisabled();
-      expect(screen.queryByRole('button', { name: 'Save Form' })).not.toBeInTheDocument();
-      release();
-      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
-    });
-
-    it('withdraws the question when the form is edited again', async () => {
-      mockGraphQLError('UpdateIngredientFormValue', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['endRedirect'], message: REDIRECT }],
-      });
-      renderFormKind({ value: FORM });
-
-      type(name(), 'Testwort Sliver');
-      press('Save Form');
-      await screen.findByRole('button', { name: 'Rename Anyway' });
-
-      type(name(), 'Testwort Splinter');
-
-      expect(screen.queryByRole('button', { name: 'Rename Anyway' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(save()).toBeEnabled();
-    });
-
-    it('withdraws the question on Keep Editing, sending nothing', async () => {
-      mockGraphQLError('UpdateIngredientFormValue', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['endRedirect'], message: REDIRECT }],
-      });
-      const onDone = renderFormKind({ value: FORM });
-
-      type(name(), 'Testwort Sliver');
-      press('Save Form');
-      await screen.findByRole('button', { name: 'Rename Anyway' });
-
-      press('Keep Editing');
-
-      expect(screen.queryByRole('button', { name: 'Rename Anyway' })).not.toBeInTheDocument();
-      expect(save()).toBeEnabled();
-      expect(onDone).not.toHaveBeenCalled();
     });
   });
 

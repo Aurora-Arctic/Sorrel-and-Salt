@@ -12,10 +12,10 @@ import type { HeldWording } from '../types';
 
 // How a write names the compendium entries it would disturb: a vocabulary
 // delete refused while live entries hold the row — a category's (M5.6), a
-// form's (M5.6a), a deity's, a planet's or a sign's — and a slug a write
-// would take from another entry's running redirect (MB.82), whether the
-// compendium's own write moves it or a form's rename does. The index exports
-// `describeEntry` and `redirectRefusal` for the compendium's service, and no
+// form's (M5.6a), a deity's, a planet's or a sign's — and a slug a
+// compendium write would take from another entry's running redirect (MB.82);
+// a form's rename moves no slug since MB.220. The index exports
+// `describeEntry` and `redirectRefusal` for the ingredient services, and no
 // other part of it.
 
 /** How many entries a refused delete names before it counts the rest. */

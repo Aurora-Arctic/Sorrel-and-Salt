@@ -12,7 +12,7 @@ import type {
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
 // every correspondence field, the tier as `isGlobal`, and the six children
-// and the picked form through the request's loaders. `canonicalKey`,
+// and the picked form through the request's loaders. `identityKey`,
 // `workspaceId` and `formId` stay off the wire: the key is the database's
 // own, the tier is a flag, and the pick is `formChoice`.
 

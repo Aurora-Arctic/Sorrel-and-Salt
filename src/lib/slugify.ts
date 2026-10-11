@@ -15,11 +15,13 @@ export function slugify(name: string): string {
 }
 
 /**
- * An ingredient's slug: the label, the form, then the formal name where one is
- * declared, so two entries sharing a label and a form are told apart by the
- * name that is their identity rather than by which was added first
- * (`Cat's Claw` / `bark` / `Uncaria tomentosa` → `cats-claw-bark-uncaria-tomentosa`;
- * no formal name, `graveyard-dirt-earth`).
+ * An ingredient's slug: the label, then the formal name where one is
+ * declared, so two entries sharing a label are told apart by the name that is
+ * their identity rather than by which was added first (`Cat's Claw` /
+ * `Uncaria tomentosa` → `cats-claw-uncaria-tomentosa`; no formal name,
+ * `graveyard-dirt`). Every caller passes `null` for the form since MB.220, a
+ * form being no part of an entry's address since MB.215; the parameter goes
+ * with MB.223, once nothing reads the form off the row.
  */
 export function ingredientSlug(
   name: string,

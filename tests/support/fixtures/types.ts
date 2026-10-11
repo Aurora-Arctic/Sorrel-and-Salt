@@ -33,7 +33,7 @@ export type Nomenclature = typeof ingredients.$inferInsert.nomenclature;
 
 /**
  * An ingredient plus its folk names, substitutes, deities and categories, the
- * latter by §6 name rather than id. `canonicalKey` is absent: GENERATED
+ * latter by §6 name rather than id. `identityKey` is absent: GENERATED
  * ALWAYS, so Drizzle omits it from the insert model.
  */
 export interface IngredientFixture extends Required<

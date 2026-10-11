@@ -30,7 +30,7 @@ limit $limit  -- the page plus one
   rows. A descending part is written negated, so one row comparison serves.
   The compendium search's `[-score, name]` is the first computed key. The
   duplicate lookup's is the same shape over trigram similarity (MB.11), and
-  M8.14's `(lower(name), canonical_key)` is the next.
+  M8.14's `(lower(name), identity_key)` is the next.
 - **Each row comes back with its cursor.** The key is selected as an array of
   each part cast to text, and compared by casting each back to its part's
   type (`getSQLType()` for a column), so Postgres compares a `timestamptz` to

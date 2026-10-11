@@ -17,9 +17,7 @@ export interface GroupedValueGroupChoice {
 
 /**
  * The fields as typed, the group `''` until one is chosen. Every kind's
- * values take this shape, whatever its input calls the group; `endRedirect`
- * is not one of them: it is the confirmation a refused rename asks for,
- * added to the input it is sent again with.
+ * values take this shape, whatever its input calls the group.
  */
 export interface GroupedValueValues {
   name: string;
@@ -75,18 +73,7 @@ export interface GroupedValueKindSpec<Input extends object> extends GroupedValue
 /** One kind as the form uses it: its copy, its resolver, and its requests, the input type behind them. */
 export interface GroupedValueFormKind extends GroupedValueCopy {
   resolver: Resolver<GroupedValueValues>;
-  /** Creates the value, or updates the one at `id`, carrying `endRedirect` once the admin confirms. */
-  save: (values: GroupedValueValues, id: string | undefined, endRedirect?: true) => Promise<void>;
+  /** Creates the value, or updates the one at `id`. */
+  save: (values: GroupedValueValues, id: string | undefined) => Promise<void>;
   remove: (id: string) => Promise<void>;
-}
-
-/**
- * A save refused until the admin confirms ending a redirect: what it said,
- * the values to send again, and the fields as they were typed, so an edit
- * withdraws it.
- */
-export interface RedirectQuestion {
-  message: string;
-  input: GroupedValueValues;
-  typed: GroupedValueValues;
 }

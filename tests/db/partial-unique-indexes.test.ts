@@ -214,7 +214,9 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   ingredient_variants_form_unique: { row: variant },
   // `canonical_key` is generated: the clash is its formal name and form under
-  // another label, which the label index would otherwise refuse first.
+  // another label, which the label index would otherwise refuse first. The
+  // two indexes on it are undeclared since MB.220 and stay in the database
+  // until MB.223 drops them, with these two rows.
   ingredients_compendium_identity_unique: {
     row: compendiumIngredient,
     clash: ['workspace_id', 'canonical_name', 'form'],

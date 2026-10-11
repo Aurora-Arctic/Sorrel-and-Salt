@@ -19,7 +19,6 @@ import type {
   GroupedValueKind,
   GroupedValueKindSpec,
   GroupedValueValues,
-  RedirectQuestion,
 } from './types';
 import './index.scss';
 
@@ -29,9 +28,9 @@ import './index.scss';
 // (MB.132): a name, a description and the group it is filed under, validated
 // by the shared schema before the mutation and again by the service, and on
 // an existing value a delete behind a confirmation. A kind whose rename
-// reaches further than its row says so (MB.162), and a rename that would
-// take a slug another entry redirects from asks first (MB.82). It holds no
-// modal of its own; the page puts it in one
+// reaches further than its row says so (MB.162). No rename here moves a
+// compendium entry's address since MB.220, so none asks to end a redirect.
+// It holds no modal of its own; the page puts it in one
 // (claude-docs/components/grouped-value-form.md).
 
 const CreateCategoryDocument = graphql(`
@@ -127,18 +126,16 @@ function defineKind<Input extends object>({
   return {
     ...copy,
     resolver: zodResolver(schema),
-    save: async (values, id, endRedirect) => {
+    save: async (values, id) => {
       const input = toInput(values);
-      // No `endRedirect` at all until the admin confirms, rather than a false.
-      const sent = endRedirect ? { ...input, endRedirect } : input;
       if (id) {
-        await graphqlRequest(update, { id, input: sent });
+        await graphqlRequest(update, { id, input });
         return;
       }
       // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
       // `Input` is generic; the spec has already held the document to it.
       const widened = create as TypedDocumentNode<unknown, { input: object }>;
-      await graphqlRequest<unknown, { input: object }>(widened, { input: sent });
+      await graphqlRequest<unknown, { input: object }>(widened, { input });
     },
     remove: async (id) => {
       await graphqlRequest(remove, { id });
@@ -170,10 +167,10 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     groupPlaceholder: 'Choose a group',
     deleteNote:
       "It can't be deleted while a compendium entry picks it. Covens' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.",
-    // A rename carries onto every compendium entry that picked the form, and
-    // a form is part of an entry's slug (MB.162).
-    renameNote:
-      "Saving renames it on every compendium entry that picked it, which can move those entries' addresses.",
+    // A rename carries onto every compendium entry that picked the form
+    // (MB.162), though no entry's address moves: a form is no part of one
+    // since MB.220.
+    renameNote: 'Saving renames it on every compendium entry that picked it.',
     schema: IngredientFormValueInput,
     toInput: (values) => values,
     create: CreateIngredientFormValueDocument,
@@ -226,7 +223,6 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
     control,
     handleSubmit,
     setError,
-    getValues,
     formState: { errors, isSubmitting, isDirty },
   } = useForm<GroupedValueValues>({
     defaultValues: value
@@ -236,44 +232,31 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
   });
   const [confirming, setConfirming] = useState(false);
   const [alert, setAlert] = useState<string>();
-  const [asked, setAsked] = useState<RedirectQuestion>();
   const values = useWatch({ control });
   // Trimmed, as the schema trims: a space added to the end renames nothing.
   const renamed =
     renameNote !== undefined && value !== undefined && (values.name ?? '').trim() !== value.name;
-  // The question is about the input that was refused: an edit makes it
-  // another input, so it stands only while the fields are as they were.
-  const question =
-    asked && FIELDS.every((field) => values[field] === asked.typed[field]) ? asked : undefined;
 
   const save = useMutation({
-    mutationFn: ({ input, endRedirect }: { input: GroupedValueValues; endRedirect?: true }) =>
-      spec.save(input, value?.id, endRedirect),
+    mutationFn: (input: GroupedValueValues) => spec.save(input, value?.id),
   });
 
   const remove = useMutation({ mutationFn: (valueId: string) => spec.remove(valueId) });
 
-  /** Sends the input; a refusal lands beside its field, or asks to end a redirect. */
-  const send = async (input: GroupedValueValues, endRedirect?: true): Promise<void> => {
+  /** Sends the input; a refusal lands beside its field, or above the fields. */
+  const send = async (input: GroupedValueValues): Promise<void> => {
     setAlert(undefined);
     try {
-      await save.mutateAsync({ input, endRedirect });
+      await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      // Beside the field it names; the redirect as a question; anything else
-      // above the fields. A question already asked stays until this answer,
-      // so Rename Anyway is busy in its place rather than swapped for Save.
-      let next: RedirectQuestion | undefined;
       const unplaced: string[] = [];
       for (const { path, message } of readGraphqlIssues(error)) {
         const [key, ...rest] = path;
         const field = rest.length === 0 ? fieldOf(spec, key) : undefined;
-        if (rest.length === 0 && key === 'endRedirect')
-          next = { message, input, typed: getValues() };
-        else if (field) setError(field, { type: 'server', message });
+        if (field) setError(field, { type: 'server', message });
         else unplaced.push(message);
       }
-      setAsked(next);
       if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
     }
   };
@@ -325,30 +308,6 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
             </button>
             <button type="button" className="btn btn--quiet" onClick={() => setConfirming(false)}>
               Keep It
-            </button>
-          </div>
-        </div>
-      );
-    }
-    if (question) {
-      // The service's own sentence names the entries and when their windows
-      // close; confirmed, the same input goes again, carrying `endRedirect`.
-      return (
-        <div className="grouped-value-form__confirm">
-          <p role="alert">{question.message}</p>
-          <div className="modal__actions">
-            <button
-              type="button"
-              className="btn btn--solid"
-              disabled={save.isPending}
-              aria-busy={save.isPending || undefined}
-              onClick={() => void send(question.input, true)}
-            >
-              {save.isPending && <span className="spinner" aria-hidden="true" />}
-              {save.isPending ? 'Renaming' : 'Rename Anyway'}
-            </button>
-            <button type="button" className="btn btn--quiet" onClick={() => setAsked(undefined)}>
-              Keep Editing
             </button>
           </div>
         </div>

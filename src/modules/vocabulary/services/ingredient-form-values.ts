@@ -1,9 +1,6 @@
 import 'server-only';
 import {
-  type IngredientRow,
-  findCompendiumEntryByIdentity,
-  findCompendiumEntryBySlug,
-  findCompendiumPage,
+  findCompendiumFormRenameClashes,
   findIngredientFormValueCount,
   findIngredientFormValues,
   findOneBySlug,
@@ -11,10 +8,9 @@ import {
 } from '../../../db/repository';
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, ValidationError } from '../../../lib/errors';
-import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
-import { formSlug, ingredientSlug } from '../../../lib/slugify';
-import { plural } from '../../../lib/text';
+import { formSlug } from '../../../lib/slugify';
+import { joinAnd, plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { assertSiteAdmin } from '@/modules/identity';
@@ -22,21 +18,22 @@ import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-form
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
 import { cachedFilteredList } from './curated-lists';
 import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-writes';
-import { describeEntry, redirectRefusal, refuseWhileHeld } from './held-entries';
+import { describeEntry, refuseWhileHeld } from './held-entries';
 import type {
   CuratedVocabulary,
-  FormRewrite,
   IngredientFormValueFilter,
   IngredientFormValueRow,
 } from '../types';
 
 // The curated form vocabulary: its reads, public reference data like every
 // curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6a).
-// A compendium entry's form is a pick (MB.167), so a form a live entry picked
-// holds: its delete is refused, and its rename is carried onto the entry in
-// the same write, re-keying it and moving its slug (MB.162). A coven's
-// ingredient never holds a form and is never rewritten: what it picked stays,
-// and an admin writes nothing of a coven's (M6.6).
+// A compendium entry's forms are its variants, each a pick (MB.167, MB.215),
+// so a form a live entry's variant picked holds: its delete is refused, and
+// its rename is carried onto every such variant in the same write (MB.162). A
+// form is no part of an entry's identity or address since MB.215, so a rename
+// moves no slug. A coven's ingredient never holds a form and is never
+// rewritten: what it picked stays, and an admin writes nothing of a coven's
+// (M6.6).
 
 // The list and its count, held in the data cache under the `compendium` tag
 // (claude-docs/db/compendium-cache.md).
@@ -118,23 +115,16 @@ export async function createIngredientFormValue(
  * `seedKey` is left as it was, so a renamed seeded row is still the seed's
  * (MB.171).
  *
- * A rename carries the new name onto every live compendium entry picking the
- * form, in the same transaction: each entry's `form` text, so its key, and its
- * slug, the old one retired to redirect for 180 days as any compendium update
- * retires it (MB.82), the compendium's lapsed retirements cleared in the same
- * write. A change of group alone rewrites no entry, since an entry holds the
- * form's name and not its group.
- *
- * The form and its entries are read before the transaction, so an entry
- * picking the form in the instant between keeps the old spelling, as two
- * admins saving one compendium entry at once can retire the older slug.
+ * A rename carries the new name onto every live variant of a live compendium
+ * entry picking the form, in the same transaction, as the variant's `form`
+ * text. No entry's slug moves and no retirement is written: a form is no part
+ * of an entry's address since MB.215. A change of group alone rewrites no
+ * variant, since a variant holds the form's name and not its group.
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {ValidationError} as `createIngredientFormValue` throws it, the
- * row's own slug excepted; on `name`, a rename that would make an entry
- * another live entry's identity or move it onto another's address, naming
- * both; on `endRedirect`, a rename moving an entry onto an address another
- * entry's redirect still runs from, unless the input confirms ending it.
+ * row's own slug excepted; on `name`, a rename that would give an entry two
+ * forms of one name, naming the entry.
  * @throws {NotFound} no live form has this id.
  */
 export async function updateIngredientFormValue(
@@ -143,44 +133,21 @@ export async function updateIngredientFormValue(
   input: IngredientFormValueInput,
 ): Promise<IngredientFormValueRow> {
   const admin = assertSiteAdmin(session);
-  const { fields, groupName, endRedirect } = await parseForm(input);
+  const { fields, groupName } = await parseForm(input);
   const current = await liveRow(FORMS, id);
   const slug = formSlug(fields.name, groupName);
 
-  const rename = { from: current.name, to: fields.name };
-  const rewrites = rename.from === rename.to ? [] : await rewritesOf(id, rename.to);
-  const at = new Date();
-  await refuseCollidingRewrites(rename, rewrites);
-  if (endRedirect !== true) {
-    const refused = await redirectRefusal(
-      rewrites
-        .filter(({ entry, slug: moved }) => moved !== entry.slug)
-        .map(({ entry, slug: moved }) => ({ slug: moved, entryId: entry.id })),
-      at,
-    );
-    if (refused) throw refused;
-  }
+  const rename = { id, from: current.name, to: fields.name };
+  const renamed = rename.from !== rename.to;
+  if (renamed) await refuseDoubledForms(rename);
 
   const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientForms, id, { ...fields, slug });
     if (!row) throw new NotFound('No such form');
-    if (rewrites.length > 0) {
-      await write.deleteLapsedSlugRetirements(admin, at);
-      await write.carryFormRename(
-        admin,
-        id,
-        fields.name,
-        rewrites.map(({ entry, slug: moved }) => ({
-          id: entry.id,
-          slug: moved,
-          previousSlug: entry.slug,
-        })),
-        at,
-      );
-    }
+    if (renamed) await write.carryFormRename(admin, id, fields.name);
     return row;
   }).catch(async (error: unknown) => {
-    await refuseCollidingRewrites(rename, rewrites, error);
+    if (renamed) await refuseDoubledForms(rename, error);
     return refuseSlugCollision(FORMS, error, slug);
   });
   expireCompendium();
@@ -222,85 +189,53 @@ export async function deleteIngredientFormValue(session: Session, id: string): P
 
 /**
  * The input parsed, its group checked live — a foreign key admits a retired
- * one — and the group's name, which the slug carries. `endRedirect` comes
- * apart from the columns: it is the admin's answer, not the form's.
+ * one — and the group's name, which the slug carries.
  */
-async function parseForm(input: IngredientFormValueInput): Promise<{
-  fields: Omit<IngredientFormValueInput, 'endRedirect'>;
-  groupName: string;
-  endRedirect: boolean | undefined;
-}> {
-  const { fields: parsed, parent } = await parseUnderLiveParent(IngredientFormValueInput, input, {
+async function parseForm(
+  input: IngredientFormValueInput,
+): Promise<{ fields: IngredientFormValueInput; groupName: string }> {
+  const { fields, parent } = await parseUnderLiveParent(IngredientFormValueInput, input, {
     table: ingredientFormGroups,
     column: 'groupId',
     refusal: 'Choose a group',
   });
-  const { endRedirect, ...fields } = parsed;
-  return { fields, groupName: parent.name, endRedirect };
+  return { fields, groupName: parent.name };
 }
 
 /**
- * Every live compendium entry picking the form, in the compendium list's
- * order, each beside the slug the new name gives it. Walked a page at a time
- * through the compendium's own filter on the pick, which the
- * `ingredients_compendium_form_id_idx` index answers.
+ * Refuses a rename that would give a live compendium entry two forms of one
+ * name — the variant picking the form beside another already spelt as the new
+ * name, which `ingredient_variants_form_unique` would refuse — on `name`,
+ * naming each such entry. A change of case finds nothing, since the variant
+ * renamed is excepted. Read before the write, and again after one the index
+ * refused, since two admins can race: then `error` is that write's, and
+ * anything but the variant index passes through untouched. A collision the
+ * second read cannot place is refused in general terms.
  */
-async function rewritesOf(formId: string, name: string): Promise<FormRewrite[]> {
-  const entries = await allPages((page) => findCompendiumPage({ formId }, page));
-  return entries.map((entry) => ({
-    entry,
-    slug: ingredientSlug(entry.name, name, entry.canonicalName),
-  }));
-}
-
-/**
- * Refuses a rename whose rewrite would make an entry another live compendium
- * entry's identity, or move it onto another's address, naming both; the
- * entry itself is excepted, since a change of case keys and slugs it as
- * before. Read before the write, and again after one an index refused, since
- * two admins can race: then `error` is that write's, and anything but a
- * compendium identity or slug collision passes through untouched. A
- * collision the second read cannot place is refused in general terms.
- */
-async function refuseCollidingRewrites(
-  rename: { from: string; to: string },
-  rewrites: readonly FormRewrite[],
+async function refuseDoubledForms(
+  rename: { id: string; from: string; to: string },
   error?: unknown,
 ): Promise<void> {
-  if (error !== undefined) {
-    const index = violatedUniqueIndex(error);
-    if (
-      index !== 'ingredients_compendium_identity_unique' &&
-      index !== 'ingredients_compendium_slug_unique'
-    ) {
-      return;
-    }
+  if (error !== undefined && violatedUniqueIndex(error) !== 'ingredient_variants_form_unique') {
+    return;
   }
   const renaming = `Renaming "${rename.from}" to "${rename.to}"`;
-  const refuse = (message: string) => {
-    throw new ValidationError([{ path: ['name'], message }]);
-  };
-
-  const claimed = new Map<string, IngredientRow>();
-  for (const { entry, slug } of rewrites) {
-    const identity = { name: entry.name, canonicalName: entry.canonicalName, form: rename.to };
-    const twin = await findCompendiumEntryByIdentity(identity);
-    if (twin && twin.id !== entry.id) {
-      refuse(
-        `${renaming} would make ${describeEntry(entry)} the same entry as ${describeEntry(twin)} — change one of them first`,
-      );
-    }
-    const holder = claimed.get(slug) ?? (await findCompendiumEntryBySlug(slug));
-    if (holder && holder.id !== entry.id) {
-      refuse(
-        `${renaming} would move ${describeEntry(entry)} to the address "${slug}", which ${describeEntry(holder)} already has — change one of them first`,
-      );
-    }
-    claimed.set(slug, entry);
+  const doubled = await findCompendiumFormRenameClashes(rename.id, rename.to);
+  if (doubled.length > 0) {
+    const entries = joinAnd(doubled.map(describeEntry));
+    throw new ValidationError([
+      {
+        path: ['name'],
+        message: `${renaming} would give ${entries} two forms called "${rename.to}" — remove one of them first`,
+      },
+    ]);
   }
   if (error !== undefined) {
-    refuse(
-      `${renaming} would give a compendium entry another entry's identity or address — try again`,
-    );
+    throw new ValidationError([
+      {
+        path: ['name'],
+        message: `${renaming} would give a compendium entry two forms of one name — try again`,
+      },
+    ]);
   }
 }

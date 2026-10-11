@@ -2,7 +2,7 @@ import type { IngredientFixture, Overrides } from '../../../support/fixtures';
 
 export type IngredientOverrides = Overrides<IngredientFixture>;
 
-export type Inserted = { id: string; canonicalKey: string };
+export type Inserted = { id: string; identityKey: string };
 
 export interface StockRow {
   workspaceId?: string;

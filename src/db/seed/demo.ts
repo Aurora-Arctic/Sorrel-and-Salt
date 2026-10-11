@@ -12,6 +12,7 @@ import {
   WORKSPACE_W_ID,
   identityOf,
   insertMissingVariants,
+  reslugIngredients,
   seedStandardContent,
 } from './standard';
 import type {
@@ -204,6 +205,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
 
     await insertMissingWorkspaceIngredients(tx);
+    // W's entries' slugs; the compendium's `standard` re-derived already.
+    await reslugIngredients(tx, await workspaceIngredientIds(tx));
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
@@ -227,9 +230,24 @@ async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<v
     toRow: (entry) => ({
       ...entry,
       workspaceId: WORKSPACE_W_ID,
-      slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+      slug: ingredientSlug(entry.name, null, entry.canonicalName),
     }),
   });
+}
+
+/** The ids of W's live entries this scenario seeds, by `identityOf`: its own, and no member's. */
+async function workspaceIngredientIds(tx: SeedTransaction): Promise<string[]> {
+  const seeded = new Set(WORKSPACE_W_INGREDIENTS.map(identityOf));
+  const rows = await tx
+    .select({
+      id: ingredients.id,
+      name: ingredients.name,
+      canonicalName: ingredients.canonicalName,
+      form: ingredients.form,
+    })
+    .from(ingredients)
+    .where(eq(ingredients.workspaceId, WORKSPACE_W_ID));
+  return rows.filter((row) => seeded.has(identityOf(row))).map((row) => row.id);
 }
 
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
