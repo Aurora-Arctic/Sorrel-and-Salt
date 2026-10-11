@@ -232,6 +232,92 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     color: $text-muted;
   }
 
+  // --- page frame, link row, brands -------------------------------------------
+  .fd-frames {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    gap: space(5);
+  }
+
+  // The frame's own edge, dashed so it reads as a boundary and not a surface.
+  .fd-frame-stage {
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
+  // A fixed height in place of the window's, or each demo would fill a screen.
+  .page-frame {
+    min-height: 24rem;
+  }
+
+  .fd-brands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(6);
+
+    h3 {
+      margin: 0 0 space(4);
+    }
+  }
+
+  .fd-brand-parts,
+  .fd-marks {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+    margin: space(4) 0 0;
+    padding: space(5);
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: space(2) space(3);
+      margin: 0;
+    }
+
+    li::before {
+      content: none;
+    }
+  }
+
+  .fd-marks {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: space(3) space(5);
+  }
+
+  .fd-brand-part {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // Every part a brand declares, in the map's order, read from the map.
+  @each $brand, $parts in $brand-palettes {
+    $printed: '';
+
+    @each $part, $value in $parts {
+      $shown: '#{$value}';
+
+      @if meta.type-of($value) == map {
+        $shown: 'dark #{map.get($value, dark)}, light #{map.get($value, light)}';
+      }
+
+      $separator: ' · ';
+
+      @if $printed == '' {
+        $separator: '';
+      }
+
+      $printed: '#{$printed}#{$separator}#{$part} #{$shown}';
+    }
+
+    .fd-brand-part--#{$brand}::after {
+      content: $printed;
+    }
+  }
+
   // A distinct ground, so the raised surface's shadow and lift actually read.
   .fd-stage {
     display: flex;

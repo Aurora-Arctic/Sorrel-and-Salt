@@ -1,4 +1,6 @@
 import type { ReactElement } from 'react';
+import type { ProviderId } from '../../lib/types';
+import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
 // Each provider's own brand mark, sourced from that provider's own published
@@ -102,3 +104,15 @@ export function MicrosoftIcon(): ReactElement {
     </svg>
   );
 }
+
+// Every provider's mark by id, the one table SignInPanel's buttons and the
+// ProviderMark circle both read, so a provider added to `ProviderId` fails
+// to compile until it has one. Facebook's two forms are a prop rather than
+// two entries, since every caller wants "Facebook's mark" and only the
+// ground it sits on differs.
+export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
+  google: GoogleIcon,
+  discord: DiscordIcon,
+  facebook: ({ chip = false }) => (chip ? <FacebookIcon /> : <FacebookMark />),
+  microsoft: MicrosoftIcon,
+};

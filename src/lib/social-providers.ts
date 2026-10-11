@@ -25,6 +25,10 @@ export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'microsoft', label: 'Microsoft' },
 ];
 
+// Why a provider's button is greyed, on /sign-in and on the account page's
+// sign-in methods alike: this environment has no credentials for it.
+export const UNAVAILABLE_NOTE = 'Not available right now.';
+
 /**
  * Whether a Better Auth account's `providerId` is one of ours. Its tables
  * type the column as any string, so this is the check rather than a cast.
