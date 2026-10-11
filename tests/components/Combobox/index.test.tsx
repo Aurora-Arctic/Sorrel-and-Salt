@@ -699,6 +699,83 @@ describe('Combobox', () => {
       expect(onRemove).toHaveBeenCalledTimes(1);
     });
 
+    // MB.115: a linked entry's text opens a panel beside the chip, which
+    // shuts on a second press, on Escape — cancelled, so a modal around the
+    // form takes no cancel from it — on a press elsewhere and on the focus
+    // leaving it; Escape hands the focus back to the text.
+    describe('with a summary', () => {
+      const panel = () => screen.queryByRole('dialog', { name: 'About Hedge Fixture' });
+      const opener = () => screen.getByRole('button', { name: 'Hedge Fixture' });
+      function renderLinked() {
+        render(
+          <>
+            <Harness
+              entries={
+                <ul className="combobox__entries">
+                  <ComboboxEntry
+                    value="Hedge Fixture"
+                    summary={{
+                      label: 'About Hedge Fixture',
+                      content: () => <a href="/fixture">Fixture Entry</a>,
+                    }}
+                    onRemove={vi.fn()}
+                  />
+                  <ComboboxEntry value="Typed Fixture" onRemove={vi.fn()} />
+                </ul>
+              }
+            />
+            <button type="button">Elsewhere</button>
+          </>,
+        );
+      }
+
+      it('opens from its text alone, and shuts on a second press', () => {
+        renderLinked();
+
+        expect(opener()).toHaveAttribute('aria-expanded', 'false');
+        expect(panel()).not.toBeInTheDocument();
+        // The typed entry has its x and nothing else to press.
+        expect(screen.queryByRole('button', { name: 'Typed Fixture' })).not.toBeInTheDocument();
+
+        fireEvent.click(opener());
+        expect(opener()).toHaveAttribute('aria-expanded', 'true');
+        expect(within(panel()!).getByRole('link')).toHaveAttribute('href', '/fixture');
+
+        fireEvent.click(opener());
+        expect(panel()).not.toBeInTheDocument();
+        expect(opener()).toHaveAttribute('aria-expanded', 'false');
+      });
+
+      it('shuts on Escape from inside it, cancelling the key and handing the focus back', () => {
+        renderLinked();
+        fireEvent.click(opener());
+        const link = within(panel()!).getByRole('link');
+        act(() => link.focus());
+
+        // fireEvent answers false when a handler cancelled the event.
+        expect(fireEvent.keyDown(link, { key: 'Escape' })).toBe(false);
+        expect(panel()).not.toBeInTheDocument();
+        expect(opener()).toHaveFocus();
+        // Shut, an Escape is left alone for whatever holds the form.
+        expect(fireEvent.keyDown(opener(), { key: 'Escape' })).toBe(true);
+      });
+
+      it('shuts on a press outside it, and when the focus leaves it', () => {
+        renderLinked();
+        fireEvent.click(opener());
+        fireEvent.pointerDown(within(panel()!).getByRole('link'));
+        expect(panel()).toBeInTheDocument();
+        fireEvent.pointerDown(document.body);
+        expect(panel()).not.toBeInTheDocument();
+
+        // Pressed as a browser presses it, the focus on it first.
+        act(() => opener().focus());
+        fireEvent.click(opener());
+        act(() => screen.getByRole('button', { name: 'Elsewhere' }).focus());
+        expect(panel()).not.toBeInTheDocument();
+      });
+    });
+
     it('shows a cut-off text whole in a tooltip on hover, and while its x has focus', async () => {
       renderEntries([LONG]);
 
