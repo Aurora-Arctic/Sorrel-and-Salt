@@ -9,4 +9,5 @@ export { FieldError, FieldShell, Required } from './shell';
 export { fieldDescription } from './description';
 export { TextField } from './text-field';
 export { SelectField } from './select-field';
+export { SwitchField } from './switch-field';
 export { useField } from './use-field';

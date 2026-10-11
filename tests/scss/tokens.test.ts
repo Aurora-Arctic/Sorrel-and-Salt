@@ -8,9 +8,10 @@ import { fromRoot } from '../support/paths';
 // marks out a control at 3:1 (WCAG 1.4.11), and a button's label on its
 // ground at 4.5:1. The admin area's text and wax hold on the card surface
 // too (MB.115), the ground of a banded row, a stacked table's card and the
-// impersonation banner, and the tab row's open tab holds on its track. One assertion per theme, the functional half of the
-// tokens; how they look is the workshop's and the axe scan's
-// (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
+// impersonation banner, the tab row's open tab holds on its track, and the
+// switch's track and thumb hold in either state. One assertion per theme,
+// the functional half of the tokens; how they look is the workshop's and the
+// axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
 const SCSS_DIR = fromRoot('src/scss');
 
@@ -136,6 +137,23 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
     row("the open tab's edge on the card", accent, card, 3);
+
+    // The switch (`.switch`, _primitives.scss), a control, so 3:1 (WCAG
+    // 1.4.11): off, its muted edge against the page and the card it may sit
+    // on, and its muted thumb on its card ground; on, and hovered on, its
+    // filled track against both, and its thumb, the page's colour, on the
+    // fill. Hovered off, the edge takes the body ink, which clears 4.5 above.
+    for (const [state, fill] of [
+      ['on', tokens['--accent']],
+      ['hovered on', tokens['--accent-solid-hover']],
+    ] as const) {
+      row(`the switch's track ${state} on the page`, fill, page, 3);
+      row(`the switch's track ${state} on the card`, fill, card, 3);
+      row(`the switch's thumb ${state} on its track`, page, fill, 3);
+    }
+    row("the switch's edge off on the page", tokens['--text-muted'], page, 3);
+    row("the switch's edge off on the card", tokens['--text-muted'], card, 3);
+    row("the switch's thumb off on its track", tokens['--text-muted'], card, 3);
 
     // A field's placeholder (`$text-placeholder`, _variables.scss): the muted
     // ink 85% into the card, the field's ground. Text, so 4.5:1, though it is

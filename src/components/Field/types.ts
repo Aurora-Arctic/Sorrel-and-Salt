@@ -106,3 +106,21 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }
+
+/**
+ * An on-or-off choice in a plain-state form, held by the caller: a list
+ * filter's Without References or Needs Approval. Not a react-hook-form field,
+ * since no such form has one yet.
+ */
+export interface SwitchFieldProps {
+  /** The name beside the switch, and its accessible name. */
+  label: string;
+  /** The parameter it submits under while on. */
+  name: string;
+  /** What it submits while on: `1`, or empty for a bare flag. */
+  value: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  /** Shut: dashed, faded, its name dimmed. */
+  disabled?: boolean;
+}

@@ -214,7 +214,7 @@ describe('the /admin/compendium filter', () => {
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
-    expect(screen.getByRole('checkbox', { name: 'Without References' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Without References' })).toBeChecked();
   });
 
   // A native submit sends every field, blank or not.
@@ -238,12 +238,12 @@ describe('the /admin/compendium filter', () => {
     );
   });
 
-  // The checkbox submits 1; any other value is every entry.
+  // The switch submits 1; any other value is every entry.
   it('reads ?withoutReferences= other than 1 as every entry', async () => {
     await renderPage({ withoutReferences: 'true' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('checkbox', { name: 'Without References' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Without References' })).not.toBeChecked();
   });
 
   it('offers every curated form in the Form box, read once for the request', async () => {

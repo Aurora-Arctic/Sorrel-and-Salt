@@ -1012,6 +1012,158 @@
     }
   }
 
+  // A switch (MB.115), the owner's call for a filter's on-or-off choice over a
+  // checkbox, which stood small and out of place among the row's boxes: a
+  // native checkbox with `role="switch"`, drawn as a rounded track whose thumb
+  // slides from the start, off, to the end, on. Native, so it submits with
+  // its form before hydration and keeps Space and the label's click, and a
+  // screen reader hears its checked state as the switch's. A `<label>`
+  // wrapping it and its name, as `.checkbox` is, so the whole line is the
+  // target; a control's height, so it stands level with the fields beside
+  // it; and the name in a field label's type, since that is what it is
+  // (claude-docs/styling.md, "Form fields").
+  .switch {
+    // From the track's inner edge to the thumb, on every side.
+    $inset: calc((#{$icon-size} - 2px - #{$glyph-size}) / 2);
+    // Pressed, the thumb stretches by a step, back from the end it sits at.
+    $stretch: space(1);
+
+    display: inline-flex;
+    align-items: center;
+    gap: space(3);
+    box-sizing: border-box;
+    min-height: $control-height;
+    font-size: type-size('small');
+    font-weight: 500;
+    cursor: pointer;
+
+    // The track: off, the field's ground and its muted 1px edge, so it reads
+    // as one of the row's controls.
+    input {
+      position: relative;
+      flex: none;
+      box-sizing: border-box;
+      inline-size: $switch-width;
+      block-size: $icon-size;
+      margin: 0;
+      border: 1px solid $text-muted;
+      border-radius: radius('pill');
+      background-color: $surface-card;
+      appearance: none;
+      cursor: inherit;
+      // The state's colour keeps pace with the thumb, rather than trailing it
+      // at the theme's 400ms.
+      transition:
+        background-color $motion-short ease-out,
+        border-color $motion-short ease-out;
+
+      // The thumb: off, the muted ink at the track's start. Where it sits,
+      // not its colour, is what tells on from off (WCAG 1.4.1).
+      &::before {
+        content: '';
+        position: absolute;
+        inset-block-start: $inset;
+        inset-inline-start: $inset;
+        inline-size: $glyph-size;
+        block-size: $glyph-size;
+        border-radius: radius('pill');
+        background-color: $text-muted;
+        transition:
+          translate $motion-short ease-out,
+          inline-size $motion-short ease-out,
+          background-color $motion-short ease-out;
+      }
+
+      // On: the track filled with the accent, as a solid button is, and the
+      // thumb at its end in the page's colour, as that button's label is.
+      &:checked {
+        border-color: $accent;
+        background-color: $accent;
+
+        &::before {
+          background-color: $text-on-color;
+          translate: calc(#{$switch-width} - #{$icon-size}) 0;
+        }
+      }
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+
+      // Dashed and unfilled, as a disabled field is.
+      &:disabled {
+        border-style: dashed;
+        background-color: transparent;
+        opacity: 0.7;
+      }
+
+      @include reduced-motion {
+        transition: none;
+
+        &::before {
+          transition: none;
+        }
+      }
+
+      // Forced colours repaint the thumb in the track's own ground, so it is
+      // painted in the system's ink instead, and on in its highlight.
+      @media (forced-colors: active) {
+        &::before {
+          background-color: CanvasText;
+          forced-color-adjust: none;
+        }
+
+        &:checked {
+          background-color: Highlight;
+          forced-color-adjust: none;
+
+          &::before {
+            background-color: HighlightText;
+          }
+        }
+      }
+    }
+
+    // Hover and press, on the label as a whole, never on a switch that is
+    // off: `disabled`, or `aria-disabled` while a filter row's list is on its
+    // way, which refuses the press itself.
+    &:not(:has(input:disabled, input[aria-disabled='true'])) {
+      // The edge in the body ink, as a field's; on, the solid button's hover.
+      &:hover input {
+        border-color: $text-primary;
+
+        &:checked {
+          border-color: $accent-solid-hover;
+          background-color: $accent-solid-hover;
+        }
+      }
+
+      // Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts`
+      // marks a tap, which `:active` alone misses on a phone): the thumb
+      // stretches towards the end it would go to, so a press answers before
+      // the switch turns.
+      &:is(:active, [data-pressed]) input {
+        &::before {
+          inline-size: calc(#{$glyph-size} + #{$stretch});
+        }
+
+        &:checked::before {
+          translate: calc(#{$switch-width} - #{$icon-size} - #{$stretch}) 0;
+        }
+      }
+    }
+
+    // The name dims with a disabled switch, as a disabled field's label does.
+    &:has(input:disabled) {
+      color: $text-muted;
+      cursor: not-allowed;
+    }
+
+    &:has(input[aria-disabled='true']) {
+      cursor: not-allowed;
+    }
+  }
+
   // Groups rows under one name — checkboxes, or a list of entries.
   .fieldset {
     display: flex;
