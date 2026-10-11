@@ -1,7 +1,5 @@
 import type { IngredientFixture, Overrides } from '../../../support/fixtures';
 
-export type IngredientCategoryPair = { ingredientId: string; categoryId: string };
-
 export type IngredientOverrides = Overrides<IngredientFixture>;
 
 export type Inserted = { id: string; canonicalKey: string };
@@ -16,18 +14,6 @@ export interface StockRow {
   source?: string | null;
   acquiredDate?: string | null;
 }
-
-/** One `information_schema.columns` row, as ingredient-lists.test.ts reads it. */
-export interface ColumnRow {
-  column_name: string;
-  data_type: string;
-  udt_name: string;
-  is_nullable: string;
-  column_default: string | null;
-}
-
-/** An ingredient's id beside its single `element` and the list it fills (MB.158). */
-export type ListedIngredientRow = { id: string } & Record<string, string | string[] | null>;
 
 export interface Retired {
   retired_at: string;
