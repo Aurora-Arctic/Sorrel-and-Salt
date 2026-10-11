@@ -15,7 +15,11 @@
   column-gap: space(4);
 }
 
-.admin-nav__menu {
+// Under `.admin-nav` for the specificity: the app includes the primitives
+// under `body`, so `body .link-row { display: flex }` outweighs a lone class
+// and would draw the row and the menu together. The workshop scopes the
+// primitives inside `:where()`, which hides the clash there.
+.admin-nav .admin-nav__menu {
   display: none;
 }
 
@@ -24,11 +28,11 @@
 // and wrapped onto four or five lines: the nav and the tables change shape at
 // the one width.
 @container admin-nav (max-width: #{$table-stack-width}) {
-  .admin-nav__row {
+  .admin-nav .admin-nav__row {
     display: none;
   }
 
-  .admin-nav__menu {
+  .admin-nav .admin-nav__menu {
     display: block;
   }
 }

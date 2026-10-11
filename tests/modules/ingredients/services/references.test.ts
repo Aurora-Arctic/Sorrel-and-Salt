@@ -273,6 +273,26 @@ describe('suggestReferences', () => {
     expect(await titles(asUser(B), WORKSPACE_W_ID, 'mortar')).toEqual(['On Grinding']);
   });
 
+  // As the compendium search scores a field: word similarity scores a
+  // fragment inside a longer word by the trigrams it shares, so a title
+  // holding the query verbatim counts as a full hit.
+  it('ranks a title holding the query inside a longer word above a near miss', async () => {
+    await insertReference(sql, { title: 'A Bri Herbal' }, E.id);
+    await insertReference(sql, { title: 'The Kettlebrim Reader' }, E.id);
+    // The precondition: by word similarity alone the two titles tie, so the
+    // title order would put the near miss first.
+    const [similarity] = await sql<{ nearMiss: number; holding: number }[]>`
+      select word_similarity('brim', 'A Bri Herbal') as "nearMiss",
+             word_similarity('brim', 'The Kettlebrim Reader') as holding`;
+    expect(similarity.holding).toBeGreaterThanOrEqual(0.5);
+    expect(similarity.nearMiss).toBeGreaterThanOrEqual(similarity.holding);
+
+    expect(await titles(asUser(B), WORKSPACE_W_ID, 'brim')).toEqual([
+      'The Kettlebrim Reader',
+      'A Bri Herbal',
+    ]);
+  });
+
   it('lists everything by title on a blank query, and leaves out a soft-deleted reference', async () => {
     await insertReference(sql, { title: 'Bitterroot' }, E.id);
     const gone = await insertReference(sql, { title: 'Cinderbark' }, E.id);
