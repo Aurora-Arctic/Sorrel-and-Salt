@@ -19,6 +19,7 @@ compendium page wrap it rather than containing their own form.
 | `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                |
 | `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                               |
 | `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                     |
+| `section.tsx`          | `Section`, one titled section of the form, the ingredient's at `h3` and a variant's at `h4`                                                                                                            |
 | `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                               |
 | `substitute-forms.tsx` | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                      |
 | `values.ts`            | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
@@ -64,7 +65,14 @@ landmark, and a screen reader moves by the headings. The Variants section's
 heading is its fieldset's legend, an `h3` inside the `<legend>`, so the
 group keeps its name. The Description section's one field would repeat its
 heading as its label, so the label is hidden from the eye alone and stays
-the textarea's name. Inside a variant the fields are not sectioned.
+the textarea's name; anything else its label row holds, a tip or a button,
+stays in view on the heading's line. `Section` lives in `section.tsx`.
+**An open variant's fields run in the same sections** (MB.115, the owner's
+call), in the same order and under the same names as far as a form's fields
+go: Identity (its form), Description, Correspondences (element, planets,
+zodiac signs, colours), Relations (categories, substitute ingredients),
+Safety (safety notes) and Sources (references). Their headings are `h4`s,
+a level beneath the Variants `h3`.
 
 **Every field shows a short action while it is empty**, and what it is for
 sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
@@ -504,8 +512,8 @@ as the ingredient's page shows its forms after it (MB.221).
   line is a card: the form as typed ("Unnamed Form" while its Form box is
   empty) with its curated group after it in the muted ink, "Dried leaf
   (Plant part)", as the Form box reads; beneath, what it carries,
-  `variantSummary`, in its fields' order — "Safety note · 1 planet · 2
-  categories · 1 reference" — or "No details yet"; and at the end an Edit
+  `variantSummary`, in its sections' order — "1 planet · 2 categories ·
+  Safety note · 1 reference" — or "No details yet"; and at the end an Edit
   and a Remove, named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
@@ -529,9 +537,9 @@ as the ingredient's page shows its forms after it (MB.221).
   error, since the focus runs as that commit lands. Any other variant with
   an error stays closed, its card edged in the error red and its line saying
   it has an error to fix, read with its Edit.
-- **Its fields** are the variant's Form, Description, Safety Notes,
-  Element, Planets, Zodiac Signs, Colours, Categories, Substitute Ingredients
-  and References, the ingredient's own field components at the variant's
+- **Its fields** are the variant's Form, Description, Element, Planets,
+  Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes
+  and References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
   place in the values, `variants.1.planets`, so each validates, errs, focuses
   and is held by text left in its box as the ingredient's is. Deities and
   folk names are the plant's, and stay on the ingredient alone.
@@ -999,7 +1007,12 @@ back, with a step more padding beneath Create Anyway than the notice's own.
 The sections are columns at the form's own gap, `space(6)` further
 apart than any two fields (the margin outweighing layout-base's bare `section`
 rule), under an `h3` in the display face at 1.25rem, a
-step under `h4`, set `space(3)` above its first field (MB.115). The
+step under `h4`, set `space(3)` above its first field (MB.115). A
+`labelled` section is a two-column grid, its field's block unboxed into it
+(`display: contents`), so the heading and the rest of the label row share
+a line. A variant's sections are a step closer for the narrower card: their
+`h4` at 1.125rem, `space(2)` above the first field, the fields `space(4)`
+apart and the sections the variant's `space(5)` gap plus `space(2)`. The
 references are one-line rows on the card surface with a 2px muted bar, the
 short form, cut with an ellipsis where the row is too narrow, and its
 locator in the muted caption, then two
@@ -1123,7 +1136,9 @@ reach until Edit opens it (`aria-expanded`, its region shown, the focus on
 its Form box); Done folding it back with the focus on Edit and what was
 typed kept; one open at a time; a variant added opened, the other closed;
 a save finding an error in a closed variant opening it, its field focused
-(MB.115); a variant added listed first, after the New Form box (MB.115); a variant added from the New Form box listed as
+(MB.115); a variant added listed first, after the New Form box (MB.115); an
+open variant's `h4` section headings in the ingredient's order, each field
+in its own section (MB.115); a variant added from the New Form box listed as
 its own fieldset and sent in `variants`, with no top-level `form`; a
 compendium pick carried into the variant's Form box; a typed compendium form
 refused beside its box, focused, with nothing sent; a variant removed by its

@@ -449,6 +449,31 @@ describe('IngredientForm’s variants', () => {
       );
     });
 
+    // MB.115, the owner's call: an open variant's fields in the ingredient's sections.
+    it('groups an open variant’s fields under the ingredient’s section headings, a level beneath Variants', () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+
+      const oil = openVariant('Oil');
+
+      const headings = within(oil).getAllByRole('heading', { level: 4 });
+      expect(headings.map((heading) => heading.textContent)).toEqual([
+        'Identity',
+        'Description',
+        'Correspondences',
+        'Relations',
+        'Safety',
+        'Sources',
+      ]);
+      expect(within(oil).queryByRole('heading', { level: 3 })).toBeNull();
+      // Each field sits in its own section, found by its label as before.
+      const sectionOf = (element: HTMLElement) => element.closest('section');
+      expect(sectionOf(control(oil, 'Form'))).toBe(sectionOf(headings[0]));
+      expect(sectionOf(control(oil, 'Description'))).toBe(sectionOf(headings[1]));
+      expect(sectionOf(control(oil, 'Planet'))).toBe(sectionOf(headings[2]));
+      expect(sectionOf(control(oil, 'Substitute Ingredient'))).toBe(sectionOf(headings[3]));
+      expect(sectionOf(control(oil, 'Safety Notes'))).toBe(sectionOf(headings[4]));
+    });
+
     it('keeps one variant open at a time', () => {
       renderForm({ workspaceId: null, values: twoForms() });
 

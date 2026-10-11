@@ -1,15 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import {
-  type ReactElement,
-  type ReactNode,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
@@ -21,6 +13,7 @@ import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingr
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
 import { ReferencesField } from './references';
+import { Section } from './section';
 import { SubstituteForms } from './substitute-forms';
 import { SelectField, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
@@ -92,35 +85,6 @@ const DeleteCompendiumIngredientDocument = graphql(`
     deleteCompendiumIngredient(id: $id)
   }
 `);
-
-/**
- * One of the form's titled sections (MB.115, the owner's call): a small
- * heading over its fields, the sections set further apart than the fields
- * within one. Unnamed, so it is no landmark: the heading is what a screen
- * reader moves by. `labelled`, for a section whose one field's label would
- * repeat its heading, hides that label from the eye alone.
- */
-function Section({
-  title,
-  labelled = false,
-  children,
-}: {
-  title: string;
-  labelled?: boolean;
-  children: ReactNode;
-}): ReactElement {
-  const id = useId();
-  return (
-    <section
-      className={labelled ? 'ingredient-form__section is-labelled' : 'ingredient-form__section'}
-    >
-      <h3 id={id} className="ingredient-form__section-title">
-        {title}
-      </h3>
-      {children}
-    </section>
-  );
-}
 
 /** The path of MB.82's refusal: the write would end another entry's redirect, unless confirmed. */
 const END_REDIRECT = 'endRedirect';

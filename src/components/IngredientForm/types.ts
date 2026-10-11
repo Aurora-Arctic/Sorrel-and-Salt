@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -480,4 +480,14 @@ export type Duplicate = PossibleDuplicatesQuery['possibleDuplicates']['edges'][n
 export interface Claimant {
   name: string;
   canonicalName: string | null;
+}
+
+/** One of the form's titled sections: its heading, and the fields beneath it. */
+export interface SectionProps {
+  title: string;
+  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
+  labelled?: boolean;
+  /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
+  level?: 3 | 4;
+  children: ReactNode;
 }
