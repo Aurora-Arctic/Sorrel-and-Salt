@@ -3448,6 +3448,8 @@ _Story:_ As a workspace member, I want to pick an existing ingredient as a subst
 
 Scoping, and the picker's search. Minted during M5.9, on the owner's decision: `ingredients.substitutes text[]` becomes a child table, one row per substitute, each either a link to an ingredient or a free-text name, the shape MB.40 gave a spell's layers, `CHECK (num_nonnulls(substitute_id, name) = 1)`. This task settles which ingredients a substitute may link: a compendium entry only another compendium entry, since the compendium is public and a coven's entries are not, and a coven's ingredient either tier, its own coven's included. It settles what a link does when its ingredient is deleted, kept and shown by its last name or turned to text; whether a row takes the full audit spread, as content like a folk name, or the stamp columns and a hard delete, as a link (MB.34); whether the list keeps its order; the GraphQL shape, a `Substitute` carrying `name` and a nullable `ingredient`, resolved through a DataLoader (rule 9); and which search the form's picker reads for ingredients to link, since `commonNameSuggestions` returns names rather than ids. The expand, switch and drop follow as MB.139 to MB.141. **Widened while it was built, on the owner's call:** no existing query fits the picker — `possibleDuplicates` compares whole names and never completes a prefix, and `workspaceIngredients` lists only what a coven holds, in wave 11 — so this task also builds the one it names, `ingredientSuggestions`, ahead of MB.131. **Decided** ([`design-decisions/mb.138-substitute-links.md`](../design-decisions/mb.138-substitute-links.md)): a compendium entry links only the compendium, a coven's ingredient either tier; a link to a deleted ingredient is kept and shown by its last name, the owner's choice, through a third named finder in M5.3's shape; the full audit spread, soft-deleted; alphabetical by the name each shows, and each substitute once, both the owner's calls, so nothing stores an order; `Substitute { name, ingredient }`.
 
+**Amended by MB.215 (2026-10-11):** the substitute picker ranks a matching form first, then its form group, then the rest, and links a variant when the linked ingredient has them, as MB.217 to MB.221 build it ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 _Acceptance criteria:_
 
 - DESIGN.md §5 gains the table and drops `substitutes[]` from the column list, §7's sketch gains `Substitute`, and §9's detail page links a linked substitute
@@ -3697,6 +3699,8 @@ _Story 64 — As a reader of the compendium, I want to see where an entry's info
 
 A References section on M8.19's page, on both its routes: beneath the substitutes, above the slot v2's notes take, a bibliography list of the entry's references in Chicago form, each with its locator where one was given and its `url` a link that opens the source, `rel="noopener"`. The page renders the parts `renderCitation` returns rather than the plain `citation`, each italic part in `<cite>` (MB.151). An entry with none shows a deliberate empty state — "No sources recorded" — rather than nothing, so the gap is as visible to a reader as it is on the admin's to-do list. The public route serves it from the same static page under the `compendium` tag, so a reference an admin edits refreshes it through `revalidateTag`. Story 64's acceptance test is written here.
 
+**Amended by MB.215 (2026-10-11):** a form's own references are listed in its section of the page, beneath the ingredient's, in the same Chicago form ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
 _Acceptance criteria:_
 
 - Every reference renders in Chicago form through MB.153's one renderer, alphabetical, on `/compendium/ingredients/[slug]` and `/ingredients/[id]` alike
@@ -3704,6 +3708,7 @@ _Acceptance criteria:_
 - The empty state reads as intentional, not broken
 - The section sits above the notes slot and the page's structure is unchanged for it
 - axe clean; story 64's acceptance test passes
+- A variant's own references are listed in its section, beneath the ingredient's (MB.215)
 
 **MB.156 — Seed the curated vocabularies' sources** · 6h
 
