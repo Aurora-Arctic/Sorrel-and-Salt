@@ -421,7 +421,9 @@ legend as a list's is.
   Backspace in the empty box takes the last row, as in every list, and each
   add and removal is announced in a "References changes" region. The rows
   keep the order picked: the service reads them back alphabetical by
-  citation (MB.153), so nothing here moves them.
+  citation (MB.153), so nothing here moves them. Beside the tier, an open
+  row whose source the form may change has **Edit Source**, which edits the
+  source itself ([Editing a source](#editing-a-source)).
 - **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
   the citation, which describes the row and is never sent, `link` the
   source's id and tier and the four fields its short form is made of —
@@ -432,7 +434,7 @@ legend as a list's is.
   open is `referencePanelOpen`, both the form's own.
 - **A search left in the box stops the save**, as text left in any list's
   box does: 'Pick a source for "grimm", or clear the box'. **So does an open
-  panel**: "Save the new reference, or cancel it". Both are the resolver's,
+  panel**, new or editing: "Save the source, or cancel it". Both are the resolver's,
   on the field's one error element, through the box.
 
 ### The new reference panel
@@ -496,8 +498,56 @@ provides them, and its errors render through `FieldError`.
 
 On the compendium the search and the panel ask with a null `workspaceId`:
 the search offers the compendium's sources alone, and Save Reference writes
-one to the compendium, under the admin proof. Nothing edits a saved source
-yet.
+one to the compendium, under the admin proof.
+
+### Editing a source
+
+A source already recorded is changed in the same panel (MB.115, the owner's
+call: "We don't have a way to edit existing references"). The edit changes
+the source, not the row's link to it, so it reaches every entry citing it.
+
+- **Edit Source, in the open row**, a small quiet button beside the tier,
+  named "Edit Source" and the short form, as the pencil is named "Edit" and
+  the short form, and described by the whole citation. A separate control
+  rather than the pencil itself: the pencil opens the row for its Locator,
+  what a row most often needs, and an edit that reaches every entry citing
+  the source should be a second, deliberate step.
+- **Only where the form may change the source.** A coven's form edits its
+  own sources; a compendium source there has no Edit Source, and its tier
+  line adds that only the site's admins can edit it. A button left
+  disabled was the alternative, refused because a disabled button takes no
+  focus, so its tip could not be reached by keyboard. The compendium's form
+  edits every source it lists, all the compendium's. Another coven's source
+  never appears: the search never offers one.
+- **The panel opens on the whole source.** A row carries only the four
+  fields of its short form, so the panel reads the rest by id through the
+  `reference` query, in the source's tier: the coven's for a coven's own,
+  none for the compendium's ([`db/references.md`](../db/references.md),
+  "Reading and writing them"). It says it is loading until the read lands,
+  then shows the fields prefilled, Kind focused as for a new source. The
+  read is kept only while the panel is open (`gcTime: 0`), so opening it
+  again reads the source as it now is.
+- **Its legend is "Edit Source" and its save Save Source**, Saving Source
+  while in flight, off until a field changes. A line under the legend,
+  which also describes the group, says a change reaches every entry citing
+  the source. Validation and other refusals land as a new source's do.
+- **Save Source sends `updateReference`** with the source's id and tier, and
+  every field, since an update replaces the source. Saved, every row in the
+  form citing that source — the ingredient's and each variant's — takes the
+  new citation and short form in place, the change is announced in the
+  field's "References changes" region, the panel closes, the row stays
+  open, and its Edit Source takes the focus. The rows are rewritten without
+  marking the ingredient changed: the source is saved already and the links
+  the form sends are as they were, so Save Ingredient and the unsaved-changes
+  guard ([`modal.md`](modal.md), "Unsaved changes") are left as they were.
+  The cached searches are dropped, so the picker shows the new text; rows on
+  other ingredients read it on their next load, which the page's refresh
+  after the modal closes gives them.
+- **Cancel closes it without saving**, the focus back on the row's Edit
+  Source. The panel's edits live in its own form, never the ingredient's,
+  so closing it discards only them and never asks the unsaved-changes
+  question. New Reference while an edit is open, or Edit Source on another
+  row, starts that panel afresh.
 
 ### The variants
 
@@ -1160,7 +1210,11 @@ authorless web page — and two forms,
 Dried leaf carrying a safety note, a planet, two categories and a source of
 its own and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
-Edit (MB.115). `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
+Edit (MB.115), and `CompendiumEntryEditSource` the same entry with its first
+source's row open and Edit Source pressed, the panel prefilled; the stand-in
+answers `Reference` from each source's whole fields and keeps what
+`UpdateReference` saves. `EditSourcePhoneDark` and `EditSourcePhoneLight` are
+it at 375px. `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design
 review. Its shape is `Modal`'s, the wide dialog less the modal gap
@@ -1186,7 +1240,9 @@ here. The lookups are answered through
 `tests/support/msw/ingredient-lookups.ts`, each recording the variables it was
 asked with, and run on fake timers that still advance, so the mocked answers
 arrive; a later answer wins, so a test about one answers it after rendering.
-The panel's `CreateReference` is answered there too, by `acceptReference`.
+The panel's `CreateReference` is answered there too, by `acceptReference`,
+and an edit's `Reference` and `UpdateReference` by `offerReference` and
+`acceptReferenceUpdate`.
 Role and label queries only, in the `dom` project.
 
 `tests/components/IngredientForm/variants.test.tsx` mounts the whole form for

@@ -129,6 +129,15 @@ compendium-tier write expires the `compendium` tag once it has committed,
 and a coven's does not, since no cached read holds a coven's reference (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
+**One reference is read whole by id** for the form that edits it (MB.115):
+`getReference(session, workspaceId, id)`, through `readersOf` under
+`ingredient: ['read']` and `findManyReferences`, so its tiers are the
+picker's — without a coven the compendium's alone, with one that coven's
+own or the compendium's — and it returns no row the picker would not
+already offer. Another coven's reference, a soft-deleted one and an id
+that is not a uuid are all `NotFound`, the first because that coven's
+contents are private.
+
 **An ingredient's links are written in its own save.** Both tiers' create and
 update reach `addReferenceLinks` and `replaceReferenceLinks` in
 `services/ingredient-rows.ts` through `writeChildren`, inside the ingredient's

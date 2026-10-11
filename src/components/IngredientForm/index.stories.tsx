@@ -13,8 +13,10 @@ import type {
   PickerCategoriesQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
+  ReferenceQuery,
   ReferenceSuggestionsQuery,
   UpdateCompendiumIngredientMutation,
+  UpdateReferenceMutation,
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
@@ -209,8 +211,14 @@ const INGREDIENTS = [
 // Invented sources in both tiers — a book, an article by two authors and a
 // web page, so the rows show each short form — one long enough to wrap and
 // one carrying an address, rendered by the one renderer as the server
-// renders them.
-const source = (id: string, isGlobal: boolean, fields: CitationFields) => ({
+// renders them. Each one's fields are kept whole, for the edit to open on.
+const SOURCE_FIELDS = new Map<string, CitationFields>();
+const source = (id: string, isGlobal: boolean, fields: CitationFields) => {
+  SOURCE_FIELDS.set(id, fields);
+  return summaryOf(id, isGlobal, fields);
+};
+/** A source as a row carries it: its citation, and the fields its short form is made of. */
+const summaryOf = (id: string, isGlobal: boolean, fields: CitationFields) => ({
   id,
   isGlobal,
   citation: citationText(fields),
@@ -364,6 +372,44 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies ReferenceSuggestionsQuery;
+    case 'Reference': {
+      const id = String(variables.id);
+      const fields = SOURCE_FIELDS.get(id);
+      if (!fields) return undefined;
+      const blank = (value: string | null | undefined) => value ?? null;
+      return {
+        reference: {
+          id,
+          kind: fields.kind,
+          title: fields.title,
+          authors: blank(fields.authors),
+          container: blank(fields.container),
+          contributors: blank(fields.contributors),
+          edition: blank(fields.edition),
+          volume: blank(fields.volume),
+          issue: blank(fields.issue),
+          series: blank(fields.series),
+          place: blank(fields.place),
+          publisher: blank(fields.publisher),
+          published: blank(fields.published),
+          pages: blank(fields.pages),
+          host: blank(fields.host),
+          url: blank(fields.url),
+          modified: blank(fields.modified),
+          accessed: blank(fields.accessed),
+          note: blank(fields.note),
+        },
+      } satisfies ReferenceQuery;
+    }
+    case 'UpdateReference': {
+      // Kept, so the edit opened again reads what was saved.
+      const id = String(variables.id);
+      const input = variables.input as CitationFields;
+      SOURCE_FIELDS.set(id, input);
+      return {
+        updateReference: summaryOf(id, variables.workspaceId == null, input),
+      } satisfies UpdateReferenceMutation;
+    }
     case 'CreateReference': {
       const input = variables.input as CitationFields;
       return {
@@ -427,6 +473,7 @@ const SAVES = new Set([
   'UpdateCompendiumIngredient',
   'DeleteCompendiumIngredient',
   'CreateReference',
+  'UpdateReference',
 ]);
 
 /**
@@ -434,12 +481,12 @@ const SAVES = new Set([
  * undefined for a save that lands: a name holding "taken" is refused on the
  * name, one holding "refuse" as a whole, and one holding "retired" on its first
  * category picked, so each server error can be seen.
- * A new reference is refused the same way by its title.
+ * A new or edited reference is refused the same way by its title.
  */
 function refusal(operation: string, variables: Record<string, unknown>): object | undefined {
   const input = variables.input as
     { name?: string; title?: string; categoryIds?: string[] } | undefined;
-  const field = operation === 'CreateReference' ? 'title' : 'name';
+  const field = operation.endsWith('Reference') ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
   // A compendium save whose name holds "redirect" would take another entry's
   // old address (MB.82), until it is sent again confirmed.
@@ -619,7 +666,10 @@ function WhatToTry() {
           <strong>References:</strong> focus Reference to list three sources, or type
           &ldquo;fixture&rdquo;; pick one and it becomes a one-line row beneath the box. Its pencil
           opens the row to the whole citation, wrapping the web page&rsquo;s long address, and a
-          Locator to fill in; its &times; takes it out. A picked source is not offered again.
+          Locator to fill in; its &times; takes it out. A picked source is not offered again. An
+          open row of this coven&rsquo;s own source has Edit Source, which opens the panel filled in
+          with the whole source; Save Source changes it for every entry citing it, and the row reads
+          the new short form. A compendium source has none here: it is the admins&rsquo; to change.
         </li>
         <li>
           <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the
@@ -804,6 +854,33 @@ export const CompendiumEntryVariantOpen: Story = () => {
   }, []);
   return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
 };
+
+/** The same entry with its first source open and its Edit Source pressed: the panel prefilled. */
+export const CompendiumEntryEditSource: Story = () => {
+  useCannedApi();
+  // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
+  useEffect(() => {
+    document
+      .querySelector<HTMLButtonElement>('button[aria-label="Edit Fixture, Testwort Herbal"]')
+      ?.click();
+    const timer = setTimeout(() =>
+      document
+        .querySelector<HTMLButtonElement>(
+          'button[aria-label="Edit Source Fixture, Testwort Herbal"]',
+        )
+        ?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+// The edit panel at a phone's width, in each theme.
+export const EditSourcePhoneDark: Story = () => <CompendiumEntryEditSource />;
+EditSourcePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const EditSourcePhoneLight: Story = () => <CompendiumEntryEditSource />;
+EditSourcePhoneLight.meta = { theme: 'light', width: 375 };
 
 // A phone's width, in each theme: the admin's edit, bare, as at desktop.
 export const PhoneDark: Story = () => <CompendiumEntry />;

@@ -390,9 +390,7 @@ function EditSourcePanel({
       {isError ? (
         <Notice kind="error">This source could not be loaded. Cancel, and try again.</Notice>
       ) : (
-        <p className="ingredient-form__panel-note" role="status">
-          Loading the source…
-        </p>
+        <output className="ingredient-form__panel-note">Loading the source…</output>
       )}
       <div className="form__actions">
         <button type="button" className="btn btn--quiet" onClick={props.onCancel}>
