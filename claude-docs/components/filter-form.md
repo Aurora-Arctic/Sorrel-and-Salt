@@ -94,9 +94,9 @@ folded behind a disclosure.
 and drawn as a native `<select>` before, as the curated lists' Group and
 Tradition are, puts `filter-row__typeahead` on its `.field` block
 (`FieldShell`'s `className`, [`field.md`](field.md)). The block then
-stands at `$filter-choice-width`, 24rem, room for the longest seeded name,
-"Anglo-Saxon & Continental Germanic", beside the clear, separator and
-chevron, and the select and the type-ahead each fill it, so hydration
+stands at `$filter-choice-width`, 14rem on the owner's call: most names
+fit, and the longest seeded one, "Anglo-Saxon & Continental Germanic", runs
+on inside the box while its option in the list is drawn whole. The select and the type-ahead each fill it, so hydration
 moves nothing. It gives way on a narrower row, and under 28rem takes the
 whole line, as the query does. It is an opt-in rather than a rule on every
 select in the row, since before hydration the type-ahead's select is
