@@ -213,9 +213,15 @@
   service, `mailpit` on the same `axllent/mailpit` tag compose pins, is the
   inbox: the job sets `MAIL_TRANSPORT=mailpit` and
   `MAILPIT_URL=http://mailpit:8025`, which the runner and the served site
-  both read, and `tests/e2e/mail-transport.spec.ts` sends through it and
-  reads the message back (MB.65). No mail variable is set on `checks.yml`'s
+  both read, and `tests/e2e/admin-invitations.spec.ts` reads an invitation
+  the site mailed back from it (MB.65). No mail variable is set on `checks.yml`'s
   `build` leg: `src/lib/mail.ts` reads them at send time, never at build.
+  Before the run, an `actions/cache` step restores `/app/.next-e2e/cache`
+  (MB.230), the e2e build's own, keyed `nextjs-e2e` on the shape of
+  `build`'s `/app/.next/cache` entry above and for the same reasons: the
+  absolute path, and a lockfile-only restore key. It cannot share `build`'s
+  entry, because the two builds write different `distDir`s
+  (`testing/e2e.md`).
 - **`build-e2e-image.yml`** (M1.14) — the same `build-image` action as
   `build-image.yml`, but for `Docker/Dockerfile.e2e`:
   `FROM mcr.microsoft.com/playwright:v1.63.0-noble` (Microsoft's own image,
