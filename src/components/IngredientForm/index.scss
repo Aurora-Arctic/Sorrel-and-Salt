@@ -189,3 +189,35 @@
   // Where the buttons it stands in for would be (M5.5).
   margin-block: space(2);
 }
+
+// The Variants section (MB.221): each form a group set off from the
+// ingredient's fields, as the new reference panel is, its legend across the
+// top edge with its Remove at the far end. Padded a step less than the panel,
+// so a form's own lists keep their width on a phone.
+.ingredient-form .ingredient-form__variants {
+  gap: space(4);
+}
+
+.ingredient-form .ingredient-form__variant {
+  gap: space(4);
+  padding: space(3);
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+
+  > .ingredient-form__variant-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(2);
+    width: 100%;
+    padding: 0 space(1);
+  }
+}
+
+// The second pickers beneath a substitute list, one per linked ingredient in
+// forms, at a field's spacing.
+.ingredient-form__substitute-forms {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}

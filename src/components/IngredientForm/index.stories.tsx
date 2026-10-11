@@ -21,7 +21,7 @@ import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
 import IngredientForm from '.';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
-import { EMPTY_VALUES } from './values';
+import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
 // Render-only; behaviour is asserted in tests/components/IngredientForm. The
 // workshop has no API, and on staging its pages may not fetch at all
@@ -173,6 +173,11 @@ const INGREDIENTS = [
     form: 'Dried leaf',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
+    // In forms, so a variant's substitutes rank it and its second picker opens (MB.221).
+    variants: [
+      { id: '00000000-0000-4000-8000-000000000401', form: 'Dried leaf', formChoice: null },
+      { id: '00000000-0000-4000-8000-000000000402', form: 'Oil', formChoice: null },
+    ],
   },
   {
     id: 'testwort-w',
@@ -181,6 +186,7 @@ const INGREDIENTS = [
     form: 'Tincture',
     description: 'A fixture herb, for the workshop.',
     isGlobal: false,
+    variants: [],
   },
   {
     id: 'fixturewort',
@@ -189,6 +195,7 @@ const INGREDIENTS = [
     form: 'Whole root',
     description: null,
     isGlobal: true,
+    variants: [],
   },
   {
     id: 'mockleaf',
@@ -197,6 +204,7 @@ const INGREDIENTS = [
     form: null,
     description: null,
     isGlobal: false,
+    variants: [],
   },
 ];
 
@@ -547,18 +555,24 @@ function WhatToTry() {
       <summary>What to try</summary>
       <ul>
         <li>
-          <strong>Suggestions:</strong> focus Form, Folk Name, Planet, Zodiac Sign, Deity or
-          Substitute Ingredient to list everything, then type to narrow it. &ldquo;wax&rdquo; in
+          <strong>Suggestions:</strong> focus New Form, Folk Name, Planet, Zodiac Sign, Deity or
+          Substitute Ingredient to list everything, then type to narrow it. &ldquo;wax&rdquo; in New
           Form shows two forms named Wax, told apart by group; &ldquo;mo&rdquo; in Planet shows From
           Compendium and From Coven; &ldquo;hec&rdquo; in Deity shows Hecate under two traditions;
           &ldquo;test&rdquo; in Substitute Ingredient shows one plant twice, the compendium&rsquo;s
           and this coven&rsquo;s.
         </li>
         <li>
-          <strong>A pick:</strong> pick either Wax in Form, and its group follows it in the box,
-          muted, its description in a tooltip on hover or focus; edit the text and the group goes.
-          Pick both Hecates in Deity, and each pill reads with its tradition, its description in its
-          tooltip.
+          <strong>A pick:</strong> pick either Wax in New Form, and a Wax variant is added, its
+          group following the text in its Form box, muted, its description in a tooltip on hover or
+          focus; edit the text and the group goes. Pick both Hecates in Deity, and each pill reads
+          with its tradition, its description in its tooltip.
+        </li>
+        <li>
+          <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
+          repeat is refused at the box. Remove takes a variant out. In a variant&rsquo;s Substitute
+          Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in oil first; pick it, and
+          Form of Testwort chooses which of its forms stands in.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -674,13 +688,32 @@ const ENTRY = {
     name: 'Testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    form: 'Dried leaf',
-    formLink: {
-      id: '00000000-0000-4000-8000-000000000103',
-      name: 'Dried leaf',
-      group: 'Plant part',
-      description: null,
-    },
+    // Two forms, the second with a safety note of its own (MB.221).
+    variants: [
+      {
+        ...EMPTY_VARIANT,
+        variantId: '00000000-0000-4000-8000-000000000311',
+        form: 'Dried leaf',
+        formLink: {
+          id: '00000000-0000-4000-8000-000000000103',
+          name: 'Dried leaf',
+          group: 'Plant part',
+          description: null,
+        },
+      },
+      {
+        ...EMPTY_VARIANT,
+        variantId: '00000000-0000-4000-8000-000000000312',
+        form: 'Whole root',
+        formLink: {
+          id: '00000000-0000-4000-8000-000000000104',
+          name: 'Whole root',
+          group: 'Plant part',
+          description: null,
+        },
+        safetyNotes: 'Wash before use.',
+      },
+    ],
     description: 'A fixture herb, for the workshop.',
     planets: [{ value: 'Mercury' }],
     // Testward, one of the categories the stand-in answers the picker with.
@@ -698,10 +731,10 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
           <strong>Classification:</strong> required here: Save with none chosen to see it refused.
         </li>
         <li>
-          <strong>Picks only:</strong> Form, Planet, Zodiac Sign and Deity offer the curated rows
-          alone, with no &ldquo;Use what you typed&rdquo; and no Add; type into one and Save, or
-          press Enter, to see the text refused. Substitute Ingredient offers the compendium&rsquo;s
-          entries alone{editing ? ', never this one' : ''}.
+          <strong>Picks only:</strong> New Form, a variant&rsquo;s Form, Planet, Zodiac Sign and
+          Deity offer the curated rows alone, with no &ldquo;Use what you typed&rdquo; and no Add;
+          type into one and Save, or press Enter, to see the text refused. Substitute Ingredient
+          offers the compendium&rsquo;s entries alone{editing ? ', never this one' : ''}.
         </li>
         <li>
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
