@@ -38,7 +38,7 @@ One seed module (`src/db/seed/index.ts`), three consumers (Docker, Vitest, Playw
 ## Fixtures
 
 - **`asUser` and the fixture users**, and how a test asserts a refusal: claude-docs/testing/acting-as-fixture-users.md, "Acting as a fixture user, and asserting a refusal".
-- **Invented default names** (M1.25) cover every ingredient or coven name a factory supplies on its own — `makeIngredient()`, `makeSpell()`'s custom layer, `makeWorkspace()`; a test that _states_ a real name is stating what it is about. Why a real name merely absent from the seed is unsafe too, and the backstop tests: claude-docs/testing/fixture-factories.md, "Fixture factories".
+- **Invented default names** (M1.25) cover every ingredient or coven name a factory supplies on its own — `makeIngredient()`, `makeSpell()`'s custom layer, `makeWorkspace()`; a test that _states_ a real name is stating what it is about. Why a real name merely absent from the seed is unsafe too: claude-docs/testing/fixture-factories.md, "Fixture factories".
 - **The shared inserters** are `tests/support/db/insert-ingredient.ts` and `insert-spell.ts`: every ingredient- or spell-family test seeds through them rather than carrying its own insert, and the one test that writes its setup through `withAudit` is a test whose subject is the write path (MB.101). Why setup must bypass the writer, and the two raw inserts that stay: claude-docs/testing/fixture-factories.md, "Fixture factories".
 
 ## What a test asserts

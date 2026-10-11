@@ -21,8 +21,6 @@ const DB_INCLUDE = ['tests/db/**/*.test.ts', 'tests/modules/**/*.test.ts'];
 export const DB_FREE = [
   'tests/modules/**/validation/**',
   'tests/db/audit.test.ts',
-  'tests/db/bootstrap.test.ts',
-  'tests/db/repository/index.test.ts',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',
