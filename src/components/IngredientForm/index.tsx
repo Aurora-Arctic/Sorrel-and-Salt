@@ -364,7 +364,8 @@ const IngredientForm = ({
             label="Description"
             placeholder="What it is, where it comes from and how it is used"
             multiline
-            rows={10}
+            // Seven lines, as each variant's Description (MB.115, the owner's call).
+            rows={7}
           />
         </Section>
         <Section title="Correspondences">

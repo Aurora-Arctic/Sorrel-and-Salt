@@ -384,6 +384,8 @@ function VariantFieldset({
             hint="What is particular to this form. What every form shares is the ingredient's description."
             placeholder="What sets this form apart"
             multiline
+            // Seven lines, matching the ingredient's Description (MB.115).
+            rows={7}
           />
         </Section>
         <Section title="Correspondences" level={4}>
