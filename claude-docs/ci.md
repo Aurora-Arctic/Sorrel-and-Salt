@@ -37,7 +37,7 @@ None remain: the checks exercise every composite action, a sourceless image and 
 
 ## Database image
 
-`Docker/Dockerfile.postgres` bakes `pg_trgm`, `unaccent` and an empty `sorrel_template` into `postgres:18` without holding `POSTGRES_PASSWORD`, and `pr-gate.yml` builds it once per content hash through `build-db-image.yml` for `vitest.yml` and `playwright.yml`. [`ci/database-image.md`](ci/database-image.md)
+`Docker/Dockerfile.postgres` bakes `pg_trgm`, `unaccent`, an empty `sorrel_template` and a `sorrel` role whose `pg_signal_backend` membership lets a forced database drop end an autovacuum worker into `postgres:18` without holding `POSTGRES_PASSWORD`, and `pr-gate.yml` builds it once per content hash through `build-db-image.yml` for `vitest.yml` and `playwright.yml`. [`ci/database-image.md`](ci/database-image.md)
 
 ## Deploy
 

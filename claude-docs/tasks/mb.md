@@ -227,6 +227,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.230 | Playwright: duplicates of Vitest flows go, the build cache warms, the closing measurement                                | Wave 8  | —                      |
 | MB.231 | The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/` | Wave 8  | —                      |
 | MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8  | —                      |
+| MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -496,6 +497,21 @@ _Acceptance criteria:_
 - No `scripts/*.d.mts` file remains, or each one that does is named in the entry with the TypeScript file that imports its script
 - `npm run pre-commit` passes
 - No doc or comment names a deleted declaration file as present
+
+**MB.233 — `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`** · 0.5h
+
+_Story:_ As a developer, I want a test run's database drops to succeed whatever Postgres is doing in the background, so that a green suite is not failed by its own teardown.
+
+PR #808's Playwright job (run 38099198158) passed all 79 tests and still failed: its global teardown, `tests/e2e/global-teardown.ts`, drops the seeded e2e template through `dropDatabase()` in `tests/support/seeded-database.ts`, and Postgres refused the drop with `permission denied to terminate process`. The drop is `DROP DATABASE IF EXISTS sorrel_e2e_template WITH (FORCE)`, and `WITH (FORCE)` ends every session still connected to the database before dropping it. One of those can be Postgres's own autovacuum worker, the background process that tidies and analyses a table a while after it is written to, and a freshly seeded template is exactly that. The worker runs as no role, and Postgres lets a role end such a process only if it is a superuser or a member of the built-in `pg_signal_backend` role. The test role, `sorrel`, is created in `Docker/postgres-init/enable-extensions.sql` as `LOGIN CREATEDB` and nothing more, so it may end only its own sessions, and the drop fails whenever it lands while the worker is busy. Every connection the tests open runs as `sorrel`, so the worker is the only session this drop can fail on; the log's `DETAIL` line names `pg_signal_backend` as the missing privilege. The same forced drop runs in three other places, each open to the same race: the per-spec re-clone of a worker's database (`recreateE2eDatabase()`, `tests/e2e/database.ts`), Vitest's re-clone before every test file (`tests/support/db-setup.ts`), and Vitest's teardown drops (`tests/support/db-global-setup.ts`). Several lanes' local runs failed the same way on 2026-10-11.
+
+The fix is one line in the test and dev database image: `GRANT pg_signal_backend TO sorrel;`, with the privileges comment above it saying why. The grant cannot end a superuser's session, and the file builds only the image CI and the devcontainer run, never Neon. Changing `Docker/postgres-init/**` changes the image's content hash, so the PR's own CI rebuilds the image and runs Vitest and Playwright on it, and that run is the proof. No regression test is added: the harness is not tested (`claude-docs/testing/layer-ownership.md`, "What a test may assert", rule 1), and a test of a role's grant would be one. A devcontainer data volume made before the change keeps its old roles until it is recreated, which `claude-docs/ci/database-image.md` says.
+
+_Acceptance criteria:_
+
+- `Docker/postgres-init/enable-extensions.sql` grants `pg_signal_backend` to the test role, with the comment saying why
+- The PR's CI rebuilds the database image and its Vitest and Playwright jobs pass on it
+- `claude-docs/ci/database-image.md`, the "Database image" section `claude-docs/ci.md` summarises, names the grant and says an existing devcontainer volume needs recreating to pick it up
+- No test is added: the harness is not tested (layer-ownership.md, rule 1)
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
