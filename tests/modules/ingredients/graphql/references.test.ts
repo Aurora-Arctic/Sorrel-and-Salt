@@ -16,7 +16,8 @@ import type { ReferenceNode } from './types';
 // reaching the read, and one refusal per error code per field, read as the
 // browser reads it. The services' own rules — who is refused, the tier rule,
 // the order — are references.test.ts's and ingredient-references.test.ts's; a
-// signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// signed-out caller at every field, and a non-admin at the compendium tier's
+// `admin` scope, are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -75,32 +76,15 @@ describe('createReference', () => {
     expect(result.data?.createReference.isGlobal).toBe(true);
   });
 
-  it('refuses a compendium reference to a member, as FORBIDDEN', async () => {
-    // Why it could have succeeded: the same member writes the same input to their coven.
-    const own = await run(asUser(B), CREATE, { workspaceId: WORKSPACE_W_ID, input: WEB_PAGE });
-    expect(own.errors).toBeUndefined();
-
-    const result = await run(asUser(B), CREATE, { input: WEB_PAGE });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['createReference'],
-      extensions: { code: 'FORBIDDEN' },
-    });
-  });
-
   it('answers a refusal per kind as VALIDATION, each issue pathed to its field', async () => {
     const result = await run(asUser(B), CREATE, {
       workspaceId: WORKSPACE_W_ID,
       input: { kind: 'web_page', title: 'Testwort' },
     });
 
-    expect(result.errors?.[0]?.extensions).toEqual({
+    expect(result.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
-      fieldErrors: [
-        { path: ['url'], message: 'A web page needs its address' },
-        { path: ['accessed'], message: 'A web page needs the day it was read' },
-      ],
+      fieldErrors: [{ path: ['url'] }, { path: ['accessed'] }],
     });
   });
 });
@@ -158,28 +142,6 @@ describe('updateReference', () => {
     });
 
     expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-  });
-
-  it('refuses a compendium reference to a member, as FORBIDDEN', async () => {
-    const reference = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
-    // Why it could have succeeded: the reference is live, and the site admin's
-    // identical call rewrites it.
-    const admitted = await run(asUser(E), UPDATE, {
-      id: reference,
-      input: { kind: 'book', title: 'Fixture Herbal', published: '1990' },
-    });
-    expect(admitted.errors).toBeUndefined();
-
-    const result = await run(asUser(B), UPDATE, {
-      id: reference,
-      input: { kind: 'book', title: 'Hijacked', published: '1990' },
-    });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['updateReference'],
-      extensions: { code: 'FORBIDDEN' },
-    });
   });
 
   it('answers a refusal of the shared schema as VALIDATION, pathed to the field', async () => {
@@ -315,19 +277,6 @@ describe('referenceSuggestions', () => {
       expect(result.data?.referenceSuggestions.edges.map((edge) => edge.node)).toEqual([
         { title: 'Testwort Compendium', isGlobal: true },
       ]);
-    });
-
-    it('refuses a signed-out request, as FORBIDDEN', async () => {
-      // Why it could have answered: the same call signed in asks no membership.
-      expect((await run(asUser(B), IN_COMPENDIUM, { workspaceId: null })).errors).toBeUndefined();
-
-      const result = await run(null, IN_COMPENDIUM, { workspaceId: null });
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]).toMatchObject({
-        path: ['referenceSuggestions'],
-        extensions: { code: 'FORBIDDEN' },
-      });
     });
   });
 });

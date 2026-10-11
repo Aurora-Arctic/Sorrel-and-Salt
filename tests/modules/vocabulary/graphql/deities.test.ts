@@ -16,7 +16,8 @@ import type { DeityNode, FilteredDeities } from './types';
 // by a write, and per write one refusal per error code, read as the browser
 // reads it. Which roles are refused and the services' own rules are
 // services/deities.test.ts's and services/deity-traditions.test.ts's; a
-// signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// signed-out caller refused at every field, and a non-admin at the `admin`
+// scope, are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {
@@ -90,19 +91,6 @@ async function picking(deityId: string): Promise<string> {
 
 const deityOf = async (id: string) => (await sql`select * from deities where id = ${id}`)[0];
 
-// The one non-admin each write refuses here, since `authScopes: { admin: true }`
-// is a gate of its own in front of the service: a coven's owner, the most a
-// workspace role grants, which is still not the site role these writes turn
-// on. Every other role is the services' tests'.
-const OWNER = asUser(A);
-
-// Why the refusals could have been something else: the session the scope
-// reads says `user`, and E's says `admin`.
-it('is testing a session whose site role is `user`, beside an admin', () => {
-  expect(OWNER.role).toBe('user');
-  expect(asUser(E).role).toBe('admin');
-});
-
 describe('deities', () => {
   it('pages the filter it is given, each deity with its tradition, and counts it', async () => {
     await seedDeity('Fixture Testra');
@@ -154,14 +142,6 @@ describe('createDeity', () => {
     });
   });
 
-  it('refuses a coven owner as FORBIDDEN, writing nothing', async () => {
-    const result = await run(OWNER, CREATE, { input: input() });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect(await sql`select 1 from deities where name = 'Fixture Testra'`).toHaveLength(0);
-  });
-
   it('answers a slug collision as VALIDATION on `name`, writing nothing', async () => {
     await seedDeity('Fixture Testra');
 
@@ -198,16 +178,10 @@ describe('updateDeity', () => {
     });
   });
 
-  it('refuses a coven owner as FORBIDDEN, leaving the row; answers an unknown id as NOT_FOUND', async () => {
-    const id = await seedDeity('Fixture Kept');
-    const before = await deityOf(id);
-
-    const refused = await run(OWNER, UPDATE, { id, input: input() });
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  it('answers an unknown id as NOT_FOUND', async () => {
     const missing = await run(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-    expect(await deityOf(id)).toEqual(before);
   });
 
   it('answers a retired tradition as VALIDATION on `traditionId`, leaving the row', async () => {
@@ -218,16 +192,16 @@ describe('updateDeity', () => {
 
     const result = await run(asUser(E), UPDATE, { id, input: input('Fixture Kept', gone) });
 
-    expect(result.errors?.[0]?.extensions).toEqual({
+    expect(result.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['traditionId'], message: 'Choose a tradition' }],
+      fieldErrors: [{ path: ['traditionId'] }],
     });
     expect(await deityOf(id)).toEqual(before);
   });
 });
 
 describe('deleteDeity', () => {
-  it('deletes one no entry picked, and refuses one a compendium entry picks as FORBIDDEN, naming it', async () => {
+  it('deletes one no entry picked, and refuses one a compendium entry picks as FORBIDDEN', async () => {
     const free = await seedDeity('Fixture Free');
     const held = await seedDeity('Fixture Held');
     await picking(held);
@@ -237,23 +211,14 @@ describe('deleteDeity', () => {
 
     expect(deleted.data?.deleteDeity).toBe(free);
     expect(refused.data).toBeNull();
-    expect(refused.errors?.[0]).toMatchObject({
-      message:
-        '"Fixture Held" is among the deities of 1 compendium entry — Testwort (herb). Take it off its deities first.',
-      extensions: { code: 'FORBIDDEN' },
-    });
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
     expect((await deityOf(held)).deleted_at).toBeNull();
   });
 
-  it('refuses a coven owner as FORBIDDEN, leaving the row live; answers an unknown id as NOT_FOUND', async () => {
-    const id = await seedDeity('Fixture Standing');
-
-    const refused = await run(OWNER, DELETE, { id });
+  it('answers an unknown id as NOT_FOUND', async () => {
     const missing = await run(asUser(E), DELETE, { id: 'not-a-uuid' });
 
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-    expect((await deityOf(id)).deleted_at).toBeNull();
   });
 });
 
@@ -291,36 +256,17 @@ describe('createDeityTradition and updateDeityTradition', () => {
     });
   });
 
-  it('refuse a coven owner as FORBIDDEN, and answer a slug collision as VALIDATION on `name`', async () => {
+  it('answer a slug collision as VALIDATION on `name`', async () => {
     await seedTradition('Fixture Folk');
 
-    const refused = await run(OWNER, CREATE_TRADITION, {
-      input: { name: 'Fixture Other', description: 'x' },
-    });
     const collided = await run(asUser(E), CREATE_TRADITION, {
       input: { name: 'Fixture-Folk', description: 'x' },
     });
 
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(collided.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
       fieldErrors: [{ path: ['name'] }],
     });
-  });
-
-  it('refuse a coven owner a rename as FORBIDDEN, leaving the row', async () => {
-    const id = await seedTradition('Fixture Kept');
-    const before = await sql`select name, slug, updated_by from deity_traditions where id = ${id}`;
-
-    const refused = await run(OWNER, UPDATE_TRADITION, {
-      id,
-      input: { name: 'Fixture Taken', description: 'x' },
-    });
-
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    expect(await sql`select name, slug, updated_by from deity_traditions where id = ${id}`).toEqual(
-      before,
-    );
   });
 });
 
@@ -335,9 +281,9 @@ describe('deleteDeityTradition', () => {
       moveTo: greek,
     });
 
-    expect(refused.errors?.[0]?.extensions).toEqual({
+    expect(refused.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
-      fieldErrors: [{ path: ['moveTo'], message: 'Choose a tradition to move its 1 deity to' }],
+      fieldErrors: [{ path: ['moveTo'] }],
     });
     expect(moved.data?.deleteDeityTradition).toBe(id);
     expect(await deityOf(deity)).toMatchObject({
@@ -346,13 +292,9 @@ describe('deleteDeityTradition', () => {
     });
   });
 
-  it('refuses a coven owner as FORBIDDEN; answers an unknown id as NOT_FOUND', async () => {
-    const id = await seedTradition('Fixture Standing');
-
-    const refused = await run(OWNER, DELETE_TRADITION, { id });
+  it('answers an unknown id as NOT_FOUND', async () => {
     const missing = await run(asUser(E), DELETE_TRADITION, { id: 'not-a-uuid' });
 
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 });

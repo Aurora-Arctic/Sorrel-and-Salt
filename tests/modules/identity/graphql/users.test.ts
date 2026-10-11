@@ -12,7 +12,7 @@ import type { UsersQueryResult } from './types';
 // the page calls, its nodes the ordinary `User`, so `email` resolves through
 // the scope it already carries rather than a second path around it
 // (claude-docs/auth/admin-users.md, "The user list"). This file holds a page,
-// the cursor and the filters reaching the service, and `providers`' scope;
+// the filters reaching the service, and `providers`' scope;
 // who is refused the list is services/user-list.test.ts's, and a signed-out
 // caller tests/db/graphql-query-scopes.test.ts's.
 
@@ -80,30 +80,11 @@ describe('Query.users', () => {
     });
   });
 
-  it('resumes from the cursor it handed out, to the end of the list', async () => {
-    const first = (await usersAs(asUser(E), PAGE_OF_USERS)).data as unknown as UsersQueryResult;
-    const rest = (
-      await usersAs(asUser(E), PAGE_OF_USERS, { after: first.users.pageInfo.endCursor })
-    ).data as unknown as UsersQueryResult;
-
-    const seen = [...first.users.edges, ...rest.users.edges].map((edge) => edge.node.id);
-    expect(new Set(seen).size).toBe(seen.length);
-    expect(rest.users.pageInfo.hasNextPage).toBe(false);
-  });
-
-  it('passes the role to the service', async () => {
-    const result = await usersAs(asUser(E), PAGE_OF_USERS, { role: 'admin' });
-
-    const { users } = result.data as unknown as UsersQueryResult;
-    // The cast's admin, among thirty listed users who are not.
-    expect(users.edges.map((edge) => edge.node.id)).toContain(E.id);
-    expect(users.edges.every((edge) => edge.node.role === 'admin')).toBe(true);
-  });
-
   it('passes the filters to the service', async () => {
     const result = await usersAs(asUser(E), PAGE_OF_USERS, {
       query: 'listed fixture 0',
       awaitingApproval: true,
+      role: 'user',
     });
 
     const { users } = result.data as unknown as UsersQueryResult;

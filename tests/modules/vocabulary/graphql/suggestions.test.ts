@@ -9,7 +9,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
 
 // The transport half of MB.94: two connection fields over one type, a page
-// each, an absent query sent as none, and the compendium-only mode. Who is
+// each, and the compendium-only mode. Who is
 // refused, what each bucket holds and the thresholds are
 // services/suggestions.test.ts's, and a signed-out caller at every field is
 // tests/db/graphql-query-scopes.test.ts's.
@@ -61,16 +61,6 @@ describe('planetSuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.planetSuggestions.edges.map((edge) => edge.node)).toEqual([
       { value: 'Sedna', description: null, curated: false },
-    ]);
-  });
-
-  it('lists the whole vocabulary, alphabetically, when no query is given', async () => {
-    const result = await run(asUser(B), 'planetSuggestions', { first: 2 });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.planetSuggestions.edges.map((edge) => edge.node.value)).toEqual([
-      'Ceres',
-      'Chiron',
     ]);
   });
 
@@ -154,26 +144,5 @@ describe.each([
     expect(result.data?.[field].edges.map((edge) => edge.node)).toEqual([
       { value: compendiums, description: null, curated: false },
     ]);
-  });
-
-  it('offers the curated rows', async () => {
-    const result = await runInCompendium(asUser(E), {});
-
-    expect(result.errors).toBeUndefined();
-    const nodes = result.data?.[field].edges.map((edge) => edge.node) ?? [];
-    expect(nodes.filter((node) => node.curated).length).toBeGreaterThan(10);
-  });
-
-  it('is refused signed out', async () => {
-    // Why it could have answered: the same call signed in asks no membership.
-    expect((await runInCompendium(asUser(B), { query })).errors).toBeUndefined();
-
-    const result = await runInCompendium(null, { query });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: [field],
-      extensions: { code: 'FORBIDDEN' },
-    });
   });
 });

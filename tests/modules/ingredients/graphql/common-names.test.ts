@@ -101,17 +101,4 @@ describe('commonNameSuggestions without a coven', () => {
       { value: 'Fixture Bane', claimants: [{ name: 'Testwort' }] },
     ]);
   });
-
-  it('is refused signed out', async () => {
-    // Why it could have answered: the same call signed in asks no membership.
-    expect((await runInCompendium(asUser(B), { query: 'testwort' })).errors).toBeUndefined();
-
-    const result = await runInCompendium(null, { query: 'testwort' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['commonNameSuggestions'],
-      extensions: { code: 'FORBIDDEN' },
-    });
-  });
 });
