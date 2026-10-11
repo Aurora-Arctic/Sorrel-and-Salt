@@ -1,0 +1,210 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Story-only: MB.115's three proposals for the tab row's look, on the
+// owner's call that today's `.link-row` reads as links rather than tabs.
+// Imported by index.stories.tsx alone, never by the component, so no losing
+// design ships; the losing rules and this file go at sign-off. Each restyles
+// the real `TabbedPage` markup under a wrapper class. In a `--states` frame
+// the second tab is drawn hovered and the third keyboard-focused, so a still
+// shows both; a pending frame is the real switch held on its way.
+
+// Shared by all three: a tab is a block target, not a word, in the body
+// ink's weight 500, no underline; the row neither wraps into the nav's
+// hairline nor scrolls the page. Under 28rem of the row's own width the
+// tabs share the line, each growing to fill it, their padding a step in.
+.tabs-proposal .tabbed-page__tabs {
+  container: tabs-proposal / inline-size;
+}
+
+.tabs-proposal .tabbed-page__row {
+  gap: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+
+  a,
+  a[aria-current='page'] {
+    display: block;
+    padding: space(2) space(4);
+    color: $text-muted;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  a[aria-current='page'] {
+    color: $text-primary;
+  }
+
+  a:hover {
+    color: $text-primary;
+  }
+
+  a:focus-visible {
+    @include focus-ring($accent);
+
+    outline-offset: -2px;
+  }
+
+  // While a tab is on its way: every tab muted and faded, the not-allowed
+  // cursor, hover doing nothing, as a disabled control is; the open tab's
+  // marker kept but greyed.
+  a[aria-disabled='true'],
+  a[aria-disabled='true']:hover {
+    color: $text-muted;
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+.tabs-proposal--states .tabbed-page__row {
+  li:nth-child(2) a {
+    color: $text-primary;
+  }
+
+  li:nth-child(3) a {
+    @include focus-ring($accent);
+
+    outline-offset: -2px;
+  }
+}
+
+@container tabs-proposal (max-width: #{$narrow-column}) {
+  .tabs-proposal .tabbed-page__row {
+    flex-wrap: nowrap;
+
+    // The tabs share the line in equal parts rather than wrapping a tab to
+    // a second row, which would break a folder or a track in two; a label
+    // too long for its part wraps inside its own tab, and every tab takes
+    // the tallest one's height, its label centred. A part never narrows
+    // past its longest word and the padding round it.
+    > li {
+      display: flex;
+      flex: 1 1 0;
+    }
+
+    a,
+    a[aria-current='page'] {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: center;
+      padding-inline: space(2);
+    }
+  }
+}
+
+// 1. Underline bar: the open tab carries a heavy accent bar along its
+// foot, set on the row's full-width hairline; the others in the muted ink.
+.tabs-proposal--underline .tabbed-page__row {
+  border-bottom: 1px solid $text-muted;
+
+  a,
+  a[aria-current='page'] {
+    margin-bottom: -1px;
+    border-bottom: $rule-heavy solid transparent;
+  }
+
+  a[aria-current='page'] {
+    border-bottom-color: $accent;
+  }
+
+  a[aria-current='page'][aria-disabled='true'] {
+    filter: grayscale(1);
+  }
+}
+
+// 2. Folder tabs: each tab a box with a rounded top, the open one on the
+// card surface and joined to a card-surface panel beneath with no line
+// between, the others on the page ground behind it, the panel's top edge
+// running under them.
+.tabs-proposal--folder {
+  .tabbed-page__tabs {
+    margin-bottom: 0;
+  }
+
+  .tabbed-page__row {
+    gap: space(1);
+    align-items: end;
+    border-bottom: 1px solid $text-muted;
+
+    a,
+    a[aria-current='page'] {
+      margin-bottom: -1px;
+      border: 1px solid $text-muted;
+      border-bottom-color: transparent;
+      border-radius: radius('surface') radius('surface') 0 0;
+      background-color: $surface-page;
+    }
+
+    // The open tab covers the panel's top edge beneath it, so it and the
+    // panel read as one sheet.
+    a[aria-current='page'] {
+      background-color: $surface-card;
+      border-bottom-color: $surface-card;
+    }
+  }
+
+  .tabbed-page__panel {
+    padding: space(5);
+    border: 1px solid $text-muted;
+    border-top: 0;
+    border-radius: 0 0 radius('surface') radius('surface');
+    background-color: $surface-card;
+  }
+
+  // Inside the panel, what would sit on the card surface sits on the page
+  // ground instead: the list's bands, its cards at a phone's width, the
+  // skeleton's rows and the fields, which would otherwise vanish into the
+  // panel's own card ground.
+  .tabbed-page__panel > * {
+    --surface-card: var(--surface-page);
+  }
+}
+
+@container tabs-proposal (max-width: #{$narrow-column}) {
+  .tabs-proposal--folder .tabbed-page__row {
+    gap: 2px;
+    align-items: stretch;
+  }
+}
+
+// 3. Segmented control: one rounded track on the card surface, edged in the
+// muted ink thinned into it so it holds on the light page, whose ground is
+// close to the card's; the open tab a raised pill inside it, the accent
+// thinned into the card under the floating shadow, the others plain. The
+// page ground would sit darker than the track in the light theme, and read
+// as a dent rather than a pill. At a phone's width the track spans the line
+// and the segments share it.
+$segment-edge: color-mix(in srgb, $text-muted 35%, $surface-card);
+$segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
+
+.tabs-proposal--segmented .tabbed-page__row {
+  display: inline-flex;
+  gap: space(1);
+  padding: space(1);
+  border: 1px solid $segment-edge;
+  border-radius: radius('pill');
+  background-color: $surface-card;
+
+  a,
+  a[aria-current='page'] {
+    border-radius: radius('pill');
+  }
+
+  a[aria-current='page'] {
+    background-color: $segment-pill;
+    box-shadow: $shadow-floating;
+  }
+
+  a[aria-current='page'][aria-disabled='true'] {
+    box-shadow: none;
+    filter: grayscale(1);
+  }
+}
+
+@container tabs-proposal (max-width: #{$narrow-column}) {
+  .tabs-proposal--segmented .tabbed-page__row {
+    display: flex;
+  }
+}
