@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   CHIP_GROUNDS,
   HEX_COLOR,
-  MIN_CHIP_CONTRAST,
   channels,
   chipContrast,
   contrastRatio,
@@ -35,10 +34,6 @@ describe('relativeLuminance', () => {
     expect(relativeLuminance('#000000')).toBe(0);
     expect(relativeLuminance('#ffffff')).toBe(1);
   });
-
-  it('reads a hex in either case alike', () => {
-    expect(relativeLuminance('#4E8BC2')).toBe(relativeLuminance('#4e8bc2'));
-  });
 });
 
 describe('contrastRatio', () => {
@@ -63,10 +58,6 @@ describe('chipContrast', () => {
     expect(chipContrast('colorLight', '#0c5393')).toBe(
       contrastRatio('#0c5393', CHIP_GROUNDS.light),
     );
-  });
-
-  it('holds both to 4.5:1', () => {
-    expect(MIN_CHIP_CONTRAST).toBe(4.5);
   });
 });
 

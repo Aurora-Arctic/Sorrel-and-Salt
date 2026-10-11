@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 
+// What the mail carries — its recipient and its link. Its wording and its
+// design are the story's (src/emails/admin-invitation.stories.tsx).
+
 const URL = 'http://localhost:8000/invite/fixture-token';
 
 describe('adminInvitationMessage', () => {
@@ -8,36 +11,19 @@ describe('adminInvitationMessage', () => {
     const message = await adminInvitationMessage({ to: 'someone@admin-invitation.test', url: URL });
 
     expect(message.to).toBe('someone@admin-invitation.test');
-    expect(message.subject).toBe('You Are Invited to Be a Sorrel & Salt Admin.');
-    expect(message.html).toMatch(/<h1[^>]*>You Are Invited<\/h1>/);
     expect(message.html).toContain(`href="${URL}"`);
     expect(message.text).toContain(URL);
     expect(message.text).not.toMatch(/<[a-z]/i);
   });
 
-  it('says who invited them to what, how long the link lasts, and that an unexpected mail can be ignored', async () => {
-    const { text } = await adminInvitationMessage({
-      to: 'someone@admin-invitation.test',
-      url: URL,
-    });
-
-    expect(text).toContain('invited this email address to become an admin.');
-    // What an admin does is not the mail's to say (the owner's call).
-    expect(text).not.toMatch(/Admins look after/);
-    expect(text).toContain('open the link below within seven days');
-    expect(text).toMatch(/sign in with an account that uses this email address/);
-    expect(text).toMatch(/weren.t expecting this.*ignore this email/is);
-  });
-
-  it('gives the text part the link once, and the HTML a button with the link as a fallback', async () => {
+  // A button, and the link written out beneath it for a client that hides buttons.
+  it('gives the text part the link once, and the HTML two anchors carrying it', async () => {
     const { html, text } = await adminInvitationMessage({
       to: 'someone@admin-invitation.test',
       url: URL,
     });
 
     expect(text.split(URL)).toHaveLength(2);
-    expect(html).toContain('click the button below within seven days');
     expect(html.split(`href="${URL}"`)).toHaveLength(3);
-    expect(html).toMatch(/class="ss-button"[^>]*>[^<]*<span[^>]*>.*Accept the Invitation/s);
   });
 });

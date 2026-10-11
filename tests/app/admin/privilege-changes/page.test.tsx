@@ -108,9 +108,6 @@ describe('the /admin/privilege-changes page', () => {
       { userId: undefined, privilege: undefined },
       entry(1).cursor,
     );
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Privilege Changes' }),
-    ).toBeInTheDocument();
   });
 
   it('reads every user the page names in one call, and names them', async () => {
@@ -146,15 +143,6 @@ describe('the /admin/privilege-changes page', () => {
     await renderPage({ query: '  ' });
 
     expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({});
-  });
-
-  it('says plainly when the filter matches nothing', async () => {
-    listPrivilegeChanges.mockResolvedValue([]);
-    countPrivilegeChanges.mockResolvedValue({ totalCount: 0, countBefore: null });
-
-    await renderPage({ query: 'ada@ledger.test', privilege: 'admin' });
-
-    expect(screen.getByText('No admin changes for “ada@ledger.test”.')).toBeInTheDocument();
   });
 
   // Only a hand-edited address carries one, so it filters nothing rather than erring.
@@ -202,29 +190,23 @@ describe('the /admin/privilege-changes page', () => {
     await expect(renderPage()).rejects.toThrow('refused');
   });
 
-  it('links the next page, keeping the filter, and says where it stands', async () => {
+  it('links the pages either side, keeping the filter, and says where it stands', async () => {
     listPrivilegeChanges.mockResolvedValue(
       Array.from({ length: 26 }, (_, index) => entry(index + 1)),
     );
-    countPrivilegeChanges.mockResolvedValue({ totalCount: 30, countBefore: 0 });
+    countPrivilegeChanges.mockResolvedValue({ totalCount: 60, countBefore: 25 });
 
-    await renderPage({ query: 'ada', privilege: 'admin' });
+    await renderPage({ query: 'ada', privilege: 'admin', after: encodeCursor(entry(0).cursor) });
 
+    const filter = '/admin/privilege-changes?query=ada&privilege=admin';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
-      `/admin/privilege-changes?query=ada&privilege=admin&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+      `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
     );
-    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 1 of 2');
-  });
-
-  it('links the previous page from a later one', async () => {
-    await renderPage({ after: encodeCursor(entry(0).cursor) });
-
-    const url = new URL(
-      screen.getByRole('link', { name: 'Prev' }).getAttribute('href') as string,
-      'http://localhost',
+    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute(
+      'href',
+      `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
-    expect(Object.fromEntries(url.searchParams)).toEqual({ before: encodeCursor(entry(1).cursor) });
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });

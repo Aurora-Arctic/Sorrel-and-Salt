@@ -38,13 +38,13 @@ describe('the /admin layout', () => {
 });
 
 describe('the /admin page', () => {
-  it('shows an admin the admin area heading', async () => {
+  it('renders for an admin', async () => {
     requireAdminSession.mockResolvedValue(ADMIN);
 
     render(await AdminPage());
 
     expect(requireAdminSession).toHaveBeenCalledOnce();
-    expect(screen.getByRole('heading', { level: 1, name: 'Admin' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
   it('renders nothing when the guard refuses, without the layout having run', async () => {

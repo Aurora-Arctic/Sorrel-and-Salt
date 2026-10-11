@@ -2,8 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // Both id and secret, never an empty string, which Better Auth reads as
 // configured. This module is the one place the provider→env-var mapping
-// lives (tests/lib/social-providers.test.ts asserts the client-safe roster
-// carries none of it), and .oxlintrc.json refuses it to any importer but
+// lives, and .oxlintrc.json refuses it to any importer but
 // src/lib/auth.ts and a server component — this file is the third named
 // exception, the same shape as tests/db/test-database-isolation.test.ts's
 // exemption from the db-client boundary (CLAUDE.md rule 2).
@@ -12,26 +11,7 @@ describe('clientCredentials', () => {
     vi.unstubAllEnvs();
   });
 
-  it('returns undefined when only the id is set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'test-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
-    vi.resetModules();
-    // oxlint-disable-next-line no-restricted-imports
-    const { clientCredentials } = await import('@/lib/social-providers-config');
-
-    expect(clientCredentials('google')).toBeUndefined();
-  });
-
-  it('returns undefined when only the secret is set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', '');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-secret');
-    vi.resetModules();
-    // oxlint-disable-next-line no-restricted-imports
-    const { clientCredentials } = await import('@/lib/social-providers-config');
-
-    expect(clientCredentials('google')).toBeUndefined();
-  });
-
+  // A half-set pair is configuredProviders' case below.
   it('returns the pair once both are set', async () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'test-id');
     vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-secret');

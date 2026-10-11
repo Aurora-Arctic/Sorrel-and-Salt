@@ -128,13 +128,10 @@
   whether the session cookie was set, since that is what the plugin keys on.
   `tests/lib/auth.test.ts` asserts Better Auth's `user` table gains no
   `lastLoginMethod`; the shared cookie name is this file's (MB.188).
-- **`tests/lib/errors.test.ts` (M1.26)** — asserts `Forbidden` and `NotFound`
-  are distinguishable by type in a `catch` and in an
-  `expect().rejects.toThrow(Class)`, and that neither an empty list nor a
-  success value satisfies an assertion written for a refusal. The last three
-  cases assert that an _inner_ expectation rejects, which is what proves the
-  assertion style can fail at all — see
-  `claude-docs/testing/acting-as-fixture-users.md`.
+- **`tests/lib/errors.test.ts` (M1.26)** — asserts each error is an `Error`
+  that names itself and carries its message, and that `Forbidden`,
+  `NotFound` and `ValidationError` are told apart by type. How Vitest's
+  `rejects.toThrow(Class)` behaves is Vitest's, and not tested here (MB.229).
 - **`tests/modules/identity/schema/users-schema.test.ts`** — asserts `users`' shape via Drizzle's
   own `getTableConfig()` introspection: `name`/`image` columns,
   `role`'s `user`/`admin` enum and `'user'` default, `canCreateWorkspace`'s

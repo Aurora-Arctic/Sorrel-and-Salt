@@ -55,17 +55,17 @@ describe('getSession', () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
-  it.each(['user', 'admin'] as const)('maps a %s to the service-level session', async (role) => {
-    getSessionMock.mockResolvedValue(betterAuthSession(role));
+  it('maps a session to the service-level one', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('admin'));
     // Exactly these two fields: the service session carries nothing else.
-    await expect(getSession()).resolves.toEqual({ userId: USER_ID, role });
+    await expect(getSession()).resolves.toEqual({ userId: USER_ID, role: 'admin' });
   });
 
   // `role` reaches here as Better Auth's plain string. A value outside the
   // column's enum is a bug somewhere upstream, and quietly reading it as
-  // 'user' would hide it.
-  it.each([undefined, null, 'owner', 'ADMIN'])('refuses a role of %s', async (role) => {
-    getSessionMock.mockResolvedValue(betterAuthSession(role));
+  // 'user' would hide it; which values are roles is tests/lib/session-role.test.ts's.
+  it('refuses a role the column does not hold', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('owner'));
     await expect(getSession()).rejects.toThrow(/role/);
   });
 });

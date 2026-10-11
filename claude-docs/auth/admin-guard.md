@@ -65,8 +65,8 @@
   server action and `sorrel/route-allowlist` a route handler beyond the
   GraphQL endpoint and `/api/auth/*` (`lint/sorrel-lint.js`).
 - **Tests.** `tests/lib/request-session.test.ts` covers the three answers and
-  the unverified admin; `tests/app/pre-paint-scripts.test.tsx` that a
-  browser-rendered page gets no script and no warning;
+  the unverified admin; `tests/app/pre-paint-scripts.test.tsx` that the
+  server HTML carries both scripts and hydrates without a warning;
   `tests/app/admin/layout.test.tsx` proves the layout
   and the index page each await the guard before rendering;
   `tests/e2e/admin.spec.ts` asserts the 403 with no admin markup anywhere in

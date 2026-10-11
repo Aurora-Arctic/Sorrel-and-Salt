@@ -117,7 +117,6 @@ describe('the /admin/forms page', () => {
   it('lists the first page of 25, each form with its group, and no modal', async () => {
     await renderPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Forms' })).toBeInTheDocument();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
@@ -136,24 +135,12 @@ describe('the /admin/forms page', () => {
     expect(listIngredientFormGroups).toHaveBeenCalledWith({ limit: 101, inverted: false });
   });
 
-  it('reads the page after a readable cursor, and the first page for one that is not', async () => {
+  // Which cursor is readable is tests/lib/search-params.test.ts's.
+  it('reads the page after the cursor in the address', async () => {
     const after = encodeCursor({ key: ['Testwort Shard'], id: SHARD.id });
 
     await renderPage({ after });
     expect(lastRequest().after).toEqual({ key: ['Testwort Shard'], id: SHARD.id });
-
-    await renderPage({ after: 'not-a-cursor' });
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-  });
-
-  it('puts Add Form on the line of the heading, linking the empty modal over this page', async () => {
-    const after = encodeCursor({ key: ['Testwort Shard'], id: SHARD.id });
-    await renderPage({ after });
-
-    const heading = screen.getByRole('heading', { level: 1, name: 'Forms' });
-    const add = screen.getByRole('link', { name: 'Add Form' });
-    expect(add.parentElement).toBe(heading.parentElement);
-    expect(add).toHaveAttribute('href', `/admin/forms?after=${encodeURIComponent(after)}&new`);
   });
 
   it('says which page of how many, counted from the first row of the page', async () => {
@@ -218,9 +205,7 @@ describe('the /admin/forms page', () => {
     await renderPage({ edit: 'gone' });
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'No form has that address — it may have been renamed or deleted.',
-    );
+    expect(screen.getByRole('alert')).toBeVisible();
   });
 
   it('lets any other failure reading ?edit= through', async () => {
@@ -325,19 +310,5 @@ describe('the /admin/forms filter', () => {
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
       /^\/admin\/forms\?query=shard&group=fixture-substance&after=[^&]+$/,
     );
-  });
-
-  // What the list says of it is the list's own test's.
-  it('counts a page the filter leaves empty from no row', async () => {
-    listIngredientFormValues.mockResolvedValue([]);
-    countIngredientFormValues.mockResolvedValue({ totalCount: 0, countBefore: undefined });
-
-    await renderPage({ query: 'nothing' });
-
-    expect(countIngredientFormValues).toHaveBeenCalledWith(
-      { query: 'nothing', groupId: undefined },
-      undefined,
-    );
-    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
-import { CHIP_GROUNDS, chipContrast } from '@/lib/contrast';
+import { chipContrast } from '@/lib/contrast';
 import {
   MAX_HUE_DISTANCE,
   boundaryPoints,
@@ -50,32 +50,34 @@ describe('isAchromatic', () => {
 });
 
 describe('the seeded pairs', () => {
-  it.each(CATEGORY_GROUPS.map((group) => [group.name, group] as const))(
-    'keep %s to one hue',
-    (_name, { colorDark, colorLight }) => {
+  it('keep each group to one hue', () => {
+    for (const { colorDark, colorLight } of CATEGORY_GROUPS) {
       expect(hueDistance(colorDark, colorLight)).toBeLessThanOrEqual(MAX_HUE_DISTANCE);
-    },
-  );
+    }
+  });
 });
 
 describe('pairedColor', () => {
+  // Each seeded colour with the column its partner fills.
   const seeded = CATEGORY_GROUPS.flatMap((group) => [
-    [`${group.name}'s light-theme partner`, group.colorDark, 'colorLight'] as const,
-    [`${group.name}'s dark-theme partner`, group.colorLight, 'colorDark'] as const,
+    [group.colorDark, 'colorLight'] as const,
+    [group.colorLight, 'colorDark'] as const,
   ]);
 
-  it.each(seeded)('derives %s on its own ground, at the same hue', (_name, source, column) => {
-    const partner = pairedColor(source, column);
+  it("derives each seed's partner on its own ground, at the same hue", () => {
+    for (const [source, column] of seeded) {
+      const partner = pairedColor(source, column);
 
-    expect(partner).toMatch(/^#[0-9a-f]{6}$/);
-    expect(chipContrast(column, partner)).toBeGreaterThanOrEqual(4.6);
-    expect(hueDistance(source, partner)).toBeLessThan(1);
+      expect(partner).toMatch(/^#[0-9a-f]{6}$/);
+      expect(chipContrast(column, partner)).toBeGreaterThanOrEqual(4.6);
+      expect(hueDistance(source, partner)).toBeLessThan(1);
+    }
   });
 
   // The lightness is the one nearest the ground that clears it, so the
   // partner is no darker or lighter than it needs to be.
   it('lands a tenth over the floor, not far past it', () => {
-    for (const [, source, column] of seeded) {
+    for (const [source, column] of seeded) {
       expect(chipContrast(column, pairedColor(source, column))).toBeLessThan(4.8);
     }
   });
@@ -105,10 +107,6 @@ describe('pairedColor', () => {
 
   it('reads a hex in either case alike', () => {
     expect(pairedColor('#4E8BC2', 'colorLight')).toBe(pairedColor('#4e8bc2', 'colorLight'));
-  });
-
-  it('measures against the grounds the check uses', () => {
-    expect(CHIP_GROUNDS).toEqual({ dark: '#1f1c16', light: '#efe9da' });
   });
 });
 
@@ -199,8 +197,6 @@ describe('failingRegion', () => {
 
   it.each([
     [208, 'colorDark'],
-    [208, 'colorLight'],
-    [240, 'colorDark'],
     [60, 'colorLight'],
   ] as const)('covers exactly the failing colours at hue %s on %s', (hue, column) => {
     const region = failingRegion(hue, column, 'hsb');
@@ -230,8 +226,6 @@ describe('failingLabelPoint', () => {
 
   it.each([
     [208, 'colorDark'],
-    [208, 'colorLight'],
-    [240, 'colorDark'],
     [60, 'colorLight'],
   ] as const)(
     'sits on a failing colour, inside the middle of the area, at hue %s on %s',

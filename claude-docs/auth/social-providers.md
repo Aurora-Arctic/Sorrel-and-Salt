@@ -15,8 +15,8 @@ the account (`sub`, `id`, `sub` or `id` for Facebook's two profile shapes,
 `oid`), whether the provider vouches for an address, and Microsoft's tenant.
 `mapProfile` in `src/lib/auth.ts` builds every `mapProfileToUser` from it
 (MB.213). It is typed as one required entry per `ProviderId`, so a provider
-added to the id without one fails `npm run typecheck`
-(`tests/lib/provider-profiles.test.ts`); the switch it replaced had no
+added to the id without one fails `npm run typecheck`, and one on the roster
+without an entry fails `tests/lib/provider-profiles.test.ts`; the switch it replaced had no
 default, so a provider given its credentials built and never registered. A new provider is
 its id, a roster entry, and the two entries the compiler then asks for, with
 no edit to `auth.ts`. Facebook and Microsoft are pinned unverified on arrival (see

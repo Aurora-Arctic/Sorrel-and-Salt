@@ -2,10 +2,10 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 
-// `/` offers a signed-in visitor the landing for their role — the admin area
-// for an admin, /coven for anyone else — and a signed-out one the sign-in
-// page (claude-docs/components/welcome.md). What the session is, is
-// tests/lib/request-session.test.ts's; here it is mocked.
+// `/` offers a signed-in visitor the landing for their role and a signed-out
+// one the sign-in page (claude-docs/components/welcome.md). What the session
+// is, is tests/lib/request-session.test.ts's, and which landing a role gets
+// tests/lib/sign-in.test.ts's; here the session is mocked.
 
 const getSession = vi.fn<() => Promise<Session | null>>();
 vi.mock('@/lib/request-session', () => ({ getSession }));
@@ -33,14 +33,5 @@ describe('the / page', () => {
     render(await HomePage());
 
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
-  });
-
-  // Why the admin's could have been /coven: the same session but for its role.
-  it('continues anyone else to the /coven landing', async () => {
-    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
-
-    render(await HomePage());
-
-    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
   });
 });

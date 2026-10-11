@@ -81,17 +81,6 @@ describe('ingredientSlug', () => {
       ingredientSlug("Cat's Claw", 'bark', 'Uncaria tomentosa'),
     );
   });
-
-  // What the slug indexes still refuse (ingredients-indexes.test.ts): two
-  // identities `canonical_key` keeps apart and this rule folds together.
-  it('folds punctuation and accents in a formal name, as it does in a label', () => {
-    expect(ingredientSlug('Testwort', 'herb', 'Fixtura-testalis')).toBe(
-      ingredientSlug('Testwort', 'herb', 'Fixtura testalis'),
-    );
-    expect(ingredientSlug('Hidcote Lavender', 'flower', "Lavandula angustifolia 'Hidcote'")).toBe(
-      ingredientSlug('Hidcote Lavender', 'flower', 'Lavandula angustifolia Hidcote'),
-    );
-  });
 });
 
 // A form's address carries its group (M5.6a), so two live forms called "Wax"

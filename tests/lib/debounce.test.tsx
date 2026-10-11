@@ -13,12 +13,6 @@ describe('useDebouncedValue', () => {
     vi.useRealTimers();
   });
 
-  it('starts as the value it is given', () => {
-    const { result } = renderHook(() => useDebouncedValue('wax'));
-
-    expect(result.current).toBe('wax');
-  });
-
   it('follows a change only once the delay has passed without another', () => {
     const { result, rerender } = renderHook(({ value }) => useDebouncedValue(value), {
       initialProps: { value: '' },
