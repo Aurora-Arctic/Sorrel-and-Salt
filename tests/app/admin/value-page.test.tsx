@@ -195,7 +195,7 @@ describe('a curated value page, on the categories', () => {
     expect(getCategoryBySlug).toHaveBeenCalledWith('testcraft');
     const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testcraft');
-    expect(within(dialog).getByRole('combobox', { name: 'Group' })).toHaveTextContent(
+    expect(within(dialog).getByRole('combobox', { name: 'Group' })).toHaveValue(
       'Fixture Protection',
     );
   });
@@ -255,11 +255,12 @@ describe("a curated value page's filter, on the categories", () => {
     expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('');
   });
 
+  // The type-ahead shows the group by its name; the slug is what it submits.
   it('reads ?group= as the id of the group at that slug', async () => {
     await renderPage({ group: 'fixture-protection' });
 
     expect(lastFilter()).toEqual({ query: undefined, groupId: GROUPS[1].id });
-    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue('fixture-protection');
+    expect(screen.getByRole('combobox', { name: 'Group' })).toHaveValue(GROUPS[1].name);
   });
 
   // As a hand-edited cursor gets the first page.
