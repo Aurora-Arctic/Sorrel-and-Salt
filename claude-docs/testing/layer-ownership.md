@@ -173,9 +173,9 @@ Two files stand over it by the owner's decision, and the ⚠ on them is expected
 - `tests/components/IngredientForm/index.test.tsx`, whose exemption covers
   the tests that render the whole 25-field form — the save payload, kind↔name
   coupling, error routing, the save flow, one wiring test per lookup — after
-  MB.181 moved everything else onto the components. Its "a linked substitute"
-  block rendered only `ListField`, so it is not covered, and MB.228 moves it
-  out. Splitting it into two whole-form files
+  MB.181 moved everything else onto the components; MB.228 left it 40 tests,
+  moving its linked-substitute block, which rendered only `ListField`, to
+  `list-field.test.tsx`. Splitting it into two whole-form files
   would shorten the wall clock and not the summed time, which was judged not
   worth a second file to keep in step.
 - `tests/modules/ingredients/services/common-names-plan.test.ts`, whose time is

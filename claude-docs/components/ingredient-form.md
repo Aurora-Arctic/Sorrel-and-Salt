@@ -710,8 +710,9 @@ modal over the same list. Why a wide modal, and `?edit=` after a save:
 `.field__error` paragraph whose id the control lists in `aria-describedby`,
 with `aria-invalid` set beside it. The resolver's issues and the server's
 `fieldErrors` both reach it through react-hook-form's error state, so a
-server-only rule draws exactly as a schema rule does. The test proves it is
-the same element, not just the same text.
+server-only rule draws exactly as a schema rule does. The tests prove each
+source marks its field invalid and described; that it is one element is the
+code's, not a test's.
 
 Both sources go through **`fieldNameOf`**, which turns an issue's path into
 the form's field name:
@@ -942,7 +943,9 @@ few it needs. It covers:
   remains, cleared inline by changing the kind to Unknown or to None.
 - **Fields**: Name alone marked required, the formal name while a named
   classification is chosen, and no classification for a typed formal name;
-  and `form` as free text. A hint behind its info tip is InfoTip's, and a
+  and `form` as free text, sent as typed — the column's being text rather
+  than a foreign key is
+  `tests/modules/ingredients/schema/ingredients-schema.test.ts`'s. A hint behind its info tip is InfoTip's, and a
   list's box, chevron and handle are ListField's and Combobox's.
 - **The duplicate warning**, what only the form does with it: a save held on
   a near match, asked about the name as sent, trimmed, for this coven, the
@@ -1075,8 +1078,8 @@ tidied by its own format as it is left; Save Reference held down and busy,
 with Cancel, while in flight; and Cancel sending nothing. The
 formats and checks themselves are tested where the schema is,
 `tests/modules/ingredients/validation/` — `reference-format.test.ts`, and
-`reference.test.ts` for a chapter with no book, a web page with no address or
-day, and a date with no year — with the server's storing of them in
+`reference.test.ts` for a chapter, an article or an entry with no container, a
+web page with no address or day, and a published date with no year — with the server's storing of them in
 `services/references.test.ts`.
 
 **On the compendium** is `tests/components/IngredientForm/compendium.test.tsx`
