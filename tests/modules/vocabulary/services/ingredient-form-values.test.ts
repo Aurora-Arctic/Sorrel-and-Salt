@@ -606,6 +606,22 @@ describe('updateIngredientFormValue', () => {
       expect(issues).toEqual([{ path: ['name'], message: expect.stringContaining('Testwort') }]);
       expect(await Promise.all([formOf(id), variantsOf(doubled)])).toEqual(before);
     });
+
+    it('refuses on `name` when the index refuses a rewrite the second read cannot place, rather than surfacing the raw error', async () => {
+      const id = await seed('Fixture Resin');
+      const doubled = await entry('Testwort', 'Fixture Resin', id);
+      await insertVariant(sql, doubled, { form: 'Fixture Amber' }, A.id);
+      repository.findCompendiumFormRenameClashes
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const issues = await issuesOf(
+        updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
+      );
+
+      expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+      expect((await formOf(id)).name).toBe('Fixture Resin');
+    });
   });
 });
 

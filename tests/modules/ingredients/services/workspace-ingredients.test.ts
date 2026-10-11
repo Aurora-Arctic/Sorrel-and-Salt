@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { findIngredientsInSpellsIncludingSoftDeleted } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
@@ -50,6 +50,17 @@ import {
 // Story 15's service: a coven's own ingredients, written by its owners and
 // members and read by its members, never by anyone else. The table is emptied
 // per test, so every row a result could come from is one this file wrote.
+
+// The identity holder lookup, wrapped so one test can have the holder gone by
+// the time it is read without changing what it answers for the rest.
+const repository = vi.hoisted(() => ({ findWorkspaceIngredientByIdentity: vi.fn() }));
+vi.mock('@/db/repository', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/db/repository')>();
+  repository.findWorkspaceIngredientByIdentity.mockImplementation(
+    actual.findWorkspaceIngredientByIdentity,
+  );
+  return { ...actual, ...repository };
+});
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -264,10 +275,10 @@ describe('a collision with another of the coven’s ingredients', () => {
   const create = (overrides: Overrides<IngredientFixture>) =>
     createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, inputOf(local(overrides)));
 
-  it('refuses a label already in the coven, whatever its case, on `name`', async () => {
-    await seed(local({ name: 'Testwort', form: 'herb' }));
+  it('refuses a label already in the coven under another formal name, whatever its case, on `name`', async () => {
+    await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis' }));
 
-    expect(await issuesOf(create({ name: 'testwort', form: 'root' }))).toEqual([
+    expect(await issuesOf(create({ name: 'testwort', canonicalName: 'Fixtura altera' }))).toEqual([
       { path: ['name'], message: expect.any(String) },
     ]);
     expect(await countIngredients()).toBe(1);
@@ -283,6 +294,16 @@ describe('a collision with another of the coven’s ingredients', () => {
       await issuesOf(create({ name: 'Testwort', canonicalName: 'Fixtura testalis', form: 'oil' })),
     ).toEqual([{ path: ['canonicalName'], message: expect.stringContaining('Testwort') }]);
     expect(await countIngredients()).toBe(1);
+  });
+
+  it('names no ingredient when the holder is gone by the time it is read, rather than surfacing the raw error', async () => {
+    await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis', form: 'herb' }));
+    repository.findWorkspaceIngredientByIdentity.mockResolvedValueOnce(undefined);
+
+    // Another label and address, so only the identity index can refuse it.
+    expect(
+      await issuesOf(create({ name: 'Testleaf', canonicalName: 'Fixtura testalis', form: 'oil' })),
+    ).toEqual([{ path: ['canonicalName'], message: expect.not.stringContaining('Testwort') }]);
   });
 
   it('refuses an identity that is only a label on `name`, since the label is the identity', async () => {
