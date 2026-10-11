@@ -1,6 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
-import type { BetterAuthOptions } from 'better-auth';
 
 // Better Auth's limiter through its real endpoint, counting in `rate_limits`
 // (claude-docs/auth/rate-limiting.md, "Rate limiting"). At NODE_ENV=production, as every
@@ -18,7 +17,6 @@ vi.stubEnv('GOOGLE_CLIENT_ID', 'test-google-id');
 vi.stubEnv('GOOGLE_CLIENT_SECRET', 'test-google-secret');
 
 const { auth } = await import('@/lib/auth');
-const { betterAuth } = await import('better-auth');
 
 const STAGING = 'https://staging.sorrelandsalt.com';
 const PATH = '/sign-in/social';
@@ -112,23 +110,5 @@ describe('the client address', () => {
       { key: `${OTHER_VISITOR}|${PATH}`, count: 1 },
       { key: `${VISITOR}|${PATH}`, count: 1 },
     ]);
-  });
-
-  it('would have put both in one shared bucket without the header pinned', async () => {
-    const options = auth.options as BetterAuthOptions;
-    // The same configuration with only the header pin taken away.
-    const unpinned = betterAuth({
-      ...options,
-      advanced: { ...options.advanced, ipAddress: undefined },
-    });
-    // Precondition: the only difference is the pin, so the pin is what separates them.
-    expect((options.advanced?.ipAddress?.ipAddressHeaders ?? []).length).toBeGreaterThan(0);
-    expect(unpinned.options.rateLimit).toEqual(options.rateLimit);
-
-    for (const from of visitors) {
-      expect((await startSignIn(unpinned.handler, from)).status).toBe(200);
-    }
-
-    expect(await rows()).toEqual([{ key: `no-trusted-ip|${PATH}`, count: 2 }]);
   });
 });

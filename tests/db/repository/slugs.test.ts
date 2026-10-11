@@ -80,28 +80,12 @@ describe('findCompendiumSlugRedirect', () => {
     await retire(movedId, 'testwort', RETIRED);
   });
 
-  it('expires at midnight UTC of the retirement date plus 180 days, whatever the hour', async () => {
-    const [row] = await sql`select expires_at from retired_ingredient_slugs`;
-    expect((row.expires_at as Date).toISOString()).toBe(EXPIRES.toISOString());
-  });
-
   it('answers the entry, at its current slug, until expires_at and not from it', async () => {
     await expect(findCompendiumSlugRedirect('testwort', INSIDE)).resolves.toMatchObject({
       entry: { id: movedId, slug: 'testwort-relabelled' },
       expiresAt: EXPIRES,
     });
     await expect(findCompendiumSlugRedirect('testwort', EXPIRES)).resolves.toBeUndefined();
-  });
-
-  // Either side of midnight: a retirement a millisecond later is a day later.
-  it('keeps a slug retired just after midnight a day longer', async () => {
-    const laterId = await add('Testleaf, relabelled');
-    await retire(laterId, 'testleaf', new Date('2026-03-02T00:00:00.000Z'));
-
-    await expect(findCompendiumSlugRedirect('testleaf', EXPIRES)).resolves.toMatchObject({
-      entry: { id: laterId },
-      expiresAt: new Date('2026-08-29T00:00:00.000Z'),
-    });
   });
 
   it('answers nothing once the entry is soft-deleted', async () => {

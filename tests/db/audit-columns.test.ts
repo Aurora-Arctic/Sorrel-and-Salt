@@ -8,7 +8,6 @@ import {
   STAMP_COLUMNS,
   UNAUDITED_TABLES,
 } from '../support/db/table-metadata';
-import type { Reference } from './types';
 
 // One catalogue sweep rather than a copy in every schema test: a table added
 // without `...auditColumns` fails here, where a per-file copy would simply not
@@ -19,135 +18,88 @@ import type { Reference } from './types';
 
 /** Hard-deleted, so four stamps and no tombstone (MB.34). */
 const STAMPED = ['ingredient_categories', 'spell_categories'];
-const AUDITED = AUDITED_TABLES.filter((table) => !STAMPED.includes(table));
 
 const AUDIT_IDS = ['created_by', 'updated_by', 'deleted_by'];
-const STAMP_IDS = ['created_by', 'updated_by'];
+const USERS_ID = 'users.id';
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
-/** Whether each of `table`'s columns is nullable, as the catalogue reports it. */
-async function nullability(table: string): Promise<Record<string, boolean>> {
-  const rows = await sql<{ column_name: string; is_nullable: 'YES' | 'NO' }[]>`
-    select column_name, is_nullable from information_schema.columns
-    where table_schema = 'public' and table_name = ${table}
-  `;
-  return Object.fromEntries(rows.map((row) => [row.column_name, row.is_nullable === 'YES']));
-}
+type Nullability = 'required' | 'nullable';
 
-let allReferences: Promise<Record<string, Record<string, Reference>>> | undefined;
-
-/**
- * Every `*_by` foreign key `table` declares, keyed by column, as the catalogue
- * reports it. Read once for every table, from `pg_constraint` rather than
- * `information_schema`, whose constraint views cost some fifty milliseconds a
- * table.
- */
-async function byReferencesOf(table: string): Promise<Record<string, Reference>> {
-  allReferences ??= sql<(Reference & { table_name: string })[]>`
-    select t.relname as table_name,
-           a.attname as column_name,
-           ft.relname as foreign_table,
-           fa.attname as foreign_column
-    from pg_constraint c
-    join pg_class t on t.oid = c.conrelid
-    join pg_class ft on ft.oid = c.confrelid
-    join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
-    join pg_attribute fa on fa.attrelid = c.confrelid and fa.attnum = c.confkey[1]
-    where c.contype = 'f'
-      and c.connamespace = 'public'::regnamespace
-      and right(a.attname, 3) = '_by'
-  `.then((rows) => {
-    const byTable: Record<string, Record<string, Reference>> = {};
-    for (const { table_name, ...reference } of rows) {
-      (byTable[table_name] ??= {})[reference.column_name] = reference;
-    }
-    return byTable;
-  });
-  return (await allReferences)[table] ?? {};
-}
-
-const USERS_ID = { foreign_table: 'users', foreign_column: 'id' };
-
-describe('the audited tables', () => {
-  it('are the twenty-six the updated_at sweep names: twenty-four audited, two stamped', () => {
-    expect(AUDITED).toHaveLength(24);
-    expect(AUDITED_TABLES).toEqual(expect.arrayContaining(STAMPED));
-  });
-
-  // Moved from updated-at-trigger.test.ts: the transcribed list is the
-  // catalogue's, so a table spreading the stamps without being named fails too.
-  it('are every table the catalogue finds carrying the four stamps', async () => {
-    const rows = await sql<{ table_name: string }[]>`
-      select table_name from information_schema.columns
-      where table_schema = 'public' and column_name in ${sql(STAMP_COLUMNS as string[])}
-      group by table_name having count(*) = ${STAMP_COLUMNS.length}
+describe('the audit columns', () => {
+  it('sit on every audited table and no other, required but for the tombstone, each id referencing users', async () => {
+    const columns = await sql<{ table_name: string; column_name: string; is_nullable: string }[]>`
+      select table_name, column_name, is_nullable from information_schema.columns
+      where table_schema = 'public'
+    `;
+    // From `pg_constraint` rather than `information_schema`, whose constraint
+    // views cost some fifty milliseconds a table.
+    const references = await sql<{ table_name: string; column_name: string; target: string }[]>`
+      select t.relname as table_name, a.attname as column_name,
+             ft.relname || '.' || fa.attname as target
+      from pg_constraint c
+      join pg_class t on t.oid = c.conrelid
+      join pg_class ft on ft.oid = c.confrelid
+      join pg_attribute a on a.attrelid = c.conrelid and a.attnum = c.conkey[1]
+      join pg_attribute fa on fa.attrelid = c.confrelid and fa.attnum = c.confkey[1]
+      where c.contype = 'f' and c.connamespace = 'public'::regnamespace
+        and right(a.attname, 3) = '_by'
     `;
 
-    expect(rows.map((row) => row.table_name).sort()).toEqual(AUDITED_TABLES);
-  });
-});
+    const audit = (table: string) => ({
+      columns: Object.fromEntries(
+        columns
+          .filter((row) => row.table_name === table && AUDIT_COLUMNS.includes(row.column_name))
+          .map((row) => [row.column_name, row.is_nullable === 'YES' ? 'nullable' : 'required']),
+      ),
+      references: Object.fromEntries(
+        references
+          .filter((row) => row.table_name === table && AUDIT_IDS.includes(row.column_name))
+          .map((row) => [row.column_name, row.target]),
+      ),
+    });
+    const stamps = Object.fromEntries(STAMP_COLUMNS.map((column) => [column, 'required']));
+    const expected = (table: string) =>
+      STAMPED.includes(table)
+        ? { columns: stamps, references: { created_by: USERS_ID, updated_by: USERS_ID } }
+        : {
+            columns: {
+              ...stamps,
+              ...Object.fromEntries(DELETE_COLUMNS.map((column) => [column, 'nullable'])),
+            } as Record<string, Nullability>,
+            references: Object.fromEntries(AUDIT_IDS.map((column) => [column, USERS_ID])),
+          };
 
-describe.each(AUDITED)('%s', (name) => {
-  it('carries the six audit columns, the four stamps required and the delete pair nullable', async () => {
-    const nullable = await nullability(name);
+    // The transcribed list is the catalogue's: a table spreading the stamps
+    // without being named fails, and so does a named one that lost them.
+    const stamped = [
+      ...new Set(
+        columns
+          .filter((row) => STAMP_COLUMNS.includes(row.column_name))
+          .map((row) => row.table_name),
+      ),
+    ].filter((table) => STAMP_COLUMNS.every((column) => audit(table).columns[column]));
+    expect(AUDITED_TABLES).toHaveLength(26);
+    expect(stamped.sort()).toEqual(AUDITED_TABLES);
 
-    // Precondition: the table exists, and is more than its audit columns.
-    expect(Object.keys(nullable).length).toBeGreaterThan(AUDIT_COLUMNS.length);
-    expect(Object.keys(nullable)).toEqual(expect.arrayContaining([...AUDIT_COLUMNS]));
-    for (const column of STAMP_COLUMNS) {
-      expect(nullable[column], column).toBe(false);
+    expect(Object.fromEntries(AUDITED_TABLES.map((table) => [table, audit(table)]))).toEqual(
+      Object.fromEntries(AUDITED_TABLES.map((table) => [table, expected(table)])),
+    );
+
+    // Why the sweep could pass wrongly: it reads whatever the migrations built,
+    // so its discriminator is proved on real tables carrying the `updated_at` a
+    // careless sweep would have matched on, and no audit id. By name rather
+    // than every `*_by`: `sessions.impersonated_by` is the `admin` plugin's
+    // column (MB.53), and no audit id.
+    for (const table of UNAUDITED_TABLES) {
+      const { columns: found, references: linked } = audit(table);
+      expect(found, table).toHaveProperty('updated_at');
+      expect(
+        Object.keys(found).filter((column) => AUDIT_IDS.includes(column)),
+        table,
+      ).toEqual([]);
+      expect(linked, table).toEqual({});
     }
-    for (const column of DELETE_COLUMNS) {
-      expect(nullable[column], column).toBe(true);
-    }
-  });
-
-  it('references users(id) from every audit id (MB.5)', async () => {
-    const references = await byReferencesOf(name);
-
-    for (const column of AUDIT_IDS) {
-      expect(references[column]).toMatchObject(USERS_ID);
-    }
-  });
-});
-
-describe.each(STAMPED)('%s', (name) => {
-  it('carries the four stamp columns, each required, and neither delete column', async () => {
-    const nullable = await nullability(name);
-
-    expect(Object.keys(nullable).length).toBeGreaterThan(STAMP_COLUMNS.length);
-    for (const column of STAMP_COLUMNS) {
-      expect(nullable[column], column).toBe(false);
-    }
-    for (const column of DELETE_COLUMNS) {
-      expect(nullable).not.toHaveProperty(column);
-    }
-  });
-
-  it('references users(id) from both stamp ids, and nothing from a deleted_by (MB.5)', async () => {
-    const references = await byReferencesOf(name);
-
-    for (const column of STAMP_IDS) {
-      expect(references[column]).toMatchObject(USERS_ID);
-    }
-    expect(references.deleted_by).toBeUndefined();
-  });
-});
-
-// Why the sweep could pass wrongly: it reads whatever the migrations built, so
-// its discriminator is proved on real tables that carry no audit id. By name
-// rather than every `*_by`: `sessions.impersonated_by` is the `admin` plugin's
-// column (MB.53), and no audit id. Each carries the `updated_at` a careless
-// sweep — this one, or the trigger's — would have matched on.
-describe.each(UNAUDITED_TABLES)('%s, unaudited', (name) => {
-  it('exists with an updated_at, and carries no audit id and no such reference', async () => {
-    const columns = await catalogue.columnNames(name);
-
-    expect(columns).toContain('updated_at');
-    expect(columns.filter((column) => AUDIT_IDS.includes(column))).toEqual([]);
-    const references = await byReferencesOf(name);
-    expect(AUDIT_IDS.filter((column) => column in references)).toEqual([]);
   });
 });

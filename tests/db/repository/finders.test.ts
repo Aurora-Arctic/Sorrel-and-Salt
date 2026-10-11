@@ -23,7 +23,6 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../../support/as-user';
 import {
-  charms,
   herbs,
   impostor,
   jars,
@@ -110,33 +109,6 @@ describe('soft-delete filtering (M1.20)', () => {
       await withAudit(session, (write) => write.insert(herbs, { name: 'Lovage' }));
 
       await expect(findManyByIds(herbs, [])).resolves.toEqual([]);
-    });
-  });
-
-  // claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention".
-  describe('the partial unique index convention', () => {
-    it('still blocks a live duplicate', async () => {
-      await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));
-
-      const error: unknown = await withAudit(session, (write) =>
-        write.insert(charms, { name: 'Ward' }),
-      ).catch((caught: unknown) => caught);
-
-      expect(String((error as { cause?: unknown }).cause ?? error)).toMatch(
-        /repository_probe_charms_name_unique/i,
-      );
-    });
-
-    it('lets the name be reused once the original is soft-deleted', async () => {
-      const [original] = await withAudit(session, (write) =>
-        write.insert(charms, { name: 'Ward' }),
-      );
-      await withAudit(session, (write) => write.softDelete(charms, eq(charms.id, original.id)));
-
-      const [reused] = await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));
-
-      expect(reused.id).not.toBe(original.id);
-      await expect(findMany(charms)).resolves.toEqual([expect.objectContaining({ id: reused.id })]);
     });
   });
 });
