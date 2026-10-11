@@ -166,7 +166,10 @@ page)`: the live references of the compendium and a proof's coven — no
 proof, for a compendium entry, reads the compendium's alone (M5.5) — whose
 `authors`, `title` or `container` the query is word-similar to (`<%` at the
 compendium search's 0.5), each side through `unaccent_immutable`, keyed
-`[-score, title]`; a blank query pages both tiers by title. No trigram index
+`[-score, title]`. The score is the best field's word similarity, a field
+holding the query verbatim scoring 1 as the compendium search's does, so a
+title holding "brim" inside _Kettlebrim_ ranks above a near miss
+([The compendium read](compendium-read.md)); a blank query pages both tiers by title. No trigram index
 is built: the table holds the sources a few hundred entries cite, and the
 scan is the search's whole cost at that size. An index is a later task's,
 measured, if the table outgrows it.

@@ -32,8 +32,9 @@ second:
   wrapper's volatility and the fold (MB.184, MB.226). The three matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope: the entry's own label and formal name, its folk names, and its
-  variants. Each arm scores what it matched as the word similarity times the
-  field's weight (the next bullet). A word in a form matches every entry
+  variants. Each arm scores what it matched as the word similarity, or 1
+  where the field holds the query verbatim, times the field's weight (the
+  next bullet). A word in a form matches every entry
   holding that form, so a bare "oil" ranks each entry with an oil variant at
   0.6, below any entry whose own name holds the word; the form filter (M8.13)
   is the precise tool for that question, and the search is not.
@@ -59,11 +60,35 @@ second:
   still leave the formal name, a folk name, a form and a description tied
   with each other. The weight lowers the rank and never the match: a field
   matches at 0.5 or better, as above, so a form matching at 0.5 ranks at 0.3.
+
+  **A field holding the typed text verbatim scores in full, 1, before its
+  weight**, wherever the text falls in a word. Without that, the weights
+  could put a lighter field above the label. `word_similarity` scores the
+  query against whole words, by the share of the query's trigrams (its
+  three-letter runs, padded with spaces at a word's edges) a run of the text
+  holds. A fragment inside a longer word loses the trigrams that mark a
+  word's start: "wood" in _Sandalwood_ shares 3 of its 5, `woo`, `ood` and
+  `od␣`, so it scores 0.6, while the same letters as a word of their own,
+  Cinnamon's folk name _Sweet Wood_, score 1. Weighted, the folk name ranked
+  at 0.8 above Sandalwood's label at 0.6. With the rule, Sandalwood's label
+  scores 1 and ranks first. The test is case- and accent-insensitive, as the
+  similarity is: both sides go through `unaccent_immutable` and `lower`,
+  and `strpos` finds the query in the text as plain text, so a `%` or `_`
+  typed into the search needs no escaping, as it would in an `ilike`
+  pattern. It is `foldedWordMatch`'s `contains`, beside its `matches` and
+  `similarity`, in `src/db/repository/predicates.ts`. The rule changes the
+  rank and never the match: the `where` is unchanged, so a fragment that
+  does not reach 0.5 against the text is still not found, and the trigram
+  indexes still answer the search. The reference picker's search scores its
+  three fields the same way, without weights ([References](references.md)).
+
   Each `UNION ALL` arm selects, for each field,
-  `case when query <% text then word_similarity(query, text) * weight end`
+  `case when query <% text then greatest(word_similarity(query, text), case when strpos(lower(text), lower(query)) > 0 then 1 end) * weight end`,
+  each side folded through `unaccent_immutable`,
   beside the id it matched — the similarity being the value the GIN recheck
   has just computed to test `<%` — and an arm reading two fields keeps the
-  greater with `greatest`, which skips the null of a field with no value. The
+  greater with `greatest`, which skips the null of a field with no value and
+  of a containment test that failed. The outer
   `case` keeps a field that did not match out of the rank: without it, a
   description matching at 1 beside a form at 0.45, short of the match, would
   rank at 0.27 by the form rather than 0.2 by the description that found it.
@@ -92,7 +117,7 @@ second:
   as `word_similarity` returns it, because a `real` prints shortest-exact and
   its cursor text casts back to the same value (`1 - score` would promote to
   `double precision`). Each weight goes into the statement as a parameter
-  cast `::real` for the same reason: `real` times a bare number is `double
+  cast `::real`, and a verbatim hit's 1 as `1::real`, for the same reason: `real` times a bare number is `double
 precision`, and while the keyset casts its sort back to `real`, the score
   carried onto the edge is not cast. A browse's cursor has one part and a search's two, so
   neither is a position in the other, and each is `InvalidCursor` there.
