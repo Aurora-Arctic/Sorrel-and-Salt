@@ -16,6 +16,34 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Agate&oldid=1371907988',
       accessed: '2026-10-11',
     },
+    'wikipedia-ametrine': {
+      kind: 'entry',
+      title: 'Ametrine',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ametrine&oldid=1369723575',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-aquamarine-gem': {
+      kind: 'entry',
+      title: 'Aquamarine (gem)',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Aquamarine_(gem)&oldid=1374757497',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-aventurine': {
+      kind: 'entry',
+      title: 'Aventurine',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Aventurine&oldid=1343340257',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-beryl': {
+      kind: 'entry',
+      title: 'Beryl',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Beryl&oldid=1376827981',
+      accessed: '2026-10-11',
+    },
     'wikipedia-blue-lace-agate': {
       kind: 'entry',
       title: 'Blue lace agate',
@@ -28,6 +56,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Carnelian',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Carnelian&oldid=1360760061',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-catlinite': {
+      kind: 'entry',
+      title: 'Catlinite',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Catlinite&oldid=1343180264',
       accessed: '2026-10-11',
     },
     'wikipedia-chalcedony': {
@@ -51,11 +86,32 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Citrine&oldid=1379470648',
       accessed: '2026-10-11',
     },
+    'wikipedia-copper': {
+      kind: 'entry',
+      title: 'Copper',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Copper&oldid=1374343138',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-emerald': {
+      kind: 'entry',
+      title: 'Emerald',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Emerald&oldid=1378904819',
+      accessed: '2026-10-11',
+    },
     'wikipedia-fire-agate': {
       kind: 'entry',
       title: 'Fire agate',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Fire_agate&oldid=1353116660',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-gold': {
+      kind: 'entry',
+      title: 'Gold',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Gold&oldid=1378929640',
       accessed: '2026-10-11',
     },
     'wikipedia-heliotrope-bloodstone': {
@@ -72,6 +128,20 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Jasper&oldid=1369072425',
       accessed: '2026-10-11',
     },
+    'wikipedia-lead': {
+      kind: 'entry',
+      title: 'Lead',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Lead&oldid=1377493060',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-mercury-element': {
+      kind: 'entry',
+      title: 'Mercury (element)',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Mercury_(element)&oldid=1377978254',
+      accessed: '2026-10-11',
+    },
     'wikipedia-moss-agate': {
       kind: 'entry',
       title: 'Moss agate',
@@ -84,6 +154,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Onyx',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Onyx&oldid=1369833689',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-pietersite': {
+      kind: 'entry',
+      title: 'Pietersite',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Pietersite&oldid=1345806969',
       accessed: '2026-10-11',
     },
     'wikipedia-quartz': {
@@ -107,11 +184,32 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Rutilated_quartz&oldid=1283688730',
       accessed: '2026-10-11',
     },
+    'wikipedia-silver': {
+      kind: 'entry',
+      title: 'Silver',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Silver&oldid=1377391783',
+      accessed: '2026-10-11',
+    },
     'wikipedia-smoky-quartz': {
       kind: 'entry',
       title: 'Smoky quartz',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Smoky_quartz&oldid=1364718303',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-tigers-eye': {
+      kind: 'entry',
+      title: "Tiger's eye",
+      container: 'Wikipedia',
+      url: "https://en.wikipedia.org/w/index.php?title=Tiger's_eye&oldid=1378298522",
+      accessed: '2026-10-11',
+    },
+    'wikipedia-tin': {
+      kind: 'entry',
+      title: 'Tin',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Tin&oldid=1379053947',
       accessed: '2026-10-11',
     },
     'wikipedia-tourmaline': {
@@ -197,6 +295,274 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'wikipedia-agate',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Ametrine',
+      canonicalName: 'Quartz var. ametrine',
+      nomenclature: 'mineral',
+      description:
+        'Ametrine is a kind of quartz, the silicon dioxide mineral, in which purple and yellow-to-orange zones sit side by side within one crystal; its name joins the words amethyst and citrine. Wikipedia explains that both colours come from traces of iron held in different oxidation states, the yellow parts having been oxidised by heat, and notes that some authorities will not call the yellow part true citrine. Natural ametrine comes almost entirely from one Bolivian mine, with further deposits in Brazil and India, though much of what is sold was made by heating or irradiating amethyst, and cheap stones may be synthetic. It is also called trystine, golden amethyst and, in the trade, bolivianite. Hall describes it as a transparent crystal, usually small and tumbled, and treats it as joining the qualities of amethyst and citrine. She associates it with protection during astral travel, calmer and more focused meditation, opening the third eye for healing and divination, clear thinking, creativity and emotional transformation, and says its cleansing action clears negativity from the aura. She suggests wearing it against the body for long stretches.',
+      colors: ['purple', 'yellow', 'orange'],
+      folkNames: ['Trystine', 'Golden Amethyst', 'Bolivianite'],
+      categories: [
+        'Protection',
+        'Meditation',
+        'Healing',
+        'Divination',
+        'Clarity',
+        'Creativity',
+        'Transformation',
+        'Cleansing',
+        'Release',
+      ],
+      references: [
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Ametrine',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-ametrine',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Ametrine',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-ametrine',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Aquamarine',
+      canonicalName: 'Beryl var. aquamarine',
+      nomenclature: 'mineral',
+      description:
+        'Aquamarine is the pale blue to light green kind of beryl, a beryllium aluminium silicate, its sea colour coming from small amounts of iron held in the crystal. It grows as six-sided prisms, from tiny to huge, mostly in granite pegmatites and in veins laid down by hot mineral-rich water. Because it is fairly plentiful it costs less than emerald, its green relative. The name joins the Latin for water and for the sea. Wikipedia records that it is the birthstone for March, that the ancient Greeks cut it into engraved gems, and that an old tale of mermaids led sailors to carry it as a lucky charm against shipwreck; the largest cut stone, the Dom Pedro, came from Minas Gerais in Brazil. Cunningham gives it to the Moon and to water, calls it the stone of the old sea goddesses, and notes aquamarine beads found in Egyptian burials. He uses it to bring psychic impulses through, to purify the body before ritual, to bring peace and happiness between partners, and as a guard for anyone travelling over water. Hall calls it a stone of courage whose calming energy quiets the mind, says sailors once carried it against drowning, and links it with clearer communication, sharper intuition and meditation.',
+      elements: ['water'],
+      planets: ['Moon'],
+      colors: ['blue', 'green'],
+      categories: [
+        'Psychic Work',
+        'Peace',
+        'Courage',
+        'Purification',
+        'Cleansing',
+        'Joy',
+        'Protection',
+        'Clarity',
+        'Communication',
+        'Intuition',
+        'Meditation',
+      ],
+      substitutes: [
+        {
+          identity: 'beryl',
+        },
+        {
+          identity: 'beryl var. emerald',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 74–75; p. 190',
+          supports: [
+            'canonicalName',
+            'elements',
+            'planets',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Aquamarine',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-aquamarine-gem',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+        {
+          source: 'wikipedia-beryl',
+          supports: ['canonicalName', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Aquamarine',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-aquamarine-gem',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Bead',
+          description:
+            'Cunningham notes that aquamarine beads were found in ancient Egyptian burial pits.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 74',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Aventurine',
+      canonicalName: 'Aventurine',
+      nomenclature: 'mineral',
+      description:
+        "Aventurine is a translucent form of quartzite, a rock, in which flat, plate-like inclusions of other minerals give a glittering shimmer called aventurescence. It is most often green, thanks to chromium-bearing fuchsite mica, which can give it a sheen of silvery green or blue, but it also comes in orange and brown, tinted by hematite or goethite, and in yellow, blue and grey. Being a rock rather than a single crystal, its hardness and weight vary, and it is a little softer than ordinary quartz. Its name comes from the Italian a ventura, 'by chance', handed on from goldstone, a glass said to have been made by accident at Murano and now a common imitation of it. Most green and blue-green material comes from India, and much of it is carved into beads and figures. Hall describes it as opaque and flecked with shiny particles, easy to find, and calls it a stone of prosperity that protects against environmental pollution and encourages creativity, perception and calm. Cunningham places it under Mercury and the element of air; he uses it to sharpen perception, intelligence and creativity, in gambling and money magic, for peace and healing, and as a general stone of luck.",
+      elements: ['air'],
+      planets: ['Mercury'],
+      colors: ['green', 'blue', 'red', 'brown', 'orange', 'yellow', 'grey', 'white'],
+      categories: ['Gambling', 'Peace', 'Healing', 'Creativity', 'Prosperity', 'Protection'],
+      substitutes: [
+        {
+          identity: 'microcline var. amazonite',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 76; p. 190',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Aventurine',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-aventurine',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Aventurine',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-aventurine',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Bead',
+          description:
+            'Wikipedia says the bulk of aventurine is worked into beads and small carved figures; only the finest pieces become polished cabochons set in jewellery.',
+          references: [
+            {
+              source: 'wikipedia-aventurine',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Beryl',
+      canonicalName: 'Beryl',
+      nomenclature: 'mineral',
+      description:
+        "Beryl is a mineral, a silicate of beryllium and aluminium, that grows as six-sided columns; single crystals can reach several metres, though ones with finished ends are uncommon. Pure beryl has no colour of its own, but traces of other elements tint it green, blue, yellow, pink or, most rarely, red, and its best-known varieties are emerald and aquamarine. It is found mostly in granite pegmatites, and also in mica schists and in Colombian limestone, and it is mined as an ore of beryllium. The name reached English through French and Latin from a Greek word used for several blue-green stones. The first spectacles, made in thirteenth-century Italy, had lenses ground from beryl or rock crystal, which is why the German word for glasses is Brille. Cunningham gives beryl to the Moon and to water, links it with Poseidon and Neptune, and calls it the seer's stone: he says spheres and flat mirrors of it served for scrying, that John Dee's famous crystal was beryl rather than quartz, and that it is worn at sea against storms and drowning, to draw love and friendship, and to reconcile enemies. Hall describes it as a stone for coping with a stressful life and dropping needless burdens, credits it with lending courage, and recommends it for scrying and crystal balls.",
+      elements: ['water'],
+      planets: ['Moon'],
+      colors: ['pink', 'gold', 'yellow', 'green', 'white', 'blue', 'colourless', 'red'],
+      safetyNotes:
+        'Wikipedia notes that beryl, being a beryllium compound, is a known carcinogen and can inflame the lungs if breathed in, so it should be handled with care.',
+      deities: ['Poseidon', 'Neptune'],
+      categories: [
+        'Psychic Work',
+        'Healing',
+        'Love',
+        'Protection',
+        'Attraction',
+        'Reconciliation',
+        'Friendship',
+        'Courage',
+      ],
+      substitutes: [
+        {
+          identity: 'beryl var. aquamarine',
+        },
+        {
+          identity: 'beryl var. emerald',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 76–78; p. 190',
+          supports: ['elements', 'planets', 'deities', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Beryl',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-beryl',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'safetyNotes', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Beryl',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-beryl',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Mirror',
+          description:
+            'Cunningham records that beryl was once shaped into round, flat scrying mirrors which, like beryl spheres, were sometimes wrapped in white cloth and gazed into while the waking mind grew drowsy.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 77',
               supports: ['form', 'description'],
             },
           ],
@@ -757,6 +1123,57 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Copper',
+      canonicalName: 'Copper',
+      nomenclature: 'chemical',
+      description:
+        'Copper is the chemical element Cu, atomic number 29, a soft, malleable and ductile metal that carries heat and electricity very well. A freshly cut surface is pinkish orange; in air it slowly dulls to a brown-black oxide, and on roofs it weathers to a green patina called verdigris. It is one of the few metals found native, which led people to use it from about 8000 BC, and it was later the first metal smelted from sulphide ores and the first cast in a mould. Cunningham calls it a reddish orange metal and gives it to Venus and to water as a receptive metal. He records it as sacred in ancient Mesopotamia to Ishtar, Astarte and other goddesses of the planet Venus, and to the Sun in Babylon. Modern practitioners make wands of copper tube tipped with quartz crystals to direct energy, and wear the metal in ritual for the same end. He describes copper worn for healing and against sickness, rings of it set with emeralds to attract love or with mimosa seeds for protection, and old pennies kept in the kitchen to draw money to the household.',
+      elements: ['water'],
+      planets: ['Venus'],
+      colors: ['orange'],
+      deities: ['Aphrodite', 'Astarte', 'Ishtar'],
+      categories: ['Healing', 'Love', 'Protection', 'Attraction'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 154–155',
+          supports: ['elements', 'planets', 'colors', 'deities', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-copper',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 154–155',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-copper',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Coin',
+          description:
+            "Copper pennies carry two of Cunningham's uses: in Mexico one is set on the navel before a journey against motion sickness, and older pennies, especially those minted in leap years, are kept in the kitchen to draw money to the household. He notes that United States pennies are no longer made of copper.",
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 155',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Dendritic Agate',
       canonicalName: 'Quartz var. dendritic agate',
       nomenclature: 'mineral',
@@ -784,6 +1201,88 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'hall-crystal-bible',
               locator: 's.v. Agate: Dendritic Agate',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Emerald',
+      canonicalName: 'Beryl var. emerald',
+      nomenclature: 'mineral',
+      description:
+        'Emerald is the green variety of beryl, a beryllium aluminium silicate, its colour coming from traces of chromium, sometimes vanadium, with iron also playing a part. Only stones of medium to dark tone are called emerald; paler ones go by the name green beryl. Most emeralds are full of inclusions and fine cracks, sometimes called the jardin, French for garden, after their mossy look, and its toughness is rated poor. It is counted among the four great precious gems with diamond, ruby and sapphire. Egypt was mining emeralds by about 1500 BC; today Colombia is the largest producer and Zambia the second. The word comes through French and Latin from a Greek name meaning green gem. Cunningham assigns emerald to Venus and to earth and links it with Isis, Venus and Ceres. He uses it for love, advising that a charged stone be worn hidden near the heart, and in business spells, and says it was worn for memory, for awareness of psychic faculties and for protection, once being tied to the left arm of travellers. Hall calls it a stone of inspiration and patience, the stone of successful love, and credits it with fostering friendship, psychic abilities, wisdom, a clear mind and a good memory.',
+      elements: ['earth'],
+      planets: ['Venus'],
+      colors: ['green'],
+      safetyNotes:
+        'Hall advises against wearing emerald all the time, saying it can stir up negative emotions.',
+      deities: ['Isis', 'Venus', 'Ceres', 'Vishnu'],
+      categories: [
+        'Love',
+        'Psychic Work',
+        'Protection',
+        'Business',
+        'Memory',
+        'Knowledge',
+        'Safe Travel',
+        'Inspiration',
+        'Friendship',
+        'Wisdom',
+        'Strength',
+        'Healing',
+        'Clarity',
+        'Truth',
+      ],
+      substitutes: [
+        {
+          identity: 'beryl var. aquamarine',
+        },
+        {
+          identity: 'beryl',
+        },
+        {
+          name: 'Green Tourmaline',
+        },
+        {
+          identity: 'forsterite var. peridot',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 93–94; p. 190',
+          supports: ['elements', 'planets', 'deities', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Emerald',
+          supports: ['colors', 'safetyNotes', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-emerald',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall notes that gem-quality emerald is costly while unpolished stone is easy to find, and Cunningham says cheap, low-grade stones serve well enough for magic. Wikipedia adds that almost every cut emerald is oiled, often with cedar oil, to fill cracks that reach the surface.',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Emerald',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 94',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-emerald',
               supports: ['form', 'description'],
             },
           ],
@@ -826,6 +1325,58 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
               source: 'hall-crystal-bible',
               locator: 's.v. Agate: Fire Agate',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Gold',
+      canonicalName: 'Gold',
+      nomenclature: 'chemical',
+      description:
+        'Gold is the chemical element Au, atomic number 79: in its pure state a bright, metallic yellow metal, dense and soft, the most malleable of all metals and one of the least reactive of the elements. It is often found native, as nuggets or grains in rock, veins and river deposits, usually alloyed with some silver, and gold artefacts appear in Egypt and Mesopotamia from the fourth millennium BC. Cunningham gives gold to the Sun and to fire and calls it projective. He traces its long bond with divinity, above all with solar gods: it was a favoured material for sacred images and altars and the highest of offerings, legend has the Druids cutting mistletoe with golden sickles, and medieval herbalists harvested with gold tools to strengthen their plants. He counts it perhaps the most potent metal in magic, worn to raise and send power and, day to day, to build courage, confidence and will. He uses it for protection, with a gold chain around a white candle as the focus of a rite; for wisdom, by giving it away without conditions; for health and long life; and in money and success rituals, where even a scrap of gold leaf is enough.',
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: ['yellow'],
+      categories: ['Protection', 'Healing', 'Wisdom', 'Success', 'Courage', 'Confidence'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 156–158',
+          supports: ['elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-gold',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          description:
+            'Cunningham works with gold as jewellery, chains, rings and plated tools, and notes that the smallest fragment of gold leaf is enough for a money ritual. Wikipedia describes the native metal as nuggets and grains, and notes that jewellery gold is usually alloyed to harden it.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 157–158',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-gold',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Cunningham calls plain gold, carried or worn, a guardian, and notes the tiny gold amulets that protect small children in India; he reads the gold crosses Christians wear as a survival of older custom.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 157–158',
+              supports: ['form', 'description'],
             },
           ],
         },
@@ -880,6 +1431,103 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
               source: 'cunningham-crystals',
               locator: 'p. 104',
               supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Lead',
+      canonicalName: 'Lead',
+      nomenclature: 'chemical',
+      description:
+        'Lead is the chemical element Pb, atomic number 82, a heavy metal denser than most everyday materials, soft and malleable, with a low melting point. Freshly cut or melted it shines silvery with a bluish tint, then tarnishes to a dull grey in air. It is easily won from its ores, chiefly galena, which often carries silver, so prehistoric peoples of the Near East knew it, and the Romans mined it widely in their search for silver. Cunningham gives lead to Saturn and earth and calls it receptive. He notes that ancient Greeks inscribed charged lead tablets with words of power, mostly for harmful spells, because the metal was thought to make a spell last, and that in eleventh-century India charms for conception and for fruitful gardens and orchards were engraved on lead. In his own practice lead serves protection and defensive magic, set near the entrance of a house to keep negativity out. He also gives a divination recorded in nineteenth-century Italy by Charles Godfrey Leland, in which melted lead and the ashes of rose seeds, nettle, rue and cumin are poured into water and the cooled shape is read.',
+      elements: ['earth'],
+      planets: ['Saturn'],
+      colors: ['silver', 'grey'],
+      safetyNotes:
+        'Lead is poisonous. Wikipedia describes it as a neurotoxin that builds up in soft tissue and bone and can damage the nervous system, heart and blood vessels, and kidneys; Cunningham warns that it causes death once absorbed by the body, as the Romans found from their lead dishes and cooking pots.',
+      categories: ['Protection', 'Divination', 'Fertility'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 161',
+          supports: ['elements', 'planets', 'safetyNotes', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-lead',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'safetyNotes', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          description:
+            'Cunningham melts a small piece of lead on a metal plate over a fire with herbs, pours it into a basin of water at midnight, and reads the cooled nodule, or sleeps on it to dream an answer. Lead is also worn or used in protective spells.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 161',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-lead',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Mercury',
+      canonicalName: 'Mercury',
+      nomenclature: 'chemical',
+      description:
+        "Mercury is the chemical element Hg, atomic number 80, commonly called quicksilver: a heavy, silvery metal and the only metallic element known to be liquid at ordinary temperature and pressure. It is found in deposits around the world, mostly as cinnabar, mercury sulphide, which ground fine gives the red pigment vermilion. It was long used in thermometers, barometers and similar instruments, though concern over its toxicity has driven much of it out of them. Cunningham gives it to the planet Mercury and calls it both projective and receptive. He rules it by earth for its weight, by water because it is liquid and by air for its quick movement. He records pools of it once held in the hand, or sealed in clear glass spheres, for scrying; a gambling talisman of a hollowed nutmeg filled with mercury and sealed, carried for luck at cards, dice and horses; and a modern protective witch bottle printed in The Witches' Almanac in 1976 or 1977, in which a small bottle of mercury sat inside bottles of water, sand, rocks and shells. He then urges readers not to use it at all, since safer and cheaper metals serve as well.",
+      elements: ['earth', 'water', 'air'],
+      planets: ['Mercury'],
+      colors: ['silver'],
+      safetyNotes:
+        'Mercury is toxic. Wikipedia states that exposure to it harms the nervous and immune systems and the kidneys, and Cunningham warns that it is dangerous to breathe, to swallow or even to touch for long, and asks readers not to use it in magic.',
+      folkNames: ['Quicksilver'],
+      categories: ['Gambling', 'Protection'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 166–167',
+          supports: [
+            'elements',
+            'planets',
+            'safetyNotes',
+            'folkNames',
+            'categories',
+            'description',
+          ],
+        },
+        {
+          source: 'wikipedia-mercury-element',
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'colors',
+            'safetyNotes',
+            'folkNames',
+            'description',
+          ],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 166–167',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-mercury-element',
+              supports: ['form'],
             },
           ],
         },
@@ -1019,6 +1667,82 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-onyx',
               supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Pietersite',
+      canonicalName: 'Quartz var. pietersite',
+      nomenclature: 'mineral',
+      description:
+        "Pietersite is a trade name given to one kind of chalcedony, itself a variety of quartz (silicon dioxide), valued as a decorative stone for its broken-up, brecciated structure and a restless, swirling sheen. Its colours run from reddish brown through blue-grey to a shimmering yellow: Chinese stones are mostly reddish brown with patches of blue and yellow, while Namibian ones are mostly blue-grey. Wikipedia dates its first description to Namibia in 1962 and its discovery in Henan Province, China, to 1966. Many accounts call it a broken-up hawk's eye or tiger's eye, but Wikipedia calls this inaccurate: the stones are mineralogically alike and take their sheen from the same fibrous mineral, crocidolite, yet pietersite is not a broken form of either. Hall, who also calls it the tempest stone for its tie to the storm element, describes it as mottled and iridescent, usually small and tumbled, and easy to come by. She associates it with spiritual journeying and vision quests, moving meditation, intuition and precognition, and with walking one's own truth and telling true words from false. She also says it releases beliefs that other people have imposed, backs up willpower, and gives strength and support.",
+      colors: ['gold', 'brown', 'grey', 'blue', 'red', 'yellow'],
+      folkNames: ['Tempest Stone'],
+      categories: ['Meditation', 'Intuition', 'Truth', 'Release', 'Strength', 'Healing'],
+      references: [
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Pietersite',
+          supports: ['colors', 'folkNames', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-pietersite',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Pietersite',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-pietersite',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Pipestone',
+      canonicalName: 'Catlinite',
+      nomenclature: 'mineral',
+      description:
+        'Pipestone, or catlinite, is a fine-grained argillite, a mudstone altered by heat and pressure, usually brownish red, that lies in beds within the hard Sioux Quartzite. Fresh Minnesota stone comes out of the ground pinkish and soft enough to cut with a hacksaw or a knife, and the iron compounds that colour it break down if it is left open to the weather. Being easy to carve, it has long been valued by the Plains nations for ceremonial pipes. The quarries outside Pipestone, Minnesota, are protected as Pipestone National Monument, where only enrolled Native Americans may dig it, and with hand tools alone. The name catlinite honours the painter George Catlin, who visited the quarries in 1835, though Philander Prescott had written about the rock in 1832. Wikipedia notes that other pipe-making stones are called pipestone too, among them Utah pipestone and the black stone the Ojibwe also use. Cunningham gives the Sioux name Inyan-sha, red rock, and assigns it to Mars, the Sun and fire. He retells a Sioux account in which the stone is the hardened blood of people lost in a great flood, says it stands for the Sioux themselves and for the North, and asks anyone who has a piece to treat it as sacred and respect Sioux and Omaha ways: it may go in a medicine bag or on the altar, including for peace rituals, but he would never wear it.',
+      elements: ['fire'],
+      planets: ['Mars', 'Sun'],
+      colors: ['red', 'pink'],
+      folkNames: ['Inyan-sha'],
+      categories: ['Peace'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 125–126',
+          supports: ['elements', 'planets', 'colors', 'folkNames', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-catlinite',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Stone',
+          references: [
+            {
+              source: 'wikipedia-catlinite',
+              supports: ['form'],
+            },
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 126',
+              supports: ['form'],
             },
           ],
         },
@@ -1268,6 +1992,89 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Silver',
+      canonicalName: 'Silver',
+      nomenclature: 'chemical',
+      description:
+        'Silver is the chemical element Ag, atomic number 47, a soft, white, lustrous metal that conducts electricity and heat and reflects light better than any other metal. One of the seven metals known in antiquity, it has long served as coinage and been worked into jewellery, tableware and ornament, usually alloyed with copper because the pure metal is soft, and it darkens with a black tarnish of silver sulphide. Cunningham makes silver the metal of the Moon, receptive and of water, and links it with Isis, Diana, Selene and the other goddesses of the Moon and night. Wiccan priestesses wear silver crescents for the Goddess, silver is laid on the altar at the full moon, and silver bells are rung to call her in. He treats it as the metal of emotion, love, healing and the psychic mind: worn to attract love, to quicken psychic awareness, or at night for psychic dreams, and held up to catch the full moon for scrying. It reflects negativity away from its wearer, is said to guard travellers, above all at sea, and its long use as money makes it a staple of money-drawing work. He adds that some people feel overwrought wearing it at the full moon.',
+      elements: ['water'],
+      planets: ['Moon'],
+      colors: ['white'],
+      deities: ['Isis', 'Diana', 'Selene'],
+      categories: [
+        'Love',
+        'Peace',
+        'Protection',
+        'Healing',
+        'Psychic Work',
+        'Safe Travel',
+        'Attraction',
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 169–171',
+          supports: ['elements', 'planets', 'deities', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-silver',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 169–171',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-silver',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Coin',
+          description:
+            'Because silver has so long been money, Cunningham uses a silver coin in money-drawing work: empowered, then set in or under a candleholder while a green candle burns. He notes that only American dimes minted before 1965 are wholly silver.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 170–171',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Bell',
+          description:
+            'Cunningham describes silver bells rung in Wiccan ritual to invoke the Goddess, the bell itself being one of her symbols and silver her metal.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 169',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Silver lockets guard small children in China, French couples about to marry are protected by a silver chain, and silver crescents, whose horns are said to turn evil back, are worn worldwide, according to Cunningham.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 169–170',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Smoky Quartz',
       canonicalName: 'Quartz var. smoky quartz',
       nomenclature: 'mineral',
@@ -1355,6 +2162,143 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-quartz',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: "Tiger's Eye",
+      canonicalName: "Quartz var. tiger's eye",
+      nomenclature: 'mineral',
+      description:
+        "Tiger's eye is a gemstone of the quartz group with a silky, shifting sheen, known as chatoyancy, and colours running from gold to reddish brown. Wikipedia explains that the sheen comes from quartz grown in parallel with altered amphibole fibres, most of them turned to limonite, and that the stone is chiefly silicon dioxide tinted by iron oxide; Cunningham, in his entry on asbestos, says that fibrous mineral, polished together with quartz, is what is called tiger's eye. Its sources include South Africa, Namibia, India, Australia, Myanmar and the United States, among others, and is generally shaped as a domed cabochon to show off its sheen. Wikipedia records a belief that it wards off the evil eye, and that Roman soldiers wore it engraved to keep them safe in battle, a story Cunningham also tells. Cunningham places it under the Sun and the element of fire and uses it in money spells, to guard against danger, and to build courage, confidence and firm conviction; he also suggests gazing into its flashes in sunlight to look into the future. Hall describes a banded, slightly shiny stone, usually small and tumbled, and associates it with grounding spiritual energy, psychic abilities, protection against ill wishing and curses, clarity of intention and manifesting the will.",
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: ['brown', 'yellow', 'pink', 'blue', 'red', 'gold'],
+      safetyNotes:
+        "Wikipedia reports a 2003 study finding that the original crocidolite fibres, an asbestos mineral, survive inside tiger's eye sealed in quartz, so grinding or cutting the stone could release small amounts of crocidolite into the air, although the stone is generally considered safe.",
+      folkNames: ['Tiger Eye'],
+      categories: [
+        'Protection',
+        'Courage',
+        'Divination',
+        'Wealth',
+        'Confidence',
+        'Grounding',
+        'Psychic Work',
+        'Clarity',
+        'Manifestation',
+        'Healing',
+        'Creativity',
+      ],
+      substitutes: [
+        {
+          identity: 'chrysoberyl var. cymophane',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 75; pp. 140–141; p. 190',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: "s.v. Tiger's Eye",
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-tigers-eye',
+          supports: [
+            'canonicalName',
+            'nomenclature',
+            'colors',
+            'safetyNotes',
+            'folkNames',
+            'description',
+          ],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: "s.v. Tiger's Eye",
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-tigers-eye',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            "Cunningham recommends a polished, domed tiger's eye mounted in gold, worn as a ring or pendant for protection, and Hall suggests wearing it as a pendant or on the right arm, though only for short periods.",
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 140',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'hall-crystal-bible',
+              locator: "s.v. Tiger's Eye",
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Tin',
+      canonicalName: 'Tin',
+      nomenclature: 'chemical',
+      description:
+        "Tin is the chemical element Sn, atomic number 50, a metallic grey metal soft enough to cut with little force; a bar of it bends easily by hand and gives off a crackling sound as it does, the so-called tin cry. It is won chiefly from the mineral cassiterite, an oxide of tin. Its first large-scale use was in bronze, roughly one part tin to seven of copper, from as early as 3000 BC, and pure metallic tin was produced from about 600 BC; pewter is an alloy that is mostly tin. Cunningham gives tin to Jupiter and air and calls it projective, a metal of divination, luck and money. He recounts an old Cornish spell claiming that tin could be turned into silver by leaving it in a tank of ants on a certain night of the Moon, and remarks that the spell never says which night. His main use is a New Year's Eve divination like the one he gives for lead: a little tin is melted in an iron cup over a flame and thrown into a bucket of icy water, and the future is read from the shape and folds of the nodule. Tin is also carried for good luck.",
+      elements: ['air'],
+      planets: ['Jupiter'],
+      colors: ['grey'],
+      categories: ['Divination'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 171–172',
+          supports: ['elements', 'planets', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-tin',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Metal',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 171–172',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-tin',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Cunningham has tin carried as a good-luck piece, or shaped into tiny talismans, such as minutely carved images of dollar bills, to draw money.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 172',
+              supports: ['form', 'description'],
             },
           ],
         },
