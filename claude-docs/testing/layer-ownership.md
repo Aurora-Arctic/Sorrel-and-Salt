@@ -183,11 +183,13 @@ Two files stand over it by the owner's decision, and the ⚠ on them is expected
   planner choose the trigram indexes (`claude-docs/db/fuzzy-matching.md`), and
   plan tests keep their row counts (MB.184).
 
-CI's figures come from a free GitHub-hosted runner, shared and unpinned, so a
-single run's block is a reading, not a measurement: one tree ran 64 s and
-110 s of wall, and `index.test.tsx` 13 s and 30 s (MB.189). Compare medians of
-several runs, and read a file against its own run's total. Nothing in the repo
-removes the variance while the runners stay free.
+CI's figures come from the `vitest` job, which has run on Blacksmith's
+8-vCPU runner with seven workers since MB.96 ([`ci/runner-budget.md`](../ci/runner-budget.md)).
+It is a shared cloud machine, so a single run's block is a reading, not a
+measurement: one tree ran 64 s and 110 s of wall, and `index.test.tsx` 13 s
+and 30 s (MB.189), and six runs on 10–11 October 2026 spent 44–62 s running
+Vitest. Compare medians of several runs, and read a file against its own
+run's total. Nothing in the repo removes that variance.
 
 ## What this amends
 

@@ -29,7 +29,7 @@ The five actions under `.github/actions/` — `checkout-to-app`, referenced by i
 
 ## Runner budget
 
-Only `vitest.yml` runs on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` while every other job stays on GitHub's free `ubuntu-26.04`, with the free-tier sum per organisation and when to move `playwright.yml` too or drop to 4 vCPU, and the 2½ free minutes `e2e-cache.yml` spends per push to `staging`. [`ci/runner-budget.md`](ci/runner-budget.md)
+Only `vitest.yml` runs on Blacksmith's `blacksmith-8vcpu-ubuntu-2404` while every other job stays on GitHub's free `ubuntu-26.04`, with where a gate run's time goes job by job, the free-tier draw at ~500 runs a month and when to drop to 4 vCPU, why Playwright and the image builds stay on GitHub, and the 2½ free minutes `e2e-cache.yml` spends per push to `staging`. [`ci/runner-budget.md`](ci/runner-budget.md)
 
 ## Smoke checks
 
