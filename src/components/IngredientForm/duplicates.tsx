@@ -44,8 +44,9 @@ const lookup = (workspaceId: string | null, name: string) =>
  * `dismiss`. The form owns it, since its save waits on it; `NameField` draws it.
  * A null coven asks about the compendium alone, and `omit` is the entry being
  * edited, which its own name always matches. `opened` is the name the form
- * opened with: until the name differs from it nothing is asked or held, so an
- * edit that leaves the name alone never warns (MB.115, the owner's call).
+ * opened with: until the name has been typed in, nothing is asked or held, so
+ * an edit that leaves the name alone never warns; once typed in, it asks as
+ * any name does, back at the opened name too (MB.115, the owner's calls).
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
@@ -55,9 +56,20 @@ export function useDuplicateWarning(
 ): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
-  const unchanged = typed === opened.trim();
-  // The opened name asks nothing, as a blank one does.
-  const name = useDebouncedValue(unchanged ? '' : typed);
+  // Typed in since the form opened, or since a save moved `opened` on: set
+  // during render, as React allows for a component's own state, so the first
+  // keystroke already asks.
+  const [baseline, setBaseline] = useState(opened);
+  const [edited, setEdited] = useState(false);
+  if (baseline !== opened) {
+    setBaseline(opened);
+    setEdited(false);
+  } else if (!edited && typed !== opened.trim()) {
+    setEdited(true);
+  }
+  const untouched = !edited && typed === opened.trim();
+  // The untouched name asks nothing, as a blank one does.
+  const name = useDebouncedValue(untouched ? '' : typed);
   const { data } = useQuery({
     ...lookup(workspaceId, name),
     // A blank name has nothing to resemble, and the server answers it empty.
@@ -81,7 +93,7 @@ export function useDuplicateWarning(
 
   const check = async (value: string): Promise<boolean> => {
     const sending = value.trim();
-    if (sending === '' || sending === opened.trim()) return false;
+    if (sending === '' || (!edited && sending === opened.trim())) return false;
     let found: Duplicate[];
     try {
       // The cached answer when the typing had settled; asked now when not, and
@@ -103,8 +115,8 @@ export function useDuplicateWarning(
   };
 
   return {
-    shown: unchanged ? [] : shown,
-    blocking: !unchanged && heldFor === typed && shown.length > 0,
+    shown: untouched ? [] : shown,
+    blocking: !untouched && heldFor === typed && shown.length > 0,
     check,
     dismiss,
   };

@@ -147,6 +147,18 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
   });
 
+  it('warns at the opened name again once the name has been typed in', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName("Cat's Claw");
+
+    type("Cat's Cla");
+    type("Cat's Claw");
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+  });
+
   it('names each near match by its label and formal name, linked to the entry', async () => {
     renderName();
     offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);

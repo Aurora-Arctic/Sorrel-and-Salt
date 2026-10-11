@@ -590,10 +590,11 @@ the same `useDebouncedValue` the lookups wait on, for the three closest
 entries in the compendium and this coven — on the compendium, the
 compendium's alone, less the entry being edited, which its own name always
 matches. A blank name asks nothing and drops
-the last warning, and so does the name the form opened with (MB.115, the
-owner's call): an edit warns only once its name has been changed, and a save
-that leaves the name alone is never held, so opening an entry to fix
-something else never asks about its own name's neighbours. The threshold is the server's, M4.7's 0.4, so "no warning
+the last warning, and so does the name the form opened with until it has
+been typed in (MB.115, the owner's calls): opening an entry to fix something
+else never asks about its own name's neighbours, and a save that never
+touched the name is never held. Once typed in, the name asks as any does,
+back at the opened name too; a save's reset starts the count again. The threshold is the server's, M4.7's 0.4, so "no warning
 below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
