@@ -14,6 +14,9 @@ import type { PageRequest } from '@/lib/types';
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
+// The filter's shared form holds the router, which only a mounted app provides.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+
 const listPrivilegeChanges = vi.fn();
 const countPrivilegeChanges = vi.fn();
 const usersForAdmin = vi.fn();
