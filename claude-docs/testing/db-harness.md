@@ -161,6 +161,76 @@ curated vocabularies run off one registry-driven file,
 `src/db/vocabularies.ts`'s `TWO_TIER` and `FLAT`, and the two category join
 tables off one template, `tests/modules/ingredients/schema/join-tables.test.ts`.
 
+### Two db projects (MB.238)
+
+The Postgres-backed files run in two Vitest projects rather than one, split by
+what a file does to the worker it runs in.
+
+- **`db`** runs with `isolate: false`: a worker keeps its module registry —
+  the record of every module it has already loaded — from one file to the
+  next. Before, every file got a fresh registry and so loaded the same few
+  hundred modules again (the repository, the services, the GraphQL schema,
+  Better Auth): Vitest's hint on CI read "387 modules were evaluated 16,386
+  times", about a third of the run's tracked time. The database still does
+  not carry over: `db-setup.ts` runs before every file either way and
+  re-clones the worker's database, so no row outlives the file that wrote it.
+- **`db-mocking`** runs with `isolate: true`, as every file did before. A file
+  lands here when its source calls `vi.mock`, `vi.doMock`, `vi.unmock`,
+  `vi.hoisted`, `vi.stubGlobal`, `vi.stubEnv`, `vi.resetModules` or
+  `vi.useFakeTimers`, or imports a `tests/support/` helper whose source does
+  (today `auth-module.ts`, whose `importAuth` resets the registry and builds
+  `@/lib/auth` under another environment). Each of those changes something a
+  shared registry would hand to the next file: a mocked module stays mocked,
+  a stubbed global stays stubbed, an auth instance built for one file's
+  environment is the one the next file imports. This is what broke
+  `--no-isolate` on the `unit` project during MB.96
+  ([`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md)).
+
+**The split is a scan, not a list.** `vitest.config.mts` reads each file's
+source when the config loads and tests it against one regular expression,
+`LEAKS_PAST_ITS_FILE`. A file that starts mocking moves to `db-mocking` in the
+same diff, with nothing to remember, and a file that stops moves back. The scan
+errs toward isolation: a match inside a comment counts too, and costs that file
+only its share of the saving. A file that leaks some other way — writing
+`process.env` directly rather than through `vi.stubEnv`, or leaving a module's
+state changed — is not caught, which is why tests stub through `vi`. To send
+such a file to `db-mocking` deliberately, extend the expression with a comment
+saying why.
+
+**What else a shared registry keeps, and why each is safe:**
+
+- **The app's database client** (`src/db/connection.ts`) is one per process
+  per `DATABASE_URL` already ("Connections per run", below), and the URL is
+  the worker's slot, which does not change between its files. The clone before
+  each file is `WITH (FORCE)`, which ends the client's idle connections;
+  postgres.js opens new ones on the next query.
+- **React's `cache()`** in the services and pages is the default build's
+  pass-through outside a server render (the `react-server` condition is the
+  `rsc` project's alone), so nothing is memoised between files.
+- **`unstable_cache`** resolves to `tests/support/next-cache.ts`'s
+  pass-through. The one cache that holds entries,
+  `tests/support/next-data-cache.ts`, is reached only through `vi.mock`, so
+  every file using it is in `db-mocking`.
+- **`revalidateTag`'s record of calls** in `next-cache.ts` would carry one
+  file's writes into the next, so `db-setup.ts` clears it before every file.
+- **Module-level `Map`s and `Set`s** in `src/` are constants: lookup tables
+  built from a fixed list, never written after load.
+
+**The global setup runs once between them.** Vitest runs each project's
+`globalSetup` in turn, so both would build the template and clone every slot.
+`db-global-setup.ts` keeps the first build on `globalThis`, keyed by the run's
+Vitest instance, and the second project awaits it; the first owns the teardown.
+`maxWorkers`, the `boundedPostgres()` plugin and `setupFiles` come from
+`dbHarness` for both, and coverage is the root config's, so the 80% threshold
+still counts every file. The acceptance config spreads `dbHarness` too and is
+unchanged: it is one isolated project of its own.
+
+**Measured** on the twelve-core devcontainer, shared with other sessions, the
+two db projects alone with `--coverage --maxWorkers=7` (CI's worker count):
+26.0 s and 26.2 s against 31.0 s and 32.2 s for `db` before, and 93 s and 91 s of CPU
+against 152 s and 155 s. Whole `test:coverage` runs on the same machine
+varied by more than the change between one run and the next.
+
 ### Connections per run (MB.179)
 
 A `db` run can fail tests that pass alone. During M5.5 the OAuth sign-in
