@@ -16,6 +16,7 @@ import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
+import { Section } from './section';
 import {
   FormField,
   LookupListField,
@@ -228,7 +229,7 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
   );
 }
 
-/** What a variant's summary line counts, in its fields' order: a word, and its plural. */
+/** What a variant's summary line counts between its description and safety note, in its fields' order: a word, and its plural. */
 const COUNTED = [
   ['elements', 'element', 'elements'],
   ['planets', 'planet', 'planets'],
@@ -236,21 +237,27 @@ const COUNTED = [
   ['colors', 'colour', 'colours'],
   ['categoryIds', 'category', 'categories'],
   ['substitutes', 'substitute', 'substitutes'],
-  ['references', 'reference', 'references'],
 ] as const;
 
-/** A variant's summary: what it carries, "Safety note · 1 planet · 2 categories", or that it carries nothing. */
+/** A count of `variant`'s entries in `key`, "2 planets", or false for none. */
+const counted = (
+  variant: VariantFormValues,
+  [key, one, many]: readonly [(typeof COUNTED)[number][0] | 'references', string, string],
+): string | false => {
+  const count = variant[key].length;
+  return count > 0 && `${count} ${count === 1 ? one : many}`;
+};
+
+/** A variant's summary: what it carries, in its sections' order, "1 planet · 2 categories · Safety note", or that it carries nothing. */
 export function variantSummary(variant: VariantFormValues): string {
   const parts = [
     variant.description.trim() !== '' && 'description',
+    ...COUNTED.map((entry) => counted(variant, entry)),
     variant.safetyNotes.trim() !== '' && 'safety note',
-    ...COUNTED.map(([key, one, many]) => {
-      const count = variant[key].length;
-      return count > 0 && `${count} ${count === 1 ? one : many}`;
-    }),
+    counted(variant, ['references', 'reference', 'references']),
   ].filter(Boolean);
   if (parts.length === 0) return 'No details yet';
-  // A line of its own, so it opens on a capital: "Safety note · 1 planet".
+  // A line of its own, so it opens on a capital: "1 planet · Safety note".
   const line = parts.join(' · ');
   return line.charAt(0).toUpperCase() + line.slice(1);
 }
@@ -363,72 +370,87 @@ function VariantFieldset({
         className="ingredient-form__variant-fields"
         hidden={!open}
       >
-        {/* On the compendium the form must be a pick (MB.162). */}
-        <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
-        <TextField<IngredientFormValues>
-          name={`${at}.description`}
-          label="Description"
-          hint="What is particular to this form. What every form shares is the ingredient's description."
-          placeholder="What sets this form apart"
-          multiline
-        />
-        <TextField<IngredientFormValues>
-          name={`${at}.safetyNotes`}
-          label="Safety Notes"
-          hint="What to take care over with this form in particular: an oil diluted, a resin burned."
-          placeholder="Add safety notes"
-          multiline
-        />
-        <MultiSelectField
-          name={`${at}.elements`}
-          label="Element"
-          placeholder="Add an element"
-          options={ELEMENT_OPTIONS}
-        />
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={usePlanetSuggestions}
-          name={`${at}.planets`}
-          ordered
-          pickOnly={compendium}
-          legend="Planets"
-          entry="Planet"
-          placeholder="Add a planet"
-        />
-        <LookupListField
-          workspaceId={workspaceId}
-          useSuggestions={useZodiacSuggestions}
-          name={`${at}.zodiacSigns`}
-          ordered
-          pickOnly={compendium}
-          legend="Zodiac Signs"
-          entry="Zodiac Sign"
-          placeholder="Add a sign"
-        />
-        <ListField
-          name={`${at}.colors`}
-          ordered
-          legend="Colours"
-          entry="Colour"
-          placeholder="Add a colour"
-        />
-        <CategoryField at={at} />
-        {/* Any ingredient may stand in for a form, this one's other forms
-          included, so nothing is left out; those in this form, or in its
-          group, are offered first (MB.215). Each row is one form of an
-          ingredient, or any form of it, so a pick names the form at once
-          (MB.115, the owner's call) and needs no second picker. */}
-        <LookupListField
-          workspaceId={workspaceId}
-          // Fixed for the form's life, since its tier is, so the hook called is always the same.
-          useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
-          rank={rank}
-          name={`${at}.substitutes`}
-          legend="Substitute Ingredients"
-          entry="Substitute Ingredient"
-          placeholder="Add a substitute"
-        />
-        <ReferencesField workspaceId={workspaceId} at={at} />
+        {/* The ingredient's sections, in its order and under its names, as
+          far as a form's fields go (MB.115, the owner's call): its Form is
+          its identity. A level beneath the Variants heading. */}
+        <Section title="Identity" level={4}>
+          {/* On the compendium the form must be a pick (MB.162). */}
+          <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
+        </Section>
+        <Section title="Description" level={4} labelled>
+          <TextField<IngredientFormValues>
+            name={`${at}.description`}
+            label="Description"
+            hint="What is particular to this form. What every form shares is the ingredient's description."
+            placeholder="What sets this form apart"
+            multiline
+          />
+        </Section>
+        <Section title="Correspondences" level={4}>
+          <MultiSelectField
+            name={`${at}.elements`}
+            label="Element"
+            placeholder="Add an element"
+            options={ELEMENT_OPTIONS}
+          />
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={usePlanetSuggestions}
+            name={`${at}.planets`}
+            ordered
+            pickOnly={compendium}
+            legend="Planets"
+            entry="Planet"
+            placeholder="Add a planet"
+          />
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useZodiacSuggestions}
+            name={`${at}.zodiacSigns`}
+            ordered
+            pickOnly={compendium}
+            legend="Zodiac Signs"
+            entry="Zodiac Sign"
+            placeholder="Add a sign"
+          />
+          <ListField
+            name={`${at}.colors`}
+            ordered
+            legend="Colours"
+            entry="Colour"
+            placeholder="Add a colour"
+          />
+        </Section>
+        <Section title="Relations" level={4}>
+          <CategoryField at={at} />
+          {/* Any ingredient may stand in for a form, this one's other forms
+            included, so nothing is left out; those in this form, or in its
+            group, are offered first (MB.215). Each row is one form of an
+            ingredient, or any form of it, so a pick names the form at once
+            (MB.115, the owner's call) and needs no second picker. */}
+          <LookupListField
+            workspaceId={workspaceId}
+            // Fixed for the form's life, since its tier is, so the hook called is always the same.
+            useSuggestions={compendium ? useCompendiumSubstitutes : useSubstituteSuggestions}
+            rank={rank}
+            name={`${at}.substitutes`}
+            legend="Substitute Ingredients"
+            entry="Substitute Ingredient"
+            placeholder="Add a substitute"
+          />
+        </Section>
+        <Section title="Safety" level={4}>
+          <TextField<IngredientFormValues>
+            name={`${at}.safetyNotes`}
+            label="Safety Notes"
+            hint="What to take care over with this form in particular: an oil diluted, a resin burned."
+            placeholder="Add safety notes"
+            multiline
+          />
+        </Section>
+        <Section title="Sources" level={4}>
+          <ReferencesField workspaceId={workspaceId} at={at} />
+        </Section>
         <div className="ingredient-form__variant-done">
           <button
             type="button"
