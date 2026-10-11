@@ -138,11 +138,14 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
     row("the open tab's edge on the card", accent, card, 3);
-    // A variant's pencil (IngredientForm/index.scss), a control, so 3:1: the
-    // accent on the card, and on its own tint, 20% into the card, while
-    // pointed at, focused or open.
-    row("a variant's pencil on the card", accent, card, 3);
-    row("a variant's pencil on its tint", accent, mixed(accent, card, 0.2), 3);
+    // Every Edit pencil (the `icon-button-edit` mixin, _mixins.scss), a
+    // control, so 3:1: the accent on the grounds it sits on — a list's
+    // unbanded row on the page; a banded row, a stacked card and the modal's
+    // form on the card — and on its own tint, 20% into the card, while
+    // pointed at, focused or open, which is opaque, so the same on either.
+    row('an Edit pencil on the page', accent, page, 3);
+    row('an Edit pencil on the card', accent, card, 3);
+    row('an Edit pencil on its tint', accent, mixed(accent, card, 0.2), 3);
 
     // The switch (`.switch`, _primitives.scss), a control, so 3:1 (WCAG
     // 1.4.11): off, its muted edge against the page and the card it may sit

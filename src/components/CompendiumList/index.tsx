@@ -89,7 +89,8 @@ const CompendiumList = ({
             <tbody {...tableRole('rowgroup')}>
               {entries.map((entry) => (
                 // Each cell names its column for the card it becomes; the Edit
-                // cell's empty name spans the card without one.
+                // cell's empty name drops the label, and on a phone it stands
+                // at the card's top right.
                 <tr key={entry.id} {...tableRole('row')}>
                   <td {...stackCell('Name')}>{entry.name}</td>
                   <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
@@ -97,7 +98,7 @@ const CompendiumList = ({
                   <td {...stackCell('Form')}>
                     {entry.forms.length ? entry.forms.join(', ') : NONE}
                   </td>
-                  <td {...stackCell('')}>
+                  <td className="data-table__card-action" {...stackCell('')}>
                     {/* Named with the formal name too, as two entries can share a
                       label but never a formal name. */}
                     <EditLink
