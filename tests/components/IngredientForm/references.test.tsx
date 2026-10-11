@@ -54,12 +54,23 @@ const HERBAL: ReferenceNode = {
   id: COMPENDIUM_ID,
   citation: 'Fixture, Ada. The Testwort Herbal. Mockford: Fixture Press, 1901.',
   isGlobal: true,
+  kind: 'book',
+  authors: 'Fixture, Ada',
+  title: 'The Testwort Herbal',
+  container: null,
 };
 const NOTES: ReferenceNode = {
   id: COVEN_ID,
   citation: 'Placeholder, Bram. "Notes on Mockleaf." Journal of Fixtures 3 (1950): 12–19.',
   isGlobal: false,
+  kind: 'article',
+  authors: 'Placeholder, Bram',
+  title: 'Notes on Mockleaf',
+  container: 'Journal of Fixtures',
 };
+// Each one's Chicago short form, which its row shows and its buttons are named by.
+const HERBAL_SHORT = 'Fixture, Testwort Herbal';
+const NOTES_SHORT = 'Placeholder, "Notes on Mockleaf"';
 
 /** The field in a form of its own, its name given; the submit receives what the form would send. */
 function renderField() {
@@ -140,6 +151,12 @@ const row = (citation: string) =>
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
+/** What a row shows a sighted reader: its text less every hidden element's. */
+const shownIn = (item: HTMLElement) => {
+  const copy = item.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll('[hidden]').forEach((node) => node.remove());
+  return copy.textContent;
+};
 const changes = () => within(references()).getByRole('status', { name: 'References changes' });
 const panel = () => within(references()).getByRole('group', { name: 'New Reference' });
 const noPanel = () =>
@@ -164,10 +181,10 @@ const newReference = () => {
   fireEvent.keyDown(box(), { key: 'ArrowDown' });
   fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
 };
-/** The row's Locator, once its edit has opened the row. */
-const locatorOf = (citation: string) => {
-  const inRow = within(row(citation));
-  const edit = inRow.getByRole('button', { name: `Edit ${citation}` });
+/** The row's Locator, once its edit has opened the row; `short` names the row's source. */
+const locatorOf = (short: string) => {
+  const inRow = within(row(short));
+  const edit = inRow.getByRole('button', { name: `Edit ${short}` });
   if (edit.getAttribute('aria-expanded') !== 'true') press(edit);
   return inRow.getByRole('textbox', { name: 'Locator' });
 };
@@ -255,18 +272,39 @@ describe('ReferencesField', () => {
   });
 
   describe('the list', () => {
-    it('adds a picked source as a row beneath the box reading its citation, and announces it', async () => {
+    it('adds a picked source as a row beneath the box reading its short form, and announces it', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
 
       expect(rows()).toHaveLength(1);
-      expect(row(HERBAL.citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(HERBAL.citation);
+      expect(shownIn(row(HERBAL_SHORT))).toBe(HERBAL_SHORT);
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
       // The box empties and keeps the focus, for the next one.
       expect(box()).toHaveValue('');
       expect(box()).toHaveFocus();
+    });
+
+    it('shows a row as its short form, its title in real italics, then its locator, described by its whole citation', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+      const item = row(HERBAL_SHORT);
+      const inRow = within(item);
+      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
+      expect(edit).toHaveAccessibleDescription(HERBAL.citation);
+      expect(
+        inRow.getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
+      ).toHaveAccessibleDescription(HERBAL.citation);
+      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
+
+      // Open, the row reads the citation whole; closed, its locator follows.
+      typeIn(locatorOf(HERBAL_SHORT), 'p. 112');
+      expect(shownIn(item)).toContain(HERBAL.citation);
+      press(edit);
+      expect(shownIn(item)).toBe(`${HERBAL_SHORT}, p. 112`);
     });
 
     it('keeps a row to one line until its edit opens it on its Locator, and closes it again', async () => {
@@ -275,7 +313,7 @@ describe('ReferencesField', () => {
 
       await pick(calls, 'testwort', HERBAL.citation);
       const inRow = within(row(HERBAL.citation));
-      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL.citation}` });
+      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
       expect(edit).toHaveAttribute('aria-expanded', 'false');
       expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
 
@@ -295,7 +333,7 @@ describe('ReferencesField', () => {
       await pick(calls, 'testwort', HERBAL.citation);
 
       const inRow = within(row(HERBAL.citation));
-      const locator = locatorOf(HERBAL.citation);
+      const locator = locatorOf(HERBAL_SHORT);
       expect(locator).toHaveAccessibleDescription(expect.stringContaining(HERBAL.citation));
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
@@ -305,11 +343,11 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
-      press(within(references()).getByRole('button', { name: `Remove ${HERBAL.citation}` }));
+      press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(HERBAL.citation);
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
       expect(box()).toHaveFocus();
     });
 
@@ -323,7 +361,7 @@ describe('ReferencesField', () => {
 
       expect(rows()).toHaveLength(0);
       expect(changes()).not.toHaveTextContent(added);
-      expect(changes()).toHaveTextContent(HERBAL.citation);
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {
@@ -346,7 +384,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const locator = locatorOf(HERBAL.citation);
+      const locator = locatorOf(HERBAL_SHORT);
       typeIn(locator, ' pp. 12-19,   40; chap. 3 ');
       fireEvent.blur(locator);
 
@@ -401,9 +439,10 @@ describe('ReferencesField', () => {
       await waitFor(noPanel);
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
-      const citation = 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.';
-      expect(row(citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(citation);
+      // Shown by its short form, as a source picked is.
+      const short = 'Mock, Fixture Grimoire';
+      expect(shownIn(row(short))).toBe(short);
+      expect(changes()).toHaveTextContent(short);
       expect(box()).toHaveFocus();
 
       save();
@@ -452,7 +491,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
-      typeIn(locatorOf(HERBAL.citation), 'p. 112');
+      typeIn(locatorOf(HERBAL_SHORT), 'p. 112');
       typeIn(nameBox(), 'Testwort');
       press(saveButton('Save & Add Another'));
 
@@ -484,13 +523,14 @@ describe('ReferencesField', () => {
 
       // The error names the source it is about, and that row's × reads it.
       await waitFor(() => expect(box()).toBeInvalid());
-      expect(box()).toHaveAccessibleDescription(expect.stringContaining(NOTES.citation));
+      expect(box()).toHaveAccessibleDescription(expect.stringContaining(NOTES_SHORT));
+      // Each × is described by its citation, the one in error by the error too.
       expect(
-        within(references()).getByRole('button', { name: `Remove ${NOTES.citation}` }),
-      ).toHaveAccessibleDescription(/\S/);
+        within(references()).getByRole('button', { name: `Remove ${NOTES_SHORT}` }),
+      ).toHaveAccessibleDescription(new RegExp(`^${escapeRegExp(NOTES.citation)} \\S`));
       expect(
-        within(references()).getByRole('button', { name: `Remove ${HERBAL.citation}` }),
-      ).not.toHaveAccessibleDescription();
+        within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
+      ).toHaveAccessibleDescription(HERBAL.citation);
       expect(box()).toHaveFocus();
     });
   });

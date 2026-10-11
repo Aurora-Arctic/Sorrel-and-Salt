@@ -281,6 +281,11 @@ describe('ReferencePanel', () => {
       id: NEW_REFERENCE_ID,
       citation: 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.',
       isGlobal: false,
+      // What its row's short form is made of.
+      kind: 'book',
+      authors: 'Mock, Cyril',
+      title: 'A Fixture Grimoire',
+      container: null,
     });
     expect(calls).toHaveLength(1);
     expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
@@ -365,6 +370,10 @@ describe('ReferencePanel', () => {
                 id: NEW_REFERENCE_ID,
                 citation: 'A Fixture Grimoire. 1999.',
                 isGlobal: false,
+                kind: 'book',
+                authors: null,
+                title: 'A Fixture Grimoire',
+                container: null,
               },
             },
           });

@@ -206,48 +206,48 @@ const INGREDIENTS = [
   },
 ];
 
-// Invented sources in both tiers, one long enough to wrap and one carrying
-// an address, rendered by the one renderer as the server renders them.
+// Invented sources in both tiers — a book, an article by two authors and a
+// web page, so the rows show each short form — one long enough to wrap and
+// one carrying an address, rendered by the one renderer as the server
+// renders them.
+const source = (id: string, isGlobal: boolean, fields: CitationFields) => ({
+  id,
+  isGlobal,
+  citation: citationText(fields),
+  kind: fields.kind,
+  authors: fields.authors ?? null,
+  title: fields.title,
+  container: fields.container ?? null,
+});
+
 const SOURCES = [
-  {
-    id: 'source-herbal',
-    isGlobal: true,
-    citation: citationText({
-      kind: 'book',
-      authors: 'Fixture, Ada',
-      title: 'The Testwort Herbal',
-      contributors: 'Edited by Bram Placeholder',
-      place: 'Mockford',
-      publisher: 'Fixture Press',
-      published: '1901',
-    }),
-  },
-  {
-    id: 'source-notes',
-    isGlobal: false,
-    citation: citationText({
-      kind: 'article',
-      authors: 'Placeholder, Bram',
-      title: 'Notes on Mockleaf',
-      container: 'Journal of Fixtures',
-      volume: '3',
-      issue: '2',
-      published: '1950',
-      pages: '12–19',
-    }),
-  },
-  {
-    id: 'source-wiki',
-    isGlobal: true,
-    citation: citationText({
-      kind: 'web_page',
-      title: 'Testwort',
-      container: 'Fixture Wiki',
-      url: 'https://fixture-wiki.example/wiki/Testwort_(herb)_and_its_many_fixture_relatives',
-      modified: '2026-09-27',
-      accessed: '2026-10-06',
-    }),
-  },
+  source('source-herbal', true, {
+    kind: 'book',
+    authors: 'Fixture, Ada',
+    title: 'The Testwort Herbal',
+    contributors: 'Edited by Bram Placeholder',
+    place: 'Mockford',
+    publisher: 'Fixture Press',
+    published: '1901',
+  }),
+  source('source-notes', false, {
+    kind: 'article',
+    authors: 'Placeholder, Bram, and Cara Mockley',
+    title: 'Notes on Mockleaf: A Survey of Fixture Gardens',
+    container: 'Journal of Fixtures',
+    volume: '3',
+    issue: '2',
+    published: '1950',
+    pages: '12–19',
+  }),
+  source('source-wiki', true, {
+    kind: 'web_page',
+    title: 'Testwort',
+    container: 'Fixture Wiki',
+    url: 'https://fixture-wiki.example/wiki/Testwort_(herb)_and_its_many_fixture_relatives',
+    modified: '2026-09-27',
+    accessed: '2026-10-06',
+  }),
 ];
 
 const CATS_CLAW = [
@@ -371,6 +371,10 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           id: crypto.randomUUID(),
           citation: citationText(input),
           isGlobal: false,
+          kind: input.kind,
+          authors: input.authors ?? null,
+          title: input.title,
+          container: input.container ?? null,
         },
       } satisfies CreateReferenceMutation;
     }
@@ -681,14 +685,15 @@ export const Blank: Story = () => {
 };
 
 /** One of SOURCES as a reference row, cited at `locator`. */
-const cited = (source: (typeof SOURCES)[number], locator = '') => ({
-  value: source.citation,
-  link: { id: source.id, isGlobal: source.isGlobal },
+const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') => ({
+  value: citation,
+  link,
   locator,
 });
 
 // The entry the edit story opens: a planet listed, a category picked
-// (MB.126), two sources, and two forms, one carrying details of its own.
+// (MB.126), three sources — a book, an article by two authors and a web
+// page — and two forms, one carrying details of its own.
 const ENTRY = {
   id: '00000000-0000-4000-8000-000000000301',
   values: {
@@ -730,7 +735,7 @@ const ENTRY = {
     planets: [{ value: 'Mercury' }],
     // Testward, one of the categories the stand-in answers the picker with.
     categoryIds: [CATEGORIES[0].id],
-    references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[2])],
+    references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[1], 'p. 14'), cited(SOURCES[2])],
   } satisfies IngredientFormValues,
 };
 

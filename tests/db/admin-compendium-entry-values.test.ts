@@ -181,6 +181,15 @@ describe('entryValues', () => {
 
   it('reads every value and link of the entry as the form shows it', async () => {
     const values = await entryValues(created);
+    // insertReference's default book, as a row links it.
+    const BOOK_LINK = {
+      id: book,
+      isGlobal: true,
+      kind: 'book',
+      title: 'A Herbal of Fixture Covens',
+      authors: null,
+      container: null,
+    };
 
     expect(values).toMatchObject({
       name: 'Testwort',
@@ -210,9 +219,7 @@ describe('entryValues', () => {
             },
             { value: 'Testleaf' },
           ]),
-          references: [
-            expect.objectContaining({ link: { id: book, isGlobal: true }, locator: 'p. 40' }),
-          ],
+          references: [expect.objectContaining({ link: BOOK_LINK, locator: 'p. 40' })],
         },
         {
           variantId: expect.any(String),
@@ -256,7 +263,8 @@ describe('entryValues', () => {
             title: 'A Herbal of Fixture Covens',
             published: '1988',
           }),
-          link: { id: book, isGlobal: true },
+          // With the fields its short form is made of.
+          link: BOOK_LINK,
           locator: 'p. 12',
         },
       ],
