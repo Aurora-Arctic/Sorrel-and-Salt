@@ -10,8 +10,8 @@ import { makeIngredient } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
 // The transport half of M4.7a's form lookup: the nodes, each curated row
-// carrying its group and every suggestion its claimants, an absent query sent
-// as none, a page by cursor and the compendium-only mode. Who is refused, what
+// carrying its group and every suggestion its claimants, a page by cursor and
+// the compendium-only mode. Who is refused, what
 // each bucket holds and the scope are services/form-suggestions.test.ts's, and
 // a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
 
@@ -77,15 +77,6 @@ describe('formSuggestions', () => {
     ]);
   });
 
-  it('lists the curated vocabulary first when no query is given', async () => {
-    const result = await run(asUser(B), { first: 3 });
-
-    expect(result.errors).toBeUndefined();
-    const nodes = result.data?.formSuggestions.edges.map((edge) => edge.node) ?? [];
-    expect(nodes).toHaveLength(3);
-    expect(nodes.every((node) => node.curated && node.group)).toBe(true);
-  });
-
   it('pages by cursor', async () => {
     const first = await run(asUser(B), { query: 'root', first: 1 });
     const page = first.data?.formSuggestions as FormSuggestionConnection;
@@ -144,18 +135,5 @@ describe('formSuggestions without a coven', () => {
         claimants: [{ name: 'Fixture Rootling' }],
       },
     ]);
-  });
-
-  it('is refused signed out', async () => {
-    // Why it could have answered: the same call signed in asks no membership.
-    expect((await runInCompendium(asUser(B), { query: 'root' })).errors).toBeUndefined();
-
-    const result = await runInCompendium(null, { query: 'root' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['formSuggestions'],
-      extensions: { code: 'FORBIDDEN' },
-    });
   });
 });

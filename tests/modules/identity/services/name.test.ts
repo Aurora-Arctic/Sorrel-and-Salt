@@ -63,12 +63,10 @@ describe('setName', () => {
     expect(await userRow(B.id)).toMatchObject({ name: B.name, updated_by: E.id });
   });
 
-  it.each([
-    ['blank', '   '],
-    ['empty', ''],
-    ['over-long', 'x'.repeat(NAME_MAX_LENGTH + 1)],
-  ])('refuses a %s name as a field error on `name`, writing nothing', async (_, name) => {
-    const issues = await refusal(setName(asUser(A), name));
+  // The name rules are the validation schema's; one row proves the service
+  // parses its input before writing.
+  it('refuses a blank name as a field error on `name`, writing nothing', async () => {
+    const issues = await refusal(setName(asUser(A), '   '));
 
     expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
     expect(await userRow(A.id)).toMatchObject({ name: A.name, updated_by: E.id });

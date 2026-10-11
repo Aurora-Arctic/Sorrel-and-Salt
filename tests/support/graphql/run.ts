@@ -16,13 +16,8 @@ import type { Answer, ContextOverrides } from './types';
 // "The owning layer"). The context is built by hand rather than by the route's
 // `createContext`, which reads the session off a cookie.
 
-/**
- * A runner over `target` behind the route's `maskedErrors`. Only
- * tests/modules/coven/services/two-transports.test.ts builds one over a schema
- * of its own (MB.186), for a field no production schema has; every other test
- * uses `run`.
- */
-export function runnerOn(target: GraphQLSchema) {
+/** A runner over `target` behind the route's `maskedErrors`; `run` below is the one built. */
+function runnerOn(target: GraphQLSchema) {
   const yoga = createYoga<Context>({ schema: target, maskedErrors, logging: false });
 
   /**

@@ -14,7 +14,7 @@ import {
 } from '@/modules/vocabulary';
 import type { AstrologyValueInput } from '@/modules/vocabulary/validation/astrology-value';
 import { slugify } from '@/lib/slugify';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -34,14 +34,10 @@ useTestDatabase((client) => {
 
 const admin = asUser(E);
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a vocabulary write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a vocabulary write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
@@ -52,26 +48,20 @@ const VOCABULARIES: {
   field: CuratedField;
   table: 'planets' | 'zodiac_signs';
   column: 'planets' | 'zodiac_signs';
-  noun: string;
-  listNoun: string;
 }[] = [
   {
     field: 'planets',
     table: 'planets',
     column: 'planets',
-    noun: 'planet',
-    listNoun: 'planets',
   },
   {
     field: 'zodiacSigns',
     table: 'zodiac_signs',
     column: 'zodiac_signs',
-    noun: 'sign',
-    listNoun: 'zodiac signs',
   },
 ];
 
-describe.each(VOCABULARIES)('$field', ({ field, table, column, noun, listNoun }) => {
+describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
   beforeEach(async () => {
     await sql`truncate ingredients cascade`;
     await sql`delete from ${sql(table)} where name like 'Fixture%'`;
@@ -207,8 +197,8 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column, noun, listNoun })
       );
 
       expect(issues).toEqual([
-        { path: ['name'], message: `Give the ${noun} a name` },
-        { path: ['description'], message: `Describe the ${noun}` },
+        { path: ['name'], message: expect.any(String) },
+        { path: ['description'], message: expect.any(String) },
       ]);
     });
 
@@ -222,7 +212,7 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column, noun, listNoun })
       expect(issues).toEqual([
         {
           path: ['name'],
-          message: '"Fixture Body" already has the address "fixture-body" — choose another name',
+          message: expect.stringContaining('Fixture Body'),
         },
       ]);
       expect(await countNamed('fixture-BODY')).toBe(0);
@@ -293,7 +283,7 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column, noun, listNoun })
       expect(issues).toEqual([
         {
           path: ['name'],
-          message: '"Fixture Taken" already has the address "fixture-taken" — choose another name',
+          message: expect.any(String),
         },
       ]);
       expect(await rowOf(id)).toEqual(before);
@@ -393,25 +383,21 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column, noun, listNoun })
       const id = await seed('Fixture Body');
       await entry('Testwort', ['Fixture Body']);
 
-      await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(
-        new Forbidden(
-          `"Fixture Body" is among the ${listNoun} of 1 compendium entry — Testwort. Take it off its ${listNoun} first.`,
-        ),
-      );
+      const attempt = deleteAstrologyValue(admin, field, id);
+      await expect(attempt).rejects.toThrow(Forbidden);
+      await expect(attempt).rejects.toThrow('Testwort');
       expect((await rowOf(id)).deleted_at).toBeNull();
     });
 
-    it('names the first few holding entries and counts the rest', async () => {
+    it('names the first three holding entries and no more', async () => {
       const id = await seed('Fixture Body');
       for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
         await entry(name, ['fixture body']);
       }
 
-      await expect(deleteAstrologyValue(admin, field, id)).rejects.toThrow(
-        new Forbidden(
-          `"Fixture Body" is among the ${listNoun} of 5 compendium entries — Testa, Testb, Testc and 2 more. Take it off their ${listNoun} first.`,
-        ),
-      );
+      const attempt = deleteAstrologyValue(admin, field, id);
+      await expect(attempt).rejects.toThrow('Testc');
+      await expect(attempt).rejects.not.toThrow('Testd');
     });
 
     it('passes once no live entry holds it: a deleted entry and a coven’s ingredient never block it', async () => {

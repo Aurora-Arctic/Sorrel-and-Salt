@@ -47,10 +47,11 @@ resolve: async (_query, { workspaceId }, { session }) =>
   services, and its writes go through this endpoint
   ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 - **The service enforces its own authorization,** never trusting a caller to
-  have checked. `tests/modules/coven/services/two-transports.test.ts` proves one refusal
-  arrives the same way by both paths: a direct call and a resolver over a
-  throwaway schema, read through the shared harness as the browser reads it
-  (MB.186), for a member of another workspace and for a site admin.
+  have checked. Each service's tests refuse by direct call
+  (`tests/modules/*/services/`), and each field's GraphQL file reads the same
+  refusal as the browser does, `extensions.code` through the shared harness
+  (MB.186). A test of the two paths agreeing over a throwaway schema went with
+  MB.227: with the check in the service and nowhere else, it repeated both.
 - **The boundary is mechanical.** Lint stops a resolver, page or component
   importing anything under `src/db` at runtime, and `server-only` fails the
   build of a client bundle that reaches a service (["The access

@@ -8,7 +8,7 @@ import {
 
 // The policy, restated here in the test's own words rather than read out of
 // the module under test: a matrix compared against itself would pass whatever
-// it said. Every role/action pair in the statements below is asserted.
+// it said. Every role/action pair in the statements is compared at once.
 const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>>> = {
   // Reads, and nothing else — CLAUDE.md: "Viewers write nothing".
   viewer: {
@@ -37,19 +37,32 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
 const ROLES = Object.keys(PERMITTED) as WorkspaceRole[];
 
 describe('the workspace permission matrix', () => {
-  for (const role of ROLES) {
-    for (const [resource, actions] of Object.entries(WORKSPACE_STATEMENTS)) {
-      for (const action of actions) {
-        const allowed = PERMITTED[role][resource]?.includes(action) ?? false;
+  it('grants each role exactly the role/action pairs the policy lists', () => {
+    // One comparison of the whole table, every statement against every role:
+    // a pair granted or refused by mistake fails it, and the diff names it.
+    const granted = (role: WorkspaceRole) =>
+      Object.fromEntries(
+        Object.entries(WORKSPACE_STATEMENTS)
+          .map(([resource, actions]) => [
+            resource,
+            actions.filter((action) =>
+              rolePermits(role, { [resource]: [action] } as WorkspacePermission),
+            ),
+          ])
+          .filter(([, actions]) => actions.length > 0),
+      );
+    const listed = (role: WorkspaceRole) =>
+      Object.fromEntries(
+        Object.entries(PERMITTED[role]).map(([resource, actions]) => [
+          resource,
+          [...(actions ?? [])],
+        ]),
+      );
 
-        it(`${allowed ? 'lets' : 'refuses'} a ${role} ${action} a ${resource}`, () => {
-          const permission = { [resource]: [action] } as WorkspacePermission;
-
-          expect(rolePermits(role, permission)).toBe(allowed);
-        });
-      }
-    }
-  }
+    expect(Object.fromEntries(ROLES.map((role) => [role, granted(role)]))).toEqual(
+      Object.fromEntries(ROLES.map((role) => [role, listed(role)])),
+    );
+  });
 });
 
 describe('a request naming more than one resource', () => {

@@ -111,8 +111,7 @@ describe('setSpellVisibility', () => {
       expect(error).toBeInstanceOf(Forbidden);
       // Not the bare default: the caller holds the permission and is being
       // told about the rule, which a `Forbidden` on its own does not say.
-      expect(error.message).not.toBe('Forbidden');
-      expect(error.message).toMatch(/shared/i);
+      expect(error.message).not.toBe(new Forbidden().message);
     });
 
     it('leaves the spell shared', async () => {

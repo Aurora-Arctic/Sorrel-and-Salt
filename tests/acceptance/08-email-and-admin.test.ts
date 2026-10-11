@@ -224,7 +224,7 @@ describe('Story 60: As an admin, make an existing user an admin and revoke it ag
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
 
     await expect(setUserRole({ userId: admin, role: 'admin' }, primary, 'user')).rejects.toThrow(
-      "This is the primary admin and can't be removed.",
+      Forbidden,
     );
     expect(await roleOf(primary)).toBe('admin');
 
@@ -244,7 +244,7 @@ describe('Story 60: As an admin, make an existing user an admin and revoke it ag
     expect(count).toBe(1);
 
     await expect(setUserRole({ userId: admin, role: 'admin' }, admin, 'user')).rejects.toThrow(
-      'the last admin',
+      Forbidden,
     );
     expect(await roleOf(admin)).toBe('admin');
   });
@@ -257,11 +257,11 @@ describe('Story 60: As an admin, make an existing user an admin and revoke it ag
     const asAdmin = { userId: admin, role: 'admin' as const };
     const asPrimary = { userId: primary, role: 'admin' as const };
 
-    await expect(pauseAdminRoleChanges(asAdmin)).rejects.toThrow('Only the primary admin');
+    await expect(pauseAdminRoleChanges(asAdmin)).rejects.toThrow(Forbidden);
     await pauseAdminRoleChanges(asPrimary);
 
-    await expect(setUserRole(asAdmin, user, 'admin')).rejects.toThrow('Admin changes are paused');
-    await expect(setUserRole(asAdmin, E.id, 'user')).rejects.toThrow('Admin changes are paused');
+    await expect(setUserRole(asAdmin, user, 'admin')).rejects.toThrow(Forbidden);
+    await expect(setUserRole(asAdmin, E.id, 'user')).rejects.toThrow(Forbidden);
     expect(await roleOf(user)).toBe('user');
     await setUserRole(asPrimary, user, 'admin');
     expect(await roleOf(user)).toBe('admin');
@@ -437,12 +437,15 @@ describe('Story 62: As an admin, invite someone by email to become an admin, acc
     const session = await sessionOf(OTHER);
     expect(await userRow(OTHER)).toMatchObject({ email_verified: true });
 
-    await expect(acceptInvitation(session, token)).rejects.toThrow(/different email address/);
+    expect(await invitationStanding(session, token)).toMatchObject({
+      reason: 'different-address',
+    });
+    await expect(acceptInvitation(session, token)).rejects.toThrow(Forbidden);
     const [user] = await sql`select role::text from users where id = ${session.userId}`;
     expect(user.role).toBe('user');
   });
 
-  it('refuses a link that has been used, withdrawn or has run out, each in words of its own', async () => {
+  it('refuses a link that has been used, withdrawn or has run out, each with a reason of its own', async () => {
     // All three first: once one is accepted, the address is an admin's.
     const withdrawn = await invite();
     const lapsed = await invite();
@@ -454,18 +457,13 @@ describe('Story 62: As an admin, invite someone by email to become an admin, acc
     const session = await sessionOf(INVITED);
     await acceptInvitation(session, used);
 
-    const messages = await Promise.all(
-      [used, withdrawn, lapsed].map((token) =>
-        acceptInvitation(session, token).then(
-          () => 'accepted',
-          (error: Error) => error.message,
-        ),
-      ),
+    const reasons = await Promise.all(
+      [used, withdrawn, lapsed].map(async (token) => {
+        await expect(acceptInvitation(session, token)).rejects.toThrow(Forbidden);
+        const standing = await invitationStanding(session, token);
+        return standing.acceptable ? 'acceptable' : standing.reason;
+      }),
     );
-    expect(messages).toEqual([
-      'This invitation has already been accepted.',
-      'This invitation was withdrawn. Ask whoever sent it for a new one.',
-      'This invitation has expired. Ask whoever sent it for a new one.',
-    ]);
+    expect(reasons).toEqual(['accepted', 'revoked', 'expired']);
   });
 });

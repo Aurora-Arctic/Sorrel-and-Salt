@@ -425,6 +425,8 @@ _Acceptance criteria:_
 - `npm run test:stories` prints one line per story
 - Per-file coverage of `src/modules/**/services/**` and `src/graphql/**` is not below the previous run, and the `Run vitest` time is recorded
 
+_As built:_ 116 A–D rows collapse to A with its precondition (A's role is `user`, and E's same call succeeds), only where the check reads the site role alone; the 51-row permission matrix is one `toEqual`; `two-transports.test.ts` and `suggestions-query.test.ts` go, and the two plan tests keep only their EXPLAIN and row counts; every sentence becomes a class, a `reason`, a `path` or a `stringContaining` of the entry named; the GraphQL files lose their admin-scope and signed-out refusals and every message beside a code; the child loaders' access cases run as one matrix over the three; the RSC dedupe is one test. 1,394 → 1,093 cases in the lane's directories, and coverage of the services and the GraphQL layer is unchanged. The GraphQL harness is still called with a `null` session for the public reads (MB.80) — the compendium, an entry and the vocabularies — which are the public surface's own behaviour, not a signed-out refusal. Follow-up: one registry-driven GraphQL file over `curatedVocabularyWrites` (`src/modules/vocabulary/graphql/curated.ts`) in place of the per-vocabulary write cases.
+
 **MB.228 — Component tests: the owner component once, no noun matrices, no presentation, no copy** · 4h
 
 _Story:_ As a maintainer, I want each component behaviour tested in the component that has it, once, by the state it leaves, so that a relabelled button, a renamed class or a second vocabulary adds no test.

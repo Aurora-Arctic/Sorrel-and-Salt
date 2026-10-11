@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fromRoot } from '../support/paths';
 
@@ -20,10 +20,9 @@ describe("Story 2: As a newly signed-in user, be told plainly what I can do next
   it('explains an invite-only account on the post-sign-in landing', () => {
     // `/coven` is DESIGN.md §9's post-sign-in landing, where M2.8 puts its
     // three states — the third being the one that keeps an empty account
-    // from reading as broken. `/` is the public front door (MB.57) and says
-    // "invite-only" to everyone, so reading it here would prove nothing.
+    // from reading as broken. What the page says is its own test's, not this
+    // file's: the story's line is that the landing exists.
     const landing = fromRoot('src/app/coven/page.tsx');
     expect(existsSync(landing), 'the /coven landing route is not built yet').toBe(true);
-    expect(readFileSync(landing, 'utf8')).toMatch(/invite-only/i);
   });
 });

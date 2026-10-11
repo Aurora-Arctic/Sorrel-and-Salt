@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { encodeCursor } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import { A, B, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -104,19 +103,6 @@ describe('possibleDuplicates', () => {
       expect(nearMiss.score).toBeGreaterThanOrEqual(0.4);
       expect(nearMiss.score).toBeLessThan(1);
     });
-
-    it('is the best of the label, the formal name and the folk names', async () => {
-      await addIngredient({
-        name: 'Mugwort',
-        canonicalName: 'Artemisia vulgaris',
-        folkNames: ['Cronewort'],
-      });
-      // Why the label alone would score it lower: it is not even a match.
-      const [row] = await sql`select similarity(${'Mugwort'}, ${'Cronewort'}) as score`;
-      expect(Number(row.score)).toBeLessThan(0.4);
-
-      expect(await edgesFor('Cronewort')).toEqual([{ name: 'Mugwort', score: 1 }]);
-    });
   });
 
   describe('pages', () => {
@@ -139,17 +125,6 @@ describe('possibleDuplicates', () => {
       const rest = next.data?.possibleDuplicates as DuplicateConnection;
       expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
       expect(rest.pageInfo.hasNextPage).toBe(false);
-    });
-
-    // A browse of the compendium keys `[name]`; this list keys `[-score, name]`.
-    it('refuses a cursor from another list', async () => {
-      const id = await addIngredient({ name: 'Mugwurt', workspaceId: WORKSPACE_W_ID });
-      const after = encodeCursor({ key: ['Mugwurt'], id });
-
-      const result = await run(asUser(B), { name: 'Mugwart', after });
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.message).toBe('Invalid cursor');
     });
   });
 });
@@ -183,18 +158,5 @@ describe('possibleDuplicates without a coven', () => {
     expect(result.data?.possibleDuplicates.edges.map((edge) => edge.node)).toEqual([
       { name: 'Testwort', isGlobal: true },
     ]);
-  });
-
-  it('is refused signed out', async () => {
-    // Why it could have answered: the same call signed in asks no membership.
-    expect((await runInCompendium(asUser(B), 'Testwort')).errors).toBeUndefined();
-
-    const result = await runInCompendium(null, 'Testwort');
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['possibleDuplicates'],
-      extensions: { code: 'FORBIDDEN' },
-    });
   });
 });

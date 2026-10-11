@@ -16,8 +16,7 @@ import {
 } from '@/modules/vocabulary';
 import type { DeityFilter } from '@/modules/vocabulary';
 import type { DeityInput } from '@/modules/vocabulary/validation/deity';
-import type { PageRequest } from '@/lib/types';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -63,14 +62,10 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a vocabulary write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a vocabulary write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
@@ -133,22 +128,6 @@ async function issuesOf(attempt: Promise<unknown>) {
   expect(error).toBeInstanceOf(ValidationError);
   return (error as ValidationError).issues;
 }
-
-describe('listDeities', () => {
-  it('hands the page request to the finder unchanged and answers its page', async () => {
-    const page: PageRequest = { limit: 26, inverted: false };
-
-    const entries = await listDeities({}, page);
-
-    expect(repository.findDeityPage).toHaveBeenCalledWith({}, page);
-    // The seed's first page: the request's limit is the page plus one.
-    expect(entries).toHaveLength(26);
-    expect(entries[0].node).toMatchObject({
-      name: expect.any(String),
-      traditionId: expect.any(String),
-    });
-  });
-});
 
 // Which deities are curated — a live deity under a live tradition — and their
 // order are the finder's (tests/db/repository/vocabularies.test.ts); the
@@ -338,7 +317,7 @@ describe('createDeity', () => {
 
     for (const traditionId of [retired.id, '99999999-9999-4999-8999-999999999999']) {
       const issues = await issuesOf(createDeity(admin, input({ traditionId })));
-      expect(issues).toEqual([{ path: ['traditionId'], message: 'Choose a tradition' }]);
+      expect(issues).toEqual([{ path: ['traditionId'], message: expect.any(String) }]);
     }
     expect(await countNamed('Fixture Testra')).toBe(0);
   });
@@ -430,7 +409,7 @@ describe('updateDeity', () => {
 
     const issues = await issuesOf(updateDeity(admin, id, input({ traditionId: retired.id })));
 
-    expect(issues).toEqual([{ path: ['traditionId'], message: 'Choose a tradition' }]);
+    expect(issues).toEqual([{ path: ['traditionId'], message: expect.any(String) }]);
     expect(await deityOf(id)).toEqual(before);
   });
 
@@ -567,28 +546,18 @@ describe('deleteDeity', () => {
       const attempt = deleteDeity(admin, id);
 
       await expect(attempt).rejects.toThrow(Forbidden);
-      await expect(attempt).rejects.toThrow(
-        '"Fixture Held" is among the deities of 2 compendium entries — Testcap (herb) and Testwort (herb). Take it off their deities first.',
-      );
+      await expect(attempt).rejects.toThrow('Testcap');
+      await expect(attempt).rejects.toThrow('Testwort');
       expect((await deityOf(id)).deleted_at).toBeNull();
     });
 
-    it('names the first three and counts the rest', async () => {
+    it('names the first three holding entries and no more', async () => {
       const id = await seed('Fixture Crowded');
       for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) await picking(name, id);
 
-      await expect(deleteDeity(admin, id)).rejects.toThrow(
-        '"Fixture Crowded" is among the deities of 5 compendium entries — Testa (herb), Testb (herb), Testc (herb) and 2 more. Take it off their deities first.',
-      );
-    });
-
-    it('says "its" of a single entry', async () => {
-      const id = await seed('Fixture Single');
-      await picking('Testwort', id);
-
-      await expect(deleteDeity(admin, id)).rejects.toThrow(
-        '"Fixture Single" is among the deities of 1 compendium entry — Testwort (herb). Take it off its deities first.',
-      );
+      const attempt = deleteDeity(admin, id);
+      await expect(attempt).rejects.toThrow('Testc');
+      await expect(attempt).rejects.not.toThrow('Testd');
     });
 
     it('passes once no live entry holds it', async () => {

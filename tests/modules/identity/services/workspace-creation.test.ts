@@ -10,7 +10,7 @@ import {
   resumeAdminRoleChanges,
   revokeWorkspaceCreation,
 } from '@/modules/identity';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix, refusalOf } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
@@ -104,18 +104,14 @@ describe('grantWorkspaceCreation', () => {
     expect(await changes()).toEqual([]);
   });
 
-  // The guard is the only thing between these callers and the write: E's
-  // same call on the same row succeeds, so a pass here is the role refusing.
-  it.each([
-    ['A, an owner who may create covens', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call, writing nothing', async (_who, user) => {
-    expect(user.role).toBe('user');
+  // The check reads the site role alone, so one non-admin stands for every
+  // one: A owns a coven and may create more, the likeliest to slip through.
+  // E's same call on the same row succeeds, so a pass here is the role refusing.
+  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
+    expect(A.role).toBe('user');
     expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
 
-    await expect(grantWorkspaceCreation(asUser(user), PENDING)).rejects.toThrow(Forbidden);
+    await expect(grantWorkspaceCreation(asUser(A), PENDING)).rejects.toThrow(Forbidden);
 
     expect(await flagOf(PENDING)).toMatchObject({
       can_create_workspace: false,
@@ -126,14 +122,13 @@ describe('grantWorkspaceCreation', () => {
     });
   });
 
-  it('refuses a user who may already create a coven with a message, leaving their row alone', async () => {
+  it('refuses a user who may already create a coven, leaving their row alone', async () => {
     await grantWorkspaceCreation(asUser(E), PENDING);
     const granted = await flagOf(PENDING);
 
     const refusal = grantWorkspaceCreation(asUser(E), PENDING);
 
     await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow('Pending Fixturewort may already create a coven');
     expect(await flagOf(PENDING)).toEqual(granted);
     expect(await changes()).toHaveLength(1);
   });
@@ -213,17 +208,13 @@ describe('revokeWorkspaceCreation', () => {
     expect(await owned()).toEqual([{ id: WORKSPACE_W_ID, deleted_at: null, role: 'owner' }]);
   });
 
+  // One non-admin, as for the grant: B is a member of W, holding no site role.
   // E's same call on the same row succeeds, so a pass here is the role refusing.
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call, writing nothing', async (_who, user) => {
-    expect(user.role).toBe('user');
+  it('refuses a non-admin as Forbidden by direct call, writing nothing', async () => {
+    expect(B.role).toBe('user');
     expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });
 
-    await expect(revokeWorkspaceCreation(asUser(user), A.id)).rejects.toThrow(Forbidden);
+    await expect(revokeWorkspaceCreation(asUser(B), A.id)).rejects.toThrow(Forbidden);
 
     expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });
     expect(await changes()).toEqual([]);
@@ -233,29 +224,23 @@ describe('revokeWorkspaceCreation', () => {
   });
 
   // MB.177's CHECK would refuse the write; the service says why first.
-  it("refuses an admin's flag with an explaining Forbidden, before the CHECK would", async () => {
+  it("refuses an admin's flag as Forbidden, before the CHECK would", async () => {
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
     expect(E.role).toBe('admin');
 
     const refusal = revokeWorkspaceCreation(asUser(E), E.id);
 
     await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(
-      `${E.name} is an admin, and every admin may create a coven. Revoke their admin role first.`,
-    );
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
     expect(await changes()).toEqual([]);
   });
 
-  it('refuses a user who may not create a coven with a message, writing nothing', async () => {
+  it('refuses a user who may not create a coven, writing nothing', async () => {
     const before = await flagOf(PENDING);
 
     const refusal = revokeWorkspaceCreation(asUser(E), PENDING);
 
     await expect(refusal).rejects.toThrow(Forbidden);
-    await expect(refusal).rejects.toThrow(
-      'Pending Fixturewort cannot create a coven, so there is nothing to revoke',
-    );
     expect(await flagOf(PENDING)).toEqual(before);
     expect(await changes()).toEqual([]);
   });
@@ -306,9 +291,7 @@ describe('approving and revoking while admin changes are paused', () => {
   it('refuses another admin approving or revoking, writing no ledger row', async () => {
     expect(E.role).toBe('admin');
 
-    await expect(grantWorkspaceCreation(asUser(E), PENDING)).rejects.toThrow(
-      'Admin changes are paused by the primary admin.',
-    );
+    await expect(grantWorkspaceCreation(asUser(E), PENDING)).rejects.toThrow(Forbidden);
     await expect(revokeWorkspaceCreation(asUser(E), A.id)).rejects.toThrow(Forbidden);
     expect(await flagOf(PENDING)).toMatchObject({ can_create_workspace: false });
     expect(await flagOf(A.id)).toMatchObject({ can_create_workspace: true });

@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { A, E, asUser } from '../../../support/as-user';
-import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
 import type { SetUserRoleResult } from './types';
 
@@ -38,11 +37,6 @@ const SET_ROLE = `
     setUserRole(userId: $userId, role: $role, note: $note) { id role canCreateWorkspace }
   }
 `;
-
-it('is testing a session whose site role is `user`, beside an admin', () => {
-  expect(asUser(A).role).toBe('user');
-  expect(asUser(E).role).toBe('admin');
-});
 
 describe('Mutation.setUserRole', () => {
   it('answers an admin the user, now an admin who may create a coven, the reason on the ledger', async () => {
@@ -84,42 +78,11 @@ describe('Mutation.setUserRole', () => {
     expect(actors).toEqual([{ created_by: E.id }]);
   });
 
-  it('answers a revoke the user, no longer an admin', async () => {
-    await asManualFix(
-      sql,
-      (tx) =>
-        tx`update users set role = 'admin', can_create_workspace = true where id = ${GRANTEE}`,
-    );
-
-    const result = await run<SetUserRoleResult>(asUser(E), SET_ROLE, {
-      userId: GRANTEE,
-      role: 'user',
-    });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.setUserRole).toEqual({
-      id: GRANTEE,
-      role: 'user',
-      canCreateWorkspace: true,
-    });
-  });
-
-  it('refuses a coven owner as FORBIDDEN, the row left as it was', async () => {
-    const result = await run(asUser(A), SET_ROLE, { userId: GRANTEE, role: 'admin' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    const [row] = await sql`select role::text from users where id = ${GRANTEE}`;
-    expect(row).toEqual({ role: 'user' });
-  });
-
-  it("answers a grant to an admin as FORBIDDEN, with the service's message", async () => {
+  // E is an admin the scope admits, so the refusal is the service's.
+  it('answers a grant to an admin as FORBIDDEN', async () => {
     const result = await run(asUser(E), SET_ROLE, { userId: E.id, role: 'admin' });
 
-    expect(result.errors?.[0]).toMatchObject({
-      message: `${E.name} is already an admin`,
-      extensions: { code: 'FORBIDDEN' },
-    });
+    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
   });
 
   it('answers an unknown id as NOT_FOUND', async () => {

@@ -161,16 +161,6 @@ describe('compendium', () => {
     expect(none.map((node) => node.name)).not.toContain('Fixture Wroot');
   });
 
-  it('combines the three', async () => {
-    const nodes = await nodesOf({
-      query: 'cat',
-      form: 'bark',
-      categoryIds: [category('Healing'), category('Strength')],
-    });
-
-    expect(nodes.map((node) => node.canonicalName)).toEqual(['Uncaria tomentosa']);
-  });
-
   // MB.140: every entry on the page asks for its substitutes, and one read
   // answers them all, the linked ingredients joined in.
   it('resolves the substitutes of a page, linked and typed, in one read', async () => {
@@ -300,23 +290,6 @@ describe('compendium', () => {
       expect([first, second, last].map((page) => page.countBefore)).toEqual([0, 10, 20]);
       expect(last.edges).toHaveLength(6);
       expect([first, second, last].map((page) => page.totalCount)).toEqual([26, 26, 26]);
-    });
-
-    it('counts a search, and places an empty page nowhere', async () => {
-      const page = await counted({ query: 'sal', first: 50 });
-      const empty = await counted({ query: 'zzzzqx' });
-
-      expect(page.totalCount).toBe(6);
-      expect(page.countBefore).toBe(0);
-      expect(empty).toMatchObject({ totalCount: 0, countBefore: null, edges: [] });
-    });
-
-    it('counts what a nomenclature narrows to', async () => {
-      const page = await counted({ nomenclature: 'none', first: 2 });
-
-      expect(page.totalCount).toBe(3);
-      expect(page.edges).toHaveLength(2);
-      expect(page.countBefore).toBe(0);
     });
 
     it('counts only when a count field is selected, and once for both', async () => {
