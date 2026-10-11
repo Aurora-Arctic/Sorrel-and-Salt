@@ -132,7 +132,7 @@ describe('CompendiumList filter', () => {
 
     // The <search> landmark around it is the e2e spec's to find, as the
     // category list's is: jsdom's role table predates the element.
-    const search = screen.getByRole('form', { name: 'Filter the compendium' });
+    const search = screen.getByRole('form', { name: 'Filter the Compendium' });
     expect(search).toHaveAttribute('action', '/admin/compendium');
     expect(search).toHaveAttribute('method', 'get');
     const name = within(search).getByRole('searchbox', { name: 'Name' });

@@ -8,11 +8,10 @@ import type {
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../components/CompendiumList/types';
-import Notice from '../../../components/Notice';
-import { NotFound } from '../../../lib/errors';
+import PageHeader from '../../../components/PageHeader';
 import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
-import { readableCursor, single } from '../../../lib/search-params';
+import { single } from '../../../lib/search-params';
 import {
   countCompendium,
   listCompendium,
@@ -23,6 +22,8 @@ import {
   NOMENCLATURE_KINDS,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import { pagerHrefs, readListPlace, readOrMissing } from '../list-page';
+import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { entryValues } from './entry-values';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
@@ -71,8 +72,8 @@ const readCompendium = cache(
  * What `?edit=` names: the entry there, its values read for the form, or the
  * address it moved to while its old one still redirects, or nothing.
  */
-async function readEdited(slug: string) {
-  try {
+const readEdited = (slug: string) =>
+  readOrMissing(async () => {
     const address = await resolveCompendiumSlug(slug);
     if (address.kind === 'moved') return address;
     return {
@@ -80,11 +81,7 @@ async function readEdited(slug: string) {
       id: address.entry.id,
       values: await entryValues(address.entry),
     };
-  } catch (error) {
-    if (error instanceof NotFound) return undefined;
-    throw error;
-  }
-}
+  });
 
 const isKind = (value: string | undefined): value is NomenclatureKind =>
   (NOMENCLATURE_KINDS as readonly string[]).includes(value ?? '');
@@ -97,17 +94,13 @@ const isKind = (value: string | undefined): value is NomenclatureKind =>
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   await requireAdminSession();
   const params: CompendiumSearchParams = await searchParams;
-  // Blank is no filter: a native submit sends `query=&nomenclature=`; a kind
-  // no classification holds is ignored, as a hand-edited cursor gets the
-  // first page.
-  const query = single(params.query)?.trim() ?? '';
+  const { query, after, before, editSlug, adding } = readListPlace(params);
+  // Blank is no filter: a native submit sends `nomenclature=`; a kind no
+  // classification holds is ignored, as a hand-edited cursor gets the first
+  // page.
   const kind = single(params.nomenclature);
   const nomenclature = isKind(kind) ? kind : undefined;
   const withoutReferences = single(params.withoutReferences) === '1';
-  const after = readableCursor(single(params.after));
-  const before = after ? undefined : readableCursor(single(params.before));
-  const editSlug = single(params.edit);
-  const adding = params.new !== undefined;
 
   const [page, edited] = await Promise.all([
     readCompendium(query, nomenclature, withoutReferences, after, before),
@@ -134,31 +127,20 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
 
   return (
     <main>
-      <div className="page-header">
-        <h1>Compendium</h1>
-        <Link className="btn btn--solid" href={compendiumHref(here, 'new')}>
-          Add Ingredient
-        </Link>
-      </div>
-      {!adding && editSlug && !edited && (
-        <Notice kind="error">
-          No compendium entry has that address — it may have been renamed or deleted.
-        </Notice>
-      )}
+      <PageHeader
+        title="Compendium"
+        action={
+          <Link className="btn btn--solid" href={compendiumHref(here, 'new')}>
+            Add Ingredient
+          </Link>
+        }
+      />
+      {!adding && editSlug && !edited && <MissingNotice noun="compendium entry" />}
       <CompendiumList
         entries={entries}
         filter={filter}
         position={page.position}
-        previousHref={
-          page.pageInfo.hasPreviousPage && page.pageInfo.startCursor
-            ? compendiumHref({ ...filter, before: page.pageInfo.startCursor })
-            : undefined
-        }
-        nextHref={
-          page.pageInfo.hasNextPage && page.pageInfo.endCursor
-            ? compendiumHref({ ...filter, after: page.pageInfo.endCursor })
-            : undefined
-        }
+        {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
       {/* One dialog in one place for both, so Save Ingredient's move from ?new
           to ?edit= keeps the modal open rather than fading it out and in; the
