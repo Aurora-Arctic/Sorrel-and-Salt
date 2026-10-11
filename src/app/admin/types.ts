@@ -7,6 +7,7 @@ import type {
 } from '../../components/GroupedValueForm/types';
 import type { EditedGroup, GroupChoice, GroupKind } from '../../components/GroupForm/types';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import type { GroupFilter } from '@/modules/vocabulary';
 
 export interface AdminLayoutProps {
   children: ReactNode;
@@ -123,7 +124,10 @@ export interface ValueDialogProps {
   groups: readonly GroupedValueGroupChoice[];
 }
 
-/** A group page's address (`group-page.tsx`): the list's place; it has no filter. */
+/**
+ * A group page's address (`group-page.tsx`): the list's place, its `query`
+ * read only by a kind that searches (`GroupKindPage.search`).
+ */
 export type GroupSearchParams = ListSearchParams;
 
 /** What a group route's `page.tsx` is handed, which it passes on to `GroupPage`. */
@@ -154,8 +158,14 @@ export interface GroupKindPage {
   /** The modal's titles: "Add Category Group", "Edit Category Group". */
   addTitle: string;
   editTitle: string;
-  list: (page: PageRequest) => Promise<PageEntry<GroupRow>[]>;
-  count: (start: Cursor | undefined) => Promise<PageCount>;
+  /**
+   * Whether the list takes a name search (MB.115): the traditions' alone. A
+   * kind without one reads no `query` from its address, so its readers are
+   * handed no filter and need take none.
+   */
+  search: boolean;
+  list: (page: PageRequest, filter?: GroupFilter) => Promise<PageEntry<GroupRow>[]>;
+  count: (start: Cursor | undefined, filter?: GroupFilter) => Promise<PageCount>;
   getBySlug: (slug: string) => Promise<GroupRow>;
   /** How many live rows the group holds, which its delete must move. */
   countMembers: (groupId: string) => Promise<number>;

@@ -32,6 +32,7 @@ export type {
   DeityFilter,
   DeityRow,
   DeityTraditionRow,
+  GroupFilter,
   IngredientFormGroupRow,
   IngredientFormValueFilter,
   IngredientFormValueRow,

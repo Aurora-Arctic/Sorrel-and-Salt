@@ -747,6 +747,16 @@ export interface DeityFilter {
   traditionId?: string;
 }
 
+/**
+ * What an admin group list is narrowed by (MB.115): the deity traditions
+ * today, and the category and form groups if their pages take the search too.
+ * Absent means no filter.
+ */
+export interface GroupFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+}
+
 /** One provider account linked to a user, without the tokens its row holds. */
 export interface LinkedProvider {
   userId: string;

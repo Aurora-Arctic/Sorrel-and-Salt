@@ -5,37 +5,33 @@ import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { stackCell, tableRole } from '../../lib/table-roles';
-import type { GroupListProps } from './types';
+import GroupListFilter from './filter';
+import { KINDS } from './kinds';
+import type { GroupListFilter as Filter, GroupListProps } from './types';
 import './index.scss';
 
 // A group page's table and pager (M5.6b), for every group vocabulary, a deity's
 // traditions included (MB.132).
 // Render-only: the page reads one page of groups through the service and hands
 // it here. A category group's name is drawn in its own chip, which is how a
-// reader meets the pair. No filter: a vocabulary of eight sections, or six,
-// needs none. Each Edit is an address — the page opens its modal from the URL
-// — so a modal can be linked to and Back closes it. The table turns each row
-// into a card at phone width (claude-docs/components/group-list.md).
+// reader meets the pair. A name search heads the list for a kind whose page
+// hands it a `filter`: the traditions', thirty-five in the seed (MB.115), and
+// not the category or form groups', eight and six. Each Edit is an address —
+// the page opens its modal from the URL — so a modal can be linked to and
+// Back closes it. The table turns each row into a card at phone width
+// (claude-docs/components/group-list.md).
 
 /**
- * What an empty list says to do: add one with the page header's button,
- * named as that button is (`group-page.tsx`).
+ * What an empty list says: how to fill it, with the page header's Add, named
+ * as that button is (`group-page.tsx`); or, searched with no rows, what to
+ * change, as a value list's does.
  */
-const EMPTY: Record<GroupKind, string> = {
-  category: 'There are no groups yet. Add one with Add Group.',
-  form: 'There are no groups yet. Add one with Add Group.',
-  tradition: 'There are no traditions yet. Add one with Add Tradition.',
-};
-
-/**
- * The table's name, what a screen reader lists it as: the full name its
- * tab's short label, "Groups" or "Traditions", stands for (MB.115).
- */
-const TABLE_NAME: Record<GroupKind, string> = {
-  category: 'Category Groups',
-  form: 'Form Groups',
-  tradition: 'Deity Traditions',
-};
+function emptyMessage(kind: GroupKind, filter: Filter | undefined): string {
+  const { noun, plural, add } = KINDS[kind];
+  return filter?.query
+    ? `No ${noun} matches that filter. Try another name.`
+    : `There are no ${plural} yet. Add one with ${add}.`;
+}
 
 const GroupList = ({
   kind,
@@ -43,15 +39,19 @@ const GroupList = ({
   previousHref,
   nextHref,
   position,
+  filter,
 }: GroupListProps): ReactElement => (
   <ListFrame>
+    {/* Keyed by the search shown, so another one starts the form again from it. */}
+    {filter && <GroupListFilter key={filter.query} kind={kind} filter={filter} />}
+
     <ListBody>
       {groups.length ? (
         <div className="data-table-frame">
           <table
             className="data-table data-table--stack group-list__table"
             {...tableRole('table')}
-            aria-label={TABLE_NAME[kind]}
+            aria-label={KINDS[kind].title}
           >
             <thead {...tableRole('rowgroup')}>
               <tr {...tableRole('row')}>
@@ -96,7 +96,7 @@ const GroupList = ({
           </table>
         </div>
       ) : (
-        <p>{EMPTY[kind]}</p>
+        <p>{emptyMessage(kind, filter)}</p>
       )}
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

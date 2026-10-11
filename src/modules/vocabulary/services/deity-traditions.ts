@@ -1,9 +1,9 @@
 import 'server-only';
 import {
   findDeityPage,
+  findGroupCount,
+  findGroupPage,
   findOneBySlug,
-  findPage,
-  findPageCount,
   withAudit,
 } from '../../../db/repository';
 import { expireCompendium } from '../../../lib/compendium-cache';
@@ -17,7 +17,7 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityTraditionInput } from '../validation/deity-tradition';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
-import type { CuratedGroup, DeityTraditionRow } from '../types';
+import type { CuratedGroup, DeityTraditionRow, GroupFilter } from '../types';
 
 // The deity traditions: their reads, public reference data like every curated
 // vocabulary (MB.80), and their writes, the site admin's alone (MB.132), in
@@ -44,17 +44,28 @@ const TRADITIONS: CuratedGroup<typeof deityTraditions> = {
     under: (traditionId) => allPages((page) => findDeityPage({ traditionId }, page)),
   },
 };
-/** One page of the live traditions, alphabetical by name (MB.35): a deity's tradition is picked from these. */
-export function listDeityTraditions(page: PageRequest): Promise<PageEntry<DeityTraditionRow>[]> {
-  return findPage(deityTraditions, [deityTraditions.name], page);
+/**
+ * One page of the live traditions, alphabetical by name (MB.35): a deity's
+ * tradition is picked from these. The admin's list narrows them by a name
+ * fragment (MB.115); every other reader passes no filter, which is all of them.
+ */
+export function listDeityTraditions(
+  page: PageRequest,
+  filter: GroupFilter = {},
+): Promise<PageEntry<DeityTraditionRow>[]> {
+  return findGroupPage(deityTraditions, filter, page);
 }
 
 /**
- * How many live traditions `listDeityTraditions` pages, and how many come before `start`
- * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
+ * How many live traditions `listDeityTraditions` pages under `filter`, and how
+ * many come before `start` — a page's first row, none on an empty page:
+ * "Page X of Y" on the admin page.
  */
-export function countDeityTraditions(start: Cursor | undefined): Promise<PageCount> {
-  return findPageCount(deityTraditions, [deityTraditions.name], start);
+export function countDeityTraditions(
+  start: Cursor | undefined,
+  filter: GroupFilter = {},
+): Promise<PageCount> {
+  return findGroupCount(deityTraditions, filter, start);
 }
 
 /**
