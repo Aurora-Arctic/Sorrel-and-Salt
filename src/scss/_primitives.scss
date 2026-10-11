@@ -296,6 +296,12 @@
   // carries room below its letters, so a centred button reads high and one on
   // the baseline low. It wraps beneath on a narrow screen rather than
   // squeezing the heading.
+  // A size container as well as the row (MB.115), since only its children
+  // change by its width: a container query styles what is inside the
+  // container, never the container itself. Keyed off its own width rather
+  // than the screen's, as `.form` is, so a header in a narrow column wraps too.
+  // Size containment means its width cannot come from its content, which
+  // holds wherever it sits: as a block, or a stretched flex item.
   .page-header {
     display: flex;
     flex-wrap: wrap;
@@ -303,6 +309,7 @@
     justify-content: space-between;
     gap: space(3) space(5);
     margin-bottom: space(5);
+    container: page-header / inline-size;
 
     > h1 {
       margin: 0;
@@ -310,6 +317,55 @@
 
     > :not(h1) {
       translate: 0 0.25rem;
+    }
+  }
+
+  // Under the forms' column, 28rem of its own width, the action goes
+  // beneath the heading at its natural width (MB.115), rather than squeezing
+  // a long heading onto three lines beside it. On a line of its own it needs
+  // no bringing down to the heading's letters.
+  @container page-header (max-width: #{$narrow-column}) {
+    .page-header > h1 {
+      flex-basis: 100%;
+    }
+
+    .page-header > :not(h1) {
+      translate: none;
+    }
+  }
+
+  // A filter form's row (MB.115): the query field, any selects and checks,
+  // and the Filter button, wrapping, all on the line's end so a check or a
+  // button stands level with the boxes beside it. Written five times as each
+  // list's own `__search` rule until it was one. A size container for the
+  // same reason `.page-header` is: under 28rem of its own width the query
+  // field, its first child, takes the whole line and the rest wrap beneath
+  // it, rather than a phone squeezing the query box to the width of a select.
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: space(3) space(5);
+    container: filter-row / inline-size;
+  }
+
+  @container filter-row (max-width: #{$narrow-column}) {
+    .filter-row > :first-child {
+      flex-basis: 100%;
+    }
+  }
+
+  // A list page's root (MB.115): the filter, the notice or empty state, the
+  // table and the pager, a `space(5)` apart. Written four times as each
+  // list's own root rule. A paragraph in it, an empty state, takes no margin,
+  // since the gap alone spaces the column, as `.page-frame`'s does.
+  .list-frame {
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+
+    > p {
+      margin: 0;
     }
   }
 
@@ -372,6 +428,28 @@
     border-top: 1px solid $text-muted;
   }
 
+  // The admin area's frame (MB.115), around the nav it carries: the nav
+  // above, the page below, a `space(5)` apart. Wider than `.page-frame`, at
+  // `$wide-column`, for the tables its pages hold, and neither full height
+  // nor centred down the window, since a list page runs as long as its rows.
+  // A primitive rather than AdminNav's own rule, since the admin layout and
+  // three stories use the class as their frame.
+  .admin-layout {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+    margin-inline: auto;
+    padding: space(6) space(4);
+  }
+
+  // Inside `:where()`, as `.page-frame`'s width is, so a story or page that
+  // wants the frame narrower or wider can say so with a single class.
+  :where(.admin-layout) {
+    width: 100%;
+    max-width: $wide-column;
+  }
+
   // A wrapping row of links that is not a bulleted list: a page's own nav,
   // the admin nav. typography-base's ◆ marker would sit against the link
   // before and hang outside the first, and its list indent and item margins
@@ -391,6 +469,18 @@
     > li::before {
       content: none;
     }
+  }
+
+  // The link to the page you are on (MB.115), marked by `aria-current`,
+  // which is what tells a screen reader too. Told apart by shape rather than
+  // hue: a firmer weight and the heavy rule as its underline, set clear of
+  // the letters, where every other link has the browser's hairline. A
+  // different colour alone would fail WCAG 1.4.1. The admin nav is the first.
+  .link-row a[aria-current='page'] {
+    font-weight: 500;
+    text-decoration-line: underline;
+    text-decoration-thickness: $rule-heavy;
+    text-underline-offset: space(1);
   }
 
   // A provider's mark on a small circle of its brand's own ground, as its
@@ -433,8 +523,14 @@
 
   // A table is as wide as its columns: on a narrow screen it scrolls inside
   // its frame rather than widening the page.
+  // Also the size container a `.data-table--stack` table stacks by, named so
+  // that a `.form` or `.page-header` container around it is not the one asked.
+  // Size containment means the frame's width cannot come from the table
+  // inside it, so the frame must sit as a block or a stretched flex item,
+  // as it does in `.list-frame`, never in a row that shrinks to its content.
   .data-table-frame {
     overflow-x: auto;
+    container: data-table / inline-size;
   }
 
   // The admin lists' table (M5.6), a primitive once a third list carried it
@@ -464,6 +560,88 @@
 
     tbody tr:nth-child(even) {
       background-color: $surface-card;
+    }
+  }
+
+  // A table whose rows turn into cards when its frame is narrower than
+  // `$table-stack-width` (MB.115), where its columns would otherwise scroll
+  // sideways out of sight on a phone. Each row is a card on the surface the
+  // bands use, every cell a block beneath the last, led by its column's name
+  // from the cell's own `data-label`, since the header row is hidden: still
+  // read by a screen reader, drawn nowhere. A cell whose `data-label` is
+  // empty, an action such as Impersonate, loses the label and spans the card.
+  // claude-docs/styling.md, "Tables at phone width".
+  //
+  // - Every stacking table carries explicit `role` attributes (`table`,
+  //   `rowgroup`, `row`, `columnheader`, `cell`): WebKit drops a table's
+  //   semantics once `display` changes on its parts, and the roles put them
+  //   back. They change nothing elsewhere, since they are the roles the
+  //   elements have already.
+  // - The label is written twice: `attr(data-label) / ''` gives it an empty
+  //   alternative text, so a screen reader, which already has the header,
+  //   does not read the name twice. Safari 16.4 drops the second
+  //   declaration and keeps the first, which doubles the name there.
+  // - A cell a component makes `position: sticky`, as the user list's
+  //   Impersonate column is, must be reset to `static` under this rule in the
+  //   component's own stylesheet: a sticky cell only works while the frame
+  //   scrolls, and in a card it would sit over its neighbours. The primitive
+  //   does not reset `position` itself, since a cell may be `relative` to
+  //   anchor a tip.
+  @container data-table (max-width: #{$table-stack-width}) {
+    .data-table--stack {
+      display: block;
+
+      > thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      > tbody {
+        display: flex;
+        flex-direction: column;
+        gap: space(3);
+      }
+
+      // Every card on the card surface, so the bands give way: each row is
+      // already its own box.
+      > tbody > tr {
+        display: grid;
+        gap: space(2);
+        padding: space(3);
+        border-radius: radius('surface');
+        background-color: $surface-card;
+      }
+
+      > tbody > tr > :is(td, th) {
+        display: block;
+        padding: 0;
+      }
+
+      > tbody > tr > :is(td, th)::before {
+        content: attr(data-label);
+        content: attr(data-label) / '';
+        display: block;
+        color: $text-muted;
+        font-size: type-size('caption');
+        font-weight: 500;
+      }
+
+      > tbody > tr > [data-label='']::before {
+        content: none;
+      }
+
+      // A cell with no label is an action: across the card, whatever columns
+      // a component gives the grid.
+      > tbody > tr > [data-label=''] {
+        grid-column: 1 / -1;
+      }
     }
   }
 
@@ -578,6 +756,23 @@
     margin-block: space(2);
   }
 
+  // A question standing where a form's buttons were (MB.115): "Delete this?"
+  // with its own row of buttons, held as far from the fields as the buttons
+  // it replaces (M5.5). Its row is a `.modal__actions`, which the
+  // narrow-form rule above stacks with the rest. Written as each admin form's
+  // own `__confirm` rule until it was one.
+  .form__confirm {
+    margin-block: space(2);
+  }
+
+  // The button apart from the rest at the row's far end, an edit's Delete,
+  // so it is not pressed for Save or Cancel. A margin rather than a spacer
+  // element, so a narrow form's stacking rule can take it back: under 28rem
+  // the row is a column and every button full width, in order.
+  .form__aside {
+    margin-inline-start: auto;
+  }
+
   .field {
     display: flex;
     flex-direction: column;
@@ -587,6 +782,25 @@
   .field__label {
     font-size: type-size('small');
     font-weight: 500;
+  }
+
+  // A label with something beside it on its line, an InfoTip's ⓘ or a
+  // required mark (MB.115, from IngredientForm's own rule). The positioning
+  // context for a tip that opens over the label, so it lines up with the
+  // field rather than the page.
+  .field__label-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: space(1);
+  }
+
+  // The asterisk on a label whose field a save will ask for, in the error
+  // red. The markup hides it from a screen reader, which hears `aria-required`
+  // on the control instead. Written five times as each form's own `__required`
+  // rule.
+  .field__required {
+    color: $secondary;
   }
 
   // The control itself, not any disabled descendant: a select's placeholder

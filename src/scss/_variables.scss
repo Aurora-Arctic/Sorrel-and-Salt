@@ -333,6 +333,48 @@ $narrow-column: 28rem;
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
+// The admin area's column (MB.115): wider than the measure, for the tables
+// the admin pages hold, whose prose still stops at it. It was `.admin-layout`'s
+// own 64rem in `AdminNav/index.scss`.
+$wide-column: 64rem;
+
+// A dialog's content column, and the wide one for a form with nested panels,
+// such as the ingredient form (M5.5). Each was a raw width in
+// `Modal/index.scss`; the modal adds its padding and caps both at the window.
+$dialog-column: 32rem;
+$dialog-column-wide: 48rem;
+
+// A small control's square box: WCAG 2.2's 24px minimum target, around a
+// `$glyph-size` mark. InfoTip's ⓘ, Combobox's clear and chip-remove buttons
+// and the user list's icon boxes each wrote 1.5rem.
+$icon-size: 1.5rem;
+
+// The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's glyphs, the
+// user list's marks. Each wrote 1rem.
+$glyph-size: 1rem;
+
+// A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`
+// so a tip never runs off a phone. InfoTip, Combobox's qualifier tip and the
+// user list's locked-control tip each wrote 18rem.
+$tip-width: 18rem;
+
+// The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
+// during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
+// `Modal/index.scss`.
+$close-target: 2.5rem;
+
+// The width of its own frame under which a `.data-table--stack` table turns
+// each row into a card (MB.115): a container width, not the screen's, so a
+// table in a narrow column stacks too. claude-docs/styling.md, "Tables at
+// phone width".
+$table-stack-width: 40rem;
+
+// The heavy rule, for a line that must read by its weight as well as its
+// colour: the impersonation banner's foot, the owner's call in MB.53, where it
+// was the banner's own `$impersonation-banner-rule`; and the underline of
+// `.link-row`'s current-page link, which no hue tells apart (MB.115).
+$rule-heavy: 3px;
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------
