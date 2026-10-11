@@ -384,14 +384,65 @@ describe('CompendiumList Clear Filters', () => {
     }
   });
 
-  it('is off while the page shows no filter, whatever the fields hold', () => {
+  it('is off while neither the page nor the fields hold a filter', () => {
     render(<CompendiumList {...props()} />);
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
-      target: { value: 'draft' },
-    });
 
     expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
     expect(clearLink()).not.toHaveAttribute('href');
+  });
+
+  // The owner's call at MB.115's review: values not yet applied are cleared
+  // too, where they are, with nothing to navigate to.
+  it('empties every field in place when only the fields hold values, without navigating', () => {
+    render(<CompendiumList {...props()} />);
+    const name = screen.getByRole('searchbox', { name: 'Name' });
+    const formBox = screen.getByRole('combobox', { name: 'Form' });
+
+    fireEvent.change(name, { target: { value: 'draft' } });
+    expect(clearLink()).toHaveAttribute('href', '/admin/compendium');
+    fireEvent.change(formBox, { target: { value: 'oil' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
+      target: { value: 'mineral' },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Without References' }));
+    fireEvent.click(clearLink());
+
+    expect(router.push).not.toHaveBeenCalled();
+    const search = screen.getByRole('form', { name: 'Filter the Compendium' });
+    expect(Object.fromEntries(new FormData(search as HTMLFormElement))).toEqual({
+      query: '',
+      form: '',
+      nomenclature: '',
+    });
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
+    expect(screen.getByRole('checkbox', { name: 'Without References' })).not.toBeChecked();
+    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveFocus();
+    expect(filterButton()).toBeDisabled();
+    expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('empties a type-ahead holding text that names no choice', () => {
+    render(<CompendiumList {...props()} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'draft' },
+    });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Form' }), { target: { value: 'zz' } });
+    fireEvent.click(clearLink());
+
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
+  });
+
+  it('opens the unfiltered list, not the fields emptied in place, while the page shows a filter', () => {
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+      target: { value: 'other' },
+    });
+    fireEvent.click(clearLink());
+
+    expect(router.push).toHaveBeenCalledWith('/admin/compendium');
   });
 
   it('opens the unfiltered list, busy until it arrives', async () => {

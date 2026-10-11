@@ -8,7 +8,8 @@ import FilterForm from '.';
 // router goes nowhere, so Filter shows its spinner only for as long as the
 // stubbed push takes. The fields are the caller's: a name and a group here, as
 // a value list's are, with Filter offered once either differs from the
-// filter shown, and Clear Filters while the filter shown is not blank.
+// filter shown, and Clear Filters while the filter shown or the fields are
+// not blank.
 export default {
   title: 'Forms / Filter Form',
 };
@@ -27,6 +28,11 @@ const ValueFilter = ({ shown = NO_FILTER }: { shown?: typeof NO_FILTER }) => {
       href={() => listHref(PATH, { query: query.trim(), group })}
       disabled={query.trim() === shown.query && group === shown.group}
       shown={[shown.query, shown.group]}
+      draft={[query, group]}
+      onClear={() => {
+        setQuery('');
+        setGroup('');
+      }}
       navigation="soft"
     >
       <div className="field">
@@ -62,8 +68,8 @@ const ValueFilter = ({ shown = NO_FILTER }: { shown?: typeof NO_FILTER }) => {
   );
 };
 
-// Type in Name, or pick a group, to offer Filter. Clear Filters is off: the
-// filter shown is blank.
+// Type in Name, or pick a group, to offer Filter and Clear Filters, which
+// empties the fields where they are: the filter shown is blank.
 export const Default: Story = () => <ValueFilter />;
 
 export const PhoneDark: Story = () => <ValueFilter />;

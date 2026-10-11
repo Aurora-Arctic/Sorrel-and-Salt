@@ -324,6 +324,22 @@ describe('UserList filter', () => {
     );
   });
 
+  it('empties the query, the role and Needs Approval in place when none is applied yet', () => {
+    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    render(<UserList {...props()} />);
+
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'bo' } });
+    fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
+    fireEvent.click(screen.getByLabelText('Needs Approval'));
+    fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+
+    expect(assignMock).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Name or Email')).toHaveValue('');
+    expect(screen.getByLabelText('Role')).toHaveValue('');
+    expect(screen.getByLabelText('Needs Approval')).not.toBeChecked();
+    expect(filterButton()).toBeDisabled();
+  });
+
   it('clears the filter as a full load, busy until the page goes', () => {
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(

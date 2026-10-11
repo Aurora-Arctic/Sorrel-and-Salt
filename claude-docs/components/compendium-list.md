@@ -55,7 +55,9 @@ different groups, so the page offers each name once, whatever its case.
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
   the Filter button, the Clear Filters link and the soft navigation; Clear
   Filters is offered while the page shows a name, a form, a classification or
-  Without References, and opens `/admin/compendium` with none. M8.10 turns the Name box into its
+  Without References, and opens `/admin/compendium` with none, and while
+  only the fields hold one it empties them in place, the Form type-ahead and
+  its hidden input included. M8.10 turns the Name box into its
   typeahead, a picked row opening the entry's `?edit=` modal, with this form
   kept underneath.
 - **Form is a type-ahead over the curated forms once hydrated**, the
@@ -157,8 +159,9 @@ drawn as a native select on the server and as a type-ahead once hydrated,
 its narrowing as a name is typed, its pick and its clear, the Filter
 button's disabled and enabled states for each control, the address it opens,
 the busy state while the filtered list loads, the reset to the filter shown,
-Clear Filters (its address with each control set, off with none set whatever
-the fields hold, and busy while the unfiltered list loads), and
+Clear Filters (its address with each control set, off with nothing set,
+every field emptied in place when nothing is applied, a type-ahead's text
+naming no choice too, and busy while the unfiltered list loads), and
 `compendiumHref`. It is the one list test of the filter's busy state, its
 reset and Clear Filters; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,

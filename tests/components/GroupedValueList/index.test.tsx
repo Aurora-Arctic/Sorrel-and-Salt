@@ -273,5 +273,21 @@ describe('GroupedValueList', () => {
         'true',
       );
     });
+
+    it('empties the name and the group in place when neither is applied yet', () => {
+      render(<GroupedValueList {...props()} />);
+
+      fireEvent.change(searchbox(), { target: { value: 'draft' } });
+      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
+      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
+      fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+
+      expect(router.push).not.toHaveBeenCalled();
+      expect(searchbox()).toHaveValue('');
+      expect(groupBox()).toHaveValue('');
+      const search = screen.getByRole('form', { name: DEITIES.filterName });
+      expect(new FormData(search as HTMLFormElement).get(DEITIES.groupParam)).toBe('');
+      expect(filterButton()).toBeDisabled();
+    });
   });
 });

@@ -34,6 +34,12 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
       }
       disabled={!changed}
       shown={[query, role, awaitingApproval]}
+      draft={[draftQuery, draftRole, draftAwaiting]}
+      onClear={() => {
+        setDraftQuery('');
+        setDraftRole('');
+        setDraftAwaiting(false);
+      }}
       navigation="full"
     >
       <div className="field">

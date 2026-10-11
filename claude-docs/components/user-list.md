@@ -40,7 +40,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   button and the full-load navigation, so Filter is busy, a spinner and
   "Filtering", from the press until the browser leaves (MB.115). Its Clear
   Filters link, offered while the page shows a query, a role or Needs
-  Approval, opens `/admin/users` with none as the same full load
+  Approval, opens `/admin/users` with none as the same full load, and while
+  only the fields hold one empties them in place
   ([`filter-form.md`](filter-form.md)).
 - **Filter is offered only when there is a new filter to apply** (MB.53, on
   the owner's word). It is `disabled` while the trimmed query and the checkbox
@@ -381,7 +382,8 @@ address's marks the one rendering of their state; a provider outside the
 roster; no table when no user matches; the filter form's action, method,
 names and kept values; the Filter button's disabled and enabled states, the
 bare `awaiting` it opens, the Role select's values and the `role` it opens;
-Clear Filters offered by each filter shown, off with none, and its full load;
+Clear Filters offered by each filter shown, off with none, emptying the
+fields in place when none is applied, and its full load;
 the history link before every name and its address; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy

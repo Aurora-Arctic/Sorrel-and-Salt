@@ -17,7 +17,9 @@ full page load and none.
 | `action`     | The page itself, which the form submits to natively before hydration                         |
 | `href`       | Builds the filtered list's address from the caller's field state, usually through `listHref` |
 | `disabled`   | The caller's "nothing changed": true while the form matches the filter the page shows        |
-| `shown`      | Each value of the filter the page shows, not the fields' drafts, for Clear Filters           |
+| `shown`      | Each value of the filter the page shows, for Clear Filters                                   |
+| `draft`      | Each value the fields hold now, applied or not, for Clear Filters                            |
+| `onClear`    | Empties every field the caller holds, for Clear Filters with nothing applied                 |
 | `navigation` | `soft` or `full`, below                                                                      |
 | `children`   | The fields, each with the `name` the page reads                                              |
 
@@ -44,25 +46,34 @@ full page load and none.
     ([`pager.md`](pager.md)). The button is busy from the press until the
     browser leaves, and a `pageshow` from the back-forward cache (the browser
     restoring a page it kept whole) clears it.
-- **Clear Filters opens the list with no filter** (the owner's call at
-  MB.115's review), after Filter in the row. It is a link, not a submit: its
+- **Clear Filters clears whatever is set** (the owner's calls at MB.115's
+  review), after Filter in the row: a filter on the address, or a value in a
+  field not yet applied. It is a link, not a submit: its
   address is `action`, the page itself with no query, so every filter
   parameter and the cursor go, and so does a modal's (`?edit=`, `?new`),
   and it works before hydration as a plain address. It is `.btn--quiet`,
   the row's secondary control, since it changes no data, as the pager's are.
-  With JavaScript a plain left click navigates as Filter does, `soft` or
-  `full`, and the link is busy the same way, a spinner and "Clearing
+  With JavaScript and a filter shown, a plain left click navigates as
+  Filter does, `soft` or `full`, and the fields come back empty with the
+  unfiltered page; the link is busy the same way, a spinner and "Clearing
   Filters" with `aria-busy`, while Filter is disabled; a click for a new tab
-  or window is left to the browser. It is offered while any of `shown` is
+  or window is left to the browser. With no filter shown but a field
+  holding something, a press empties the fields where they are and
+  navigates nowhere: the caller's `onClear` empties its state, and the
+  fields are drawn again, so a type-ahead's own text goes too, even text
+  naming no choice, which is no value; the focus goes to the first field,
+  since the pressed link then has nothing to do, and Filter is left with
+  nothing to apply. It is offered while any of `shown` or of `draft` is
   set, a non-blank string or `true`, so a blank name box, an "All …"
   choice and an unticked check count as none. Each list passes its values
-  and this one place decides. With no filter shown it is **disabled, not
-  hidden**: an anchor with no address, `aria-disabled` and `role="link"`,
+  and this one place decides. Before hydration the fields hold the filter
+  shown, so the server's link is offered for that alone and is the plain
+  address, which empties every field on load. With nothing to clear it is
+  **disabled, not hidden**: an anchor with no address, `aria-disabled` and `role="link"`,
   as the pager's end with no page is. The owner's rule is that a control with
   nothing to do is disabled, as Filter is with nothing new to send, and a
   disabled control keeps its place, so nothing in the row moves when a
-  filter is applied or cleared. What the fields hold does not count: a draft
-  not yet applied is not a filter on the list.
+  filter is applied or cleared.
 - **The fields are the caller's.** Their state, their labels and what counts
   as a change stay in the list that knows them; this holds the form, the
   two controls and the navigation.
@@ -107,6 +118,7 @@ page showing a filter, Clear Filters offered.
 No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
 assert", rule 6): a filter's spinner and reset are tested once, in
 `CompendiumList`, and each list asserts the address its filter builds.
-Clear Filters is tested there too, its address, its disabled state and its
-busy soft navigation; each other list asserts which of its values offer it,
-and `UserList` its full load.
+Clear Filters is tested there too, its address, its disabled state, its
+busy soft navigation and its in-place emptying, the type-ahead included;
+each other list asserts which of its values offer it and that its fields
+empty in place, and `UserList` its full load.

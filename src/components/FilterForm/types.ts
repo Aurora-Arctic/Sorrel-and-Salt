@@ -20,8 +20,12 @@ export interface FilterFormProps {
   href: () => Route;
   /** The caller's "nothing changed": Filter is offered only when the form differs from the filter shown. */
   disabled: boolean;
-  /** Each value of the filter the page shows, not the fields' drafts: Clear Filters is offered while any is set. */
+  /** Each value of the filter the page shows: while any is set, Clear Filters opens the unfiltered list. */
   shown: readonly FilterValue[];
+  /** Each value the fields hold now, applied or not: while any is set and none is shown, Clear Filters empties the fields in place. */
+  draft: readonly FilterValue[];
+  /** Empties every field the caller holds, for Clear Filters with nothing applied. */
+  onClear: () => void;
   navigation: FilterNavigation;
   /** The filter's fields, each carrying the `name` the page reads. */
   children: ReactNode;

@@ -61,6 +61,13 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
       }
       disabled={!changed}
       shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
+      draft={[draftQuery, draftForm, draftKind, draftUnsourced]}
+      onClear={() => {
+        setDraftQuery('');
+        setDraftForm('');
+        setDraftKind('');
+        setDraftUnsourced(false);
+      }}
       navigation="soft"
     >
       <FieldShell label="Name" {...query}>

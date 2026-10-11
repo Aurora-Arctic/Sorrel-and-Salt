@@ -50,6 +50,11 @@ const GroupedValueListFilter = ({
       href={() => groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup })}
       disabled={!changed}
       shown={[filter.query, filter.group]}
+      draft={[draftQuery, draftGroup]}
+      onClear={() => {
+        setDraftQuery('');
+        setDraftGroup('');
+      }}
       navigation="soft"
     >
       <FieldShell label="Name" {...query}>

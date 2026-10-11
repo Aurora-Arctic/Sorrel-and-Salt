@@ -3,10 +3,12 @@
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import {
+  Fragment,
   type FormEvent,
   type MouseEvent,
   type ReactElement,
   useEffect,
+  useRef,
   useState,
   useTransition,
 } from 'react';
@@ -19,8 +21,10 @@ import type { FilterFormProps, FilterValue } from './types';
 // reads. Once hydrated, Filter is offered only when the form differs from the
 // filter the page shows (MB.53, the owner's word), and opens the new filter
 // from the first page, busy until it arrives. Clear Filters, after it, is a
-// link to the page itself with no filter, offered while the page shows one
-// (the owner's call at MB.115's review). The caller keeps its own field state
+// link to the page itself with no filter, offered while the page shows one or
+// a field holds a value not yet applied (the owner's calls at MB.115's
+// review): with a filter shown it opens the unfiltered list, and with only
+// unapplied values it empties the fields where they are. The caller keeps its own field state
 // and supplies the fields; this holds the form, the two controls and the
 // navigation, which five lists had each written for themselves
 // (claude-docs/components/filter-form.md).
@@ -35,6 +39,8 @@ const FilterForm = ({
   href,
   disabled,
   shown,
+  draft,
+  onClear,
   navigation,
   children,
 }: FilterFormProps): ReactElement => {
@@ -47,7 +53,23 @@ const FilterForm = ({
   const filterBusy = filtering || leaving === 'filter';
   const clearBusy = clearing || leaving === 'clear';
   const busy = filterBusy || clearBusy;
-  const active = shown.some(isSet);
+  const filtered = shown.some(isSet);
+  const drafted = draft.some(isSet);
+  const form = useRef<HTMLFormElement>(null);
+  // Bumped by an in-place clear, which keys the fields: a type-ahead keeps
+  // its own text, which may name no choice and so be no value, and starts
+  // again empty only by being drawn again.
+  const [emptied, setEmptied] = useState(0);
+
+  // An in-place clear takes the focus to the first field once the fields are
+  // drawn again: the pressed Clear Filters has nothing left to do and is no
+  // longer focusable.
+  useEffect(() => {
+    if (emptied === 0) return;
+    form.current
+      ?.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea')
+      ?.focus();
+  }, [emptied]);
 
   // Back to a page the browser kept whole (the back-forward cache) restores
   // it as it was left, spinner and all: the flag drops when it is shown again,
@@ -84,19 +106,25 @@ const FilterForm = ({
     if (opensElsewhere(event)) return;
     event.preventDefault();
     if (busy) return;
-    go(() => action, 'clear');
+    if (filtered) {
+      go(() => action, 'clear');
+      return;
+    }
+    onClear();
+    setEmptied((count) => count + 1);
   }
 
   return (
     <search>
       <form
         className="filter-row"
+        ref={form}
         method="get"
         action={action}
         aria-label={label}
         onSubmit={submit}
       >
-        {children}
+        <Fragment key={emptied}>{children}</Fragment>
         {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
         <BusyButton
           type="submit"
@@ -107,10 +135,11 @@ const FilterForm = ({
         >
           Filter
         </BusyButton>
-        {active ? (
+        {filtered || drafted ? (
           // A link, not a submit: the unfiltered first page is the page
           // itself, which works before hydration as an address, and a submit
-          // would send the fields as they stand.
+          // would send the fields as they stand. Before hydration the fields
+          // hold the filter shown, so it is offered only for that.
           <a
             className="btn btn--quiet"
             href={action}
@@ -121,7 +150,7 @@ const FilterForm = ({
             {clearBusy ? 'Clearing Filters' : 'Clear Filters'}
           </a>
         ) : (
-          // Disabled rather than hidden while the page shows no filter, as
+          // Disabled rather than hidden with nothing to clear, as
           // Filter is with nothing to send and the pager's end with no page,
           // so neither control moves. An anchor cannot be `disabled`: no
           // address and `aria-disabled`, with the role kept so it still reads

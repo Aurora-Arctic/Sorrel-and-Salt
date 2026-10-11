@@ -25,6 +25,11 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
       href={() => privilegeLedgerHref({ query: draftQuery.trim(), privilege: draft || undefined })}
       disabled={!changed}
       shown={[filter.query, filter.privilege]}
+      draft={[draftQuery, draft]}
+      onClear={() => {
+        setDraftQuery('');
+        setDraft('');
+      }}
       navigation="full"
     >
       <div className="field">

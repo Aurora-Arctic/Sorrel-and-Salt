@@ -171,6 +171,22 @@ describe('PrivilegeLedger', () => {
         'true',
       );
     });
+
+    it('empties the query and the privilege in place when neither is applied yet', () => {
+      vi.stubGlobal('location', { ...window.location, assign });
+      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
+      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
+
+      fireEvent.change(query, { target: { value: 'ada' } });
+      fireEvent.change(privilege, { target: { value: 'admin' } });
+      fireEvent.click(screen.getByRole('link', { name: 'Clear Filters' }));
+
+      expect(assign).not.toHaveBeenCalled();
+      expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('');
+      expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('');
+      expect(filterButton()).toBeDisabled();
+    });
   });
 
   it('draws no table when there is nothing to show', () => {
