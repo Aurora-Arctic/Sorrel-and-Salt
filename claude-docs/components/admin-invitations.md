@@ -5,21 +5,30 @@
 gave it a tab of its own): **Invite Admin**, and the pending invitations, each
 with its address, its reason, when it expires and **Revoke**. Render-only: the
 page reads the list through `listPendingAdminInvitations` and whether this
-admin is held by the pause, and hands both down. The rules are
+admin is held by the pause (`invitations/lock.ts`), and hands both down. The rules are
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
 
 ## Contracts
 
 - **A region named "Admin Invitations", with no heading of its own.** The
   page's `h1`, People, and its open tab already say what it holds
-  ([`tabbed-page.md`](tabbed-page.md)). The name keeps Invite Admin, the
-  sent confirmation and the rows findable as one. Invite Admin is the tab's
-  action, in `TabActions` at the end of the line above the table.
+  ([`tabbed-page.md`](tabbed-page.md)). The name keeps the sent
+  confirmation and the rows findable as one.
+- **Invite Admin is the tab's action, beside the page's heading** (MB.115,
+  on the owner's call), exported as `InviteAdmin` and drawn by
+  `src/app/admin/(people)/@action/invitations/page.tsx`. The heading line
+  and the list are rendered apart, so the button can no longer hold the
+  form's state: Invite Admin is a link to `/admin/invitations?invite`
+  (`href.ts`), and the page opens the form over the list by that address,
+  as a value page's `?new` opens its own. While locked it is the locked
+  control instead, and `?invite` opens nothing.
 - **Props.** `invitations`, newest first, each `{ id, email, note, expiresAt }`;
-  and `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
+  `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
   admin changes are paused and this admin is not the primary one, absent
-  otherwise. The page sets it from `adminRoleChangePauseState`: paused and
-  not `canToggle`.
+  otherwise; and `inviting`, whether the address is `?invite`. The page
+  sets `locked` from `adminRoleChangePauseState`, paused and not
+  `canToggle`, and `inviting` only while not locked. `InviteAdmin` takes
+  `locked` alone.
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
@@ -27,8 +36,8 @@ admin is held by the pause, and hands both down. The rules are
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
-- **Invite Admin** (`invite-form.tsx`) opens a modal titled "Invite Admin",
-  the button's own name, with the **Email Address**, required and marked
+- **The invite form** (`invite-form.tsx`) is a `RouteModal` titled
+  "Invite Admin", the link's own name ([`modal.md`](modal.md)), with the **Email Address**, required and marked
   with the shared red asterisk, and a **Reason**, labelled plainly: a field
   is optional unless it carries the required mark, so no label says
   "(Optional)". What it is for, "Kept with the invitation, and in the record
@@ -37,12 +46,14 @@ admin is held by the pause, and hands both down. The rules are
   as the user list's confirmation spaces its own; both are the shared field shell around their
   input ([`field.md`](field.md)). **Send Invitation** stays disabled until
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
-  a spinner and "Sending" while the request is out; Cancel is quiet. A `VALIDATION` refusal on `email`
+  a spinner and "Sending" while the request is out; Cancel is quiet and
+  closes back to the tab. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent
-  invitation closes the modal, says "Invitation sent to …" beside the button,
-  and refreshes the page, whose re-read lists it. The confirmation takes a
-  line of its own beneath the button in the action row. No link is ever shown: the
-  mutation answers none.
+  invitation closes the modal back to the tab, refreshing it so the re-read
+  lists it, and says "Invitation sent to …" above the list. The address is
+  this component's state, set by the form before it closes, so the notice
+  outlasts `?invite` without the address riding in the URL; opening the
+  form again clears it. No link is ever shown: the mutation answers none.
 - **No invitation waiting is a sentence**: "No admin invitations are
   waiting."
 - **Four columns**: Email, Reason, Expires and Revoke, the headings and each
@@ -78,21 +89,23 @@ alert (MB.116).
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
 `Admin / Admin Invitations`, inside the admin layout's frame and the People
-page with its Invitations tab open: `Pending`,
-`NoneWaiting` and `Paused` (both controls locked with the pause's reason),
-and `PhoneDark`/`PhoneLight`, the invitations as cards at 375px; Invite
-Admin opens the form, its Reason's hint in a tip. Invite and Revoke reach the network only when sent, so a send in the workshop
+page with its Invitations tab open and Invite Admin beside the heading:
+`Pending`, `NoneWaiting`, `Inviting` (the form open, its Reason's hint in
+a tip), `Paused` (both controls locked with the pause's reason), and
+`PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the heading
+and the invitations as cards at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
 fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests
 
 `tests/components/AdminInvitations/index.test.tsx` covers the list and the
-empty state; sending, with Send disabled until there is an address, the
-trimmed variables and the refresh; a refused address beside its field;
+empty state; Invite Admin a link to `?invite`; sending, with Send disabled
+until there is an address, the trimmed variables, the close back to the tab
+and its refresh, and the notice outlasting the form; a refused address beside its field;
 Revoke after its confirmation; and both controls locked with the pause's
 reason. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
-the guard first, the hash never rendered, and the pause locking both
-controls.
+the guard first, the hash never rendered, the form opened by `?invite`,
+and the pause locking both controls and opening nothing.
 `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.
