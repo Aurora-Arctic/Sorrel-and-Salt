@@ -291,10 +291,10 @@ describe('GroupForm, for a category group', () => {
       renderForm({ group: WARDS, memberCount: 3 });
 
       press('Delete Group');
-      fireEvent.click(screen.getByRole('combobox', { name: 'Move its 3 categories to' }));
+      fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
 
       const options = within(
-        screen.getByRole('listbox', { name: 'Move its 3 categories to choices' }),
+        screen.getByRole('listbox', { name: 'Move Its 3 Categories To choices' }),
       ).getAllByRole('option');
       expect(options.map((option) => option.textContent)).toEqual([
         'Fixture Mineral',
@@ -315,7 +315,7 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 3 });
 
       press('Delete Group');
-      choose('Move its 3 categories to', 'Fixture Mineral');
+      choose('Move Its 3 Categories To', 'Fixture Mineral');
       press('Continue');
 
       expect(screen.getByRole('button', { name: 'Move and Delete' })).toBeVisible();
@@ -330,10 +330,10 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 1 });
 
       press('Delete Group');
-      choose('Move its 1 category to', 'Fixture Substance');
+      choose('Move Its 1 Category To', 'Fixture Substance');
       press('Continue');
       press('Back');
-      expect(screen.getByRole('combobox', { name: 'Move its 1 category to' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Move Its 1 Category To' })).toHaveTextContent(
         'Fixture Substance',
       );
       press('Keep It');
@@ -347,7 +347,7 @@ describe('GroupForm, for a category group', () => {
 
       press('Delete Group');
 
-      expect(screen.queryByRole('combobox', { name: 'Move its 2 categories to' })).toBeNull();
+      expect(screen.queryByRole('combobox', { name: 'Move Its 2 Categories To' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     });
 
@@ -361,11 +361,11 @@ describe('GroupForm, for a category group', () => {
       renderForm({ group: WARDS, memberCount: 1 });
 
       press('Delete Group');
-      choose('Move its 1 category to', 'Fixture Mineral');
+      choose('Move Its 1 Category To', 'Fixture Mineral');
       press('Continue');
       press('Move and Delete');
 
-      const picker = () => screen.getByRole('combobox', { name: 'Move its 1 category to' });
+      const picker = () => screen.getByRole('combobox', { name: 'Move Its 1 Category To' });
       await waitFor(() => expect(picker()).toHaveAttribute('aria-invalid', 'true'));
       expect(picker()).toHaveAccessibleDescription(/\S/);
     });
@@ -439,7 +439,7 @@ describe('GroupForm, for a form group', () => {
     const onDone = renderForm({ kind: 'form', group: MATTER, memberCount: 2 });
 
     press('Delete Group');
-    choose('Move its 2 forms to', 'Fixture Substance');
+    choose('Move Its 2 Forms To', 'Fixture Substance');
     press('Continue');
 
     press('Move and Delete');
@@ -486,7 +486,7 @@ describe('GroupForm, for a deity tradition', () => {
     const onDone = renderForm({ kind: 'tradition', group: MATTER, memberCount: 1 });
 
     press('Delete Tradition');
-    choose('Move its 1 deity to', 'Fixture Substance');
+    choose('Move Its 1 Deity To', 'Fixture Substance');
     press('Continue');
 
     press('Move and Delete');

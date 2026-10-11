@@ -164,7 +164,7 @@ const ChipColorField = ({
       {/* Under the field's label, saying what the veil below means (the owner's call). */}
       {labelPoint && (
         <p id={lineId} className="field__hint chip-color-field__veil-hint">
-          Colours in the {theme} veil fall short of 4.5:1 on {GROUND[column]}.
+          Colours under the veil are too faint on {GROUND[column]} (under 4.5:1).
         </p>
       )}
       <ColorPicker.Root
@@ -287,7 +287,7 @@ const ChipColorField = ({
                 <button
                   type="button"
                   className="btn btn--small btn--quiet chip-color-field__format"
-                  aria-label={`${label} format: ${current.name}. Switch to ${next.name}`}
+                  aria-label={`${label} Format: ${current.name}. Switch to ${next.name}`}
                   onClick={() => setFormat(next.format)}
                 >
                   {current.name}
@@ -362,7 +362,7 @@ const ChipColorField = ({
         className="chip-color-field__notice chip-color-field__near"
       >
         {near &&
-          `Close to the ${theme} theme colour of "${near.name}", so their chips may be hard to tell apart.`}
+          `This is close to "${near.name}"'s ${theme} theme colour, so their chips may be hard to tell apart. You can still save it.`}
       </Notice>
     </div>
   );

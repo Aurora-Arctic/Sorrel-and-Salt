@@ -17,13 +17,13 @@ export interface GroupedValueListKind {
   path: Route;
   /** The page's heading and its tab's title: "Zodiac Signs". */
   title: string;
-  /** One row in title case, as a button says it: "Add Sign". */
+  /** One row in title case, as a button says it: "Add Zodiac Sign". */
   label: string;
   /** One row, lower-case, as a sentence says it: "category". */
   noun: string;
   /** More than one, lower-case: "categories". */
   plural: string;
-  /** The group, for a grouped kind; a flat kind (a planet, a sign) has none. */
+  /** The group, for a grouped kind; a flat kind (a planet, a zodiac sign) has none. */
   group?: GroupedValueListGroup;
 }
 

@@ -116,7 +116,8 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     title: 'Group',
     one: 'category',
     many: 'categories',
-    moved: 'Each keeps its name, its address and every entry filed under it.',
+    // A category's address is its name alone, so a move changes none.
+    moved: 'Each category keeps its name, its address and the entries filed under it.',
     // The schema's output is the input the mutation takes; its type is the values'.
     resolver: zodResolver(CategoryGroupInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
@@ -132,8 +133,8 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     title: 'Group',
     one: 'form',
     many: 'forms',
-    moved:
-      'Each keeps its name, and its address follows its new group; every ingredient that picked one keeps it.',
+    // A form's address carries its group's name, so a move re-addresses it.
+    moved: "Each form keeps its name and takes its new group's address.",
     // Drops the two empty colours, which a form group's input does not take.
     resolver: zodResolver(IngredientFormGroupInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
@@ -150,8 +151,8 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     title: 'Tradition',
     one: 'deity',
     many: 'deities',
-    moved:
-      'Each keeps its name, and its address follows its new tradition; every ingredient that picked one keeps it.',
+    // A deity's address carries its tradition's name, as a form's does its group's.
+    moved: "Each deity keeps its name and takes its new tradition's address.",
     resolver: zodResolver(DeityTraditionInput) as unknown as Resolver<GroupValues>,
     save: async (input, id) => {
       if (id) await graphqlRequest(UpdateDeityTraditionDocument, { id, input });
@@ -172,6 +173,9 @@ const COLORS: { column: GroupColorColumn; label: string }[] = [
   { column: 'colorDark', label: 'Dark Theme Colour' },
   { column: 'colorLight', label: 'Light Theme Colour' },
 ];
+
+/** A one-word noun in title case, as a label says it: "categories" is "Categories". */
+const titled = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
 
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
@@ -280,7 +284,8 @@ const GroupForm = ({
   };
 
   const others = groups.filter((each) => each.id !== group?.id);
-  const rows = `${memberCount} ${memberCount === 1 ? one : many}`;
+  const rowNoun = memberCount === 1 ? one : many;
+  const rows = `${memberCount} ${rowNoun}`;
   const rootError = errors.root?.message ?? alert;
 
   const deleteButton = (label: string, target: string | undefined) => (
@@ -312,14 +317,15 @@ const GroupForm = ({
       return (
         <div className="form__confirm">
           <p>
-            &quot;{group?.name}&quot; holds {rows}, and there is no other {noun} to move them to.
-            Add another {noun} first.
+            &quot;{group?.name}&quot; holds {rows}, and there&apos;s no other {noun} to move them
+            to. Add another {noun} first, then delete this one.
           </p>
           <div className="modal__actions">{keepIt}</div>
         </div>
       );
     }
-    const label = `Move its ${rows} to`;
+    // A label, so title case (the MB.115 sign-off): "Move Its 3 Categories To".
+    const label = `Move Its ${memberCount} ${titled(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
     return (
       <div className="form__confirm">
@@ -360,7 +366,7 @@ const GroupForm = ({
       return (
         <div className="form__confirm">
           <p>
-            Delete &quot;{group?.name}&quot;? No {one} is filed under it.
+            Delete &quot;{group?.name}&quot;? No {many} are filed under it.
           </p>
           <div className="modal__actions">
             {deleteButton('Delete', undefined)}

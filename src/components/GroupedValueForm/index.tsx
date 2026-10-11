@@ -193,13 +193,17 @@ function defineKind<Input extends object>({
   };
 }
 
-/** What a curated value's delete leaves behind, for a kind a compendium entry picks. */
-const PICKED_DELETE_NOTE =
-  "It can't be deleted while a compendium entry picks it. Covens' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.";
+/**
+ * What a curated value's delete leaves behind, for every kind a compendium
+ * entry uses: picked, as a form or a deity is, or listed, as a planet or a
+ * zodiac sign is. A coven's ingredient that wrote the value keeps it, as a
+ * value of its own rather than a curated one.
+ */
+const USED_DELETE_NOTE =
+  "You can't delete it while a compendium entry uses it. Covens' ingredients keep what they wrote, as their own value.";
 
-/** The same, for a flat kind, which a compendium entry lists rather than picks. */
-const LISTED_DELETE_NOTE =
-  "It can't be deleted while a compendium entry lists it. Covens' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.";
+/** What saving a renamed value does, for every kind a compendium entry uses (MB.162). */
+const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses it.';
 
 /** A flat kind's input is its name and description: the group field it never shows is left out. */
 const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, description });
@@ -214,7 +218,11 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
     noun: 'Category',
     group: { label: 'Group', placeholder: 'Choose a group' },
-    deleteNote: "Covens' ingredients and spells filed under it lose it too.",
+    // Deleting a category removes nothing of a coven's: an entry filed under
+    // it keeps its link and stops reading the category, so the entry stays in
+    // its list and only the filter loses the category (the MB.115 sign-off).
+    deleteNote:
+      "Covens' ingredients and spells filed under it stay in their lists, but can no longer be filtered by it.",
     schema: CategoryInput,
     toInput: (values) => values,
     create: CreateCategoryDocument,
@@ -224,11 +232,11 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   form: defineKind({
     noun: 'Form',
     group: { label: 'Group', placeholder: 'Choose a group' },
-    deleteNote: PICKED_DELETE_NOTE,
+    deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the form
     // (MB.162), though no entry's address moves: a form is no part of one
     // since MB.220.
-    renameNote: 'Saving renames it on every compendium entry that picked it.',
+    renameNote: USED_RENAME_NOTE,
     schema: IngredientFormValueInput,
     toInput: (values) => values,
     create: CreateIngredientFormValueDocument,
@@ -238,10 +246,10 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   deity: defineKind({
     noun: 'Deity',
     group: { label: 'Tradition', placeholder: 'Choose a tradition' },
-    deleteNote: PICKED_DELETE_NOTE,
+    deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the deity
     // (MB.162), though no entry's address moves: a deity is no part of one.
-    renameNote: 'Saving renames it on every compendium entry that picked it.',
+    renameNote: USED_RENAME_NOTE,
     // The input calls the group its tradition; the form's field stays `groupId`.
     inputKeys: { groupId: 'traditionId' },
     schema: DeityInput.omit({ traditionId: true }).extend({
@@ -257,8 +265,8 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // listing the value (MB.162).
   planet: defineKind({
     noun: 'Planet',
-    deleteNote: LISTED_DELETE_NOTE,
-    renameNote: 'Saving renames it on every compendium entry that lists it.',
+    deleteNote: USED_DELETE_NOTE,
+    renameNote: USED_RENAME_NOTE,
     schema: PlanetInput,
     toInput: withoutGroup,
     create: CreatePlanetDocument,
@@ -266,10 +274,10 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeletePlanetDocument,
   }),
   zodiacSign: defineKind({
-    // "Sign", as every label on the zodiac signs' page says it.
-    noun: 'Sign',
-    deleteNote: LISTED_DELETE_NOTE,
-    renameNote: 'Saving renames it on every compendium entry that lists it.',
+    // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.
+    noun: 'Zodiac Sign',
+    deleteNote: USED_DELETE_NOTE,
+    renameNote: USED_RENAME_NOTE,
     schema: ZodiacSignInput,
     toInput: withoutGroup,
     create: CreateZodiacSignDocument,

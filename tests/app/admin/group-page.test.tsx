@@ -174,9 +174,9 @@ describe('a group page, on the category groups', () => {
       '#0c5393',
     );
     fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Group' }));
-    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Move its 3 categories to' }));
+    fireEvent.click(within(dialog).getByRole('combobox', { name: 'Move Its 3 Categories To' }));
     expect(
-      within(screen.getByRole('listbox', { name: 'Move its 3 categories to choices' }))
+      within(screen.getByRole('listbox', { name: 'Move Its 3 Categories To choices' }))
         .getAllByRole('option')
         .map((option) => option.textContent),
     ).toEqual(['Fixture Mending']);

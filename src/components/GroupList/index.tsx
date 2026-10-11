@@ -16,6 +16,16 @@ import './index.scss';
 // — so a modal can be linked to and Back closes it. The table turns each row
 // into a card at phone width (claude-docs/components/group-list.md).
 
+/**
+ * What an empty list says to do: add one with the page header's button,
+ * named as that button is (`group-page.tsx`).
+ */
+const EMPTY: Record<GroupKind, string> = {
+  category: 'There are no groups yet. Add one with Add Group.',
+  form: 'There are no groups yet. Add one with Add Group.',
+  tradition: 'There are no traditions yet. Add one with Add Tradition.',
+};
+
 /** The table's name, the page's heading: what a screen reader lists it as. */
 const TABLE_NAME: Record<GroupKind, string> = {
   category: 'Category Groups',
@@ -84,7 +94,7 @@ const GroupList = ({
         </table>
       </div>
     ) : (
-      <p>{kind === 'tradition' ? 'No traditions yet.' : 'No groups yet.'}</p>
+      <p>{EMPTY[kind]}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
