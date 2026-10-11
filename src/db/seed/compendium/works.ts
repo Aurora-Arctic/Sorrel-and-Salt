@@ -5,7 +5,8 @@ import type { CitationFields } from '../../../lib/types';
 // is the edition in the owner's library, as its own title and copyright pages
 // give it (claude-docs/db/compendium-seed/README.md, "The library"); a shard's
 // per-entry pages (a Wikipedia revision, a web page) are its own `SOURCES`.
-// A shard names a work here by its handle.
+// A shard names a work here by its handle. The two read online, Culpeper
+// and Grieve, are cited as the edition the site transcribes (MB.243).
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',
@@ -81,6 +82,31 @@ export const WORKS = {
     place: 'London',
     publisher: 'John Lane, The Bodley Head',
     published: '1903',
+  },
+  'culpeper-herbal': {
+    kind: 'book',
+    authors: 'Culpeper, Nicholas',
+    title: 'The Complete Herbal',
+    place: 'London',
+    publisher: 'Thomas Kelly',
+    published: '1850',
+    host: 'Project Gutenberg ebook 49513',
+    url: 'https://www.gutenberg.org/ebooks/49513',
+    modified: '2024-10-24',
+    accessed: '2026-10-11',
+  },
+  'grieve-herbal': {
+    kind: 'book',
+    authors: 'Grieve, M.',
+    title:
+      'A Modern Herbal: The Medicinal, Culinary, Cosmetic and Economic Properties, Cultivation and Folk-Lore of Herbs, Grasses, Fungi, Shrubs & Trees with Their Modern Scientific Uses',
+    contributors: 'Edited by C. F. Leyel',
+    place: 'New York',
+    publisher: 'Dover Publications',
+    published: '1971',
+    host: 'botanical.com',
+    url: 'https://www.botanical.com/botanical/mgmh/mgmh.html',
+    accessed: '2026-10-11',
   },
 } as const satisfies Record<string, CitationFields>;
 
