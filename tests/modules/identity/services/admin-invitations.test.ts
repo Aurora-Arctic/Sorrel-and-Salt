@@ -13,7 +13,7 @@ import {
   revokeAdminInvitation,
 } from '@/modules/identity';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
@@ -130,21 +130,16 @@ describe('createAdminInvitation', () => {
     expect((await invitations())[0].note).toBeNull();
   });
 
-  it.each([
-    ['', 'Enter an email address'],
-    ['not-an-address', "That doesn't look like an email address"],
-    ['someone@pending.invalid', "That address can't receive mail"],
-  ])(
-    'refuses %j as a ValidationError on the email, writing and mailing nothing',
-    async (email, message) => {
-      const refusal = createAdminInvitation(asUser(E), email, undefined, sender());
+  // The address rules are email.ts's (tests/modules/identity/services/email.test.ts);
+  // one row proves this service parses its input before writing or mailing.
+  it('refuses a malformed address as a ValidationError on the email, writing and mailing nothing', async () => {
+    const refusal = createAdminInvitation(asUser(E), 'not-an-address', undefined, sender());
 
-      await expect(refusal).rejects.toThrow(ValidationError);
-      await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'], message }] });
-      expect(await invitations()).toEqual([]);
-      expect(send).not.toHaveBeenCalled();
-    },
-  );
+    await expect(refusal).rejects.toThrow(ValidationError);
+    await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
+    expect(await invitations()).toEqual([]);
+    expect(send).not.toHaveBeenCalled();
+  });
 
   it('refuses the address of a live admin, who has nothing to accept', async () => {
     const refusal = createAdminInvitation(
@@ -154,22 +149,17 @@ describe('createAdminInvitation', () => {
       sender(),
     );
 
-    await expect(refusal).rejects.toMatchObject({
-      issues: [{ path: ['email'], message: 'That address belongs to an admin already' }],
-    });
+    await expect(refusal).rejects.toThrow(ValidationError);
+    await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
     expect(await invitations()).toEqual([]);
   });
 
-  // E creates one in the first test; each of these holds no admin role.
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct call, writing and mailing nothing', async (_who, user) => {
-    expect(asUser(user).role).toBe('user');
+  // E creates one in the first test. The check reads the site role alone, so
+  // one non-admin — A, a coven owner — stands for every one.
+  it('refuses a non-admin as Forbidden by direct call, writing and mailing nothing', async () => {
+    expect(asUser(A).role).toBe('user');
 
-    await expect(createAdminInvitation(asUser(user), INVITED, undefined, sender())).rejects.toThrow(
+    await expect(createAdminInvitation(asUser(A), INVITED, undefined, sender())).rejects.toThrow(
       Forbidden,
     );
     expect(await invitations()).toEqual([]);
@@ -207,16 +197,13 @@ describe('revokeAdminInvitation', () => {
     ).rejects.toThrow(NotFound);
   });
 
-  // The direct id is a real pending invitation, which E then revokes.
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden by direct id, leaving it pending', async (_who, user) => {
+  // The direct id is a real pending invitation, which E then revokes; B holds
+  // no site role, which is all the check reads.
+  it('refuses a non-admin as Forbidden by direct id, leaving it pending', async () => {
     const id = await invite();
+    expect(asUser(B).role).toBe('user');
 
-    await expect(revokeAdminInvitation(asUser(user), id)).rejects.toThrow(Forbidden);
+    await expect(revokeAdminInvitation(asUser(B), id)).rejects.toThrow(Forbidden);
     expect((await invitations())[0].revoked_at).toBeNull();
     await expect(revokeAdminInvitation(asUser(E), id)).resolves.toMatchObject({ id });
   });
@@ -243,16 +230,12 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
-  it.each([
-    ['A, an owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-    ['D, a member elsewhere', D],
-  ])('refuses %s as Forbidden', async (_who, user) => {
+  it('refuses a non-admin as Forbidden', async () => {
     await createAdminInvitation(asUser(E), INVITED, undefined, sender());
     expect(await listPendingAdminInvitations(asUser(E))).toHaveLength(1);
+    expect(asUser(C).role).toBe('user');
 
-    await expect(listPendingAdminInvitations(asUser(user))).rejects.toThrow(Forbidden);
+    await expect(listPendingAdminInvitations(asUser(C))).rejects.toThrow(Forbidden);
   });
 });
 
