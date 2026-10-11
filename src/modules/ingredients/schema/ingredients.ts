@@ -3,7 +3,7 @@ import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
-import { idColumn, liveUnique } from '../../../db/schema-parts';
+import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve
@@ -83,6 +83,11 @@ export const ingredients = pgTable(
     // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
     // stopped declaring `deities text[]` and MB.168 dropped it
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
+
+    // The key the compendium seed (MB.242) gives the entry it writes, so an
+    // entry an admin renames is not seeded again beside itself (MB.241). The
+    // `standard` fixture keys on identity and writes none.
+    seedKey: seedKeyColumn(),
     ...auditColumns,
   },
   (table) => [
@@ -123,6 +128,7 @@ export const ingredients = pgTable(
       .on(table.slug)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
     liveUnique('ingredients_workspace_slug_unique', table, table.workspaceId, table.slug),
+    seedKeyUnique('ingredients_seed_key_unique', table),
 
     // One multicolumn `gin_trgm_ops` index serves a predicate on either column
     // alone (asserted by EXPLAIN in ingredients-trigram.test.ts). Not partial:

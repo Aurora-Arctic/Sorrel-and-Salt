@@ -1,0 +1,2 @@
+ALTER TABLE "ingredients" ADD COLUMN "seed_key" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "ingredients_seed_key_unique" ON "ingredients" USING btree ("seed_key") WHERE "ingredients"."seed_key" is not null and "ingredients"."deleted_at" is null;

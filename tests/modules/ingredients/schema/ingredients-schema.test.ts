@@ -31,6 +31,7 @@ const COLUMNS = [
   'colors',
   'safety_notes',
   'slug',
+  'seed_key',
   ...AUDIT_COLUMNS,
 ].sort();
 
