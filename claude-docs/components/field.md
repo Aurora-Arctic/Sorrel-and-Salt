@@ -6,7 +6,7 @@ tied to each other by id. MB.115 lifted it out of `IngredientForm`, which had
 the one good copy, once the same block had been written by hand fifteen
 times across the admin forms and the account forms.
 
-It has two ways in:
+It has three ways in:
 
 - **The shell**, `FieldShell` with `fieldDescription`, knows no form library.
   A plain-state form (one holding its values in `useState`, such as NameForm
@@ -15,6 +15,8 @@ It has two ways in:
   form through `useFormContext`, so they work inside any form wrapped in a
   `<FormProvider>`. Each draws the shell around its control and reads its own
   error out of the form state.
+- **The switch**, `SwitchField`, an on-or-off choice held in the caller's
+  own state: a list filter's Without References and Needs Approval (MB.115).
 
 `IngredientForm`'s three fields of its own, `SuggestField`,
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
@@ -28,6 +30,7 @@ the same shell until its design review (MB.120).
 | `use-field.ts`     | `useField`, `fieldDescription` over a react-hook-form field's own error             |
 | `text-field.tsx`   | `TextField`                                                                         |
 | `select-field.tsx` | `SelectField`                                                                       |
+| `switch-field.tsx` | `SwitchField`                                                                       |
 | `types.ts`         | The props, and `SelectOption`                                                       |
 
 ## The exports
@@ -41,6 +44,7 @@ the same shell until its design review (MB.120).
 | `useField`         | `fieldDescription` for a react-hook-form field, its error read by name                                        |
 | `TextField`        | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
 | `SelectField`      | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
+| `SwitchField`      | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
 
 ## Props
 
@@ -81,6 +85,20 @@ naming no option is no value, so a required one shows its error on save as
 an unchosen one does ([`combobox.md`](combobox.md), "The type-ahead box"). Both are generic over the
 form's values, `TextField<IngredientFormValues>`, so `name` is checked
 against the form's own paths; left out, any string passes.
+
+`SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
+it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
+`checked` with `onChange(checked)`, and `disabled`. It draws a `.field`
+block of its own rather than `FieldShell`, since it has no hint, note or
+error and its label takes the press feedback: the label above, tied to the
+toggle by `htmlFor`, and the toggle, a native checkbox with
+`role="switch"`, beneath it in `.switch__control`. The label is its
+accessible name and a click on it turns it; the label and the toggle are
+each marked `data-pressed` while a pointer holds them
+(`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
+checked state is the switch's, and one written beside it would go stale on
+a press before hydration, so the lint rule asking for it is switched off on
+that line with the reason.
 
 ## Contracts
 
@@ -129,14 +147,16 @@ None of its own: the block is the field primitives (`.field`,
 `.field__label`, `.field__hint`, `.field__error`, `.input`, `.textarea`),
 with `.field__label-row` holding the label and its tip, positioned so the tip
 can place itself above it, and `.field__required` the asterisk
-([`styling.md`](../styling.md), "Form fields").
+([`styling.md`](../styling.md), "Form fields"). `SwitchField` is the
+`.switch` primitive, its toggle's states set out there.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 `WithError`, `Multiline` and `Disabled`, each in a `FormProvider`; and
-`PlainShell`, the shell around a native input with an error.
+`PlainShell`, the shell around a native input with an error; and `Switch`,
+`SwitchField` off, on, and disabled off and on.
 
 ## Testing
 
@@ -144,4 +164,8 @@ No file of its own: the forms that use it cover it (claude-docs/testing/layer-ow
 "What a test may assert", rule 5). `tests/components/IngredientForm/` covers
 `TextField` and `SelectField`, and `tests/components/GroupedValueForm/` (with
 `tests/support/grouped-value-form.tsx`) its `typeahead`; the NameForm and EmailForm tests cover the
-shell around a plain control.
+shell around a plain control. The CompendiumList and UserList tests cover
+`SwitchField`, found by its `switch` role: turned by a click, sent with the
+form, the server's before hydration included, emptied by Clear Filters, and
+`aria-disabled` while a list is on its way. Space is the platform's and
+jsdom does not run it, so it was checked in the workshop's Chromium.

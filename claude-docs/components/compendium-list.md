@@ -45,9 +45,13 @@ different groups, so the page offers each name once, whatever its case.
   category list's is: named "Filter the Compendium" inside a `<search>`
   landmark, a search box labelled "Name" (`query`), a type-ahead labelled
   "Form" (`form`), a native `<select>` labelled "Classification"
-  (`nomenclature`), a checkbox labelled "Without
+  (`nomenclature`), a switch labelled "Without
   References", title case as the owner asked (`withoutReferences`, valued `1`), and a Filter button. The
-  classification and the checkbox are the admin's two to-do lists: Unknown is
+  switch is `SwitchField`, a slide toggle with its label above it as the
+  other fields have, over a native checkbox, so it submits the same; it was a
+  checkbox until the owner found it out of place in the row (MB.115;
+  [`field.md`](field.md)). The
+  classification and the switch are the admin's two to-do lists: Unknown is
   every entry whose naming system is unsettled, and Without References every
   entry that cites no source yet. A filtered page is an address, and filtering
   starts again from the first page, since the form carries no cursor. It is
@@ -78,10 +82,10 @@ different groups, so the page offers each name once, whatever its case.
   `NOMENCLATURE_OPTIONS` (`options.ts`), as its Classification select is: the
   value capitalised. Before hydration every control is native, so the
   form submits as `query=&form=&nomenclature=`, plus
-  `withoutReferences=1` when ticked. The page reads a blank value as no filter
+  `withoutReferences=1` when on. The page reads a blank value as no filter
   and ignores a kind it does not know.
 - **Filter is offered only when there is a new filter to apply**: `disabled`
-  while the trimmed query, the form, the classification and the checkbox all match the
+  while the trimmed query, the form, the classification and the switch all match the
   filter the page shows, enabled once any differs. With JavaScript, a submit
   builds the address with `compendiumHref`, and `FilterForm` pushes it as a
   soft navigation inside its `ListFrame`'s transition: the row greyed and
@@ -117,7 +121,7 @@ different groups, so the page offers each name once, whatever its case.
   classification Botanical and Without References. Change or clear the
   filter to see more." The query and the form are quoted, the
   classification is its label, and Without
-  References is the checkbox's (MB.115, the owner's call; the user list's
+  References is the switch's (MB.115, the owner's call; the user list's
   says the same of its own filters, [`user-list.md`](user-list.md)).
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
@@ -126,7 +130,7 @@ different groups, so the page offers each name once, whatever its case.
 
 None of its own; the stylesheet went in MB.115. The list's root is
 `.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
-`.field`, `.input`, `.select`, `.checkbox` and `.btn` primitives, Filter
+`.field`, `.input`, `.select`, `.switch` and `.btn` primitives, Filter
 `.btn--solid` ([`styling.md`](../styling.md), "Form fields"). The table is
 the `.data-table` primitive with the `--stack` modifier: banded on
 `$surface-card` with a 1px `$text-muted` hairline under the header row at
@@ -156,6 +160,8 @@ Render-only, no test ids, no snapshots.
 links and their names, no table when there are none, the filter form's
 action, method, names, kept values and classification values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
+Without References found as a `switch`, sent by the server-drawn form and
+turned by a press before hydration,
 its narrowing as a name is typed, its pick and its clear, the Filter
 button's disabled and enabled states for each control, the address it opens,
 the loading state while the filtered list loads (the list's status, the

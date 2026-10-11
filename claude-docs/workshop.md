@@ -147,9 +147,11 @@ without a page routed to it.
   `Foundations`: the raw palette and the runtime tokens, the type scale and
   `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
   button, notices, a form built from the field primitives (a label row with
-  its required mark and `InfoTip` among them), the page frame
+  its required mark and `InfoTip` among them), the switch off, on and
+  disabled either way, through `SwitchField`, the page frame
   and its narrow form, the link row with its current-page link, the data
-  table, the pager, the filter row, the page header, the four providers' sign-in buttons in
+  table, the pager (in a list navigation that goes nowhere, since `Pager`
+  reads its `ListFrame`'s), the filter row with a switch, the page header, the four providers' sign-in buttons in
   each state with their brand parts printed from `$brand-palettes`, the
   provider marks, the eight
   seeded group colour pairs as `chip()`'s two states — read from
