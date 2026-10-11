@@ -19,3 +19,7 @@ src/graphql/schema.graphql
 # Client types: the generator owns their layout, and a reformat would fail
 # CI's codegen leg (.github/workflows/checks.yml)
 src/gql
+
+# A local folder of reference texts, kept out of git by .git/info/exclude,
+# which Prettier does not read
+.library
