@@ -19,16 +19,16 @@ There is no filter. A vocabulary of eight sections, or six, needs none, where th
 
 ## Contracts
 
-- **Each Edit is a soft link**, named "Edit <name>" for a screen reader, so the page renders again with the modal open and Back closes it.
+- **Each Edit is a soft link**, the pencil [`EditLink`](icon-tip.md) with its "Edit" tooltip, named "Edit <name>" for a screen reader, so the page renders again with the modal open and Back closes it.
 - **The pager is soft**, as every admin list's is, and says "Page X of Y" when the page passes `position`, as each of the three group pages does, counted through `countCategoryGroups`, `countIngredientFormGroups` or `countDeityTraditions` from the page's first row (MB.132). The traditions run to two pages; the category and form groups to one, which the pager still names.
 - **The table is named for its page**, "Category Groups", "Form Groups" or "Deity Traditions", the full name its tab's short label, Groups or Traditions, stands for on the tabbed page (MB.115).
 - **An empty list says what to do**, naming the tab's Add: "There are no groups yet. Add one with Add Group.", and for the traditions "There are no traditions yet. Add one with Add Tradition."
 
 ## Styling
 
-The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table a `.data-table.data-table--stack` in a `.data-table-frame`, banded at desktop width as every admin table is (MB.115's sign-off kept the bands over a hairline rule). Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with Edit across the card's foot. The table writes out its roles by spreading `tableRole` and `stackCell` (`src/lib/table-roles.ts`) onto each part, since WebKit drops a table's meaning once its parts change `display`; every admin table spreads the same helper.
+The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table a `.data-table.data-table--stack` in a `.data-table-frame`, banded at desktop width as every admin table is (MB.115's sign-off kept the bands over a hairline rule). Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with the Edit pencil at the card's top right beside the name (`.data-table__card-action`, MB.115, the owner's call). The table writes out its roles by spreading `tableRole` and `stackCell` (`src/lib/table-roles.ts`) onto each part, since WebKit drops a table's meaning once its parts change `display`; every admin table spreads the same helper.
 
-Its own stylesheet adds two things. The description takes the measure. While it is a table, its cells take `space(3)` above and below and centre their contents: a chip and the small Edit button stand taller than a line of text, so on the primitive's baseline they met the band's top edge while the text met its bottom (the owner's call). As cards, the stack primitive spaces the cells instead.
+Its own stylesheet adds two things. The description takes the measure. While it is a table, its cells take `space(3)` above and below and centre their contents: a chip and the Edit pencil stand taller than a line of text, so on the primitive's baseline they met the band's top edge while the text met its bottom (the owner's call). As cards, the stack primitive spaces the cells instead.
 
 ## Stories
 

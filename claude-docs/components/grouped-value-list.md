@@ -132,9 +132,11 @@ for a rule only one kind's rows need.
   the page renders again with the modal open, and the page itself calls the
   admin guard on every render. AdminNav keeps plain anchors for its own
   reason, which is that typed routes refuse a route not built yet.
-- **Each Edit is named for its value**: the visible "Edit", then the name in
-  a `visually-hidden` span, so a screen reader hears "Edit Testcraft" rather
-  than a column of "Edit". Two live forms may share a name under different
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its
+  value**: "Edit" and the name in `visually-hidden` text, so a screen
+  reader hears "Edit Testcraft" rather than a column of "Edit", and a
+  sighted reader sees the tooltip "Edit" on hover or focus (MB.115, the
+  owner's call). Two live forms may share a name under different
   groups, and two deities under different traditions; the group column
   beside it tells them apart.
 - **An empty list says so and what to do, with no table**: "There are no
@@ -158,15 +160,17 @@ M5.6 call, kept at MB.115's sign-off over a hairline rule), with the
 (`tableRole` and `stackCell`, `src/lib/table-roles.ts`, as every admin
 table does) and a `data-label` on every cell, so under `$table-stack-width` of its
 frame each row turns into a card ("Tables at phone width"). The Edit cell's
-`data-label` is empty, so it has no label and spans its card.
+`data-label` is empty, so it has no label, and its
+`.data-table__card-action` stands it at the card's top right, beside the
+name (MB.115, the owner's call).
 
 What the list has of its own: a description keeps to `$measure`; and under
 `.grouped-value-list--category`, while the table is wider than
 `$table-stack-width`, the cells take `space(3)` above and below and centre
 their contents, for the chip. As cards they keep the card's own spacing. The
 page's Add is `.btn--solid` beside its heading, its one primary action, and
-each row's Edit is `.btn--small.btn--quiet`: a row action that changes
-nothing, small enough to keep the row short. The pager is `Pager`
+each row's Edit is the larger green pencil, a 2rem target
+([`icon-tip.md`](icon-tip.md), "Styling"). The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
 full width and the Add spans its line, the sign-off's two phone calls,
 which `FilterForm` and `TabbedPage` own

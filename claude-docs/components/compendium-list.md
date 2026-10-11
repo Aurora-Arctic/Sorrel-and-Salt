@@ -108,9 +108,10 @@ different groups, so the page offers each name once, whatever its case.
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.
-- **Each Edit is named for its entry and its formal name**: the visible
-  "Edit", then the label and, when there is one, the formal name in a
-  `visually-hidden` span, so a screen reader hears "Edit Testwort, Fixtura
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its entry
+  and its formal name**: "Edit", the label and, when there is one, the
+  formal name in `visually-hidden` text, with the tooltip "Edit" on hover
+  or focus, so a screen reader hears "Edit Testwort, Fixtura
   testalis", or the label alone without a formal name. The formal name is
   there because it is the entry's identity: two rows can share a label,
   never a formal name.
@@ -140,8 +141,9 @@ desktop width, and each row a card once its frame is under
 part carries its role written out, `table`, `rowgroup`, `row`,
 `columnheader` and `cell`, spread from `src/lib/table-roles.ts` since lint refuses a
 literal role it takes for redundant, and every cell names its column in
-`data-label`, the Edit cell's empty so it spans the card. Each row's Edit is
-`.btn--small.btn--quiet`, and the pager is `Pager` ([`pager.md`](pager.md)),
+`data-label`, the Edit cell's empty and its `.data-table__card-action`
+standing it at the card's top right. Each row's Edit is the larger green
+pencil ([`icon-tip.md`](icon-tip.md)), and the pager is `Pager` ([`pager.md`](pager.md)),
 soft. The formal name is plain, not italic: a binomial is italicised, a
 mineral's or a chemical's name is not, and the row does not carry its kind.
 

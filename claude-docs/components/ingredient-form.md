@@ -22,7 +22,7 @@ compendium page wrap it rather than containing their own form.
 | `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                                                                |
 | `section.tsx`            | `CollapsibleSection`, one of the ingredient's seven sections as a disclosure, and `Section`, one titled section of a variant's fields, at `h4`                                                                                                  |
 | `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields                                                                                                                                                   |
-| `icons.tsx`              | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                                                                        |
+| `icons.tsx`              | The rows' icons: `EditIcon` (IconTip's pencil, re-exported), `RemoveIcon`, and Edit Source's `SourceEditIcon`                                                                                                                                   |
 | `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                               |
 | `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it                                                                 |
 | `values.ts`              | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, `SECTION_KEYS` and `sectionsWithErrors`, and the two resolvers, a coven's and the compendium's |
@@ -508,8 +508,9 @@ legend as a list's is.
   italics real `<i>` markup, then its locator in the muted ink if it has
   one, the short form taking the comma before it, "p. 112", then two icon
   buttons, an edit (a pencil, in `$accent` as a variant's is) named "Edit"
-  and the short form, and a remove (×) named "Remove" and the short form
-  (MB.115, the owner's calls). The
+  and the short form, with a tooltip reading "Edit" on hover and focus
+  ([`IconTip`](icon-tip.md)), and a remove (×) named "Remove" and the short
+  form (MB.115, the owner's calls). The
   short form is `renderShortCitation`'s
   ([`db/references.md`](../db/references.md), "The short form"), from the
   four fields each row's `link` carries; a row too narrow for it is cut with
@@ -620,10 +621,14 @@ A source already recorded is changed in the same panel (MB.115, the owner's
 call: "We don't have a way to edit existing references"). The edit changes
 the source, not the row's link to it, so it reaches every entry citing it.
 
-- **Edit Source, in the open row**, a small quiet button beside the tier,
-  named "Edit Source" and the short form, as the pencil is named "Edit" and
-  the short form, and described by the whole citation. A separate control
-  rather than the pencil itself: the pencil opens the row for its Locator,
+- **Edit Source, in the open row**, an icon button beside the tier: a page
+  with a pencil at its corner (`SourceEditIcon`), in the green every Edit
+  control wears, with a tooltip reading "Edit Source"
+  ([`IconTip`](icon-tip.md); MB.115, the owner's call that every Edit is
+  an icon). Not the row's own pencil, so the two in one open row do not
+  look alike. Named "Edit Source" and the short form, as the pencil is
+  named "Edit" and the short form, and described by the whole citation. A
+  separate control rather than the pencil itself: the pencil opens the row for its Locator,
   what a row most often needs, and an edit that reaches every entry citing
   the source should be a second, deliberate step.
 - **Only where the form may change the source.** A coven's form edits its
@@ -694,7 +699,8 @@ as the ingredient's page shows its forms after it (MB.221).
   `variantSummary`, in its sections' order — "1 planet · 2 categories ·
   Safety note · 1 reference" — or "No details yet"; and at the end the reference
   rows' two icon buttons, a pencil and a × (MB.115, the owner's call),
-  named for the form, "Edit Oil" and "Remove Oil". The card is
+  named for the form, "Edit Oil" and "Remove Oil", the pencil with its
+  "Edit" tooltip ([`IconTip`](icon-tip.md)). The card is
   a fieldset named by the form alone, through `aria-labelledby`.
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
   and `aria-controls`, naming the region of the variant's fields, and is
@@ -1292,7 +1298,11 @@ line the form in weight 500, the group and the summary muted, and its pencil
 and × the reference rows' 24px icon buttons, level with the form's name at
 every width: the × as a reference row's, and the pencil in `$accent`, on a
 tint of it 20% into the card while pointed at, focused or open, each clearing
-3:1 on the card (`tests/scss/tokens.test.ts`); open, its fields follow at the form's gap, Done at their foot. The
+3:1 on the card (`tests/scss/tokens.test.ts`). The box and the pencil's green
+are the `icon-button` and `icon-button-edit` mixins (`_mixins.scss`), which
+the admin lists' larger pencils wear too, so every Edit matches; the form
+keeps the 24px box, `$icon-size`, beside its fields' text. Edit Source's
+icon is the same 24px green button; open, its fields follow at the form's gap, Done at their foot. The
 new reference panel is a group set off by the same 1px muted edge. The
 hidden variant fields and a row's closed detail are hidden by the `hidden`
 attribute, which each restates as `display: none` because its own display
