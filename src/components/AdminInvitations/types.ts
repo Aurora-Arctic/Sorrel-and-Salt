@@ -28,3 +28,9 @@ export interface InviteFormProps {
   /** Told the address an invitation was sent to, before the form closes. */
   onSent: (address: string) => void;
 }
+
+/** The invite form inside its modal, given the modal's own close. */
+export interface InviteFieldsProps extends InviteFormProps {
+  /** The modal's close, unguarded: a sent invitation goes at once. */
+  close: () => void;
+}

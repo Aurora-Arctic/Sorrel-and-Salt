@@ -14,6 +14,7 @@ import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
 import { FieldShell, TextField, fieldDescription } from '../Field';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
@@ -239,6 +240,9 @@ const GroupForm = ({
     setValue(partner, paired, { shouldDirty: true });
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
+  // Cancel, and every other way out of the modal, asks first while the form
+  // has changes (MB.115, the owner's call); a save or a delete does not.
+  const discard = useDiscardGuard(isDirty);
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
   const [alert, setAlert] = useState<string>();
@@ -409,6 +413,7 @@ const GroupForm = ({
   };
 
   const actions = (): ReactElement => {
+    if (discard.asking) return <DiscardQuestion guard={discard} />;
     if (step.at === 'choosing') return choosing();
     if (step.at === 'confirming') return confirming(step.moveTo);
     return (
@@ -426,7 +431,7 @@ const GroupForm = ({
         >
           {`Save ${title}`}
         </BusyButton>
-        <button type="button" className="btn btn--quiet" onClick={onDone}>
+        <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
           Cancel
         </button>
         {group && (

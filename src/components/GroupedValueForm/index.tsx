@@ -9,6 +9,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import { SelectField, TextField } from '../Field';
 import Notice from '../Notice';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
@@ -344,6 +345,9 @@ const GroupedValueForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
+  // Cancel, and every other way out of the modal, asks first while the form
+  // has changes (MB.115, the owner's call); a save or a delete does not.
+  const discard = useDiscardGuard(isDirty);
   const [alert, setAlert] = useState<string>();
   const name = useWatch({ control, name: 'name' });
   // Trimmed, as the schema trims: a space added to the end renames nothing.
@@ -392,6 +396,7 @@ const GroupedValueForm = ({
   const noteId = `${id}-rename-note`;
 
   const actions = (): ReactElement => {
+    if (discard.asking) return <DiscardQuestion guard={discard} />;
     if (confirming) {
       return (
         <div className="form__confirm">
@@ -439,7 +444,7 @@ const GroupedValueForm = ({
           >
             Save {noun}
           </BusyButton>
-          <button type="button" className="btn btn--quiet" onClick={onDone}>
+          <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
             Cancel
           </button>
           {value && (
