@@ -1176,6 +1176,43 @@ describe('its forms', () => {
     expect(await countIngredients()).toBe(3);
   });
 
+  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // names one of what it links.
+  it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const linking = (substituteVariantId?: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot.id, substituteVariantId }] });
+    const path = ['variants', 0, 'substitutes', 0, 'substituteVariantId'];
+    // Why each could have saved: the same link, its form named, does.
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      linking(testroot.form),
+    );
+    const leaf = await variantIdOf(sql, created.id, 'Testleaf');
+    const count = await countIngredients();
+
+    const create = createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...linking(),
+      name: 'Testwort, formless',
+    });
+    await expect(create).rejects.toThrow(ValidationError);
+    await expect(create).rejects.toMatchObject({ issues: [{ path }] });
+    const update = updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, {
+      ...linking(),
+      variants: [{ ...linking().variants[0], id: leaf }],
+    });
+    await expect(update).rejects.toThrow(ValidationError);
+    await expect(update).rejects.toMatchObject({ issues: [{ path }] });
+
+    expect(await countIngredients()).toBe(count);
+    expect(
+      await sql`
+        select substitute_variant_id from ingredient_substitutes
+        where variant_id = ${leaf} and deleted_at is null`,
+    ).toEqual([{ substitute_variant_id: testroot.form }]);
+  });
+
   // MB.217's narrowed `not_itself`: the same ingredient and the same form.
   it('lets a form name a sibling form as its substitute, refusing the form itself on that entry', async () => {
     const created = await createWorkspaceIngredient(
