@@ -6,6 +6,8 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
 import { NameField, useDuplicateWarning } from './duplicates';
@@ -30,14 +32,7 @@ import type {
   RedirectQuestion,
   SavedIngredient,
 } from './types';
-import {
-  EMPTY_VALUES,
-  GENERIC_ERROR,
-  compendiumResolver,
-  fieldNameOf,
-  ingredientResolver,
-  issuesOf,
-} from './values';
+import { EMPTY_VALUES, compendiumResolver, fieldNameOf, ingredientResolver } from './values';
 import './index.scss';
 
 // Every property of an ingredient, validated by the shared schema before the
@@ -228,7 +223,7 @@ const IngredientForm = ({
       // edit to the field clears them the same way. MB.82's refusal is a
       // question rather than an error: it asks before the save goes again.
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         if (path[0] === END_REDIRECT) {
           setQuestion({ message, input });
           continue;
@@ -264,7 +259,7 @@ const IngredientForm = ({
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setDeleting(false);
-      setRefusal(issuesOf(error)[0]?.message ?? GENERIC_ERROR);
+      setRefusal(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 
@@ -292,20 +287,9 @@ const IngredientForm = ({
         }}
         noValidate
       >
-        {saved !== null && (
-          // `output` carries the status role itself, so no `role` attribute.
-          <output className="notice notice--success">Saved {saved}.</output>
-        )}
-        {errors.root && (
-          <p className="notice notice--error" role="alert">
-            {errors.root.message}
-          </p>
-        )}
-        {refusal && (
-          <p className="notice notice--error" role="alert">
-            {refusal}
-          </p>
-        )}
+        {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
+        {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+        {refusal && <Notice kind="error">{refusal}</Notice>}
         {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
         <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />

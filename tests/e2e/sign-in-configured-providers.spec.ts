@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 
 // Runs only in the `chromium-configured-providers` project, against a server
 // whose four providers carry placeholder credentials — the brand-coloured
@@ -73,5 +73,8 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await expect(button).toBeVisible();
     await expect(button).not.toHaveAttribute('aria-disabled');
     await assertNoAccessibilityViolations(page);
+    // At a phone's width the badge, hanging past its button's left edge, is
+    // what could push the page sideways.
+    await assertNoSidewaysScroll(page);
   });
 }

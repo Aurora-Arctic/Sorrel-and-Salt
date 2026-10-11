@@ -619,8 +619,8 @@ was pressed is the submit event's `submitter`, read by its `value`; a submit
 with none is Save Ingredient's.
 
 After either, the form says what it saved, "Saved Testwort.", in a
-`.notice--success` `<output>` above the fields where a refusal's alert goes,
-and so at the form's width; the next submit drops it. The message is the
+`Notice` of the `success` kind, an `<output>`, above the fields where a
+refusal's alert goes, and so at the form's width; the next submit drops it. The message is the
 form's own rather than the wrapper's: the form is the one place that knows a
 save just landed, and a wrapper is still told through `onSaved`.
 
@@ -748,13 +748,20 @@ description, so it is what a failed submit focuses. **The categories'
 errors are the picker's** the same way: its box takes `aria-invalid`, and
 the pick named is edged ("The categories", above).
 
-`issuesOf` reads the rejection:
+`issuesOf`, re-exported from `values.ts` for the form and its reference
+panel, is the shared `readGraphqlIssues` (`src/lib/graphql-failure.ts`,
+MB.116). It reads the rejection:
 
-| Failure                                   | Issues                                                      |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| `VALIDATION` with `fieldErrors`           | the field errors, each pathed to the input                  |
-| any other GraphQL error                   | one empty-path issue, carrying the error's own message      |
-| no GraphQL answer at all (a failed fetch) | one empty-path issue: "That didn't work. Please try again." |
+| Failure                                   | Issues                                                                         |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `VALIDATION` with `fieldErrors`           | the field errors, each pathed to the input                                     |
+| any other GraphQL error                   | one empty-path issue, carrying the error's own message                         |
+| no GraphQL answer at all (a failed fetch) | one empty-path issue: `GENERIC_FAILURE`, "That didn't work. Please try again." |
+
+The last two rows are `readGraphqlFailure`'s answer. The first is why the
+form uses `readGraphqlIssues` rather than that reader, which answers only
+the first field it finds: this form places every issue at once, a draft's
+nested path included.
 
 Each placeable issue goes in through `setError`, bar
 `['endRedirect']`, which is a question rather than an error
@@ -789,7 +796,8 @@ so no refusal is the browser's own bubble.
 Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
 "Form fields"): `.form` and `.form__actions`, `.field` with its label, hint,
 control and `.field__error`, `.input` and `.textarea`, and
-`.fieldset` with its legend for each list. The alert is `.notice--error`, and
+`.fieldset` with its legend for each list. The alert is a `Notice` of the
+`error` kind ([`notice.md`](notice.md)), the reference panel's too, and
 Save Ingredient is the view's one `.btn--solid`. A disabled field's dashed
 edge and dimmed label are the primitives' too; a closed set's box and its
 muted placeholder are the combobox's.

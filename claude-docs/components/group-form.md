@@ -53,6 +53,15 @@ A category group's two colours are one family, the owner's call ([`m5.6b-admin-g
 
 Layout only, on the form primitives, as GroupedValueForm's. The actions wrap, Delete Group sits at the far end, and the required asterisk is `$secondary`. Nothing goes further before MB.115's design review.
 
+The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
+failed request is read by the shared `readGraphqlIssues`
+(`src/lib/graphql-failure.ts`, MB.116), which gives every field error of a
+`VALIDATION` refusal at once, where `readGraphqlFailure` answers only the
+first field it finds. The form places each issue under its field and joins
+the rest into the alert. Anything that is not a `VALIDATION` refusal comes
+back as one issue carrying the server's sentence, or `GENERIC_FAILURE` when
+there is none.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx) has five stories: `AddingACategoryGroup`, `EditingACategoryGroup` (three categories held, so Delete Group shows the move), `EditingAFormGroup` (none held), `AddingATradition`, and `EditingATradition` (two deities held, so Delete Tradition shows the move to the other invented tradition). Each sits in the modal and its own iframe.

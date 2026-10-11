@@ -61,6 +61,7 @@ summary of task tracking. It stays within 20 KB. The long forms are
 | `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.ladle/`, `tests/components/`   | Component layout, stories and docs, Sass, the measure, design-review scope, button case    |
 | `testing`       | `tests/`, the Vitest and Playwright configs                                                | The Testing section in full, the harness, fixtures, the coverage `jq` line                 |
 | `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`   | Board layout, the status table, the lookup rule, PR bodies, comments, minting              |
+| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s  | Plain language for readers of every experience level: who reads, how, where precision wins |
 
 **How one loads.** Claude Code reads a rule file's `paths:` frontmatter, a list
 of globs from the repo root, and adds the file to the session once the **Read

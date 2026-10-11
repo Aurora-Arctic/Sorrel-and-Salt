@@ -8,6 +8,7 @@ import type {
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../components/CompendiumList/types';
+import Notice from '../../../components/Notice';
 import { NotFound } from '../../../lib/errors';
 import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
@@ -121,9 +122,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         </Link>
       </div>
       {!adding && editSlug && !edited && (
-        <p className="notice notice--error" role="alert">
+        <Notice kind="error">
           No compendium entry has that address — it may have been renamed or deleted.
-        </p>
+        </Notice>
       )}
       <CompendiumList
         entries={entries}

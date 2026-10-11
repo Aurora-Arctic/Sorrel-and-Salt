@@ -2,6 +2,7 @@
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { stopImpersonating } from '../../lib/auth-client';
+import Notice from '../Notice';
 import type { ImpersonationBannerProps } from './types';
 import './index.scss';
 
@@ -63,9 +64,7 @@ const ImpersonationBanner = ({ name, email }: ImpersonationBannerProps): ReactEl
         Stop Impersonating
       </button>
       {failed && (
-        <p className="notice notice--error" role="alert">
-          Impersonation could not be stopped. Signing out ends it too.
-        </p>
+        <Notice kind="error">Impersonation could not be stopped. Signing out ends it too.</Notice>
       )}
     </aside>
   );

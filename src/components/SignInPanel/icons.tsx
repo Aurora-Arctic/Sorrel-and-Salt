@@ -1,4 +1,6 @@
 import type { ReactElement } from 'react';
+import type { ProviderId } from '../../lib/types';
+import type { ProviderArt } from '../ProviderMark/types';
 import './icons.scss';
 
 // Each provider's own brand mark, sourced from that provider's own published
@@ -6,8 +8,10 @@ import './icons.scss';
 // claude-docs/components/sign-in-panel.md, "Provider branding" names where
 // each one came from: Google's identity branding guidelines, Discord's and
 // Facebook's own brand-resource downloads, Microsoft's identity platform
-// guidelines. Colours are hex literals, not $accent/$secondary tokens, for
-// the same reason: they are the provider's, not ours.
+// guidelines. The fills inside each SVG are part of the artwork, so they stay
+// here as the provider drew them; the grounds the marks sit on — a button's
+// fill, Facebook's chip, the list's circle — are the provider's colours too,
+// and come from `$brand-palettes` (_variables.scss) rather than our tokens.
 
 // Google's "G" logo, as published for "Sign in with Google" buttons
 // (Google's identity branding guidelines). No chip: the mark is multicolour
@@ -102,3 +106,15 @@ export function MicrosoftIcon(): ReactElement {
     </svg>
   );
 }
+
+// Every provider's mark by id, the one table SignInPanel's buttons and the
+// ProviderMark circle both read, so a provider added to `ProviderId` fails
+// to compile until it has one. Facebook's two forms are a prop rather than
+// two entries, since every caller wants "Facebook's mark" and only the
+// ground it sits on differs.
+export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
+  google: GoogleIcon,
+  discord: DiscordIcon,
+  facebook: ({ chip = false }) => (chip ? <FacebookIcon /> : <FacebookMark />),
+  microsoft: MicrosoftIcon,
+};

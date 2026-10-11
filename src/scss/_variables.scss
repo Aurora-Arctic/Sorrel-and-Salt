@@ -1,6 +1,7 @@
 @use 'sass:color';
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:meta';
 
 // The raw palette and the `var(--token)` aliases over it. Emits no CSS: every
 // component `@use`s this file. See claude-docs/styling.md, "The palette".
@@ -156,6 +157,69 @@ $badge-edge-weight: (
 }
 
 // ---------------------------------------------------------------------------
+// Third-party brand colours
+// ---------------------------------------------------------------------------
+// Each sign-in provider's own published button colours, which are theirs
+// rather than ours: `fill` the ground, `ink` the label, `edge` the outline
+// a white button needs on our page, `hover` the ground under the pointer.
+// A compile-time map rather than custom properties, since the hues do not
+// follow the theme and nothing reads them at runtime; a part that ever does
+// differ by theme is written `(dark: …, light: …)`, and brand-color() turns
+// it into `light-dark()`, which Lightning CSS lowers to the browser
+// baseline. Google's edge is its current light-button grey, the first that
+// clears 3:1 on parchment, and Microsoft keeps its white button in both
+// themes, its edge #808080, which clears 3:1 on parchment (the owner's call,
+// MB.116).
+// claude-docs/styling.md, "Brand colours".
+$brand-palettes: (
+  'google': (
+    fill: #ffffff,
+    ink: #1f1f1f,
+    edge: #747775,
+    hover: #e8eaed,
+  ),
+  'discord': (
+    fill: #5865f2,
+    ink: #ffffff,
+    hover: #4752c4,
+  ),
+  'facebook': (
+    fill: #0866ff,
+    ink: #ffffff,
+    hover: #0653d4,
+  ),
+  'microsoft': (
+    fill: #ffffff,
+    ink: #000000,
+    edge: #808080,
+    hover: #e0e0e0,
+  ),
+);
+
+// A function rather than map.get() at each call site, so a mistyped brand or
+// part fails at compile time instead of emitting no declaration.
+@function brand-color($brand, $part) {
+  $parts: map.get($brand-palettes, $brand);
+
+  @if $parts == null {
+    @error 'Unknown brand "#{$brand}". The brands are: #{map.keys($brand-palettes)}.';
+  }
+
+  @if not map.has-key($parts, $part) {
+    @error 'Brand "#{$brand}" has no part "#{$part}". Its parts are: #{map.keys($parts)}.';
+  }
+
+  $value: map.get($parts, $part);
+
+  @if meta.type-of($value) == map {
+    // light-dark() takes the light value first, as chip() passes it.
+    @return light-dark(map.get($value, light), map.get($value, dark));
+  }
+
+  @return $value;
+}
+
+// ---------------------------------------------------------------------------
 // Token aliases — what components consume
 // ---------------------------------------------------------------------------
 // Sass variables over var() calls, so a component keeps `color: $text-primary;`
@@ -257,6 +321,11 @@ $theme-transition-easing: ease-in-out;
 
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
+
+// The forms' column: the sign-in panel, the account page's sections, the
+// email form and the invitation. One number where each page restated 28rem;
+// narrower than the measure, since a form's line is a field, not prose.
+$narrow-column: 28rem;
 
 // The height every one-line control shares, so a field, a select or
 // suggesting box and a button stand level in a row: 44.5px, the owner's call

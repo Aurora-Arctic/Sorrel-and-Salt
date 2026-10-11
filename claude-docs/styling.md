@@ -24,6 +24,9 @@ to.
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
+  Stylelint carries it (`npm run lint:css`, part of `lint`): `color-no-hex` and
+  `color-named` refuse a hue anywhere but `_variables.scss`, so a theme mixin
+  takes its hues from there too ([`commands.md`](commands.md), "The app").
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
@@ -56,9 +59,17 @@ to.
   has to remember it. A component never widens a paragraph past it; running
   text that is not a `p`, such as a long list item or a description, takes
   `max-width: $measure` itself; and a narrower column, as the forms use, is a
-  component's own choice. `Welcome` and `NotAuthorized` size their whole
-  column to it. `tests/e2e/admin.spec.ts` asserts it on a layout wider than
+  component's own choice. A page with no AppShell takes its column from
+  `.page-frame`, which stops at the measure, or at the forms' narrower
+  column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
+- **Browser baseline: Next's default modern targets** — Chrome, Edge and
+  Firefox 111, Safari 16.4, "baseline widely available" as of 2025-10-01
+  (`node_modules/next/dist/shared/lib/modern-browserslist-target.js`).
+  Turbopack's Lightning CSS lowers newer syntax to them, as it does
+  `light-dark()` (below). Each review checks the CSS it adds against this
+  baseline. Playwright's projects are Chromium only, so the owner's own look at
+  the dev server in Safari and Firefox is part of every sign-off.
 
 ## The palette
 
@@ -303,6 +314,48 @@ Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
 Lexend's 300 body weight, so a small label holds its colour at chip size.
 
+## Brand colours
+
+A sign-in provider's button wears the provider's colours, not ours:
+`$brand-palettes` in `_variables.scss` holds each brand's `fill`, `ink`
+and `hover`, and the `edge` a white button needs on our page, read through
+`brand-color($brand, $part)`. A mistyped brand or part is a compile error,
+worded as `badge-token()`'s. It is a compile-time map rather than custom
+properties because the hues do not follow the theme and nothing reads them at
+runtime; a part that ever does differ by theme is written
+`(dark: …, light: …)`, and the accessor returns `light-dark()`, which
+Lightning CSS lowers to the baseline. SignInPanel's buttons and the
+`.provider-mark` circle are its consumers; an SVG fill inside a mark is
+artwork, and stays in `icons.tsx`.
+
+Measured with `contrastRatio` (`src/lib/contrast.ts`), each edge or fill
+against the page at 3:1 (WCAG 1.4.11), each ink against its fill and its
+hover at 4.5:1. `tests/scss/tokens.test.ts` checks every pair below that is
+held to a floor, which is all but the rows marked "before MB.116" and the
+hover fills on the page, reading the colours from `$brand-palettes` and the
+theme tokens, in one assertion per theme:
+
+| Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
+| ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
+| Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
+| Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
+| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
+| Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
+| Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
+| Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
+| Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
+| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
+
+**Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
+and its states, and a hover ground is neither: the button is already known
+by its resting fill, and keyboard focus is shown by the focus ring, which
+clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
+may sit under 3:1 on the dark page. Microsoft keeps its white face in both
+themes, with the darker `#808080` edge that clears 3:1 on the light page: the
+owner's call at MB.116's sign-off, over Microsoft's own dark button.
+
 ## Type
 
 Cormorant Unicase for display, Lexend for body — both SIL Open Font License 1.1,
@@ -336,7 +389,9 @@ the three the scale uses (500/600/700) are requested.
   mineral and chemical names are set upright; and `.lede`, the muted sentence
   or two saying what the section is for, at body size because it is read.
   Wrapped in `.header`, they are the head of every section on the
-  Foundations page.
+  Foundations page. The `.header` gap alone spaces them: it zeroes its
+  children's margins, because flex margins never collapse and a heading's
+  bottom margin would otherwise add to the gap.
 
 ## Spacing
 
@@ -379,11 +434,13 @@ the inset, so it starts below the banner and the page does not scroll by the
 banner's height:
 
 - `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
-- The five pages a full screen high (`Welcome`, `NotAuthorized`,
-  `SignInPanel`, `SignInMethods` and `EmailForm`) take
-  `min-height: calc(100dvh - #{$top-inset})`.
+- Every page a full screen high sits in `.page-frame`, which takes
+  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below):
+  `/`, `/sign-in`, `/account`, `/account/email`, the not-authorized
+  page and the invitation page. A page that needs the full height takes the
+  frame rather than restating the rule.
 
-A new full-height page, or anything new fixed to the top, does the same.
+Anything new fixed to the top offsets by the inset the same way.
 
 ## Corner radius
 
@@ -542,6 +599,51 @@ The class layer every form is built from, in `_primitives.scss`:
 
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 
+## The page frame
+
+`.page-frame` is the centred, full-height column of a page with no AppShell:
+Welcome, sign-in, the account pages, the not-authorized page and the
+invitation. Its children stand `space(6)` apart and stop at `$measure`;
+`.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
+column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
+and below and `space(4)` at the sides, `border-box`, so a page a screen high
+does not scroll by its own padding or the banner above it.
+
+- **The gap alone spaces the column.** `.page-frame > *` clears every
+  child's block margins, which outranks bare `section`'s from
+  `layout-base` and `.page-header`'s own, so neither stacks on the gap.
+- **The width and its cap sit inside `:where()`**, so they carry no
+  specificity. In the app the class layer compiles as `body .x` (0,1,1) and
+  would beat a component's single class; in the workshop it compiles as
+  `:where(.ladle-story-frame) .x` (0,1,0), where source order decides. Under
+  `:where()` a component's own narrower column, such as the sign-in panel's,
+  wins in both. A primitive rule a component must be able to override is
+  wrapped the same way; check it in the app, not only the workshop. The
+  other way round holds too: a component that carries a primitive class
+  and restates one of its properties compounds the two, as the sign-in
+  card's `.sign-in-panel.panel` does for its padding, since a lone
+  component class loses to `body .panel` in the app while the workshop
+  shows it winning.
+- **`.page-frame__section`** is a titled section of a framed page, a
+  `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
+  `space(4)` clear of the top when the page's own nav jumps to it.
+  **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
+
+## Link rows and provider marks
+
+**`.link-row` is a wrapping row of links that is not a bulleted list**: a
+page's own nav, the admin nav. A `space(2)` by `space(5)` gap, and the
+list's indent, item margins and `typography-base`'s ◆ marker cleared, since
+the marker would sit against the link before and hang outside the first.
+
+**`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
+ground**, as its sign-in button gives it one: the marks are drawn for those
+grounds. `--google`, `--discord`, `--facebook` and `--microsoft` take
+their `fill` from `brand-color()`, and a white one its brand's `edge`, which
+holds 3:1 against both pages ("Brand colours", above). The circle is
+`border-box`, so an edged one is the same size as the rest. The markup is the
+`ProviderMark` component's ([`components/provider-mark.md`](components/provider-mark.md)).
+
 ## Designing a section
 
 What each section review (MB.115 to MB.124) designs to:
@@ -553,11 +655,34 @@ What each section review (MB.115 to MB.124) designs to:
   not two component rules.
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
+- **A page with no AppShell sits in `.page-frame`**, or
+  `.page-frame--narrow` when its content is a form ("The page frame",
+  above). A page's own row of links is a `ul.link-row`, and each titled
+  section a `.page-frame__section` named by its `h2` through
+  `aria-labelledby`, so a screen reader lists it as a region.
 - **Forms are the field primitives.** An error is a `.field__error` beneath
   its control from either source, and a rule that belongs to no field is a
-  `.notice` above them all.
+  `Notice` above them all ([`components/notice.md`](components/notice.md)).
+  Use the component rather than writing the `.notice` markup: its `kind`
+  picks the role, and the role is what makes a message that arrives late get
+  read out.
+- **A failed request is read by `readGraphqlFailure`**
+  (`src/lib/graphql-failure.ts`). Pass it the names of the fields the form
+  draws its own errors under. It answers either one of those fields and its
+  message, or one sentence for the form's `Notice`: the server's own, or
+  `GENERIC_FAILURE` when the request got no usable answer. A form that places
+  several field errors at once, as the admin forms and `IngredientForm` do,
+  reads them with `readGraphqlIssues` beside it, which hands back every issue
+  of a refusal, or one pathless issue carrying the same sentence.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
+- **The copy has one voice.** Speak to the reader as "you", in plain words.
+  A message says what happened in one sentence and what to do in the next.
+  "Please try again." goes only where trying again can help, so a refusal
+  that will refuse again says what to change instead. The same thing keeps
+  the same name everywhere: a "sign-in method", never a "sign-in option", and
+  an email "address". Every label, button and heading is title case
+  (`.claude/rules/components.md`, "Copy").
 - **Prose stops at the measure**; a table or a grid may be as wide as it
   needs.
 - **Both themes, and 375px.** A review signs off in the workshop in both, at
@@ -590,7 +715,8 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+- `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
+  colours and `brand-color()`, `$narrow-column`, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
@@ -605,8 +731,9 @@ heavier than the reverse; light reverts to the browser default.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--secondary` variants and
-    `--small` size, `.notice`,
+    `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
+    `--small` size, `.notice`, `.page-frame` and its parts, `.link-row`,
+    `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a

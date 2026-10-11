@@ -22,6 +22,15 @@ without a page routed to it.
   sidebar too. In its own iframe, carrying the global provider and styles, the
   dialog covers the story's frame and nothing else. `Modal` and the category
   form, now `GroupedValueForm`, are the first.
+- **A page component's story renders inside the page's real frame**
+  (MB.116): the `main` its route draws, with the same classes, such as
+  `<main className="page-frame">` for `NotAuthorized` or
+  `page-frame page-frame--narrow` for a form page. A story that drew the
+  component bare would show a column the app never draws, since the frame
+  sets the width and the spacing. Each also has `PhoneDark` and
+  `PhoneLight` stories, `meta = { theme, width: 375 }` as the
+  Foundations page has, so a review sees the page at phone width in both
+  themes without touching the toolbar.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -134,7 +143,10 @@ without a page routed to it.
 - **`foundations.{tsx,scss,stories.tsx}`** — one reference page under
   `Foundations`: the raw palette and the runtime tokens, the type scale and
   `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
-  button, notices, a form built from the field primitives, the eight
+  button, notices, a form built from the field primitives, the page frame
+  and its narrow form, the link row, the four providers' sign-in buttons in
+  each state with their brand parts printed from `$brand-palettes`, the
+  provider marks, the eight
   seeded group colour pairs as `chip()`'s two states — read from
   `src/db/seed/category-groups.ts` and set inline by `chipColors()`, as a page
   does — the badge palettes, a modal
@@ -163,6 +175,39 @@ without a page routed to it.
   turns the mail's one `LIGHT_MEDIA` block into `@media all` or `@media not
 all`: the same rules a client in that scheme applies, nothing re-styled. A
   story's `meta.theme` pin wins, as for components.
+
+## Review screenshots
+
+`scripts/review-screenshots.mjs` is a design review's camera (MB.116): it
+shoots each page a review lists at 375×812 and 412×915, in the dark and the
+light theme, full page, into the directory it is given —
+`.reports/<task>-screenshots/` by convention, gitignored with the rest of
+`.reports/`. Every later review reuses it rather than shooting by hand.
+
+```sh
+node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
+  --pages '[{ "path": "/sign-in", "name": "sign-in" }, { "path": "/", "name": "welcome" }]'
+```
+
+- **It drives the remote browser**, `chromium.connect(PLAYWRIGHT_WS_ENDPOINT)`,
+  the same `playwright-server` the e2e runner uses, since no browser is
+  installed in the devcontainer. That browser reaches this container as
+  `devcontainer`, so `--base` defaults to `http://devcontainer:8000`, the dev
+  server. A workshop page is reached the same way once a copy is served on
+  every interface:
+  `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=devcontainer npx ladle serve --host 0.0.0.0 --port 61001`.
+- **`--pages`** is a JSON list of `{ path, name }`, inline or a file's path;
+  each page is saved as `<name>-<width>-<theme>.png`.
+- **The theme is `emulateMedia({ colorScheme })`**: a fresh context has no
+  stored theme, so the app follows `prefers-color-scheme` as a first visit
+  does. A workshop story does not: Ladle sets its configured default, dark,
+  on the document unless the URL carries `theme=`, so the script adds
+  `theme=light` or `theme=dark` to any path with a `story=` parameter. A
+  story whose `meta.theme` is fixed keeps it either way.
+- **`--storage-state <file>`** is a Playwright storage-state file carrying a
+  signed-in session's cookies, for a page behind sign-in.
+- **Untested on purpose**: it is a tool the agents running a review use, not
+  a requirement of the app.
 
 ## Commands and gates
 

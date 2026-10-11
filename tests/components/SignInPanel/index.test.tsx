@@ -3,7 +3,7 @@ import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
+import { LAST_USED_PROVIDER_COOKIE, signInErrorMessage } from '@/lib/sign-in';
 
 // Better Auth's client performs the OAuth hop by assigning
 // `window.location.href` (tests/lib/auth-client.test.ts) — jsdom can't
@@ -80,17 +80,10 @@ describe('SignInPanel', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     unmount();
 
-    render(
-      <SignInPanel
-        next="/"
-        error="Sign-in was cancelled before it finished."
-        configured={['google']}
-      />,
-    );
+    const error = signInErrorMessage('access_denied')!;
+    render(<SignInPanel next="/" error={error} configured={['google']} />);
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Sign-in was cancelled before it finished.',
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent(error);
   });
 
   it('surfaces a failing signIn.social result in the same alert region', async () => {

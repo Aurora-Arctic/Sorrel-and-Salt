@@ -226,7 +226,13 @@ row's own id, and refuses another user's row (`ACCOUNT_NOT_FOUND`).
 `allowUnlinkingAll` stays off, so it refuses the last one
 (`FAILED_TO_UNLINK_LAST_ACCOUNT`) and a user is never left with no way in.
 The endpoint also wants a session younger than Better Auth's `freshAge`, a
-day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
+day (`SESSION_NOT_FRESH`). The page reads the session's age first
+(`sessionIsFresh()`, `src/lib/request-session.ts`) and, from a stale one,
+offers Sign In Again in place of every Remove, which signs out and returns
+through `/sign-in` to `/account` with a fresh session; a refusal that still
+happens, from a page left open past the day, says to sign in again
+([`components/sign-in-methods.md`](../components/sign-in-methods.md), "A
+stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
@@ -235,11 +241,13 @@ rule 4, and leaves `users` alone.
 `requireSession()`, so an unverified account never reaches it, though
 Better Auth itself would link to an unverified row. The page reads
 `linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
-`listUserAccounts` with the request headers) and renders `SignInMethods`
+`listUserAccounts` with the request headers) and `sessionIsFresh()`, and
+renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
 and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
-account page, `/account`, with its `?error=` when it failed.
+account page, `/account`, with `?error=` and `?provider=` when it failed, so
+the page can put the sentence in the row of the provider that failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
 ("Provisional accounts" below). At a sign-in, `unable_to_link_account`
@@ -318,9 +326,8 @@ verification window, and three hours at most. The argument is
   vouching for its address, into a row that is an admin until MB.58
   demotes it.
 - **The refusal.** `account_not_linked` maps in `src/lib/sign-in.ts` to one
-  sentence whatever the cause: _"Sign-in didn't work. If you signed in
-  before with a different provider, sign in that way, then add this one
-  under Account."_ A squatted address and a provider that never vouches
+  sentence whatever the cause: _"We couldn't sign you in this way. Use the
+  sign-in method you used before, then add this one on your account page."_ A squatted address and a provider that never vouches
   share the code, and naming either would confirm the address is taken
   (MB.71).
 - **A change never unverifies a row.** An established account asking for a
@@ -457,9 +464,9 @@ the tests [`tests.md`](tests.md).
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
-  address, since the row's is unchanged until the link is followed. Below
-  the form, a verified account gets a link to the account page, reading
-  "Your account" (["The account page"](#the-account-page-mb88) below), where
+  address, since the row's is unchanged until the link is followed. Inside
+  the card, a verified account gets a quiet button to the account page,
+  reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
@@ -480,17 +487,28 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/sign-in-methods.md`](../components/sign-in-methods.md).
 
 - **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
-  unverified account is sent to the email page instead, and reads `getMe`
-  and `linkedAccounts()`. Under its `<h1>` "Your Account" are three
-  sections, each under its own `<h2>`: Name ("Change your name." beneath its
-  heading, then `NameForm`), Email
-  (`EmailForm`, embedded) and Sign-In Methods (`SignInMethods`, whose
-  heading is the section's). It carries no link to `/account/email`.
+  unverified account is sent to the email page instead, and reads `getMe`,
+  `linkedAccounts()` and `sessionIsFresh()`. Under its `<h1>` "Your
+  Account" are three sections, each a region named by its own `<h2>`, which
+  the page writes in a `.header` with the section's intro as its `.lede`:
+  Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
+  (`EmailForm`, embedded, whose own status line says what the section is
+  for) and Sign-In Methods ("You can sign in to this account with any of
+  these.", then `SignInMethods`). It carries no link to `/account/email`.
   Between the heading and the first section, a nav labelled "On this page"
   links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-sign-in-methods`), and a hairline `<hr>`
-  rules each section from the next (on the owner's call). A section a link
-  lands on stops clear of the top inset. Beside the heading, in a
+  `#account-email`, `#account-sign-in-methods`). Each section stands on its
+  own `.panel`, which parts it from the next, so no rule is drawn between
+  them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
+  section a link lands on stops clear of the top inset. The frame, the
+  sections, the panels and the nav's row are primitives
+  (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
+  [`styling.md`](../styling.md), "The page frame" and "Link rows and
+  provider marks"), so the page has no stylesheet of its own. A failed link
+  lands back with `?error=` and `?provider=`: the page turns the code into
+  a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
+  the provider, when it is one on the roster, so the sentence shows in that
+  provider's row. Beside the heading, in a
   `.page-header`, is Sign Out (`SignOutButton`,
   [`components/sign-out-button.md`](../components/sign-out-button.md)):
   Better Auth's own sign-out, then a full load of `/` (added in MB.63's PR,
@@ -498,8 +516,10 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a
   provisional account can reach, a mailed link lands on its confirmed view,
-  and a link opened from the wrong browser is explained there. Its link
-  across, offered to a verified account, reads "Your account".
+  and a link opened from the wrong browser is explained there. Its way
+  across, offered to a verified account, is a quiet "Continue to Account"
+  button inside the form's `.panel`, the ground the account page's sections
+  stand on too.
 - **The Email section is EmailForm, not a second form.** The same field,
   `setEmail` mutation, one-a-minute cooldown and field errors, with
   `embedded` set: no page heading, which the section gives, and never the

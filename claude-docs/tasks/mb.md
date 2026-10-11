@@ -120,7 +120,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.114 | Design review: foundations                                                                                               | Wave 8  | —                      |
 | MB.115 | Design review: the admin area                                                                                            | Wave 8  | —                      |
 | MB.116 | Design review: the sign-in and account pages                                                                             | Wave 8  | —                      |
-| MB.117 | Design review: sign-in methods                                                                                           | Wave 8  | —                      |
+| MB.117 | ~~Design review: sign-in methods~~ — **merged into MB.116**                                                              | —       | —                      |
 | MB.118 | Design review: the site's mail                                                                                           | Wave 10 | —                      |
 | MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
 | MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
@@ -3067,6 +3067,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: `CategoryForm` and `IngredientFormValueForm` are duplicated components (MB.189 kept their nine identically titled tests as one `it.each` so the next copy is a row); the hex regex is written in `GroupForm` and `ChipColorField` once more each after `lib/contrast.ts` exports it (MB.209); and the admin list pages carry their filter, cursor and "Page X of Y" plumbing per page.
 
+_Left by MB.116:_ The shared row of links and the notice component are already in the admin area: `AdminNav`'s list is a `ul.link-row`, and every admin page and form shows its notices through `Notice`. Two warnings in the user list stay hand-written, since `Notice`'s `warn` kind is an alert and they must not be read out twice. The admin forms already read a failed request through `readGraphqlFailure` and its fallback sentence, `GENERIC_FAILURE`, so this review reads their sentences for the copy, not their plumbing. The four forms that place several field errors at once (`GroupForm`, `GroupedValueForm`, `VocabularyValueForm` and `IngredientForm`) keep a small reader of their own that falls back to the shared one. `.admin-layout`'s raw `2rem 1rem` padding, `1.5rem` gap and `64rem` width are this review's to put on the scale or a token. A shared `TextField` is the candidate once `IngredientForm`'s react-hook-form `TextField` and `FieldShell` (`IngredientForm/fields.tsx`) are compared with the plain-state forms. The user list's Google and Microsoft circle edges changed in MB.116, to clear 3:1 on the light page. `scripts/review-screenshots.mjs` takes this review's phone screenshots, at 375px and 412px in both themes.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3082,15 +3084,25 @@ _Acceptance criteria:_
 - A destructive admin action looks destructive, and its confirmation says what will happen
 - No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
-**MB.116 — Design review: the sign-in and account pages** · 2h
+**MB.116 — Design review: the sign-in and account pages** · 8h
 
 _Story:_ As a member, I want signing in and managing my account to feel like one finished site, so that trusting it with my sign-in is easy.
 
-Minted during M5.4. Reviews the pages around signing in once MB.88 rebuilds `/account`: the public entry page `/` (MB.57), the sign-in page and its provider buttons with the last-used mark (M2.6, MB.77), `/account` with the name and address (MB.88), `/account/email` (MB.54) and the not-authorized page (M5.4). The sign-in methods list on `/account` has a review of its own, MB.117, straight after.
+Minted during M5.4. Reviews the pages around signing in once MB.88 rebuilds `/account`: the public entry page `/` (MB.57), the sign-in page and its provider buttons with the last-used mark (M2.6, MB.77), `/account` with the name, the address and the sign-in methods (MB.88, MB.71), `/account/email` (MB.54) and the not-authorized page (M5.4). **MB.117, the review of the sign-in methods, is merged into this task** (the owner's call, 2026-10-10): the methods are on `/account`, so the two were one page reviewed twice. MB.117's three criteria are this task's, below, and MB.117 is retired. **Re-estimated from 2h to 8h**: MB.117's 1h, and the shared pieces, stylelint, the adoptions across the frontend and the copy review that the review turned up. The plan is [`design-decisions/mb.116-plan.md`](../design-decisions/mb.116-plan.md).
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: the provider buttons' brand-coloured and greyed states, and the client twins of `sign-in.ts`'s error-message lookups.
+The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: the provider buttons' brand-coloured and greyed states, the client twins of `sign-in.ts`'s error-message lookups, and `SignInMethods`' per-provider row — linked, addable or unavailable — as one row component.
+
+What the review builds beyond the section's own pages, each named in the PR body:
+
+- **Shared pieces for every later review.** The centred full-height frame of a page with no AppShell, `.page-frame`, with `--narrow` for a form page and `__section` and `__rule` for its titled sections; a row of links that is not a bulleted list, `.link-row`; a provider's mark on its brand's circle, `.provider-mark`, and the `ProviderMark` component; the providers' brand colours as one map in `_variables.scss`, read through `brand-color()`; the `Notice` component, which pairs each notice's look with the role that gets it read out, and its `quiet` option, a status rather than an alert for a warning on the page from the start; `readGraphqlFailure` and its one fallback sentence, `GENERIC_FAILURE`, and `readGraphqlIssues`, which reads every field error of a refusal at once for a form that places each under its field; `scripts/review-screenshots.mjs`, which takes a review's phone screenshots in both themes; and an e2e check that a page does not scroll sideways at 375px.
+- **Stylelint**, run by `npm run lint`, refusing a raw hue anywhere but `_variables.scss`. Group colours are data on their rows and never reach a stylesheet, so it cannot conflict with them.
+- **Ride-alongs outside the section**: `InvitationAcceptance` takes the page frame; `UserList` takes the brand map and the shared provider mark, its Google and Microsoft circles' edges darkened to clear 3:1 on the light page; `AdminNav`'s list becomes a `.link-row`; and every hand-written notice and every copy of the failure reader across the frontend, the admin pages and forms among them, takes `Notice` and `readGraphqlFailure`, or `readGraphqlIssues` where a form places several field errors at once.
+- **The plain-writing rule**: a `CLAUDE.md` line, its long form in `.claude/rules/writing.md`, and a row in `claude-docs/agent-skills.md`.
+- **The copy review**: every sentence the section shows, proposed against one register in the sign-off comment and applied as agreed. Second person and plain words; one sentence for what happened and one for what to do; "Please try again." only where trying again can help; "sign-in method" and "address" throughout; title case for every label, button and heading.
+
+On the section's own pages, one behaviour fix rides with the design: **the account page pre-empts a stale session**. Better Auth refuses to remove a sign-in method on a session older than its freshness window, so the page withholds Remove on such a session and offers Sign In Again, rather than letting the request fail. The decisions taken at sign-off, and the owner's calls on the applied design in the running app (the only method's Remove greyed with its reason as its description, the sign-in card filling the narrow column as one centred column with more room inside, a quiet Continue to Account button inside the email card, each sign-in method's button small and one word with the provider in its accessible name, and a page-frame child made `border-box` after the new 375px width check caught the account panels overflowing), are recorded at the end of the plan.
 
 _Acceptance criteria:_
 
@@ -3101,9 +3113,20 @@ _Acceptance criteria:_
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The provider buttons keep their brand-coloured and greyed states distinct in both themes
 - `/`, `/sign-in` and the not-authorized page read as one site with the signed-in pages
+- Linked, addable and unavailable providers are told apart without colour alone (from MB.117)
+- The last remaining method reads as the one that cannot be removed, and says why (from MB.117)
+- A failed link's error sits beside the provider it concerns (from MB.117)
+- Stylelint refuses a raw hue outside `_variables.scss`, as part of `npm run lint`
+- Every hand-written notice that carries a role, and every copy of the failure reader and its fallback sentence, uses `Notice`, `readGraphqlFailure` and `GENERIC_FAILURE`, and a form that places several field errors at once reads them with `readGraphqlIssues`
+- The section's copy is reviewed against one register, proposed in the sign-off comment and applied as agreed
 - No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
-**MB.117 — Design review: sign-in methods** · 1h
+**MB.117 — [RETIRED] Design review: sign-in methods** · **RETIRED 2026-10-10, merged into MB.116**
+
+> **Merged into MB.116, not done on its own.** The owner's call (2026-10-10):
+> the sign-in methods are on `/account`, which MB.116 reviews, so the two were
+> one page reviewed twice. The ID is kept, as every retired one is. Its three
+> criteria below are MB.116's now, and its issue is closed as not planned.
 
 _Story:_ As a member, I want to see at a glance how I can sign in, and add or remove a method safely, so that I never lock myself out by accident.
 
@@ -3113,7 +3136,7 @@ A section review designs what the section's building tasks left at the tokens an
 
 The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: `SignInMethods`' per-provider row — linked, addable or unavailable — as one row component.
 
-_Acceptance criteria:_
+_Acceptance criteria (retired — moved to MB.116):_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
@@ -3130,6 +3153,8 @@ _Acceptance criteria:_
 _Story:_ As a new member or an invitee, I want the site's mail to look like the site and read well in my mail client, so that I trust the link in it.
 
 Minted during M5.4. Reviews the mail the site sends, once the last of it exists: the verification and change-of-address mail (MB.66, `verify-email.tsx`), the coven invitation (M7.3) and the admin invitation (MB.70). Mail has its own constraints — inline styles, a client's own dark mode, images blocked by default, MB.72's light-mode rules — so it is reviewed as mail, in Mailpit and in the major clients, not as a page, and built within the palette and type MB.114 settles. Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.116:_ The providers' brand colours are one map in `_variables.scss`, `$brand-palettes`, read through `brand-color()`: the one place their hexes are written, if a mail ever shows a provider mark. MB.116's copy register holds for mail too: second person and plain words, one sentence for what happened and one for what to do, "Please try again." only where trying again can help, and title case for every label and heading (`styling.md`, "Designing a section").
 
 _Acceptance criteria:_
 
@@ -3148,6 +3173,8 @@ Minted during M5.4. Reviews the coven section once invitations land: creating a 
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
+_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), and is the frame for the coven create page too: a form page with no AppShell (`styling.md`, "The page frame"). Every notice in the section shows through `Notice` (`components/notice.md`).
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3165,6 +3192,8 @@ _Story:_ As a visitor, I want the public compendium to look finished and read we
 Minted during M5.4. Reviews the public compendium and the ingredient components the rest of the site shares, once MB.106's markers land: `IngredientSearch` with its chips, OR toggle and filters (M8.10 to M8.13), `SafetyNote` (M8.13a), the local-or-compendium chip and the stock badges (M9.7, M9.8), `IngredientCard` (M8.14), `IngredientForm` read-only and inside the add and edit modals (M8.15 to M8.17), the public frame and its signed-in island (MB.83), the compendium page and its pager (M8.18, MB.105), the entry page (M8.19) and the New and Updated markers (MB.106). The compendium is the site's public, indexable face (MB.80), so it is reviewed signed out as well as signed in.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.116:_ `IngredientForm`'s notices already show through `Notice`, and its failed saves fall back to `readGraphqlFailure`. The one left hand-written is the duplicate-name warning in `IngredientForm/duplicates.tsx`, a `div` that turns from warning to error in place, which is this review's to settle. A shared `TextField`, lifted from `IngredientForm/fields.tsx`, is settled with MB.115.
 
 _Acceptance criteria:_
 
@@ -3203,6 +3232,8 @@ Minted during M5.4, on the owner's request that the nav be designed once MB.7 bu
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
+_Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; where it goes is this review's to settle once the nav exists.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3240,6 +3271,8 @@ _Story:_ As a user, I want errors, loading and empty pages to look as finished a
 Minted during M5.4, the last design review, once M11.10's error pages and M11.16's images land: the cold-start skeletons (M11.9); the 403, 404 and 500 pages (M5.4, M11.10), which need one design whether Next draws them in the browser, as it does a thrown error, or on the server, as it does an unmatched URL (`auth.md`, "The admin guard"); the empty states across sections; and a read of the whole site end to end for anything the section reviews left inconsistent.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.116:_ `Notice` is the one way to show an error, a warning or a success sentence (`components/notice.md`), and `GENERIC_FAILURE`, "That didn't work. Please try again.", is the one sentence for a request that got no usable answer. The whole-site read checks against MB.116's copy register (`styling.md`, "Designing a section") and the browser baseline (`styling.md`, "Binding rules"). The not-authorized page already sits in `.page-frame`, the frame the 404 and 500 pages can share.
 
 _Acceptance criteria:_
 

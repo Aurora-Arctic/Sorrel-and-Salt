@@ -2,12 +2,12 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import type { ValidationIssue } from '../../lib/types';
+import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import Notice from '../Notice';
 import { VOCABULARY_COPY } from '../VocabularyValueList/vocabularies';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
 import type { FlatVocabulary } from '../VocabularyValueList/types';
@@ -90,24 +90,10 @@ const WRITES: Record<
   },
 };
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
-
 const FIELDS = ['name', 'description'] as const;
 type FieldName = (typeof FIELDS)[number];
 
 const EMPTY: VocabularyValueValues = { name: '', description: '' };
-
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
-  }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
-}
 
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
@@ -162,7 +148,7 @@ const VocabularyValueForm = ({
       onDone();
     } catch (error) {
       const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
+      for (const { path, message } of readGraphqlIssues(error)) {
         const [field, ...rest] = path;
         if (rest.length === 0 && isField(field)) setError(field, { type: 'server', message });
         else unplaced.push(message);
@@ -180,7 +166,7 @@ const VocabularyValueForm = ({
     } catch (error) {
       // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
       setConfirming(false);
-      setAlert(issuesOf(error)[0]?.message ?? GENERIC_ERROR);
+      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
     }
   };
 
@@ -274,11 +260,7 @@ const VocabularyValueForm = ({
       onSubmit={handleSubmit((input) => send(input))}
       noValidate
     >
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
+      {rootError && <Notice kind="error">{rootError}</Notice>}
       <div className="field">
         <label className="field__label" htmlFor={ids('name').control}>
           Name

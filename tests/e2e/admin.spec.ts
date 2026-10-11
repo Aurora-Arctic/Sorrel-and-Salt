@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from './session';
@@ -61,6 +61,7 @@ test('a signed-in non-admin is refused at /admin with a 403 page and no admin ma
   await expect(
     page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
   ).toBeVisible();
+  await assertNoSidewaysScroll(page);
   await assertNoAccessibilityViolations(page);
 });
 
@@ -160,8 +161,12 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(tip).toBeHidden();
   await email.locator('.user-list__mark').hover();
   await expect(tip).toBeVisible();
+  await expect(tip).toHaveText('Verified');
   // So does each sign-in logo's.
-  const discord = admin.getByRole('cell').nth(4).locator('.user-list__provider--discord');
+  const discord = admin
+    .getByRole('cell')
+    .nth(4)
+    .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();
   await assertNoAccessibilityViolations(page);

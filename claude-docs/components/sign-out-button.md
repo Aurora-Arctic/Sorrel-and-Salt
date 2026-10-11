@@ -18,15 +18,23 @@ with no props.
 - **While it runs** the button is disabled, `aria-busy`, with a spinner and
   "Signing Out".
 - **A failure**, a refusal or a connection that drops, says "That didn't
-  work. Please try again." in a `.notice--error` `role="alert"` beside the
-  button, which is offered again.
+  work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`)
+  in an error `Notice` beside the button, which is offered again. The call
+  is Better Auth's, not GraphQL's, but it has no more to say about why than a
+  lost request does, so it takes the same sentence.
 - **A plain full-size `.btn`**, its label in title case, "Sign Out".
+- **SignInMethods' Sign In Again makes the same call** in the same shape,
+  a refusal or a dropped connection said in `GENERIC_FAILURE`, but lands on
+  `/sign-in?next=%2Faccount` rather than `/`, so a stale session comes back
+  to the account page fresh
+  ([`sign-in-methods.md`](sign-in-methods.md), "A stale session signs in
+  again").
 
 ## Styling
 
 Layout only: the button and the failure on one wrapping line, a `space(3)`
-gap, the notice compounded as `.notice.sign-out-button__failure` past the
-`body .notice` primitive.
+gap. The notice needs no rule of its own, since the `.notice` primitive
+already sets no margin.
 
 ## Stories
 

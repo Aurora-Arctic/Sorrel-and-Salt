@@ -4,6 +4,7 @@ import { cache } from 'react';
 import GroupList from '../../../components/GroupList';
 import { groupsHref } from '../../../components/GroupList/href';
 import type { GroupListEntry } from '../../../components/GroupList/types';
+import Notice from '../../../components/Notice';
 import { NotFound } from '../../../lib/errors';
 import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
@@ -100,9 +101,9 @@ export default async function AdminCategoryGroupsPage({
         </Link>
       </div>
       {!adding && editSlug && !edited && (
-        <p className="notice notice--error" role="alert">
+        <Notice kind="error">
           No group has that address — it may have been renamed or deleted.
-        </p>
+        </Notice>
       )}
       <GroupList
         kind="category"

@@ -3,7 +3,12 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react';
 import { HttpResponse } from 'msw';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
-import EmailForm from '@/components/EmailForm';
+import EmailForm, {
+  CHANGE_STATUS,
+  NO_EMAIL_STATUS,
+  UNVERIFIED_STATUS,
+  VERIFIED_STATUS,
+} from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -53,13 +58,13 @@ describe('EmailForm', () => {
     renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
     expect(emailField()).toHaveValue('');
-    expect(screen.getByText(/no email yet/i)).toBeInTheDocument();
+    expect(screen.getByText(NO_EMAIL_STATUS)).toBeInTheDocument();
   });
 
   it('says an unverified address is waiting on its link', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
-    expect(screen.getByText(/not yet verified/i)).toBeInTheDocument();
+    expect(screen.getByText(UNVERIFIED_STATUS)).toBeInTheDocument();
   });
 
   // A followed link's landing: the address is proved, so there is nothing to
@@ -75,7 +80,7 @@ describe('EmailForm', () => {
       />,
     );
 
-    expect(screen.getByText(/^verified/i)).toBeInTheDocument();
+    expect(screen.getByText(VERIFIED_STATUS)).toBeInTheDocument();
     expect(screen.getByText('ada@example.test')).toBeInTheDocument();
     // Where the account was going wins over its role's landing.
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven/hearth');
@@ -92,10 +97,10 @@ describe('EmailForm', () => {
   it('offers a verified account the field alone when it comes back to change the address', () => {
     renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
 
-    expect(screen.queryByText(/^verified/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(VERIFIED_STATUS)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
     expect(emailField()).toHaveValue('ada@example.test');
-    expect(screen.getByText(/enter a new address/i)).toBeInTheDocument();
+    expect(screen.getByText(CHANGE_STATUS)).toBeInTheDocument();
   });
 
   it('has nothing to send for an unchanged verified address, until it is edited', () => {
@@ -132,6 +137,29 @@ describe('EmailForm', () => {
     expect(calls).toEqual([{ email: 'New@Example.test' }]);
     // The row's own address (still the old one) is never what the message names.
     expect(status).not.toHaveTextContent('old@example.test');
+  });
+
+  // The answer is held until the busy state is seen, so a quick answer
+  // cannot end the send before the assertion runs.
+  it('is busy while the send is in flight', async () => {
+    let answer: () => void = () => {};
+    const answered = new Promise<void>((resolve) => (answer = resolve));
+    server.use(
+      graphqlLink.mutation('SetEmail', async () => {
+        await answered;
+        return HttpResponse.json({ data: { setEmail: { id: 'u1', email: 'old@example.test' } } });
+      }),
+    );
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    const busy = submit();
+    fireEvent.submit(busy.closest('form') as HTMLFormElement);
+
+    await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
+    expect(busy).toBeDisabled();
+    answer();
+    await screen.findByRole('status');
+    expect(busy).not.toHaveAttribute('aria-busy');
   });
 
   // The link it asks for lands back here, and Continue goes on from there.
@@ -177,7 +205,7 @@ describe('EmailForm', () => {
     mockGraphQLError('SetEmail', {
       code: 'VALIDATION',
       fieldErrors: [
-        { path: ['email'], message: 'That address is already in use by another account' },
+        { path: ['email'], message: 'That email address is already in use by another account' },
       ],
     });
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);

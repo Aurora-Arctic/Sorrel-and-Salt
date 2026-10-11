@@ -30,10 +30,24 @@ the signed-out state is the page's to show.
 
 ## Styling
 
-Layout only: `.invitation-page` centres the panel without an AppShell, as
-`.email-page` does, and `.invitation-acceptance` stacks it. The notice, the
-buttons and the spinner are the primitives'. Tokens used: `space()` and
-`$top-inset`.
+Layout only. The page has no AppShell, the signed-in pages' shared frame, so
+its `main` is the page frame, `.page-frame.page-frame--narrow`
+([`styling.md`](../styling.md), "The page frame"): it centres the panel,
+holds it clear of the top inset and caps it at the forms' column,
+`$narrow-column` (28rem), so the panel sets no width of its own.
+`.invitation-acceptance` only stacks its heading, sentences and button a
+`space(3)` apart. Both notices, the refusal and a failed accept, are
+`Notice` ([`notice.md`](notice.md)) as errors, so each is an alert; a
+failed accept is read by `readGraphqlFailure` (`src/lib/graphql-failure.ts`),
+whose `GENERIC_FAILURE` is the sentence when the server sent none. The
+buttons and the spinner are the primitives'. Tokens used: `space()`.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
+`SignedOut`, `Acceptable`, `Unverified` and `Expired`, each inside the
+page's own `main.page-frame.page-frame--narrow`, so the workshop shows what
+the page shows. Render-only.
 
 ## Tests
 

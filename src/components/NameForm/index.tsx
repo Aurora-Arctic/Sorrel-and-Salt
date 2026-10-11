@@ -1,11 +1,12 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
+import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import type { NameFailure, NameFormProps } from './types';
+import Notice from '../Notice';
+import type { NameFormProps } from './types';
 import './index.scss';
 
 // The account page's Name section (MB.88): the name the site shows, changed
@@ -21,22 +22,6 @@ const SetNameDocument = graphql(`
     }
   }
 `);
-
-export const GENERIC_NAME_ERROR = "That didn't work. Please try again.";
-
-// The shape claude-docs/graphql/errors.md, "Errors" describes: the first
-// error's `extensions` carries the code and, for VALIDATION, the field errors.
-function readFailure(error: unknown): NameFailure {
-  if (!(error instanceof ClientError)) return { alert: GENERIC_NAME_ERROR };
-  const first = error.response.errors?.[0];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] } | undefined;
-  if (extensions?.code === 'VALIDATION') {
-    const issue = extensions.fieldErrors?.find(({ path }) => path[0] === 'name');
-    if (issue) return { field: issue.message };
-  }
-  return { alert: first?.message || GENERIC_NAME_ERROR };
-}
 
 const NameForm = ({ name }: NameFormProps): ReactElement => {
   const inputId = useId();
@@ -56,8 +41,8 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
       setSavedMessage(true);
     },
     onError: (failure) => {
-      const { field, alert: message } = readFailure(failure);
-      setFieldError(field);
+      const { field, alert: message } = readGraphqlFailure(failure, ['name']);
+      setFieldError(field?.message);
       setAlert(message);
     },
   });
@@ -77,15 +62,8 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
 
   return (
     <div className="name-form">
-      {alert && (
-        <p className="notice notice--error" role="alert">
-          {alert}
-        </p>
-      )}
-      {savedMessage && (
-        // `output` carries the status role itself, so no `role` attribute.
-        <output className="notice notice--success">Saved your name.</output>
-      )}
+      {alert && <Notice kind="error">{alert}</Notice>}
+      {savedMessage && <Notice kind="success">Your name was saved.</Notice>}
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>

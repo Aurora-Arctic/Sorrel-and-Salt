@@ -13,7 +13,8 @@ import type { Session } from '@/lib/session';
 
 const requireSession = vi.fn<() => Promise<Session>>();
 const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
-vi.mock('@/lib/request-session', () => ({ requireSession, linkedAccounts }));
+const sessionIsFresh = vi.fn(async () => true);
+vi.mock('@/lib/request-session', () => ({ requireSession, linkedAccounts, sessionIsFresh }));
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
 
 const getMe = vi.fn();

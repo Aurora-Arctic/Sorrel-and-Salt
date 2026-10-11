@@ -8,6 +8,7 @@ import type {
   FlatVocabulary,
   VocabularyValueListEntry,
 } from '../../components/VocabularyValueList/types';
+import Notice from '../../components/Notice';
 import { NotFound } from '../../lib/errors';
 import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
@@ -103,9 +104,9 @@ export async function VocabularyPage({
         </Link>
       </div>
       {!adding && editSlug && !edited && (
-        <p className="notice notice--error" role="alert">
+        <Notice kind="error">
           No {noun} has that address — it may have been renamed or deleted.
-        </p>
+        </Notice>
       )}
       <VocabularyValueList
         vocabulary={vocabulary}
