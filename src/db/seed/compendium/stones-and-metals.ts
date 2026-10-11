@@ -100,6 +100,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Chalcedony&oldid=1372143626',
       accessed: '2026-10-11',
     },
+    'wikipedia-chrysoberyl': {
+      kind: 'entry',
+      title: 'Chrysoberyl',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Chrysoberyl&oldid=1374719919',
+      accessed: '2026-10-11',
+    },
     'wikipedia-chrysoprase': {
       kind: 'entry',
       title: 'Chrysoprase',
@@ -119,6 +126,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Copper',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Copper&oldid=1374343138',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-diamond': {
+      kind: 'entry',
+      title: 'Diamond',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Diamond&oldid=1379421941',
       accessed: '2026-10-11',
     },
     'wikipedia-electrum': {
@@ -147,6 +161,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Flint',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Flint&oldid=1375602611',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-garnet': {
+      kind: 'entry',
+      title: 'Garnet',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Garnet&oldid=1375466931',
       accessed: '2026-10-11',
     },
     'wikipedia-gold': {
@@ -254,11 +275,25 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Rose_quartz&oldid=1379091724',
       accessed: '2026-10-11',
     },
+    'wikipedia-ruby': {
+      kind: 'entry',
+      title: 'Ruby',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Ruby&oldid=1378292619',
+      accessed: '2026-10-11',
+    },
     'wikipedia-rutilated-quartz': {
       kind: 'entry',
       title: 'Rutilated quartz',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Rutilated_quartz&oldid=1283688730',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-sapphire': {
+      kind: 'entry',
+      title: 'Sapphire',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Sapphire&oldid=1377304079',
       accessed: '2026-10-11',
     },
     'wikipedia-silver': {
@@ -273,6 +308,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Smoky quartz',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Smoky_quartz&oldid=1364718303',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-spinel': {
+      kind: 'entry',
+      title: 'Spinel',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Spinel&oldid=1377591394',
       accessed: '2026-10-11',
     },
     'wikipedia-steel': {
@@ -296,6 +338,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       url: 'https://en.wikipedia.org/w/index.php?title=Tin&oldid=1379053947',
       accessed: '2026-10-11',
     },
+    'wikipedia-topaz': {
+      kind: 'entry',
+      title: 'Topaz',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Topaz&oldid=1373763816',
+      accessed: '2026-10-11',
+    },
     'wikipedia-tourmaline': {
       kind: 'entry',
       title: 'Tourmaline',
@@ -308,6 +357,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       title: 'Witch bottle',
       container: 'Wikipedia',
       url: 'https://en.wikipedia.org/w/index.php?title=Witch_bottle&oldid=1368142800',
+      accessed: '2026-10-11',
+    },
+    'wikipedia-zircon': {
+      kind: 'entry',
+      title: 'Zircon',
+      container: 'Wikipedia',
+      url: 'https://en.wikipedia.org/w/index.php?title=Zircon&oldid=1368589625',
       accessed: '2026-10-11',
     },
   },
@@ -387,6 +443,47 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-agate',
               supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Alexandrite',
+      canonicalName: 'Chrysoberyl var. alexandrite',
+      nomenclature: 'mineral',
+      description:
+        'Alexandrite is the colour-changing variety of chrysoberyl, the beryllium aluminate gem. A trace of chromium taking the place of some aluminium makes it soak up a narrow band of yellow light, so a fine stone looks green to bluish green by daylight and turns red to purplish red under incandescent lamps. Beryllium and chromium seldom turn up in the same rocks, and Wikipedia explains its rarity by the need for beryllium-rich pegmatite fluids to meet chromium-bearing rock; stones over three carats are very scarce. Wikipedia credits its discovery to Nils Gustaf Nordenskiöld, a mineralogist from Finland who first took it for emerald, and says it was named for the future Russian emperor Alexander II, though newer research points to Yakov Kokovin. Large stones were once thought to come only from the Ural Mountains, but it is also mined in Brazil, India, Madagascar, Tanzania and Sri Lanka, laboratories now grow synthetic stones, and much sold as synthetic alexandrite is really colour-change corundum or spinel. It is one of the June birthstones. Cunningham notes that it is rare and costly, and has it worn to draw luck and good fortune and used in love spells. Hall calls it a crystal of contrasts and associates it with intuition, willpower, self-respect, joy, creativity and manifestation.',
+      colors: ['green', 'red', 'yellow', 'pink'],
+      categories: ['Love', 'Intuition', 'Joy', 'Creativity', 'Manifestation', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 68',
+          supports: ['categories', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Beryl: Chrysoberyl',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-chrysoberyl',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Beryl: Chrysoberyl',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-chrysoberyl',
+              supports: ['form'],
             },
           ],
         },
@@ -746,6 +843,53 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Black Tourmaline',
+      canonicalName: 'Schorl',
+      nomenclature: 'mineral',
+      description:
+        'Black tourmaline is schorl, the sodium- and iron-rich member of the tourmaline group and by far its commonest kind: Wikipedia puts it at up to 95 per cent of all tourmaline found in nature. It is opaque, brownish-black to black, and its iron gives it a high magnetic susceptibility. The name is older than 1400 and comes from a Saxon village, now Zschorlau, beside a tin mine where the black crystals turned up; Johannes Mathesius described it in 1562, and English writers later called it shorl, shirl or iron tourmaline. Like other iron-rich tourmalines it grows mainly in granite and granite pegmatite. Cunningham says it is usually too brittle for jewellery and seldom sold; he gives it to Saturn and to earth, uses it for grounding and to stand for the earth in spells of that element, and calls it protective, since it soaks up negativity once charged to do so. Hall presents it as a shield against psychic attack, spells, ill-wishing, electromagnetic smog and negative energy, says it grounds energy and lifts physical vitality, and links it with a calm, objective outlook, altruism and practical creativity.',
+      elements: ['earth'],
+      planets: ['Saturn'],
+      colors: ['black'],
+      folkNames: ['Shorl', 'Common Schorl', 'Iron Tourmaline'],
+      categories: ['Grounding', 'Protection', 'Creativity', 'Healing'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 142',
+          supports: ['canonicalName', 'elements', 'planets', 'colors', 'categories', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Tourmaline',
+          supports: ['canonicalName', 'colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-tourmaline',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Cunningham finds the crystals mostly too brittle to set in jewellery. Hall suggests wearing one at the neck or setting it between yourself and a source of electromagnetic fields, and for healing work lays the crystals with their points turned away from the body to draw negative energy off.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 142',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Tourmaline',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Bloodstone',
       canonicalName: 'Quartz var. heliotrope',
       nomenclature: 'mineral',
@@ -1049,6 +1193,63 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: "Cat's Eye",
+      canonicalName: 'Chrysoberyl var. cymophane',
+      nomenclature: 'mineral',
+      description:
+        "Cymophane, better known as cat's eye, is the chatoyant variety of chrysoberyl: a translucent, usually yellowish stone in which countless fine needles of rutile, or tiny tube-shaped hollows, lie parallel and throw a single bright line across a polished dome. Its formal name comes from Greek words for wave and appearance. Dealers praise the finest stones as 'milk and honey', meaning a sharp milky streak over a honey-toned body, though lemon-yellow ones are liked as well. Quartz, tourmaline, corundum and other minerals can show the same effect, but Wikipedia says the jewellery trade keeps the bare name 'cat's eye' for chrysoberyl and gives the others a qualifier. It grew fashionable late in the nineteenth century after the Duke of Connaught gave an engagement ring set with one. Cunningham writes of 'cat's-eye' in a looser sense that he says usually means quartz holding asbestos fibres; he assigns it to Venus and earth and uses it for wealth, beauty, gambling, protection and healing, keeping it with money and wearing it set in silver. Hall describes it as a grounding stone that also stirs intuition, credits it with protection and confidence, and says its cymophane form steadies the intellect.",
+      elements: ['earth'],
+      planets: ['Venus'],
+      colors: ['yellow', 'green'],
+      categories: [
+        'Wealth',
+        'Gambling',
+        'Protection',
+        'Healing',
+        'Grounding',
+        'Intuition',
+        'Confidence',
+        'Love',
+      ],
+      substitutes: [
+        {
+          identity: "quartz var. tiger's eye",
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 81; p. 190',
+          supports: ['elements', 'planets', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Beryl: Chrysoberyl',
+          supports: ['categories', 'description'],
+        },
+        {
+          source: 'wikipedia-chrysoberyl',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Beryl: Chrysoberyl',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-chrysoberyl',
+              supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Chalcedony',
       canonicalName: 'Quartz var. chalcedony',
       nomenclature: 'mineral',
@@ -1137,6 +1338,42 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-chalcedony',
               supports: ['form', 'description', 'colors'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Chrysoberyl',
+      canonicalName: 'Chrysoberyl',
+      nomenclature: 'mineral',
+      description:
+        "Chrysoberyl is a hard gem mineral, a beryllium aluminate (BeAl2O4) that scores 8.5 for hardness on the Mohs scale. Its name joins the Greek words for gold and for beryl, yet Wikipedia stresses that it is an entirely separate mineral from beryl, though the two share beryllium, aluminium and oxygen; Hall, for her part, files it under beryl. The common stone is a yellowish green that ranges from clear to translucent, and its tabular or stubby prismatic crystals often twin in threes into hexagonal-looking trillings. It forms in pegmatites and in neighbouring rocks such as mica schist and dolomitic marble, and since it shrugs off weathering it gathers in river gravels, the source of much Brazilian and Sri Lankan stone. Wikipedia names three main kinds: the plain yellow to green stone, cat's eye (cymophane) and colour-changing alexandrite. Hall ties chrysoberyl to new beginnings, to compassion, forgiveness, generosity, confidence and creativity, and says it lets a person weigh the two sides of a question and plan ahead. She also associates it with self-healing when it is used alongside other crystals.",
+      colors: ['gold', 'yellow', 'brown', 'green', 'red', 'blue', 'black', 'colourless'],
+      categories: ['Forgiveness', 'Confidence', 'Creativity', 'Release', 'Healing'],
+      references: [
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Beryl: Chrysoberyl',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-chrysoberyl',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Beryl: Chrysoberyl',
+              supports: ['form'],
+            },
+            {
+              source: 'wikipedia-chrysoberyl',
+              supports: ['form'],
             },
           ],
         },
@@ -1461,6 +1698,102 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Diamond',
+      canonicalName: 'Diamond',
+      nomenclature: 'mineral',
+      description:
+        "Diamond is the element carbon in a rigid cubic crystal lattice, the hardest natural material known and the mineral that defines 10 on the Mohs scale. Pure diamond has no colour; nitrogen tints it yellow or brown and boron blue, radiation turns it green, distortion of the lattice gives some brown, pink and red stones, and 'black' diamonds owe their darkness to dense inclusions. Most natural diamonds grew between one and three and a half billion years ago, deep in the Earth's mantle, and were carried up far later by kimberlite and lamproite eruptions. The name goes back to Greek adamas, meaning untamed or unbreakable. India is thought to be where diamonds were first recognised and mined, and in 1772 Lavoisier burned one in oxygen to show that it is made of carbon. About four in five mined diamonds are unfit to be gems and go to industry for cutting and grinding, and laboratory-made diamond is now produced in enormous quantities. Cunningham ties diamond to the Sun and fire and uses it for spirituality and meditation, courage and strength, protection, peace, reconciling quarrelling lovers, fidelity and healing; worn at night, he says, it eases nightmares and brings sleep. Hall treats it as a symbol of purity, wealth and fidelity and an amplifier of energy, while warning that it magnifies negative energy as readily as positive.",
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: [
+        'colourless',
+        'white',
+        'yellow',
+        'blue',
+        'brown',
+        'pink',
+        'grey',
+        'green',
+        'black',
+        'violet',
+        'orange',
+        'purple',
+        'red',
+      ],
+      categories: [
+        'Protection',
+        'Courage',
+        'Peace',
+        'Reconciliation',
+        'Healing',
+        'Strength',
+        'Meditation',
+        'Confidence',
+        'Cleansing',
+        'Purification',
+        'Release',
+        'Fidelity',
+        'Nightmare Protection',
+        'Sleep',
+        'Love',
+        'Clarity',
+        'Wealth',
+        'Manifestation',
+        'Abundance',
+        'Creativity',
+      ],
+      substitutes: [
+        {
+          name: 'Herkimer Diamond',
+        },
+        {
+          identity: 'quartz',
+        },
+        {
+          identity: 'zircon',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 91–93; p. 190',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Diamond',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-diamond',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Rough diamonds most often grow as octahedra, plain or twinned, and some come coated in an opaque, gum-like skin. Cunningham says diamonds were long worn simply polished, before faceting brought out their fire; he recommends a six-sided cut for protection and luck, and scrying by candlelight into a faceted stone. Hall describes the cut gem as small, clear and transparent, and costly.',
+          references: [
+            {
+              source: 'wikipedia-diamond',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-crystals',
+              locator: 'pp. 92–93',
+              supports: ['description'],
+            },
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Diamond',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Electrum',
       nomenclature: 'unknown',
       description:
@@ -1670,6 +2003,91 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-flint',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Garnet',
+      canonicalName: 'Garnet',
+      nomenclature: 'mineral',
+      description:
+        'Garnet is the name of a group of silicate minerals rather than of one species. Its members share a crystal structure but differ in make-up, falling into two main series: pyrope, almandine and spessartine, which carry aluminium, and uvarovite, grossular and andradite, which carry calcium. Reddish shades are the most common, though garnets come in nearly every colour, blue being the rarest. The word reached English as gernet, meaning dark red, through Old French from Latin granatus, from granum, a grain or seed, perhaps in reference to the pomegranate, whose red seed coats look like some garnet crystals. Garnet forms mostly in metamorphic rocks such as gneiss and schist, less often in igneous ones, and has been worked as both gem and abrasive since the Bronze Age; red garnets set in gold cells were the commonest gems of the late Roman world and of Anglo-Saxon pieces like those from Sutton Hoo. Cunningham gives it to Mars and to fire, and uses it for healing, protection and strength: worn for endurance and extra energy in ritual, as a guard against thieves, and once exchanged by parting friends so that they would meet again. Hall calls it an energising, cleansing and purifying stone that inspires love and devotion, brings courage and hope in a crisis and lends self-confidence.',
+      elements: ['fire'],
+      planets: ['Mars'],
+      colors: ['red', 'pink', 'green', 'orange', 'yellow', 'brown', 'black', 'blue'],
+      categories: [
+        'Healing',
+        'Protection',
+        'Strength',
+        'Friendship',
+        'Cleansing',
+        'Purification',
+        'Love',
+        'Courage',
+        'Success',
+        'Business',
+        'Confidence',
+      ],
+      substitutes: [
+        {
+          identity: 'corundum var. ruby',
+        },
+        {
+          name: 'Red Tourmaline',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 98–99; p. 190',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Garnet',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-garnet',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall describes garnet as see-through or semi-clear crystals, usually small cut stones, or as bigger opaque lumps. She advises wearing it touching the skin, at the earlobe, on a finger or over the heart, and passes on the claim that square-cut garnets bring success in business.',
+          categories: ['Success', 'Business'],
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Garnet',
+              supports: ['form', 'description', 'categories'],
+            },
+          ],
+        },
+        {
+          form: 'Charm',
+          description:
+            'Cunningham records that in the Middle Ages a lion was carved on a garnet, which was then carried to keep its bearer in good health, above all on journeys.',
+          references: [
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 99',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+        {
+          form: 'Sand',
+          description:
+            'Crushed garnet is a hard-wearing abrasive. Wikipedia notes that garnet sand often takes the place of silica sand in blasting, is mixed with water at very high pressure to cut steel, and is used to filter water; much of it is gathered from beach sands on the coasts of India and Australia.',
+          references: [
+            {
+              source: 'wikipedia-garnet',
+              supports: ['form', 'description'],
             },
           ],
         },
@@ -2386,6 +2804,80 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Ruby',
+      canonicalName: 'Corundum var. ruby',
+      nomenclature: 'mineral',
+      description:
+        "Ruby is corundum, an aluminium oxide mineral, in its red form: a trace of chromium supplies the colour, and the name goes back to the Latin word for red. Gem corundum in any shade of red, pink included, is called ruby, while the remaining colours are sold as sapphire. It is very hard, at 9 on the Mohs scale, and some stones carry a star of light when cut as a domed cabochon. Nearly every ruby now sold has been treated, usually by heating, and synthetic ruby, made since the nineteenth century, was the heart of the first working laser in 1960. The Mogok valley in Burma was for centuries the main source. Red spinel was long confused with it, and some famous 'rubies', the Black Prince's Ruby among them, are really spinel. Wikipedia records a Hindu astrological belief tying ruby to the Sun and the god Surya. Cunningham pairs ruby with fire and Mars, treats it as a stone for wealth and protection, and says it was worn to lift sadness, bring joy and confidence, and keep nightmares away from sleep; he notes it was thought a fitting offering to Krishna and the Buddha. Hall calls it a stone of energy and abundance and a shield against psychic attack, though she adds that it may overstimulate delicate or irritable people.",
+      elements: ['fire'],
+      planets: ['Mars'],
+      colors: ['red', 'pink'],
+      folkNames: ['Carbuncle', 'Red Sapphire'],
+      deities: ['Krishna'],
+      categories: [
+        'Wealth',
+        'Protection',
+        'Joy',
+        'Nightmare Protection',
+        'Banishing',
+        'Confidence',
+        'Sleep',
+        'Abundance',
+        'Courage',
+      ],
+      substitutes: [
+        {
+          identity: 'garnet',
+        },
+        {
+          name: 'Red Tourmaline',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 128–129; p. 190',
+          supports: [
+            'elements',
+            'planets',
+            'folkNames',
+            'deities',
+            'categories',
+            'substitutes',
+            'description',
+          ],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Ruby',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-ruby',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall describes ruby as bright and see-through once polished but opaque in the rough, found as small faceted crystals or as bigger cloudy lumps; rough stones are easy to come by, while polished gems cost a great deal. Cunningham likewise says that cheap, low-grade rubies that are not of gem quality serve perfectly well in magic.',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Ruby',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 128',
+              supports: ['description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Rutilated Quartz',
       canonicalName: 'Quartz var. rutilated quartz',
       nomenclature: 'mineral',
@@ -2426,6 +2918,94 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             {
               source: 'wikipedia-quartz',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Sapphire',
+      canonicalName: 'Corundum var. sapphire',
+      nomenclature: 'mineral',
+      description:
+        "Sapphire is gem-quality corundum, which is aluminium oxide in crystal form. Pure corundum has no colour; small amounts of other elements tint it, so that besides the familiar blue it is found yellow, green, purple, pink, orange, grey, black and colourless, and the trade calls every colour but blue a 'fancy' sapphire. Pink sapphire grades into ruby with no fixed chemical boundary, and laboratories separate the two by the colour they see. At 9 on the Mohs scale it resists scratching, which is why grown sapphire is made into watch glasses and other hard windows. Natural stones are often heated to change their colour and clarity. The word reaches English through French and Latin from Greek, and the ancient word may once have meant lapis lazuli or another blue stone. It is the customary birthstone for September. Cunningham links sapphire with the Moon, water and Apollo, saying the Greeks wore it to consult the oracle at Delphi. He uses it to widen psychic awareness, in meditation and for wisdom, as a guardian of love and fidelity, for peace, in protective and defensive magic, in legal matters, in healing work and in rites for money and wealth. Hall calls it the wisdom stone, one that steadies the mind and brings prosperity.",
+      elements: ['water'],
+      planets: ['Moon'],
+      colors: [
+        'blue',
+        'yellow',
+        'green',
+        'black',
+        'purple',
+        'pink',
+        'orange',
+        'grey',
+        'colourless',
+      ],
+      folkNames: ['Holy Stone'],
+      deities: ['Apollo'],
+      categories: [
+        'Psychic Work',
+        'Love',
+        'Meditation',
+        'Peace',
+        'Healing',
+        'Fidelity',
+        'Banishing',
+        'Reconciliation',
+        'Wisdom',
+        'Protection',
+        'Legal Matters',
+        'Wealth',
+        'Prosperity',
+        'Release',
+      ],
+      substitutes: [
+        {
+          identity: 'quartz var. amethyst',
+        },
+        {
+          name: 'Blue Tourmaline',
+        },
+        {
+          name: 'Blue Zircon',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 132–133; p. 190',
+          supports: [
+            'elements',
+            'planets',
+            'colors',
+            'folkNames',
+            'deities',
+            'categories',
+            'substitutes',
+            'description',
+          ],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Sapphire',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-sapphire',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall describes sapphire as bright and see-through once polished, usually small, or else a bigger cloudy piece. A few colours are scarce, but most are easy to buy as rough stones. She advises wearing it on a finger or otherwise against the skin.',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Sapphire',
+              supports: ['form', 'description'],
             },
           ],
         },
@@ -2741,6 +3321,69 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Spinel',
+      canonicalName: 'Spinel',
+      nomenclature: 'mineral',
+      description:
+        "Spinel is a mineral species, the magnesium and aluminium oxide that lends its name to the wider spinel group. It grows as cubic crystals, most often twinned octahedra, and rates about 8 on the Mohs scale. It may lack colour altogether, though red, lavender, blue, green, brown, black and yellow stones are the usual run; chromium causes the red of Burmese stones and a little cobalt the pure blues. The name comes from a Latin word for a little spine, after its pointed crystals. Spinel forms in the same kinds of rock as corundum, so spinel and ruby commonly turn up side by side, and before ruby had a scientific definition red spinel was called ruby too: two of the great red stones among Britain's Crown Jewels, the Timur Ruby and the Black Prince's Ruby, are spinels. Old names for the red stones were spinel ruby and balas ruby, the second after Badakhshan in central Asia, whose mines in present-day Tajikistan were for centuries the chief source. Cheap synthetic spinel is cut for August birthstone jewellery and used to imitate aquamarine and emerald. Cunningham assigns spinel to Pluto and fire and uses it to lend the body energy, to add physical strength during hard exertion, and in spells for riches and wealth. Hall connects it with renewed energy, encouragement and rejuvenation, and with accepting success humbly.",
+      elements: ['fire'],
+      planets: ['Pluto'],
+      colors: [
+        'black',
+        'blue',
+        'green',
+        'pink',
+        'red',
+        'violet',
+        'brown',
+        'colourless',
+        'yellow',
+        'white',
+        'orange',
+      ],
+      folkNames: ['Balas Ruby', 'Spinel Ruby'],
+      categories: ['Strength', 'Wealth', 'Success'],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 136',
+          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Spinel',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-spinel',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall describes spinel as small crystals with terminations, or as tumbled pebbles, and says it is easy to find; she lays it on the chakras or wears it. Cunningham, by contrast, calls it fairly rare, and has it worn to give the body energy. Wikipedia notes its common crystal shape is the octahedron, usually twinned.',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Spinel',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'cunningham-crystals',
+              locator: 'p. 136',
+              supports: ['description'],
+            },
+            {
+              source: 'wikipedia-spinel',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Steel',
       nomenclature: 'none',
       description:
@@ -2926,6 +3569,98 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       ],
     },
     {
+      name: 'Topaz',
+      canonicalName: 'Topaz',
+      nomenclature: 'mineral',
+      description:
+        'Topaz is a silicate of aluminium and fluorine, Al2SiO4(F,OH)2, and the mineral that marks 8 on the Mohs scale of hardness. Pure topaz is colourless, often with a greyish cast; traces of other elements give it a pale blue tint, or a shade between golden brown and yellowish orange, and pink and red stones owe their colour to chromium. Much of the deep blue, pink and other strongly coloured topaz on sale has been heated or irradiated. It forms in granite, granite pegmatites and the vapour cavities of rhyolite lava, and Brazil and Russia are among its best-known sources. The name came through Old French and Latin from the Greek name of a Red Sea island where a yellow stone, now thought to be olivine, was mined; in the Middle Ages any yellow gem might be called topaz, and the word settled on this mineral only in 1737. Wikipedia records old beliefs that it cured lunacy, kept Roman travellers from danger and, tied to the left arm, warded off curses and the evil eye. Cunningham gives it to the Sun, to fire and to Ra, uses it for protection, healing, love and wealth and against nightmares, and notes that it was once called lover of gold. Hall describes a soothing stone of truth, forgiveness, joy, abundance and love that supports manifestation.',
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: [
+        'colourless',
+        'white',
+        'blue',
+        'brown',
+        'orange',
+        'grey',
+        'yellow',
+        'green',
+        'pink',
+        'red',
+        'gold',
+      ],
+      folkNames: ['Lover of Gold'],
+      deities: ['Ra'],
+      categories: [
+        'Protection',
+        'Healing',
+        'Love',
+        'Wealth',
+        'Nightmare Protection',
+        'Truth',
+        'Forgiveness',
+        'Joy',
+        'Abundance',
+        'Manifestation',
+        'Confidence',
+        'Wisdom',
+        'Success',
+        'Safe Travel',
+        'Warding',
+        'Longevity',
+      ],
+      substitutes: [
+        {
+          identity: 'quartz var. citrine',
+        },
+        {
+          name: 'Yellow Tourmaline',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'p. 141; p. 190',
+          supports: [
+            'elements',
+            'planets',
+            'deities',
+            'folkNames',
+            'categories',
+            'substitutes',
+            'description',
+          ],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Topaz',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-topaz',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'categories', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            "Hall describes topaz as clear, pointed crystals, mostly small cut stones but sometimes big pieces, and repeats the belief that a crystal's facets and tips hold positive and negative charges through which a wish can be focused and brought about. Wikipedia warns that, hard as it is, it splits easily along one plane if knocked, and that ultrasonic cleaners or steam can crack it; warm soapy water is the safe way to wash it.",
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Topaz',
+              supports: ['form', 'description'],
+            },
+            {
+              source: 'wikipedia-topaz',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
       name: 'Tourmalinated Quartz',
       nomenclature: 'unknown',
       description:
@@ -2966,6 +3701,133 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
               source: 'cunningham-crystals',
               locator: 'p. 92',
               supports: ['form'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Tourmaline',
+      canonicalName: 'Tourmaline',
+      nomenclature: 'mineral',
+      description:
+        'Tourmaline is not a single mineral but a group of silicate minerals built around boron, joined with metals that vary from one member to the next, among them aluminium, iron, magnesium, lithium and sodium. Its crystals are long three-sided prisms, often scored with grooves along their length, and one crystal can carry two or three colours. Black is the commonest shade, from schorl, the iron-rich member that makes up most of the tourmaline in nature; others run through brown, yellow, green, blue, pink and red, and a few stones are colourless. It forms in granite, granite pegmatite, schist and marble, and most gem material comes from Brazil and from many parts of Africa. The name goes back to a Sinhalese word, and the Dutch East India Company shipped Ceylon stones to Europe, where its knack of drawing in and then pushing away hot ashes earned it the name Ceylonese Magnet. Cunningham notes that heating or rubbing a crystal charges its two ends oppositely, that ancient magicians did not know the stone, and that each colour has its own planet and element; for the stone as a whole he names love and friendship, money and business, peace, health, courage, energy and astral projection. Hall treats it as a cleansing, purifying and grounding stone that shields the body, and credits it with bringing self-confidence, inspiration and prosperity, and with helping the garden.',
+      colors: [
+        'black',
+        'brown',
+        'green',
+        'pink',
+        'red',
+        'yellow',
+        'blue',
+        'colourless',
+        'orange',
+        'violet',
+      ],
+      folkNames: ['Ceylonese Magnet'],
+      categories: [
+        'Love',
+        'Friendship',
+        'Business',
+        'Peace',
+        'Courage',
+        'Cleansing',
+        'Purification',
+        'Grounding',
+        'Protection',
+        'Confidence',
+        'Inspiration',
+        'Prosperity',
+        'Healing',
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 141–142',
+          supports: ['categories', 'description'],
+        },
+        {
+          source: 'hall-crystal-bible',
+          locator: 's.v. Tourmaline',
+          supports: ['colors', 'categories', 'description'],
+        },
+        {
+          source: 'wikipedia-tourmaline',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'folkNames', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          description:
+            'Hall describes tourmaline as glossy and either opaque or see-through, growing in long grooved crystals of every size. She credits the grooves running down its sides with speeding the flow of energy, which is why she rates it so highly for healing work.',
+          references: [
+            {
+              source: 'hall-crystal-bible',
+              locator: 's.v. Tourmaline',
+              supports: ['form', 'description'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'Zircon',
+      canonicalName: 'Zircon',
+      nomenclature: 'mineral',
+      description:
+        "Zircon is a common silicate mineral, zirconium silicate (ZrSiO4), and the main source of the metal zirconium. It turns up as small grains in igneous, metamorphic and sedimentary rocks, usually well under a millimetre across in granite, though pegmatites and carbonatites can grow crystals several centimetres long. Fairly hard (7.5 on the Mohs scale), dense and chemically stubborn, it outlasts weathering and ends up in most sands. Natural stones run from colourless through yellow, red and brown to blue and green; heating can turn ordinary brown zircon colourless or blue, and blue is the most prized. Its high refractive index has led to its use in place of diamond, though its strong double refraction usually gives it away. Many zircons hold traces of uranium and thorium, so Wikipedia lists the mineral as radioactive; that same content lets geologists date single grains, and zircons from Western Australia's Jack Hills, about 4.4 billion years old, are the oldest minerals yet dated on Earth. Cunningham calls it a confusing stone, found in many colours, some of them artificial, and under many names. He gives it to the Sun and to fire, pairs it with gold, and counts love, protection, healing, peace, beauty, sexual energy and guarding against theft among its powers.",
+      elements: ['fire'],
+      planets: ['Sun'],
+      colors: [
+        'brown',
+        'yellow',
+        'gold',
+        'green',
+        'blue',
+        'grey',
+        'colourless',
+        'red',
+        'pink',
+        'purple',
+        'white',
+        'orange',
+      ],
+      categories: ['Protection', 'Love', 'Peace', 'Healing'],
+      substitutes: [
+        {
+          identity: 'diamond',
+        },
+      ],
+      references: [
+        {
+          source: 'cunningham-crystals',
+          locator: 'pp. 144–145; p. 190',
+          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+        },
+        {
+          source: 'wikipedia-zircon',
+          supports: ['canonicalName', 'nomenclature', 'colors', 'description'],
+        },
+      ],
+      variants: [
+        {
+          form: 'Crystal',
+          references: [
+            {
+              source: 'wikipedia-zircon',
+              supports: ['form'],
+            },
+          ],
+        },
+        {
+          form: 'Sand',
+          description:
+            "Zircon's resistance to weathering, heat and chemical attack lets its grains survive into most sands and build up in heavy-mineral sand deposits, where it is mined commercially. Industry uses the grains chiefly to make ceramics opaque, and also in refractories, as an aggregate for foundry sand casting, and as the raw material for zirconium metal and zirconium dioxide.",
+          references: [
+            {
+              source: 'wikipedia-zircon',
+              supports: ['form', 'description'],
             },
           ],
         },
