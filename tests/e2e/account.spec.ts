@@ -27,7 +27,11 @@ test('shows all three sections, with no accessibility violations', async ({ page
   );
   // No way across to the email page; the nav's Email link stays on this one.
   await expect(main.locator('a[href^="/account/email"]')).toHaveCount(0);
-  await expect(main.getByRole('button', { name: /^Remove/ })).toHaveCount(0);
+  // The only method's Remove is greyed, not gone, with its reason as its description.
+  await expect(main.getByRole('button', { name: /^Remove/ })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
   await expect(main.getByRole('button', { name: /^Add/ })).toHaveCount(3);
   await expect(main.getByRole('button', { name: 'Add Microsoft' })).toHaveAttribute(
     'aria-disabled',

@@ -6,8 +6,8 @@ import type { ProviderRowProps } from './types';
 
 // One provider in the account's list of sign-in methods, in one of three
 // states, each told apart by its control and its words rather than by hue:
-// linked has Remove (or, the only method left, a line saying why it has
-// none; or, from a stale session, nothing, since the list says why once),
+// linked has Remove (greyed for the only method left, with a line saying why;
+// or, from a stale session, nothing, since the list says why once),
 // addable has Add, and unavailable has a greyed Add with the note saying why. A failure about this provider sits in its row, beneath the
 // controls. claude-docs/components/sign-in-methods.md, "The rows".
 export function ProviderRow({
@@ -20,6 +20,7 @@ export function ProviderRow({
   onRemove,
 }: ProviderRowProps): ReactElement {
   const noteId = `sign-in-methods__note-${provider.id}`;
+  const reasonId = `sign-in-methods__reason-${provider.id}`;
   const unavailable = state === 'unavailable';
 
   return (
@@ -46,7 +47,17 @@ export function ProviderRow({
             Remove {provider.label}
           </button>
         ) : removal === 'last' ? (
-          <p className="meta sign-in-methods__line">Your only sign-in method</p>
+          // Greyed rather than gone, as an unavailable Add is: the reason
+          // beneath it then sits under the control it explains (the owner,
+          // 2026-10-11), and a screen reader hears it as the button's description.
+          <button
+            type="button"
+            className="btn btn--destructive"
+            aria-disabled="true"
+            aria-describedby={reasonId}
+          >
+            Remove {provider.label}
+          </button>
         ) : null
       ) : (
         <button
@@ -61,6 +72,11 @@ export function ProviderRow({
         </button>
       )}
       {unavailable && <ProviderUnavailableNote id={noteId} className="sign-in-methods__line" />}
+      {state === 'linked' && removal === 'last' && (
+        <p id={reasonId} className="meta sign-in-methods__line">
+          Your only sign-in method
+        </p>
+      )}
       {error && (
         <Notice kind="error" className="sign-in-methods__error">
           {error}

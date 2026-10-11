@@ -31,11 +31,11 @@ Each provider is a `ProviderRow` (`provider-row.tsx`), in one of three
 states. Each state is told apart by its control and its words, never by
 colour alone:
 
-| State         | What the row shows                                                                                                                                                                                                                                                              |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`      | The provider's mark, its name, and "Remove &lt;Provider&gt;" in the wax (`.btn--destructive`). With one method left there is no Remove, and a line, "Your only sign-in method", says why. From a stale session there is no Remove either, and the line above the list says why. |
-| `addable`     | The mark, the name, and "Add &lt;Provider&gt;".                                                                                                                                                                                                                                 |
-| `unavailable` | The mark, faded with its button, the name, and "Add &lt;Provider&gt;" greyed with `aria-disabled`, over the shared unavailable note.                                                                                                                                            |
+| State         | What the row shows                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `linked`      | The provider's mark, its name, and "Remove &lt;Provider&gt;" in the wax (`.btn--destructive`). With one method left the Remove is greyed (`aria-disabled`, still in the tab order) and a line beneath it, "Your only sign-in method", is its description: greyed rather than gone so the reason sits under the control it explains (the owner, 2026-10-11). From a stale session there is no Remove, and the line above the list says why. |
+| `addable`     | The mark, the name, and "Add &lt;Provider&gt;".                                                                                                                                                                                                                                                                                                                                                                                            |
+| `unavailable` | The mark, faded with its button, the name, and "Add &lt;Provider&gt;" greyed with `aria-disabled`, over the shared unavailable note.                                                                                                                                                                                                                                                                                                       |
 
 No row carries a status word such as "Linked": a linked row is the one with
 Remove or its reason, and an unlinked one has Add (the owner's call, MB.116).
@@ -68,10 +68,10 @@ Remove: removal needs no credentials.
 
 ## Removing one answers in place
 
-"Remove &lt;Provider&gt;" is rendered only while two or more are linked and
+"Remove &lt;Provider&gt;" is offered only while two or more are linked and
 the session is fresh. Better Auth refuses the last one anyway
 (`allowUnlinkingAll` is pinned off), so the rule only keeps the page honest,
-and the last row says why it has no Remove. It calls
+and the last row's greyed Remove says why in its description. It calls
 `unlinkAccount({ accountId })`. On success the row leaves the component's own
 copy of the list, a success notice at the head of the list says
 "&lt;Provider&gt; was removed from your sign-in methods.", and the provider's

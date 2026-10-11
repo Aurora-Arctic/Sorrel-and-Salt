@@ -44,7 +44,7 @@ describe('SignInMethods', () => {
 
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
     // A linked row is the one without an Add.
-    expect(within(row('Discord')).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(row('Discord')).queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
     for (const label of ['Google', 'Facebook', 'Microsoft']) {
       expect(within(row(label)).getByRole('button', { name: `Add ${label}` })).toBeInTheDocument();
     }
@@ -97,11 +97,16 @@ describe('SignInMethods', () => {
     expect(linkSocialMock).not.toHaveBeenCalled();
   });
 
-  it('with one method left, the row says why it cannot go', () => {
+  // Greyed rather than gone, so the reason sits under the control it explains.
+  it('with one method left, its Remove is greyed and says why', () => {
+    unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
     render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
 
-    expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
-    expect(within(row('Discord')).getByRole('paragraph')).toHaveTextContent(/\S/);
+    const remove = screen.getByRole('button', { name: 'Remove Discord' });
+    expect(remove).toHaveAttribute('aria-disabled', 'true');
+    expect(remove).toHaveAccessibleDescription(/\S/);
+    fireEvent.click(remove);
+    expect(unlinkAccountMock).not.toHaveBeenCalled();
   });
 
   // Better Auth would refuse every removal from a session older than its
@@ -143,8 +148,11 @@ describe('SignInMethods', () => {
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
     expect(await screen.findByRole('status')).toHaveTextContent('Microsoft');
     expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toBeVisible();
-    // Back to one: the survivor can no longer be removed.
-    expect(screen.queryByRole('button', { name: 'Remove Discord' })).not.toBeInTheDocument();
+    // Back to one: the survivor's Remove is greyed.
+    expect(screen.getByRole('button', { name: 'Remove Discord' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('maps a refused removal to a sentence of its own and keeps the provider', async () => {
