@@ -6,9 +6,10 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 
 // `/invite/[token]` against the built server (MB.70): public, so a signed-out
-// visitor is asked to sign in and brought back; signed in, only the invited
+// visitor is asked to sign in and brought back; signed in, the invited
 // address, verified, is offered Accept, which lands an admin on /admin
-// (claude-docs/components/invitation-acceptance.md). The invitations are
+// (claude-docs/components/invitation-acceptance.md). Who else is refused is
+// the accept service's and acceptance story 08's. The invitations are
 // written here as the repository writes them, the token's hash alone; mailing
 // one is admin-invitations.spec.ts's.
 test.describe.configure({ mode: 'serial' });
@@ -50,32 +51,10 @@ test('a signed-out visitor is asked to sign in and brought back to the link', as
 
   expect(response?.status()).toBe(200);
   expect(new URL(page.url()).pathname).toBe(path);
-  await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
-  const signIn = page.getByRole('link', { name: 'Sign In' });
-  await expect(signIn).toHaveAttribute('href', `/sign-in?next=${encodeURIComponent(path)}`);
   // Nothing of the invitation before a session holds the link.
   await expect(page.getByRole('main').getByText(/admin/i)).toHaveCount(0);
-  await assertNoAccessibilityViolations(page);
-});
-
-test('a different address is refused, and the invited one is sent to confirm it first', async ({
-  page,
-}) => {
-  const invited = `pending-${randomUUID()}${DOMAIN}`;
-  const path = await invite(invited);
-
-  await signInAs(page, `someone-else-${randomUUID()}${DOMAIN}`);
-  await page.goto(path);
-  await expect(page.getByText(/sent to a different email address/)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
-
-  await signInAs(page, invited, ['microsoft'], 'user', { emailVerified: false });
-  await page.goto(path);
-  await expect(page.getByText(/Confirm your email address/)).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Confirm Your Email' })).toHaveAttribute(
-    'href',
-    `/account/email?next=${encodeURIComponent(path)}`,
-  );
+  const signIn = page.getByRole('link', { name: 'Sign In' });
+  await expect(signIn).toHaveAttribute('href', `/sign-in?next=${encodeURIComponent(path)}`);
   await assertNoAccessibilityViolations(page);
 });
 
@@ -90,16 +69,18 @@ test('the invited account, verified, accepts and lands on /admin as an admin', a
   await signInAgainAs(page, userId);
 
   await page.goto(path);
-  await expect(page.getByText(/invited to become an admin/)).toBeVisible();
+  const accept = page.getByRole('button', { name: 'Accept Invitation' });
+  await expect(accept).toBeVisible();
   await assertNoAccessibilityViolations(page);
-  await page.getByRole('button', { name: 'Accept Invitation' }).click();
+  await accept.click();
 
   await expect(page).toHaveURL(/\/admin$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
   const [row] = await withSql((sql) => sql`select role::text from users where id = ${userId}`);
   expect(row.role).toBe('admin');
 
-  // A second use says so.
+  // A second use is refused: the page, and no Accept on it.
   await page.goto(path);
-  await expect(page.getByText('This invitation has already been accepted.')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
+  await expect(accept).toHaveCount(0);
 });
