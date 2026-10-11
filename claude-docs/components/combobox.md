@@ -37,7 +37,7 @@ movable, on dnd-kit.
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
 | `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
-| `create`           | `{ label, onCreate }`: a first row that makes something new, "Add a reference", in place of the typed row, there with a blank box too. See "The create row".                                                                                                                                   |
+| `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
 | `placeholder`      | Shown, muted, while the box is empty.                                                                                                                                                                                                                                                          |
@@ -170,12 +170,16 @@ chips theirs.
 
 A list whose entries can only be picked, the references' (MB.154), has
 nothing to do with what was typed: a search is not a source. Its caller
-passes `create`, and the list's first row reads its label, "Add a
-reference", in the typed row's place and italic as that row is. It is there
-whatever the box holds, a blank box included, so ArrowDown or the chevron
-opens the list on it even before any suggestion has arrived. Picking it, by
-click or by Enter, calls `onCreate` and never `onPick`, and leaves the text
-as typed. The caller still passes an `onCommit`, a no-op for the
+passes `create`, and the list's last row reads its label, "New
+Reference…", with no typed row, and italic as that row is. Last since
+MB.115, the owner's call: the references' box lost its New Reference button
+to this row, so the sources found come first and making one is the way out
+at the end, as an "Add new…" row ends a picker's list; it was the first
+row, "Add a reference", under MB.154. It is there whatever the box holds, a
+blank box included, so ArrowDown or the chevron opens the list even before
+any suggestion has arrived, on this row alone until one does, and ArrowUp
+opens it on this row. Picking it, by click or by Enter, calls `onCreate`
+and never `onPick`, and leaves the text as typed. The caller still passes an `onCommit`, a no-op for the
 references, so that Enter with nothing highlighted never reaches the form.
 
 **A second pick keeps the text** (a regression MB.154 found and fixed).
@@ -560,7 +564,7 @@ Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen;
-`CreateRow`, "Add a reference" first whatever is typed, saying beneath the
+`CreateRow`, "New Reference…" last whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
@@ -577,7 +581,7 @@ headed rows grouped under their headings in first-seen order, and two
 same-named rows under different headings told apart and counted; a row's
 accessible name carrying its label and note; picking by keyboard and by
 click, and the typed row as `null`; the list opening above the box with no
-room beneath it; the create row first in the typed row's place, there with a
+room beneath it; the create row last with no typed row, there with a
 blank box and with no suggestions, calling `onCreate` by click or keyboard
 and never `onPick`; the typed row withheld under `offerTyped={false}`, the
 suggestions still shown, Enter still handed to `onCommit`, and the list shut

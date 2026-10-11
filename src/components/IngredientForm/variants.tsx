@@ -178,6 +178,9 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
         <Combobox<FormOption>
           id={`${id}-box`}
           label="New Form"
+          // Its label is hidden, as a list box's is, and beneath the cards the
+          // box would otherwise read as one more field of the last (MB.115).
+          placeholder="Add a form"
           value={field.value}
           onChange={(typed) => {
             clearRefusal();
