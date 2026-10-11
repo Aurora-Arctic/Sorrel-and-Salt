@@ -28,37 +28,33 @@ describe('InfoTip', () => {
     vi.useRealTimers();
   });
 
-  it('starts closed, its text still describing the button and the field that names it', () => {
+  it('starts closed, and stays shut while the field it describes has focus, its text describing the button and the field', () => {
     const button = renderTip();
+    const field = screen.getByRole('textbox', { name: 'Name' });
+
+    act(() => field.focus());
 
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
     expect(button).toHaveAccessibleDescription(TEXT);
-    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveAccessibleDescription(TEXT);
+    expect(field).toHaveAccessibleDescription(TEXT);
   });
 
-  it('opens on hover and closes a moment after the pointer leaves', () => {
+  it('opens on hover, stays open while the pointer is over the tip, and closes a moment after it leaves', () => {
     const button = renderTip();
 
     fireEvent.mouseEnter(button);
     expect(screen.getByRole('tooltip')).toHaveTextContent(TEXT);
 
-    fireEvent.mouseLeave(button);
     // Long enough to cross from the button onto the tip without it closing.
-    expect(screen.getByRole('tooltip')).toBeInTheDocument();
-    act(() => vi.advanceTimersByTime(200));
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-  });
-
-  it('stays open while the pointer is over the tip itself', () => {
-    const button = renderTip();
-
-    fireEvent.mouseEnter(button);
-    const tip = screen.getByRole('tooltip');
     fireEvent.mouseLeave(button);
+    const tip = screen.getByRole('tooltip');
     fireEvent.mouseEnter(tip);
     act(() => vi.advanceTimersByTime(200));
-
     expect(screen.getByRole('tooltip')).toBeInTheDocument();
+
+    fireEvent.mouseLeave(tip);
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
   });
 
   it('opens on focus and closes on blur', () => {
@@ -69,16 +65,6 @@ describe('InfoTip', () => {
 
     act(() => button.blur());
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-  });
-
-  it('stays shut while the field it describes has focus', () => {
-    renderTip();
-    const field = screen.getByRole('textbox', { name: 'Name' });
-
-    act(() => field.focus());
-
-    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    expect(field).toHaveAccessibleDescription(TEXT);
   });
 
   it('opens on a tap, and a second tap leaves it open', () => {

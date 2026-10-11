@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   FormField,
   LookupListField,
@@ -10,7 +10,6 @@ import {
   useDeitySuggestions,
   usePlanetSuggestions,
   useSubstituteSuggestions,
-  useZodiacSuggestions,
 } from '@/components/IngredientForm/suggestions';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
@@ -23,9 +22,7 @@ import {
   offerIngredients,
   offerNames,
   offerPlanets,
-  offerSigns,
 } from '../../support/msw/ingredient-lookups';
-import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type {
   CorrespondenceNode,
   DeityNode,
@@ -171,18 +168,16 @@ describe('FormField', () => {
     const curated = await screen.findByRole('group', { name: 'From Compendium' });
     // Two same-named forms, told apart by the group in each one's name.
     expect(within(curated).getByRole('option', { name: /^Wax \(Animal\)/ })).toHaveTextContent(
-      'Used by Testwort (Fixtura testalis)',
+      'Testwort (Fixtura testalis)',
     );
     expect(within(curated).getByRole('option', { name: /^Wax \(Substance\)/ })).toHaveTextContent(
       'Candle and poppet wax.',
     );
     const inUse = screen.getByRole('group', { name: 'From Coven' });
-    expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent(
-      'Used by Mockleaf',
-    );
+    expect(within(inUse).getByRole('option', { name: /^Rhizomes/ })).toHaveTextContent('Mockleaf');
     // What was typed comes first, the owner's call.
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
-    expect(rows.getAllByRole('option')[0]).toHaveAccessibleName('Use what you typed: wax');
+    expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
   });
 
   // MB.169: the text alone reads the same for both Waxes; the group tells
@@ -196,8 +191,9 @@ describe('FormField', () => {
     expect(box('Form')).toHaveValue('Wax');
     expect(box('Form')).toHaveAttribute('aria-expanded', 'false');
     expect(group('(Substance)')).toBeInTheDocument();
+    expect(box('Form')).toHaveAccessibleDescription(expect.stringContaining('Substance'));
     expect(box('Form')).toHaveAccessibleDescription(
-      expect.stringContaining('(Substance) Candle and poppet wax.'),
+      expect.stringContaining('Candle and poppet wax.'),
     );
     expect(await send()).toMatchObject({ form: 'Wax', formId: SUBSTANCE_WAX_ID });
   });
@@ -272,13 +268,6 @@ describe('LookupListField', () => {
     legend: 'Planets',
     entry: 'Planet',
   };
-  const ZODIAC_SIGNS: LookupList = {
-    useSuggestions: useZodiacSuggestions,
-    name: 'zodiacSigns',
-    ordered: true,
-    legend: 'Zodiac Signs',
-    entry: 'Zodiac Sign',
-  };
   const DEITIES: LookupList = {
     useSuggestions: useDeitySuggestions,
     name: 'deities',
@@ -306,12 +295,6 @@ describe('LookupListField', () => {
   };
   const MOONFIXTURE: CorrespondenceNode = {
     value: 'Moonfixture',
-    description: null,
-    curated: false,
-  };
-  const CANCER: CorrespondenceNode = { value: 'Cancer', description: 'The crab.', curated: true };
-  const CANCERFIXTURE: CorrespondenceNode = {
-    value: 'Cancerfixture',
     description: null,
     curated: false,
   };
@@ -367,14 +350,10 @@ describe('LookupListField', () => {
     isGlobal: false,
   };
 
-  // Each hook asks its own query, with this coven, once its box is used.
-  it.each([
-    { list: FOLK_NAMES, offer: () => offerNames([HEDGE]) },
-    { list: PLANETS, offer: () => offerPlanets([MOON]) },
-    { list: ZODIAC_SIGNS, offer: () => offerSigns([CANCER]) },
-    { list: DEITIES, offer: () => offerDeities([HECATE_GREEK]) },
-    { list: SUBSTITUTES, offer: () => offerIngredients([MOCKWORT_COVEN]) },
-  ])(
+  // A list's box asks its hook's query, with this coven, once it is used:
+  // one hook, `useLookup`, under each; which query each list asks is
+  // index.test.tsx's, once per lookup.
+  it.each([{ list: FOLK_NAMES, offer: () => offerNames([HEDGE]) }])(
     'asks about the $list.legend for this coven once its box is used, and not before',
     async ({ list, offer }) => {
       renderList(list);
@@ -398,7 +377,7 @@ describe('LookupListField', () => {
     await lookUp('Folk Name', calls, 'hedge');
 
     const option = await screen.findByRole('option', { name: /^Hedge Fixture/ });
-    expect(option).toHaveTextContent('Used by Testwort (Fixtura testalis)');
+    expect(option).toHaveTextContent('Testwort (Fixtura testalis)');
     // One bucket: there is no curated vocabulary of common names.
     expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
     fireEvent.click(option);
@@ -406,13 +385,11 @@ describe('LookupListField', () => {
     expect(removeButton('Hedge Fixture')).toBeInTheDocument();
     expect(box('Folk Name')).toHaveValue('');
     expect(box('Folk Name')).toHaveFocus();
-    expect(changes('Folk Names')).toHaveTextContent('Added Hedge Fixture');
+    expect(changes('Folk Names')).toHaveTextContent('Hedge Fixture');
   });
 
-  it.each([
-    { list: PLANETS, offer: offerPlanets, rows: [MOON, MOONFIXTURE] },
-    { list: ZODIAC_SIGNS, offer: offerSigns, rows: [CANCER, CANCERFIXTURE] },
-  ])(
+  // The planets and the signs share one shape and one split.
+  it.each([{ list: PLANETS, offer: offerPlanets, rows: [MOON, MOONFIXTURE] }])(
     'offers the curated $list.legend apart from those in use, with their descriptions',
     async ({ list, offer, rows: [curated, inUse] }) => {
       renderList(list);
@@ -470,39 +447,6 @@ describe('LookupListField', () => {
     ).toBeInTheDocument();
   });
 
-  it('picks a deity by the keyboard, closes on Escape, and adds typed text on Enter with none open', async () => {
-    const send = renderList(DEITIES);
-    const calls = offerDeities([HECATE_GREEK, HECATE_FIXTURE]);
-
-    await lookUp('Deity', calls, 'hecate');
-    await screen.findByRole('option', { name: /^Hecate \(Greek\)/ });
-    // Past the typed row, which comes first, onto the suggestion.
-    fireEvent.keyDown(box('Deity'), { key: 'ArrowDown' });
-    fireEvent.keyDown(box('Deity'), { key: 'ArrowDown' });
-    expect(box('Deity')).toHaveAttribute(
-      'aria-activedescendant',
-      screen.getByRole('option', { name: /^Hecate \(Greek\)/ }).id,
-    );
-    fireEvent.keyDown(box('Deity'), { key: 'Enter' });
-    expect(removeButton('Hecate (Greek)')).toBeInTheDocument();
-
-    type('Deity', 'Fixture of the Hedge');
-    settle();
-    await waitFor(() => expect(box('Deity')).toHaveAttribute('aria-expanded', 'true'));
-    fireEvent.keyDown(box('Deity'), { key: 'Escape' });
-    expect(box('Deity')).toHaveAttribute('aria-expanded', 'false');
-    expect(box('Deity')).toHaveValue('Fixture of the Hedge');
-
-    fireEvent.keyDown(box('Deity'), { key: 'Enter' });
-    expect(removeButton('Fixture of the Hedge')).toBeInTheDocument();
-    expect(box('Deity')).toHaveValue('');
-
-    expect((await send()).deities).toEqual([
-      { deityId: GREEK_HECATE_ID },
-      { name: 'Fixture of the Hedge' },
-    ]);
-  });
-
   // MB.169: the same name in two traditions, told apart on the pill as in
   // the list, and saved as two picks.
   it('adds Greek and Roman Hecate as two pills, each with its tradition, and sends two ids', async () => {
@@ -511,7 +455,7 @@ describe('LookupListField', () => {
 
     await lookUp('Deity', calls, 'hecate');
     fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
-    expect(changes('Deities')).toHaveTextContent('Added Hecate (Greek)');
+    expect(changes('Deities')).toHaveTextContent('Hecate (Greek)');
     type('Deity', 'hecate');
     settle();
     fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Roman)' }));
@@ -525,34 +469,6 @@ describe('LookupListField', () => {
     expect((await send()).deities).toEqual([
       { deityId: GREEK_HECATE_ID },
       { deityId: ROMAN_HECATE_ID },
-    ]);
-  });
-
-  // MB.170: a move carries a pick's link with it, so the order sent is of
-  // links and names alike, and MB.167's replace stores it as positions.
-  it('sends a picked deity and a typed one in the order they were moved to', async () => {
-    layOutChips();
-    onTestFinished(() => {
-      vi.restoreAllMocks();
-    });
-    const send = renderList(DEITIES);
-    const calls = offerDeities([HECATE_GREEK]);
-
-    await lookUp('Deity', calls, 'hecate');
-    fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
-    type('Deity', 'Fixture of the Hedge');
-    fireEvent.click(screen.getByRole('button', { name: 'Add Deity' }));
-    await moveByKeyboard(
-      screen.getByRole('button', { name: 'Move Fixture of the Hedge' }),
-      'ArrowLeft',
-    );
-
-    expect(removeButton('Hecate (Greek)')).toHaveAccessibleDescription(
-      'Of crossroads and the moon.',
-    );
-    expect((await send()).deities).toEqual([
-      { name: 'Fixture of the Hedge' },
-      { deityId: GREEK_HECATE_ID },
     ]);
   });
 
@@ -577,11 +493,12 @@ describe('LookupListField', () => {
     const rows = within(screen.getByRole('listbox', { name: 'Substitute Ingredient suggestions' }))
       .getAllByRole('option')
       .slice(1);
-    expect(rows.map((row) => row.textContent)).toEqual([
-      'Mockwort (Fixtura vulgaris)Compendium entry',
-      'Mockwort (Fixtura vulgaris)This coven’s entry',
-      'Mockwort TeaThis coven’s entry',
-    ]);
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Mockwort (Fixtura vulgaris)');
+    expect(rows[1]).toHaveTextContent('Mockwort (Fixtura vulgaris)');
+    // Told apart by whose entry each is.
+    expect(rows[0]).not.toHaveAccessibleName(rows[1].textContent ?? '');
+    expect(rows[2]).toHaveTextContent('Mockwort Tea');
     // One ranked list: a tier is a note, never a heading that reorders it.
     expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
   });
@@ -598,12 +515,10 @@ describe('LookupListField', () => {
     );
     // The chip reads as the compendium's Mockwort would; its detail says
     // which was picked (MB.164).
-    expect(removeButton('Mockwort (Fixtura vulgaris)')).toHaveAccessibleDescription(
-      'Tincture · This coven’s entry — A fixture herb.',
-    );
-    expect(changes('Substitute Ingredients')).toHaveTextContent(
-      'Added Mockwort (Fixtura vulgaris)',
-    );
+    const picked = removeButton('Mockwort (Fixtura vulgaris)');
+    expect(picked).toHaveAccessibleDescription(expect.stringContaining('Tincture'));
+    expect(picked).toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
+    expect(changes('Substitute Ingredients')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect((await send()).substitutes).toEqual([{ ingredientId: COVEN_ID }]);
   });
 

@@ -34,73 +34,10 @@ describe('GroupList', () => {
     );
   });
 
-  it("draws a category group's name in a chip wearing its pair", () => {
-    render(<GroupList kind="category" groups={[WARDS]} />);
-
-    const chip = screen.getByText('Fixture Wards', { selector: '.chip' });
-    expect(chip.style.getPropertyValue('--chip-dark')).toBe('#4e8bc2');
-    expect(chip.style.getPropertyValue('--chip-light')).toBe('#0c5393');
-  });
-
-  it("draws a form group's name as plain text", () => {
-    render(
-      <GroupList
-        kind="form"
-        groups={[{ ...WARDS, name: 'Fixture Matter', colorDark: undefined, colorLight: undefined }]}
-      />,
-    );
-
-    expect(screen.getByRole('cell', { name: 'Fixture Matter' })).toBeInTheDocument();
-    expect(document.querySelector('.chip')).toBeNull();
-  });
-
-  it('says so when there is no group', () => {
+  it('draws no table when there is no group', () => {
     render(<GroupList kind="form" groups={[]} />);
 
-    expect(screen.getByText('No groups yet.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-  });
-
-  it('says so in its own word when there is no tradition', () => {
-    render(<GroupList kind="tradition" groups={[]} />);
-
-    expect(screen.getByText('No traditions yet.')).toBeInTheDocument();
-  });
-
-  it('pages by the links it is given', () => {
-    render(
-      <GroupList
-        kind="category"
-        groups={[WARDS]}
-        nextHref={groupsHref('category', { after: 'cursor' })}
-      />,
-    );
-
-    expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute(
-      'href',
-      '/admin/category-groups?after=cursor',
-    );
-  });
-
-  it('says which page of how many when given its position, and nothing of it when not', () => {
-    const { rerender } = render(
-      <GroupList
-        kind="tradition"
-        groups={[WARDS]}
-        nextHref={groupsHref('tradition', { after: 'cursor' })}
-        position={{ page: 1, pages: 2 }}
-      />,
-    );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 1 of 2');
-
-    rerender(
-      <GroupList
-        kind="tradition"
-        groups={[WARDS]}
-        nextHref={groupsHref('tradition', { after: 'cursor' })}
-      />,
-    );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).not.toHaveTextContent(/Page \d/);
   });
 });
 

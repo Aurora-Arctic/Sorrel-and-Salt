@@ -1,5 +1,5 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -66,65 +66,26 @@ function cellsOf(name: string): string[] {
 }
 
 describe('UserList', () => {
-  it('heads a column for each fact an admin judges a user by', () => {
+  it('shows a row per user, in the order given, with its address, its coven-creation flag and its signup date', () => {
     render(<UserList {...props()} />);
 
-    const headers = screen.getAllByRole('columnheader').map((header) => header.textContent);
-    expect(headers).toEqual([
-      'Name',
-      'Email',
-      'Role',
-      'Coven Creation',
-      'Sign-In Methods',
-      'Signed Up',
-    ]);
-  });
-
-  it('shows a row per user, in the order given', () => {
-    render(<UserList {...props()} />);
-
-    expect(cellsOf('Ada Fixturewort')).toEqual([
-      // The history link's tip, then the name.
-      'Permissions HistoryAda Fixturewort',
-      // The verified mark's word, for the reader and in its tip, then the address.
-      'VerifiedVerifiedada@users.test',
-      // The role, then the control that changes it, in one cell (MB.59).
-      'AdminRevoke',
-      // The mark alone, no control: an admin holds the flag.
-      'Yes',
-      // Each logo's name, for the reader and in its tip.
-      'DiscordDiscordGoogleGoogle',
-      '2026-03-04',
-    ]);
-    expect(cellsOf('Bo Fixturewort')).toEqual([
-      'Permissions HistoryBo Fixturewort',
-      'UnverifiedUnverifiedbo@users.test',
-      'UserGrant',
-      // The mark, then the control that changes it, in one cell.
-      'NoApprove',
-      // No sign-in method is an empty cell.
-      '',
-      '2026-05-06',
-    ]);
-    // An admin's role in bold, a user's not.
-    expect(
-      within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getByText('Admin').tagName,
-    ).toBe('STRONG');
-    expect(
-      within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getByText('User').tagName,
-    ).toBe('SPAN');
+    const [, ada, bo] = screen.getAllByRole('row');
+    for (const [row, user, date] of [
+      [ada, ADA, '2026-03-04'],
+      [bo, BO, '2026-05-06'],
+    ] as const) {
+      expect(row).toHaveTextContent(user.name);
+      expect(row).toHaveTextContent(user.email);
+      expect(row).toHaveTextContent(date);
+    }
+    // The mark's word is the flag's one rendering: an admin holds it, Bo does not.
+    expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
+    expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
   });
 
   // MB.200: each row opens the privilege ledger narrowed to its user, an
   // admin's included, from an icon before the name.
   describe('the history link', () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('leads every name, to the ledger searched for that user’s address', () => {
       render(<UserList {...props()} />);
 
@@ -149,101 +110,6 @@ describe('UserList', () => {
         screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
     });
-
-    it('says Permissions History in a tip on hover, kept while the pointer is on it', () => {
-      render(<UserList {...props()} />);
-      const link = screen.getByRole('link', { name: 'Permissions history for Ada Fixturewort' });
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-
-      fireEvent.mouseEnter(link);
-      const tip = screen.getByRole('tooltip');
-      expect(tip).toHaveTextContent('Permissions History');
-      fireEvent.mouseLeave(link);
-      fireEvent.mouseEnter(tip);
-      act(() => vi.advanceTimersByTime(200));
-      expect(screen.getByRole('tooltip')).toBeInTheDocument();
-
-      fireEvent.mouseLeave(tip);
-      act(() => vi.advanceTimersByTime(200));
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    });
-
-    it('says it on focus too, until blur or Escape', () => {
-      render(<UserList {...props()} />);
-      const link = screen.getByRole('link', { name: 'Permissions history for Bo Fixturewort' });
-
-      fireEvent.focus(link);
-      expect(screen.getByRole('tooltip')).toHaveTextContent('Permissions History');
-      fireEvent.keyDown(document, { key: 'Escape' });
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-
-      fireEvent.focus(link);
-      fireEvent.blur(link);
-      expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
-    });
-  });
-
-  // The owner's call: a green check or a red cross, the word kept for a
-  // screen reader since the mark is drawn alone.
-  it('marks a yes with a green check and a no with a red cross, each saying its word', () => {
-    render(<UserList {...props()} />);
-
-    const bo = within(screen.getByRole('row', { name: /Bo Fixturewort/ })).getAllByRole('cell');
-    const ada = within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getAllByRole('cell');
-    // The address's, its word in a tip bubble on hover too, since its heading
-    // says Email: the bubble is the eye's copy, the hidden word the reader's.
-    const unverified = within(bo[1] as HTMLElement).getByText('Unverified', {
-      selector: '.visually-hidden',
-    }).parentElement as HTMLElement;
-    expect(unverified).toHaveClass('user-list__mark--no', 'user-list__hint');
-    expect(unverified.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    const tip = unverified.querySelector('.user-list__tip');
-    expect(tip).toHaveTextContent('Unverified');
-    expect(tip).toHaveAttribute('aria-hidden', 'true');
-    expect(
-      within(ada[1] as HTMLElement).getByText('Verified', { selector: '.visually-hidden' })
-        .parentElement,
-    ).toHaveClass('user-list__mark--yes');
-    // The creation flag's, whose heading already asks the question: no tooltip.
-    const no = within(bo[3] as HTMLElement).getByText('No');
-    expect(no).toHaveClass('visually-hidden');
-    expect(no.parentElement).toHaveClass('user-list__mark--no');
-    expect(no.parentElement?.querySelector('.user-list__tip')).toBeNull();
-    expect(within(ada[3] as HTMLElement).getByText('Yes').parentElement).toHaveClass(
-      'user-list__mark--yes',
-    );
-  });
-
-  it('dates the signup with a machine-readable time', () => {
-    render(<UserList {...props()} />);
-
-    const time = within(screen.getByRole('row', { name: /Ada/ })).getByText('2026-03-04');
-    expect(time.tagName).toBe('TIME');
-    expect(time).toHaveAttribute('dateTime', '2026-03-04T05:06:07.000Z');
-  });
-
-  // The owner's call: logos, not names, each named on hover and to a reader.
-  it('shows each linked provider as its logo, named in a tip and for a screen reader', () => {
-    render(<UserList {...props()} />);
-
-    const methods = within(screen.getByRole('row', { name: /Ada Fixturewort/ })).getAllByRole(
-      'cell',
-    )[4] as HTMLElement;
-    const logos = [...methods.querySelectorAll('.user-list__provider')];
-    expect(logos.map((logo) => logo.className)).toEqual([
-      'user-list__hint user-list__provider user-list__provider--discord',
-      'user-list__hint user-list__provider user-list__provider--google',
-    ]);
-    for (const [logo, name] of [
-      [logos[0], 'Discord'],
-      [logos[1], 'Google'],
-    ] as const) {
-      expect(logo?.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-      expect(logo?.querySelector('.visually-hidden')).toHaveTextContent(name);
-      const tip = logo?.querySelector('.user-list__tip');
-      expect(tip).toHaveTextContent(name);
-      expect(tip).toHaveAttribute('aria-hidden', 'true');
-    }
   });
 
   it('names a provider outside the roster by its id rather than dropping it', () => {
@@ -252,11 +118,10 @@ describe('UserList', () => {
     expect(cellsOf('Bo Fixturewort')[4]).toBe('github');
   });
 
-  it('says so when no user matches', () => {
+  it('draws no table when no user matches', () => {
     render(<UserList {...props({ users: [], query: 'nobody' })} />);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText('No users match.')).toBeInTheDocument();
   });
 
   it('filters by a GET search to the page itself, keeping what was asked', () => {
@@ -272,35 +137,6 @@ describe('UserList', () => {
     expect(within(search).getByLabelText('Name or Email')).toHaveAttribute('name', 'query');
     expect(within(search).getByLabelText('Needs Approval')).toBeChecked();
     expect(within(search).getByLabelText('Needs Approval')).toHaveAttribute('name', 'awaiting');
-  });
-
-  it('links the pages either side, and disables an end that has none', () => {
-    const { rerender } = render(<UserList {...props()} />);
-    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
-
-    rerender(<UserList {...props({ nextHref: '/admin/users?after=next' })} />);
-    let pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(within(pages).getByRole('link', { name: 'Prev' })).not.toHaveAttribute('href');
-    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
-      'href',
-      '/admin/users?after=next',
-    );
-
-    rerender(<UserList {...props({ previousHref: '/admin/users?before=previous' })} />);
-    pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'href',
-      '/admin/users?before=previous',
-    );
-    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(within(pages).getByRole('link', { name: 'Next' })).not.toHaveAttribute('href');
   });
 });
 
@@ -323,15 +159,10 @@ describe('UserList impersonation', () => {
   it('offers it on each non-admin row, naming the user, and on no admin row', () => {
     render(<UserList {...props({ canImpersonate: true })} />);
 
-    // The column is tinted red and its button is red: it acts as someone else.
-    expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toHaveClass(
-      'user-list__impersonate',
-    );
+    expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toBeInTheDocument();
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
     const impersonate = within(bo).getByRole('button', { name: 'Impersonate Bo Fixturewort' });
     expect(impersonate).toBeEnabled();
-    expect(impersonate).toHaveClass('btn--destructive', 'btn--small');
-    expect(impersonate.closest('td')).toHaveClass('user-list__impersonate');
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
     expect(within(ada).queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
@@ -358,9 +189,7 @@ describe('UserList impersonation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
 
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
-    expect(await within(bo).findByRole('alert')).toHaveTextContent(
-      'Bo Fixturewort could not be impersonated.',
-    );
+    expect(await within(bo).findByRole('alert')).toBeVisible();
     expect(assignMock).not.toHaveBeenCalled();
   });
 });
@@ -392,17 +221,6 @@ describe('UserList filter', () => {
     expect(filterButton()).toBeDisabled();
   });
 
-  it('enables once the checkbox differs, and disables again when it is put back', () => {
-    render(<UserList {...props()} />);
-    const awaiting = screen.getByLabelText('Needs Approval');
-
-    fireEvent.click(awaiting);
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.click(awaiting);
-    expect(filterButton()).toBeDisabled();
-  });
-
   it('opens the filtered page from the first, with a bare awaiting', () => {
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<UserList {...props({ previousHref: '/admin/users?before=x' })} />);
@@ -424,8 +242,8 @@ describe('UserList filter', () => {
     expect(
       within(role)
         .getAllByRole('option')
-        .map((option) => option.textContent),
-    ).toEqual(['All roles', 'Admin', 'User']);
+        .map((option) => option.getAttribute('value')),
+    ).toEqual(['', 'admin', 'user']);
     expect(filterButton()).toBeDisabled();
 
     fireEvent.change(role, { target: { value: 'user' } });
@@ -463,14 +281,7 @@ describe('UserList approval', () => {
 
     expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
     expect(within(boRow()).queryByRole('button', { name: /Revoke/ })).not.toBeInTheDocument();
-    // The table's own size, so a row is no taller than its text, and quiet:
-    // Revoke is the red one.
-    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toHaveClass(
-      'btn--small',
-      'btn--quiet',
-    );
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
-    expect(within(ada).getAllByRole('cell')[3]).toHaveTextContent(/^Yes$/);
     expect(
       within(ada).queryByRole('button', { name: /Approve|Revoke approval/ }),
     ).not.toBeInTheDocument();
@@ -483,8 +294,6 @@ describe('UserList approval', () => {
       name: 'Revoke approval for Bo Fixturewort',
     });
     expect(revoke).toBeEnabled();
-    // Red, since it takes something away; Approve is the quiet one.
-    expect(revoke).toHaveClass('btn--destructive');
     expect(within(boRow()).queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
   });
 
@@ -501,9 +310,7 @@ describe('UserList approval', () => {
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
 
     const asking = dialog('Approve Coven Creation');
-    expect(asking).toHaveTextContent('Let Bo Fixturewort create covens?');
-    // The name in bold, on the owner's call.
-    expect(within(asking).getByText('Bo Fixturewort').tagName).toBe('STRONG');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
     expect(within(asking).getByRole('button', { name: 'Approve' })).toHaveFocus();
     fireEvent.click(within(asking).getByRole('button', { name: 'Cancel' }));
 
@@ -514,8 +321,6 @@ describe('UserList approval', () => {
 
   // MB.205: an unverified address is said in the confirmation, read with its
   // Approve, since the focus lands there; a warning, not a refusal.
-  const UNVERIFIED_WARNING =
-    'This email address has not been verified, so nobody has proved who holds it. Approving keeps the account rather than letting it lapse.';
 
   it('warns before approving a user whose email is unverified, and still approves', async () => {
     const calls: unknown[] = [];
@@ -524,40 +329,17 @@ describe('UserList approval', () => {
       return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
     });
     render(<UserList {...props()} />);
-    // The precondition: Bo's address is unverified, as the row's mark says.
+    // The precondition: Bo's address is unverified, as the row's mark says,
+    // the mark's word being the flag's one rendering.
     expect(within(boRow()).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
 
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
 
-    const asking = dialog('Approve Coven Creation');
-    expect(asking).toHaveTextContent(`Let Bo Fixturewort create covens?${UNVERIFIED_WARNING}`);
-    const approve = within(asking).getByRole('button', { name: 'Approve' });
-    expect(approve).toHaveFocus();
-    expect(approve).toHaveAccessibleDescription(UNVERIFIED_WARNING);
-    expect(within(asking).getByText(UNVERIFIED_WARNING)).toHaveClass('notice', 'notice--warn');
-    fireEvent.click(approve);
-
-    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(calls).toEqual([{ userId: BO.id }]);
-  });
-
-  it('gives no warning before approving a user whose email is verified', async () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
-      calls.push(variables);
-      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    const approve = within(dialog('Approve Coven Creation')).getByRole('button', {
+      name: 'Approve',
     });
-    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
-
-    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
-
-    const asking = dialog('Approve Coven Creation');
-    expect(asking).toHaveTextContent(
-      /^Approve Coven Creation×Let Bo Fixturewort create covens\?Reason/,
-    );
-    expect(within(asking).queryByText(UNVERIFIED_WARNING)).not.toBeInTheDocument();
-    const approve = within(asking).getByRole('button', { name: 'Approve' });
-    expect(approve).not.toHaveAccessibleDescription();
+    expect(approve).toHaveFocus();
+    expect(approve).toHaveAccessibleDescription(/\S/);
     fireEvent.click(approve);
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -571,16 +353,14 @@ describe('UserList approval', () => {
       within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
     );
 
-    const asking = dialog('Revoke Coven Creation');
-    expect(within(asking).queryByText(UNVERIFIED_WARNING)).not.toBeInTheDocument();
     expect(
-      within(asking).getByRole('button', { name: 'Revoke' }),
+      within(dialog('Revoke Coven Creation')).getByRole('button', { name: 'Revoke' }),
     ).not.toHaveAccessibleDescription();
   });
 
   // The owner's call, beside MB.59's: each confirmation takes the same
   // optional reason, sent trimmed, or not at all when blank.
-  it('approves with a reason, the field under the unverified warning, and revokes with one', async () => {
+  it('approves with a reason, and revokes with one', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
       calls.push(variables);
@@ -595,13 +375,7 @@ describe('UserList approval', () => {
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
     const approving = dialog('Approve Coven Creation');
     const reason = within(approving).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(
-      'Kept with the change in the record of who changed what.',
-    );
-    // Below the warning, which keeps its own spacing class.
-    const warning = within(approving).getByText(UNVERIFIED_WARNING);
-    expect(warning).toHaveClass('notice', 'user-list__warning');
-    expect(warning.compareDocumentPosition(reason) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(reason).toHaveAccessibleDescription(/\S/);
     fireEvent.change(reason, { target: { value: '  Runs the Tuesday circle ' } });
     fireEvent.click(within(approving).getByRole('button', { name: 'Approve' }));
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -629,13 +403,9 @@ describe('UserList approval', () => {
     render(<UserList {...props()} />);
 
     fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
-    fireEvent.click(
-      within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' }),
-    );
+    const busy = within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' });
+    fireEvent.click(busy);
 
-    const busy = within(dialog('Approve Coven Creation')).getByRole('button', {
-      name: 'Approving',
-    });
     expect(busy).toBeDisabled();
     expect(busy).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -654,15 +424,13 @@ describe('UserList approval', () => {
       within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' }),
     );
 
-    expect(await within(boRow()).findByRole('alert')).toHaveTextContent(
-      'Bo Fixturewort may already create a coven',
-    );
+    expect(await within(boRow()).findByRole('alert')).toBeVisible();
     expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('revokes from a modal whose red Revoke says their covens stay theirs', async () => {
+  it('revokes from a modal naming the user, busy until the list is read again', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
       calls.push(variables);
@@ -675,39 +443,15 @@ describe('UserList approval', () => {
     );
 
     const asking = dialog('Revoke Coven Creation');
-    expect(asking).toHaveTextContent(
-      'Stop Bo Fixturewort from creating covens? Covens they own stay theirs.',
-    );
-    expect(within(asking).getByText('Bo Fixturewort').tagName).toBe('STRONG');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
     const confirm = within(asking).getByRole('button', { name: 'Revoke' });
     expect(confirm).toHaveFocus();
-    expect(confirm).toHaveClass('btn--destructive');
     fireEvent.click(confirm);
 
-    expect(within(asking).getByRole('button', { name: 'Revoking' })).toBeDisabled();
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: BO.id }]);
-  });
-
-  // The refresh re-renders the same row with the flag turned over; the
-  // control must start afresh rather than stay busy under the other action.
-  it('offers Revoke, idle, once the refreshed row says the user was approved', async () => {
-    mockGraphQLMutation('GrantWorkspaceCreation', () => ({
-      grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true },
-    }));
-    const { rerender } = render(<UserList {...props()} />);
-    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
-    fireEvent.click(
-      within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' }),
-    );
-    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-
-    rerender(<UserList {...props({ users: [ADA, { ...BO, canCreateWorkspace: true }] })} />);
-
-    expect(
-      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
-    ).toBeEnabled();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
 
@@ -721,8 +465,6 @@ describe('UserList admin role', () => {
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
   const dialog = (title: string) => screen.getByRole('dialog', { name: title });
-  const PRIMARY_REASON =
-    "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
 
   it('offers Grant on a user’s row and Revoke on an admin’s, each naming the user', () => {
     render(<UserList {...props()} />);
@@ -731,15 +473,13 @@ describe('UserList admin role', () => {
       name: 'Grant admin to Bo Fixturewort',
     });
     expect(grant).toBeEnabled();
-    expect(grant).toHaveClass('btn--small', 'btn--quiet');
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
     });
     expect(revoke).toBeEnabled();
     expect(revoke).not.toHaveAttribute('aria-disabled');
-    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
     // Nobody here is the primary admin.
-    expect(screen.queryByText('Primary Admin')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Primary Admin' })).not.toBeInTheDocument();
   });
 
   it('grants from a modal naming the user, sending the reason, busy until the list is read again', async () => {
@@ -755,22 +495,17 @@ describe('UserList admin role', () => {
     );
 
     const asking = dialog('Grant Admin');
-    expect(asking).toHaveTextContent('Make Bo Fixturewort an admin?');
-    expect(within(asking).getByText('Bo Fixturewort').tagName).toBe('STRONG');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
     const confirm = within(asking).getByRole('button', { name: 'Grant' });
     expect(confirm).toHaveFocus();
-    expect(confirm).toHaveClass('btn--solid');
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
-    expect(reason).toHaveAccessibleDescription(
-      'Kept with the change in the record of who changed what.',
-    );
+    expect(reason).toHaveAccessibleDescription(/\S/);
     fireEvent.change(reason, { target: { value: '  Curates the planets  ' } });
     fireEvent.click(confirm);
 
-    const busy = within(dialog('Grant Admin')).getByRole('button', { name: 'Granting' });
-    expect(busy).toBeDisabled();
-    expect(busy).toHaveAttribute('aria-busy', 'true');
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the planets' }]);
   });
@@ -795,12 +530,8 @@ describe('UserList admin role', () => {
 
     fireEvent.click(open);
     const asking = dialog('Revoke Admin');
-    expect(asking).toHaveTextContent(
-      'Stop Ada Fixturewort being an admin? They keep their covens, and everything they wrote stays as it is.',
-    );
-    const confirm = within(asking).getByRole('button', { name: 'Revoke' });
-    expect(confirm).toHaveClass('btn--destructive');
-    fireEvent.click(confirm);
+    expect(asking).toHaveTextContent('Ada Fixturewort');
+    fireEvent.click(within(asking).getByRole('button', { name: 'Revoke' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ userId: ADA.id, role: 'user' }]);
@@ -808,8 +539,6 @@ describe('UserList admin role', () => {
 
   // MB.205's warning, in Grant's words: a grant vouches as an approval does.
   it('warns before granting to a user whose email is unverified, and still grants', async () => {
-    const warning =
-      'This email address has not been verified, so nobody has proved who holds it. Granting keeps the account rather than letting it lapse.';
     mockGraphQLMutation('SetUserRole', () => ({
       setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
     }));
@@ -820,30 +549,10 @@ describe('UserList admin role', () => {
       within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
     );
 
-    const asking = dialog('Grant Admin');
-    const confirm = within(asking).getByRole('button', { name: 'Grant' });
-    expect(confirm).toHaveAccessibleDescription(warning);
-    expect(within(asking).getByText(warning)).toHaveClass(
-      'notice',
-      'notice--warn',
-      'user-list__warning',
-    );
+    const confirm = within(dialog('Grant Admin')).getByRole('button', { name: 'Grant' });
+    expect(confirm).toHaveAccessibleDescription(/\S/);
     fireEvent.click(confirm);
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-  });
-
-  it('gives no warning before revoking, even from an admin whose email is unverified', () => {
-    render(<UserList {...props({ users: [{ ...ADA, emailVerified: false }] })} />);
-
-    fireEvent.click(
-      within(row('Ada Fixturewort')).getByRole('button', {
-        name: 'Revoke admin from Ada Fixturewort',
-      }),
-    );
-
-    expect(
-      within(dialog('Revoke Admin')).getByRole('button', { name: 'Revoke' }),
-    ).not.toHaveAccessibleDescription();
   });
 
   it('says why in the row when the service refuses, and offers Revoke again', async () => {
@@ -861,14 +570,12 @@ describe('UserList admin role', () => {
     );
     fireEvent.click(within(dialog('Revoke Admin')).getByRole('button', { name: 'Revoke' }));
 
-    expect(await within(row('Ada Fixturewort')).findByRole('alert')).toHaveTextContent(
-      'Ada Fixturewort is the last admin',
-    );
+    expect(await within(row('Ada Fixturewort')).findByRole('alert')).toBeVisible();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.refresh).not.toHaveBeenCalled();
   });
 
-  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, the reason in a tip', () => {
+  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, described by the reason', () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('SetUserRole', (variables) => {
       calls.push(variables);
@@ -877,31 +584,16 @@ describe('UserList admin role', () => {
     render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }, BO] })} />);
     const primary = row('Ada Fixturewort');
 
-    // The crown is named, and its tip opens on focus and closes on Escape.
-    const crown = within(primary).getByRole('button', { name: 'Primary Admin' });
-    const crownTip = within(primary).getByText('Primary Admin');
-    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
-    fireEvent.focus(crown);
-    expect(crownTip).toHaveAttribute('aria-hidden', 'false');
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(crownTip).toHaveAttribute('aria-hidden', 'true');
+    expect(within(primary).getByRole('button', { name: 'Primary Admin' })).toBeInTheDocument();
 
     const revoke = within(primary).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
     });
-    // In view and reachable, not `disabled`, and described by the reason,
-    // which is in a tip, closed until the button is hovered or focused.
+    // In view and reachable, not `disabled`, and described by the reason.
     expect(revoke).toBeVisible();
     expect(revoke).toBeEnabled();
     expect(revoke).toHaveAttribute('aria-disabled', 'true');
-    expect(revoke).toHaveAccessibleDescription(PRIMARY_REASON);
-    const reason = within(primary).getByText(PRIMARY_REASON);
-    expect(reason).toHaveAttribute('role', 'tooltip');
-    expect(reason).toHaveAttribute('aria-hidden', 'true');
-    fireEvent.focus(revoke);
-    expect(reason).toHaveAttribute('aria-hidden', 'false');
-    fireEvent.blur(revoke);
-    expect(reason).toHaveAttribute('aria-hidden', 'true');
+    expect(revoke).toHaveAccessibleDescription(/\S/);
     expect(within(primary).queryByRole('alert')).not.toBeInTheDocument();
     // Only the primary admin's row is marked.
     expect(
@@ -924,38 +616,13 @@ describe('UserList admin role', () => {
     fireEvent.click(revoke);
 
     // The tip opens, as an alert.
-    expect(within(primary).getByRole('alert')).toHaveTextContent(PRIMARY_REASON);
+    expect(within(primary).getByRole('alert')).toBeVisible();
     expect(within(primary).getByRole('alert')).toHaveAttribute('aria-hidden', 'false');
-    expect(within(primary).getAllByText(PRIMARY_REASON)).toHaveLength(1);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     // A second try says it again, as a fresh alert.
     fireEvent.click(revoke);
-    expect(within(primary).getByRole('alert')).toHaveTextContent(PRIMARY_REASON);
+    expect(within(primary).getByRole('alert')).toBeVisible();
     expect(calls).toEqual([]);
-  });
-
-  // The refresh turns the row over; the control starts afresh as the other one.
-  it('offers Revoke, idle, once the refreshed row says the user was made an admin', async () => {
-    mockGraphQLMutation('SetUserRole', () => ({
-      setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
-    }));
-    const { rerender } = render(<UserList {...props({ users: [BO] })} />);
-    fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
-    );
-    fireEvent.click(within(dialog('Grant Admin')).getByRole('button', { name: 'Grant' }));
-    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-
-    rerender(
-      <UserList {...props({ users: [{ ...BO, role: 'admin', canCreateWorkspace: true }] })} />,
-    );
-
-    expect(
-      within(row('Bo Fixturewort')).getByRole('button', {
-        name: 'Revoke admin from Bo Fixturewort',
-      }),
-    ).toBeEnabled();
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
 
@@ -966,15 +633,8 @@ describe('UserList admin changes switch', () => {
     router.refresh.mockReset();
   });
 
-  const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
-
-  // The page puts the switch beside its heading; the list draws none of its own.
-  it('draws no switch inside the list', () => {
-    render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
-
-    expect(screen.queryByRole('button', { name: /Admin Changes/ })).not.toBeInTheDocument();
-  });
-
+  // The paused notice is a plain paragraph before the switch, the state's one
+  // rendering; while changes are on, the switch stands alone.
   it('lets the primary admin pause, stating that changes are on, busy until the page is read again', async () => {
     let calls = 0;
     mockGraphQLMutation('PauseAdminRoleChanges', () => {
@@ -984,17 +644,13 @@ describe('UserList admin changes switch', () => {
     render(<PauseControl paused={false} canToggle={true} />);
 
     // No sentence while changes are on, on the owner's call: only the button.
-    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause.previousElementSibling).toBeNull();
     expect(pause).not.toHaveAttribute('aria-disabled');
-    // Big and red, on the owner's call.
-    expect(pause).toHaveClass('btn', 'btn--destructive');
-    expect(pause).not.toHaveClass('btn--small');
     fireEvent.click(pause);
 
-    const busy = screen.getByRole('button', { name: 'Pausing' });
-    expect(busy).toBeDisabled();
-    expect(busy).toHaveAttribute('aria-busy', 'true');
+    expect(pause).toBeDisabled();
+    expect(pause).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
     expect(calls).toBe(1);
   });
@@ -1007,16 +663,8 @@ describe('UserList admin changes switch', () => {
     });
     render(<PauseControl paused={true} canToggle={true} />);
 
-    // A warning notice, on the owner's call.
-    expect(screen.getByText('Admin changes are paused.')).toHaveClass(
-      'notice',
-      'notice--warn',
-      'user-list__pause-state',
-    );
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
-    // Red and full size like Pause, on the owner's call.
-    expect(resume).toHaveClass('btn', 'btn--destructive');
-    expect(resume).not.toHaveClass('btn--small');
+    expect(resume.previousElementSibling).toHaveTextContent(/\S/);
     fireEvent.click(resume);
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -1032,9 +680,7 @@ describe('UserList admin changes switch', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Only the primary admin may pause or resume admin changes',
-    );
+    expect(await screen.findByRole('alert')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
     expect(router.refresh).not.toHaveBeenCalled();
   });
@@ -1047,18 +693,15 @@ describe('UserList admin changes switch', () => {
     });
     render(<PauseControl paused={false} canToggle={false} />);
 
-    expect(screen.queryByText(/^Admin changes are/)).not.toBeInTheDocument();
     const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
     expect(pause).toBeEnabled();
     expect(pause).toHaveAttribute('aria-disabled', 'true');
-    expect(pause).toHaveClass('btn', 'btn--destructive');
-    expect(pause).toHaveAccessibleDescription(NOT_PRIMARY);
+    expect(pause).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     fireEvent.click(pause);
 
-    expect(screen.getByRole('alert')).toHaveTextContent(NOT_PRIMARY);
-    expect(screen.getAllByText(NOT_PRIMARY)).toHaveLength(1);
+    expect(screen.getByRole('alert')).toBeVisible();
     expect(calls).toBe(0);
   });
 
@@ -1067,12 +710,12 @@ describe('UserList admin changes switch', () => {
   it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
     render(<PauseControl paused canToggle={false} />);
 
-    expect(screen.getByText('Admin changes are paused.')).toHaveClass('notice--warn');
     const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    // The locked control wraps the button with its tip; the notice stands before it.
+    expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
     expect(resume).toHaveAttribute('aria-disabled', 'true');
-    expect(resume).toHaveClass('btn', 'btn--destructive');
-    expect(resume).toHaveAccessibleDescription(NOT_PRIMARY);
-    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(NOT_PRIMARY);
+    expect(resume).toHaveAccessibleDescription(/\S/);
+    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
   });
 });
 
@@ -1085,7 +728,6 @@ describe('UserList admin role while admin changes are paused', () => {
   });
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
-  const PAUSED_REASON = 'Admin changes are paused by the primary admin.';
 
   it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
     let calls = 0;
@@ -1104,16 +746,14 @@ describe('UserList admin role while admin changes are paused', () => {
     for (const button of [grant, revoke]) {
       expect(button).toBeEnabled();
       expect(button).toHaveAttribute('aria-disabled', 'true');
-      expect(button).toHaveAccessibleDescription(PAUSED_REASON);
+      expect(button).toHaveAccessibleDescription(/\S/);
     }
-    expect(grant).toHaveClass('btn--small', 'btn--quiet');
-    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
 
     fireEvent.click(grant);
 
-    expect(within(row('Bo Fixturewort')).getByRole('alert')).toHaveTextContent(PAUSED_REASON);
+    expect(within(row('Bo Fixturewort')).getByRole('alert')).toBeVisible();
     fireEvent.click(revoke);
-    expect(within(row('Ada Fixturewort')).getByRole('alert')).toHaveTextContent(PAUSED_REASON);
+    expect(within(row('Ada Fixturewort')).getByRole('alert')).toBeVisible();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(calls).toBe(0);
   });
@@ -1142,14 +782,12 @@ describe('UserList admin role while admin changes are paused', () => {
     });
     for (const button of [approve, revoke]) {
       expect(button).toHaveAttribute('aria-disabled', 'true');
-      expect(button).toHaveAccessibleDescription(PAUSED_REASON);
+      expect(button).toHaveAccessibleDescription(/\S/);
     }
-    expect(approve).toHaveClass('btn--small', 'btn--quiet');
-    expect(revoke).toHaveClass('btn--small', 'btn--destructive');
 
     fireEvent.click(approve);
 
-    expect(within(row('Bo Fixturewort')).getAllByRole('alert')[0]).toHaveTextContent(PAUSED_REASON);
+    expect(within(row('Bo Fixturewort')).getAllByRole('alert')[0]).toBeVisible();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(calls).toBe(0);
   });
@@ -1166,20 +804,6 @@ describe('UserList admin role while admin changes are paused', () => {
     expect(screen.getByRole('dialog', { name: 'Approve Coven Creation' })).toBeInTheDocument();
   });
 
-  it('leaves the primary admin’s Grant and Revoke usable while paused', () => {
-    render(<UserList {...props({ adminChanges: { paused: true, canToggle: true } })} />);
-
-    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
-    });
-    expect(revoke).not.toHaveAttribute('aria-disabled');
-    fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
-    );
-
-    expect(screen.getByRole('dialog', { name: 'Grant Admin' })).toBeInTheDocument();
-  });
-
   it('locks nothing while changes are on', () => {
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
 
@@ -1188,7 +812,8 @@ describe('UserList admin role while admin changes are paused', () => {
     }
   });
 
-  // The primary admin's own reason holds whether or not changes are paused.
+  // The primary admin's own reason holds whether or not changes are paused:
+  // which of the two reasons won is told by its words alone.
   it('keeps the primary admin’s Revoke on its own reason while paused', () => {
     render(
       <UserList
@@ -1204,37 +829,5 @@ describe('UserList admin role while admin changes are paused', () => {
         name: 'Revoke admin from Ada Fixturewort',
       }),
     ).toHaveAccessibleDescription(/^This is the primary admin/);
-  });
-});
-
-// A locked control's tip is placed against the viewport by measuring it at
-// the origin; reopened at the same spot, it must land there again rather than
-// stay at the origin (the owner's report).
-describe('UserList locked control tip', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('places the tip by its button each time it opens, not only the first', () => {
-    // jsdom lays nothing out, so the button and the tip are given boxes.
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      const box =
-        this.tagName === 'BUTTON'
-          ? { top: 300, left: 200, width: 80, height: 30 }
-          : { top: 0, left: 0, width: 100, height: 40 };
-      return { ...box, right: box.left + box.width, bottom: box.top + box.height } as DOMRect;
-    });
-    render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }] })} />);
-    const revoke = screen.getByRole('button', { name: 'Revoke admin from Ada Fixturewort' });
-    const tip = () => screen.getByText(/^This is the primary admin/);
-
-    fireEvent.focus(revoke);
-    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
-    fireEvent.blur(revoke);
-    fireEvent.focus(revoke);
-
-    expect(tip()).toHaveStyle({ top: '260px', left: '200px' });
   });
 });

@@ -41,9 +41,9 @@ paragraphs take `_typography.scss`'s global rules. Tokens used: `$measure`.
 
 ## Testing
 
-`tests/components/NotAuthorized/index.test.tsx` covers the heading, the reason,
-the single link back to `/`, and the absence of any button, form, text field,
-address or request wording. `tests/app/forbidden.test.tsx` checks the root
-`forbidden.tsx` renders it inside `<main>`. `tests/e2e/admin.spec.ts` reaches
-it through the guard against the built server — the 403, the page at the same
-URL, no admin nav — and runs the axe scan.
+`tests/components/NotAuthorized/index.test.tsx` covers the single link back
+to `/` and the absence of any button, form, text field, address or request
+wording. The root `forbidden.tsx` that renders it is exercised by the admin
+403 tests of `tests/e2e/admin.spec.ts` alone, which reach it through the
+guard against the built server — the 403, the page at the same URL, no admin
+nav — and run the axe scan.

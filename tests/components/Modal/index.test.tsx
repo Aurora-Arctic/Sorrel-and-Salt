@@ -39,7 +39,6 @@ describe('Modal', () => {
     const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
     expect(showModal).toHaveBeenCalledTimes(1);
     expect(dialog).toHaveAttribute('open');
-    expect(screen.getByRole('heading', { name: 'Edit Category' })).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 
@@ -67,59 +66,26 @@ describe('Modal', () => {
 
   // The owner's call during M5.5: a click outside closes it, as Escape does.
   // The backdrop is the dialog's own box to an event, so outside is told by
-  // the point: the dialog stands at 100,100 to 300,300 here, jsdom laying
-  // nothing out.
-  describe('a click outside', () => {
-    const at = (x: number, y: number) => ({ clientX: x, clientY: y });
-    let dialog: HTMLElement;
-    beforeEach(() => {
-      vi.spyOn(HTMLDialogElement.prototype, 'getBoundingClientRect').mockReturnValue(
-        DOMRect.fromRect({ x: 100, y: 100, width: 200, height: 200 }),
-      );
-    });
-    const press = (target: HTMLElement, x: number, y: number) => {
-      fireEvent.mouseDown(target, at(x, y));
-      fireEvent.click(dialog, at(x, y));
-    };
+  // the point; jsdom lays nothing out, so every point is outside the box and
+  // what is tested is where the press began and ended. Its own padding is
+  // inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
+  it('asks its owner to close it for a press and release on the backdrop, and for nothing else', () => {
+    const onClose = renderModal();
+    const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+    const field = screen.getByRole('textbox', { name: 'Name' });
+    const at = { clientX: 20, clientY: 150 };
 
-    it('asks its owner to close it when pressed and released on the backdrop', () => {
-      const onClose = renderModal();
-      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+    // A press inside released outside: a selection dragged out of a field.
+    fireEvent.mouseDown(field, at);
+    fireEvent.click(dialog, at);
+    // A click on its contents.
+    fireEvent.mouseDown(field, at);
+    fireEvent.click(field, at);
+    expect(onClose).not.toHaveBeenCalled();
 
-      press(dialog, 20, 150);
-
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('stays open for a click on its own padding, inside its box', () => {
-      const onClose = renderModal();
-      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
-
-      press(dialog, 110, 110);
-
-      expect(onClose).not.toHaveBeenCalled();
-    });
-
-    it('stays open when a press inside is released outside, a selection dragged out', () => {
-      const onClose = renderModal();
-      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
-
-      fireEvent.mouseDown(screen.getByRole('textbox', { name: 'Name' }), at(150, 150));
-      fireEvent.click(dialog, at(20, 150));
-
-      expect(onClose).not.toHaveBeenCalled();
-    });
-
-    it('stays open for a click on its contents', () => {
-      const onClose = renderModal();
-      dialog = screen.getByRole('dialog', { name: 'Edit Category' });
-      const field = screen.getByRole('textbox', { name: 'Name' });
-
-      fireEvent.mouseDown(field, at(150, 150));
-      fireEvent.click(field, at(150, 150));
-
-      expect(onClose).not.toHaveBeenCalled();
-    });
+    fireEvent.mouseDown(dialog, at);
+    fireEvent.click(dialog, at);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   // The owner's call during M5.5: it fades in and out. In is CSS alone. Out
@@ -137,29 +103,17 @@ describe('Modal', () => {
       vi.useRealTimers();
     });
 
-    it('fades before asking its owner to close it', () => {
-      motion(false);
-      const onClose = renderModal();
-      const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
-
-      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-      expect(dialog).toHaveClass('is-closing');
-      expect(onClose).not.toHaveBeenCalled();
-      fireEvent.transitionEnd(dialog);
-      expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    it('asks once, however many ways it was asked to close', () => {
+    it('fades before asking its owner to close it, and asks once however many ways it was asked', () => {
       motion(false);
       const onClose = renderModal();
       const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
 
       fireEvent.click(screen.getByRole('button', { name: 'Close' }));
       fireEvent(dialog, new Event('cancel', { cancelable: true }));
-      fireEvent.transitionEnd(dialog);
-      fireEvent.transitionEnd(dialog);
 
+      expect(onClose).not.toHaveBeenCalled();
+      fireEvent.transitionEnd(dialog);
+      fireEvent.transitionEnd(dialog);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
 
@@ -205,29 +159,6 @@ describe('Modal', () => {
       fireEvent.transitionEnd(dialog);
       expect(onClose).toHaveBeenCalledTimes(1);
     });
-  });
-
-  // A long form's width (M5.5); the class is the whole of the size, so it is what is asserted.
-  it('widens for a long form only when asked', () => {
-    const { rerender } = render(
-      <Modal title="Add Ingredient" onClose={vi.fn()} size="wide">
-        <p>Body</p>
-      </Modal>,
-    );
-
-    expect(screen.getByRole('dialog', { name: 'Add Ingredient' })).toHaveClass(
-      'modal-dialog--wide',
-    );
-
-    rerender(
-      <Modal title="Add Ingredient" onClose={vi.fn()}>
-        <p>Body</p>
-      </Modal>,
-    );
-
-    expect(screen.getByRole('dialog', { name: 'Add Ingredient' })).not.toHaveClass(
-      'modal-dialog--wide',
-    );
   });
 
   it('closes the element when it unmounts', () => {

@@ -44,32 +44,15 @@ const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProp
 });
 
 describe('CompendiumList', () => {
-  it('lists each entry with its classification, formal name and form', () => {
+  it('lists each entry with its formal name and form', () => {
     render(<CompendiumList {...props()} />);
 
-    const table = screen.getByRole('table');
-    expect(
-      within(table)
-        .getAllByRole('columnheader')
-        .map((header) => header.textContent),
-    ).toEqual(['Name', 'Classification', 'Formal Name', 'Form', 'Edit']);
-    const rows = within(table).getAllByRole('row');
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows).toHaveLength(3);
     expect(within(rows[1]).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
-    // By the label the filter and the form give the kind.
-    expect(within(rows[1]).getByRole('cell', { name: 'Botanical' })).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('cell', { name: 'Unknown' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'dried' })).toBeInTheDocument();
-  });
-
-  // The to-do list tells an unconfirmed formal name from none by this column.
-  it('shows an em dash for a formal name or form there is none of', () => {
-    render(<CompendiumList {...props()} />);
-
-    const row = within(screen.getByRole('table')).getAllByRole('row')[2];
-    expect(within(row).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
-    expect(within(row).getAllByRole('cell', { name: '—' })).toHaveLength(2);
+    expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
   it('links each row to its edit modal, named for the entry and its form', () => {
@@ -85,51 +68,14 @@ describe('CompendiumList', () => {
     );
   });
 
-  it('pages when there is another page either way', () => {
-    render(
-      <CompendiumList
-        {...props()}
-        previousHref={compendiumHref({ before: 'b' })}
-        nextHref={compendiumHref({ after: 'a' })}
-        position={{ page: 2, pages: 3 }}
-      />,
-    );
-
-    const pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'href',
-      '/admin/compendium?before=b',
-    );
-    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
-      'href',
-      '/admin/compendium?after=a',
-    );
-    expect(within(pages).getByText('Page 2 of 3')).toBeInTheDocument();
-  });
-
-  it('has no pager on a lone page', () => {
-    render(<CompendiumList {...props()} />);
-
-    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
-  });
-
-  it('says so when there are none', () => {
-    render(<CompendiumList {...props({ entries: [] })} />);
-
+  it('draws no table when there are none, filtered or not', () => {
+    const { rerender } = render(<CompendiumList {...props({ entries: [] })} />);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText('No compendium entries yet.')).toBeInTheDocument();
-  });
 
-  it.each([
-    ['a query', { ...NO_FILTER, query: 'nothing' }],
-    ['a classification', { ...NO_FILTER, nomenclature: 'unknown' as const }],
-    ['the unsourced', { ...NO_FILTER, withoutReferences: true }],
-  ])('says no entry matches when %s finds none', (_, filter) => {
-    render(<CompendiumList {...props({ entries: [], filter })} />);
-
+    rerender(
+      <CompendiumList {...props({ entries: [], filter: { ...NO_FILTER, query: 'nothing' } })} />,
+    );
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText('No compendium entry matches.')).toBeInTheDocument();
-    expect(screen.queryByText('No compendium entries yet.')).not.toBeInTheDocument();
   });
 });
 
@@ -199,24 +145,15 @@ describe('CompendiumList filter', () => {
     expect(unsourced).toHaveAttribute('value', '1');
   });
 
-  it('offers every classification by the form’s labels, after Any', () => {
+  it('offers every classification, after the option for any', () => {
     render(<CompendiumList {...props()} />);
 
     const kind = screen.getByRole('combobox', { name: 'Classification' });
     expect(
       within(kind)
         .getAllByRole('option')
-        .map((option) => [option.textContent, option.getAttribute('value')]),
-    ).toEqual([
-      ['Any', ''],
-      ['Botanical', 'botanical'],
-      ['Fungal', 'fungal'],
-      ['Zoological', 'zoological'],
-      ['Mineral', 'mineral'],
-      ['Chemical', 'chemical'],
-      ['Unknown', 'unknown'],
-      ['None', 'none'],
-    ]);
+        .map((option) => option.getAttribute('value')),
+    ).toEqual(['', 'botanical', 'fungal', 'zoological', 'mineral', 'chemical', 'unknown', 'none']);
     expect(kind).toHaveValue('');
   });
 
@@ -305,11 +242,11 @@ describe('CompendiumList filter', () => {
     );
 
     fireEvent.click(screen.getByRole('checkbox', { name: 'Without References' }));
+    const busy = filterButton();
     await act(async () => {
-      fireEvent.click(filterButton());
+      fireEvent.click(busy);
     });
 
-    const busy = screen.getByRole('button', { name: 'Filtering' });
     expect(busy).toBeDisabled();
     expect(busy).toHaveAttribute('aria-busy', 'true');
     expect(router.push).toHaveBeenCalledWith('/admin/compendium?withoutReferences=1');

@@ -710,8 +710,9 @@ modal over the same list. Why a wide modal, and `?edit=` after a save:
 `.field__error` paragraph whose id the control lists in `aria-describedby`,
 with `aria-invalid` set beside it. The resolver's issues and the server's
 `fieldErrors` both reach it through react-hook-form's error state, so a
-server-only rule draws exactly as a schema rule does. The test proves it is
-the same element, not just the same text.
+server-only rule draws exactly as a schema rule does. The tests prove each
+source marks its field invalid and described; that it is one element is the
+code's, not a test's.
 
 Both sources go through **`fieldNameOf`**, which turns an issue's path into
 the form's field name:
@@ -913,22 +914,22 @@ few it needs. It covers:
   returned row and `'open'` or `'another'`, Save Ingredient the default and
   keeping the form; the submit held down while in flight; every field, list
   and category pick cleared once saved, with nothing marked invalid and the
-  focus in Name; "Saved Testwort." said inside the form until the next save;
-  and a refused save keeping what was typed. The in-flight save tests, one per
-  button, assert both held down, the pressed one's `aria-busy` and its "Saving
-  Ingredient" label until the answer, and the other's own label.
+  focus in Name; a status naming what was saved, inside the form, until the
+  next save; and a refused save keeping what was typed. The in-flight save
+  test, on Save Ingredient, asserts both held down and the pressed one's
+  `aria-busy` until the answer.
 - **Resolver errors**: beside the field, focused, invalid and described, with
-  no request sent, and cleared once the field is corrected; an issue with the
-  form's pick, or with its text, on the Form field; an element list given a
-  repeat, as an edit would hold it, refused on the Element control.
+  no request sent, and cleared once the field is corrected; an element list
+  given a repeat, as an edit would hold it, refused on the Element control.
+  An issue with the form's pick, or with its text, landing on `form` is the
+  resolver's own test,
+  `tests/modules/ingredients/validation/ingredient-resolver.test.ts`.
 - **Server errors** — `fieldNameOf`'s routing: beside the field its path
   names, focused; on the list entry its path names; one pathed to `formId` on
-  the Form field; one pathed to one element on the whole Element control; and
-  rendered through the same element as a resolver error on that field, and
-  cleared by an edit the same way.
+  the Form field; and one pathed to one element on the whole Element control.
 - **The categories** (MB.126): the picks sent as `categoryIds` by id in the
   order picked, and `[]` with none; a pick alone enabling Save; an issue at
-  `['categoryIds', i]` on the picker's `.field__error`, naming the pick, the
+  `['categoryIds', i]` on the picker's error, naming the pick, the
   box invalid, described and focused and the pick's × described, with no
   alert, and cleared by taking the pick out; an index past the picks as the
   root alert; and the form still saving, with no categories, when they cannot
@@ -942,13 +943,10 @@ few it needs. It covers:
   remains, cleared inline by changing the kind to Unknown or to None.
 - **Fields**: Name alone marked required, the formal name while a named
   classification is chosen, and no classification for a typed formal name;
-  a hint behind an info tip yet still read with its field, and kept shut
-  while its field, or a list's box, has focus; the seven classifications and
-  the five elements each closed set offers behind a placeholder that is not
-  one; `form` as free text; and, in one render, the six lists as the form
-  wires them — each with its hint, its box the combobox with a chevron on
-  every list but the colours, and a handle on a planet, sign, colour or deity
-  entry and none on a folk name or substitute.
+  and `form` as free text, sent as typed — the column's being text rather
+  than a foreign key is
+  `tests/modules/ingredients/schema/ingredients-schema.test.ts`'s. A hint behind its info tip is InfoTip's, and a
+  list's box, chevron and handle are ListField's and Combobox's.
 - **The duplicate warning**, what only the form does with it: a save held on
   a near match, asked about the name as sent, trimmed, for this coven, the
   name marked invalid and the focus on Create Anyway, and on it again at the
@@ -960,12 +958,12 @@ few it needs. It covers:
   each of the five list boxes asking its own lookup about this coven, none
   before it is used, a pick from each sent in its shape — text for folk
   names, planets and signs, a deity's id, a substitute's ingredient id.
-- **A linked substitute** (MB.140, MB.164), the list given one on its own:
-  read as its ingredient's label with its formal name, or its label alone
-  without one; its form, tier and description in a tooltip and as its ×'s
-  description, the tier alone without the rest, and nothing for a typed one;
-  sent as its ingredient's id beside a typed one's name; and a refused link
-  marked beside its pill, named by its formal name too.
+- **An element list given its values**, as an edit would hold them: chips in
+  the order held, the rest alone offered.
+
+A linked substitute rendered only `ListField`, so its refused link, named by
+its formal name too, is `list-field.test.tsx`'s; how a picked one reads and
+is sent is `lookups.test.tsx`'s.
 
 `tests/components/IngredientForm/lookups.test.tsx` renders `FormField` or
 one `LookupListField` alone, in a `QueryClientProvider` and a form on the
@@ -979,21 +977,20 @@ showing its group in the box, read as its description, and sending its id; a
 later pick of the other Wax replacing it, a group with no description the
 whole of what the box adds; an edit away from the pick dropping the group and
 the id; a form only in use picked with no id; and a value in no vocabulary
-taken from its own row, with no warning and no id. The list boxes: each of
-the five hooks asking its own query about this coven once its box is used,
-and not before; the common names in use with their claimants, in one bucket,
-a pick adding an entry; the planets and signs curated apart from those in
-use, with descriptions; a listed planet left out of the rows whatever its
-case, the typed row offered for other text and withheld for a repeat; a
-curated deity with its tradition, two of one name told apart; a deity picked
-by the arrow keys and Enter, Escape closing the list and keeping the text,
-and Enter with it closed adding the text, sent as its id and the typed one as
-its name; Greek and Roman Hecate picked as two pills, each with its tradition
-and its description, sent as two ids; a picked deity and a typed one sent in
-the order they were moved to; a deity only in use added and sent as its name;
-each ingredient with its formal name and tier in the order found; a picked
-ingredient saved as a link, its entry reading as it; and a substitute added
-or picked as typed saved as text, with no warning.
+taken from its own row, with no warning and no id. The list boxes: a box
+asking its hook's query about this coven once it is used, and not before, on
+the folk names, `useLookup` being one hook under each; the common names in
+use with their claimants, in one bucket, a pick adding an entry; the planets
+curated apart from those in use, with descriptions, the signs sharing their
+shape; a listed planet left out of the rows whatever its case, the typed row
+offered for other text and withheld for a repeat; a curated deity with its
+tradition, two of one name told apart; Greek and Roman Hecate picked as two
+pills, each with its tradition and its description, sent as two ids; a deity
+only in use added and sent as its name; each ingredient with its formal name,
+the two of one name told apart by whose entry each is; a picked ingredient
+saved as a link, its entry reading as it, its form and description its
+detail; and a substitute added or picked as typed saved as text, with no
+warning. The keyboard and a move are Combobox's and `list-field.test.tsx`'s.
 
 `tests/components/IngredientForm/duplicates.test.tsx` renders `NameField`
 with `useDuplicateWarning`, in a form whose save asks the warning's `check`
@@ -1012,21 +1009,20 @@ while a new one returns.
 `tests/components/IngredientForm/list-field.test.tsx` renders `ListField`
 alone, in a `FormProvider` on the form's resolver with a Name box beside it,
 its suggestions given rather than looked up, as `LookupListField` gives them.
-The behaviours independent of which list it is run over the four shapes the
-field takes — plain, ordered, folk-name and pick-only, where a pick-only
-list is given a source since a pick is its only way in: one empty box and no
+The behaviours independent of which list it is run over the two ways an
+entry gets in — a plain list and a pick-only one, given a source since a pick
+is its only way in: one empty box and no
 entries at first, Add offered only where text is added; an entry added inside
-the box ahead of the text, the box emptied and kept focused, and said; an
+the box ahead of the text, the box emptied and kept focused, and announced by name; an
 entry removed by its ×, the focus back in the box; the last taken on Backspace
 in the empty box and none with text in it; Clear taking every entry; and an
 error naming an entry marking that entry alone, cleared once it is removed.
 Once, on a typed box: Enter adding without saving the form; a blank box
 adding nothing; a save refused while the box holds text, until it is added
 or cleared, and the entries then sent. A repeat (MB.174): at a box with a
-source, Add and Enter on text repeating an entry but for case and spacing
-adding nothing, keeping the text, the message on the list's error element,
-read with the box and announced, the focus kept in the box, the listed value
-and the typed row left out of the list, and an edit clearing it so a
+source, Add on text repeating an entry but for case and spacing
+adding nothing, keeping the text, the box invalid and described, the refusal
+announced, the focus kept in the box, and an edit clearing it so a
 different entry adds; at a pick-only box, Enter on text not picked refused
 with the text kept, an edit clearing it and a pick adding, and the curated
 rows alone offered flat, less what is listed, with no typed row; a folk name
@@ -1037,12 +1033,13 @@ the link no repeat; a deity only in use left out once its name is listed,
 its typed row withheld; a listed substitute left out by its ingredient's id,
 its name added as typed text beside it, and a second typed one refused.
 Moving (MB.170), on the ordered shape: a handle only where the list is
-ordered; a move by keyboard said, the focus kept on the moved entry and the
-new order sent; a move by pointer sent the same; and an error kept on the
-entry it names as another moves past it. Per list, what differs: the entries
-sent in order, less any removed, a typed deity or substitute as `{ name }`;
-and the same deity listed twice, given, refused beside the repeat, named
-with its tradition. `tests/support/sortable.ts`'s real 60 ms waits stay:
+ordered; a move by keyboard announced, the focus kept on the moved entry and
+the new order sent; and an error kept on the entry it names as another moves
+past it. A move by pointer is Combobox's. Per shape, what differs: the
+entries sent in order, less any removed, as text or, a typed deity or
+substitute, as `{ name }`; the same deity listed twice, given, refused beside
+the repeat, named with its tradition; and a refused substitute link marked
+beside its pill, named by its formal name too (MB.140). `tests/support/sortable.ts`'s real 60 ms waits stay:
 fake timers would couple to the dnd sensor.
 
 **The references** are `tests/components/IngredientForm/references.test.tsx`
@@ -1051,7 +1048,7 @@ fake timers would couple to the dnd sensor.
 renders a list's box, and reads what the field sends from what the resolver
 hands the submit: the search asking about this coven only once the box is
 used; "Add a reference" first, then each source by its citation and tier, none
-already listed and no typed row; a pick by click and by keyboard adding a row
+already listed and no typed row; a pick adding a row
 beneath the box, announced, the box emptied and focused; each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
 × and Backspace removing a row; Enter with nothing picked submitting nothing;
@@ -1077,12 +1074,12 @@ sent, and a server field error on the element it uses; a refusal naming no
 field as an alert inside it; a save sending the coven and only the chosen
 kind's fields, a blank day as null, and handing back the saved source; Enter
 in a field saving the source, held back from the form around it; each field
-tidied by its own format as it is left; Save Reference held down, busy and
-saying so, with Cancel, while in flight; and Cancel sending nothing. The
+tidied by its own format as it is left; Save Reference held down and busy,
+with Cancel, while in flight; and Cancel sending nothing. The
 formats and checks themselves are tested where the schema is,
 `tests/modules/ingredients/validation/` — `reference-format.test.ts`, and
-`reference.test.ts` for a chapter with no book, a web page with no address or
-day, and a date with no year — with the server's storing of them in
+`reference.test.ts` for a chapter, an article or an entry with no container, a
+web page with no address or day, and a published date with no year — with the server's storing of them in
 `services/references.test.ts`.
 
 **On the compendium** is `tests/components/IngredientForm/compendium.test.tsx`
@@ -1091,7 +1088,7 @@ mutations answered by MSW. A new entry: the classification marked required and
 a save refused without one, then a create sent with `categoryIds: []` and
 `'open'`, Save & Add Another kept; Cancel, and where a near match links, taken
 from the page. The lookups: every one asked with a null `workspaceId`, the
-Form box offering no typed row; no Add on a planet, sign or deity; substitutes
+Form box offering no typed row; substitutes
 from `compendium`, less the entry itself. The Form box and a deity's box
 alone, on `compendiumResolver`: the Form box offering the curated forms alone,
 flat, with no typed row; a save held while a pick-only box holds text, and on

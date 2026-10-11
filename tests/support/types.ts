@@ -115,20 +115,13 @@ export interface GroupedValue {
   groupId: string;
 }
 
-/**
- * One kind of the grouped-value form, as the tests its kinds share drive it
- * (tests/support/grouped-value-form.tsx).
- */
+/** One kind of the grouped-value form, as its shared tests drive it (tests/support/grouped-value-form.tsx). */
 export interface GroupedValueFormSubject {
   kind: GroupedValueKind;
   /** What Save, Saving and Delete name: `Category`, `Form`. */
   noun: string;
   /** The group field's label, which also names its list: `Group`. */
   groupLabel: string;
-  /** The schema's refusal of a blank description. */
-  describeRefusal: string;
-  /** The schema's refusal of an unchosen group. */
-  groupRefusal: string;
   /** The two groups it is rendered with, in the picker's order. */
   groups: readonly [{ id: string; name: string }, { id: string; name: string }];
   /** The value an edit starts from, filed under the second group. */
@@ -147,26 +140,17 @@ export type GroupedValueFormCase = [
   run: (subject: GroupedValueFormSubject) => void | Promise<void>,
 ];
 
-/**
- * One kind of the grouped-value list, as tests/components/GroupedValueList
- * drives every kind through the same rows.
- */
+/** One kind of the grouped-value list, as tests/components/GroupedValueList drives it. */
 export interface GroupedValueListSubject {
   kind: GroupedValueKind;
   /** The page the list is on, which its links and its filter address: `/admin/categories`. */
   path: string;
   /** The filter form's name: `Filter categories`. */
   filterName: string;
-  /** The group column's heading and the filter's label: `Group`. */
+  /** The group filter's label: `Group`. */
   groupLabel: string;
   /** The address parameter the filter names a group by: `group`. */
   groupParam: string;
-  /** The group filter's first option: `All groups`. */
-  allGroups: string;
-  /** What an unfiltered empty list says: `No categories yet.`. */
-  noneYet: string;
-  /** What a filtered empty list says: `No category matches.`. */
-  noMatch: string;
   /** Two rows as the page hands them over. */
   entries: readonly [GroupedValueListEntry, GroupedValueListEntry];
   /** Two live groups, alphabetical, as the filter offers them. */

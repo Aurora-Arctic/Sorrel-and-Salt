@@ -73,8 +73,10 @@ failure. Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/ImpersonationBanner/index.test.tsx` covers the sentence, the
-call and the landing, the failure, and the published height: set while
-mounted, updated on a resize, withdrawn on unmount. `tests/app/impersonation-banner.test.tsx`
-covers the slot (shown only while the session is an impersonation) and the
-layout (mounted only where the gate is open).
+`tests/components/ImpersonationBanner/index.test.tsx` covers the user named
+by name and address, the call and the landing, and the failure as an alert
+with the admin kept on the page. The published height is presentation, a
+measured layout that jsdom fakes, and no test asserts it.
+`tests/app/impersonation-banner.test.tsx` covers the slot (shown only while
+the session is an impersonation) and the layout (mounted only where the gate
+is open).

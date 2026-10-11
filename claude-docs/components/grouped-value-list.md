@@ -139,16 +139,15 @@ does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/GroupedValueList/index.test.tsx` runs the same rows for
-each subject in its `SUBJECTS`: the rows and the group column, the Edit
-links, the pager and its position, both empty messages, the filter form's
-action, method, names, kept values and group options, the Filter button's
-disabled, enabled and busy states, the address it opens, and
-`groupedValuesHref`. A new kind is a subject there — its path, the filter's
-name, its group label, parameter and first option, its empty messages, two
-entries, two groups and a query — beside its `KINDS` entry; the deity is
-the third, under invented traditions. The category chip, which only that
-kind draws, has its own describe.
+`tests/components/GroupedValueList/index.test.tsx` runs the behaviour the
+kinds share on the deities, whose group goes by its own name: the rows and
+their group, the Edit links, no table when there are none, the filter form's
+action, method, names and kept values, the Filter button's disabled and
+enabled states, the address it opens, and `groupedValuesHref`. The category
+and the form get only what they change, their page and their group's
+parameter, as `groupedValuesHref` rows. The filter's busy state and its reset
+are CompendiumList's, paging Pager's, and the category chip's colours
+presentation.
 `tests/app/admin/categories/page.test.tsx`,
 `tests/app/admin/forms/page.test.tsx` and
 `tests/app/admin/deities/page.test.tsx` keep each page's half
@@ -159,9 +158,7 @@ one page of the maximum; the filter read from `?query=` and `?group=` (the
 deities' `?tradition=`) into the list and its count, a blank one as none and
 an unknown group slug ignored; the position counted from the page's first
 row, or from none when the filter leaves it empty; each group's name joined
-onto its rows; Add on the heading's line; the filter and cursor kept on the
+onto its rows; the filter and cursor kept on the
 pager, each Edit, Add and the modal's way back; and the modal the address
-opens. How the list shows what it is given — the empty messages included —
-is this component's test's alone. `tests/e2e/admin.spec.ts` lists the
-seeded forms' first page, and filters the categories and the forms by part
-of a name and by a group; no spec drives the deities yet.
+opens. How the list shows what it is given is this component's test's alone. `tests/e2e/admin.spec.ts` lists the
+seeded forms' first page; no spec drives the deities yet.

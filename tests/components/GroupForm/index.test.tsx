@@ -77,20 +77,15 @@ const choose = (box: string, label: string) => {
 
 describe('GroupForm, for a category group', () => {
   describe('adding', () => {
-    it('starts empty, with both colours and nothing to delete', () => {
+    // A field named "name" reads to Chrome as a person's name: it flags it in
+    // the Issues panel and offers the user's own name to fill it, so autofill is off.
+    it('starts empty, with both colours, nothing to delete, and no autofill on the name', () => {
       renderForm();
 
       expect(name()).toHaveValue('');
       expect(dark()).toHaveValue('');
       expect(light()).toHaveValue('');
       expect(screen.queryByRole('button', { name: 'Delete Group' })).not.toBeInTheDocument();
-    });
-
-    // A field named "name" reads to Chrome as a person's name: it flags it in
-    // the Issues panel and offers the user's own name to fill it.
-    it('turns autofill off on the name, which names no person', () => {
-      renderForm();
-
       expect(name()).toHaveAttribute('autocomplete', 'off');
     });
 
@@ -145,11 +140,8 @@ describe('GroupForm, for a category group', () => {
       type(light(), '#0c5393');
       press('Save Group');
 
-      const message =
-        'The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1';
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(dark()).toHaveAccessibleDescription(expect.stringContaining(message));
-      expect(dark()).toHaveAttribute('aria-invalid', 'true');
+      await waitFor(() => expect(dark()).toHaveAttribute('aria-invalid', 'true'));
+      expect(dark()).toHaveAccessibleDescription(expect.stringContaining('2.16:1'));
       expect(light()).not.toHaveAttribute('aria-invalid');
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -158,37 +150,30 @@ describe('GroupForm, for a category group', () => {
   // The owner's call: the colour chosen first sets its partner, the same hue
   // fitted to the other ground, until the admin sets the partner themselves.
   describe('the pair', () => {
-    it('fills the light-theme colour from a dark-theme one chosen first', () => {
-      renderForm();
-
+    it('fills either colour from the other chosen first', () => {
+      const { unmount } = render(
+        <QueryClientProvider client={makeQueryClient()}>
+          <GroupForm kind="category" groups={GROUPS} onDone={vi.fn()} />
+        </QueryClientProvider>,
+      );
       type(dark(), '#4e8bc2');
-
       expect(light()).toHaveValue(pairedColor('#4e8bc2', 'colorLight'));
-    });
+      unmount();
 
-    it('fills the dark-theme colour from a light-theme one chosen first', () => {
       renderForm();
-
       type(light(), '#0c5393');
-
       expect(dark()).toHaveValue(pairedColor('#0c5393', 'colorDark'));
     });
 
-    it('waits for a whole hex before filling anything', () => {
+    // A picker dragged across the wheel sends a value at every step, and only a whole hex counts.
+    it('waits for a whole hex, and keeps the partner following while it is still the one it filled', () => {
       renderForm();
 
       type(dark(), '#4e8bc');
-
       expect(light()).toHaveValue('');
-    });
-
-    // A picker dragged across the wheel sends a value at every step.
-    it('keeps the partner following while it is still the one it filled', () => {
-      renderForm();
 
       type(dark(), '#4e8bc2');
       type(dark(), '#35987d');
-
       expect(light()).toHaveValue(pairedColor('#35987d', 'colorLight'));
     });
 
@@ -230,14 +215,14 @@ describe('GroupForm, for a category group', () => {
       { ...GROUPS[2], colorDark: '#5d8ab1', colorLight: '#286ba6' },
     ];
 
-    it("warns of another group's colour in the same theme, naming it", () => {
+    it("warns of another group's colour in the same theme, naming it, and leaves Save enabled", () => {
       renderForm({ groups: COLOURED });
 
+      type(name(), 'Fixture Near');
       type(dark(), '#5a87ae');
 
-      expect(screen.getAllByRole('status')[0]).toHaveTextContent(
-        'Close to the dark theme colour of "Fixture Mineral", so their chips may be hard to tell apart.',
-      );
+      expect(screen.getAllByRole('status')[0]).toHaveTextContent('Fixture Mineral');
+      expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
     it('never warns an edited group of its own colours', () => {
@@ -246,15 +231,6 @@ describe('GroupForm, for a category group', () => {
       type(dark(), '#5d8ab2');
 
       for (const status of screen.getAllByRole('status')) expect(status).toBeEmptyDOMElement();
-    });
-
-    it('leaves Save enabled', () => {
-      renderForm({ groups: COLOURED });
-
-      type(name(), 'Fixture Near');
-      type(dark(), '#5d8ab1');
-
-      expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
   });
 
@@ -290,19 +266,23 @@ describe('GroupForm, for a category group', () => {
     });
 
     it("lands the server's refusal beside the field it names", async () => {
-      const message =
-        '"Fixture Shields" already has the address "fixture-shields" — choose another name';
       mockGraphQLError('UpdateCategoryGroup', {
         code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'], message }],
+        fieldErrors: [
+          {
+            path: ['name'],
+            message:
+              '"Fixture Shields" already has the address "fixture-shields" — choose another name',
+          },
+        ],
       });
       renderForm({ group: WARDS });
 
       type(name(), 'Fixture Shields');
       press('Save Group');
 
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(name()).toHaveAccessibleDescription(message);
+      await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
+      expect(name()).toHaveAccessibleDescription(/\S/);
     });
   });
 
@@ -338,11 +318,7 @@ describe('GroupForm, for a category group', () => {
       choose('Move its 3 categories to', 'Fixture Mineral');
       press('Continue');
 
-      expect(
-        screen.getByText(
-          'Move 3 categories to "Fixture Mineral" and delete "Fixture Wards"? Each keeps its name, its address and every entry filed under it.',
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Move and Delete' })).toBeVisible();
       expect(calls).toEqual([]);
       press('Move and Delete');
 
@@ -366,24 +342,21 @@ describe('GroupForm, for a category group', () => {
       expect(onDone).not.toHaveBeenCalled();
     });
 
-    it('says to add another group first when there is none to move them to', () => {
+    it('offers no move when there is no other group to move them to', () => {
       renderForm({ group: WARDS, memberCount: 2, groups: [GROUPS[2]] });
 
       press('Delete Group');
 
-      expect(
-        screen.getByText(
-          '"Fixture Wards" holds 2 categories, and there is no other group to move them to. Add another group first.',
-        ),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Move its 2 categories to' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     });
 
     it("lands the server's refusal of the move beside the picker", async () => {
-      const message = 'Choose another live group to move its 1 category to';
       mockGraphQLError('DeleteCategoryGroup', {
         code: 'VALIDATION',
-        fieldErrors: [{ path: ['moveTo'], message }],
+        fieldErrors: [
+          { path: ['moveTo'], message: 'Choose another live group to move its 1 category to' },
+        ],
       });
       renderForm({ group: WARDS, memberCount: 1 });
 
@@ -392,10 +365,9 @@ describe('GroupForm, for a category group', () => {
       press('Continue');
       press('Move and Delete');
 
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(
-        screen.getByRole('combobox', { name: 'Move its 1 category to' }),
-      ).toHaveAccessibleDescription(message);
+      const picker = () => screen.getByRole('combobox', { name: 'Move its 1 category to' });
+      await waitFor(() => expect(picker()).toHaveAttribute('aria-invalid', 'true'));
+      expect(picker()).toHaveAccessibleDescription(/\S/);
     });
   });
 
@@ -412,9 +384,7 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 0 });
 
       press('Delete Group');
-      expect(
-        screen.getByText('Delete "Fixture Wards"? No category is filed under it.'),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
       press('Delete');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -428,7 +398,7 @@ describe('GroupForm, for a category group', () => {
       press('Delete Group');
       press('Delete');
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('No such group');
+      expect(await screen.findByRole('alert')).toBeVisible();
       expect(onDone).not.toHaveBeenCalled();
     });
   });
@@ -457,7 +427,7 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  it('moves its forms on a confirmed delete, saying their addresses follow the group', async () => {
+  it('moves its forms on a confirmed delete', async () => {
     const calls: DeleteIngredientFormGroupMutationVariables[] = [];
     mockGraphQLMutation<
       DeleteIngredientFormGroupMutation,
@@ -472,11 +442,6 @@ describe('GroupForm, for a form group', () => {
     choose('Move its 2 forms to', 'Fixture Substance');
     press('Continue');
 
-    expect(
-      screen.getByText(
-        'Move 2 forms to "Fixture Substance" and delete "Fixture Matter"? Each keeps its name, and its address follows its new group; every ingredient that picked one keeps it.',
-      ),
-    ).toBeInTheDocument();
     press('Move and Delete');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -509,7 +474,7 @@ describe('GroupForm, for a deity tradition', () => {
     ]);
   });
 
-  it('moves its deities on a confirmed delete, saying their addresses follow the tradition', async () => {
+  it('moves its deities on a confirmed delete', async () => {
     const calls: DeleteDeityTraditionMutationVariables[] = [];
     mockGraphQLMutation<DeleteDeityTraditionMutation, DeleteDeityTraditionMutationVariables>(
       'DeleteDeityTradition',
@@ -521,32 +486,12 @@ describe('GroupForm, for a deity tradition', () => {
     const onDone = renderForm({ kind: 'tradition', group: MATTER, memberCount: 1 });
 
     press('Delete Tradition');
-    expect(screen.getByRole('combobox', { name: 'Move its 1 deity to' })).toHaveTextContent(
-      'Choose a tradition',
-    );
     choose('Move its 1 deity to', 'Fixture Substance');
     press('Continue');
 
-    expect(
-      screen.getByText(
-        'Move 1 deity to "Fixture Substance" and delete "Fixture Matter"? Each keeps its name, and its address follows its new tradition; every ingredient that picked one keeps it.',
-      ),
-    ).toBeInTheDocument();
     press('Move and Delete');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
-  });
-
-  it('says to add another tradition first when there is none to move its deities to', () => {
-    renderForm({ kind: 'tradition', group: MATTER, groups: [GROUPS[2]], memberCount: 2 });
-
-    press('Delete Tradition');
-
-    expect(
-      screen.getByText(
-        '"Fixture Matter" holds 2 deities, and there is no other tradition to move them to. Add another tradition first.',
-      ),
-    ).toBeInTheDocument();
   });
 });

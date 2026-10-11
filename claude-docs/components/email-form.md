@@ -143,15 +143,18 @@ the network only on submit.
 `tests/components/EmailForm/index.test.tsx` answers `SetEmail` through MSW —
 `mockGraphQLMutation` for the row and `mockGraphQLError` for a refusal, so the
 error body is the route's own mapping rather than a hand-written one. Covers:
-the prefilled and empty field; the confirmed view and the verified return
-visit; the embedded use, with no heading and no confirmed view; the status lines; the submit disabled for
-an unchanged verified address (case and whitespace included) and enabled once
-edited, or when unverified; the typed value sent as typed and named, normalised,
-in the status, with `next` beside it, or none; a `VALIDATION` field error beside the
-input with `aria-invalid` and `aria-describedby`; a `FORBIDDEN` message in the alert; a send that never reached the server as the generic sentence; the last outcome
-cleared on resubmit; the cooldown, a submit refused inside it and the button
-back once it passes, and one started from `waitSeconds`; an empty field sent
-to the server with no native check in the way; a passed-in `error` as an
-alert on mount; and "Continue"
-only when verified, pointing at `next`, or at `landing` without one. Role and label queries only. Runs in
-the `dom` (jsdom) Vitest project — `npm run test:coverage`.
+the prefilled and empty field; the confirmed view, with Continue to `next` or
+to `landing` without one, and the verified return visit; the embedded use,
+with no heading and no confirmed view; the status lines, each the one
+rendering of the address's state; the submit disabled for an unchanged
+verified address (case included) and enabled once edited, or when
+unverified; the typed value sent as typed and the status naming it,
+normalised, with `next` beside it, or none; a `VALIDATION` field error
+marking the input invalid and describing it; a `FORBIDDEN` refusal and a
+send that never reached the server, each as an alert; the last outcome
+cleared on resubmit; the cooldown on the button held from before the send, a
+submit refused inside it and the button back once it passes, and one started
+from `waitSeconds`; an empty field sent to the server with no native check in
+the way; a passed-in `error` as an alert on mount, and none without one; and
+no Continue while unverified. Role and label queries only. Runs in the `dom`
+(jsdom) Vitest project — `npm run test:coverage`.

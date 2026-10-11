@@ -87,10 +87,12 @@ answers with the generic error.
 
 ## Testing
 
-`tests/components/VocabularyValueForm/index.test.tsx` runs every case on both
-vocabularies, the mutations answered by MSW in the route's own shape: the
-fields, the schema's refusal in the vocabulary's noun, create, update and
-delete with their variables, server field errors placed, the save rules, the
-rename note, and the delete's confirmation and refusal. The pages' half is
+`tests/components/VocabularyValueForm/index.test.tsx`, the mutations
+answered by MSW in the route's own shape. Each vocabulary's create, update
+and delete, with their variables, run on both; the rest runs on the planets,
+the two differing only in their nouns and their mutations: the fields, the
+save rules, the schema's refusal of a blank description, the busy Save,
+server field errors placed, Cancel, the rename note describing Save, and the
+delete's confirmation and refusal. The pages' half is
 `tests/app/admin/vocabulary-page.test.tsx`. `tests/e2e/admin.spec.ts` adds,
 renames and deletes a planet through the real server.

@@ -84,10 +84,10 @@ screen scrolls nothing sideways.
 `tests/components/CategoryPicker/index.test.tsx`: the group and its box;
 every category under its group, both alphabetical, with a novel group; the
 rows narrowed by the text and no typed row; a pick added after the others,
-the box emptied, said, and the pick offered no more; the picks reported in
-order; each row and each entry in its group's colour pair, its tooltip naming the group
-then the description; an x, the
-focus kept in the box; Backspace; Clear, shown only with picks; Enter adding
-the one category named whole and nothing for part of a name; the box and the
-entries an error names, each described; the status read with the box; and a
-pick not yet named held while the read is on, then drawn by its id.
+the box emptied, announced, and the pick offered no more; the picks reported
+in order as one is added, removed, taken by Backspace or cleared; each entry described by its group and description, its tooltip
+naming the group; Enter adding the one category named whole and nothing for
+part of a name; the box and the entries an error names, each described; the
+status read with the box; and a pick not yet named held while the read is
+on, then drawn by its id. The ×, Backspace and Clear themselves are
+Combobox's, the colours presentation.

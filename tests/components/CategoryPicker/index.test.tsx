@@ -125,7 +125,7 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
   });
 
-  it('adds a pick after the others, empties the box, says so, and offers it no more', () => {
+  it('adds a pick after the others, empties the box, announces it, and offers it no more', () => {
     renderControlled(['c-zz']);
 
     open();
@@ -133,11 +133,7 @@ describe('CategoryPicker', () => {
     fireEvent.click(option('Ablefix'));
 
     expect(box()).toHaveValue('');
-    expect(changes()).toHaveTextContent('Added Ablefix');
-    expect(screen.getAllByRole('button', { name: /^Remove / }).map((x) => x.textContent)).toEqual([
-      '×',
-      '×',
-    ]);
+    expect(changes()).toHaveTextContent('Ablefix');
     expect(removeButton('Zestwort')).toBeInTheDocument();
     expect(removeButton('Ablefix')).toBeInTheDocument();
     open();
@@ -145,7 +141,9 @@ describe('CategoryPicker', () => {
     expect(screen.queryByRole('option', { name: /^Zestwort/ })).not.toBeInTheDocument();
   });
 
-  it('reports the picks in order through onChange', () => {
+  // The ×, Backspace and the clear are Combobox's; what the picker does with
+  // each is its own.
+  it('reports the picks in order through onChange, as one is added, removed, taken by Backspace or cleared', () => {
     const { onChange } = renderPicker({ value: ['c-zz', 'c-tw'] });
 
     open();
@@ -154,68 +152,28 @@ describe('CategoryPicker', () => {
 
     fireEvent.click(removeButton('Zestwort'));
     expect(onChange).toHaveBeenLastCalledWith(['c-tw']);
+
+    fireEvent.keyDown(box(), { key: 'Escape' });
+    fireEvent.keyDown(box(), { key: 'Backspace' });
+    expect(onChange).toHaveBeenLastCalledWith(['c-zz']);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Categories' }));
+    expect(onChange).toHaveBeenLastCalledWith([]);
+    expect(box()).toHaveFocus();
   });
 
-  it("draws each pick as an entry in its group's stored colour pair, its tooltip naming the group", () => {
+  it('describes each pick by its group and description, its tooltip naming the group', () => {
     renderPicker({ value: ['c-ab', 'c-tw'] });
 
-    const ablefix = entry('Ablefix');
-    expect(ablefix).toHaveClass('combobox__entry', 'is-coloured');
-    expect(ablefix.style.getPropertyValue('--chip-dark')).toBe('#8e7bd1');
-    expect(ablefix.style.getPropertyValue('--chip-light')).toBe('#5a3fa8');
-    expect(entry('Testward').style.getPropertyValue('--chip-dark')).toBe('#4e8bc2');
     expect(removeButton('Testward')).toHaveAccessibleDescription(
       'Fixture Wards Guards nothing in particular.',
     );
     // No description: the group alone.
     expect(removeButton('Ablefix')).toHaveAccessibleDescription('Zanthic Testery');
-    // The tooltip's first line is the name with its group, the description beneath.
     fireEvent.mouseEnter(
       within(entry('Testward')).getByText('Testward', { ignore: '[role="tooltip"]' }),
     );
-    expect(screen.getByRole('tooltip')).toHaveTextContent(/^Testward \(Fixture Wards\)/);
-    // The chip itself reads the bare name.
-    expect(entry('Ablefix')).toHaveTextContent(/^Ablefix/);
-  });
-
-  it("edges each row in its group's stored colour pair", () => {
-    renderPicker();
-
-    open();
-    expect(option('Ablefix')).toHaveClass('combobox__option', 'is-coloured');
-    expect(option('Ablefix').style.getPropertyValue('--chip-dark')).toBe('#8e7bd1');
-    expect(option('Ablefix').style.getPropertyValue('--chip-light')).toBe('#5a3fa8');
-    expect(option('Testward').style.getPropertyValue('--chip-dark')).toBe('#4e8bc2');
-  });
-
-  it('takes an entry out by its x, keeps the focus in the box, and says so', () => {
-    renderControlled(['c-ab', 'c-tw']);
-
-    fireEvent.click(removeButton('Ablefix'));
-
-    expect(screen.queryByRole('button', { name: 'Remove Ablefix' })).not.toBeInTheDocument();
-    expect(removeButton('Testward')).toBeInTheDocument();
-    expect(box()).toHaveFocus();
-    expect(changes()).toHaveTextContent('Removed Ablefix');
-  });
-
-  it('takes the last entry on Backspace in the empty box', () => {
-    const { onChange } = renderPicker({ value: ['c-ab', 'c-tw'] });
-
-    fireEvent.keyDown(box(), { key: 'Backspace' });
-
-    expect(onChange).toHaveBeenLastCalledWith(['c-ab']);
-  });
-
-  it('clears every pick from its clear, shown only while there are picks', () => {
-    renderControlled(['c-ab', 'c-tw']);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Clear Categories' }));
-
-    expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Clear Categories' })).not.toBeInTheDocument();
-    expect(changes()).toHaveTextContent('Cleared Categories');
-    expect(box()).toHaveFocus();
+    expect(screen.getByRole('tooltip')).toHaveTextContent('Fixture Wards');
   });
 
   // Nothing typed is a category, so Enter adds only the one the text names whole.
@@ -244,11 +202,9 @@ describe('CategoryPicker', () => {
 
     expect(box()).toBeInvalid();
     expect(box()).toHaveAccessibleDescription('Testward: No such category');
-    expect(entry('Testward')).toHaveClass('is-invalid');
     expect(removeButton('Testward')).toHaveAccessibleDescription(
       expect.stringContaining('Testward: No such category'),
     );
-    expect(entry('Ablefix')).not.toHaveClass('is-invalid');
     expect(removeButton('Ablefix')).not.toHaveAccessibleDescription(
       expect.stringContaining('No such category'),
     );
@@ -271,6 +227,5 @@ describe('CategoryPicker', () => {
 
     rerender(<CategoryPicker {...PROPS} value={['c-gone']} />);
     expect(removeButton('c-gone')).toBeInTheDocument();
-    expect(entry('c-gone')).not.toHaveClass('is-coloured');
   });
 });

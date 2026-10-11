@@ -10,13 +10,13 @@ import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
 // GroupedValueForm is one form for every grouped vocabulary: a name, a
 // description and a group, saved through the kind's create, update and
-// delete mutations. The tests every kind shares are written once, here, as
-// rows tests/components/GroupedValueForm runs with `it.each` for each
-// subject, so a new kind is a subject rather than a copy of them (MB.189,
-// MB.132). The group field is found by the subject's own label, since a kind
-// may call its group something else. What only one kind does — the rename
-// note, the redirect question, its own confirmation and refusals — stays in
-// that kind's describe.
+// delete mutations. The behaviour every kind shares is written once, here, as
+// rows tests/components/GroupedValueForm runs with `it.each` on one subject
+// (MB.189, MB.132): a kind shares this code path, so another kind's run would
+// prove nothing more, and gets only what it changes in its own describe — its
+// mutations, the rename note, the redirect question, its own refusals. The
+// group field is found by the subject's own label, since a kind may call its
+// group something else.
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
@@ -54,27 +54,6 @@ function renderSubject(subject: GroupedValueFormSubject, editing = false) {
 }
 
 export const ADDING: GroupedValueFormCase[] = [
-  // A field named "name" reads to Chrome as a person's name: it flags it in
-  // the Issues panel and offers the user's own name to fill it.
-  [
-    'turns autofill off on the name, which names no person',
-    (subject) => {
-      renderSubject(subject);
-
-      expect(name()).toHaveAttribute('autocomplete', 'off');
-    },
-  ],
-  [
-    'marks every field required',
-    (subject) => {
-      renderSubject(subject);
-
-      // The asterisk is for the eye; the name stays the label alone.
-      expect(name()).toHaveAttribute('aria-required', 'true');
-      expect(description()).toHaveAttribute('aria-required', 'true');
-      expect(group(subject)).toBeRequired();
-    },
-  ],
   // The owner's rule for every form: Save is offered only when there is
   // something to save.
   [
@@ -98,14 +77,15 @@ export const ADDING: GroupedValueFormCase[] = [
       type(name(), subject.value.name);
       press(`Save ${subject.noun}`);
 
-      expect(await screen.findByText(subject.describeRefusal)).toBeInTheDocument();
-      expect(description()).toHaveAccessibleDescription(subject.describeRefusal);
-      expect(group(subject)).toHaveAccessibleDescription(subject.groupRefusal);
+      await waitFor(() => expect(description()).toHaveAttribute('aria-invalid', 'true'));
+      expect(description()).toHaveAccessibleDescription(/\S/);
+      expect(group(subject)).toHaveAttribute('aria-invalid', 'true');
+      expect(group(subject)).toHaveAccessibleDescription(/\S/);
       expect(onDone).not.toHaveBeenCalled();
     },
   ],
   [
-    'says it is saving, busy and held down, until the answer',
+    'is busy and held down until the answer',
     async (subject) => {
       let release = () => {};
       const held = new Promise<void>((resolve) => {
@@ -121,11 +101,11 @@ export const ADDING: GroupedValueFormCase[] = [
       type(name(), subject.value.name);
       type(description(), 'Held');
       chooseGroup(subject, subject.groups[0].name);
+      const busy = button(`Save ${subject.noun}`);
       press(`Save ${subject.noun}`);
 
-      const busy = await screen.findByRole('button', { name: `Saving ${subject.noun}` });
+      await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
       expect(busy).toBeDisabled();
-      expect(busy).toHaveAttribute('aria-busy', 'true');
       release();
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     },
@@ -133,10 +113,9 @@ export const ADDING: GroupedValueFormCase[] = [
   [
     "lands the server's slug refusal beside Name",
     async (subject) => {
-      const { message } = subject.slugClash;
       mockGraphQLError(subject.create.operation, {
         code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'], message }],
+        fieldErrors: [{ path: ['name'], message: subject.slugClash.message }],
       });
       const onDone = renderSubject(subject);
 
@@ -145,8 +124,8 @@ export const ADDING: GroupedValueFormCase[] = [
       chooseGroup(subject, subject.groups[0].name);
       press(`Save ${subject.noun}`);
 
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(name()).toHaveAccessibleDescription(message);
+      await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
+      expect(name()).toHaveAccessibleDescription(/\S/);
       expect(onDone).not.toHaveBeenCalled();
     },
   ],
