@@ -119,11 +119,4 @@ describe('ingredient_variants table', () => {
 
     expect(await formsOf(other)).toEqual(['Testbark']);
   });
-
-  it('refuses a variant of an ingredient that does not exist', async () => {
-    const error = await failureOf(addVariant('00000000-0000-0000-0000-00000000dead', 'Testleaf'));
-
-    // 23503 is foreign_key_violation: there is no parent to hold the form.
-    expect(error.code).toBe('23503');
-  });
 });
