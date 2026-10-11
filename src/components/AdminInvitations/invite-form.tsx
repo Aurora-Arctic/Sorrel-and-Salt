@@ -9,7 +9,6 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { INVITATIONS_HREF } from './href';
 import type { InviteFieldsProps, InviteFormProps } from './types';
 
 // The modal Invite Admin opens, by the tab's address, `?invite`, as a value
@@ -138,8 +137,8 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   );
 };
 
-const InviteForm = ({ onSent }: InviteFormProps): ReactElement => (
-  <RouteModal title="Invite Admin" closeHref={INVITATIONS_HREF}>
+const InviteForm = ({ onSent, closeHref }: InviteFormProps): ReactElement => (
+  <RouteModal title="Invite Admin" closeHref={closeHref}>
     {(close) => <InviteFields onSent={onSent} close={close} />}
   </RouteModal>
 );

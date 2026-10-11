@@ -1,3 +1,5 @@
+import type { Route } from 'next';
+
 /** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
 export interface AdminInvitationEntry {
   id: string;
@@ -7,9 +9,19 @@ export interface AdminInvitationEntry {
   expiresAt: Date;
 }
 
+/** What the tab is narrowed by, as its address carries it (MB.115). */
+export interface AdminInvitationsFilter {
+  /** A fragment of the invited address, trimmed; blank is no filter. */
+  email: string;
+  /** Only the invitations lapsing within the next 24 hours: Expires in 24 Hrs. */
+  expiringSoon: boolean;
+}
+
 export interface AdminInvitationsProps {
-  /** The pending invitations, newest first. */
+  /** The pending invitations the filter leaves, newest first. */
   invitations: AdminInvitationEntry[];
+  /** The filter the page shows; none when left out. */
+  filter?: AdminInvitationsFilter;
   /**
    * Why this admin may neither invite nor withdraw, while admin changes are
    * paused and they are not the primary admin (MB.63); absent when they may.
@@ -22,15 +34,24 @@ export interface AdminInvitationsProps {
 export interface InviteAdminProps {
   /** Why Invite Admin is locked, while admin changes are paused; absent when it is not. */
   locked?: string;
+  /** The filter the tab shows, which the form opens over; none when left out. */
+  filter?: AdminInvitationsFilter;
+}
+
+/** The filter's fields, starting from the filter the page shows. */
+export interface AdminInvitationsFilterProps {
+  filter: AdminInvitationsFilter;
 }
 
 export interface InviteFormProps {
+  /** The tab under the filter it shows, which the form closes back to. */
+  closeHref: Route;
   /** Told the address an invitation was sent to, before the form closes. */
   onSent: (address: string) => void;
 }
 
 /** The invite form inside its modal, given the modal's own close. */
-export interface InviteFieldsProps extends InviteFormProps {
+export interface InviteFieldsProps extends Pick<InviteFormProps, 'onSent'> {
   /** The modal's close, unguarded: a sent invitation goes at once. */
   close: () => void;
 }

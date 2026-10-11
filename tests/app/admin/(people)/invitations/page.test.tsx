@@ -34,7 +34,7 @@ const { default: InvitationsAction } =
 // The tab's action and its content, as the route group's layout puts them on one page.
 async function renderPage(params: Record<string, string> = {}) {
   const [action, page] = await Promise.all([
-    InvitationsAction(),
+    InvitationsAction({ searchParams: Promise.resolve(params) }),
     AdminInvitationsPage({ searchParams: Promise.resolve(params) }),
   ]);
   render(
@@ -76,13 +76,32 @@ describe('the /admin/invitations page', () => {
   it('lists the pending invitations with what an admin acts on, and never the hash', async () => {
     await renderPage();
 
-    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN);
+    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN, {
+      email: '',
+      expiringSoon: false,
+    });
     const section = screen.getByRole('region', { name: 'Admin Invitations' });
     expect(within(section).getByText('invited@users.test')).toBeInTheDocument();
     expect(within(section).getByText('Curates the resins')).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent(PENDING.tokenHash);
     expect(screen.getByRole('link', { name: 'Invite Admin' })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('reads the filter off the address, a native submit’s blank flag as the bare one, and keeps it in Invite Admin', async () => {
+    await renderPage({ email: ' fern ', expiring: '' });
+
+    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN, {
+      email: 'fern',
+      expiringSoon: true,
+    });
+    const search = screen.getByRole('form', { name: 'Filter Invitations' });
+    expect(within(search).getByRole('searchbox', { name: 'Email' })).toHaveValue('fern');
+    expect(within(search).getByRole('switch', { name: 'Expires in 24 Hrs' })).toBeChecked();
+    expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
+      'href',
+      '/admin/invitations?email=fern&expiring&invite',
+    );
   });
 
   it('opens the invite form on ?invite', async () => {
