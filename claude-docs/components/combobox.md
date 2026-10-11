@@ -337,7 +337,7 @@ a second way through the chips would be a second tab model for one look.
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, detail?, colors?, onRemove })`, a named export beside the
+`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, onRemove })`, a named export beside the
 default, is the chip a list passes in `entries`, inside a
 `ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
 so that every list draws the same one:
@@ -392,6 +392,46 @@ so that every list draws the same one:
   picked deity's pill reads its tradition — and as the x's description
   before the detail, the brackets left out. With one the tooltip opens
   whether the text is cut off or not, as it does with a detail.
+- **A note says what kind of entry it is, to a screen reader alone.**
+  `note`, "name only" on a substitute typed rather than linked (MB.115), is
+  read in brackets after the text, visually hidden: the eye tells the kind by
+  the link mark a linked entry has and this one lacks.
+- **A summary turns the text into a button** (MB.115); see "A linked
+  entry's summary" below.
+
+## A linked entry's summary
+
+`summary`, `{ label, content }`, is what a linked entry opens: IngredientForm
+gives one to each substitute that links an ingredient
+([`ingredient-form.md`](ingredient-form.md), "A linked substitute's
+summary"). The chip's text becomes a button, `.combobox__entry-open`, led by
+a link mark (`LinkIcon`) in the accent and underlined in the body ink, both
+in the accent's hover when pointed at; it is named by the text, described as
+the × is, and says it opens a dialog and whether it is open
+(`aria-haspopup="dialog"`, `aria-expanded`, `aria-controls` while open).
+A press opens a non-modal `<dialog open>` named `label`, after the button in
+the chip, so the Tab order runs from the text into the panel and on to the ×.
+`content()` is called only while it is open, so what it holds may ask the
+server then. The behaviour is `useEntrySummary` (`summary.ts`):
+
+- **It shuts four ways**: a second press of the button; Escape, from the
+  button or anywhere in the panel, which hands the focus back to the button;
+  a press anywhere else, on the capture phase, the focus left where the press
+  put it; and the focus moving out of both the button and the panel, by Tab
+  or otherwise. A blur to nowhere, a press on the panel's own text, keeps it.
+- **Escape is cancelled** (`preventDefault`). A modal `<dialog>` turns an
+  Escape nobody cancelled into its own `cancel` event, and the form's modal
+  answers that by asking to close with unsaved changes; cancelled, the key
+  shuts the panel alone, and the next Escape reaches the modal. Checked in
+  Chromium inside a modal `<dialog>`.
+- **It is placed by `useListPosition`**, as an open list is, with
+  `matchWidth: false`: beneath the chip, flipped above when there is more
+  room there, kept off the screen's edge, fixed rather than absolute so the
+  control and the modal clip nothing, and as wide as its words up to a tip's
+  measure, scrolled within the room it has.
+- **The tooltip stays shut while it is open**, since the panel says more,
+  and a press of the button closes an open tooltip.
+- **A sortable entry takes none**: its text is already its handle.
 
 ## A sortable list
 
@@ -528,7 +568,11 @@ from the box's own states, `:has(.combobox__input:focus-visible)` and
 a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
-hovers in the warning's wash and ink. A box stands at `$control-height`, level with a text field and a button
+hovers in the warning's wash and ink. A linked entry's text is a button
+led by a link mark in the accent, underlined in the body ink, both in the
+accent's hover when pointed at; the accent clears only the 3:1 a mark needs
+on the chip's wash, so the text keeps the body ink (`tests/scss/tokens.test.ts`).
+Its summary is the list's floating surface and edge. A box stands at `$control-height`, level with a text field and a button
 (MB.154): its text line, `$text-height`, is the control's height less its
 1px edge and its `space(1)` padding, and a typed box, a select's value and
 the qualifier's hidden copy all take it. The chip list carries `space(1)`
@@ -604,7 +648,11 @@ in the text, its detail's tooltip on hover
 and on the box's focus, closed by Escape and blur, and closed by a
 printable key and by the list opening, the detail still the box's
 description; the entry's ×, its
-tooltip on a cut-off text and on a detail, and its error read by its ×; the
+tooltip on a cut-off text and on a detail, and its error read by its ×;
+a linked entry's summary (MB.115), opened by its text alone, a typed
+entry having nothing to press, and shut by a second press, by Escape from
+inside it, cancelled and the focus handed back, by a press outside it and
+by the focus leaving it; the
 select-only box, its name, placeholder, list and choices, "None" among them,
 chosen by the keyboard, the arrows opening and moving, Enter choosing and
 Escape closing on what it had; the multi-select box, its name and

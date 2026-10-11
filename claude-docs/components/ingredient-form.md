@@ -9,23 +9,24 @@ compendium mutations, and puts an error from either side beside the field it
 names. It is built standalone: the add and edit modals and the admin
 compendium page wrap it rather than containing their own form.
 
-| File                   | What it holds                                                                                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.tsx`            | The form: the mutations, the fields in order in their titled sections, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                      |
-| `fields.tsx`           | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                      |
-| `suggestions.tsx`      | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                           |
-| `duplicates.tsx`       | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                           |
-| `references.tsx`       | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                       |
-| `categories.tsx`       | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                |
-| `reference-panel.tsx`  | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                               |
-| `variants.tsx`         | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                     |
-| `copy.tsx`             | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                       |
-| `section.tsx`          | `Section`, one titled section of the form, the ingredient's at `h3` and a variant's at `h4`                                                                                                            |
-| `icons.tsx`            | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                               |
-| `substitute-forms.tsx` | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                      |
-| `values.ts`            | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
-| `options.ts`           | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                       |
-| `types.ts`             | The props, the form's own values, and the input it sends                                                                                                                                               |
+| File                     | What it holds                                                                                                                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.tsx`              | The form: the mutations, the fields in order in their titled sections, the root alert, where a server error goes, focus after a submit, and an edit's delete and MB.82's question                      |
+| `fields.tsx`             | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                      |
+| `suggestions.tsx`        | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                           |
+| `duplicates.tsx`         | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                           |
+| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                       |
+| `categories.tsx`         | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                |
+| `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                               |
+| `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, and `variantSummary`                                     |
+| `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                       |
+| `section.tsx`            | `Section`, one titled section of the form, the ingredient's at `h3` and a variant's at `h4`                                                                                                            |
+| `icons.tsx`              | A reference row's two icons, `EditIcon` and `RemoveIcon`                                                                                                                                               |
+| `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                      |
+| `substitute-summary.tsx` | A linked substitute's summary (MB.115): its query, `SubstituteSummary`, `substituteSummary`, which a list's chip opens, and `EntryHrefContext`, which carries `entryHref` to it                        |
+| `values.ts`              | The empty values and `EMPTY_VARIANT`, `toInput`, `draftOf`, `addEntry`, `commitDraft`, `repeatedForm`, `rankForForm`, `formRows`, `fieldNameOf`, and the two resolvers, a coven's and the compendium's |
+| `options.ts`             | The closed sets' choices, `NOMENCLATURE_OPTIONS` and `ELEMENT_OPTIONS`, which the admin compendium filter shares                                                                                       |
+| `types.ts`               | The props, the form's own values, and the input it sends                                                                                                                                               |
 
 ## The props contract
 
@@ -42,6 +43,7 @@ so the union cannot say one yet.
 | `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                         |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                     |
 | `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                           |
+| `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                              |
 
 ## The fields
 
@@ -188,7 +190,10 @@ field shows none: the browser draws its own format there.
   "Compendium entry" or "This coven’s entry", as its lookup row said; and the
   description, "Dried leaf, Oil · Compendium entry — A fixture herb." It shows in the pill's tooltip and
   describes its ×, as the combobox's "An entry" sets out; a typed entry has
-  none. The pill itself stays as it reads, the owner's call.
+  none. The pill itself stays as it reads, the owner's call. A linked
+  substitute's pill is a button, led by a link mark, that opens a summary of
+  its ingredient, and a typed one is plain text read as a name only (MB.115;
+  ["A linked substitute's summary"](#a-linked-substitutes-summary)).
   `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
   (DESIGN.md §5, `ingredient_substitutes`). A link is made only by picking an
   ingredient from the substitutes' lookup (MB.131); Add, Enter and the typed
@@ -327,6 +332,53 @@ compendium the box reads `compendium(query)` in their place,
 `useCompendiumSubstitutes`, each row a compendium entry with its forms,
 joined, as its note, and leaves out the entry being edited, since nothing is its own
 substitute.
+
+### A linked substitute's summary
+
+The owner's ask at MB.115: a substitute that links an ingredient must be
+told from one that is only typed text, and must open a summary of what it
+links. In both substitute lists, the ingredient's and each variant's:
+
+- **A linked chip is a button; a typed one is text.** The linked chip's
+  text is a button led by a link mark (two chain links) in the accent, the
+  text underlined in the body ink, and the accent's hover on both when
+  pointed at. A typed chip has no mark, no underline and nothing to press
+  but its ×. So the two differ by shape, not by colour alone. A screen
+  reader hears the linked one as a button, named by its text, that opens a
+  dialog and says whether it is open (`aria-haspopup`, `aria-expanded`),
+  described by the chip's detail, "Dried leaf · Compendium entry"; it hears
+  the typed one as its text followed by "(name only)", a visually hidden
+  `note` (`NAME_ONLY`). Each × keeps its name, "Remove Mockwort (Fixtura
+  vulgaris)". Which lists these are is `holdsSubstitutes` in `values.ts`.
+- **Pressing the button opens a small panel beneath the chip**, a non-modal
+  `<dialog>` named "About" and the chip's text. It is
+  [`Combobox`](combobox.md)'s, "A linked entry's summary": it shuts on a
+  second press, on Escape, on a press anywhere else, and when the focus
+  leaves it; Escape hands the focus back to the chip and is cancelled, so
+  the compendium's modal around the form does not take it as its own
+  cancel and ask about unsaved changes.
+- **What it shows** (`SubstituteSummary`, `substitute-summary.tsx`): the
+  ingredient's name and formal name, then its Classification, the Form the
+  entry names when it names one, its Elements, Planets, Zodiac Signs and
+  Colours, each left out when empty, and whose entry it is, "Compendium
+  entry" or "This coven’s entry". With a form named, each list is the
+  ingredient's and the form's together, since a form adds to its ingredient
+  and never takes away (MB.215).
+- **It is read when the panel opens, and not before**, so a list of chips
+  asks nothing until one is opened: the `IngredientSummary` document runs
+  the existing `ingredient(id, workspaceId)` query through `/api/graphql`,
+  with the coven the lookups ask about, or none on the compendium. That
+  query already reads an entry by id in the compendium's tier, or a coven's
+  own and the compendium's, and never another coven's, so no new query was
+  needed. TanStack Query keeps the answer, so a second opening is instant.
+  While it reads, the panel says Loading…; a failed read shows the server's
+  sentence, or the generic one, as an alert, with Try Again.
+- **It links the entry's page where the form is given one** (`entryHref`),
+  in a new tab, so the form and its unsaved changes stay where they are. The
+  admin's compendium page gives the entry's own modal,
+  `/admin/compendium?edit=<slug>`. No other page fits yet: a coven's
+  ingredient page and the public compendium's entry page are not built, so
+  a coven's form links nothing.
 
 ### The categories
 
@@ -1218,7 +1270,11 @@ compendium's substitute search and its three writes: a name holding
 The original `fetch` is put back on unmount. The TanStack Query client is the
 workshop's global provider's: a second provider would split the cache. This replaces M5.10's
 `DuplicateWarning` story, which filled that cache ahead for one exact name.
-`CompendiumEntry` holds three sources, so its rows show each short form —
+`CompendiumEntry` holds two linked substitutes, Fixturewort and Testwort in
+its oil, and a typed one, Hedge Mockroot, so both kinds of chip show; the
+stand-in answers `IngredientSummary` for each invented ingredient, and
+`CompendiumEntrySubstituteSummary` is the same entry with Fixturewort's
+summary open (MB.115). It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
 Dried leaf carrying a safety note, a planet, two categories and a source of
@@ -1236,16 +1292,21 @@ review. Its shape is `Modal`'s, the wide dialog less the modal gap
 
 ## Testing
 
-Eight files hold the form's own tests, split along the owning layer (MB.181,
+Nine files hold the form's own tests, split along the owning layer (MB.181,
 MB.182; [`testing/layer-ownership.md`](../testing/layer-ownership.md), "The
 owning layer"): `index.test.tsx` for what needs the whole form,
 `compendium.test.tsx` for what the compendium's mode changes,
-`variants.test.tsx` for the Variants section, and five for
+`variants.test.tsx` for the Variants section, and six for
 parts of it on their own — `list-field.test.tsx` for a list field,
 `lookups.test.tsx` for the Form box and a list's box with their lookups,
 `duplicates.test.tsx` for the name field and its warning,
-`references.test.tsx` for the References field, and `reference-panel.test.tsx`
-for the new reference panel. What the box, its chips, its handles and its
+`references.test.tsx` for the References field, `reference-panel.test.tsx`
+for the new reference panel, and `substitute-summary.test.tsx` for a
+substitute list's chips: a linked one a button that opens a dialog and a
+typed one text alone, nothing read until one opens; the summary read for
+the coven, showing the classification, the form named, and the
+ingredient's and the form's lists together; the entry's link where the form
+is given one; and a failed read's alert and Try Again (MB.115). What the box, its chips, its handles and its
 closed-set variants do is Combobox's
 (`tests/components/Combobox/index.test.tsx`, which also drives the select-only
 box by the keyboard), what the picker does is CategoryPicker's, and the

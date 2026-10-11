@@ -10,6 +10,7 @@ import type {
   DeleteCompendiumIngredientMutation,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
+  IngredientSummaryQuery,
   PickerCategoriesQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
@@ -208,6 +209,37 @@ const INGREDIENTS = [
   },
 ];
 
+/**
+ * What a linked substitute's summary reads of each ingredient above (MB.115):
+ * its classification and correspondences, and each form's own, which add to
+ * the ingredient's.
+ */
+const SUMMARIES = Object.fromEntries(
+  INGREDIENTS.map((row) => [
+    row.id,
+    {
+      id: row.id,
+      name: row.name,
+      canonicalName: row.canonicalName,
+      nomenclature: row.canonicalName ? 'botanical' : 'unknown',
+      isGlobal: row.isGlobal,
+      slug: row.name.toLowerCase(),
+      elements: ['water', 'earth'],
+      planets: ['Moon'],
+      zodiacSigns: ['Cancer'],
+      colors: ['Green'],
+      variants: row.variants.map(({ id, form }) => ({
+        id,
+        form,
+        elements: null,
+        planets: form === 'Oil' ? ['Venus'] : null,
+        zodiacSigns: null,
+        colors: null,
+      })),
+    },
+  ]),
+) satisfies Record<string, IngredientSummaryQuery['ingredient']>;
+
 // Invented sources in both tiers — a book, an article by two authors and a
 // web page, so the rows show each short form — one long enough to wrap and
 // one carrying an address, rendered by the one renderer as the server
@@ -365,6 +397,10 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies CompendiumSubstitutesQuery;
+    case 'IngredientSummary': {
+      const ingredient = SUMMARIES[String(variables.id)];
+      return ingredient && ({ ingredient } satisfies IngredientSummaryQuery);
+    }
     case 'ReferenceSuggestions':
       return {
         referenceSuggestions: page(
@@ -737,6 +773,25 @@ export const Blank: Story = () => {
   );
 };
 
+/** One of INGREDIENTS as a substitute's link, as an edit reads it back. */
+const linkOf = ({
+  id,
+  canonicalName,
+  description,
+  isGlobal,
+  variants,
+}: (typeof INGREDIENTS)[number]) => ({
+  id,
+  canonicalName,
+  description,
+  isGlobal,
+  forms: variants.map(({ form }) => form),
+  variants: variants.map(({ id: variantId, form }) => ({ id: variantId, form, group: null })),
+});
+
+/** Where a summary links its entry on the admin's page: that entry's modal. */
+const entryHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
+
 /** One of SOURCES as a reference row, cited at `locator`. */
 const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') => ({
   value: citation,
@@ -786,6 +841,17 @@ const ENTRY = {
     ],
     description: 'A fixture herb, for the workshop.',
     planets: [{ value: 'Mercury' }],
+    // Two linked compendium entries, one in a form of it, and a name typed
+    // (MB.115): the linked chips lead with a link mark and open a summary.
+    substitutes: [
+      { value: 'Fixturewort', link: linkOf(INGREDIENTS[2]) },
+      {
+        value: 'Testwort',
+        link: linkOf(INGREDIENTS[0]),
+        variantId: INGREDIENTS[0].variants[1].id,
+      },
+      { value: 'Hedge Mockroot' },
+    ],
     // Testward, one of the categories the stand-in answers the picker with.
     categoryIds: [CATEGORIES[0].id],
     references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[1], 'p. 14'), cited(SOURCES[2])],
@@ -814,6 +880,14 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
         </li>
         {editing && (
           <li>
+            <strong>Substitutes:</strong> Fixturewort and Testwort &middot; Oil are linked entries,
+            each led by a link mark and underlined: press one to open its summary, and press it
+            again, press Escape or press elsewhere to close it. Hedge Mockroot is a name only, plain
+            text that opens nothing.
+          </li>
+        )}
+        {editing && (
+          <li>
             <strong>Edit and delete:</strong> Save Ingredient is off until something changes; Delete
             Ingredient asks first.
           </li>
@@ -840,7 +914,12 @@ export const CompendiumEntry: Story = () => {
   return (
     <>
       <WhatToTryOnTheCompendium editing />
-      <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />
+      <IngredientForm
+        workspaceId={null}
+        entry={ENTRY}
+        entryHref={entryHref}
+        onCancel={() => undefined}
+      />
     </>
   );
 };
@@ -881,6 +960,27 @@ EditSourcePhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const EditSourcePhoneLight: Story = () => <CompendiumEntryEditSource />;
 EditSourcePhoneLight.meta = { theme: 'light', width: 375 };
+
+/**
+ * The same entry with its first linked substitute's summary open (MB.115):
+ * pressed once it is drawn, the summary being the chip's own state.
+ */
+export const CompendiumEntrySubstituteSummary: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    document
+      .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
+      ?.click();
+  }, []);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      entry={ENTRY}
+      entryHref={entryHref}
+      onCancel={() => undefined}
+    />
+  );
+};
 
 // A phone's width, in each theme: the admin's edit, bare, as at desktop.
 export const PhoneDark: Story = () => <CompendiumEntry />;

@@ -9,7 +9,8 @@ import { fromRoot } from '../support/paths';
 // ground at 4.5:1. The admin area's text and wax hold on the card surface
 // too (MB.115), the ground of a banded row, a stacked table's card and the
 // impersonation banner, the tab row's open tab holds on its track, and the
-// switch's track and thumb hold in either state. One assertion per theme,
+// switch's track and thumb hold in either state, and a chip's text and a
+// linked chip's mark hold on the chip's wash. One assertion per theme,
 // the functional half of the tokens; how they look is the workshop's and the
 // axe scan's (claude-docs/testing/layer-ownership.md, "What a test may assert", rule 4).
 
