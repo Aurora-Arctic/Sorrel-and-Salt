@@ -22,6 +22,7 @@ import type {
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
+import Modal from '../Modal';
 import IngredientForm from '.';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
@@ -1046,6 +1047,25 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
 };
 
 // A phone's width, in each theme: the admin's edit, bare, its sections closed, as at desktop.
+/**
+ * The edit in its modal, as the admin compendium opens it: Open All / Close
+ * All beside the title, and the header staying at the top as the form
+ * scrolls beneath it (MB.115).
+ */
+export const CompendiumEntryInModal: Story = () => {
+  useCannedApi();
+  return (
+    <Modal title="Edit Ingredient" onClose={() => undefined}>
+      <IngredientForm
+        workspaceId={null}
+        entry={ENTRY}
+        entryHref={entryHref}
+        onCancel={() => undefined}
+      />
+    </Modal>
+  );
+};
+
 export const PhoneDark: Story = () => <CompendiumEntry />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 

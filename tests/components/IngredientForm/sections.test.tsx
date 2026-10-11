@@ -19,6 +19,7 @@ import {
   offerReferences,
   offerSigns,
 } from '../../support/msw/ingredient-lookups';
+import { renderInModal } from '../../support/discard-guard';
 
 // The form's seven sections as disclosures (MB.115, the owner's calls): a
 // new entry opens with every one open, an edit with every one closed to its
@@ -46,7 +47,8 @@ const TESTWORT: IngredientFormValues = {
   canonicalName: 'Fixtura testalis',
 };
 
-function renderForm(values?: IngredientFormValues) {
+/** The lookups every section asks, answered empty. */
+function offerNothing() {
   for (const offer of [offerForms, offerNames, offerPlanets, offerSigns, offerDeities]) offer([]);
   offerReferences([]);
   offerDuplicates([]);
@@ -56,6 +58,10 @@ function renderForm(values?: IngredientFormValues) {
   mockGraphQLQuery<Record<string, unknown>>('CompendiumSubstitutes', () => ({
     compendium: { edges: [] },
   }));
+}
+
+function renderForm(values?: IngredientFormValues) {
+  offerNothing();
   render(
     <QueryClientProvider client={makeQueryClient()}>
       <IngredientForm workspaceId={null} entry={values && { id: ENTRY_ID, values }} />
@@ -139,6 +145,24 @@ describe('IngredientForm’s sections', () => {
     fireEvent.click(toggle('Correspondences'));
     expect(openSections()).toEqual(['Safety']);
     expect(byLabel('Planet')).not.toBeVisible();
+  });
+
+  it('puts Open All beside the modal’s title, out of the form, and it still opens every section', () => {
+    offerNothing();
+    renderInModal(() => (
+      <IngredientForm workspaceId={null} entry={{ id: ENTRY_ID, values: TESTWORT }} />
+    ));
+
+    const openAll = screen.getByRole('button', { name: 'Open All' });
+    // In the modal's header, beside its heading, rather than in the form.
+    expect(openAll.closest('form')).toBeNull();
+    expect(openAll.parentElement?.parentElement).toContainElement(
+      screen.getByRole('heading', { level: 2 }),
+    );
+
+    fireEvent.click(openAll);
+
+    expect(openSections()).toEqual(SECTIONS);
   });
 
   it('opens every section with Open All, and closes every one with Close All while any is open', () => {

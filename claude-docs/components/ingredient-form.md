@@ -284,8 +284,10 @@ where the change is:
 - **Several open at once, each on its own.** A new entry opens with every
   section open, the long form it is, and so does the form Save & Add Another
   clears; an edit opens with every one closed.
-- **Open All / Close All**, a small quiet button at the end of the line above
-  the first section, reads Close All while any section is open and Open All
+- **Open All / Close All**, a small quiet button beside the modal's title,
+  "Edit Ingredient" or "Add Ingredient" (the owner's call; [`Modal`](modal.md),
+  "Beside the title"), or at the end of the line above the first section
+  where the form is in no modal, reads Close All while any section is open and Open All
   once every one is closed. A press from any mix therefore folds the form to
   its summary lines, the view the sections are for, and a new entry, all
   open, offers Close All at once.
@@ -504,8 +506,9 @@ legend as a list's is.
   it**: the source's Chicago short form, "Fixture, _Testwort Herbal_", its
   italics real `<i>` markup, then its locator in the muted ink if it has
   one, the short form taking the comma before it, "p. 112", then two icon
-  buttons, an edit (a pencil) named "Edit" and the short form, and a remove
-  (×) named "Remove" and the short form (MB.115, the owner's call). The
+  buttons, an edit (a pencil, in `$accent` as a variant's is) named "Edit"
+  and the short form, and a remove (×) named "Remove" and the short form
+  (MB.115, the owner's calls). The
   short form is `renderShortCitation`'s
   ([`db/references.md`](../db/references.md), "The short form"), from the
   four fields each row's `link` carries; a row too narrow for it is cut with

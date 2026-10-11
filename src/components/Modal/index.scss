@@ -88,17 +88,39 @@ $modal-fade: 150ms ease-out;
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The × centred on the title, at its larger size (M5.5).
+// The × centred on the title, at its larger size (M5.5). Stuck to the top
+// of the dialog as a long form scrolls beneath it, the owner's call at
+// MB.115: drawn up over the dialog's top padding and given it back as its
+// own, so it sits as it did and sticks flush, on the dialog's own ground,
+// the gap beneath it padding rather than margin so nothing shows through.
 .modal-dialog__header {
+  position: sticky;
+  // A sticky box stops at the scroller's padding, not its edge: lifted by
+  // that padding, so it sticks flush and its own padding sets the title.
+  top: space(5) * -1;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: space(3);
-  margin-bottom: space(4);
+  margin-top: space(5) * -1;
+  padding-block: space(5) space(4);
+  background-color: inherit;
 }
 
 .modal-dialog__title {
   margin: 0;
+}
+
+// Beside the title, a control the contents put there, and then the space
+// that pushes the × to the end; empty, it is that space alone.
+.modal-dialog__header-slot {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  margin-inline-end: auto;
+  // The title wraps on a phone; the control keeps to one line beside it.
+  white-space: nowrap;
 }
 
 // A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,

@@ -6,14 +6,15 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File              | What it holds                                              |
-| ----------------- | ---------------------------------------------------------- |
-| `modal.tsx`       | `Modal`, the default export                                |
-| `route-modal.tsx` | `RouteModal`                                               |
-| `index.tsx`       | The exports; two files, since `RouteModal` renders `Modal` |
-| `close-guard.ts`  | `CloseGuardContext`, the slot a form's guard goes in       |
-| `discard.tsx`     | `useDiscardGuard` and `DiscardQuestion` (below)            |
-| `types.ts`        | `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's |
+| File              | What it holds                                                  |
+| ----------------- | -------------------------------------------------------------- |
+| `modal.tsx`       | `Modal`, the default export                                    |
+| `route-modal.tsx` | `RouteModal`                                                   |
+| `index.tsx`       | The exports; two files, since `RouteModal` renders `Modal`     |
+| `close-guard.ts`  | `CloseGuardContext`, the slot a form's guard goes in           |
+| `discard.tsx`     | `useDiscardGuard` and `DiscardQuestion` (below)                |
+| `header-slot.ts`  | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title |
+| `types.ts`        | `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's     |
 
 ## Props
 
@@ -107,6 +108,18 @@ each form.
 - **The browser's own ways out are not covered.** Back, a reload or closing
   the tab leave without asking: no `beforeunload` handler is added, since the
   modals are opened by their address and Back is how one is left.
+
+## Beside the title
+
+The header holds the title, then an empty place beside it, then the ×. The
+modal hands that place down as an element (`HeaderSlotContext`), and its
+contents may portal one control of their own into it through
+`useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
+owner's call at MB.115. A slot, as the guard is, since the form sits inside
+the modal's render prop, out of its owner's reach. Outside a modal the hook
+answers null and the form keeps the control in its own flow. Empty, the place
+is only the space that pushes the × to the end. Tab order follows the page:
+the title's control, then the ×, then the form.
 
 ## RouteModal
 

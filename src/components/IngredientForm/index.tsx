@@ -2,13 +2,14 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
@@ -180,6 +181,16 @@ const IngredientForm = ({
   // from any mix folds the form to its summary lines, the view the sections
   // are for, and a new entry, all open, offers it at once.
   const anyOpen = open.size > 0;
+  const headerSlot = useModalHeaderSlot();
+  const foldAll = (
+    <button
+      type="button"
+      className="btn btn--small btn--quiet"
+      onClick={() => setOpen(new Set(anyOpen ? [] : SECTION_KEYS))}
+    >
+      {anyOpen ? 'Close All' : 'Open All'}
+    </button>
+  );
 
   // A submit's last update carries its count and every error it found, the
   // resolver's or the server's, so this runs once they are all drawn: the
@@ -374,19 +385,16 @@ const IngredientForm = ({
             {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
             {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
             {refusal && <Notice kind="error">{refusal}</Notice>}
-            {/* The sections flush, between hairlines, under the one control
-              that opens or closes them all, a small quiet button at the end
-              of the line above the first (MB.115, the owner's call). */}
+            {/* The sections flush, between hairlines. The one control that
+              opens or closes them all sits beside the modal's title, the
+              owner's call (MB.115); outside a modal, at the end of the line
+              above the first section. */}
             <div className="ingredient-form__folds">
-              <div className="ingredient-form__fold-all">
-                <button
-                  type="button"
-                  className="btn btn--small btn--quiet"
-                  onClick={() => setOpen(new Set(anyOpen ? [] : SECTION_KEYS))}
-                >
-                  {anyOpen ? 'Close All' : 'Open All'}
-                </button>
-              </div>
+              {headerSlot ? (
+                createPortal(foldAll, headerSlot)
+              ) : (
+                <div className="ingredient-form__fold-all">{foldAll}</div>
+              )}
               <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
                 {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}

@@ -362,7 +362,7 @@ export function ReferencesField({
                     Each is described by the citation whole. */}
                 <button
                   type="button"
-                  className="ingredient-form__icon-button"
+                  className="ingredient-form__icon-button ingredient-form__edit"
                   aria-label={`Edit ${name}`}
                   aria-describedby={citationId}
                   aria-expanded={open}

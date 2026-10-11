@@ -410,8 +410,8 @@
     color: $text-primary;
   }
 
-  // A variant's pencil, drawn in the accent green, the owner's call
-  // (MB.115): the open way into a variant, set apart from its ×. Pointed at,
+  // A variant's pencil and a reference row's, drawn in the accent green, the
+  // owner's call (MB.115): the open way into a row, set apart from its ×. Pointed at,
   // focused or open, it sits on a tint of its own green, as the × does on
   // the wax's.
   &.ingredient-form__edit {

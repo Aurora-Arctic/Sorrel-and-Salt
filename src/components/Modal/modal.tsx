@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
+import { HeaderSlotContext } from './header-slot';
 import type { ModalPhase, ModalProps } from './types';
 import './index.scss';
 
@@ -87,6 +88,8 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
   // "Unsaved changes"). The close handed to the contents is not guarded, so
   // a save or a delete goes at once. Nothing is asked once it is closing.
   const [guard] = useState(closeGuardSlot);
+  // Held in state, so the contents redraw into it once it is in the page.
+  const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
   const request = (): void => {
     if (phase === 'open' && guard.consult(close)) close();
   };
@@ -132,12 +135,16 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
         <h2 id={titleId} className="modal-dialog__title">
           {title}
         </h2>
+        {/* Beside the title, for a control the contents put there (HeaderSlotContext). */}
+        <div ref={setHeaderSlot} className="modal-dialog__header-slot" />
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
       </div>
       <CloseGuardContext.Provider value={guard}>
-        {typeof children === 'function' ? children(close) : children}
+        <HeaderSlotContext.Provider value={headerSlot}>
+          {typeof children === 'function' ? children(close) : children}
+        </HeaderSlotContext.Provider>
       </CloseGuardContext.Provider>
     </dialog>
   );
