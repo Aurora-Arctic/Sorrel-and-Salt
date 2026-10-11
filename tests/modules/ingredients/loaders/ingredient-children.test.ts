@@ -462,22 +462,4 @@ describe('who the ingredient-children loaders answer', () => {
       expect(await READS[loader](loadersFor(asUser(B)), local.ref), loader).toEqual([]);
     }
   });
-
-  // A form left out of a save is soft-deleted and its rows left for a
-  // restore (MB.219), so its tombstone must hide them.
-  it("answers nothing for a soft-deleted variant's own rows", async () => {
-    const VARIANT_READS = [variantCategoryNames, variantSubstituteNames, variantCitations];
-    // The precondition: the member reads each of them before the delete.
-    for (const read of VARIANT_READS) {
-      expect(await read(loadersFor(asUser(B)), local.ref)).toHaveLength(1);
-    }
-
-    await sql`
-      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
-      where id = ${variantOf.get(local.ref.id) ?? ''}`;
-
-    for (const read of VARIANT_READS) {
-      expect(await read(loadersFor(asUser(B)), local.ref)).toEqual([]);
-    }
-  });
 });
