@@ -52,8 +52,11 @@ would need no edit at any call site; nothing passes it today.
     `ghcr.io/<repo>/<path>:buildcache` with `mode=max`, one tag per image
     beside its hash tags, so a build on one PR warms the next PR's and every
     branch reads the same copy. `mode=max` caches the stages before the
-    target too, which is how `testing` and `e2e` reuse `development`'s
-    `npm ci` layer. A hash tag is hex, so it can never collide with
+    target too, which is how `testing` reuses `development`'s `npm ci`
+    layer. The e2e image never shares that layer: `Docker/Dockerfile.e2e` is
+    a separate file on a Debian base, and its `e2e` target is that file's
+    first stage, so the cache holds only the e2e image's own layers, its
+    `npm ci` among them. A hash tag is hex, so it can never collide with
     `buildcache`.
   - **Why not the Actions cache.** A `type=gha` entry written by a
     `pull_request` run can be restored only by re-runs of that PR, so each
