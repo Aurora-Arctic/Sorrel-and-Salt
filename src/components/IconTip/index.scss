@@ -36,18 +36,15 @@
   }
 }
 
-// In a table row, above the control and ending at its right edge, running
-// left, the owner's call at MB.115's review: level with it, the tip covered
-// the row's own text. Above the first row is the header row, inside the
+// In a table row, centred above the control, the owner's call at MB.115's
+// review: level with it, the tip covered the row's own text. Above the first row is the header row, inside the
 // frame, so the frame's sideways scroll clips nothing. Not on a phone card:
 // above the first card's top-right Edit is only the card's padding, and the
 // frame would cut it off, so a card keeps the tip to the left.
 .data-table .icon-tip__bubble {
-  top: auto;
-  right: 0;
-  bottom: 100%;
+  inset: auto auto 100% 50%;
   margin: 0 0 space(1);
-  translate: none;
+  translate: -50% 0;
 
   @starting-style {
     opacity: 0;
@@ -57,9 +54,7 @@
 
 @container data-table (max-width: #{$table-stack-width}) {
   .data-table--stack .icon-tip__bubble {
-    top: 50%;
-    right: 100%;
-    bottom: auto;
+    inset: 50% 100% auto auto;
     margin: 0 space(1) 0 0;
     translate: 0 -50%;
   }
