@@ -5,7 +5,9 @@ import type { CitationFields } from '../../../lib/types';
 // is the edition in the owner's library, as its own title and copyright pages
 // give it (claude-docs/db/compendium-seed/README.md, "The library"); a shard's
 // per-entry pages (a Wikipedia revision, a web page) are its own `SOURCES`.
-// A shard names a work here by its handle.
+// A shard names a work here by its handle. Culpeper, read online, is cited as
+// the edition Project Gutenberg transcribes (MB.243); Grieve is cited page by
+// page in each shard's own sources, as `grieve-<heading>` (MB.247).
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',
@@ -81,6 +83,18 @@ export const WORKS = {
     place: 'London',
     publisher: 'John Lane, The Bodley Head',
     published: '1903',
+  },
+  'culpeper-herbal': {
+    kind: 'book',
+    authors: 'Culpeper, Nicholas',
+    title: 'The Complete Herbal',
+    place: 'London',
+    publisher: 'Thomas Kelly',
+    published: '1850',
+    host: 'Project Gutenberg ebook 49513',
+    url: 'https://www.gutenberg.org/ebooks/49513',
+    modified: '2024-10-24',
+    accessed: '2026-10-11',
   },
 } as const satisfies Record<string, CitationFields>;
 

@@ -52,10 +52,12 @@ export const VARIANT_WORDS_MAX = 120;
 
 // A binomial (`Genus species`), a trinomial with or without its rank
 // (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, or the genus
-// or higher taxon alone where practice does not split it (`Usnea`).
+// or higher taxon alone where practice does not split it (`Usnea`), or a
+// group within a genus the candidate list names by its rank (`Rubus subg.
+// Rubus`, `Vaccinium sect. Cyanococcus`; MB.243).
 const EPITHET = String.raw`(?:× )?[a-z][a-z-]*`;
 const TAXON = new RegExp(
-  String.raw`^[A-Z][a-z]+(?: ${EPITHET}(?: (?:(?:subsp\.|var\.|f\.) )?[a-z][a-z-]*)?)?(?: '[^']+')?$`,
+  String.raw`^[A-Z][a-z]+(?: (?:subg\.|sect\.) [A-Z][a-z]+|(?: ${EPITHET}(?: (?:(?:subsp\.|var\.|f\.) )?[a-z][a-z-]*)?)?(?: '[^']+')?)$`,
 );
 const TAXONOMIC = new Set(['botanical', 'fungal', 'zoological']);
 

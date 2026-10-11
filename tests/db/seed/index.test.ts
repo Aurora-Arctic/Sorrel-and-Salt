@@ -11,7 +11,7 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
-import { FIXTURE_SHARD } from './compendium-fixture';
+import { COMPENDIUM } from '@/db/seed/compendium/index';
 import type { SeedEntry, UserRow } from './types';
 
 // The shape every production seed shares, asserted here once over all of them
@@ -156,8 +156,8 @@ const SEED_ENTRIES: SeedEntry[] = [
     tables: ['references', 'reference_links'],
   },
   {
-    // On the invented fixture shard, after everything it picks from and the
-    // sources it may share a work with: the real list grows shard by shard.
+    // On the production list, after everything it picks from and the sources
+    // it may share a work with (MB.243 moved it off the invented fixture).
     name: 'the compendium seed, after the vocabularies and sources',
     run: async (db) => {
       await seedCategories(db);
@@ -165,7 +165,7 @@ const SEED_ENTRIES: SeedEntry[] = [
       await seedAstrology(db);
       await seedDeities(db);
       await seedSources(db);
-      await seedCompendium(db, [FIXTURE_SHARD]);
+      await seedCompendium(db, COMPENDIUM);
     },
     tables: [
       'ingredients',
@@ -183,6 +183,12 @@ const SEED_ENTRIES: SeedEntry[] = [
 describe('the shape every seed shares', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);
+  });
+
+  // Precondition of the compendium entry: an empty list would pass every sweep below by writing nothing.
+  it('runs the compendium seed over a list that holds entries', () => {
+    expect(COMPENDIUM.length).toBeGreaterThan(0);
+    expect(COMPENDIUM.flatMap((shard) => shard.entries).length).toBeGreaterThan(0);
   });
 
   // One run, read three ways: the bootstrap row it inserted, the stamps on
