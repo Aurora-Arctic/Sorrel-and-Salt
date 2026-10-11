@@ -29,6 +29,7 @@ import type {
   ReferenceSendInput,
   SavedReference,
 } from './types';
+import { useReportPanelChanges } from './panel-changes';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 
 // The citation sub-form (MB.154): a new source written to this coven without
@@ -422,6 +423,8 @@ function PanelForm({
     setError,
     formState: { errors, isSubmitting, isDirty, submitCount },
   } = methods;
+  // Told to the ingredient form, so closing its modal over them asks first.
+  useReportPanelChanges(isDirty);
   const panel = useRef<HTMLFieldSetElement>(null);
   const legendId = useId();
   const noteId = useId();

@@ -548,6 +548,20 @@ the source, not the row's link to it, so it reaches every entry citing it.
   so closing it discards only them and never asks the unsaved-changes
   question. New Reference while an edit is open, or Edit Source on another
   row, starts that panel afresh.
+- **A panel's edits still count as unsaved changes** to the ingredient form,
+  new or editing (MB.115, the owner's call that every way out of an admin
+  form asks while it has changes). Each panel reports its own `isDirty`
+  through `PanelChangesContext` (`panel-changes.ts`), and the form's guard
+  reads its `isDirty` or any panel holding edits, so the form's Cancel, the
+  modal's ×, Escape and the backdrop all ask first. Keep Editing returns to
+  the panel with its text as typed; Discard Changes closes everything. A
+  closed panel reports nothing.
+- **One limitation is known**: rows rewritten after an edit hold a citation
+  the form's defaults do not, so once another field is changed the
+  ingredient counts as changed until it is saved, even if that change is
+  undone. Moving the defaults with the rows needs react-hook-form's private
+  `control._defaultValues`, or a `reset` that would drop the field arrays'
+  keys, so it is left.
 
 ### The variants
 

@@ -380,6 +380,11 @@ export interface ReferenceFieldSpec {
   type?: 'date' | 'url';
 }
 
+/** Where a reference panel tells the ingredient form whether it holds unsaved edits. */
+export interface PanelChanges {
+  report: (panel: string, changed: boolean) => void;
+}
+
 export interface ReferencePanelProps {
   /** The coven the new source is written to, or null for the compendium's. */
   workspaceId: string | null;

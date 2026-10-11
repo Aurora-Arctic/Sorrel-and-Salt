@@ -322,6 +322,42 @@ describe('IngredientForm on the compendium', () => {
 
       expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
     });
+
+    // A reference panel's edits are in a form of their own, which the
+    // ingredient form's isDirty never sees; they count all the same.
+    it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', () => {
+      offerNothing();
+      const onClose = renderInModal((done) => (
+        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+      ));
+      const panel = () => screen.getByRole('group', { name: 'New Reference' });
+      const title = () =>
+        within(panel()).getByLabelText((content) => content.replace(/\*$/, '') === 'Title');
+      const reference = screen.getByLabelText('Reference', { selector: '[role="combobox"]' });
+      fireEvent.keyDown(reference, { key: 'ArrowDown' });
+      fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+      fireEvent.click(within(panel()).getByRole('combobox', { name: 'Kind' }));
+      fireEvent.click(
+        within(screen.getByRole('listbox', { name: 'Kind choices' })).getByRole('option', {
+          name: 'Book',
+        }),
+      );
+      fireEvent.change(title(), { target: { value: 'A Fixture Grimoire' } });
+
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+      expect(screen.queryByRole('button', { name: 'Discard Changes' })).toBeInTheDocument();
+      expect(onClose).not.toHaveBeenCalled();
+
+      fireEvent.click(button('Keep Editing'));
+      expect(title()).toHaveValue('A Fixture Grimoire');
+      // The form's own Cancel, not the panel's.
+      const cancels = screen.getAllByRole('button', { name: 'Cancel' });
+      fireEvent.click(cancels.find((cancel) => !panel().contains(cancel)) as HTMLElement);
+      expect(onClose).not.toHaveBeenCalled();
+
+      fireEvent.click(button('Discard Changes'));
+      expect(onClose).toHaveBeenCalledOnce();
+    });
   });
 
   describe('the lookups', () => {
