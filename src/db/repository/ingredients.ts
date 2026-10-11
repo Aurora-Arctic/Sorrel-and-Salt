@@ -316,8 +316,9 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * What a compendium page and its count share: the filter's arms, and the key
  * with the search's join — built in one place, so the count reads the rows
  * the pages hold in the order they hold them, and the ingredient picker
- * matches as the compendium does. A search keys `[-score, name]`,
- * negated so one ascending row comparison bounds it; a browse keys `[name]`.
+ * matches as the compendium does. A search keys `[-rank, name]`, the rank
+ * being `searchMatch`'s weighted score, negated so one ascending row
+ * comparison bounds it; a browse keys `[name]`.
  */
 function compendiumList(filter: IngredientFilter): {
   arms: SQL | undefined;
@@ -358,7 +359,24 @@ function compendiumList(filter: IngredientFilter): {
 }
 
 /**
- * The rows matching a search, as a relation to join and each row's score. A
+ * How much a match in each field counts towards a search's rank: the query's
+ * word similarity to the field, times the field's weight. Every field, not
+ * just the label, has its own, because a boost on the label alone would leave
+ * a formal name, a folk name, a form and a description tied with each other —
+ * a word in a variant's prose ranking with the entry's own formal name. Why
+ * these five, in this order: claude-docs/db/compendium-read.md, "The
+ * compendium read".
+ */
+const SEARCH_WEIGHTS = {
+  name: 1,
+  canonicalName: 0.9,
+  folkName: 0.8,
+  form: 0.6,
+  description: 0.2,
+} as const;
+
+/**
+ * The rows matching a search, as a relation to join and each row's rank. A
  * row matches when the query is word-similar (`<%`) to its label, its formal
  * name, a live folk name, or the form or description of a live variant
  * (MB.218), each side folded through `unaccent_immutable` so the expression
@@ -366,8 +384,10 @@ function compendiumList(filter: IngredientFilter): {
  * the match; the threshold is the keyset read's (`wordMatch`). The three
  * arms are a `UNION ALL`, for `findSimilarIngredients`'s reason, each
  * scoring what it matched with `word_similarity` — which the index's recheck
- * has just computed — and the score is the best of them, `max … group by
- * id`, so an entry two of whose forms match is still one row. A plain
+ * has just computed — times that field's `SEARCH_WEIGHTS` entry, and the
+ * rank is the best of them, `max … group by id`, so an entry two of whose
+ * forms match is still one row. A field only scores where it matched itself,
+ * so a weak hit in a heavier field never outranks the field that matched. A plain
  * column, so the order and the page bound read it per matched row rather than
  * a correlated folk-name subquery per compendium row
  * (claude-docs/db/compendium-read.md, "The compendium read"). Blank means no
@@ -382,21 +402,34 @@ function searchMatch(
   const candidate = alias(ingredients, 'candidate');
   const arms = sql.identifier('arms');
   const matched = sql.identifier('matched');
+  // A field's weighted similarity where it matched, else null. The weight is a
+  // parameter cast to `real`: `real` times a bare number is `double
+  // precision`, and the rank carried onto the edge is not cast as the
+  // keyset's sort is.
+  const weighted = (text: AnyPgColumn, weight: number) =>
+    sql`case when ${matches(text)} then ${similarity(text)} * ${weight}::real end`;
   // `greatest` skips nulls, so an entry with no formal name scores on its
   // label, and a variant with no description on its form.
   const source = sql`(
     select ${arms}.id, max(${arms}.score) as score from (
       select ${candidate.id},
-        greatest(${similarity(candidate.name)}, ${similarity(candidate.canonicalName)}) as score
+        greatest(
+          ${weighted(candidate.name, SEARCH_WEIGHTS.name)},
+          ${weighted(candidate.canonicalName, SEARCH_WEIGHTS.canonicalName)}
+        ) as score
       from ${ingredients} as ${candidate}
       where ${or(matches(candidate.name), matches(candidate.canonicalName))}
       union all
-      select ${ingredientFolkNames.ingredientId}, ${similarity(ingredientFolkNames.name)}
+      select ${ingredientFolkNames.ingredientId},
+        ${weighted(ingredientFolkNames.name, SEARCH_WEIGHTS.folkName)}
       from ${ingredientFolkNames}
       where ${and(matches(ingredientFolkNames.name), notSoftDeleted(ingredientFolkNames))}
       union all
       select ${ingredientVariants.ingredientId},
-        greatest(${similarity(ingredientVariants.form)}, ${similarity(ingredientVariants.description)})
+        greatest(
+          ${weighted(ingredientVariants.form, SEARCH_WEIGHTS.form)},
+          ${weighted(ingredientVariants.description, SEARCH_WEIGHTS.description)}
+        )
       from ${ingredientVariants}
       where ${and(
         or(matches(ingredientVariants.form), matches(ingredientVariants.description)),

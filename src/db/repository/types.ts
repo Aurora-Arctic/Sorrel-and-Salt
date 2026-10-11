@@ -529,7 +529,11 @@ export interface IngredientFilter {
   nomenclature?: NomenclatureKind;
 }
 
-/** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
+/**
+ * What a compendium entry carries onto its edge: on a search, its rank — the
+ * best of its matched fields' word similarity to the query, each times that
+ * field's weight (`searchMatch`). Null on a browse.
+ */
 export interface CompendiumScore {
   score: number | null;
 }

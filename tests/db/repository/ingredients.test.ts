@@ -268,8 +268,9 @@ describe('findCompendiumPage', () => {
 
         const page = await pageOf({ query: 'testoil' }, { first: 100 });
 
+        // The form's weight, 0.6, beats the description's, 0.2.
         expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
-          ['Fixture Mugwort', 1],
+          ['Fixture Mugwort', 0.6],
         ]);
       });
 
@@ -292,21 +293,32 @@ describe('findCompendiumPage', () => {
 
     /**
      * The answer key, written independently of the finder: every live
-     * compendium row's best word similarity across the label, the formal name
-     * and its live folk names, at 0.5 or better, best first, then by name and id.
+     * compendium row's best weighted word similarity — the label at 1, the
+     * formal name at 0.9, a live folk name at 0.8, a live variant's form at 0.6
+     * and its description at 0.2 — counting a field only where it matches at
+     * 0.5 or better, best first, then by name and id. The weights are restated
+     * here on purpose rather than imported, and each is cast to `real` as the
+     * finder's are, so a product rounds as the finder's does.
      */
     async function rankedOrder(query: string): Promise<{ id: string; score: number }[]> {
+      const q = sql`unaccent_immutable(${query})`;
+      const ws = (text: postgres.Fragment) =>
+        sql`word_similarity(${q}, unaccent_immutable(${text}))`;
+      const weighted = (text: postgres.Fragment, weight: number) =>
+        sql`case when ${ws(text)} >= 0.5 then ${ws(text)} * ${weight}::real end`;
       return sql<{ id: string; score: number }[]>`
         select id, score from (
           select i.id, i.name, greatest(
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.name)),
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.canonical_name)),
-            (select max(word_similarity(unaccent_immutable(${query}), unaccent_immutable(f.name)))
-             from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null)
+            ${weighted(sql`i.name`, 1)},
+            ${weighted(sql`i.canonical_name`, 0.9)},
+            (select max(${weighted(sql`f.name`, 0.8)})
+             from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null),
+            (select max(greatest(${weighted(sql`v.form`, 0.6)}, ${weighted(sql`v.description`, 0.2)}))
+             from ingredient_variants v where v.ingredient_id = i.id and v.deleted_at is null)
           ) as score
           from ingredients i where i.workspace_id is null and i.deleted_at is null
         ) scored
-        where score >= 0.5
+        where score is not null
         order by score desc, name, id`;
     }
 
@@ -315,7 +327,10 @@ describe('findCompendiumPage', () => {
       for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
         await add('Fixture Mugwort', { nomenclature: 'botanical', canonicalName });
       }
+      // Two longer labels holding the word whole, so the perfect-score tie is
+      // five rows, wider than a page of four.
       await add('Fixture Mugwort Leaf');
+      await add('Fixture Mugwort Root');
       await add('Fixture Mugwart');
       await add('Fixture Wormwood', { folkNames: ['Mugwort'] });
       await add('Fixture Mugroot');
@@ -340,8 +355,9 @@ describe('findCompendiumPage', () => {
     it('scores a folk-name match by the folk name', async () => {
       const page = await pageOf({ query: QUERY }, { first: 100 });
 
+      // The folk name is the word whole, similarity 1, at the folk name's weight.
       const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
-      expect(wormwood?.score).toBe(1);
+      expect(wormwood?.score).toBe(0.8);
     });
 
     it('walks across the ties forwards, neither losing nor repeating a row', async () => {
@@ -418,6 +434,87 @@ describe('findCompendiumPage', () => {
         InvalidCursor,
       );
       await expect(pageOf({}, { after: search.pageInfo.endCursor })).rejects.toThrow(InvalidCursor);
+    });
+  });
+
+  // Each field a search matches carries a weight (claude-docs/db/compendium-read.md,
+  // "The compendium read"), so a word found in a label outranks the same word
+  // found in a folk name, a form or a description.
+  describe('weighted ranking', () => {
+    const QUERY = 'quandle';
+
+    beforeEach(async () => {
+      await add('Fixture Quandle');
+      await add('Fixture Kettlebrim', {
+        nomenclature: 'botanical',
+        canonicalName: 'Fixtura quandle',
+      });
+      await add('Fixture Wimble', { folkNames: ['Quandle'] });
+      await add('Fixture Quandles');
+      await add('Fixture Thrum', { variants: [makeVariant({ form: 'Quandle' })] });
+      await add('Fixture Sprocket', {
+        variants: [makeVariant({ description: 'Steeped with quandle' })],
+      });
+    });
+
+    it('ranks the label above the formal name, the folk name, the form and the description', async () => {
+      // The preconditions: the plural label matches, but short of a whole word,
+      // so its rank sits between the formal name's and the folk name's; and
+      // the entry with the formal name does not match by its label, so it is
+      // found by the formal name alone.
+      const [similarity] = await sql<{ plural: number; label: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandles') as plural,
+               word_similarity(${QUERY}, 'Fixture Kettlebrim') as label`;
+      expect(similarity.plural).toBeGreaterThanOrEqual(0.5);
+      expect(similarity.plural).toBeLessThan(0.9);
+      expect(similarity.label).toBeLessThan(0.5);
+
+      expect(await namesOf({ query: QUERY })).toEqual([
+        'Fixture Quandle',
+        'Fixture Kettlebrim',
+        'Fixture Quandles',
+        'Fixture Wimble',
+        'Fixture Thrum',
+        'Fixture Sprocket',
+      ]);
+    });
+
+    it('carries the weighted rank on each edge', async () => {
+      const [{ plural }] = await sql<{ plural: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandles') as plural`;
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+
+      expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+        ['Fixture Quandle', 1],
+        ['Fixture Kettlebrim', 0.9],
+        ['Fixture Quandles', expect.closeTo(plural, 5)],
+        ['Fixture Wimble', 0.8],
+        ['Fixture Thrum', 0.6],
+        ['Fixture Sprocket', 0.2],
+      ]);
+    });
+
+    it('walks the weighted order across a cursor, neither losing nor repeating a row', async () => {
+      const whole = (await pageOf({ query: QUERY }, { first: 100 })).edges.map(
+        (edge) => edge.node.id,
+      );
+      // The precondition: the walk takes more than one step.
+      expect(whole.length).toBeGreaterThan(2);
+
+      const ids: string[] = [];
+      let after: string | null = null;
+      for (;;) {
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      expect(ids).toEqual(whole);
     });
   });
 
