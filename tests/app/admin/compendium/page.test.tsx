@@ -8,6 +8,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { mockGraphQLQuery } from '../../../support/msw/graphql';
+import { openSections } from '../../../support/ingredient-sections';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
 // under the address's filter, and the modal its address opens — `?new` empty,
@@ -214,7 +215,7 @@ describe('the /admin/compendium filter', () => {
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
     expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
-    expect(screen.getByRole('switch', { name: 'Without References' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
   });
 
   // A native submit sends every field, blank or not.
@@ -243,7 +244,7 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ withoutReferences: 'true' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('switch', { name: 'Without References' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
   });
 
   it('offers every curated form in the Form box, read once for the request', async () => {
@@ -347,6 +348,8 @@ describe('the /admin/compendium modal', () => {
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
     expect(entryValues).toHaveBeenCalledWith(TESTWORT);
     const dialog = screen.getByRole('dialog', { name: 'Edit Ingredient' });
+    // An edit opens with its sections closed (MB.115).
+    openSections('Identity', 'Variants');
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
     // Its forms too, each the variant's own fieldset (MB.221).
     expect(within(dialog).getByRole('group', { name: 'Herb' })).toBeInTheDocument();
