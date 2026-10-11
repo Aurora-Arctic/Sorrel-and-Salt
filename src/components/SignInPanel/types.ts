@@ -7,4 +7,6 @@ export interface SignInPanelProps {
   error?: string;
   /** Providers this environment has credentials for; the rest render greyed out. */
   configured: readonly ProviderId[];
+  /** A class from the caller, added after the panel's own: a `.panel` ground, or one of the panel's modifiers. */
+  className?: string;
 }

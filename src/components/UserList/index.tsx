@@ -1,14 +1,14 @@
 import type { ReactElement } from 'react';
-import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
+import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import UserListFilter from './filter';
 import CreationControl from './creation-control';
-import { DiscordIcon, FacebookMark, GoogleIcon, MicrosoftIcon } from '../SignInPanel/icons';
 import { CheckIcon, CrossIcon } from './icons';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import Pager from '../Pager';
+import ProviderMark from '../ProviderMark';
 import type { UserListEntry, UserListProps } from './types';
 import './index.scss';
 
@@ -18,14 +18,6 @@ import './index.scss';
 // (claude-docs/components/user-list.md).
 
 const ROLE_LABELS = { admin: 'Admin', user: 'User' } as const;
-
-/** Each roster provider's own mark, as the sign-in page draws it. */
-const PROVIDER_LOGOS: Record<string, () => ReactElement> = {
-  discord: DiscordIcon,
-  facebook: FacebookMark,
-  google: GoogleIcon,
-  microsoft: MicrosoftIcon,
-};
 
 /** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
@@ -39,12 +31,11 @@ function providerLabel(id: string): string {
  * text, so the account still says it is linked.
  */
 const ProviderLogo = ({ id }: { id: string }): ReactElement => {
-  const Logo = PROVIDER_LOGOS[id];
   const label = providerLabel(id);
-  if (!Logo) return <span className="user-list__provider-text">{label}</span>;
+  if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
   return (
-    <span className={`user-list__hint user-list__provider user-list__provider--${id}`}>
-      <Logo />
+    <span className="user-list__hint">
+      <ProviderMark id={id} />
       <span className="visually-hidden">{label}</span>
       <span className="user-list__tip" aria-hidden="true">
         {label}

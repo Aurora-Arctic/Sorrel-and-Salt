@@ -193,6 +193,26 @@ $brand-palettes: (
     edge: #808080,
     hover: #e0e0e0,
   ),
+  // Proposal (MB.116), not a fifth brand: Microsoft's own dark button in the
+  // light theme, its white one kept in the dark, drawn by SignInPanel's
+  // `ProposalMicrosoftDark` story against the #808080 edge above. No edge:
+  // the white fill clears 18.71:1 on soot, #2f2f2f 11.05:1 on parchment, and
+  // the inks 21.00 and 13.39:1 on them. If it wins, it replaces `microsoft`;
+  // if it loses, it goes with its story.
+  'microsoft-dark': (
+      fill: (
+        dark: #ffffff,
+        light: #2f2f2f,
+      ),
+      ink: (
+        dark: #000000,
+        light: #ffffff,
+      ),
+      hover: (
+        dark: #e0e0e0,
+        light: #454545,
+      ),
+    ),
 );
 
 // A function rather than map.get() at each call site, so a mistyped brand or

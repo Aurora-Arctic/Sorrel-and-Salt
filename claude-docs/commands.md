@@ -67,10 +67,6 @@ the repo's Sass:
   alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
   says what they mean), and `media-feature-range-notation` (both notations
   sit inside the browser baseline; the repo writes `max-width:`).
-- **`ignoreFiles`, for now**: `SignInPanel/index.scss`,
-  `SignInPanel/icons.scss` and `UserList/index.scss` still inline the
-  provider hexes that `brand-color()` replaces. MB.116's sign-in lane moves
-  them onto the map and removes the ignore; nothing else may join it.
 
 ## Tests
 
