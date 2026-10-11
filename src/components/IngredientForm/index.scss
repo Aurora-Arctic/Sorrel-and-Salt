@@ -623,6 +623,38 @@
   margin-left: auto;
 }
 
+// The notice of what a variant's substitute copy skipped (MB.115, the
+// owner's call), beneath the list. The region is always in the page, as a
+// live region must be, so while empty it cancels the list's gap. Its words
+// first, then Copy Anyway and the dismissing × at its end, which wrap
+// beneath the words on a phone rather than squeeze them.
+.ingredient-form__copy-skipped {
+  display: block;
+
+  &:empty {
+    margin-top: calc(-1 * #{space(3)});
+  }
+
+  .notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: space(2);
+  }
+
+  .notice p {
+    flex: 1 1 16rem;
+    margin: 0;
+  }
+}
+
+.ingredient-form__copy-skipped-actions {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+  margin-left: auto;
+}
+
 .ingredient-form__variant-done {
   display: flex;
   justify-content: flex-end;

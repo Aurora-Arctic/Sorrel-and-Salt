@@ -281,8 +281,8 @@ const formNamed = (link: SubstituteLink, id: string | undefined): string | undef
  * A variant's substitute suggestions, ranked for `form` (MB.215): the
  * ingredients that come in a form folding alike first, then those with a
  * form in its curated `group`, then the rest, each tier in the order the
- * search ranked it. Every row is kept, since any ingredient may stand in for
- * any form; this only puts the likeliest first.
+ * search ranked it. Every row is kept, since a form of any ingredient may
+ * stand in for any form; this only puts the likeliest first.
  */
 export function rankForForm(
   options: readonly ListOption[],
@@ -306,13 +306,14 @@ export function rankForForm(
 /**
  * A variant's substitute rows (MB.115, the owner's call): each ingredient
  * the lookup found, in its order, as one row per form it comes in, "Rosemary
- * · Dried leaf (Plant part)", which links that form, after a row for any form
- * of it, "Rosemary · Any form", which links the ingredient alone, since a
- * whole ingredient may stand in for a form too (MB.215). An ingredient in no
- * form keeps its one plain row. Its forms run the likeliest first, as
- * `rankForForm` ranks ingredients for `form` and `group`; `own`, the
- * variant's saved row, is never its own substitute, as the database's
- * `ingredient_substitutes_not_itself` holds.
+ * · Dried leaf (Plant part)", which links that form. A variant's link names a
+ * form, never the whole ingredient, so there is no row for any form of it,
+ * and an ingredient in no form at all, which only a coven's
+ * information-only entry can be, is not offered: there is nothing to link.
+ * Typed text is the box's own row, a name only, and is untouched here. Its
+ * forms run the likeliest first, as `rankForForm` ranks ingredients for
+ * `form` and `group`; `own`, the variant's saved row, is never its own
+ * substitute, as the database's `ingredient_substitutes_not_itself` holds.
  */
 export function formRows(
   options: readonly ListOption[],
@@ -327,22 +328,19 @@ export function formRows(
   };
   return options.flatMap((option) => {
     const { link } = option;
-    if (!link || isDeityLink(link) || !link.variants?.length) return [option];
+    if (!link || isDeityLink(link)) return [option];
     const name = option.label ?? option.value;
-    const ranked = link.variants
+    const ranked = (link.variants ?? [])
       .filter(({ id }) => id !== own)
       .map((variant, index) => ({ variant, index, tier: rankOf(variant) }))
       .sort((a, b) => a.tier - b.tier || a.index - b.index);
-    return [
-      { ...option, label: `${name} · Any form` },
-      ...ranked.map(({ variant }) => ({
-        value: option.value,
-        label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
-        key: `${option.key ?? link.id}/${variant.id}`,
-        link,
-        variantId: variant.id,
-      })),
-    ];
+    return ranked.map(({ variant }) => ({
+      value: option.value,
+      label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+      key: `${option.key ?? link.id}/${variant.id}`,
+      link,
+      variantId: variant.id,
+    }));
   });
 }
 

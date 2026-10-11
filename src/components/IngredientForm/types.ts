@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react';
+import type { ReactNode, Ref, RefObject } from 'react';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -345,6 +345,8 @@ export interface ListFieldProps {
   pickOnly?: boolean;
   /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
   action?: LegendAction;
+  /** Drawn beneath the box and its error: a variant's notice of the substitutes a copy skipped. */
+  after?: ReactNode;
   /**
    * The coven a linked substitute's summary reads its entry from, as the
    * lookups do; null, the default, for the compendium alone (MB.115).
@@ -581,4 +583,35 @@ export interface CopyFromIngredientProps {
   field: CopiedField;
   /** The field's own live region, where it has one; else the button says what it did through its own. */
   announce?: Announce;
+  /**
+   * A variant's substitutes only: told what a copy skipped, the ingredient's
+   * links in no form like the variant's, and how to say what Copy Anyway does.
+   */
+  onSkip?: (skipped: SkippedCopy) => void;
+  /** The button, which takes the focus back when the notice of what was skipped goes. */
+  buttonRef?: Ref<HTMLButtonElement>;
+}
+
+/**
+ * What a variant's substitute copy left out (MB.115, the owner's call): the
+ * ingredient's links to an ingredient in no form like the variant's, the
+ * list as the copy left it, by `listKey`, so the notice goes once the list
+ * changes otherwise, and the list's announcer.
+ */
+export interface SkippedCopy {
+  entries: SubstituteListEntry[];
+  /** The variant's form as typed when the copy ran, which the notice names. */
+  form: string;
+  listKey: string;
+  announce: Announce;
+}
+
+/** The notice beneath a variant's substitutes of what a copy skipped, with Copy Anyway. */
+export interface SkippedNoticeProps {
+  at: VariantPath;
+  skipped: SkippedCopy | null;
+  /** The notice is done with: Copy Anyway pressed, dismissed, or the list changed. */
+  onDone: () => void;
+  /** The variant's Copy From Ingredient, which takes the focus when the notice goes. */
+  copyButton: RefObject<HTMLButtonElement | null>;
 }

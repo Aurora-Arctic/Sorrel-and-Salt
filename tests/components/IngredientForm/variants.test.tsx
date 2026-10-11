@@ -562,30 +562,32 @@ describe('IngredientForm’s variants', () => {
 
       const list = await openSubstitutes(await addOil());
 
-      await waitFor(() => within(list).getByRole('option', { name: /^Plainwort/ }));
+      await waitFor(() => within(list).getByRole('option', { name: /^Tinctwort/ }));
       const named = within(list)
         .getAllByRole('option')
         .map((option) => option.textContent ?? '');
       expect(named.map((text) => text.match(/^(Plainwort|Tinctwort|Oilwort)/)?.[0])).toEqual([
         'Oilwort',
-        'Oilwort',
         'Tinctwort',
-        'Tinctwort',
-        'Plainwort',
       ]);
     });
 
-    // MB.115, the owner's call: a variant's substitute is picked form by form.
-    it('offers each form of an ingredient as its own row, after one for any form of it', async () => {
+    // MB.115, the owner's calls: a variant's substitute is picked form by
+    // form, and a link always names one.
+    it('offers an ingredient only as its forms, one row each, and one in no form not at all', async () => {
       renderForm({ workspaceId: WORKSPACE_ID });
 
       const list = await openSubstitutes(await addOil());
 
-      await waitFor(() => within(list).getByRole('option', { name: /^Plainwort/ }));
-      // Tinctwort comes in one form: a row for it, and one for any form.
-      expect(within(list).getAllByRole('option', { name: /^Tinctwort · / })).toHaveLength(2);
-      // Plainwort comes in none: its one row, with nothing to choose between.
-      expect(within(list).getAllByRole('option', { name: /^Plainwort/ })).toHaveLength(1);
+      await waitFor(() => within(list).getByRole('option', { name: /^Tinctwort/ }));
+      // Tinctwort and Oilwort come in one form each: that form's row alone.
+      expect(within(list).getAllByRole('option')).toHaveLength(2);
+      expect(within(list).getAllByRole('option', { name: /^Tinctwort · Tincture/ })).toHaveLength(
+        1,
+      );
+      expect(within(list).getAllByRole('option', { name: /^Oilwort · OIL/ })).toHaveLength(1);
+      // Plainwort comes in none: nothing of it to link.
+      expect(within(list).queryByRole('option', { name: /^Plainwort/ })).toBeNull();
       // There is no second picker to name a form with.
       expect(within(variant('Oil')).queryByRole('combobox', { name: /^Form of / })).toBeNull();
     });
@@ -597,8 +599,7 @@ describe('IngredientForm’s variants', () => {
       const oil = await addOil();
 
       const list = await openSubstitutes(oil);
-      const [, form] = await within(list).findAllByRole('option', { name: /^Oilwort · / });
-      fireEvent.click(form);
+      fireEvent.click(await within(list).findByRole('option', { name: /^Oilwort · / }));
       save();
 
       // One pill, for Oilwort's form rather than Oilwort whole.
@@ -610,20 +611,63 @@ describe('IngredientForm’s variants', () => {
       ]);
     });
 
-    it('links the ingredient alone from its any-form row, sending no form', async () => {
+    it('adds typed text as a name only, linking nothing', async () => {
       const calls = acceptCreate();
       renderForm({ workspaceId: WORKSPACE_ID });
       type(document.body, 'Name', 'Testwort');
       const oil = await addOil();
 
-      const list = await openSubstitutes(oil);
-      const [any] = await within(list).findAllByRole('option', { name: /^Oilwort · / });
-      fireEvent.click(any);
+      type(oil, 'Substitute Ingredient', 'Plainwort');
+      fireEvent.click(within(oil).getByRole('button', { name: 'Add Substitute Ingredient' }));
       save();
 
-      expect(within(oil).getByRole('button', { name: 'Remove Oilwort' })).toBeInTheDocument();
       await waitFor(() => expect(calls).toHaveLength(1));
-      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ ingredientId: OILWORT_ID }]);
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ name: 'Plainwort' }]);
+    });
+
+    // Old data, from before a link had to name a form: the chip stays to be
+    // read, and the save is refused beside it until it is replaced.
+    it('refuses a save holding a link that names no form, the error on that entry alone', async () => {
+      const calls = acceptUpdate();
+      renderForm({
+        workspaceId: null,
+        values: twoForms({
+          substitutes: [
+            { value: 'Fixture moss' },
+            {
+              value: 'Plainwort',
+              link: {
+                id: PLAINWORT_ID,
+                canonicalName: null,
+                forms: [],
+                description: null,
+                isGlobal: true,
+                variants: [],
+              },
+            },
+          ],
+        }),
+      });
+      const oil = openVariant('Oil');
+      const remove = (name: string) => within(oil).getByRole('button', { name: `Remove ${name}` });
+      const described = (element: HTMLElement) =>
+        element.getAttribute('aria-describedby')?.split(' ') ?? [];
+      type(oil, 'Description', 'A fixture oil.');
+
+      save();
+
+      const box = control(oil, 'Substitute Ingredient');
+      await waitFor(() => expect(box).toHaveAttribute('aria-invalid', 'true'));
+      const [errorId] = described(remove('Plainwort'));
+      expect(described(box)).toContain(errorId);
+      expect(described(remove('Fixture moss'))).not.toContain(errorId);
+      expect(calls).toHaveLength(0);
+
+      // Why: the same save, the formless link removed, goes.
+      fireEvent.click(remove('Plainwort'));
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([{ name: 'Fixture moss' }]);
     });
 
     it('never offers the variant itself as its own substitute, its sibling forms still offered', async () => {
@@ -694,19 +738,7 @@ describe('IngredientForm’s variants', () => {
         colors: [{ value: 'Fixture Red' }],
         elements: ['fire'],
         categoryIds: [CATEGORY_B],
-        substitutes: [
-          {
-            value: 'Plainwort',
-            link: {
-              id: PLAINWORT_ID,
-              canonicalName: null,
-              forms: [],
-              description: null,
-              isGlobal: true,
-              variants: [],
-            },
-          },
-        ],
+        substitutes: [{ value: 'Fixture fern' }],
         references: [reference(OTHER_REFERENCE_ID, 'The Second Herbal', '')],
       });
       return {
@@ -850,21 +882,73 @@ describe('IngredientForm’s variants', () => {
       expect(copyOf(oil, 'Safety Notes')).toHaveFocus();
     });
 
-    it('links each substitute’s same form where it comes in one, the ingredient alone where not, and a name as a name', async () => {
+    /** The notice beneath a variant's substitutes of what a copy skipped. */
+    const skippedNotice = (scope: HTMLElement) =>
+      within(scope).getByRole('status', { name: 'Substitute Ingredients skipped' });
+
+    // MB.115, the owner's calls: Oil for Oil, and an ingredient in no such
+    // form skipped, since a variant's link names a form.
+    it('links each substitute’s same form, skips one in no such form and says which, and keeps a name as a name', async () => {
       const calls = acceptUpdate();
       renderForm({ workspaceId: null, values: filled() });
       const oil = openVariant('Oil');
+      expect(skippedNotice(oil)).toBeEmptyDOMElement();
 
       fireEvent.click(copyOf(oil, 'Substitute Ingredients'));
-      save();
 
+      // Tinctwort comes in no oil, and Plainwort in no form at all.
+      const notice = skippedNotice(oil);
+      expect(notice).toHaveTextContent(/Tinctwort/);
+      expect(notice).toHaveTextContent(/Plainwort/);
+      expect(notice).not.toHaveTextContent(/Oilwort|Fixture moss/);
+      expect(
+        within(oil).getByRole('status', { name: 'Substitute Ingredients changes' }),
+      ).toHaveTextContent(/2/);
+      save();
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
-        { ingredientId: PLAINWORT_ID },
+        { name: 'Fixture fern' },
         { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
-        { ingredientId: TINCTWORT_ID },
         { name: 'Fixture moss' },
       ]);
+    });
+
+    it('adds what a copy skipped as names only at Copy Anyway, the focus back on the copy', async () => {
+      const calls = acceptUpdate();
+      renderForm({ workspaceId: null, values: filled() });
+      const oil = openVariant('Oil');
+      const copy = copyOf(oil, 'Substitute Ingredients');
+      fireEvent.click(copy);
+
+      fireEvent.click(within(skippedNotice(oil)).getByRole('button', { name: 'Copy Anyway' }));
+
+      expect(copy).toHaveFocus();
+      expect(skippedNotice(oil)).toBeEmptyDOMElement();
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
+        { name: 'Fixture fern' },
+        { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },
+        { name: 'Fixture moss' },
+        { name: 'Tinctwort' },
+        { name: 'Plainwort' },
+      ]);
+    });
+
+    it('takes the notice away at its dismiss, and once the list changes otherwise', () => {
+      renderForm({ workspaceId: null, values: filled() });
+      const oil = openVariant('Oil');
+      const copy = copyOf(oil, 'Substitute Ingredients');
+
+      fireEvent.click(copy);
+      fireEvent.click(within(skippedNotice(oil)).getByRole('button', { name: 'Dismiss' }));
+      expect(skippedNotice(oil)).toBeEmptyDOMElement();
+      expect(copy).toHaveFocus();
+
+      fireEvent.click(copy);
+      expect(skippedNotice(oil)).not.toBeEmptyDOMElement();
+      fireEvent.click(within(oil).getByRole('button', { name: 'Remove Fixture fern' }));
+      expect(skippedNotice(oil)).toBeEmptyDOMElement();
     });
   });
 });

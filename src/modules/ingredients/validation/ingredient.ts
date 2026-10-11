@@ -207,6 +207,7 @@ const variant = z
       refuseRepeats(field, value[field], ctx);
     }
     substituteRules(value.substitutes, ctx);
+    formLinkRules(value.substitutes, ctx);
     referenceRules(value.references, ctx);
     categoryRules(value.categoryIds, ctx);
   })
@@ -431,6 +432,24 @@ function substituteRules(entries: readonly SubstituteFields[], ctx: z.Refinement
     } else if (!ingredientId) {
       ctx.addIssue({ code: 'custom', path, message: 'Choose the ingredient this is a form of' });
     }
+  });
+}
+
+/**
+ * A variant's substitute that links an ingredient names one of its forms
+ * (MB.115, the owner's call): a form stands in for a form, so a link to the
+ * whole ingredient is refused, pathed to its form as a wrong form is. A name
+ * stays a name. The ingredient's own list may still link the whole
+ * ingredient, so this is the variant schema's alone.
+ */
+function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
+  entries.forEach(({ ingredientId, substituteVariantId }, index) => {
+    if (!ingredientId || substituteVariantId) return;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['substitutes', index, 'substituteVariantId'],
+      message: 'Link one of its forms: remove this, and pick the form from the list',
+    });
   });
 }
 

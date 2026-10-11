@@ -1334,6 +1334,35 @@ describe('its forms', () => {
     });
   });
 
+  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // names one of what it links.
+  it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
+    const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });
+    const [rootHerb] = await variantRowsOf(sql, testroot);
+    const linking = (substituteVariantId?: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot, substituteVariantId }] });
+    const path = ['variants', 0, 'substitutes', 0, 'substituteVariantId'];
+    // Why each could have saved: the same link, its form named, does.
+    const created = await createCompendiumEntry(admin, linking(rootHerb.id));
+    const [herbRow] = await variantRowsOf(sql, created.id);
+    const [{ n: count }] = await sql`select count(*)::int as n from ingredients`;
+
+    const create = createCompendiumEntry(admin, { ...linking(), name: 'Testwort, formless' });
+    await expect(create).rejects.toThrow(ValidationError);
+    await expect(create).rejects.toMatchObject({ issues: [{ path }] });
+    const update = updateCompendiumEntry(admin, created.id, {
+      ...linking(),
+      variants: [{ ...linking().variants[0], id: herbRow.id }],
+    });
+    await expect(update).rejects.toThrow(ValidationError);
+    await expect(update).rejects.toMatchObject({ issues: [{ path }] });
+
+    expect(await sql`select count(*)::int as n from ingredients`).toEqual([{ n: count }]);
+    expect((await variantChildrenOf(sql, herbRow.id)).substitutes).toMatchObject([
+      { substitute_id: testroot, substitute_variant_id: rootHerb.id },
+    ]);
+  });
+
   it('keeps a form by its id across a repick, drops the one left out and adds the new', async () => {
     const created = await createCompendiumEntry(
       admin,

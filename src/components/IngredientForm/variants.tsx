@@ -12,7 +12,7 @@ import {
 import Combobox from '../Combobox';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
-import { CopyFromIngredient } from './copy';
+import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
@@ -297,6 +297,8 @@ function VariantFieldset({
     (options: ListOption[]) => formRows(rankForForm(options, form, group), form, group, own),
     [form, group, own],
   );
+  // What a substitute copy skipped, for the notice beneath the list.
+  const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
   const id = useId();
   const legendId = `${id}-legend`;
   const summaryId = `${id}-summary`;
@@ -447,11 +449,13 @@ function VariantFieldset({
               <CopyFromIngredient at={at} field="categoryIds" announce={announce} />
             )}
           />
-          {/* Any ingredient may stand in for a form, this one's other forms
-            included, so nothing is left out; those in this form, or in its
-            group, are offered first (MB.215). Each row is one form of an
-            ingredient, or any form of it, so a pick names the form at once
-            (MB.115, the owner's call) and needs no second picker. */}
+          {/* A form of any ingredient may stand in for a form, this one's
+            other forms included; those in this form, or in its group, are
+            offered first (MB.215). Each row is one form of an ingredient, so
+            a pick names the form at once and needs no second picker, and a
+            link always names one (MB.115, the owner's call). A copy that
+            skips the ingredient's substitutes in no such form says so
+            beneath the list, with Copy Anyway. */}
           <LookupListField
             workspaceId={workspaceId}
             // Fixed for the form's life, since its tier is, so the hook called is always the same.
@@ -462,8 +466,17 @@ function VariantFieldset({
             entry="Substitute Ingredient"
             placeholder="Add a substitute"
             action={(announce) => (
-              <CopyFromIngredient at={at} field="substitutes" announce={announce} />
+              <CopyFromIngredient
+                at={at}
+                field="substitutes"
+                announce={announce}
+                onSkip={onSkip}
+                buttonRef={copyButton}
+              />
             )}
+            after={
+              <SkippedNotice at={at} skipped={skipped} onDone={onDone} copyButton={copyButton} />
+            }
           />
         </Section>
         <Section title="Safety" level={4}>
