@@ -117,11 +117,10 @@ nullable link — is still written out, `and ${table.deletedAt} is null` last;
 the seed key's is `seedKeyUnique`, beside `liveUnique`, for the vocabularies
 and `references`.
 
-`tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
-second scratch table (`repository_probe_charms`) carries a unique index with
-the same predicate, and the tests assert a live duplicate name is still
-rejected, while soft-deleting the original row and reinserting the same name
-succeeds — the row that comes back is a new id, and `findMany` sees only it.
+`tests/db/partial-unique-indexes.test.ts` proves the convention rather than
+merely stating it, on every partial unique index the catalogue holds: a
+second live row is still rejected, while soft-deleting the first frees the
+slot.
 
 **`users.email` is also held to lower case** (`users_email_lower_case`,
 migration 0019, MB.60). The unique index is on the raw column, so without it

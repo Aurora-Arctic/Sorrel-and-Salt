@@ -9,7 +9,7 @@ table spreads, built by calling them with `() => users.id`:
 - **`deletionColumnsReferencing(usersId)`** → `deletedAt` and `deletedBy`,
   which `users.ts` spreads after the stamp _instance_ to make
   `auditColumns`. The six-column set is the four-column one plus two, from
-  the same builders, and `tests/db/audit.test.ts` asserts that identity.
+  the same builders.
 
 The factories take the referenced column rather than importing `users`, so
 `audit.ts` depends on nothing in a module; the instances live beside `users`
@@ -32,16 +32,16 @@ and are hard-deleted (MB.34) — see ["Hard delete on two join tables"](hard-del
 why, and note that `workspace_members`, `ingredient_folk_names` and, since
 MB.110, `spell_ingredients` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
-drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
-the same builder object in both.
+drifting.
 
-**Where a table's audit columns are proved** (MB.188). Since every table
-spreads these same instances, what they declare — the four stamps required,
-the delete pair nullable, every id a key to `users.id` — is asserted once, in
-`tests/db/audit.test.ts`. That each table spreads them is its module schema
-test's exact column set, `[...OWN, ...AUDIT_COLUMNS]` or the stamp set, and
-that the migrated database carries them is `tests/db/audit-columns.test.ts`'s
-catalogue sweep ([`testing/db-harness.md`](../testing/db-harness.md), "The db
+**Where a table's audit columns are proved** (MB.188; MB.225). Once, in
+`tests/db/audit-columns.test.ts`'s one catalogue sweep: every audited table
+in the migrated database carries the set — the four stamps required, the
+delete pair nullable but on the two hard-deleted joins, every id a key to
+`users.id` — and no unaudited table carries an audit id. That each table
+spreads them is its module schema test's exact column set,
+`[...OWN, ...AUDIT_COLUMNS]` or the stamp set. `tests/db/audit.test.ts`
+keeps `applyAudit` alone ([`testing/db-harness.md`](../testing/db-harness.md), "The db
 test harness").
 
 `createdBy`/`updatedBy`/`deletedBy` carry

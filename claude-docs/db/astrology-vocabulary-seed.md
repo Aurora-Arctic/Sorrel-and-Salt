@@ -13,21 +13,20 @@ to insert first. `standard` seeds both inside its own transaction, and every
 planet its compendium lists is a curated one, as MB.162 requires of every
 compendium entry; no uncurated planet is seeded on a coven's entry either, so
 the autofill's in-use bucket is exercised by tests that write one. §5's table is lower-case; the seed writes each name in title case
-(`North Node`), and `astrology.test.ts` compares case-insensitively and
-then checks every word's capital separately.
+(`North Node`).
 
 **A description is a gloss, not a correspondence list.** Each names the
 body's or sign's other names, what it is and what it is read for — the Ram,
 cardinal fire, courage and beginnings; the Moon's ascending node, what is
 sought — because the suggestion query matches descriptions
 (§5), so the words a reader reaches for have to be there: Lilith's carries
-_Black Moon_, the nodes' _Rahu_ and _Ketu_, Ophiuchus's _Serpentarius_, and
-the test asserts those four by name. Ophiuchus has no agreed modality or
+_Black Moon_, the nodes' _Rahu_ and _Ketu_, Ophiuchus's _Serpentarius_. Ophiuchus has no agreed modality or
 element, so its themes carry it alone. A sign's description leaves out its
 ruling planet, so typing `Mars` as a zodiac sign does not offer Aries. As with the
-forms, the descriptions are pairwise distinct within each table, and §5's
-table is parsed at test time with the parse itself checked — two vocabularies,
-nineteen and thirteen.
+forms, the descriptions are pairwise distinct within each table, and the
+literal is §5's table, nineteen and thirteen — held to it by review, not a
+test (MB.225). `astrology.test.ts` keeps what a re-run leaves of an admin's
+edits.
 
 **Sources.** Researched when M4.5 settled the lists, and recast in Chicago form
 by MB.156, each page fetched again on October 6, 2026. MB.156 seeds each as a

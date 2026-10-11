@@ -205,7 +205,7 @@
   `user_privilege_changes` and its three enums, with four statements added by
   hand: the table's `set_updated_at` trigger; `forbid_rewrite()`, one function
   for every append-only ledger, and its `BEFORE UPDATE OR DELETE` trigger on
-  this one, which `tests/db/append-only-trigger.test.ts` sweeps for; and the
+  this one, whose refusals `user-privilege-changes-schema.test.ts` asserts; and the
   copy of the two one-privilege ledgers it replaced, with their ids and stamps,
   re-run in `user-privilege-changes-schema.test.ts`. See
   [MB.194's record](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
