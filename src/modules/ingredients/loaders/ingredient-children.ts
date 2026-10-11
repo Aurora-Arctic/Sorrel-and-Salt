@@ -1,10 +1,13 @@
 import { defineLoader } from '../../../graphql/loaders/define-loader';
 import {
   categoriesOf,
+  categoriesOfVariants,
   deitiesOf,
   folkNamesOf,
   referencesOf,
+  referencesOfVariants,
   substitutesOf,
+  substitutesOfVariants,
   variantsOf,
 } from '../services/ingredient-children';
 import type { Built } from '../../../graphql/loaders/types';
@@ -15,12 +18,14 @@ import type {
   IngredientKey,
   IngredientVariantRow,
   SubstituteRow,
+  VariantKey,
 } from '../types';
 
 // Keyed by the parent row rather than its id, so the service knows which
 // coven to check without a read of its own; cached by id, since the same
 // ingredient reached through two fields is one key.
 const byId = { cacheKeyFn: (ref: IngredientKey) => ref.id };
+const byVariantId = { cacheKeyFn: (ref: VariantKey) => ref.id };
 
 // Every child loader in one record rather than one export each, so
 // `clearIngredientChildren` is built from it: a loader added here is cleared
@@ -51,6 +56,30 @@ const CHILD_LOADERS = {
   ),
 };
 
+// A variant's child loaders, keyed by the variant row as the ingredient's are
+// by the ingredient row (MB.218). A record of their own: an ingredient write
+// knows the ingredient, not which of its variants a request has loaded, so
+// `clearIngredientChildren` empties these whole.
+const VARIANT_CHILD_LOADERS = {
+  /** `IngredientVariant.categories`, batched: the categories each variant adds. */
+  categoriesByVariant: defineLoader<VariantKey, CategoryRow[], string>(
+    categoriesOfVariants,
+    byVariantId,
+  ),
+
+  /** `IngredientVariant.substitutes`, batched: what may stand in for each variant. */
+  substitutesByVariant: defineLoader<VariantKey, SubstituteRow[], string>(
+    substitutesOfVariants,
+    byVariantId,
+  ),
+
+  /** `IngredientVariant.references`, batched: the references each variant cites. */
+  referencesByVariant: defineLoader<VariantKey, CitedReference[], string>(
+    referencesOfVariants,
+    byVariantId,
+  ),
+};
+
 // One export each, as src/graphql/loaders/index.ts registers them by name.
 export const {
   categoriesByIngredient,
@@ -60,9 +89,13 @@ export const {
   deitiesByIngredient,
   variantsByIngredient,
 } = CHILD_LOADERS;
+export const { categoriesByVariant, substitutesByVariant, referencesByVariant } =
+  VARIANT_CHILD_LOADERS;
 
 /**
- * Clears `row` from every child loader of the request's `loaders`. An
+ * Clears `row` from every child loader of the request's `loaders`, and
+ * empties its variants' child loaders, since the write may have changed any
+ * of the row's variants and the request does not know which it loaded. An
  * ingredient write calls it before answering: root mutation fields run in
  * turn within one request, so an earlier one may have read this entry's
  * children, and the answer must be this write's. `loaders` is typed by the
@@ -70,10 +103,13 @@ export const {
  * context fails to compile at each caller.
  */
 export function clearIngredientChildren(
-  loaders: Built<typeof CHILD_LOADERS>,
+  loaders: Built<typeof CHILD_LOADERS & typeof VARIANT_CHILD_LOADERS>,
   row: IngredientKey,
 ): void {
   for (const name of Object.keys(CHILD_LOADERS) as (keyof typeof CHILD_LOADERS)[]) {
     loaders[name].clear(row);
+  }
+  for (const name of Object.keys(VARIANT_CHILD_LOADERS) as (keyof typeof VARIANT_CHILD_LOADERS)[]) {
+    loaders[name].clearAll();
   }
 }

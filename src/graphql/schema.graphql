@@ -289,6 +289,7 @@ One form an ingredient comes in, and what that form adds to the ingredient: its 
 """
 type IngredientVariant {
   audit: AuditInfo!
+  categories: [Category!]!
   colors: [String!]
   description: String
   elements: [IngredientElement!]
@@ -300,7 +301,9 @@ type IngredientVariant {
   formChoice: IngredientFormValue
   id: ID!
   planets: [String!]
+  references: [ReferenceLink!]!
   safetyNotes: String
+  substitutes: [Substitute!]!
   zodiacSigns: [String!]
 }
 
@@ -929,6 +932,11 @@ type Substitute {
   The linked ingredient's label, its last once deleted; the typed name otherwise.
   """
   name: String!
+
+  """
+  The linked ingredient's form the link names: null when it names none, on a typed name, and once that ingredient or form is deleted.
+  """
+  variant: IngredientVariant
 }
 
 """

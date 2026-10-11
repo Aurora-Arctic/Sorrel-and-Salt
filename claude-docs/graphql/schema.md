@@ -481,7 +481,18 @@ type QueryCompendiumConnectionEdge {
   `name`. A page of ingredients reads its substitutes in one statement, the
   linked ingredients joined in, through the hatch
   ([`db/soft-delete.md`](../db/soft-delete.md)). It carries no `audit`, as
-  `folkNames` carries none.
+  `folkNames` carries none. `variant` (MB.218) is the linked ingredient's form
+  the link names, null without one and wherever `ingredient` is null: it is
+  found among the linked ingredient's variants through `variantsByIngredient`,
+  so a form is read beneath its ingredient and never by its id alone.
+- **`IngredientVariant` is one form of an ingredient** (DESIGN.md §7, MB.215;
+  built by MB.218): its own fields, `formChoice` as `Ingredient.formChoice`
+  reads one, and `categories`, `substitutes` and `references`, that form's
+  own additions through `categoriesByVariant`, `substitutesByVariant` and
+  `referencesByVariant`, keyed by the variant row, which carries its
+  ingredient's tier. An ingredient's own lists are its rows with no variant, so
+  nothing appears in both and nothing is merged: a client shows a form's beside
+  its ingredient's (the union rule).
 - **`IngredientDeity` is a pick or a typed name** (DESIGN.md §7, MB.167),
   read as `Substitute` is: `name` is as saved — a pick's curated spelling, or
   the typed text — and `deity` the curated `Deity` picked, null on typed text
@@ -632,8 +643,8 @@ signatures DESIGN.md §7's sketch gives them.
   client reconciles its cache from the answer without a refetch.
   `updateIngredient` first clears the entry from `categoriesByIngredient`,
   `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`,
-  `referencesByIngredient` and `variantsByIngredient`, through
-  `clearIngredientChildren`, which
+  `referencesByIngredient` and `variantsByIngredient`, and empties the three
+  variant child loaders, through `clearIngredientChildren`, which
   clears every loader `loaders/ingredient-children.ts` defines (MB.211). Root mutation fields run in turn within one
   request, so an earlier field may already have loaded the categories, folk
   names, substitutes, deities or references this write replaced.

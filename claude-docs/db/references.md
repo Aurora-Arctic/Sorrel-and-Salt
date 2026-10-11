@@ -155,7 +155,11 @@ rather than a column: the registry maps it to the parent's table, which the
 finder needs, and a `SourcedKey` cannot name a column that is not a sourced
 link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
-`referencesByIngredient` batches it behind `Ingredient.references`.
+`referencesByIngredient` batches it behind `Ingredient.references`. A
+variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
+through `readableVariantParent`, the variant live and its ingredient readable
+(MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
+`IngredientVariant.references`.
 
 **The picker's search** is `findReferenceSuggestions(memberships, query,
 page)`: the live references of the compendium and a proof's coven — no
@@ -170,7 +174,10 @@ measured, if the table outgrows it.
 **The admin's to-do list** is `compendium(withoutReferences: true)`, whose
 arm `citesNothing('ingredientId')` keeps an entry with no live link to a live compendium
 reference — the entries whose bibliography reads empty, so one whose only
-link was unlinked, or cites a retracted source, is listed.
+link was unlinked, or cites a retracted source, is listed. Under the union
+rule (MB.218) a source on one of the entry's live forms sources the entry, so
+the arm also asks that no live variant `cites('ingredientVariantId')`: an
+entry whose only citation is on its oil is not listed.
 
 Every finder here is on the tier seam, named in `TIER_SEAM`
 ([`modules.md`](../modules.md#the-tier-seam)).

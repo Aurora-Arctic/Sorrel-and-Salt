@@ -17,8 +17,12 @@ import {
 import type { ReferenceLinkFields } from '@/modules/ingredients/validation/types';
 import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../../../support/db/insert-reference';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
 // MB.153: an ingredient's references, each a link to a reference with an
@@ -429,5 +433,26 @@ describe('the compendium without references', () => {
     expect(await names({})).toEqual(['Cited', 'Misfiled', 'Retracted', 'Uncited', 'Unlinked']);
     expect(await names({ withoutReferences: false })).toHaveLength(5);
     expect((await countCompendium({ withoutReferences: true }, undefined)).totalCount).toBe(4);
+  });
+
+  // The union rule (MB.215, MB.218): a source on one of an entry's forms
+  // sources the entry, while that form is live.
+  it('counts an entry sourced when one of its live variants cites, and only then', async () => {
+    const book = await compendiumBook('Fixture Herbal');
+    const byForm = await seed(entry({ name: 'Sourced By Its Oil' }));
+    const oil = await insertVariant(sql, byForm, { form: 'Oil' }, A.id);
+    await insertVariantReferenceLink(sql, oil, book, A.id);
+    const byDeletedForm = await seed(entry({ name: 'Sourced By A Deleted Form' }));
+    const resin = await insertVariant(sql, byDeletedForm, { form: 'Resin' }, A.id);
+    await insertVariantReferenceLink(sql, resin, book, A.id);
+    await sql`update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${resin}`;
+    // The precondition: neither entry cites anything itself.
+    const [{ count }] = await sql`
+      select count(*)::int as count from reference_links
+      where ingredient_id in ${sql([byForm, byDeletedForm])}`;
+    expect(count).toBe(0);
+
+    expect(await names({ withoutReferences: true })).toEqual(['Sourced By A Deleted Form']);
+    expect((await countCompendium({ withoutReferences: true }, undefined)).totalCount).toBe(1);
   });
 });

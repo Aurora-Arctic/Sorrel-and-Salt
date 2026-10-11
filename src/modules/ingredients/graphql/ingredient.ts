@@ -44,6 +44,21 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
         'The ingredient to follow: null on a typed name, and once the linked ingredient is deleted.',
       resolve: (substitute) => substitute.ingredient,
     }),
+    // Read beneath the linked ingredient, through the loader its variants are
+    // read by, never by the variant's id alone (MB.218): a form takes its
+    // ingredient's tier, so a link the reader may not follow shows no form.
+    variant: t.field({
+      type: IngredientVariantRef,
+      nullable: true,
+      description:
+        "The linked ingredient's form the link names: null when it names none, on a typed name, and once that ingredient or form is deleted.",
+      resolve: async (substitute, _args, { loaders }) => {
+        const { ingredient, variantId } = substitute;
+        if (!ingredient || !variantId) return null;
+        const variants = await loaders.variantsByIngredient.load(ingredient);
+        return variants.find((variant) => variant.id === variantId) ?? null;
+      },
+    }),
   }),
 });
 
@@ -96,6 +111,23 @@ IngredientVariantRef.implement({
     planets: t.exposeStringList('planets', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
+    // This form's own additions, never its ingredient's, which the client
+    // shows beside them (the union rule). The row is the loaders' key, as an
+    // ingredient's is theirs.
+    categories: t.field({
+      type: [CategoryRef],
+      resolve: (row, _args, { loaders }) => loaders.categoriesByVariant.load(row),
+    }),
+    // Alphabetical by the name each shows, `[]` when there are none.
+    substitutes: t.field({
+      type: [SubstituteRef],
+      resolve: (row, _args, { loaders }) => loaders.substitutesByVariant.load(row),
+    }),
+    // Alphabetical by citation, `[]` when there are none.
+    references: t.field({
+      type: [ReferenceLinkRef],
+      resolve: (row, _args, { loaders }) => loaders.referencesByVariant.load(row),
+    }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
 });

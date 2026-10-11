@@ -2,9 +2,14 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
-import { A, B, C, D, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
-import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import {
+  insertIngredient,
+  insertSubstituteLink,
+  insertVariant,
+} from '../../../support/db/insert-ingredient';
+import { insertReference, insertVariantReferenceLink } from '../../../support/db/insert-reference';
 import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { IngredientNode, IngredientVariantNode } from './types';
@@ -112,10 +117,18 @@ describe('ingredient', () => {
   });
 
   // The transport's half of `variants` (MB.218): each field reaches the wire,
-  // in form order. Who may read them is the loader matrix's
+  // in form order, a form's own children through its loaders. Who may read
+  // them is the loader matrix's
   // (tests/modules/ingredients/loaders/ingredient-children.test.ts).
-  it('answers its variants in form order, each with its fields', async () => {
+  it('answers its variants in form order, each with its fields and children', async () => {
     const barkId = await curatedFormId(sql, 'Bark');
+    const linkedId = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Fixture Linked', nomenclature: 'none' }),
+      A.id,
+    );
+    const [{ id: linkedHerb }] = await sql<{ id: string }[]>`
+      select id from ingredient_variants where ingredient_id = ${linkedId}`;
     // Written after the fixture's own `herb`, and sorting before it.
     const variantId = await insertVariant(
       sql,
@@ -129,9 +142,18 @@ describe('ingredient', () => {
         planets: ['Fixture Star'],
         zodiacSigns: ['Fixture Sign'],
         colors: ['Fixture Grey'],
+        categories: ['Protection'],
+        substitutes: ['Testbane'],
       },
       A.id,
     );
+    // The bark stands in for the linked ingredient's herb, and cites a book.
+    await insertSubstituteLink(sql, compendiumId, linkedId, A.id, {
+      variantId,
+      substituteVariantId: linkedHerb,
+    });
+    const book = await insertReference(sql, { title: 'Fixture Barks' }, E.id);
+    await insertVariantReferenceLink(sql, variantId, book, A.id, 'p. 3');
 
     const result = await runOperation<{ ingredient: { variants: IngredientVariantNode[] } }>(
       null,
@@ -139,6 +161,9 @@ describe('ingredient', () => {
         ingredient(id: $id) {
           variants {
             id form formChoice { id } description safetyNotes elements planets zodiacSigns colors
+            categories { name }
+            substitutes { name ingredient { id } variant { id form } }
+            references { reference { title } locator }
             audit { createdBy updatedBy }
           }
         }
@@ -158,9 +183,27 @@ describe('ingredient', () => {
         planets: ['Fixture Star'],
         zodiacSigns: ['Fixture Sign'],
         colors: ['Fixture Grey'],
+        categories: [{ name: 'Protection' }],
+        substitutes: [
+          {
+            name: 'Fixture Linked',
+            ingredient: { id: linkedId },
+            variant: { id: linkedHerb, form: 'herb' },
+          },
+          { name: 'Testbane', ingredient: null, variant: null },
+        ],
+        references: [{ reference: { title: 'Fixture Barks' }, locator: 'p. 3' }],
         audit: { createdBy: A.id, updatedBy: A.id },
       },
-      expect.objectContaining({ form: 'herb', formChoice: null, description: null }),
+      // The ingredient's own herb, which owns none of the bark's children.
+      expect.objectContaining({
+        form: 'herb',
+        formChoice: null,
+        description: null,
+        categories: [],
+        substitutes: [],
+        references: [],
+      }),
     ]);
   });
 });
