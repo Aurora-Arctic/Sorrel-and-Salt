@@ -471,7 +471,11 @@ thing that holds them. Buttons were 0.5rem and panels 0.25rem until MB.114.
 ## Buttons
 
 `.btn` is the shape every button shares, `SignInPanel`'s brand buttons
-included. Four variants:
+included. No tapped control shows the platform's tap highlight, the blue box
+iOS and Android Chrome draw: `body` sets `-webkit-tap-highlight-color:
+transparent` (`src/app/globals.scss`), so a control's own `:active` and focus
+styles are its only feedback, and each control that can be tapped needs one.
+Four variants:
 
 - **The outline (`.btn`)**, the default: the accent on an edge, filling on
   hover. The edge is 1.6px on every variant, heavier than a field's 1px, since

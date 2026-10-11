@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
 
@@ -24,6 +25,7 @@ const TABS = [
 const tabs = () => within(screen.getByRole('navigation', { name: 'People' })).getAllByRole('link');
 const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
 const open = () => hrefs(tabs().filter((link) => link.getAttribute('aria-current') === 'page'));
+const busy = () => hrefs(tabs().filter((link) => link.getAttribute('aria-busy') === 'true'));
 
 beforeEach(() => {
   pathname.mockReturnValue('/admin/users');
@@ -98,10 +100,57 @@ describe('TabbedPage', () => {
     expect(action()?.closest('[inert]')).not.toBeNull();
     expect(within(panel()).getByRole('status')).toBeInTheDocument();
     expect(within(panel()).queryByRole('table', { name: 'Users' })).not.toBeInTheDocument();
+    // The page shown is still Users until Invitations renders; the pressed
+    // tab is the one on its way.
+    expect(open()).toEqual(['/admin/users']);
+    expect(busy()).toEqual(['/admin/invitations']);
 
     // A second press while the first is on its way goes nowhere.
     fireEvent.click(tab('Privilege Changes'));
     expect(router.push).toHaveBeenCalledTimes(1);
+  });
+
+  it('moves the current page to the pressed tab once it has rendered', () => {
+    // A navigation that renders at once: the address moves and the
+    // transition ends in the same update.
+    const Switching = () => {
+      const [, rendered] = useState(0);
+      router.push.mockImplementation((href: string) => {
+        pathname.mockReturnValue(href);
+        rendered((count) => count + 1);
+      });
+      return (
+        <TabbedPage title="People" tabs={TABS}>
+          <p>Content</p>
+        </TabbedPage>
+      );
+    };
+    render(<Switching />);
+
+    fireEvent.click(tab('Invitations'));
+
+    expect(open()).toEqual(['/admin/invitations']);
+    expect(busy()).toEqual([]);
+    expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+  });
+
+  it('marks a tab pressed while a pointer is down on it, a tap included, and not after', () => {
+    render(
+      <TabbedPage title="People" tabs={TABS}>
+        <p>Content</p>
+      </TabbedPage>,
+    );
+    const users = tab('Users');
+
+    fireEvent.pointerDown(users, { button: 0, pointerType: 'touch' });
+    expect(users).toHaveAttribute('data-pressed');
+    fireEvent.pointerUp(users);
+    expect(users).not.toHaveAttribute('data-pressed');
+
+    // A touch that turns into a scroll of the track is not a press.
+    fireEvent.pointerDown(users, { button: 0, pointerType: 'touch' });
+    fireEvent.pointerCancel(users);
+    expect(users).not.toHaveAttribute('data-pressed');
   });
 
   it.each([['ctrlKey'], ['metaKey'], ['shiftKey']] as const)(

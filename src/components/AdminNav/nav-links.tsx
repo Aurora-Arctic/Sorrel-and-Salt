@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useId } from 'react';
+import { pressFeedback } from '../../lib/press-feedback';
 import { isAtPath } from '../../lib/at-path';
 import { ChevronIcon } from '../Combobox/icons';
 import type { AdminPage, AdminSection, NavLinksProps } from './types';
@@ -58,7 +59,7 @@ const NavLinks = ({ sections }: NavLinksProps): ReactElement => {
           address, so a client-side navigation, which keeps the layout
           mounted, remounts it shut. */}
       <details key={pathname} className="admin-nav__menu">
-        <summary className="admin-nav__summary">
+        <summary className="admin-nav__summary" {...pressFeedback}>
           <span className="admin-nav__here">
             {here === null ? (
               'Admin Pages'

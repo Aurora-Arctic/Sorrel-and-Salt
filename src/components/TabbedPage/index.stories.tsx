@@ -66,10 +66,12 @@ const Invitations = () => (
 );
 
 // Users pressed and on its way: the heading where it was, Invite Admin and
-// every tab greyed out and closed to another press, and in place of the
-// invitations the skeleton of the list on its way, its filter row, a table's
-// heading and six rows, and the pager, shimmering. At 375px the rows are
-// cards. Under reduced motion the shapes stand still.
+// every tab greyed out and closed to another press, the pill moved to Users
+// in its pending look, grey and flat, while Invitations is still the current
+// page, and in place of the invitations the skeleton of the list on its
+// way, its filter row, a table's heading and six rows, and the pager,
+// shimmering. At 375px the rows are cards. Under reduced motion the shapes
+// stand still.
 const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
   <TabSwitchContext.Provider value={tab}>
     <Invitations />
