@@ -12,7 +12,7 @@ import type { UserListFilterProps } from './types';
 // as the pager's plain anchors do, busy until the page goes. Before hydration
 // the form submits natively, its checkbox as `awaiting=`, which the page
 // reads the same as the bare flag. The role is a native `<select>`, so it
-// submits before hydration too, its "All roles" as `role=`, which the page
+// submits before hydration too, its "All Roles" as `role=`, which the page
 // reads as no role.
 const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
@@ -23,7 +23,7 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
 
   return (
     <FilterForm
-      label="Filter users"
+      label="Filter Users"
       action="/admin/users"
       href={() =>
         userListHref({
@@ -59,7 +59,7 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
           value={draftRole}
           onChange={(event) => setDraftRole(event.target.value as UserRole | '')}
         >
-          <option value="">All roles</option>
+          <option value="">All Roles</option>
           <option value="admin">Admin</option>
           <option value="user">User</option>
         </select>

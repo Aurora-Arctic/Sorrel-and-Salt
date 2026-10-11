@@ -10,7 +10,7 @@ import RoleControl from './role-control';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
 import { stackCell, tableRole } from '../../lib/table-roles';
-import type { UserListEntry, UserListProps } from './types';
+import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
 // `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
@@ -37,6 +37,29 @@ const COLUMNS = {
 } as const;
 
 const IMPERSONATE = 'Impersonate';
+
+/** A list as prose, without the serial comma: "a", "a and b", "a, b and c". */
+function and(items: readonly string[]): string {
+  return items.length < 2
+    ? items.join('')
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
+/**
+ * The empty list, naming the filters in use (MB.115, on the owner's call), so
+ * an admin sees what to change: "No users match “ada” and the role Admin.
+ * Change or clear the filter to see more."
+ */
+function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string {
+  const filters = [
+    query && `“${query}”`,
+    role && `the role ${ROLE_LABELS[role]}`,
+    awaitingApproval && 'Needs Approval',
+  ].filter((filter): filter is string => Boolean(filter));
+  return filters.length
+    ? `No users match ${and(filters)}. Change or clear the filter to see more.`
+    : 'There are no users yet.';
+}
 
 /** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
@@ -174,20 +197,21 @@ const UserRow = ({
         )}
       </div>
     </td>
-    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
-    <td {...stackCell(COLUMNS.methods)}>
+    {/* Logos, empty when none, on the owner's call: a blank reads as none.
+        This and Signed Up are facts no control changes, so muted (index.scss). */}
+    <td className="user-list__fact" {...stackCell(COLUMNS.methods)}>
       <span className="user-list__providers">
         {user.providers.map((id) => (
           <ProviderLogo key={id} id={id} />
         ))}
       </span>
     </td>
-    <td {...stackCell(COLUMNS.signedUp)}>
+    <td className="user-list__fact" {...stackCell(COLUMNS.signedUp)}>
       <time dateTime={user.createdAt.toISOString()}>
         {user.createdAt.toISOString().slice(0, 10)}
       </time>
     </td>
-    {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
+    {/* Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
         as acting as someone else is the table's one dangerous control. */}
     {canImpersonate && (
       <td className="user-list__impersonate" {...stackCell('')}>
@@ -242,7 +266,7 @@ const UserList = ({
         </table>
       </div>
     ) : (
-      <p>No users match.</p>
+      <p>{noMatch({ query, role, awaitingApproval })}</p>
     )}
 
     <Pager previousHref={previousHref} nextHref={nextHref} />

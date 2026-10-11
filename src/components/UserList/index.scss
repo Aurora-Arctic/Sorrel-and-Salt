@@ -7,8 +7,10 @@
 // Impersonate column and how it gives way when the table stacks into cards,
 // and the pause beside the page's heading. The column, filter, table and pager
 // are primitives (`.list-frame`, `.filter-row`, `.data-table` with
-// `--stack`, `.pager`); the desktop's look past the tokens awaits the
-// section's sign-off (MB.115, proposal 1d.2).
+// `--stack`, `.pager`). Above the stacking width the seven columns keep
+// their order, restyled on the owner's call at MB.115's sign-off: rows a
+// step taller, the read-only facts muted at the caption size, every control
+// at the end of its cell.
 
 // Every cell centred on its row rather than on the text's baseline, which
 // the primitive uses: these rows mix text with logo circles, marks and
@@ -179,26 +181,42 @@
   gap: space(2);
 }
 
-// The Impersonate column, heading and cells: a red rule down its left, a
-// faded red tint and red text,
-// since it is the one control in the table that acts as someone else.
+// The table above the stacking width (MB.115, the owner's call): each row a
+// step taller than the primitive's, since a row holds buttons as well as
+// text, and the facts no control changes, Sign-In Methods and Signed Up,
+// muted at the caption size, so the eye goes to what can be acted on. Scoped
+// to this width because a card already leads each fact with its muted label.
+@container data-table (width > #{$table-stack-width}) {
+  .user-list .data-table td {
+    padding-block: space(3);
+  }
+
+  .user-list .user-list__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
+// The Impersonate column, heading and cells: a red rule down its left, since
+// it is the one control in the table that acts as someone else. No tint and
+// no red text since MB.115's sign-off: the rule and the wax button say it.
 //
-// It stays at the table's right edge while the other columns scroll beneath it
-// on a narrow screen (the owner's call), so its ground is opaque: the tint
-// mixed into the band it sits on, the page or a banded row's card, rather than
-// laid over transparent.
+// It stays at the table's right edge while the other columns scroll beneath
+// it (the owner's call), so its ground is opaque, the band it sits on: the
+// page, or a banded row's card. Still needed with the admin column at 80rem:
+// the frame stops scrolling only from about 77rem of table, so any window
+// narrower than that, above the stacking width, scrolls it still.
 .user-list__impersonate {
   position: sticky;
   right: 0;
   z-index: $sticky-column-layer;
   // A hairline, as the headings' rule is: the red marks it, not the weight.
   border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
-  color: $secondary;
+  background-color: $surface-page;
 }
 
 .user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
-  background-color: color-mix(in srgb, $secondary 6%, $surface-card);
+  background-color: $surface-card;
 }
 
 // Its heading's hairline red too, where every other column's is the muted

@@ -6,5 +6,5 @@
  * is the act's own, "Approving" or "Granting".
  */
 export function unverifiedWarning(verb: string): string {
-  return `This email address has not been verified, so nobody has proved who holds it. ${verb} keeps the account rather than letting it lapse.`;
+  return `Nobody has confirmed this email address yet. ${verb} also keeps the account from lapsing.`;
 }

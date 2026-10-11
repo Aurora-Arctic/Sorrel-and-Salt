@@ -28,7 +28,7 @@ export function sameAddress(a: string, b: string): boolean {
  * the two cannot drift. How to change who it is lives in the docs, not the page.
  */
 export const PRIMARY_ADMIN_REFUSAL =
-  "This is the primary admin and can't be removed. Changing who the primary admin is takes a change to the site's configuration.";
+  "You can't revoke the primary admin. The site's configuration sets who that is.";
 
 /**
  * Why a grant or revoke is refused while the primary admin has paused admin
@@ -36,4 +36,5 @@ export const PRIMARY_ADMIN_REFUSAL =
  * Revoke shows, one string so the two cannot drift. It names a role, not a
  * person (the owner's wording).
  */
-export const ADMIN_CHANGES_PAUSED_REFUSAL = 'Admin changes are paused by the primary admin.';
+export const ADMIN_CHANGES_PAUSED_REFUSAL =
+  'The primary admin has paused admin changes. Ask them to resume changes.';

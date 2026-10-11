@@ -26,16 +26,16 @@ id.
 ## Contracts
 
 - **One ledger, filtered, not a page per privilege.** The filter is a GET
-  form to `/admin/privilege-changes`, named "Filter privilege changes" inside
+  form to `/admin/privilege-changes`, named "Filter Privilege Changes" inside
   a `<search>` landmark, as the user list's is
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
   (`query`), matching part of the subject's name or email, a native Privilege
-  dropdown (`privilege`: All, Admin or Coven creation), both on the owner's
-  call, and a Filter button. It is `filter.tsx`, the one client file here:
+  dropdown (`privilege`: All Privileges, Admin or Coven Creation, in title
+  case as every label is), both on the owner's call, and a Filter button. It is `filter.tsx`, the one client file here:
   the fields and their state inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)), so Filter is busy, a spinner and
   "Filtering", until the full load leaves (MB.115). A native
-  `<select>`, so before hydration the form still submits, All as
+  `<select>`, so before hydration the form still submits, All Privileges as
   `privilege=`, which the page reads as no privilege. Filter is `disabled`
   while the trimmed query and the dropdown match the filter shown, as the
   user list's is (MB.53), and a submit opens the new filter from the first
@@ -43,7 +43,7 @@ id.
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's
-  permissions history icon opens it with their address in the search, which
+  privilege changes icon opens it with their address in the search, which
   fills the box: the owner's call, over a separate `?user=<id>` filter and a
   line saying whose changes are shown. The match is the user list's, a
   case-insensitive substring, so an address inside another (`ada@…` in
@@ -61,8 +61,8 @@ id.
   reads "Deleted account".
 - **The note shows only where one was given**: an empty cell otherwise.
 - **Nothing to show is a sentence, not an empty table**, in plain words for
-  the filter, on the owner's wording: "No permission changes yet.", "No
-  permission changes for “<query>”.", "No admin changes yet.", "No coven
+  the filter, on the owner's wording: "No privilege changes yet.", "No
+  privilege changes for “<query>”.", "No admin changes yet.", "No coven
   creation changes yet.", "No admin changes for “<query>”." or "No coven
   creation changes for “<query>”."
 - **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors and
@@ -77,7 +77,9 @@ primitives, the table a `.data-table` with `--stack` in its
 `.data-table-frame`, and the pager the `.pager`. Under `$table-stack-width`
 of its frame each change is a card, every fact led by its column's name. Its
 own stylesheet keeps the time on one line and holds the note to `$measure`.
-The look past the tokens waits for the section's sign-off (MB.115).
+Its look is MB.115's, signed off as it stands; "privilege changes" is the
+ledger's one name everywhere, its heading, its nav entry, its empty state and
+the user list's icon.
 
 ## Stories
 

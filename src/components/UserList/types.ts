@@ -70,9 +70,9 @@ export type CreationAction = 'approve' | 'revoke';
 export type ConfirmStep = 'idle' | 'confirming' | 'sending';
 
 /**
- * A row's action that asks first, in a modal: what its button and the modal
- * say, and the write it sends. The creation control and the role control
- * each build one.
+ * An action that asks first, in a modal: what its button and the modal say,
+ * and the write it sends. The creation and role controls, Impersonate, the
+ * pause switch and the invitations' Revoke each build one.
  */
 export interface ConfirmedActionProps {
   /** The row's button and the modal's confirm, one word or two. */
@@ -91,8 +91,12 @@ export interface ConfirmedActionProps {
   confirmClass: string;
   /** Whether the modal offers an optional reason, sent with the write. */
   withNote?: boolean;
-  /** The write; `note` is the reason as typed, trimmed, or absent. */
+  /** The write; `note` is the reason as typed, trimmed, or absent. A refusal rejects. */
   send: (note?: string) => Promise<unknown>;
+  /** What follows a success, the confirm still busy; absent, the page is read again. */
+  onSent?: () => void;
+  /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
+  refusal?: string;
 }
 
 /** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
