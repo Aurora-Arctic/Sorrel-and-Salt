@@ -171,3 +171,12 @@ export interface CachedDeclaration {
   tags: readonly string[];
   revalidate: number | false | undefined;
 }
+
+/**
+ * `globalThis` as db-global-setup.ts extends it: the template build each run's
+ * Vitest instance started, so the second project naming the setup awaits the
+ * first's rather than starting its own.
+ */
+export interface TemplateBuildRegistry {
+  __sorrelTemplateBuilds?: WeakMap<object, Promise<void>>;
+}
