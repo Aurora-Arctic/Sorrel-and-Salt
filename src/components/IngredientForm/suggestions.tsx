@@ -28,9 +28,10 @@ import type {
   FormFieldProps,
   LookupListFieldProps,
   LookupText,
+  SubstituteForm,
   UseSuggestions,
 } from './types';
-import { tierOf } from './values';
+import { draftOf, tierOf } from './values';
 
 // The lookups on the form's boxes: the form and folk names M4.7a serves, and
 // the planets, signs, deities and substitutes MB.131 adds. Each waits for the
@@ -130,6 +131,17 @@ const IngredientSuggestionsDocument = graphql(`
           form
           description
           isGlobal
+          variants {
+            id
+            form
+            formChoice {
+              id
+              group {
+                id
+                name
+              }
+            }
+          }
         }
       }
     }
@@ -147,6 +159,17 @@ const CompendiumSubstitutesDocument = graphql(`
           form
           description
           isGlobal
+          variants {
+            id
+            form
+            formChoice {
+              id
+              group {
+                id
+                name
+              }
+            }
+          }
         }
       }
     }
@@ -244,6 +267,16 @@ const deityOptions = (data: DeitySuggestionsQuery): ListOption[] =>
       : undefined,
   }));
 
+/** An ingredient's forms as a substitute's link carries them, each with its group. */
+const formsOf = (
+  variants: IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node']['variants'],
+): SubstituteForm[] =>
+  variants.map(({ id, form, formChoice }) => ({
+    id,
+    form,
+    group: formChoice?.group.name ?? null,
+  }));
+
 const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
   data.ingredientSuggestions.edges.map(({ node }) => {
     const canonicalName = node.canonicalName ?? null;
@@ -253,6 +286,7 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
       form: node.form ?? null,
       description: node.description ?? null,
       isGlobal: node.isGlobal,
+      variants: formsOf(node.variants),
     };
     return {
       // The label is what a linked entry reads as; the link is what is saved,
@@ -282,6 +316,7 @@ const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
         form: node.form ?? null,
         description: node.description ?? null,
         isGlobal: node.isGlobal,
+        variants: formsOf(node.variants),
       },
     };
   });
@@ -329,30 +364,30 @@ export const useCompendiumSubstitutes: UseSuggestions = (_workspaceId, text, act
   useLookup(CompendiumSubstitutesDocument, {}, text, active, compendiumOptions);
 
 /**
- * The form field, suggesting from the curated vocabulary and the forms in
- * use. A pick of a curated form links it, and the box shows its group, which
- * the text alone cannot: Wax under _Animal_ and under _Substance_ both read
- * "Wax" (MB.169). The text stays the member's to edit, and an edit away from
- * the picked name drops the link, the owner's call: what is left is typed.
- * On the compendium the form must be a pick (MB.162), so the box offers the
- * curated rows alone and no typed row.
+ * A variant's Form field, suggesting from the curated vocabulary and the
+ * forms in use. A pick of a curated form links it, and the box shows its
+ * group, which the text alone cannot: Wax under _Animal_ and under
+ * _Substance_ both read "Wax" (MB.169). The text stays the member's to edit,
+ * and an edit away from the picked name drops the link, the owner's call:
+ * what is left is typed. On the compendium the form must be a pick (MB.162),
+ * so the box offers the curated rows alone and no typed row.
  */
-export function FormField({ workspaceId, pickOnly }: FormFieldProps): ReactElement {
+export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactElement {
   const { control, getValues, setValue } = useFormContext<IngredientFormValues>();
-  const text = useWatch({ control, name: 'form' });
-  const link = useWatch({ control, name: 'formLink' });
+  const text = useWatch({ control, name: `${at}.form` });
+  const link = useWatch({ control, name: `${at}.formLink` });
   const [active, setActive] = useState(false);
   const suggestions = curatedOnly(useFormSuggestions(workspaceId, text, active), pickOnly);
   return (
     <SuggestField
-      name="form"
+      name={`${at}.form`}
       label="Form"
       hint="How it comes: dried leaf, whole root, oil."
       suggestions={suggestions}
       onActivate={() => setActive(true)}
-      onPick={(option) => setValue('formLink', option?.link ?? null)}
+      onPick={(option) => setValue(`${at}.formLink`, option?.link ?? null)}
       onEdit={(edited) => {
-        if (edited !== getValues('formLink')?.name) setValue('formLink', null);
+        if (edited !== getValues(`${at}.formLink`)?.name) setValue(`${at}.formLink`, null);
       }}
       qualifier={
         link?.group ? { text: link.group, detail: link.description ?? undefined } : undefined
@@ -368,7 +403,7 @@ export function FormField({ workspaceId, pickOnly }: FormFieldProps): ReactEleme
  * flat, `curated` dropped: every row left is the compendium's, so a From
  * Compendium heading over them would tell the admin nothing.
  */
-function curatedOnly<O extends ComboboxOption>(
+export function curatedOnly<O extends ComboboxOption>(
   found: Suggestions<O>,
   only = false,
 ): Suggestions<O> {
@@ -387,18 +422,19 @@ export function LookupListField({
   workspaceId,
   useSuggestions,
   omit,
+  rank,
   ...list
 }: LookupListFieldProps): ReactElement {
   const { control } = useFormContext();
-  const text: string = useWatch({ control, name: `drafts.${list.name}` });
+  const text: string = useWatch({ control, name: draftOf(list.name) });
   const [active, setActive] = useState(false);
   const found = useSuggestions(workspaceId, text, active);
-  const suggestions = useMemo(
-    () =>
+  const suggestions = useMemo(() => {
+    const kept =
       omit === undefined
-        ? found
-        : { ...found, options: found.options.filter((option) => option.link?.id !== omit) },
-    [found, omit],
-  );
+        ? found.options
+        : found.options.filter((option) => option.link?.id !== omit);
+    return { ...found, options: rank ? rank(kept) : kept };
+  }, [found, omit, rank]);
   return <ListField {...list} suggestions={suggestions} onActivate={() => setActive(true)} />;
 }

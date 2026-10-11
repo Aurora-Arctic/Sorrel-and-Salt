@@ -85,6 +85,34 @@ describe('Combobox', () => {
     expect(screen.queryByRole('button', { name: /Show/ })).not.toBeInTheDocument();
   });
 
+  // Regression, found by MB.221's e2e flow: a box left while its list was
+  // empty — a pick-only box's lookup still answering — kept wanting it open,
+  // and when the answer came the list opened and took the focus back from
+  // whatever box was then in use.
+  it('stays shut and unfocused when suggestions arrive after it was left with none', () => {
+    const PICK_ONLY = { offerTyped: false };
+    const { rerender } = render(
+      <>
+        <Harness suggestions={{ options: [], pending: true }} {...PICK_ONLY} />
+        <input aria-label="Elsewhere" />
+      </>,
+    );
+    act(() => box().focus());
+    fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
+    const elsewhere = screen.getByRole('textbox', { name: 'Elsewhere' });
+    act(() => elsewhere.focus());
+
+    rerender(
+      <>
+        <Harness suggestions={TWO_BUCKETS} {...PICK_ONLY} />
+        <input aria-label="Elsewhere" />
+      </>,
+    );
+
+    expect(box()).toHaveAttribute('aria-expanded', 'false');
+    expect(elsewhere).toHaveFocus();
+  });
+
   it('opens as text is typed, what was typed first and then each suggestion', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 

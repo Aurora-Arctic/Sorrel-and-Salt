@@ -30,7 +30,7 @@ import type {
   SuggestFieldProps,
   TextFieldProps,
 } from './types';
-import { addEntry, commitDraft, entryDetail, entryText, repeatOf } from './values';
+import { addEntry, commitDraft, draftOf, entryDetail, entryText, repeatOf } from './values';
 
 // IngredientForm's fields, on the form primitives (claude-docs/styling.md,
 // "Form fields"). Each reads its own error out of the form state, so a field
@@ -328,8 +328,9 @@ export function ListField({
   const form = useFormContext<IngredientFormValues>();
   const { control, trigger, setError, clearErrors, getFieldState, getValues } = form;
   const { fields, remove, move } = useFieldArray({ control, name });
-  const box = `drafts.${name}` as const;
+  const box = draftOf(name);
   const { field } = useController({ control, name: box });
+  const text = field.value as string;
   const { errors, isSubmitted } = useFormState({ control, name: [name, box] });
   const id = useId();
   // Its own ref rather than setFocus, which waits a tick: the box never
@@ -429,7 +430,7 @@ export function ListField({
   // Add refuses a repeat; a pick never is one, since the lookup leaves out
   // what the list holds and withholds the typed row for a repeat.
   const add = () => {
-    if (!refused(getValues(box))) added(commitDraft(form, name));
+    if (!refused(getValues(box) as string)) added(commitDraft(form, name));
   };
   const pick = (value: string, option: ListOption | null) =>
     added(addEntry(form, name, value, option?.link));
@@ -449,10 +450,13 @@ export function ListField({
   };
 
   // Keyed by the field array's id, which follows an entry through a move.
+  // The detail is read from the values watched: the field array's rows are a
+  // snapshot that an entry's own field — a substitute's form, picked beside
+  // the list (MB.221) — does not refresh.
   const chips = fields.map((row, index) => ({
     id: row.id,
     value: entryText(row),
-    detail: entryDetail(row),
+    detail: entryDetail(listed[index] ?? row),
     errorId: entryErrors[index] && errorId,
     onRemove: () => {
       setAnnouncement(`Removed ${entryText(row)}`);
@@ -498,18 +502,18 @@ export function ListField({
         <Combobox
           id={boxId}
           label={entry}
-          value={field.value}
-          onChange={(text) => {
+          value={text}
+          onChange={(typed) => {
             clearRefusal();
-            field.onChange(text);
+            field.onChange(typed);
           }}
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
-          onCommit={pickOnly ? () => unpicked(getValues(box)) : add}
+          onCommit={pickOnly ? () => unpicked(getValues(box) as string) : add}
           onRemoveLast={removeLast}
           suggestions={offered}
-          offerTyped={!pickOnly && !repeat(field.value)}
+          offerTyped={!pickOnly && !repeat(text)}
           listAnchor={boxRow}
           entries={entries}
           clear={fields.length > 0 ? { label: `Clear ${legend}`, onClear: clear } : undefined}

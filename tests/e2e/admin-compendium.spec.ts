@@ -108,7 +108,7 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   const field = await heightOf(adding.getByRole('textbox', { name: 'Name', exact: true }));
   for (const box of [
     adding.getByRole('combobox', { name: 'Classification' }),
-    adding.getByRole('combobox', { name: 'Form' }),
+    adding.getByRole('combobox', { name: 'New Form' }),
     adding.getByRole('combobox', { name: 'Folk Name' }),
     adding.getByRole('combobox', { name: 'Reference' }),
     adding.getByRole('button', { name: 'Add Folk Name' }),
@@ -124,12 +124,25 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   // Left in the box, the text would hold the save: a planet here is a pick.
   await adding.getByRole('combobox', { name: 'Planet' }).fill('');
 
+  /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
+  const addForm = async (dialog: Locator, form: string) => {
+    const box = dialog.getByRole('combobox', { name: 'New Form' });
+    await box.click();
+    await box.fill(form);
+    await dialog
+      .getByRole('listbox', { name: 'New Form suggestions' })
+      .getByRole('option', { name: new RegExp(`^${form} \\(`) })
+      .click();
+    await expect(dialog.getByRole('group', { name: form, exact: true })).toBeVisible();
+  };
+
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Testwort');
   await adding.getByRole('combobox', { name: 'Classification' }).click();
   await adding
     .getByRole('listbox', { name: 'Classification choices' })
     .getByRole('option', { name: 'None' })
     .click();
+  await addForm(adding, 'Herb');
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
 
   // Save Ingredient opens what it saved, at its address.
@@ -141,15 +154,31 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   );
   await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
 
-  await editing.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+  // The ingredient's own description, ahead of its forms' (MB.221).
+  await editing.getByRole('textbox', { name: 'Description' }).first().fill('Made by the e2e spec');
+  // A second form, with a safety note of its own.
+  await addForm(editing, 'Oil');
+  const oil = editing.getByRole('group', { name: 'Oil', exact: true });
+  await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
+  await assertNoAccessibilityViolations(page);
   await editing.getByRole('button', { name: 'Save Ingredient' }).click();
   await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
   await expect(editing.getByRole('status').filter({ hasText: 'Aaa Testwort' })).toBeVisible();
+
+  // Read back from the server: both forms, the oil's note its own.
+  await page.reload();
+  const reopened = page.getByRole('dialog', { name: 'Edit Ingredient' });
+  await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
+  await expect(
+    reopened
+      .getByRole('group', { name: 'Oil', exact: true })
+      .getByRole('textbox', { name: 'Safety Notes' }),
+  ).toHaveValue('Dilute before use.');
   await assertNoAccessibilityViolations(page);
 
-  await editing.getByRole('button', { name: 'Delete Ingredient' }).click();
-  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(editing).toHaveCount(0);
+  await reopened.getByRole('button', { name: 'Delete Ingredient' }).click();
+  await reopened.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(reopened).toHaveCount(0);
   await expect(page).toHaveURL(/\/admin\/compendium$/);
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });

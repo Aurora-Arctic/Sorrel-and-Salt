@@ -269,7 +269,6 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
-      type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
       chooseEach('Element', 'Water', 'Air');
       addEntry('Planet', 'Mercury');
@@ -284,7 +283,6 @@ describe('IngredientForm', () => {
         name: 'Testwort',
         nomenclature: 'botanical',
         canonicalName: 'Fixtura testalis',
-        form: 'dried leaf',
         description: 'A fixture herb.',
         // In the order chosen, not the vocabulary's.
         elements: ['water', 'air'],
@@ -292,14 +290,14 @@ describe('IngredientForm', () => {
         zodiacSigns: ['Gemini'],
         colors: ['Silver-green'],
         safetyNotes: 'None known.',
-        // Typed, so it records no pick (MB.169).
-        formId: null,
         deities: [],
         substitutes: [],
         folkNames: [],
         // None picked is sent as none, which an update needs to clear them.
         categoryIds: [],
         references: [],
+        // Its forms alone, never a top-level form (MB.221): variants.test.tsx's.
+        variants: [],
       });
     });
 
@@ -349,7 +347,6 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       choose('Classification', 'Botanical');
       type('Formal Name', 'Fixtura testalis');
-      type('Form', 'dried leaf');
       type('Description', 'A fixture herb.');
       chooseEach('Element', 'Air');
       addEntry('Planet', 'Mercury');
@@ -369,7 +366,6 @@ describe('IngredientForm', () => {
       expect(select('Classification')).not.toHaveTextContent('Botanical');
       expect(textbox('Formal Name')).toHaveValue('');
       expect(textbox('Formal Name')).toBeEnabled();
-      expect(box('Form')).toHaveValue('');
       expect(textbox('Description')).toHaveValue('');
       expect(screen.queryByRole('button', { name: 'Remove Air' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Remove Mercury' })).not.toBeInTheDocument();
@@ -460,22 +456,6 @@ describe('IngredientForm', () => {
       const formal = textbox('Formal Name');
       await waitFor(() => expectErrorOn(formal));
       expect(formal).toHaveFocus();
-    });
-
-    // A pick the server could not find, the form since retired: its issue is
-    // pathed to the pick, which the form shows as the Form field.
-    it('lands an issue pathed to the form’s pick on the Form field', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['formId'], message: 'No such form to pick' }],
-      });
-      renderForm();
-
-      type('Name', 'Testwort');
-      save();
-
-      await waitFor(() => expectErrorOn(box('Form')));
-      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('lands on the list entry its path names', async () => {
@@ -818,18 +798,6 @@ describe('IngredientForm', () => {
       type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).not.toBeRequired();
     });
-
-    it('takes form as free text rather than a fixed choice', async () => {
-      const calls = acceptCreate();
-      const onSaved = renderForm();
-
-      type('Name', 'Testwort');
-      type('Form', 'moon-dried shavings');
-      save();
-
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(calls[0].input.form).toBe('moon-dried shavings');
-    });
   });
 
   // Story 16's warning, as only the whole form holds it: the form asks its
@@ -941,7 +909,7 @@ describe('IngredientForm', () => {
       fireEvent.click(await screen.findByRole('option', { name: option }));
     };
 
-    it('asks the form box about this coven, sends its pick by id, and clears it with the rest after Save & Add Another', async () => {
+    it('asks the New Form box about this coven, sends its pick as a variant by id, and clears it with the rest after Save & Add Another', async () => {
       const SUBSTANCE_WAX_ID = '6e1f2a3b-4c5d-4e7f-8a9b-0c1d2e3f4a5b';
       const saves = acceptCreate();
       const onSaved = renderForm();
@@ -956,15 +924,17 @@ describe('IngredientForm', () => {
         },
       ]);
 
-      await pickFrom('Form', calls, /^Wax \(Substance\)/);
+      await pickFrom('New Form', calls, /^Wax \(Substance\)/);
       expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, query: '', first: 10 });
       type('Name', 'Testwort');
       saveAnother();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      expect(saves[0].input).toMatchObject({ form: 'Wax', formId: SUBSTANCE_WAX_ID });
-      await waitFor(() => expect(box('Form')).toHaveValue(''));
-      expect(box('Form')).not.toHaveAccessibleDescription(expect.stringContaining('Substance'));
+      expect(saves[0].input.variants).toEqual([
+        expect.objectContaining({ form: 'Wax', formId: SUBSTANCE_WAX_ID }),
+      ]);
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+      expect(screen.queryByRole('group', { name: 'Wax' })).not.toBeInTheDocument();
     });
 
     it('asks each list box’s own lookup about this coven, and sends each pick in its shape', async () => {
@@ -1011,6 +981,7 @@ describe('IngredientForm', () => {
               form: null,
               description: null,
               isGlobal: false,
+              variants: [],
             },
           ]),
           option: /^Mockwort/,

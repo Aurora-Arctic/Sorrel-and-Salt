@@ -20,7 +20,11 @@ import type {
   IngredientFormProps,
   IngredientFormValues,
 } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, compendiumResolver } from '@/components/IngredientForm/values';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  compendiumResolver,
+} from '@/components/IngredientForm/values';
 import type {
   CompendiumSubstitutesQuery,
   CompendiumSubstitutesQueryVariables,
@@ -108,20 +112,26 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
 }
 
 /**
- * The Form box and a pick-only list's box on their own, as the compendium's
- * form wires them, in a form of its own on the compendium's resolver.
+ * A variant's Form box and a pick-only list's box on their own, as the
+ * compendium's form wires them, in a form of its own on the compendium's
+ * resolver.
  */
 function renderPickOnly() {
   const onSubmit = vi.fn();
   const Harness = () => {
     const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
-      defaultValues: { ...EMPTY_VALUES, name: 'Testwort', nomenclature: 'none' },
+      defaultValues: {
+        ...EMPTY_VALUES,
+        name: 'Testwort',
+        nomenclature: 'none',
+        variants: [EMPTY_VARIANT],
+      },
       resolver: compendiumResolver,
     });
     return (
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(onSubmit)}>
-          <FormField workspaceId={null} pickOnly />
+          <FormField workspaceId={null} at="variants.0" pickOnly />
           <LookupListField
             workspaceId={null}
             useSuggestions={useDeitySuggestions}
@@ -315,10 +325,10 @@ describe('IngredientForm on the compendium', () => {
       };
 
       type('Name', 'Testwort');
-      await search('Form', 'ro');
-      // The Form box is the compendium's pick, as the harness below has it.
+      await search('New Form', 'ro');
+      // A form is the compendium's pick, as the harness below has it.
       expect(
-        within(suggestions('Form')).queryByRole('option', { name: /Use what you typed/ }),
+        within(suggestions('New Form')).queryByRole('option', { name: /Use what you typed/ }),
       ).toBeNull();
       await search('Folk Name', 'mo');
       await search('Reference', 'fi');
@@ -363,16 +373,15 @@ describe('IngredientForm on the compendium', () => {
       expect(within(forms).queryByRole('group')).not.toBeInTheDocument();
     });
 
-    it('hold a save while a pick-only box holds text, and refuse a form typed rather than picked', async () => {
+    // A variant's form typed rather than picked is variants.test.tsx's.
+    it('hold a save while a pick-only box holds text', async () => {
       const onSubmit = renderPickOnly();
 
-      type('Form', 'Root');
       type('Deity', 'Mockate');
       fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
 
       await waitFor(() => expect(box('Deity')).toBeInvalid());
       expect(box('Deity')).toHaveAccessibleDescription(expect.stringContaining('Mockate'));
-      expect(box('Form')).toBeInvalid();
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
@@ -386,6 +395,7 @@ describe('IngredientForm on the compendium', () => {
           form: null,
           description: null,
           isGlobal: true,
+          variants: [],
         },
         {
           id: OTHER_ID,
@@ -394,6 +404,7 @@ describe('IngredientForm on the compendium', () => {
           form: 'root',
           description: null,
           isGlobal: true,
+          variants: [],
         },
       ]);
 

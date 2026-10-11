@@ -331,6 +331,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 },
                 onBlur: () => {
                   tip.hide();
+                  // An open list is Downshift's to close on blur; one wanted
+                  // but empty is not open to it, so the wish is dropped here,
+                  // or the next answer would open the list and pull the
+                  // focus back from wherever it has gone.
+                  if (!isOpen) setWantsOpen(false);
                   onBlur?.();
                 },
               })}

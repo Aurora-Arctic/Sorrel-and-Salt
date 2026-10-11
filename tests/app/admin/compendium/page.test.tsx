@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
@@ -67,7 +67,7 @@ const TESTWORT_VALUES: IngredientFormValues = {
   name: 'Testwort',
   nomenclature: 'botanical',
   canonicalName: 'Fixtura testalis',
-  form: 'Herb',
+  variants: [{ ...EMPTY_VARIANT, form: 'Herb' }],
 };
 
 const entry = <T extends { id: string; name: string }>(node: T) => ({
@@ -266,6 +266,8 @@ describe('the /admin/compendium modal', () => {
     expect(entryValues).toHaveBeenCalledWith(TESTWORT);
     const dialog = screen.getByRole('dialog', { name: 'Edit Ingredient' });
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
+    // Its forms too, each the variant's own fieldset (MB.221).
+    expect(within(dialog).getByRole('group', { name: 'Herb' })).toBeInTheDocument();
     expect(within(dialog).getByRole('button', { name: 'Delete Ingredient' })).toBeInTheDocument();
     expect(
       within(dialog).queryByRole('button', { name: 'Save & Add Another' }),

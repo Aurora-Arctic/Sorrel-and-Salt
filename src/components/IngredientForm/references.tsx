@@ -24,8 +24,9 @@ import type {
   ReferenceLink,
   ReferenceOption,
   SavedReference,
+  SharedFieldProps,
 } from './types';
-import { sourceTierOf } from './values';
+import { draftOf, sourceTierOf } from './values';
 
 // The References field (MB.154): a search over the compendium's sources and
 // this coven's, each picked becoming a row beneath the box — the citation
@@ -67,15 +68,22 @@ const LOCATOR_HINT =
 /** Enter with nothing picked adds nothing: a search is not a source. */
 const IGNORE_ENTER = () => {};
 
-export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement {
+/**
+ * The ingredient's references, or at `at` a variant's own, citing that form
+ * alone (MB.215).
+ */
+export function ReferencesField({
+  workspaceId,
+  at,
+}: LookupFieldProps & SharedFieldProps): ReactElement {
   const { control, register, setValue, trigger } = useFormContext<IngredientFormValues>();
-  const { fields, append, remove } = useFieldArray({ control, name: 'references' });
-  const { field } = useController({ control, name: 'drafts.references' });
-  const panelOpen = useWatch({ control, name: 'referencePanelOpen' });
-  const { errors, isSubmitted } = useFormState({
-    control,
-    name: ['references', 'drafts.references'],
-  });
+  const list = at ? (`${at}.references` as const) : 'references';
+  const box = draftOf(list);
+  const panel = at ? (`${at}.referencePanelOpen` as const) : 'referencePanelOpen';
+  const { fields, append, remove } = useFieldArray({ control, name: list });
+  const { field } = useController({ control, name: box });
+  const panelOpen = useWatch({ control, name: panel });
+  const { errors, isSubmitted } = useFormState({ control, name: [list, box] });
   const queryClient = useQueryClient();
   const id = useId();
   const legendId = `${id}-legend`;
@@ -103,13 +111,13 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
   const rowErrors = fields.map(
     (_, index): string | undefined =>
       [
-        get(errors, `references.${index}.value`)?.message,
-        get(errors, `references.${index}.locator`)?.message,
+        get(errors, `${list}.${index}.value`)?.message,
+        get(errors, `${list}.${index}.locator`)?.message,
       ]
         .filter(Boolean)
         .join(' ') || undefined,
   );
-  const boxError: string | undefined = get(errors, 'drafts.references')?.message;
+  const boxError: string | undefined = get(errors, box)?.message;
   const message = [
     ...fields.flatMap((row, index) =>
       rowErrors[index] ? [`${row.value}: ${rowErrors[index]}`] : [],
@@ -122,7 +130,7 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
 
   // Once a submit has shown errors, a change revalidates the list and its box.
   const revalidate = () => {
-    if (isSubmitted) void trigger(['references', 'drafts.references']);
+    if (isSubmitted) void trigger([list, box]);
   };
   const add = (citation: string, link: ReferenceLink) => {
     // Not focused by the field array, which would take its locator: the box keeps it.
@@ -133,7 +141,7 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
     // The list has no typed row, so every pick is a source.
     if (!option) return;
     add(option.value, option.link);
-    setValue('drafts.references', '');
+    setValue(box, '');
     revalidate();
     focusBox();
   };
@@ -146,12 +154,12 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
   // Counted, so a request while the panel is open still takes you to it.
   const [summons, setSummons] = useState(0);
   const openPanel = () => {
-    setValue('referencePanelOpen', true);
+    setValue(panel, true);
     setSummons((count) => count + 1);
     revalidate();
   };
   const closePanel = () => {
-    setValue('referencePanelOpen', false);
+    setValue(panel, false);
     revalidate();
     focusBox();
   };
@@ -177,7 +185,7 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
         <Combobox<ReferenceOption>
           id={`${id}-box`}
           label="Reference"
-          value={field.value}
+          value={field.value as string}
           onChange={field.onChange}
           onFocus={() => setActive(true)}
           onBlur={field.onBlur}
@@ -245,13 +253,13 @@ export function ReferencesField({ workspaceId }: LookupFieldProps): ReactElement
                       .filter(Boolean)
                       .join(' ')}
                     aria-invalid={invalid || undefined}
-                    {...register(`references.${index}.locator`, {
+                    {...register(`${list}.${index}.locator`, {
                       // Tidied as it is left, as the server will store it.
                       onBlur: (event: FocusEvent<HTMLInputElement>) => {
                         const text = event.target.value;
                         const formatted = formatLocator(text);
                         if (formatted !== text) {
-                          setValue(`references.${index}.locator`, formatted, { shouldDirty: true });
+                          setValue(`${list}.${index}.locator`, formatted, { shouldDirty: true });
                         }
                       },
                     })}
