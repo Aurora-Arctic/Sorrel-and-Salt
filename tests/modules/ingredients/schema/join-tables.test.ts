@@ -4,7 +4,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertSpell } from '../../../support/db/insert-spell';
 import { STAMP_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
-import { makeIngredient, makeSpell } from '../../../support/fixtures';
+import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { withAudit } from '@/db/repository';
@@ -180,12 +180,20 @@ describe('ingredient_categories, on a form', () => {
   beforeAll(async () => {
     ingredientId = await insertIngredient(
       sql,
-      makeIngredient({ name: 'Testwort Varia', canonicalName: 'Fixtura varia', form: 'Testleaf' }),
+      makeIngredient({
+        name: 'Testwort Varia',
+        canonicalName: 'Fixtura varia',
+        variants: [makeVariant({ form: 'Testleaf' })],
+      }),
       AUTHOR,
     );
     const other = await insertIngredient(
       sql,
-      makeIngredient({ name: 'Testwort Alia', canonicalName: 'Fixtura alia', form: 'Testleaf' }),
+      makeIngredient({
+        name: 'Testwort Alia',
+        canonicalName: 'Fixtura alia',
+        variants: [makeVariant({ form: 'Testleaf' })],
+      }),
       AUTHOR,
     );
     const variants = await sql`

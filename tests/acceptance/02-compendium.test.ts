@@ -7,12 +7,11 @@ import { schema } from '@/graphql/schema';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { createWorkspaceIngredient, getWorkspaceIngredient } from '@/modules/ingredients';
-import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { A, B, C, D, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { noSender } from '../support/email-verification';
-import { makeIngredient } from '../support/fixtures';
+import { makeIngredient, makeVariant, variantInput } from '../support/fixtures';
 import type { Duplicate, Entry } from './types';
 
 // Stories 15, 14 and 16 against the services and queries that answer them,
@@ -40,13 +39,17 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
       categories: _categories,
       substitutes: _substitutes,
       deities: _deities,
+      variants,
       ...fixture
     } = makeIngredient({
       workspaceId: WORKSPACE_W_ID,
-      form: 'root',
+      variants: [makeVariant({ form: 'Root' })],
       folkNames: ['Fixture Root'],
     });
-    const input: LocalIngredientInput = fixture;
+    const input = {
+      ...fixture,
+      variants: variants.map((variant) => variantInput(variant)),
+    };
 
     // Why this is story 15's case: nothing by this name exists in any tier.
     expect(await tiersHolding(input.name)).toEqual([]);
@@ -80,6 +83,7 @@ describe('Story 15: Create an ingredient local to my workspace when the compendi
       categories: _categories,
       substitutes: _substitutes,
       deities: _deities,
+      variants: _variants,
       ...input
     } = makeIngredient({
       name: 'Fixture Viewerwort',
@@ -262,6 +266,7 @@ describe("Story 16: See a warning when the name I'm entering resembles something
       categories: _categories,
       substitutes: _substitutes,
       deities: _deities,
+      variants: _variants,
       ...input
     } = makeIngredient({ name: "Cat's Claw", canonicalName: 'Fixtura felina' });
     // Why this is story 16's case: the name is one the warning names.

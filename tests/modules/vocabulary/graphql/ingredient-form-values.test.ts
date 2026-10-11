@@ -5,7 +5,7 @@ import type { Session } from '@/lib/session';
 import { formSlug } from '@/lib/slugify';
 import { E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 import type {
   FilteredFormValues,
@@ -110,7 +110,7 @@ describe('the admin writes', () => {
   const DELETE = 'mutation ($id: ID!) { deleteIngredientFormValue(id: $id) }';
   // An entry's pick read back in the same request as the write, so a loader
   // holding the form from before it would answer the old name.
-  const PICKED = `query ($id: ID!) { ingredient(id: $id) { formChoice { id name } } }`;
+  const PICKED = `query ($id: ID!) { ingredient(id: $id) { variants { formChoice { id name } } } }`;
 
   let substance: string;
   beforeAll(async () => {
@@ -250,7 +250,11 @@ describe('the admin writes', () => {
       const id = await seed('Fixture Old');
       const picked = await insertIngredient(
         sql,
-        makeIngredient({ name: 'Testwort', nomenclature: 'none', form: 'Fixture Old', formId: id }),
+        makeIngredient({
+          name: 'Testwort',
+          nomenclature: 'none',
+          variants: [makeVariant({ form: 'Fixture Old', formId: id })],
+        }),
         E.id,
       );
       const session = asUser(E);
@@ -258,7 +262,9 @@ describe('the admin writes', () => {
       const context = { loaders: createLoaders(session) };
       // The pick read first, so the request's loader holds the form as it was.
       const before = await send(session, PICKED, { id: picked }, context);
-      expect(before.data).toEqual({ ingredient: { formChoice: { id, name: 'Fixture Old' } } });
+      expect(before.data).toEqual({
+        ingredient: { variants: [{ formChoice: { id, name: 'Fixture Old' } }] },
+      });
 
       const result = await send(
         session,
@@ -272,7 +278,9 @@ describe('the admin writes', () => {
 
       expect(result.errors).toBeUndefined();
       expect(result.data).toEqual({ updateIngredientFormValue: { id, name: 'Fixture New' } });
-      expect(after.data).toEqual({ ingredient: { formChoice: { id, name: 'Fixture New' } } });
+      expect(after.data).toEqual({
+        ingredient: { variants: [{ formChoice: { id, name: 'Fixture New' } }] },
+      });
     });
 
     it('answers an unknown id as NOT_FOUND', async () => {
@@ -306,8 +314,7 @@ describe('the admin writes', () => {
         makeIngredient({
           name: 'Testwort',
           nomenclature: 'none',
-          form: 'Fixture Held',
-          formId: id,
+          variants: [makeVariant({ form: 'Fixture Held', formId: id })],
         }),
         E.id,
       );

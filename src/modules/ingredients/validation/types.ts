@@ -99,8 +99,6 @@ export interface Parsed {
   name: string;
   canonicalName?: string | null;
   nomenclature: NomenclatureKind;
-  form?: string | null;
-  formId?: string | null;
   planets?: string[] | null;
   zodiacSigns?: string[] | null;
   colors?: string[] | null;

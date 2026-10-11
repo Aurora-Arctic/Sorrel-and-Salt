@@ -24,7 +24,6 @@ import {
   updateCompendiumEntry,
   variantsOf,
 } from '@/modules/ingredients';
-import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
 import {
   suggestDeities,
@@ -43,9 +42,11 @@ import { liveFormsOf, variantChildrenOf, variantRowsOf } from '../../../support/
 import {
   type IngredientFixture,
   type Overrides,
+  type VariantInput,
   makeIngredient,
   makeSpell,
-  stated,
+  makeVariant,
+  variantInput,
 } from '../../../support/fixtures';
 
 // Story 17's service: the compendium's writes, which the site admin makes and
@@ -67,9 +68,9 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// The live curated forms by folded name, read once: a compendium entry's form
-// is a pick (MB.167), so `entry` picks the row its text names unless the test
-// states a `formId`, as the admin's autofill would.
+// The live curated forms by folded name, read once: a compendium entry's every
+// form is a pick (MB.167), so `entry` picks the row each form's text names
+// unless the test states its `formId`, as the admin's autofill would.
 let formIds: Map<string, string>;
 beforeAll(async () => {
   const rows = await sql`
@@ -84,23 +85,37 @@ beforeEach(async () => {
 });
 
 /**
- * The fixture as the service's input: everything but the tier and the
- * category names, its substitutes and deities typed.
+ * The fixture as an admin's input: everything but the tier and the category
+ * names, its substitutes and deities typed, and each form picked by its text
+ * unless the variant states its `formId` (`null` for a typed one). One
+ * curated form, Herb, unless the test states `variants`: the fixture's own
+ * default is invented, so no curated row holds it.
  */
-function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+function entry(
+  overrides: Overrides<IngredientFixture> = {},
+): Parameters<typeof createCompendiumEntry>[1] {
+  const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });
+  const {
+    workspaceId: _tier,
+    categories: _categories,
+    substitutes,
+    deities,
+    variants,
+    ...input
+  } = fixture;
   return {
     ...input,
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
+    variants: variants.map((variant) =>
+      variantInput(
+        variant,
+        variant.formId === undefined
+          ? { formId: formIds.get(variant.form.trim().toLowerCase()) ?? '' }
+          : {},
+      ),
+    ),
   };
-}
-
-/** The fixture as an admin's input, its form picked unless `formId` is stated. */
-function entry(overrides: Overrides<IngredientFixture> = {}): CompendiumIngredientInput {
-  const input = inputOf(makeIngredient(overrides));
-  if (stated(overrides, 'formId') || input.form == null) return input;
-  return { ...input, formId: formIds.get(input.form.trim().toLowerCase()) ?? null };
 }
 
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
@@ -149,8 +164,6 @@ describe('createCompendiumEntry', () => {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      // The fixture's `herb`, in the curated row's spelling (MB.162).
-      form: 'Herb',
       createdBy: E.id,
       updatedBy: E.id,
       deletedAt: null,
@@ -207,7 +220,7 @@ describe('createCompendiumEntry', () => {
       const attempt = createCompendiumEntry(admin, {
         ...entry(),
         nomenclature,
-      } as unknown as CompendiumIngredientInput);
+      } as unknown as Parameters<typeof createCompendiumEntry>[1]);
 
       // A ValidationError on the field is the parse's: the column's NOT NULL
       // would have answered with a driver error instead.
@@ -220,7 +233,9 @@ describe('createCompendiumEntry', () => {
   );
 
   it('ignores a workspaceId in the input, so the entry lands in the compendium', async () => {
-    const input = { ...entry(), workspaceId: WORKSPACE_W_ID } as CompendiumIngredientInput;
+    const input = { ...entry(), workspaceId: WORKSPACE_W_ID } as Parameters<
+      typeof createCompendiumEntry
+    >[1];
 
     const created = await createCompendiumEntry(admin, input);
 
@@ -338,7 +353,7 @@ describe('updateCompendiumEntry', () => {
       updateCompendiumEntry(admin, id, {
         ...entry(),
         nomenclature: undefined,
-      } as unknown as CompendiumIngredientInput),
+      } as unknown as Parameters<typeof createCompendiumEntry>[1]),
     ).rejects.toMatchObject({ issues: [expect.objectContaining({ path: ['nomenclature'] })] });
     expect(await rowOf(id)).toEqual(before);
   });
@@ -471,7 +486,7 @@ describe('a deleted entry', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form, a variant since MB.216 (MB.218).
+    // The fixture's own form.
     [
       'its variants',
       async (id) => {
@@ -504,7 +519,7 @@ describe('a deleted entry', () => {
     [
       "a coven's form suggestions",
       async () =>
-        (await suggestForms(member, WORKSPACE_W_ID, 'herb', PAGE)).some(({ node }) =>
+        (await suggestForms(member, WORKSPACE_W_ID, 'testform', PAGE)).some(({ node }) =>
           node.claimants.some((claimant) => claimant.name === 'Testwort'),
         ),
     ],
@@ -572,11 +587,7 @@ describe('a deleted entry', () => {
     await deleteCompendiumEntry(admin, id);
     const created = await createCompendiumEntry(admin, again);
 
-    expect(created).toMatchObject({
-      name: 'Fixture Leaf',
-      canonicalName: 'Fixtura testalis',
-      form: 'Herb',
-    });
+    expect(created).toMatchObject({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis' });
     const keys = await sql`
       select distinct identity_key from ingredients where id in ${sql([id, created.id])}`;
     expect(keys).toHaveLength(1);
@@ -666,16 +677,17 @@ describe('a collision with another compendium entry', () => {
     return (error as ValidationError).issues;
   }
 
-  // MB.220: one formal name is one entry, so an oil beside the herb is a form
-  // of it, not a second entry. Under the herb's own label, the address index
+  // MB.220: one formal name is one entry, so an oil beside its form is a form
+  // of it, not a second entry. Under the same label, the address index
   // breaks first, and the refusal is still the formal name's.
   it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
     await seed();
     // Why it could have been admitted: Oil is a curated pick, so no vocabulary
     // rule refuses it, and until MB.220 a differing form was another identity.
-    expect(entry({ form: 'Oil' }).formId).toEqual(expect.any(String));
+    const oil = entry({ variants: [makeVariant({ form: 'Oil' })] });
+    expect(oil.variants?.[0].formId).toEqual(expect.any(String));
 
-    const issues = await issuesOf(createCompendiumEntry(admin, entry({ form: 'Oil' })));
+    const issues = await issuesOf(createCompendiumEntry(admin, oil));
 
     expect(issues).toEqual([
       {
@@ -704,14 +716,12 @@ describe('a collision with another compendium entry', () => {
   });
 
   it("refuses a rewrite onto another entry's identity, leaving the row as it was", async () => {
-    await seed({ name: 'Testwort', form: 'root' });
+    await seed({ name: 'Testwort' });
     // Another formal name: one formal name is one entry per tier since MB.216.
-    const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis', form: 'root' });
+    const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis' });
     const before = await rowOf(id);
 
-    const issues = await issuesOf(
-      updateCompendiumEntry(admin, id, entry({ name: 'Testleaf', form: 'Root' })),
-    );
+    const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ name: 'Testleaf' })));
 
     expect(issues).toEqual([{ path: ['canonicalName'], message: expect.any(String) }]);
     expect(await rowOf(id)).toEqual(before);
@@ -842,10 +852,12 @@ describe('the slug', () => {
     const updated = await updateCompendiumEntry(
       admin,
       id,
-      entry({ description: 'Redescribed', form: 'Root' }),
+      entry({ description: 'Redescribed', variants: [makeVariant({ form: 'Root' })] }),
     );
 
-    expect(updated).toMatchObject({ slug: 'testwort-fixtura-testalis', form: 'Root' });
+    expect(updated.slug).toBe('testwort-fixtura-testalis');
+    // Why the form did change: the entry's one form is Root now.
+    expect(await liveFormsOf(sql, id)).toEqual(['Root']);
     expect(await retirements()).toEqual([]);
   });
 
@@ -884,15 +896,15 @@ describe('the slug', () => {
     // Graveyard-dirt-shaped: no formal name, so the relabel frees the identity
     // and a new entry may spell the old address.
     beforeEach(async () => {
-      movedId = await seed({ name: 'Testdirt', nomenclature: 'none', form: 'earth' });
+      movedId = await seed({ name: 'Testdirt', nomenclature: 'none' });
       await updateCompendiumEntry(
         admin,
         movedId,
-        entry({ name: 'Testsoil', nomenclature: 'none', form: 'earth' }),
+        entry({ name: 'Testsoil', nomenclature: 'none' }),
       );
     });
 
-    const taker = () => entry({ name: 'Testdirt', nomenclature: 'none', form: 'earth' });
+    const taker = () => entry({ name: 'Testdirt', nomenclature: 'none' });
 
     it('refuses a create that would end its redirect, on `endRedirect`, writing nothing', async () => {
       const issues = await issuesOf(createCompendiumEntry(admin, taker()));
@@ -902,7 +914,7 @@ describe('the slug', () => {
     });
 
     it('refuses a rename into it the same way, leaving the row as it was', async () => {
-      const id = await seed({ name: 'Testclay', nomenclature: 'none', form: 'earth' });
+      const id = await seed({ name: 'Testclay', nomenclature: 'none' });
       const before = await rowOf(id);
 
       const [issue] = await issuesOf(updateCompendiumEntry(admin, id, taker()));
@@ -945,7 +957,7 @@ describe('the slug', () => {
 
   it("refuses a rewrite onto another entry's current address, on `name`, naming it", async () => {
     await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
-    const id = await seed({ name: 'Testleaf', nomenclature: 'none', form: 'leaf' });
+    const id = await seed({ name: 'Testleaf', nomenclature: 'none' });
 
     expect(
       await issuesOf(
@@ -1033,7 +1045,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   }
 
   /** Saves `input` on a coven's ingredient: the precondition that only the tier refuses it. */
-  async function savesInACoven(input: CompendiumIngredientInput) {
+  async function savesInACoven(input: Parameters<typeof createCompendiumEntry>[1]) {
     const saved = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...input,
       name: 'Testwort, kept',
@@ -1089,8 +1101,16 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   // MB.167: a form and a deity are held to a pick, not a spelling — a curated
   // name typed rather than picked is refused, as an uncurated one is.
   const UNPICKED: [string, Overrides<IngredientFixture>, (string | number)[]][] = [
-    ['a typed form, curated or not', { form: 'Herb', formId: null }, ['form']],
-    ['an uncurated form', { form: 'Testform', formId: null }, ['form']],
+    [
+      'a typed form, curated or not',
+      { variants: [makeVariant({ form: 'Herb', formId: null })] },
+      ['variants', 0, 'form'],
+    ],
+    [
+      'an uncurated form',
+      { variants: [makeVariant({ form: 'Testform' })] },
+      ['variants', 0, 'form'],
+    ],
     ['a typed deity, curated or not', { deities: ['Thor'] }, ['deities', 0]],
     ['an uncurated deity', { deities: ['Testgod'] }, ['deities', 0]],
   ];
@@ -1150,8 +1170,8 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   // compendium adds is that a pick it already holds is refused too, where a
   // coven's is kept, so no compendium entry goes on holding an uncurated one.
   const RETIRED_PICKS: [string, string, string, (string | number)[]][] = [
-    ['a retired form', 'ingredient_forms', 'Leaf', ['formId']],
-    ['a form of a retired group', 'ingredient_form_groups', 'Botanical', ['formId']],
+    ['a retired form', 'ingredient_forms', 'Leaf', ['variants', 0, 'formId']],
+    ['a form of a retired group', 'ingredient_form_groups', 'Botanical', ['variants', 0, 'formId']],
     ['a retired deity', 'deities', 'Thor', ['deities', 0]],
     ['a deity of a retired tradition', 'deity_traditions', 'Norse', ['deities', 0]],
   ];
@@ -1160,7 +1180,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     'refuses %s, picked anew or already held',
     async (_case, table, retired, path) => {
       const picks = {
-        ...entry({ name: 'Testwort', form: 'Leaf' }),
+        ...entry({ name: 'Testwort', variants: [makeVariant({ form: 'Leaf' })] }),
         deities: [{ deityId: await curatedDeityId(sql, 'Thor') }],
       };
       const id = await seed({ name: 'Testwort' });
@@ -1197,8 +1217,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
       createCompendiumEntry(
         admin,
         entry({
-          form: 'Testform',
-          formId: null,
+          variants: [makeVariant({ form: 'Testform' })],
           planets: ['Testplanet'],
           deities: ['Testgod', 'Thor'],
         }),
@@ -1206,25 +1225,30 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     );
 
     expect(issues.map((issue) => issue.path)).toEqual([
-      ['form'],
       ['planets', 0],
       ['deities', 0],
       ['deities', 1],
+      ['variants', 0, 'form'],
     ]);
   });
 
   it("stores a value matching a curated row but for case and spacing in the row's spelling", async () => {
     const created = await createCompendiumEntry(admin, {
-      ...entry({ form: '  hERB ', planets: [' venus', 'MOON '], zodiacSigns: ['taurus'] }),
+      ...entry({
+        variants: [makeVariant({ form: '  hERB ' })],
+        planets: [' venus', 'MOON '],
+        zodiacSigns: ['taurus'],
+      }),
       deities: [{ deityId: await curatedDeityId(sql, 'Thor') }],
     });
 
     expect(await rowOf(created.id)).toMatchObject({
-      form: 'Herb',
-      form_id: await curatedFormId(sql, 'Herb'),
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus'],
     });
+    expect(await variantRowsOf(sql, created.id)).toMatchObject([
+      { form: 'Herb', form_id: await curatedFormId(sql, 'Herb') },
+    ]);
     expect(await liveDeities(created.id)).toEqual([
       { deity_id: await curatedDeityId(sql, 'Thor'), name: 'Thor' },
     ]);
@@ -1232,23 +1256,27 @@ describe('the curated vocabularies a compendium entry is held to', () => {
 
   it("stores the row's spelling on update too, and keeps the coven's own as typed", async () => {
     const id = await seed({ name: 'Testwort' });
-    const local = await savesInACoven(entry({ form: 'hERB', formId: null, planets: ['venus'] }));
+    const local = await savesInACoven(
+      entry({ variants: [makeVariant({ form: 'hERB', formId: null })], planets: ['venus'] }),
+    );
 
-    await updateCompendiumEntry(admin, id, entry({ form: 'hERB', planets: ['venus'] }));
+    await updateCompendiumEntry(
+      admin,
+      id,
+      entry({ variants: [makeVariant({ form: 'hERB' })], planets: ['venus'] }),
+    );
 
-    expect(await rowOf(id)).toMatchObject({ form: 'Herb', planets: ['Venus'] });
-    expect(await rowOf(local.id)).toMatchObject({
-      form: 'hERB',
-      form_id: null,
-      planets: ['venus'],
-    });
+    expect(await rowOf(id)).toMatchObject({ planets: ['Venus'] });
+    expect(await liveFormsOf(sql, id)).toEqual(['Herb']);
+    expect(await rowOf(local.id)).toMatchObject({ planets: ['venus'] });
+    expect(await variantRowsOf(sql, local.id)).toMatchObject([{ form: 'hERB', form_id: null }]);
   });
 });
 
 // MB.219: a compendium entry's forms are written inside its own save, each a
 // curated pick with its own curated planets and signs (DESIGN.md §5, "The
-// compendium is held to the vocabularies"). The write's mechanics — matching,
-// unchanged rows, the shim — are the coven's file's, on the one shared path.
+// compendium is held to the vocabularies"). The write's mechanics — matching
+// and unchanged rows — are the coven's file's, on the one shared path.
 describe('its forms', () => {
   let herb: string;
   let oil: string;
@@ -1263,24 +1291,12 @@ describe('its forms', () => {
     protection = row.id as string;
   });
 
-  /** One whole form as the admin's input sends it: every field, `overrides` over blanks. */
-  const formOf = (overrides: Record<string, unknown>) => ({
-    form: 'Herb',
-    formId: herb,
-    description: '',
-    safetyNotes: '',
-    elements: [],
-    planets: [],
-    zodiacSigns: [],
-    colors: [],
-    categoryIds: [],
-    substitutes: [],
-    references: [],
-    ...overrides,
-  });
+  /** One whole form as the admin's input sends it: picked Herb, `overrides` over blanks. */
+  const formOf = (overrides: Partial<VariantInput>) =>
+    variantInput(makeVariant({ form: 'Herb' }), { formId: herb, ...overrides });
 
-  const withForms = (...variants: Record<string, unknown>[]) => ({
-    ...entry({ form: null, formId: null }),
+  const withForms = (...variants: Partial<VariantInput>[]) => ({
+    ...entry(),
     variants: variants.map(formOf),
   });
 
@@ -1309,7 +1325,6 @@ describe('its forms', () => {
       { form: 'Herb', form_id: herb, planets: ['Venus'] },
       { form: 'Oil', form_id: oil, safety_notes: 'Dilute.' },
     ]);
-    expect(await rowOf(created.id)).toMatchObject({ form: 'Herb', form_id: herb });
     expect((await variantChildrenOf(sql, herbRow.id)).categories).toMatchObject([
       { category_id: protection },
     ]);

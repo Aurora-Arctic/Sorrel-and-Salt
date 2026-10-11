@@ -50,7 +50,7 @@ async function aParent(): Promise<string> {
       workspaceId: WORKSPACE_W_ID,
       name: `Testwort ${t}`,
       canonicalName: `Fixtura testalis ${t}`,
-      form: null,
+      variants: [],
     }),
     AUTHOR,
   );

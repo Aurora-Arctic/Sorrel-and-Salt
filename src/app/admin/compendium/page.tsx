@@ -13,7 +13,12 @@ import { NotFound } from '../../../lib/errors';
 import { resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
 import { readableCursor, single } from '../../../lib/search-params';
-import { countCompendium, listCompendium, resolveCompendiumSlug } from '@/modules/ingredients';
+import {
+  countCompendium,
+  listCompendium,
+  resolveCompendiumSlug,
+  variantsOf,
+} from '@/modules/ingredients';
 import {
   NOMENCLATURE_KINDS,
   type NomenclatureKind,
@@ -40,11 +45,25 @@ const readCompendium = cache(
   ) => {
     const filter = { query: query || undefined, nomenclature, withoutReferences };
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
-    return resolveNumberedPage(
+    const page = await resolveNumberedPage(
       { after, before },
       (request) => listCompendium(filter, request),
       (start) => countCompendium(filter, start),
     );
+    // Each entry's live forms, the Form column (MB.222): one batch for the
+    // page, through the read `Ingredient.variants` resolves through.
+    const forms = await variantsOf(
+      null,
+      page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
+    );
+    return {
+      ...page,
+      forms: forms.map((answer) => {
+        // A compendium ref is never refused (MB.80).
+        if (answer instanceof Error) throw answer;
+        return answer.map((variant) => variant.form);
+      }),
+    };
   },
 );
 
@@ -103,13 +122,13 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
-  const entries = page.edges.map(({ node }): CompendiumListEntry => ({
+  const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
     id: node.id,
     slug: node.slug,
     name: node.name,
     nomenclature: node.nomenclature,
     canonicalName: node.canonicalName,
-    form: node.form,
+    forms: page.forms[i],
     editHref: compendiumHref(here, { edit: node.slug }),
   }));
 

@@ -4,7 +4,13 @@
 // claude-docs/testing/fixture-factories.md, "Fixture factories".
 
 export { toColumns } from './columns';
-export { NOMENCLATURE_KINDS, ingredientColumns, makeIngredient } from './ingredient';
+export {
+  NOMENCLATURE_KINDS,
+  ingredientColumns,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from './ingredient';
 export { mergeFixture, stated } from './merge';
 export { makeSpell, spellColumns, spellLayerColumns } from './spell';
 export { makeWorkspace, workspaceColumns } from './workspace';
@@ -15,6 +21,8 @@ export type {
   SpellLayerFixture,
   SpellLayerOverrides,
   SpellOverrides,
+  VariantFixture,
+  VariantInput,
   WorkspaceFixture,
   WorkspaceMemberFixture,
 } from './types';

@@ -59,19 +59,16 @@ against the database, as the deities and categories already were, so
 its `children` go to `writeChildren` whole. The next child, checked or not,
 edits neither service. `ingredient_variants_form_unique` is mapped where the
 form is written, onto that form's `form`, since only that write knows which
-entry it was writing. The compendium holds each form to the curated rules the
-entry's own form was held to. Each form must be a pick, refused at
+entry it was writing. The compendium holds each form to the curated rules. Each form must be a pick, refused at
 `['variants', i, 'form']` or `['variants', i, 'formId']`. Each form's planets
 and signs must name curated rows, at `['variants', i, 'planets', j]`.
 
-Two measures keep the old form field working until MB.222 removes them. An
-input with no `variants` reads its top-level `form` and `formId` as its one
-form, and that form's refusals land on `form` and `formId` as they always
-have, so `IngredientForm` saves unchanged. And `resolvePicks` hands back the
-first form's text and pick as the row's `form` and `formId`, so the row
-mirrors a form while the columns last. Between the two, an entry saved through
-the old form sends only its first form, and the save drops any other form it
-holds. Nothing but the API writes a second form until MB.221.
+`variants` is the only place a form is written (MB.222). The ingredient row
+has no form of its own, so nothing copies a variant onto it, and an input
+carries no top-level `form` or `formId`. Each of the four input types
+requires `variants`, and `[]` is an entry with no form, as story 29's
+one-field stub sends it. The Zod schema still accepts it absent, reading that
+as none, as every child list's absence reads.
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and
@@ -84,14 +81,14 @@ error instead.
 coven's write keeps what was typed; these two do not. After the parse,
 `inCuratedValues` checks the form and the deities by pick and the planets and
 signs by spelling (MB.167, which moved the form and deities onto the pick).
-The form and every deity must be a pick of a curated row, held or not,
+Each form and every deity must be a pick of a curated row, held or not,
 through `resolvePicks`, which `vocabulary`'s `curatedNames` answers by id: a
 curated value typed rather than picked is refused as an uncurated one is, and
 a held deity pick is refused once its deity is retired, where a coven keeps
 it. The planets and signs read the live curated rows each value folds to,
 through `vocabulary`'s `curatedSpellings`. Every value refused is one issue of
-one `ValidationError`, beside its field — `['form']` or `['formId']`, or
-`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+one `ValidationError`, beside its field — `['variants', i, 'form']` or
+`['variants', i, 'formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
 — naming the list to pick from or add it to. A value that passes is written in
 the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
 group and a deity only under a live tradition, as the autofill reads them
@@ -127,7 +124,7 @@ common-name, form, planet, sign and deity suggestions — whether it shows the
 entry, before the delete and after. The table is where each reader's
 soft-delete filter is proved, so no reader's own test carries a one-off
 (MB.187).
-It then adds the entry's formal name and form again under another label, the
+It then adds the entry's formal name again under another label, the
 write the identity index refused while the entry was live: the index's
 `deleted_at IS NULL` is all that lets it through. The proof is on the formal
 name, because two live entries may share a label anyway, so a label coming
@@ -148,7 +145,7 @@ catches the write's failure and reads the index off it with
   `unknown` entry keys as its label, and §5's cross-namespace case is a label
   equal to another entry's formal name, where a message beside the empty
   formal-name field would point at a box the admin never filled in. The
-  message names the holder by its label, formal name and form, and points at
+  message names the holder by its label and formal name, and points at
   adding the form to it: an oil of a plant the compendium holds is a variant
   of that entry, not an entry beside it. `ingredients_compendium_identity_unique`,
   on the undeclared three-part key, is mapped the same way until MB.223 drops
@@ -181,4 +178,4 @@ these services are M5.5's: `createCompendiumIngredient`,
 `updateCompendiumIngredient` and `deleteCompendiumIngredient`
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
 
-**MB.215: variants are the sixth child, the recipe's first adopter.** An entry's forms become rows of `ingredient_variants` (DESIGN.md §5), and MB.219 writes them by the recipe above rather than through mutations of their own: `ingredientInputFields` gains `variants`, optional on all four input types until MB.222 makes it required on the two update inputs (the shim below), so the four carry it unedited; `splitChildren` and `IngredientChildren` gain the list; and `writeChildren` gains `addVariants` and `replaceVariants` in its two branches, which write each variant's own categories, substitutes and references through the existing add and replace helpers, widened to take an owner of `{ ingredientId, variantId }`. On replace a variant is matched by its `id` when the input carries one the entry holds, else by its folded form, so a form can be respelt in place; one no longer sent is soft-deleted, its children left; a new one is inserted. `resolvePicks` runs per variant, so each compendium form must be a pick, and a collision on `ingredient_variants_form_unique` lands at `['variants', i, 'form']`. MB.220 moves the identity collision onto `identity_key`: `findCompendiumEntryByIdentity({ name, canonicalName })` names the holder by its label and formal name, and the message points the admin at adding a form to it instead. Until MB.222 the top-level `form` and `formId` still save, read as one variant, and the row's `form` and `formId` are the first variant's (the dual write).
+**MB.215: variants are the sixth child, the recipe's first adopter.** An entry's forms become rows of `ingredient_variants` (DESIGN.md §5), and MB.219 writes them by the recipe above rather than through mutations of their own: `ingredientInputFields` gains `variants`, optional on all four input types while the old top-level form still saved, so the four carry it unedited; `splitChildren` and `IngredientChildren` gain the list; and `writeChildren` gains `addVariants` and `replaceVariants` in its two branches, which write each variant's own categories, substitutes and references through the existing add and replace helpers, widened to take an owner of `{ ingredientId, variantId }`. On replace a variant is matched by its `id` when the input carries one the entry holds, else by its folded form, so a form can be respelt in place; one no longer sent is soft-deleted, its children left; a new one is inserted. `resolvePicks` runs per variant, so each compendium form must be a pick, and a collision on `ingredient_variants_form_unique` lands at `['variants', i, 'form']`. MB.220 moves the identity collision onto `identity_key`: `findCompendiumEntryByIdentity({ name, canonicalName })` names the holder by its label and formal name, and the message points the admin at adding a form to it instead. Until MB.222 the top-level `form` and `formId` still saved, read as one variant when `variants` was absent (the shim), and the row's `form` and `formId` were the first variant's (the dual write). MB.222 removed both: `form` and `formId` left `ingredientInputFields`, `variants` became required on all four input types, the two creates included, and the row's two columns are undeclared and written by nothing until MB.223 drops them.

@@ -77,7 +77,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
           cursor
           score
           node {
-            id name slug canonicalName nomenclature form isGlobal folkNames
+            id name slug canonicalName nomenclature isGlobal folkNames
             categories { name group { name colorDark } }
             audit { createdBy }
           }
@@ -207,14 +207,14 @@ describe('compendium', () => {
     expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
-  // MB.167: every entry on the page asks for its picked form and its deities,
+  // MB.167: every entry on the page asks for its forms' picks and its deities,
   // and one read answers each, the curated deities joined in.
   it('resolves the picked forms and the deities of a page in one read each', async () => {
     const result = await runOperation(
       null,
       `query {
         compendium(first: 50) {
-          edges { node { name form formChoice { name group { name } } deities { name deity { name tradition { name } } } } }
+          edges { node { name variants { form formChoice { name group { name } } } deities { name deity { name tradition { name } } } } }
         }
       }`,
     );
@@ -222,18 +222,20 @@ describe('compendium', () => {
     expect(result.errors).toBeUndefined();
     type Node = {
       name: string;
-      form: string | null;
-      formChoice: { name: string; group: { name: string } } | null;
+      variants: { form: string; formChoice: { name: string; group: { name: string } } | null }[];
       deities: { name: string; deity: { name: string; tradition: { name: string } } | null }[];
     };
     const nodes = (result.data as { compendium: { edges: { node: Node }[] } }).compendium.edges.map(
       (edge) => edge.node,
     );
-    // Precondition: the page holds every entry, each picked form among them.
+    // Precondition: the page holds every entry, and their picked forms among them.
     expect(nodes.length).toBeGreaterThan(20);
-    expect(nodes.filter((node) => node.form !== null).length).toBeGreaterThan(20);
-    for (const node of nodes) {
-      if (node.form !== null) expect(node.formChoice?.name, node.name).toBe(node.form);
+    const picked = nodes.flatMap((node) =>
+      node.variants.flatMap((variant) => (variant.formChoice ? [{ node, variant }] : [])),
+    );
+    expect(picked.length).toBeGreaterThan(20);
+    for (const { node, variant } of picked) {
+      expect(variant.formChoice?.name, node.name).toBe(variant.form);
     }
     expect(nodes.find((node) => node.name === 'Mugwort')?.deities).toEqual([
       { name: 'Artemis', deity: { name: 'Artemis', tradition: { name: 'Greek' } } },

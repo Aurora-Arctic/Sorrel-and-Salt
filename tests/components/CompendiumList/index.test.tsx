@@ -10,7 +10,7 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // `/admin/compendium`'s filter, table and pager (M5.5): each entry with its
-// formal name and form, an Edit link opening it in the page's modal, the
+// formal name and live forms, an Edit link opening it in the page's modal, the
 // filter that narrows them to the admin's to-do lists, and the pager
 // (claude-docs/components/compendium-list.md).
 
@@ -21,7 +21,7 @@ const ENTRIES: CompendiumListEntry[] = [
     slug: 'testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    form: 'dried',
+    forms: ['Fixture Herb', 'Fixture Oil'],
     editHref: compendiumHref({}, { edit: 'testwort' }),
   },
   {
@@ -30,7 +30,7 @@ const ENTRIES: CompendiumListEntry[] = [
     slug: 'fixture-salt',
     nomenclature: 'unknown',
     canonicalName: null,
-    form: null,
+    forms: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
   },
 ];
@@ -44,21 +44,23 @@ const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProp
 });
 
 describe('CompendiumList', () => {
-  it('lists each entry with its formal name and form', () => {
+  it('lists each entry with its formal name and every live form', () => {
     render(<CompendiumList {...props()} />);
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
     expect(rows).toHaveLength(3);
     expect(within(rows[1]).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(rows[1]).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('cell', { name: 'dried' })).toBeInTheDocument();
+    expect(
+      within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
+    ).toBeInTheDocument();
     expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
-  it('links each row to its edit modal, named for the entry and its form', () => {
+  it('links each row to its edit modal, named for the entry and its formal name', () => {
     render(<CompendiumList {...props()} />);
 
-    expect(screen.getByRole('link', { name: 'Edit Testwort, dried' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit Testwort, Fixtura testalis' })).toHaveAttribute(
       'href',
       '/admin/compendium?edit=testwort',
     );

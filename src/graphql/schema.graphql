@@ -50,10 +50,6 @@ input CompendiumIngredientInput {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]
-  form: String
-
-  """The curated form picked for `form`."""
-  formId: ID
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]
@@ -62,9 +58,9 @@ input CompendiumIngredientInput {
   substitutes: [SubstituteInput!]
 
   """
-  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
-  variants: [IngredientVariantInput!]
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]
 }
 
@@ -81,10 +77,6 @@ input CompendiumIngredientUpdateInput {
   description: String!
   elements: [IngredientElement!]!
   folkNames: [String!]!
-  form: String!
-
-  """The curated form picked for `form`; "" when there is none."""
-  formId: ID!
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]!
@@ -93,9 +85,9 @@ input CompendiumIngredientUpdateInput {
   substitutes: [SubstituteInput!]!
 
   """
-  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
-  variants: [IngredientVariantInput!]
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]!
 }
 
@@ -170,12 +162,6 @@ type Ingredient {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]!
-  form: String
-
-  """
-  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
-  """
-  formChoice: IngredientFormValue
   id: ID!
   isGlobal: Boolean!
   name: String!
@@ -254,10 +240,6 @@ input IngredientInput {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]
-  form: String
-
-  """The curated form picked for `form`; none when it was typed."""
-  formId: ID
   name: String!
   nomenclature: Nomenclature
   planets: [String!]
@@ -266,9 +248,9 @@ input IngredientInput {
   substitutes: [SubstituteInput!]
 
   """
-  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
-  variants: [IngredientVariantInput!]
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]
 }
 
@@ -285,10 +267,6 @@ input IngredientUpdateInput {
   description: String!
   elements: [IngredientElement!]!
   folkNames: [String!]!
-  form: String!
-
-  """The curated form picked for `form`; "" when it was typed."""
-  formId: ID!
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]!
@@ -297,9 +275,9 @@ input IngredientUpdateInput {
   substitutes: [SubstituteInput!]!
 
   """
-  Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
-  variants: [IngredientVariantInput!]
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]!
 }
 

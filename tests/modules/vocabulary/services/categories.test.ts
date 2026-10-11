@@ -84,17 +84,12 @@ const countNamed = async (name: string) => {
 
 /**
  * Files a fresh compendium entry, or W's own ingredient, under the category
- * named — by its label alone unless a form is given.
+ * named — by its label alone.
  */
-const fileUnder = (
-  category: string,
-  name: string,
-  workspaceId: string | null = null,
-  form: string | null = null,
-) =>
+const fileUnder = (category: string, name: string, workspaceId: string | null = null) =>
   insertIngredient(
     sql,
-    makeIngredient({ name, workspaceId, nomenclature: 'none', form, categories: [category] }),
+    makeIngredient({ name, workspaceId, nomenclature: 'none', categories: [category] }),
     A.id,
   );
 
@@ -505,28 +500,20 @@ describe('deleteCategory', () => {
     });
 
     // Two formal names under one label, since one formal name is one entry
-    // per tier (MB.216); the forms still tell them apart.
-    it('tells two entries sharing a label apart by their forms', async () => {
+    // per tier (MB.216); the formal names tell them apart (MB.222).
+    it('tells two entries sharing a label apart by their formal names', async () => {
       const id = await seed('Testcraft Namesakes');
-      for (const [canonicalName, form] of [
-        ['Fixtura testalis', 'herb'],
-        ['Fixtura alteralis', 'root'],
-      ]) {
+      for (const canonicalName of ['Fixtura testalis', 'Fixtura alteralis']) {
         await insertIngredient(
           sql,
-          makeIngredient({
-            name: 'Testwort',
-            canonicalName,
-            form,
-            categories: ['Testcraft Namesakes'],
-          }),
+          makeIngredient({ name: 'Testwort', canonicalName, categories: ['Testcraft Namesakes'] }),
           A.id,
         );
       }
 
       const attempt = deleteCategory(admin, id);
-      await expect(attempt).rejects.toThrow('herb');
-      await expect(attempt).rejects.toThrow('root');
+      await expect(attempt).rejects.toThrow('Fixtura testalis');
+      await expect(attempt).rejects.toThrow('Fixtura alteralis');
     });
   });
 

@@ -47,16 +47,13 @@ export async function refuseWhileHeld(
 
 /**
  * An entry as a person tells it apart, as every refusal naming one does: its
- * label, then its formal name and form — two entries may share a label. The
- * label unquoted, so a list of entries reads as one: `Rose (Rosa, petal)`.
+ * label, then its formal name, which is its identity — two entries may share
+ * a label, never a formal name (MB.215). No form: an entry may have several
+ * (MB.222). The label unquoted, so a list of entries reads as one:
+ * `Rose (Rosa gallica)`.
  */
-export function describeEntry(entry: {
-  name: string;
-  canonicalName: string | null;
-  form: string | null;
-}): string {
-  const identity = [entry.canonicalName, entry.form].filter(Boolean).join(', ');
-  return identity ? `${entry.name} (${identity})` : entry.name;
+export function describeEntry(entry: { name: string; canonicalName: string | null }): string {
+  return entry.canonicalName ? `${entry.name} (${entry.canonicalName})` : entry.name;
 }
 
 /**

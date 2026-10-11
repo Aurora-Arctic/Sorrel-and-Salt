@@ -12,9 +12,9 @@ import type {
 
 // `Ingredient` as DESIGN.md §7 sketches it, over the row the services return:
 // every correspondence field, the tier as `isGlobal`, and the six children
-// and the picked form through the request's loaders. `identityKey`,
-// `workspaceId` and `formId` stay off the wire: the key is the database's
-// own, the tier is a flag, and the pick is `formChoice`.
+// through the request's loaders, its forms among them as `variants`.
+// `identityKey` and `workspaceId` stay off the wire: the key is the
+// database's own, and the tier is a flag.
 
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
 export const IngredientElementEnum = builder.enumType('IngredientElement', {
@@ -142,15 +142,6 @@ IngredientRef.implement({
       description: 'The formal name: null for none, set for a named kind, either for unknown.',
     }),
     nomenclature: t.expose('nomenclature', { type: NomenclatureEnum }),
-    form: t.exposeString('form', { nullable: true }),
-    formChoice: t.field({
-      type: IngredientFormValueRef,
-      nullable: true,
-      description:
-        'The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.',
-      resolve: (row, _args, { loaders }) =>
-        row.formId === null ? null : loaders.ingredientFormsById.load(row.formId),
-    }),
     description: t.exposeString('description', { nullable: true }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
     planets: t.exposeStringList('planets', { nullable: true }),

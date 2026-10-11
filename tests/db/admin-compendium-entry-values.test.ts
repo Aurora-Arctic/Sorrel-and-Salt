@@ -169,9 +169,7 @@ async function childrenOf(id: string) {
 
 /** The input the form sends for an edit, as IngredientForm's mutation builds it. */
 function editInput(values: Parameters<typeof toInput>[0]): CompendiumWrite {
-  // The update takes every field present (MB.159), the top-level form
-  // included until MB.222, as `""`: the variants carry the forms.
-  return { ...toInput(values), form: '', formId: '' } as CompendiumWrite;
+  return toInput(values) as CompendiumWrite;
 }
 
 describe('entryValues', () => {

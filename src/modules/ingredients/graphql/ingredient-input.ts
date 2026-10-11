@@ -72,25 +72,14 @@ const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
   }),
 });
 
-/** What `formId` says it is, by tier and by whether the type is the whole row. */
-const FORM_ID = {
-  compendium: {
-    part: 'The curated form picked for `form`.',
-    whole: 'The curated form picked for `form`; "" when there is none.',
-  },
-  coven: {
-    part: 'The curated form picked for `form`; none when it was typed.',
-    whole: 'The curated form picked for `form`; "" when it was typed.',
-  },
-} as const;
-
 /**
  * An ingredient input type's fields. The two switches are the two ways the
  * four types differ: `whole` is an update's, which replaces the row, so every
  * field is non-null and leaving one out is a schema error rather than a
  * silent clear (MB.159); and `tier`, since the compendium declares a
  * `nomenclature` for every entry (DESIGN.md §5), where a coven's create may
- * leave it out. Only `name` is required otherwise, so story 29's stub saves.
+ * leave it out. Only `name` and `variants` are required otherwise, so story
+ * 29's stub saves with `variants: []`.
  */
 export function ingredientInputFields<T extends Tier, Whole extends boolean>(
   t: PothosSchemaTypes.InputFieldBuilder<
@@ -108,8 +97,6 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
     name: t.string({ required: true }),
     canonicalName: t.string({ required: whole }),
     nomenclature: t.field({ type: NomenclatureEnum, required: nomenclatureRequired }),
-    form: t.string({ required: whole }),
-    formId: t.id({ required: whole, description: FORM_ID[tier][whole ? 'whole' : 'part'] }),
     description: t.string({ required: whole }),
     elements: t.field({ type: [IngredientElementEnum], required: whole }),
     planets: t.stringList({ required: whole }),
@@ -126,14 +113,13 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
         ? 'The categories it is filed under; [] when none.'
         : 'The categories it is filed under.',
     }),
-    // Optional on every type, the whole row's included, until MB.222: an
-    // input without it reads `form` and `formId` as the one form, which is
-    // how a caller sending only those still saves (MB.219's shim).
+    // Required on every type, a create's included (MB.222): the only place
+    // a form is written, so a caller always says which it has, [] for none.
     variants: t.field({
       type: [IngredientVariantInput],
-      required: false,
+      required: true,
       description:
-        'Its forms, each replacing the one it names; a form not listed is removed. Left out, form and formId are the one form.',
+        'Its forms, each replacing the one it names; a form not listed is removed, and [] is none.',
     }),
   };
 }

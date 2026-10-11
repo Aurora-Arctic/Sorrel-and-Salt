@@ -30,7 +30,7 @@ the argument, and why there is no order column, is §14's.
 a form group is a foreign-key violation rather than an empty chip section
 (§5, §14).
 
-**Both `groupId`s are foreign keys, and `ingredients.form` is not — that is
+**Both `groupId`s are foreign keys, and a variant's `form` is not — that is
 a rule, not an inconsistency**: a member writes `form`, and only admins write
 either side of a group link (§5, §14).
 
@@ -83,20 +83,20 @@ nothing reads that order: the database's is the migrations', where
 **On `ingredient_forms` that last sentence has a consequence the other three
 do not have, and it is deliberate.** A category is referenced by **id**, so
 two categories sharing a display name are only two similar chips.
-`ingredients.form` stores the **string**, so two live forms both called "Root"
+A variant's `form` stores the **string**, so two live forms both called "Root"
 — one an _animal_ part, one a _substance_ — are indistinguishable to
 everything downstream: whichever the member picks, the same `Root` lands on
-the row, and the second curated entry can never be attributed to anything.
+the variant, and the second curated entry can never be attributed to anything.
 M4.2a's acceptance criteria originally asked for a partial unique index on
 `name` here, which would have refused the second row outright. It was dropped
 in favour of MB.35's slug-only rule for two reasons: a unique index on `name`
 is case-sensitive, so it would still admit "Root" beside "root" — two
-identical strings once `canonicalKey` lowercases `form` — and _wax_ is
+identical strings once `ingredient_variants_form_unique` lowercases `form` — and _wax_ is
 legitimately both a part of the bee and a preparation of it, which the index
 would force an admin to rename their way out of. **The disambiguation moved to
 the autofill instead**, as §5 specifies: M4.7a returns each curated
 suggestion's group and M5.10a renders it, and MB.165 keeps a pick, as
-`ingredients.form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
+a variant's `form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
 the gap stays a recorded decision. A form's slug names its group,
 `formSlug(name, group)`, so the pair can be written through the admin's page
 and not only by a test (M5.6a). Adding the index later is the reversible
@@ -164,8 +164,9 @@ admin's alone, each opening on `assertSiteAdmin` before it reads the input.
 - **`deleteCategory` soft-deletes, and is refused while a live compendium
   entry is filed under the category.** The refusal is `Forbidden`, naming the
   first three entries by name, each told apart from a namesake by its formal
-  name and form, then how many more: `"Protection" is filed on 5 compendium
-entries — Bay Laurel (Laurus nobilis, Leaf), … and 2 more. Take it off them
+  name (`describeEntry`; no form since MB.222, as an entry may have several),
+  then how many more: `"Protection" is filed on 5 compendium
+entries — Bay Laurel (Laurus nobilis), … and 2 more. Take it off them
 first.` The entries are read through the compendium's own category filter,
   `findCompendiumPage` and `findCompendiumCount`, so "filed under" means what
   the compendium's list means by it. A deleted entry's link does not hold
@@ -221,9 +222,8 @@ keep it one after the write.
   the form, in the same transaction** (MB.220), through `write.carryFormRename`,
   one statement over `ingredient_variants`: each variant's `form` text, and
   nothing else. No slug moves and no retirement is written, since a form is no
-  part of an entry's identity or address since MB.215. Until MB.222 drops it,
-  the ingredient row's own `form`, which mirrors its first variant (MB.219),
-  follows where the row picked the form. A change of group alone rewrites no
+  part of an entry's identity or address since MB.215. The ingredient row has
+  no form of its own since MB.222, so nothing else is rewritten. A change of group alone rewrites no
   variant, which holds the form's name, not its group.
 - **The rename is refused rather than half-carried.** Before the write it
   refuses, on `name`, a rename that would give an entry two forms of one

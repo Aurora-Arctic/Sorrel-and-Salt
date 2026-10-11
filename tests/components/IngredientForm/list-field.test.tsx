@@ -450,7 +450,7 @@ describe('ListField', () => {
     const COMPENDIUM = {
       id: '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e',
       canonicalName: null,
-      form: 'Dried leaf',
+      forms: ['Dried leaf'],
       description: null,
       isGlobal: true,
     };
@@ -648,7 +648,7 @@ describe('ListField', () => {
       link: {
         id: '3f6c1d2e-8a4b-4c5d-9e0f-1a2b3c4d5e6f',
         canonicalName: 'Fixtura testalis',
-        form: 'Dried leaf',
+        forms: ['Dried leaf'],
         description: 'A fixture herb.',
         isGlobal: true,
       },

@@ -187,13 +187,10 @@ const IngredientForm = ({
       // input is the compendium's, whose `nomenclature` is required.
       if (entry) {
         // The update takes the whole entry, every field present (MB.159),
-        // and its type still declares the top-level form, which the form no
-        // longer has: `""` for each, which the service reads as none and
-        // sets aside for the variants sent (MB.219). MB.222 drops the pair.
-        const whole = { ...input, form: '', formId: '' } as CompendiumIngredientUpdateInput;
+        // which the form's input always is.
         const answer = await graphqlRequest(UpdateCompendiumIngredientDocument, {
           id: entry.id,
-          input: whole,
+          input: input as CompendiumIngredientUpdateInput,
           endRedirect,
         });
         return answer.updateCompendiumIngredient;

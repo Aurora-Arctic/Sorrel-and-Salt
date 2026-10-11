@@ -342,24 +342,24 @@ describe('LookupListField', () => {
     id: COMPENDIUM_ID,
     name: 'Mockwort',
     canonicalName: 'Fixtura vulgaris',
-    form: 'Dried leaf',
     description: 'A fixture herb.',
     isGlobal: true,
-    variants: [],
+    variants: [
+      { id: '71c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e', form: 'Dried leaf', formChoice: null },
+    ],
   };
   // The same label and formal name in another form: only the tooltip tells
   // the two apart once one is picked (MB.164).
   const MOCKWORT_COVEN: IngredientNode = {
     ...MOCKWORT_COMPENDIUM,
     id: COVEN_ID,
-    form: 'Tincture',
     isGlobal: false,
+    variants: [{ id: 'e8f9a0b1-c2d3-4e4f-8a5b-6c7d8e9f0a1b', form: 'Tincture', formChoice: null }],
   };
   const MOCKWORT_TEA: IngredientNode = {
     id: BARE_ID,
     name: 'Mockwort Tea',
     canonicalName: null,
-    form: null,
     description: null,
     isGlobal: false,
     variants: [],

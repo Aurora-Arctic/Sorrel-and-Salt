@@ -2,6 +2,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { spells } from '../../modules/grimoire/schema/spells';
 import type {
   referenceLinks,
@@ -53,22 +54,30 @@ export type SeedMembership = Pick<
 >;
 
 /**
- * One compendium entry plus its folk names, deities and categories, named
- * rather than keyed. Its form and each deity are picked by that name from the
- * curated rows (MB.167), so each must name exactly one.
+ * One form of a seeded entry and what that form adds (MB.222): its own
+ * description and safety note. A compendium form is picked by name from the
+ * curated rows (MB.167), so it must name exactly one; a coven's is typed.
+ */
+export type SeedVariant = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
+  Partial<Pick<typeof ingredientVariants.$inferInsert, 'description' | 'safetyNotes'>>;
+
+/**
+ * One compendium entry plus its forms, folk names, deities and categories,
+ * named rather than keyed. Each deity is picked by that name from the curated
+ * rows (MB.167), so each must name exactly one.
  */
 export type SeedIngredient = Pick<
   typeof ingredients.$inferInsert,
   | 'name'
   | 'canonicalName'
   | 'nomenclature'
-  | 'form'
   | 'description'
   | 'elements'
   | 'planets'
   | 'zodiacSigns'
   | 'safetyNotes'
 > & {
+  variants: SeedVariant[];
   folkNames?: string[];
   deities?: string[];
   categories: string[];
@@ -76,17 +85,17 @@ export type SeedIngredient = Pick<
 
 // `demo`: W's own ingredients and the spells layered from both tiers.
 
-/** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
+/** W's own ingredients — the workspace tier, `workspace_id` set rather than null — and their forms. */
 export type SeedWorkspaceIngredient = Pick<
   typeof ingredients.$inferInsert,
-  'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'elements'
->;
+  'name' | 'canonicalName' | 'nomenclature' | 'description' | 'elements'
+> & { variants: SeedVariant[] };
 
 /** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */
 export type SeedLayerIngredient =
   | {
       tier: 'compendium' | 'workspace';
-      entry: { name: string; canonicalName?: string | null; form?: string | null };
+      entry: { name: string; canonicalName?: string | null };
     }
   | { tier: 'custom'; name: string; form: string };
 

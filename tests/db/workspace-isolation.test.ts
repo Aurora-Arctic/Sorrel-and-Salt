@@ -9,11 +9,10 @@ import type { Session } from '@/lib/session';
 import { assertMembership } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { getWorkspaceIngredient, updateWorkspaceIngredient } from '@/modules/ingredients';
-import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { A, D, E, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
-import { makeIngredient, makeSpell } from '../support/fixtures';
+import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
 // Story 19 — an outsider and a site admin both refused a coven's ingredients
 // and grimoire, by direct id and on every write, with a refusal that hands
@@ -74,16 +73,18 @@ const seedSpell = () =>
   );
 
 /** A rewrite of the ingredient as the coven's own form would send it. */
-function hijack(): LocalIngredientInput {
+function hijack(): Parameters<typeof updateWorkspaceIngredient>[3] {
   const {
     workspaceId: _tier,
     categories: _categories,
     substitutes,
     deities,
+    variants,
     ...input
   } = makeIngredient({ name: 'Hijacked' });
   return {
     ...input,
+    variants: variants.map((variant) => variantInput(variant)),
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
   };

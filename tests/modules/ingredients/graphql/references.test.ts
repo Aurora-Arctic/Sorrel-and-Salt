@@ -181,8 +181,7 @@ describe('Ingredient.references', () => {
     name: 'Testwort',
     canonicalName: '',
     nomenclature: 'none',
-    form: '',
-    formId: '',
+    variants: [],
     description: '',
     elements: [],
     planets: [],
@@ -200,7 +199,7 @@ describe('Ingredient.references', () => {
     const reference = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
     const created = await run<{ createWorkspaceIngredient: { id: string } }>(asUser(B), SAVE, {
       workspaceId: WORKSPACE_W_ID,
-      input: { name: 'Testwort', references: [{ referenceId: reference }] },
+      input: { name: 'Testwort', variants: [], references: [{ referenceId: reference }] },
     });
     const id = created.data?.createWorkspaceIngredient.id;
 

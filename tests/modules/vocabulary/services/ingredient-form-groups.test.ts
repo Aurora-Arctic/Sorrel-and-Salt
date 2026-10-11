@@ -17,7 +17,7 @@ import type { IngredientFormGroupInput } from '@/modules/vocabulary/validation/i
 import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // Story 18's form-group half (M5.6b): the groups' writes, the site admin's
 // alone. A form's slug is its name and its group (M5.6a), so a rename moves
@@ -105,15 +105,17 @@ const picking = (formId: string, workspaceId: string | null = null) =>
       name: 'Testwort',
       workspaceId,
       nomenclature: 'none',
-      form: 'Fixture Shard',
-      formId,
+      variants: [makeVariant({ form: 'Fixture Shard', formId })],
     }),
     A.id,
   );
 
+/** An entry's row and its variants, where its form and its pick live (MB.222). */
 async function ingredientOf(id: string) {
   const [row] = await sql`select * from ingredients where id = ${id}`;
-  return row;
+  const variants = await sql`
+    select * from ingredient_variants where ingredient_id = ${id} order by id`;
+  return { ...row, variants: [...variants] };
 }
 
 /** An issue list, or the test fails because the write went through. */
@@ -345,7 +347,10 @@ describe('deleteIngredientFormGroup', () => {
     const owned = await picking(shard, WORKSPACE_W_ID);
     const before = [await ingredientOf(entry), await ingredientOf(owned)];
     // Why either could have held the delete: both are live and pick the form.
-    expect(before.map((row) => row.form_id)).toEqual([shard, shard]);
+    expect(before.map((row) => row.variants.map((variant) => variant.form_id))).toEqual([
+      [shard],
+      [shard],
+    ]);
 
     await deleteIngredientFormGroup(admin, id, substance.id);
 

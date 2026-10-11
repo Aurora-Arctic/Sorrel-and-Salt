@@ -56,8 +56,7 @@ const WHOLE_INGREDIENT = {
   name: 'Testwort',
   canonicalName: '',
   nomenclature: 'none',
-  form: '',
-  formId: '',
+  variants: [],
   description: '',
   elements: [],
   planets: [],
@@ -98,7 +97,7 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {
       createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) { id }
     }`,
-    variables: () => ({ input: { name: 'Fixture Created' } }),
+    variables: () => ({ input: { name: 'Fixture Created', variants: [] } }),
   },
   updateIngredient: {
     source: `mutation ($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {

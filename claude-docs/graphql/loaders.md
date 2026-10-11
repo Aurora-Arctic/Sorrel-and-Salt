@@ -27,7 +27,7 @@ merely absent:
   (`ingredients`, for `IngredientVariant`'s three, MB.218),
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
-  `IngredientFormValue.group`, `Deity.tradition` and `Ingredient.formChoice`;
+  `IngredientFormValue.group`, `Deity.tradition` and `IngredientVariant.formChoice`;
   the last two MB.167's); M6.11
   `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById`, the members' display name, follow. A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the

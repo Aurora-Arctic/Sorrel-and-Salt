@@ -117,21 +117,12 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
         and(inCompendium(ingredients), inArray(fromFold, listFolds(column))),
       );
     },
-    // One statement over the variants: no slug moves, so every pick takes the
-    // same rewrite. The entry's tier and liveness by the builder's correlated
-    // `EXISTS`, so a coven's variant is never reached.
-    carryFormRename: async (_admin, formId, form) => {
-      // The ingredient row's own `form` mirrors its first variant until MB.222
-      // drops it (MB.219's dual write), so a picked row follows too, or the
-      // entry's next save would send the old text beside the pick. No slug
-      // moves: since MB.220 a slug carries no form, and an older one keeps its
-      // form until the entry's own next save.
-      await update(
-        ingredients,
-        { form },
-        and(inCompendium(ingredients), eq(ingredients.formId, formId)),
-      );
-      return update(
+    // One statement over the variants: no slug moves, since a slug carries no
+    // form (MB.220), so every pick takes the same rewrite. The entry's tier
+    // and liveness by the builder's correlated `EXISTS`, so a coven's variant
+    // is never reached.
+    carryFormRename: (_admin, formId, form) =>
+      update(
         ingredientVariants,
         { form },
         and(
@@ -141,8 +132,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
             and(inCompendium(ingredients), eq(ingredients.id, ingredientVariants.ingredientId)),
           ),
         ),
-      );
-    },
+      ),
     // One statement: no slug moves and the name is the deity's own, so every
     // link takes the same rewrite. `deity_id` is matched here as the service
     // read it, and the entry's tier and liveness by the builder's correlated

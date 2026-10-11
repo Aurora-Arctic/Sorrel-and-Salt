@@ -53,19 +53,14 @@ import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
  * The parsed input as columns, every optional one written — `null` where the
  * input has nothing — so an update replaces the row rather than merging into
  * it; and the slug, derived from the label and the formal name
- * (M4.3) rather than sent beside them.
- *
- * `form` and `formId` are the first form's once `resolvePicks` has run, so
- * the row mirrors a variant while the columns last: the dual write MB.222
- * removes, once nothing reads them.
+ * (M4.3) rather than sent beside them. No form: an entry's forms are its
+ * variants, written by `writeChildren` (MB.222).
  */
 export function ingredientColumns(fields: IngredientFields) {
   return {
     name: fields.name,
     canonicalName: fields.canonicalName ?? null,
     nomenclature: fields.nomenclature,
-    form: fields.form ?? null,
-    formId: fields.formId ?? null,
     description: fields.description ?? null,
     elements: fields.elements ?? null,
     planets: fields.planets ?? null,
@@ -188,9 +183,7 @@ export function heldDeities(
  * to: a `formId` must name a curated form — live, under a live group — and
  * the text beside it fold to that form's name, written in its spelling; on
  * the compendium every form must be such a pick. A form's pick is a column,
- * so one sent without its id is kept as its text. With no list sent, the
- * top-level `form` and `formId` are the one form, its issues on those two
- * fields as before (the shim MB.222 removes).
+ * so one sent without its id is kept as its text. No list sent is no form.
  *
  * A deity picked anew must name a curated deity, its name written in that
  * deity's spelling. A pick the ingredient already `held` is kept on a coven's
@@ -202,9 +195,6 @@ export function heldDeities(
  *
  * Each category, the ingredient's and each form's, must name a live one, in
  * either tier and held or not, and one named twice is filed once (MB.125).
- *
- * The fields come back with `form` and `formId` the first form's, as written,
- * so the row's columns mirror a variant until MB.222 (the dual write).
  *
  * @returns the fields; the lists `writeChildren` takes that were checked here
  * — the categories each once, each deity to write in order, and the forms —
@@ -222,9 +212,9 @@ export async function resolvePicks(
   issues: ValidationIssue[];
 }> {
   const { deities } = picked;
-  const variants: PickedVariant[] = picked.variants
-    ? picked.variants.map((variant, index) => asPicked(variant, ['variants', index]))
-    : formAsVariant(fields);
+  const variants = (picked.variants ?? []).map((variant, index) =>
+    asPicked(variant, ['variants', index]),
+  );
   const heldLinks = held.flatMap((row) => (row.deityId === null ? [] : [row]));
   const categoryIds = [...new Set(fields.categoryIds ?? [])];
   const [forms, deityNames, filed] = await Promise.all([
@@ -288,9 +278,8 @@ export async function resolvePicks(
 
   refuseDeadCategories(fields.categoryIds ?? [], live, ['categoryIds'], issues);
 
-  const [first] = resolved;
   return {
-    fields: { ...fields, categoryIds, form: first?.form ?? null, formId: first?.formId ?? null },
+    fields: { ...fields, categoryIds },
     children: {
       categoryIds,
       deities: pickedDeities.filter((entry) => entry !== undefined),
@@ -318,33 +307,6 @@ function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
     colors: listOrNone(variant.colors),
     at,
   };
-}
-
-/**
- * The one form the top-level `form` and `formId` stand for when an input
- * sends no `variants` (MB.219's shim, until MB.222): none when there is no
- * form, so a stub saves bare. At `[]`, so its issues land on `form` and
- * `formId`, the fields the caller sent.
- */
-function formAsVariant(fields: IngredientFields): PickedVariant[] {
-  if (fields.form == null) return [];
-  return [
-    {
-      id: null,
-      form: fields.form,
-      formId: fields.formId ?? null,
-      description: null,
-      safetyNotes: null,
-      elements: null,
-      planets: null,
-      zodiacSigns: null,
-      colors: null,
-      categoryIds: [],
-      substitutes: [],
-      references: [],
-      at: [],
-    },
-  ];
 }
 
 /**

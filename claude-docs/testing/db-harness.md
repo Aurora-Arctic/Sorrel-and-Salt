@@ -66,7 +66,9 @@ run as a test.
 
 - **`insert-ingredient.ts` — `insertIngredient(sql, fixture, author)`** (MB.101).
   The setup inserter for an ingredient and its children, on the raw client and
-  in one transaction. Why setup goes this way rather than through `withAudit`
+  in one transaction. Its children include a variant row for each of the
+  fixture's forms, since the ingredient row has none (MB.222), and
+  `insertVariant` writes one more form beside them. Why setup goes this way rather than through `withAudit`
   is under ["Fixture factories"](fixture-factories.md), where the convention is stated. It
   has no test of its own: it is the harness, proved by every test seeding
   through it (MB.225).

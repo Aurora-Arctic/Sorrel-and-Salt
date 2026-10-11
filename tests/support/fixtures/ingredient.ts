@@ -1,7 +1,13 @@
 import { ingredientSlug } from '@/lib/slugify';
 import { toColumns } from './columns';
 import { mergeFixture, stated } from './merge';
-import type { Nomenclature, IngredientFixture, Overrides } from './types';
+import type {
+  IngredientFixture,
+  Nomenclature,
+  Overrides,
+  VariantFixture,
+  VariantInput,
+} from './types';
 
 // The compendium entry a test writes when the ingredient is not what is under
 // test.
@@ -38,14 +44,57 @@ const CANONICAL_NAME_BY_NOMENCLATURE: Record<Nomenclature, string | null> = {
   none: null,
 };
 
+/**
+ * One form of an ingredient. The default form is invented, as every default
+ * name here is (M1.25): a real one, `Herb` or `Oil`, is safe only until a
+ * curated row or a seeded variant spells it.
+ *
+ * ```ts
+ * makeVariant()                                   // Testform, adding nothing
+ * makeVariant({ form: 'Fixture Oil', formId })    // a pick of a curated form
+ * ```
+ */
+export function makeVariant(overrides: Partial<VariantFixture> = {}): VariantFixture {
+  return { form: 'Testform', ...overrides };
+}
+
+/**
+ * A fixture's form as a write's input sends it (MB.219): every field, `""` or
+ * `[]` for what the fixture leaves out, its typed substitutes as names, and
+ * `overrides` over the rest. The fixture's categories are names, which an
+ * input cannot send, so a test states `categoryIds` itself.
+ *
+ * ```ts
+ * variantInput(makeVariant({ form: 'Herb' }), { formId: herb })  // a pick
+ * ```
+ */
+export function variantInput(
+  variant: VariantFixture,
+  overrides: Partial<VariantInput> = {},
+): VariantInput {
+  return {
+    form: variant.form,
+    formId: variant.formId ?? '',
+    description: variant.description ?? '',
+    safetyNotes: variant.safetyNotes ?? '',
+    elements: variant.elements ?? [],
+    planets: variant.planets ?? [],
+    zodiacSigns: variant.zodiacSigns ?? [],
+    colors: variant.colors ?? [],
+    categoryIds: [],
+    substitutes: (variant.substitutes ?? []).map((name) => ({ ingredientId: null, name })),
+    references: [],
+    ...overrides,
+  };
+}
+
 const DEFAULTS: IngredientFixture = {
   // The compendium tier; a workspace-local fixture says so with `workspaceId`.
   workspaceId: null,
   name: 'Testwort',
   canonicalName: CANONICAL_NAME_BY_NOMENCLATURE.botanical,
   nomenclature: 'botanical',
-  form: 'herb',
-  formId: null,
+  variants: [makeVariant()],
   description: null,
   elements: null,
   planets: null,
@@ -65,6 +114,7 @@ const DEFAULTS: IngredientFixture = {
  * makeIngredient()                              // Testwort, botanical, Fixtura testalis
  * makeIngredient({ categories: ['Protection'] }) // filed under protection and nothing else
  * makeIngredient({ nomenclature: 'none' })      // graveyard-dirt shaped: no formal name
+ * makeIngredient({ variants: [] })              // no form at all
  * ```
  *
  * A stated `canonicalName` is left as given, even beside a contradicting
@@ -89,6 +139,7 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
  */
 export function ingredientColumns(fixture: IngredientFixture): Record<string, unknown> {
   const {
+    variants: _variants,
     folkNames: _folkNames,
     substitutes: _substitutes,
     deities: _deities,

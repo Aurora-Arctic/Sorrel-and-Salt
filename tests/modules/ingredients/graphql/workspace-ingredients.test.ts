@@ -10,7 +10,13 @@ import { A, B, C, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
@@ -33,10 +39,10 @@ beforeEach(async () => {
 });
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form formChoice { id name group { name } } description
+  id name slug canonicalName nomenclature description
   elements planets zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
   substitutes { name ingredient { id } } isGlobal folkNames
-  categories { name } variants { form }
+  categories { name } variants { form formChoice { id name group { name } } }
   audit { createdBy updatedBy }
 `;
 
@@ -90,8 +96,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     name: fixture.name,
     canonicalName: fixture.canonicalName ?? '',
     nomenclature: fixture.nomenclature,
-    form: fixture.form ?? '',
-    formId: fixture.formId ?? '',
+    variants: fixture.variants.map((variant) => variantInput(variant)),
     description: fixture.description ?? '',
     elements: fixture.elements ?? [],
     planets: fixture.planets ?? [],
@@ -125,8 +130,7 @@ describe('createWorkspaceIngredient', () => {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      form: 'root',
-      formId: root,
+      variants: [variantInput(makeVariant({ form: 'root' }), { formId: root })],
       elements: ['water', 'earth'],
       planets: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
@@ -143,8 +147,9 @@ describe('createWorkspaceIngredient', () => {
       { name: 'Zest Root', ingredient: null },
     ]);
     // MB.167: the picks read back as picks, the typed deity as its name, in order.
-    expect(answered.form).toBe('Root');
-    expect(answered.formChoice).toEqual({ id: root, name: 'Root', group: { name: 'Botanical' } });
+    expect(answered.variants).toEqual([
+      { form: 'Root', formChoice: { id: root, name: 'Root', group: { name: 'Botanical' } } },
+    ]);
     expect(answered.deities).toEqual([
       { name: 'Testara', deity: null },
       { name: 'Hecate', deity: { id: hecate, tradition: { name: 'Greek' } } },
@@ -164,7 +169,11 @@ describe('createWorkspaceIngredient', () => {
   // Nothing in the input names a stamp or a tier: both are the session's and
   // the proof's, and the schema has no field to carry either.
   it('refuses an input carrying a tier, writing nothing', async () => {
-    const result = await create(asUser(B), { name: 'Testwort', workspaceId: WORKSPACE_X_ID });
+    const result = await create(asUser(B), {
+      name: 'Testwort',
+      variants: [],
+      workspaceId: WORKSPACE_X_ID,
+    });
 
     expect(result.data ?? null).toBeNull();
     expect(result.errors?.[0]?.message).toMatch(/is not defined by type "IngredientInput"/);
@@ -176,6 +185,7 @@ describe('createWorkspaceIngredient', () => {
       name: 'Testwort',
       nomenclature: 'botanical',
       folkNames: ['Test Root', 'test root'],
+      variants: [],
     };
     // Two issues at two depths, from the schema the form also runs.
     const parsed = LocalIngredientInput.safeParse(input);
@@ -199,7 +209,7 @@ describe('createWorkspaceIngredient', () => {
     const id = await seed(local({ name: 'Rootwort' }));
     expect((await read(asUser(C), id)).data?.ingredient).toMatchObject({ name: 'Rootwort' });
 
-    const result = await create(asUser(C), { name: 'Testwort' });
+    const result = await create(asUser(C), { name: 'Testwort', variants: [] });
 
     expect(result.data).toBeNull();
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
@@ -223,7 +233,6 @@ describe('updateIngredient', () => {
       wholeInput(
         local({
           name: 'Testroot',
-          form: 'root',
           elements: ['fire'],
           planets: ['Mars'],
           colors: ['Red', 'Black'],
@@ -237,7 +246,6 @@ describe('updateIngredient', () => {
     expect(answered).toMatchObject({
       id,
       name: 'Testroot',
-      form: 'root',
       elements: ['fire'],
       description: null,
       planets: ['Mars'],
@@ -251,7 +259,6 @@ describe('updateIngredient', () => {
   it('clears a text field sent as "", and a list sent as [], elements included', async () => {
     const id = await seed(
       local({
-        form: 'root',
         description: 'Dug at dusk',
         elements: ['water', 'air'],
         planets: ['Moon'],
@@ -263,11 +270,11 @@ describe('updateIngredient', () => {
       }),
     );
 
-    const result = await update(asUser(B), id, wholeInput(local({ form: null })));
+    const result = await update(asUser(B), id, wholeInput(local({ variants: [] })));
 
     expect(result.errors).toBeUndefined();
     expect(result.data?.updateIngredient).toMatchObject({
-      form: null,
+      variants: [],
       description: null,
       elements: null,
       planets: null,
@@ -293,37 +300,36 @@ describe('updateIngredient', () => {
   });
 
   // An empty value clears every field, `elements` too since it became a list
-  // (MB.159), so none is left nullable and none may be left out.
-  // But `variants`, until MB.222: an input without it reads `form` and
-  // `formId` as the one form, which is how IngredientForm still saves (MB.219).
-  it('declares every field of its input required, but its forms', () => {
+  // (MB.159), and `variants` since MB.222, so none is left nullable and none
+  // may be left out.
+  it('declares every field of its input required', () => {
     const input = schema.getType('IngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
     // Precondition: the input is the whole ingredient, not a stub.
     expect(fields.map((field) => field.name)).toEqual(
-      expect.arrayContaining(['name', 'canonicalName', 'form', 'elements', 'folkNames']),
+      expect.arrayContaining(['name', 'canonicalName', 'variants', 'elements', 'folkNames']),
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      ['variants'],
+      [],
     );
   });
 
   it('refuses an input that leaves a field out, changing nothing', async () => {
-    const id = await seed(local({ form: 'root' }));
-    const { form: _form, ...withoutForm } = wholeInput(local({ name: 'Testroot', form: 'root' }));
+    const id = await seed(local());
+    const { variants, ...withoutForms } = wholeInput(local({ name: 'Testroot' }));
     // Why it could have succeeded: the same input with the field sent is saved.
-    const sent = await update(asUser(B), id, { ...withoutForm, form: 'root', name: 'Testwort' });
+    const sent = await update(asUser(B), id, { ...withoutForms, variants, name: 'Testwort' });
     expect(sent.errors).toBeUndefined();
 
-    const result = await update(asUser(B), id, withoutForm);
+    const result = await update(asUser(B), id, withoutForms);
 
     expect(result.data ?? null).toBeNull();
     expect(result.errors?.[0]?.message).toMatch(
-      /Field "form" of required type "String!" was not provided/,
+      /Field "variants" of required type .* was not provided/,
     );
-    expect(await rowOf(id)).toMatchObject({ name: 'Testwort', form: 'root' });
+    expect(await rowOf(id)).toMatchObject({ name: 'Testwort' });
   });
 
   describe('its elements', () => {
@@ -502,19 +508,8 @@ describe('deleteIngredient', () => {
 // matches, keeps and drops forms is services/workspace-ingredients.test.ts's.
 describe('variants', () => {
   /** One whole form as the input type requires it: every field but its id. */
-  const formOf = (form: string, description = '') => ({
-    form,
-    formId: '',
-    description,
-    safetyNotes: '',
-    elements: [],
-    planets: [],
-    zodiacSigns: [],
-    colors: [],
-    categoryIds: [],
-    substitutes: [],
-    references: [],
-  });
+  const formOf = (form: string, description = '') =>
+    variantInput(makeVariant({ form, description }));
 
   // Root mutation fields run one after another in one request, so the second
   // must not answer the forms the first one read.
@@ -545,15 +540,6 @@ describe('variants', () => {
       { form: 'Testleaf', description: 'Pressed.' },
       { form: 'Testoil', description: null },
     ]);
-  });
-
-  // The shim, until MB.222: the field is optional on every input, so a caller
-  // sending only `form` passes the schema and saves it as the one form.
-  it('takes an input without variants, answering its top-level form as the one form', async () => {
-    const result = await create(asUser(B), { name: 'Testwort', form: 'root' });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.createWorkspaceIngredient.variants).toEqual([{ form: 'root' }]);
   });
 
   it("answers a form's refusal as VALIDATION pathed to that form, writing nothing", async () => {

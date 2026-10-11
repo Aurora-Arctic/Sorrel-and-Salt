@@ -1,5 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { FieldError, FieldErrors, FieldPath, Resolver, UseFormReturn } from 'react-hook-form';
+import type {
+  FieldError,
+  FieldErrors,
+  FieldPath,
+  Resolver,
+  ResolverResult,
+  UseFormReturn,
+} from 'react-hook-form';
 import {
   CompendiumIngredientInput,
   LocalIngredientInput,
@@ -155,7 +162,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     deities: deities.map(({ value, link }) => (link ? { deityId: link.id } : { name: value })),
     substitutes: substituteInputs(substitutes),
     references: referenceInputs(references),
-    // The forms alone, never the top-level `form`, which MB.222 retires.
+    // The forms, each with what it adds (MB.215).
     variants: variants.map(variantInput),
   };
 }
@@ -231,18 +238,18 @@ export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =
 
 /**
  * What a linked entry's pill leaves out, for its tooltip. A substitute's is
- * "Dried leaf · Compendium entry — A fixture herb.": its form, which the
- * pill's formal name needs to tell two ingredients apart (§5), its tier and
- * its description (MB.164). A deity's is its description (MB.169).
- * Undefined for a typed entry, which has nothing more to tell.
+ * "Dried leaf, Oil · Compendium entry — A fixture herb.": the form of it
+ * picked, or else the forms it comes in (MB.222), its tier and its
+ * description (MB.164). A deity's is its description (MB.169). Undefined for
+ * a typed entry, which has nothing more to tell.
  */
 export function entryDetail(entry: AnyListEntry): string | undefined {
   const link = linkOf(entry);
   if (!link) return undefined;
   if (isDeityLink(link)) return link.description ?? undefined;
-  // The form of it picked, when one is (MB.215), else the form the row records.
+  // The form of it picked, when one is (MB.215), else every form it comes in.
   const picked = 'variantId' in entry ? formNamed(link, entry.variantId) : undefined;
-  const facts = [picked ?? link.form, tierOf(link)].filter(Boolean).join(' · ');
+  const facts = [picked ?? link.forms.join(', '), tierOf(link)].filter(Boolean).join(' · ');
   return link.description ? `${facts} — ${link.description}` : facts;
 }
 
@@ -565,7 +572,9 @@ function resolverFor(
     } else if (drafts) {
       errors.drafts = drafts;
     }
-    if (Object.keys(errors).length === 0) return result;
+    // `toInput` lists the forms always, which the schema's input type leaves optional.
+    if (Object.keys(errors).length === 0)
+      return result as ResolverResult<IngredientFormValues, IngredientFormInput>;
     return { values: {}, errors: errors as FieldErrors<IngredientFormValues> };
   };
 }

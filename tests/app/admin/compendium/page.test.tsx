@@ -22,10 +22,12 @@ vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();
+const variantsOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   listCompendium,
   countCompendium,
   resolveCompendiumSlug,
+  variantsOf,
 }));
 
 const entryValues = vi.fn();
@@ -55,10 +57,9 @@ const TESTWORT = {
   id: '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
   workspaceId: null,
   name: 'Testwort',
-  slug: 'testwort-herb-fixtura-testalis',
+  slug: 'testwort-fixtura-testalis',
   canonicalName: 'Fixtura testalis',
   nomenclature: 'botanical',
-  form: 'Herb',
 };
 
 /** Testwort as the form edits it. */
@@ -115,6 +116,11 @@ beforeEach(() => {
   countCompendium.mockResolvedValue({ totalCount: 1, countBefore: 0 });
   resolveCompendiumSlug.mockReset();
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
+  // Every entry listed comes in one form, Herb.
+  variantsOf.mockReset();
+  variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
+    refs.map(() => [{ form: 'Herb' }]),
+  );
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
   redirect.mockClear();
@@ -133,20 +139,23 @@ describe('the /admin/compendium page', () => {
     expect(countCompendium).not.toHaveBeenCalled();
   });
 
-  it('lists the first page of 25, each entry with its formal name and form, and no modal', async () => {
+  it('lists the first page of 25, each entry with its formal name and its forms, and no modal', async () => {
     await renderPage();
 
     expect(requireAdminSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
+    // The page's forms, read in one batch for the entries it lists.
+    expect(variantsOf).toHaveBeenCalledExactlyOnceWith(null, [
+      { id: TESTWORT.id, workspaceId: null },
+    ]);
     const row = within(screen.getByRole('table')).getAllByRole('row')[1];
     expect(within(row).getByRole('cell', { name: 'Testwort' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Fixtura testalis' })).toBeInTheDocument();
     expect(within(row).getByRole('cell', { name: 'Herb' })).toBeInTheDocument();
-    expect(within(row).getByRole('link', { name: 'Edit Testwort, Herb' })).toHaveAttribute(
-      'href',
-      `/admin/compendium?edit=${TESTWORT.slug}`,
-    );
+    expect(
+      within(row).getByRole('link', { name: 'Edit Testwort, Fixtura testalis' }),
+    ).toHaveAttribute('href', `/admin/compendium?edit=${TESTWORT.slug}`);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
   });
@@ -223,7 +232,7 @@ describe('the /admin/compendium filter', () => {
       'href',
       `${here}&new`,
     );
-    expect(screen.getByRole('link', { name: 'Edit Testwort 0, Herb' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Edit Testwort 0, Fixtura testalis' })).toHaveAttribute(
       'href',
       `${here}&edit=testwort-0`,
     );

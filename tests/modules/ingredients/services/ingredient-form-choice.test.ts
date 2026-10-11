@@ -11,13 +11,14 @@ import { formChoicesOf } from '@/modules/vocabulary';
 import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant, variantInput } from '../../../support/fixtures';
 
 // MB.167: the curated form a member picked, recorded beside the form's text in
-// `ingredients.form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under
+// its variant's `form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under
 // _Animal_ and Wax under _Substance_ stay told apart after a save; and
-// `formChoicesOf`, the batch behind `Ingredient.formChoice`. The ingredients
-// are emptied per test; a form or group a test adds or retires is put back.
+// `formChoicesOf`, the batch behind `IngredientVariant.formChoice`. The
+// ingredients are emptied per test; a form or group a test adds or retires is
+// put back.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -73,15 +74,18 @@ async function groupOf(form: string): Promise<string> {
   return row.group_id as string;
 }
 
-const input = (form: string | null, formIdValue?: string | null) => ({
+/** Testwort with one form, its text and, when given, its pick. */
+const input = (form: string, formIdValue?: string) => ({
   name: 'Testwort',
   nomenclature: 'none' as const,
-  form,
-  formId: formIdValue,
+  variants: [variantInput(makeVariant({ form }), { formId: formIdValue ?? '' })],
 });
 
+/** The ingredient's one live form, as its variant row holds it. */
 async function rowOf(id: string) {
-  const [row] = await sql`select form, form_id from ingredients where id = ${id}`;
+  const [row] = await sql`
+    select form, form_id from ingredient_variants
+    where ingredient_id = ${id} and deleted_at is null`;
   return row;
 }
 
@@ -121,7 +125,7 @@ describe('a save carrying a picked form', () => {
       createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Root', substanceWax)),
     );
 
-    expect(issues).toEqual([expect.objectContaining({ path: ['form'] })]);
+    expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'form'] })]);
   });
 
   // Typed text is never resolved into a pick (MB.165).
@@ -160,7 +164,7 @@ describe('a form pick that names no curated form', () => {
         createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Wax', form)),
       );
 
-      expect(issues).toEqual([expect.objectContaining({ path: ['formId'] })]);
+      expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'formId'] })]);
       const [{ n }] = await sql`select count(*)::int as n from ingredients`;
       expect(n).toBe(0);
     },
@@ -178,8 +182,7 @@ describe('a picked form since retired', () => {
       makeIngredient({
         workspaceId: WORKSPACE_W_ID,
         nomenclature: 'none',
-        form: 'Wax',
-        formId: animalWax,
+        variants: [makeVariant({ form: 'Wax', formId: animalWax })],
       }),
       A.id,
     );
@@ -212,7 +215,7 @@ describe('a picked form since retired', () => {
       updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input('Wax', animalWax)),
     );
 
-    expect(issues).toEqual([expect.objectContaining({ path: ['formId'] })]);
+    expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'formId'] })]);
     expect(await rowOf(id)).toEqual({ form: 'Wax', form_id: animalWax });
   });
 });

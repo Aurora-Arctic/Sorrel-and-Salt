@@ -18,8 +18,8 @@ export const ingredientVariants = pgTable(
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
-    // Free text over the curated vocabulary, as `ingredients.form` is: an
-    // uncurated value stays writable.
+    // Free text over the curated vocabulary, not a foreign key: an uncurated
+    // value stays writable.
     form: text('form').notNull(),
     // The curated row a member picked, beside the text and never instead of it
     // (MB.165): two live forms may share a name, and only the link says which.

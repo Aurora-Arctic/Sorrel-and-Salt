@@ -21,7 +21,7 @@ answerable.
 - **Both sides are foreign keys** —
   `ingredient_categories_ingredient_id_ingredients_id_fk` and
   `ingredient_categories_category_id_categories_id_fk`. A category is referenced
-  by **id**, unlike `ingredients.form`'s free text: there is no vocabulary
+  by **id**, unlike a variant's `form`, free text: there is no vocabulary
   question here at all, since the row _is_ the link and a dangling id on either
   side is a chip that renders nothing.
 - **Indexed in both directions.** The parent pair's unique index leads on

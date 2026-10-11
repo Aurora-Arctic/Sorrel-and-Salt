@@ -233,8 +233,7 @@ const WHOLE_INGREDIENT = {
   name: 'Testwort',
   canonicalName: '',
   nomenclature: 'none',
-  form: '',
-  formId: '',
+  variants: [],
   description: '',
   elements: [],
   planets: [],
@@ -272,7 +271,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
   createWorkspaceIngredient: write(
-    `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort" }) { id } }`,
+    `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
   updateIngredient: write(
     `mutation ($input: IngredientUpdateInput!) {
@@ -284,7 +283,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { deleteIngredient(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
   createCompendiumIngredient: write(
-    'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none }) { id } }',
+    'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none, variants: [] }) { id } }',
   ),
   updateCompendiumIngredient: write(
     `mutation ($input: CompendiumIngredientUpdateInput!) {
