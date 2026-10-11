@@ -29,7 +29,7 @@ builder.queryField('compendium', (t) =>
       score: t.float({
         nullable: true,
         description:
-          'The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name, folk names and forms. Null without a query.',
+          "The search's rank, 0 to 1: the query's word similarity to each matched field — label, formal name, folk name, variant form or description — times that field's weight, the best kept. Null without a query.",
         resolve: (edge) => edge.score,
       }),
     }),
