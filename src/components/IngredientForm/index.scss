@@ -85,16 +85,17 @@
   align-items: center;
   gap: space(1);
 
-  // Nested, to outweigh the heading's own margin below.
-  .ingredient-form__section-title {
-    margin: 0;
-  }
-
   // An ⓘ beside the heading, lifted over the toggle's overlay so it is its own target.
   .info-tip {
     position: relative;
     z-index: 1;
   }
+}
+
+// Nested, to outweigh the section heading's own margin (below), which sets
+// a variant's heading closer to its fields.
+.ingredient-form .ingredient-form__fold-line .ingredient-form__section-title {
+  margin: 0;
 }
 
 .ingredient-form__fold-toggle {

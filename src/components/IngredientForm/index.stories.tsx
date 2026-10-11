@@ -858,6 +858,17 @@ const ENTRY = {
   } satisfies IngredientFormValues,
 };
 
+/**
+ * Opens the form's section titled `title` once the story is drawn, as a
+ * person opens it, by its heading: an edit opens with every section closed
+ * (MB.115), and which are open is the form's own state.
+ */
+function openSection(title: string): void {
+  [...document.querySelectorAll<HTMLButtonElement>('.ingredient-form__fold-toggle')]
+    .find((button) => button.textContent === title && button.ariaExpanded === 'false')
+    ?.click();
+}
+
 /** What the compendium form adds to the coven's, beside it in the workshop. */
 function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
   return (
@@ -886,6 +897,15 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
             text that opens nothing.
           </li>
         )}
+        <li>
+          <strong>Sections:</strong> each heading opens and closes its section, several at once;
+          {editing
+            ? ' an edit opens with every one closed, '
+            : ' a new entry opens with every one open, '}
+          each closed one summarising what it holds on the line beneath. Open All / Close All above
+          them opens or closes every one. Save with an error in a closed section, a colour left in
+          its box say, and that section opens on it.
+        </li>
         {editing && (
           <li>
             <strong>Edit and delete:</strong> Save Ingredient is off until something changes; Delete
@@ -924,11 +944,49 @@ export const CompendiumEntry: Story = () => {
   );
 };
 
+/** The same entry with its Correspondences open, the other sections summarised. */
+export const CompendiumEntrySectionOpen: Story = () => {
+  useCannedApi();
+  useEffect(() => openSection('Correspondences'), []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+/**
+ * The same entry, a colour left typed in its box, saved: the save refuses the
+ * text, and Correspondences, closed, opens on the error, flagged, the box
+ * focused (MB.115). Submitted once drawn, Save being off until a change.
+ */
+export const CompendiumEntrySaveError: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    document.querySelector<HTMLFormElement>('form.ingredient-form')?.requestSubmit();
+  }, []);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      entry={{
+        ...ENTRY,
+        // Without its links: the stand-in's ids are no ids the schema
+        // takes, so a save would refuse each, and the colour is the one error.
+        values: {
+          ...ENTRY.values,
+          substitutes: [],
+          references: [],
+          variants: ENTRY.values.variants.map((variant) => ({ ...variant, references: [] })),
+          drafts: { ...ENTRY.values.drafts, colors: 'Fixture Red' },
+        },
+      }}
+      onCancel={() => undefined}
+    />
+  );
+};
+
 /** The same entry with its first form open, as its Edit leaves it. */
 export const CompendiumEntryVariantOpen: Story = () => {
   useCannedApi();
   // Pressed once it is drawn: which form is open is the form's own state.
   useEffect(() => {
+    openSection('Variants');
     document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]')?.click();
   }, []);
   return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
@@ -939,6 +997,7 @@ export const CompendiumEntryEditSource: Story = () => {
   useCannedApi();
   // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
   useEffect(() => {
+    openSection('Sources');
     document
       .querySelector<HTMLButtonElement>('button[aria-label="Edit Fixture, Testwort Herbal"]')
       ?.click();
@@ -968,6 +1027,7 @@ EditSourcePhoneLight.meta = { theme: 'light', width: 375 };
 export const CompendiumEntrySubstituteSummary: Story = () => {
   useCannedApi();
   useEffect(() => {
+    openSection('Relations');
     document
       .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
       ?.click();
@@ -982,7 +1042,7 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
   );
 };
 
-// A phone's width, in each theme: the admin's edit, bare, as at desktop.
+// A phone's width, in each theme: the admin's edit, bare, its sections closed, as at desktop.
 export const PhoneDark: Story = () => <CompendiumEntry />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
