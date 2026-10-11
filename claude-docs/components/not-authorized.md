@@ -1,9 +1,9 @@
 # NotAuthorized
 
 `src/components/NotAuthorized/` — what a signed-in non-admin sees at `/admin`:
-a level-one "Not authorized", one sentence saying the account does not have
+a level-one "Not Authorized", one sentence saying the account does not have
 admin rights, and a link back to `/`. It takes no props. `src/app/forbidden.tsx`
-wraps it in `<main className="not-authorized-page">` and Next renders that,
+wraps it in `<main className="page-frame">` and Next renders that,
 with a 403, wherever `forbidden()` is thrown — today only by the `/admin`
 guard ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 
@@ -26,18 +26,27 @@ says _workspace_ (CLAUDE.md, "Vocabulary").
 **The way back is a `next/link` to `/`**, the one page every signed-in visitor
 can reach; `/` offers a signed-in visitor the landing. It is a plain text link
 rather than a `.btn`: it is the page's only action, and nothing about it is
-primary.
+primary. MB.116 reopens this for the owner: an outline `.btn` anchor is drawn
+beside the link (Stories, below).
 
 ## Styling
 
-Layout only, following `Welcome`: a `.not-authorized-page` frame that centers
-the page without an AppShell, and the reading measure, `$measure`. The heading and
-paragraphs take `_typography.scss`'s global rules. Tokens used: `$measure`.
+The page draws the frame: `forbidden.tsx`'s `main` is `.page-frame`, which
+centres the column without an AppShell and stops it at the reading measure,
+`$measure` ([`styling.md`](../styling.md), "The page frame"). The
+component's own column follows `Welcome`'s: a flex column with a `space(5)`
+gap, its heading and reason a `.header` with the reason as the `.lede`.
+Function used: `space()`.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/NotAuthorized/index.stories.tsx) —
-`Default`, inside the page frame. Render-only, no test ids, no snapshots.
+`Default`, and `PhoneDark` and `PhoneLight` at 375px, each inside
+`forbidden.tsx`'s real `main.page-frame` ([`workshop.md`](../workshop.md)).
+`ProposalWayBackLink` and `ProposalWayBackButton` draw the way back as
+today's link and as an outline `.btn`; the button's story copies the
+component's markup with that one change, so the losing side goes with its
+story at sign-off. Render-only, no test ids, no snapshots.
 
 ## Testing
 

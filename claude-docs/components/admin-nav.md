@@ -45,14 +45,19 @@ only too.
 
 ## Styling
 
-Layout only. `index.scss` also carries `.admin-layout`, the frame the layout
-renders — a 64rem column, nav above page — beside the nav it holds, as
-`EmailForm`'s carries `.email-page`. It is wider than the reading measure on
-purpose, for the tables the admin pages will hold; their paragraphs still stop
-at `$measure` through `typography-base` ([`styling.md`](../styling.md),
-"Binding rules"). The list is a wrapping row with no bullets, and no
-`typography-base` ◆ marker either: a row of links is not a bulleted list, and
-the marker sat against the previous link. No tokens used.
+Layout only. `index.scss` carries `.admin-layout`, the frame the layout
+renders — a 64rem column, nav above page — beside the nav it holds. It is
+wider than `.page-frame` and the reading measure on purpose, for the tables
+the admin pages hold; their paragraphs still stop at `$measure` through
+`typography-base` ([`styling.md`](../styling.md), "Binding rules"). Its raw
+lengths are the admin review's to put on the scale (MB.115).
+
+The list is a `ul.link-row`, the shared row of links
+([`styling.md`](../styling.md), "Link rows and provider marks"): a wrapping
+row with no bullets and no `typography-base` ◆ marker, since a row of links
+is not a bulleted list and the marker sat against the previous link. It was
+`.admin-nav__list`, the same rules written here, until MB.116 made them a
+primitive. No tokens used.
 
 ## Stories
 
