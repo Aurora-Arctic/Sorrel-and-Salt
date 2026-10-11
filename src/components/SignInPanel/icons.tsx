@@ -8,8 +8,10 @@ import './icons.scss';
 // claude-docs/components/sign-in-panel.md, "Provider branding" names where
 // each one came from: Google's identity branding guidelines, Discord's and
 // Facebook's own brand-resource downloads, Microsoft's identity platform
-// guidelines. Colours are hex literals, not $accent/$secondary tokens, for
-// the same reason: they are the provider's, not ours.
+// guidelines. The fills inside each SVG are part of the artwork, so they stay
+// here as the provider drew them; the grounds the marks sit on — a button's
+// fill, Facebook's chip, the list's circle — are the provider's colours too,
+// and come from `$brand-palettes` (_variables.scss) rather than our tokens.
 
 // Google's "G" logo, as published for "Sign in with Google" buttons
 // (Google's identity branding guidelines). No chip: the mark is multicolour
