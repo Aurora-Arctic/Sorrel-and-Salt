@@ -857,24 +857,35 @@ so no refusal is the browser's own bubble.
 Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md),
 "Form fields"): `.form` and `.form__actions`, `.field` with its label, hint,
 control and `.field__error`, `.input` and `.textarea`, and
-`.fieldset` with its legend for each list. The alert is a `Notice` of the
-`error` kind ([`notice.md`](notice.md)), the reference panel's too, and
-Save Ingredient is the view's one `.btn--solid`. A disabled field's dashed
-edge and dimmed label are the primitives' too; a closed set's box and its
-muted placeholder are the combobox's.
+`.fieldset` with its legend for each list. Since MB.115 the shared pieces
+around them are primitives too, where this form had kept its own copies:
+`.field__label-row` puts each label and its info tip, or a legend and its
+tip, on one positioned row, so an open tip lies above the label from the
+column's edge rather than hanging off the icon; `.field__required` is the
+asterisk; `.form__confirm` is a question asked in the saves' place, a step
+below the fields; and `.form__aside` pushes an edit's Delete Ingredient to
+the row's far end, away from the saves, as GroupedValueForm's Delete
+Category is. A narrow form stacks its buttons. The alert is a `Notice` of
+the `error` kind ([`notice.md`](notice.md)), the reference panel's too,
+Save Ingredient is the view's one `.btn--solid`, and every button that
+waits on a request (the two saves, End Redirect & Save, Delete and Save
+Reference) is a `BusyButton` ([`busy-button.md`](busy-button.md)). A
+disabled field's dashed edge and dimmed label are the primitives' too; a
+closed set's box and its muted placeholder are the combobox's.
 
-The component's own stylesheet sets the form's width, a column of at most
-`32rem`, narrower than the measure as the other forms keep. It also lays out
-the row a list's box shares with Add, draws an entry's tooltip, and puts each
-label and its info tip, or a legend and its tip, on one positioned row, so an
-open tip lies above the label from the column's edge rather than hanging off
-the icon. The actions wrap on a narrow screen, an edit's Delete Ingredient
-pushed to the far end, away from the saves, as GroupedValueForm's Delete
-Category is, and a question asked in their place sits a step below the
-fields. The duplicate warning's region cancels the field's gap while it is
+The component's own stylesheet holds what is the form's alone. Its column
+is at most `$dialog-column` (32rem), narrower than the measure as the other
+forms keep, and kept in the wide modal, whose extra width is the panels'
+room. It lays out the row a list's box shares with Add, and sets a list's
+legend and its box a step further apart than a single field's label and
+control. The duplicate warning's region cancels the field's gap while it is
 empty, since a live region stays in the page, and its notice puts the gap
-back, with a step more padding beneath Create Anyway than the notice's own. A list's legend and its box sit a step further apart than a single
-field's label and control. The box, its entries and its list are the
+back, with a step more padding beneath Create Anyway than the notice's own.
+The references are rows with a 2px muted bar, the locator a 10rem box beside
+its label; the new reference panel and each variant are groups set off by a
+1px muted edge. Lengths come from `space()` and `radius()`, and the three
+left raw, the bar, the locator's width and the edges, say why in a comment.
+The box, its entries and its list are the
 [`Combobox`](combobox.md)'s: an entry is a filled, square-cornered chip in
 the muted ink's wash, neutral since a free-text entry has no category group
 to take a colour from, and the entry an error names takes the field's error
@@ -985,8 +996,11 @@ every 5 ms rather than RTL's 50, since most of its waits are for a mock to
 have been called, which no DOM mutation announces. A role query with a name
 names every element of that role, which in a 25-field form was most of the
 file's time, so its controls are found by their labels — the hidden `*` of a
-required field dropped from the label's text — and the saves among the
-form's action row alone. Every change on the form re-renders it whole, so a
+required field dropped from the label's text. The saves are the one
+exception, found by role and name across the whole form, since the class
+that scoped them to the action row is a presentation detail a test may not
+read (MB.115; [`testing/layer-ownership.md`](../testing/layer-ownership.md),
+"What a test may assert", rule 4); it costs the file about a second. Every change on the form re-renders it whole, so a
 test here costs its interactions rather than its mount, and each keeps to the
 few it needs. It covers:
 

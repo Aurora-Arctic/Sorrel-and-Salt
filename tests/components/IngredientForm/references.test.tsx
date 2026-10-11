@@ -157,10 +157,7 @@ const press = (button: HTMLElement) => {
   fireEvent.click(button);
 };
 /** The harness's save, or the form's, by name. */
-const saveButton = (name = 'Save Ingredient') => {
-  const actions = document.querySelector<HTMLElement>('.ingredient-form__actions');
-  return (actions ? within(actions) : screen).getByRole('button', { name });
-};
+const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
 const newReference = () => within(references()).getByRole('button', { name: 'New Reference' });
 const chooseKind = (label: string) => {

@@ -295,7 +295,7 @@ export function ListField({
     // Named by the legend's text alone: the tip's button inside the legend
     // would otherwise join the group's name.
     <fieldset className="fieldset ingredient-form__list" aria-labelledby={legendId}>
-      <legend className="fieldset__legend ingredient-form__label-row">
+      <legend className="fieldset__legend field__label-row">
         <span id={legendId}>{legend}</span>
         {hint && (
           <InfoTip id={hintId} label={legend}>

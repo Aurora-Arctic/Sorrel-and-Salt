@@ -125,7 +125,7 @@ export function VariantsField({ workspaceId }: VariantsFieldProps): ReactElement
   return (
     // Named by the legend's text alone, as a list's fieldset is.
     <fieldset className="fieldset ingredient-form__variants" aria-labelledby={legendId}>
-      <legend className="fieldset__legend ingredient-form__label-row">
+      <legend className="fieldset__legend field__label-row">
         <span id={legendId}>Variants</span>
         <InfoTip id={hintId} label="Variants">
           The forms it comes in: dried leaf, oil, whole root. Each adds its own description, safety

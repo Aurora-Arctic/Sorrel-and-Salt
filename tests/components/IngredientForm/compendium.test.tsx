@@ -179,14 +179,10 @@ const box = (name: string) => byLabel(name, '[role="combobox"]');
 const control = (name: string) => byLabel(name, 'input:not([role]), textarea, [role="combobox"]');
 const type = (name: string, value: string) =>
   fireEvent.change(control(name), { target: { value } });
-/** The row of buttons at the form's foot: the saves, or a question asked in their place. */
-const actions = () =>
-  within(
-    document.querySelector('.ingredient-form__actions, .ingredient-form__confirm') as HTMLElement,
-  );
-const button = (name: string) => actions().getByRole('button', { name });
+/** A button at the form's foot, a save or a question's answer, by its role and name. */
+const button = (name: string) => screen.getByRole('button', { name });
 const noButton = (name: string) =>
-  expect(actions().queryByRole('button', { name })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
 const choose = (name: string, label: string) => {
   fireEvent.click(box(name));
   fireEvent.click(
