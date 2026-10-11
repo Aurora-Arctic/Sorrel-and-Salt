@@ -1,16 +1,11 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
-import { stackCell, tableRole } from '../../lib/table-roles';
 import PageHeader from '../PageHeader';
-import Pager from '../Pager';
-import ValueFilter from './filter';
 import { groupedValuesHref } from './href';
 import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
-import './proposals.scss';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
 // The filter reaches the admin pages (`/admin/categories` and the rest),
@@ -294,182 +289,12 @@ export const PlanetsEmpty: Story = () => (
   <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
 );
 
-// At a phone's width in each theme, inside the admin layout: the filter
-// stacked, and each row a card.
+// At a phone's width in each theme, inside the admin layout, as the page draws
+// it: the page header's Add button full width under the heading, the filter
+// stacked and each row a card. The header and the filter are the real
+// `PageHeader` and `FilterForm`, so these show what the sign-off settled.
 const Phone = () => (
   <div className="admin-layout">
-    <CategoriesOnePageOfSeveral />
-  </div>
-);
-
-export const PhoneDark: Story = () => <Phone />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Phone />;
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// MB.115's contested calls, each beside today's look so the owner can choose.
-// The alternatives are story-only markup and `proposals.scss` rules under a
-// wrapper class, never a component prop, so no unchosen path ships. Each is
-// shown at desktop and at a phone's width in both themes, inside the admin
-// layout as a page draws it.
-
-const AtPhoneWidth = ({ children }: { children: ReactNode }) => (
-  <div className="admin-layout">{children}</div>
-);
-
-// 1d.6, the table's rows. Banded — every even row on the card surface — is
-// today's `.data-table` and the owner's M5.6 call, and the recommendation.
-// Hairline drops the bands for a 1px rule in the muted ink under each row,
-// the ink the header's rule already wears. At phone width both are cards,
-// each on the card surface, so the choice is a desktop one.
-const RowsBanded = () => <CategoriesOnePageOfSeveral />;
-
-const RowsHairline = () => (
-  <div className="proposal-rows-hairline">
-    <CategoriesOnePageOfSeveral />
-  </div>
-);
-
-export const ProposalRowsBanded: Story = () => <RowsBanded />;
-
-export const ProposalRowsBandedPhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <RowsBanded />
-  </AtPhoneWidth>
-);
-ProposalRowsBandedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalRowsBandedPhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <RowsBanded />
-  </AtPhoneWidth>
-);
-ProposalRowsBandedPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const ProposalRowsHairline: Story = () => <RowsHairline />;
-
-export const ProposalRowsHairlinePhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <RowsHairline />
-  </AtPhoneWidth>
-);
-ProposalRowsHairlinePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalRowsHairlinePhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <RowsHairline />
-  </AtPhoneWidth>
-);
-ProposalRowsHairlinePhoneLight.meta = { theme: 'light', width: 375 };
-
-// 1d.7, the filter at phone width. Stacked — today's `.filter-row`, the query
-// on a line of its own and the rest wrapping beneath — is the recommendation.
-// Disclosure folds the same form behind a summary naming the filter in force,
-// so the table starts higher on a phone, at the cost of a tap to change it.
-// The phone pairs are the point; desktop is for completeness.
-const DEITY_FILTER: GroupedValueListFilter = { query: 'tra', group: 'fixtural' };
-
-const FILTERED_DEITIES = [
-  deity('Testra', 'Fixtural', 'An invented deity, for the workshop.'),
-  deity('Fixtra', 'Fixtural', 'Invented too.'),
-];
-
-const FilterStacked = () => (
-  <GroupedValueList
-    kind="deity"
-    values={FILTERED_DEITIES}
-    filter={DEITY_FILTER}
-    groups={TRADITIONS}
-  />
-);
-
-// The list's own markup, with its filter moved into a `<details>`.
-const FilterDisclosure = () => (
-  <div className="list-frame grouped-value-list--deity">
-    <details className="proposal-filter-disclosure">
-      <summary>Filter · Name: tra · Tradition: Fixtural</summary>
-      <ValueFilter kind="deity" filter={DEITY_FILTER} groups={TRADITIONS} />
-    </details>
-    <div className="data-table-frame">
-      <table className="data-table data-table--stack" aria-label="Deities" {...tableRole('table')}>
-        <thead {...tableRole('rowgroup')}>
-          <tr {...tableRole('row')}>
-            <th scope="col" {...tableRole('columnheader')}>
-              Name
-            </th>
-            <th scope="col" {...tableRole('columnheader')}>
-              Tradition
-            </th>
-            <th scope="col" {...tableRole('columnheader')}>
-              Description
-            </th>
-            <th scope="col" {...tableRole('columnheader')}>
-              <span className="visually-hidden">Edit</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody {...tableRole('rowgroup')}>
-          {FILTERED_DEITIES.map((entry) => (
-            <tr key={entry.id} {...tableRole('row')}>
-              <td {...stackCell('Name')}>{entry.name}</td>
-              <td {...stackCell('Tradition')}>{entry.groupName}</td>
-              <td className="grouped-value-list__description" {...stackCell('Description')}>
-                {entry.description}
-              </td>
-              <td {...stackCell('')}>
-                <Link className="btn btn--small btn--quiet" href={entry.editHref}>
-                  Edit <span className="visually-hidden">{entry.name}</span>
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <Pager soft />
-  </div>
-);
-
-export const ProposalFilterStacked: Story = () => <FilterStacked />;
-
-export const ProposalFilterStackedPhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <FilterStacked />
-  </AtPhoneWidth>
-);
-ProposalFilterStackedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalFilterStackedPhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <FilterStacked />
-  </AtPhoneWidth>
-);
-ProposalFilterStackedPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const ProposalFilterDisclosure: Story = () => <FilterDisclosure />;
-
-export const ProposalFilterDisclosurePhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <FilterDisclosure />
-  </AtPhoneWidth>
-);
-ProposalFilterDisclosurePhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalFilterDisclosurePhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <FilterDisclosure />
-  </AtPhoneWidth>
-);
-ProposalFilterDisclosurePhoneLight.meta = { theme: 'light', width: 375 };
-
-// 1d.8, the page header's Add at 375px. Wraps — today's `PageHeader`, the
-// action beneath the heading at its natural width — is the recommendation.
-// Full width stretches the action across the line under the heading, so it
-// reads as the page's one primary action, as a narrow form's stacked buttons
-// do. Each sits above the real list, so the page reads whole.
-const AddPage = () => (
-  <>
     <PageHeader
       title="Categories"
       action={
@@ -478,44 +303,12 @@ const AddPage = () => (
         </Link>
       }
     />
-    <CategoriesOnePageOfSeveral />
-  </>
-);
-
-const AddFullWidth = () => (
-  <div className="proposal-add-full-width">
-    <AddPage />
+    <CategoriesFiltered />
   </div>
 );
 
-export const ProposalAddWraps: Story = () => <AddPage />;
+export const PhoneDark: Story = () => <Phone />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
 
-export const ProposalAddWrapsPhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <AddPage />
-  </AtPhoneWidth>
-);
-ProposalAddWrapsPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalAddWrapsPhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <AddPage />
-  </AtPhoneWidth>
-);
-ProposalAddWrapsPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const ProposalAddFullWidth: Story = () => <AddFullWidth />;
-
-export const ProposalAddFullWidthPhoneDark: Story = () => (
-  <AtPhoneWidth>
-    <AddFullWidth />
-  </AtPhoneWidth>
-);
-ProposalAddFullWidthPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const ProposalAddFullWidthPhoneLight: Story = () => (
-  <AtPhoneWidth>
-    <AddFullWidth />
-  </AtPhoneWidth>
-);
-ProposalAddFullWidthPhoneLight.meta = { theme: 'light', width: 375 };
+export const PhoneLight: Story = () => <Phone />;
+PhoneLight.meta = { theme: 'light', width: 375 };
