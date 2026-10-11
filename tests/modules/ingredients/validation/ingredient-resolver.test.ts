@@ -17,6 +17,7 @@ import {
 // reached through a render of the form.
 
 const OPTIONS = { fields: {}, shouldUseNativeValidation: false };
+const SOURCE_ID = '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
 
 /** Testwort, coming in one form, `variant`. */
 const withVariant = (variant: Partial<VariantFormValues>): IngredientFormValues => ({
@@ -69,6 +70,42 @@ describe('ingredientResolver', () => {
 
   it.each([
     {
+      issue: 'a repeated reference',
+      variant: {
+        references: [
+          { value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: '' },
+          { value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: 'p. 2' },
+        ],
+      },
+      path: ['variants', 0, 'references', 1, 'value'],
+    },
+    {
+      issue: 'a substitute’s form that names nothing',
+      variant: {
+        substitutes: [
+          {
+            value: 'Mockwort',
+            link: {
+              id: SOURCE_ID,
+              canonicalName: null,
+              form: null,
+              description: null,
+              isGlobal: true,
+            },
+            variantId: 'not-a-uuid',
+          },
+        ],
+      },
+      path: ['variants', 0, 'substitutes', 0, 'value'],
+    },
+  ])('moves $issue onto the variant’s row for it', async ({ variant, path }) => {
+    const { errors } = await ingredientResolver(withVariant(variant), undefined, OPTIONS);
+
+    expect(at(errors, path)).toMatchObject({ message: expect.any(String) });
+  });
+
+  it.each([
+    {
       box: 'the New Form box',
       values: { ...withVariant({}), drafts: { ...EMPTY_VALUES.drafts, variants: 'Oil' } },
       path: ['drafts', 'variants'],
@@ -95,13 +132,29 @@ describe('compendiumResolver', () => {
 
     expect(at(errors, ['variants', 0, 'form'])).toMatchObject({ type: 'unpicked' });
   });
+
+  it('holds a save while the New Form box holds text, as a pick not made', async () => {
+    const { errors } = await compendiumResolver(
+      { ...withVariant({}), drafts: { ...EMPTY_VALUES.drafts, variants: 'Oyl' } },
+      undefined,
+      OPTIONS,
+    );
+
+    expect(at(errors, ['drafts', 'variants'])).toMatchObject({ type: 'unpicked' });
+  });
 });
 
 describe('fieldNameOf', () => {
   const values: IngredientFormValues = {
     ...EMPTY_VALUES,
     variants: [
-      { ...EMPTY_VARIANT, form: 'Wax', planets: [{ value: 'Mars' }] },
+      {
+        ...EMPTY_VARIANT,
+        form: 'Wax',
+        planets: [{ value: 'Mars' }],
+        substitutes: [{ value: 'Mockwort' }],
+        references: [{ value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: '' }],
+      },
       { ...EMPTY_VARIANT, form: 'Oil' },
     ],
   };
@@ -113,6 +166,11 @@ describe('fieldNameOf', () => {
     { path: ['variants', 1], field: 'variants.1.form' },
     { path: ['variants', 0, 'planets', 0], field: 'variants.0.planets.0.value' },
     { path: ['variants', 0, 'planets', 1], field: undefined },
+    {
+      path: ['variants', 0, 'substitutes', 0, 'substituteVariantId'],
+      field: 'variants.0.substitutes.0.value',
+    },
+    { path: ['variants', 0, 'references', 0, 'locator'], field: 'variants.0.references.0.locator' },
     { path: ['variants', 2, 'form'], field: undefined },
   ])('places $path on $field', ({ path, field }) => {
     expect(fieldNameOf(path, values)).toBe(field);

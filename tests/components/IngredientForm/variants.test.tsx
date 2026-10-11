@@ -292,6 +292,16 @@ describe('IngredientForm’s variants', () => {
     expect(calls).toHaveLength(0);
   });
 
+  it('refuses text the compendium’s New Form box has not picked, at Enter, adding nothing', () => {
+    renderForm({ workspaceId: null });
+
+    type(document.body, 'New Form', 'Oyl');
+    fireEvent.keyDown(newForm(), { key: 'Enter' });
+
+    expect(newForm()).toBeInvalid();
+    noVariant('Oyl');
+  });
+
   it('removes a variant by its own button, and sends the rest', async () => {
     const calls = acceptCreate();
     renderForm({ workspaceId: WORKSPACE_ID });
@@ -428,6 +438,10 @@ describe('IngredientForm’s variants', () => {
       );
       save();
 
+      // The pill tells the form chosen.
+      expect(
+        within(oil).getByRole('button', { name: 'Remove Oilwort' }),
+      ).toHaveAccessibleDescription(expect.stringContaining('OIL'));
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0].input.variants?.[0]?.substitutes).toEqual([
         { ingredientId: OILWORT_ID, substituteVariantId: OILWORT_OIL_ID },

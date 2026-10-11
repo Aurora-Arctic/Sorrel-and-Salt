@@ -30,6 +30,7 @@ const admin = asUser(E);
 
 /** The curated rows the entry picks, and what each is filed under, read from the seed. */
 let herb: { id: string; group: string };
+let oil: string;
 let hecate: { id: string; tradition: string };
 let healing: string;
 let mockwort: string;
@@ -42,6 +43,7 @@ beforeAll(async () => {
     join ingredient_form_groups on ingredient_form_groups.id = ingredient_forms.group_id
     where ingredient_forms.id = ${formId}`;
   herb = { id: formId, group: form.name as string };
+  oil = await curatedFormId(sql, 'Oil');
 
   const deityId = await curatedDeityId(sql, 'Hecate');
   const [deity] = await sql`
@@ -95,6 +97,20 @@ const everything = (): CompendiumWrite => ({
       categoryIds: [healing],
       substitutes: [{ ingredientId: mockwort }, { name: 'Testleaf' }],
       references: [{ referenceId: book, locator: 'p. 40' }],
+    },
+    // A form adding nothing but itself, read back as blanks and empty lists.
+    {
+      form: 'Oil',
+      formId: oil,
+      description: '',
+      safetyNotes: '',
+      elements: [],
+      planets: [],
+      zodiacSigns: [],
+      colors: [],
+      categoryIds: [],
+      substitutes: [],
+      references: [],
     },
   ],
 });
@@ -188,6 +204,20 @@ describe('entryValues', () => {
           references: [
             expect.objectContaining({ link: { id: book, isGlobal: true }, locator: 'p. 40' }),
           ],
+        },
+        {
+          variantId: expect.any(String),
+          form: 'Oil',
+          formLink: expect.objectContaining({ id: oil, name: 'Oil' }),
+          description: '',
+          safetyNotes: '',
+          elements: [],
+          planets: [],
+          zodiacSigns: [],
+          colors: [],
+          categoryIds: [],
+          substitutes: [],
+          references: [],
         },
       ],
       description: 'An invented herb.',
