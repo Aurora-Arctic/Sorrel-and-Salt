@@ -33,4 +33,17 @@ describe('Notice', () => {
       }
     },
   );
+
+  // A notice on the page from the start is a status, not an alert, so it is
+  // found by its role without being announced over what the reader is doing.
+  it('renders a quiet warning as a status', () => {
+    render(
+      <Notice kind="warn" quiet>
+        {SENTENCE}
+      </Notice>,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent(SENTENCE);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

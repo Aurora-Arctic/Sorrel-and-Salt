@@ -16,6 +16,12 @@ export const Warning: Story = () => (
   </Notice>
 );
 
+export const QuietWarning: Story = () => (
+  <Notice kind="warn" quiet>
+    This address is unverified, so approving vouches for it as a sign-in would.
+  </Notice>
+);
+
 export const Success: Story = () => <Notice kind="success">Your name was saved.</Notice>;
 
 export const Plain: Story = () => (

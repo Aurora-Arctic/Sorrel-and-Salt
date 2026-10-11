@@ -14,11 +14,13 @@ const MODIFIER: Record<NoticeKind, string> = {
   plain: 'notice',
 };
 
-const Notice = ({ kind, id, className, children }: NoticeProps): ReactElement => {
+const Notice = ({ kind, quiet = false, id, className, children }: NoticeProps): ReactElement => {
   const classes = className ? `${MODIFIER[kind]} ${className}` : MODIFIER[kind];
 
-  if (kind === 'success') {
-    // `output` carries the status role itself, so it takes no `role`.
+  if (kind === 'success' || (quiet && kind !== 'plain')) {
+    // `output` carries the status role itself, so it takes no `role`. A quiet
+    // error or warning takes it too: present from the start, found by its
+    // role, and never announced over what the reader is doing.
     return (
       <output id={id} className={classes}>
         {children}

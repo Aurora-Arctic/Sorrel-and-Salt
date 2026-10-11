@@ -12,6 +12,7 @@ MB.116, once the same markup had been written by hand in twenty-two files.
 | Prop        | What it is                                                              |
 | ----------- | ----------------------------------------------------------------------- |
 | `kind`      | `error`, `warn`, `success` or `plain`: the look and the role together   |
+| `quiet`     | Optional: an error or warning on the page from the start, as a status   |
 | `id`        | Optional, for a control that names the notice in its `aria-describedby` |
 | `className` | Optional layout class from the caller, added after the notice's own     |
 | `children`  | The sentence; a link inside it stays inline                             |
@@ -33,6 +34,11 @@ MB.116, once the same markup had been written by hand in twenty-two files.
 
 - **A warning is an alert too**: it leads with the error's triangle and asks
   for attention, even though it does not block.
+- **`quiet` makes an error or warning a status** (an `<output>`, as success
+  is) for one that is on the page from the start and must not interrupt: the
+  user list's unverified-address warning, read once as the description of the
+  button the focus lands on, and its paused-state line, which arrives with the
+  page. The owner's call at MB.116's sign-off, so nothing stays hand-written.
 - **A component renders the notice when it has something to say**, and not
   before: an empty alert announces nothing, and a live region mounted with
   its text is announced on arrival.
@@ -46,5 +52,5 @@ full-width line, never a colour.
 ## Testing
 
 `tests/components/Notice/index.test.tsx` asserts the role each kind takes, one
-row per kind. The look is the story's (`Surfaces / Notice`, both themes at
+row per kind, and that a quiet warning is a status. The look is the story's (`Surfaces / Notice`, both themes at
 375px) and axe's on every page that shows one.

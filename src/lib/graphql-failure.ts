@@ -1,5 +1,5 @@
 import { ClientError } from 'graphql-request';
-import type { Failure } from './types';
+import type { Failure, ValidationIssue } from './types';
 
 // One reader for a failed GraphQL request from the browser, shared by every
 // form and button that sends one. Before MB.116 each of them unpacked the
@@ -32,4 +32,22 @@ export function readGraphqlFailure(error: unknown, fields: readonly string[] = [
     if (issue) return { field: { name: String(issue.path[0]), message: issue.message } };
   }
   return { alert: first?.message || GENERIC_FAILURE };
+}
+
+/**
+ * Every issue a failed request carries, for a form that places each field
+ * error at once and joins the rest into its alert, where `readGraphqlFailure`
+ * answers the first field it finds. A VALIDATION refusal gives its own list;
+ * anything else is one issue with no path, carrying the sentence the
+ * single-field reader would have put in the alert.
+ */
+export function readGraphqlIssues(error: unknown): ValidationIssue[] {
+  if (error instanceof ClientError) {
+    const extensions = error.response.errors?.[0]?.extensions as
+      { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
+    if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
+      return extensions.fieldErrors;
+    }
+  }
+  return [{ path: [], message: readGraphqlFailure(error).alert ?? GENERIC_FAILURE }];
 }
