@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { StrictMode, type ReactNode } from 'react';
 import { expect, type Mock, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -14,8 +14,12 @@ import { makeQueryClient } from '@/lib/graphql-client';
 /**
  * Renders the form in a modal, handed the modal's own close as its page's
  * dialog hands it; answers the modal's `onClose`, which every way out ends at.
+ * `strict` renders it under React's development double mount.
  */
-export function renderInModal(form: (done: () => void) => ReactNode): Mock {
+export function renderInModal(
+  form: (done: () => void) => ReactNode,
+  { strict = false }: { strict?: boolean } = {},
+): Mock {
   // jsdom implements no modal dialog; stood in for as a browser behaves.
   HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
     this.setAttribute('open', '');
@@ -24,13 +28,16 @@ export function renderInModal(form: (done: () => void) => ReactNode): Mock {
     this.removeAttribute('open');
   };
   const onClose = vi.fn();
-  render(
+  const tree = (
     <QueryClientProvider client={makeQueryClient()}>
       <Modal title="Edit" onClose={onClose}>
         {form}
       </Modal>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  // `strict`: React's development double mount, as `next dev` runs it,
+  // which re-checks a form's changes as it mounts again.
+  render(strict ? <StrictMode>{tree}</StrictMode> : tree);
   return onClose;
 }
 

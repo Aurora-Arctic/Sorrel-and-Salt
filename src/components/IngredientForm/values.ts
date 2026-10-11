@@ -448,6 +448,23 @@ export function repeatOf(
 }
 
 /**
+ * The values an edit opens on, each linked substitute of the ingredient's own
+ * list holding a `variantId`, "" for Any Form, where the readback leaves
+ * the key out. Its Form of X box registers that key as it mounts, and
+ * react-hook-form counts a key it adds against defaults that lack it as a
+ * change: React's development double mount re-checks, and an untouched entry
+ * asked about unsaved changes (MB.115). "" sends no form (`toInput`).
+ */
+export function openingValues(values: IngredientFormValues): IngredientFormValues {
+  return {
+    ...values,
+    substitutes: values.substitutes.map((entry) =>
+      entry.link && !('variantId' in entry) ? { ...entry, variantId: '' } : entry,
+    ),
+  };
+}
+
+/**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
  * suggestion picked from it, with the ingredient or the curated deity it
  * links when it is a substitute's or a deity's, and the form of that

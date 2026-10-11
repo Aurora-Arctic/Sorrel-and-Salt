@@ -47,6 +47,7 @@ import {
   compendiumResolver,
   fieldNameOf,
   ingredientResolver,
+  openingValues,
   sectionsWithErrors,
 } from './values';
 import { VariantsField } from './variants';
@@ -116,7 +117,7 @@ const IngredientForm = ({
   // about the compendium alone (M5.5; MB.162).
   const compendium = workspaceId === null;
   const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
-    defaultValues: entry?.values ?? EMPTY_VALUES,
+    defaultValues: entry ? openingValues(entry.values) : EMPTY_VALUES,
     resolver: compendium ? compendiumResolver : ingredientResolver,
     // react-hook-form focuses in registration order and only a registered
     // field; a list entry is neither, so the effect below does it instead.

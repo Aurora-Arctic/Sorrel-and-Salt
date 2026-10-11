@@ -313,6 +313,48 @@ describe('IngredientForm on the compendium', () => {
       expect(onCancel).toHaveBeenCalledOnce();
     });
 
+    // A regression (MB.115): an entry whose substitute links an ingredient
+    // in forms, with none chosen, opened as the readback gives it, its
+    // Form of X box registering a key the values lacked. React's development
+    // double mount then counted the untouched entry changed, and Cancel asked.
+    it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
+      offerNothing();
+      const values: IngredientFormValues = {
+        ...TESTWORT,
+        substitutes: [
+          {
+            value: 'Mockleaf',
+            link: {
+              id: OTHER_ID,
+              canonicalName: null,
+              forms: ['Oil'],
+              description: null,
+              isGlobal: true,
+              variants: [{ id: '5d6e7f8a-9b0c-4d1e-8f2a-3b4c5d6e7f8a', form: 'Oil', group: null }],
+            },
+          },
+        ],
+      };
+      const onClose = renderInModal(
+        (done) => (
+          <IngredientForm
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values }}
+            onSaved={vi.fn()}
+            onDeleted={done}
+            onCancel={done}
+          />
+        ),
+        { strict: true },
+      );
+
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+
     // Every way out asks first while the form has changes (MB.115): the
     // guard's shape is tests/components/Modal's, and this its wiring.
     it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
