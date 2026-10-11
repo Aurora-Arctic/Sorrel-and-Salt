@@ -978,7 +978,6 @@ describe('IngredientForm', () => {
               id: COVEN_ID,
               name: 'Mockwort',
               canonicalName: null,
-              form: null,
               description: null,
               isGlobal: false,
               variants: [],

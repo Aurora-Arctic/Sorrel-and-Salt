@@ -14,7 +14,6 @@ import {
 } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
-import { ingredientForms } from '@/modules/vocabulary/schema/ingredient-forms';
 import type { IngredientOverrides } from './types';
 
 // §5's columns and the six audit ones.
@@ -25,8 +24,6 @@ const COLUMNS = [
   'canonical_name',
   'nomenclature',
   'identity_key',
-  'form',
-  'form_id',
   'description',
   'elements',
   'planets',
@@ -45,13 +42,11 @@ describe('ingredients schema', () => {
   });
 
   // Text, not a foreign key, is what keeps an uncurated value writable: the
-  // form, the astrology lists and a deity's name (ingredient_deities) are text
-  // over their vocabularies, and the curated form a member picked is `form_id`,
-  // a key beside the text and never instead of it (MB.165;
+  // astrology lists and a deity's name (ingredient_deities) are text over
+  // their vocabularies, and a form is a variant's (MB.222;
   // claude-docs/db/identity-model.md, "The ingredient identity model").
-  it('keys its workspace and the form it picked, and no vocabulary its text names', () => {
+  it('keys its workspace, and no vocabulary its text names', () => {
     expect(nonAuditForeignKeys.map((fk) => [fk.column, fk.foreignTable]).sort()).toEqual([
-      ['form_id', ingredientForms],
       ['workspace_id', workspaces],
     ]);
   });
@@ -170,31 +165,11 @@ describe('ingredients table', () => {
     });
   });
 
-  describe('the non-blank checks', () => {
+  describe('the non-blank check', () => {
     it('rejects a blank-but-present formal name', async () => {
       const error = await failureOf(insert({ canonicalName: '   ' }));
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe('ingredients_canonical_name_not_blank');
-    });
-
-    it('rejects a blank-but-present form', async () => {
-      const error = await failureOf(insert({ form: '   ' }));
-      expect(error.code).toBe('23514');
-      expect(error.constraint_name).toBe('ingredients_form_not_blank');
-    });
-
-    // A blank form is rejected; an *absent* one is not — form is optional.
-    it('accepts a null form', async () => {
-      const id = await insert({ form: null, canonicalName: 'Artemisia vulgaris' });
-      const [found] = await sql`select form from ingredients where id = ${id}`;
-      expect(found.form).toBeNull();
-    });
-
-    // The vocabulary is an autofill, not a constraint: `rhizome` is writable uncurated.
-    it('accepts a form absent from the curated vocabulary', async () => {
-      const id = await insert({ form: 'rhizome', canonicalName: 'Artemisia vulgaris' });
-      const [found] = await sql`select form from ingredients where id = ${id}`;
-      expect(found.form).toBe('rhizome');
     });
   });
 
@@ -216,13 +191,12 @@ describe('ingredients table', () => {
       expect(updating.code).toBe('428C9');
     });
 
-    it('folds the formal name, leaves the form out, and falls back to the label', async () => {
-      const named = await insert({ canonicalName: 'Valeriana Officinalis', form: 'Root' });
+    it('folds the formal name, and falls back to the label', async () => {
+      const named = await insert({ canonicalName: 'Valeriana Officinalis' });
       const unnamed = await insert({
         nomenclature: 'none',
         canonicalName: null,
         name: 'Graveyard Dirt',
-        form: 'Pinch',
       });
 
       expect(await identityKeyOf(named)).toBe('valeriana officinalis');
@@ -231,39 +205,33 @@ describe('ingredients table', () => {
 
     // Valerian root and leaf are one identity, so one entry with two forms
     // (MB.215). Two tiers, since the index holds a formal name once per tier.
-    it('keys two rows of one formal name alike whatever their forms', async () => {
-      const root = await insert({
-        name: 'Valerian root',
-        canonicalName: 'Valeriana officinalis',
-        form: 'root',
-      });
+    it('keys two rows of one formal name alike whatever their labels', async () => {
+      const root = await insert({ name: 'Valerian root', canonicalName: 'Valeriana officinalis' });
       const leaf = await insert({
         name: 'Valerian leaf',
         canonicalName: 'Valeriana officinalis',
-        form: 'leaf',
         workspaceId: WORKSPACE,
       });
 
       expect(await identityKeyOf(leaf)).toBe(await identityKeyOf(root));
     });
 
-    it('follows a relabel only where the row declares no formal name, and never a form', async () => {
+    it('follows a relabel only where the row declares no formal name', async () => {
       const named = await insert({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
       const unnamed = await insert({
         nomenclature: 'none',
         canonicalName: null,
         name: 'Moon water',
-        form: null,
       });
 
-      await sql`update ingredients set name = 'Cronewort', form = 'leaf' where id = ${named}`;
+      await sql`update ingredients set name = 'Cronewort' where id = ${named}`;
       await sql`update ingredients set name = 'Full moon water' where id = ${unnamed}`;
 
       expect(await identityKeyOf(named)).toBe('artemisia vulgaris');
       expect(await identityKeyOf(unnamed)).toBe('full moon water');
-      // And the writes happened, so a silent no-op update cannot pass.
-      const [{ name, form }] = await sql`select name, form from ingredients where id = ${named}`;
-      expect([name, form]).toEqual(['Cronewort', 'leaf']);
+      // And the write happened, so a silent no-op update cannot pass.
+      const [{ name }] = await sql`select name from ingredients where id = ${named}`;
+      expect(name).toBe('Cronewort');
     });
   });
 
@@ -282,56 +250,6 @@ describe('ingredients table', () => {
       const error = await failureOf(insert({ elements }));
       // 22P02 is invalid_text_representation: the enum cast refusing the value.
       expect(error.code).toBe('22P02');
-    });
-  });
-
-  // MB.165: `form_id` records the curated row a pick named, and only beside
-  // the text it names — a link with no text would name nothing.
-  describe('form_id', () => {
-    async function aForm(): Promise<string> {
-      const t = crypto.randomUUID().slice(0, 8);
-      const [group] = await sql`
-        insert into ingredient_form_groups ${sql({
-          name: `Testformgroup ${t}`,
-          slug: `testformgroup-${t}`,
-          description: 'A group kept only by fixtures.',
-          created_by: AUTHOR,
-          updated_by: AUTHOR,
-        })}
-        returning id
-      `;
-      const [form] = await sql`
-        insert into ingredient_forms ${sql({
-          name: `Testform ${t}`,
-          slug: `testform-${t}`,
-          description: 'A form kept only by fixtures.',
-          group_id: group.id as string,
-          created_by: AUTHOR,
-          updated_by: AUTHOR,
-        })}
-        returning id
-      `;
-      return form.id as string;
-    }
-
-    // Why the refusal could have been a success: the same id links beside a form.
-    it('refuses a link with no form beside it', async () => {
-      const form = await aForm();
-      const named = await insert({ form: 'Testform' });
-      await sql`update ingredients set form_id = ${form} where id = ${named}`;
-      const unnamed = await insert({
-        form: null,
-        name: 'Testroot',
-        canonicalName: 'Fixtura radix',
-      });
-
-      const error = await failureOf(
-        sql`update ingredients set form_id = ${form} where id = ${unnamed}`,
-      );
-
-      // 23514 is check_violation, named: the refusal is this CHECK's.
-      expect(error.code).toBe('23514');
-      expect(error.constraint_name).toBe('ingredients_form_id_has_form');
     });
   });
 });

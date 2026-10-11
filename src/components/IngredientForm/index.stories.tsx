@@ -163,14 +163,13 @@ const DEITIES = [
   },
 ];
 
-// The two Testworts differ only in form and tier, which a picked pill's
-// tooltip tells (MB.164).
+// The two Testworts differ only in forms and tier, which a picked pill's
+// tooltip tells (MB.164, MB.222). A row's forms are its variants.
 const INGREDIENTS = [
   {
     id: 'testwort-c',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
-    form: 'Dried leaf',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
     // In forms, so a variant's substitutes rank it and its second picker opens (MB.221).
@@ -183,25 +182,24 @@ const INGREDIENTS = [
     id: 'testwort-w',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
-    form: 'Tincture',
     description: 'A fixture herb, for the workshop.',
     isGlobal: false,
-    variants: [],
+    variants: [{ id: '00000000-0000-4000-8000-000000000403', form: 'Tincture', formChoice: null }],
   },
   {
     id: 'fixturewort',
     name: 'Fixturewort',
     canonicalName: 'Fixtura vulgaris',
-    form: 'Whole root',
     description: null,
     isGlobal: true,
-    variants: [],
+    variants: [
+      { id: '00000000-0000-4000-8000-000000000404', form: 'Whole root', formChoice: null },
+    ],
   },
   {
     id: 'mockleaf',
     name: 'Mockleaf',
     canonicalName: null,
-    form: null,
     description: null,
     isGlobal: false,
     variants: [],

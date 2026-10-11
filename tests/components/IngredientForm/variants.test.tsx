@@ -69,7 +69,6 @@ const substitute = (
   id,
   name,
   canonicalName: null,
-  form: null,
   description: null,
   isGlobal: true,
   variants,
@@ -207,7 +206,7 @@ describe('IngredientForm’s variants', () => {
     vi.useRealTimers();
   });
 
-  it('lists a variant added from the New Form box as its own fieldset, and sends it as variants, never form', async () => {
+  it('lists a variant added from the New Form box as its own fieldset, and sends it as a variant', async () => {
     const calls = acceptCreate();
     renderForm({ workspaceId: WORKSPACE_ID });
 
@@ -235,8 +234,6 @@ describe('IngredientForm’s variants', () => {
         references: [],
       },
     ]);
-    expect(calls[0].input).not.toHaveProperty('form');
-    expect(calls[0].input).not.toHaveProperty('formId');
   });
 
   it('adds a curated form picked on the compendium, the variant’s Form field carrying the pick', async () => {

@@ -34,7 +34,7 @@ part, preparation, matter — which named a group after a verb and put 21 of its
 the list.
 
 **There is no `Other`.** A value that fits no form is typed as free text on a
-coven's ingredient — `ingredients.form` is text, not a foreign key — and
+coven's ingredient — a variant's `form` is text, not a foreign key — and
 surfaces in the autofill's in-use bucket; a compendium entry may hold it only
 once an admin has added it to the vocabulary (MB.162). A curated catch-all
 would swallow exactly the values that bucket exists to show, give the

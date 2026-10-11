@@ -88,7 +88,7 @@ describe('ingredientResolver', () => {
             link: {
               id: SOURCE_ID,
               canonicalName: null,
-              form: null,
+              forms: [],
               description: null,
               isGlobal: true,
             },

@@ -55,14 +55,15 @@ const CompendiumList = ({
                 <td>{entry.name}</td>
                 <td>{KIND_LABELS.get(entry.nomenclature)}</td>
                 <td>{entry.canonicalName ?? NONE}</td>
-                <td>{entry.form ?? NONE}</td>
+                <td>{entry.forms.length ? entry.forms.join(', ') : NONE}</td>
                 <td>
                   {/* Soft navigation: the page renders again with the modal open.
-                      Named with the form too, as two entries can share a name. */}
+                      Named with the formal name too, as two entries can share a
+                      label but never a formal name. */}
                   <Link className="btn btn--small btn--quiet" href={entry.editHref}>
                     Edit{' '}
                     <span className="visually-hidden">
-                      {entry.form ? `${entry.name}, ${entry.form}` : entry.name}
+                      {entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
                     </span>
                   </Link>
                 </td>

@@ -13,7 +13,7 @@ import { curatedVocabularyWrites } from './curated';
 import { IngredientFormGroupRef } from './ingredient-form-groups';
 
 // `IngredientFormValue`, not `IngredientForm`: one row is one permitted value
-// of `ingredients.form`, and `IngredientForm` is the entry-form component
+// of `ingredient_variants.form`, and `IngredientForm` is the entry-form component
 // (DESIGN.md §7). Public (MB.80), so no scope and no session in the readers;
 // tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
 // The writes are the site admin's (M5.6a).

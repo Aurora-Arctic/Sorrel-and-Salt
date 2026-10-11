@@ -8,7 +8,13 @@ import { A, B, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
@@ -38,7 +44,7 @@ beforeEach(async () => {
 });
 
 const FIELDS = `
-  id name slug canonicalName nomenclature form isGlobal folkNames
+  id name slug canonicalName nomenclature isGlobal folkNames
   substitutes { name } deities { name } categories { name }
   audit { createdBy updatedBy }
 `;
@@ -79,13 +85,15 @@ const remove = (session: Session | null, id: string) =>
 const read = (session: Session | null, id: string) =>
   run<{ ingredient: { id: string; name: string } | null }>(session, READ, { id });
 
-/** Testwort as the admin's form sends it, its form picked from the curated list. */
+/** One whole form as the input type requires it, picked: every field but its id. */
+const formOf = (form: string, formId: string) => variantInput(makeVariant({ form }), { formId });
+
+/** Testwort as the admin's form sends it, its one form picked from the curated list. */
 const testwort = (overrides: Record<string, unknown> = {}) => ({
   name: 'Testwort',
   canonicalName: 'Fixtura testalis',
   nomenclature: 'botanical',
-  form: 'Herb',
-  formId: herb,
+  variants: [formOf('Herb', herb)],
   ...overrides,
 });
 
@@ -94,8 +102,7 @@ const earthy = (name: string) => ({
   name,
   canonicalName: null,
   nomenclature: 'none',
-  form: 'Earth',
-  formId: earth,
+  variants: [formOf('Earth', earth)],
 });
 
 /**
@@ -105,8 +112,6 @@ const earthy = (name: string) => ({
 function whole(input: Record<string, unknown>): Record<string, unknown> {
   const empty: Record<string, unknown> = {
     canonicalName: '',
-    form: '',
-    formId: '',
     description: '',
     elements: [],
     planets: [],
@@ -118,6 +123,7 @@ function whole(input: Record<string, unknown>): Record<string, unknown> {
     references: [],
     folkNames: [],
     categoryIds: [],
+    variants: [],
   };
   const sent = Object.entries(input).filter(([, value]) => value != null);
   return { ...empty, ...Object.fromEntries(sent) };
@@ -179,7 +185,7 @@ describe('createCompendiumIngredient', () => {
     expect(await countIngredients()).toBe(0);
   });
 
-  it('answers a formal name and form already in the compendium as VALIDATION on `canonicalName`', async () => {
+  it('answers a formal name already in the compendium as VALIDATION on `canonicalName`', async () => {
     await seed();
 
     const result = await create(asUser(E), testwort({ name: 'Fixture Leaf' }));
@@ -211,19 +217,17 @@ describe('updateCompendiumIngredient', () => {
     expect(await categoriesOf(id)).toEqual(['Protection']);
   });
 
-  // But `variants`, until MB.222: an input without it reads `form` and
-  // `formId` as the one form, which is how IngredientForm still saves (MB.219).
-  it('declares every field of its input required, but its forms', () => {
+  it('declares every field of its input required', () => {
     const input = schema.getType('CompendiumIngredientUpdateInput');
     expect(input).toBeInstanceOf(GraphQLInputObjectType);
     const fields = Object.values((input as GraphQLInputObjectType).getFields());
     // Precondition: the input is the whole entry, not a stub.
     expect(fields.map((field) => field.name)).toEqual(
-      expect.arrayContaining(['name', 'nomenclature', 'formId', 'folkNames', 'categoryIds']),
+      expect.arrayContaining(['name', 'nomenclature', 'variants', 'folkNames', 'categoryIds']),
     );
 
     expect(fields.filter((field) => !isNonNullType(field.type)).map((field) => field.name)).toEqual(
-      ['variants'],
+      [],
     );
   });
 
@@ -290,7 +294,7 @@ describe('updateCompendiumIngredient', () => {
     let movedId: string;
 
     beforeEach(async () => {
-      movedId = await seed({ name: 'Testsoil', nomenclature: 'none', form: 'earth' });
+      movedId = await seed({ name: 'Testsoil', nomenclature: 'none' });
       await sql`
         insert into retired_ingredient_slugs ${sql({
           ingredient_id: movedId,
@@ -301,7 +305,7 @@ describe('updateCompendiumIngredient', () => {
     });
 
     it('refuses a rename into it as VALIDATION on `endRedirect`, then takes it when resent confirmed', async () => {
-      const id = await seed({ name: 'Testclay', nomenclature: 'none', form: 'earth' });
+      const id = await seed({ name: 'Testclay', nomenclature: 'none' });
       const before = await rowOf(id);
 
       const refused = await update(asUser(E), id, earthy('Testdirt'));
@@ -363,20 +367,6 @@ describe('deleteCompendiumIngredient', () => {
 // answered back on `Ingredient.variants`, and a form the compendium refuses
 // pathed to it. The matching and the curated rules are the service file's.
 describe('variants', () => {
-  /** One whole form as the input type requires it: every field but its id. */
-  const formOf = (form: string, formId: string) => ({
-    form,
-    formId,
-    description: '',
-    safetyNotes: '',
-    elements: [],
-    planets: [],
-    zodiacSigns: [],
-    colors: [],
-    categoryIds: [],
-    substitutes: [],
-    references: [],
-  });
   const VARIANTS = `mutation ($id: ID!, $input: CompendiumIngredientUpdateInput!) {
     updateCompendiumIngredient(id: $id, input: $input) { variants { form formChoice { id } } }
   }`;
@@ -413,6 +403,6 @@ describe('variants', () => {
     });
     const forms = await sql`
       select form from ingredient_variants where ingredient_id = ${id} and deleted_at is null`;
-    expect(forms).toEqual([{ form: 'herb' }]);
+    expect(forms).toEqual([{ form: 'Testform' }]);
   });
 });

@@ -265,7 +265,7 @@ type SuggestionClaimant {
 
 - **`group` is how two same-named forms are told apart.** `ingredient_forms`
   is unique on the slug alone, so "Wax" may be both an _animal_ part and a
-  _substance_, and `ingredients.form` stores the string. The pair comes back as
+  _substance_, and a variant's `form` stores the string. The pair comes back as
   two suggestions, in group order, and a client renders "Wax (Substance)".
 - **`id` is what a pick sends** (MB.167): the curated row's, as `formId`, or
   as a deity entry's `deityId`; null for a value only in use, which is sent
@@ -427,7 +427,7 @@ type QueryCompendiumConnectionEdge {
   name, a live folk name, or a live variant's form or description (MB.218),
   case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
-  adds a mode); the form trimmed and lower-cased on both sides. The browser never holds more than a page (rule
+  adds a mode); and an entry holding a live variant of the form, trimmed and lower-cased on both sides, so an entry with two forms is found under either, once (MB.222). The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
   that task's argument to add, and matches an entry whose `elements` holds
@@ -471,8 +471,8 @@ type QueryCompendiumConnectionEdge {
   `variantsByIngredient` (MB.218); `Category.group`,
   `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
-  `deityTraditionsById`; and `formChoice` through `ingredientFormsById`
-  (MB.167; ["Loaders"](loaders.md)).
+  `deityTraditionsById`; and a variant's `formChoice` through
+  `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
   MB.140): `name` is what it shows — the linked ingredient's label, its last
   once deleted, or the typed text — and `ingredient` is the one to follow,
@@ -486,8 +486,7 @@ type QueryCompendiumConnectionEdge {
   found among the linked ingredient's variants through `variantsByIngredient`,
   so a form is read beneath its ingredient and never by its id alone.
 - **`IngredientVariant` is one form of an ingredient** (DESIGN.md §7, MB.215;
-  built by MB.218): its own fields, `formChoice` as `Ingredient.formChoice`
-  reads one, and `categories`, `substitutes` and `references`, that form's
+  built by MB.218): its own fields, `formChoice` (below), and `categories`, `substitutes` and `references`, that form's
   own additions through `categoriesByVariant`, `substitutesByVariant` and
   `referencesByVariant`, keyed by the variant row, which carries its
   ingredient's tier. An ingredient's own lists are its rows with no variant, so
@@ -500,9 +499,11 @@ type QueryCompendiumConnectionEdge {
   non-null, `[]` with none, and in the order entered. `Deity` carries its
   `tradition`, which tells two "Hecate"s apart, and is registered by
   `vocabulary` in `graphql/deities.ts` with `DeityTradition`.
-  `Ingredient.formChoice` is the curated `IngredientFormValue` that
-  `formId` records, null when the form was typed and once the form or its
-  group is retired, so the text stands alone.
+  `IngredientVariant.formChoice` is the curated `IngredientFormValue` that
+  the variant's `formId` records, null when the form was typed and once the
+  form or its group is retired, so the text stands alone. `Ingredient` has no
+  `form` or `formChoice` since MB.222: a client reads an entry's forms
+  through `variants`.
 - **`ReferenceLink` is a reference and the link's locator** (DESIGN.md §7,
   MB.151; built by MB.153). `Ingredient.references` is non-null, `[]` with
   none, and filed alphabetically by citation, less a leading quotation mark
@@ -513,7 +514,7 @@ type QueryCompendiumConnectionEdge {
   ([`db/references.md`](../db/references.md)). The `Reference` type is
   ["References"](#references-reference-createreference-updatereference-and-referencesuggestions)'s.
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
-  value of `ingredients.form`, and `IngredientForm` is the entry-form component
+  value of a variant's `form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as
   `formSuggestions` counts curated, and the group is what tells two "Wax"
   values apart.
@@ -551,7 +552,7 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
-**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 drops `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, and the `compendium` query's `form` argument then matches an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -579,8 +580,8 @@ signatures DESIGN.md §7's sketch gives them.
   (MB.211): `whole` makes every field non-null, and the compendium tier
   requires `nomenclature` on a create too. The field descriptions vary with
   the two switches, so the SDL is the one the four declared by hand.
-- **`IngredientInput` is the create's.** Only `name` is required, so story
-  29's one-field stub is `{ name }`. With no formal name, a `nomenclature`
+- **`IngredientInput` is the create's.** Only `name` and `variants` are
+  required, so story 29's one-field stub is `{ name, variants: [] }` (MB.222). With no formal name, a `nomenclature`
   left out or sent as `null` becomes `none`.
 - **`IngredientUpdateInput` is the whole ingredient, and replaces the row.**
   Every field is non-null, so leaving one out is a schema error rather than a
@@ -621,11 +622,11 @@ signatures DESIGN.md §7's sketch gives them.
   ingredient, a name as written, and a list that changes nothing writes
   nothing.
 - **A form's pick is `formId`, a deity an `IngredientDeityInput`** (MB.167).
-  `formId` sits beside `form`, nullable on the create and non-null on the
-  update, where `""` clears it. It must name a curated form — live, under a
-  live group — and `form` must fold to that form's name, which is written in
-  its spelling; anything else is a `VALIDATION` field error at `['formId']`
-  or `['form']`, never a 23503. A deity entry is `{ deityId }` or `{ name }`,
+  `formId` sits beside `form` on each `IngredientVariantInput`, non-null,
+  where `""` means the form was typed. It must name a curated form — live,
+  under a live group — and `form` must fold to that form's name, which is
+  written in its spelling; anything else is a `VALIDATION` field error at
+  `['variants', i, 'formId']` or `['variants', i, 'form']`, never a 23503. A deity entry is `{ deityId }` or `{ name }`,
   exactly one, as a substitute's is; a deity picked anew must be curated, and
   one the ingredient already holds is kept once retired, sent back by id or
   by name. The list replaces the live rows in the order sent
@@ -678,13 +679,13 @@ the thrown type — the ingredients files since MB.185, the vocabulary, identity
 and coven files since MB.186. A test that watches a loader or shares one across
 operations, or records what a sender was asked to mail, hands `run` its own.
 
-**`variants` on all four inputs** (MB.219): `[IngredientVariantInput!]`, each
+**`variants` on all four inputs** (MB.219): `[IngredientVariantInput!]!`, each
 a whole form whose every field but `id` is non-null, `""` or `[]` clearing
-one, as MB.159 holds every row-replacing input. The list itself is optional
-on all four, the update inputs included, until MB.222. An input without it
-reads `form` and `formId` as the one form, which is how `IngredientForm`
-still saves. MB.222 makes it required on the two update inputs when it
-removes those two fields. `SubstituteInput` gains `substituteVariantId`, one
+one, as MB.159 holds every row-replacing input. The list itself is
+required on all four, the two creates included, since MB.222 removed the
+inputs' top-level `form` and `formId`, which an input without it used to
+read as its one form: a create with no form, such as story 29's one-field
+stub, sends `variants: []`. `SubstituteInput` gains `substituteVariantId`, one
 form of the linked ingredient. A form's refusal is `VALIDATION` pathed to it,
 `['variants', 1, 'form']`. Both update mutations clear `variantsByIngredient`
 with the other child loaders, so a second update in one request answers its
@@ -717,8 +718,8 @@ curated values.
   one (DESIGN.md §5). Leaving it out is a schema error before any resolver
   runs.
 - **`CompendiumIngredientUpdateInput` is the whole entry**, every field
-  non-null, `""` or `[]` clearing one and `formId: ""` for no pick, as
-  `IngredientUpdateInput` is (MB.159). `categoryIds` is among them, so an
+  non-null, `""` or `[]` clearing one and a variant's `formId: ""` for no
+  pick, as `IngredientUpdateInput` is (MB.159). `categoryIds` is among them, so an
   update that left it out cannot silently unfile the entry. The update clears
   the entry from the five child loaders first, as `updateIngredient` does.
 - **`endRedirect` answers MB.82's question.** A write taking an address

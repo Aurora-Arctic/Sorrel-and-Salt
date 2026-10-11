@@ -1,8 +1,10 @@
+import type { z } from 'zod';
 import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 import type { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import type { spells } from '@/modules/grimoire/schema/spells';
+import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 
 // The tables are imported as types only: the fixtures carry no runtime
 // dependency on the database layer, which is what lets the `unit` project test
@@ -43,8 +45,6 @@ export interface IngredientFixture extends Required<
     | 'name'
     | 'canonicalName'
     | 'nomenclature'
-    | 'form'
-    | 'formId'
     | 'description'
     | 'elements'
     | 'planets'
@@ -53,6 +53,11 @@ export interface IngredientFixture extends Required<
     | 'safetyNotes'
   >
 > {
+  /**
+   * Its forms, each a variant row with what it adds (MB.222): the form lives
+   * on the variant, never the ingredient row. `[]` is an entry with no form.
+   */
+  variants: VariantFixture[];
   folkNames: string[];
   /** Substitutes typed as names; a test links one with `insertSubstituteLink`. */
   substitutes: string[];
@@ -62,9 +67,9 @@ export interface IngredientFixture extends Required<
 }
 
 /**
- * One more form of an ingredient, as `insertVariant` writes it beside the
- * fixture's own (MB.215): the form, whatever it adds, and the categories and
- * typed substitutes it owns (MB.217).
+ * One form of an ingredient (MB.215), as `insertIngredient` writes each of
+ * the fixture's and `insertVariant` writes one more beside them: the form,
+ * whatever it adds, and the categories and typed substitutes it owns (MB.217).
  */
 export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
   Partial<
@@ -78,6 +83,9 @@ export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'
     /** Substitutes typed as names for this form; a test links one with `insertSubstituteLink`. */
     substitutes?: string[];
   };
+
+/** One form as a write's input sends it (MB.219): every field but `id`, `""` or `[]` for none. */
+export type VariantInput = NonNullable<z.input<typeof LocalIngredientInput>['variants']>[number];
 
 /**
  * One layer of the stack: it points at an ingredient *or* names one of its own

@@ -5,8 +5,10 @@ pager (M5.5), built as the category list's is
 ([`grouped-value-list.md`](grouped-value-list.md)). It is render-only and a server
 component: the page reads one page of the compendium under the address's
 filter through `listCompendium` and hands it over, each entry with its
-classification, its formal name, its form and the address that opens it to edit, with the filter
-as asked.
+classification, its formal name, its live forms and the address that opens it to edit, with the filter
+as asked. The page reads each page's forms in one batch through
+`variantsOf(null, refs)`, the read `Ingredient.variants` resolves through,
+rather than one read per row.
 
 ## Props
 
@@ -21,7 +23,8 @@ as asked.
 | `position`     | `{ page, pages }`, the pager's "Page X of Y"                      |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
-`canonicalName` and `form`, each `null` for none, and `editHref`. In the
+`canonicalName`, `null` for none, its `forms` (`string[]`, the entry's live
+forms' text in form order, `[]` for none), and `editHref`. In the
 filter, `query` and `nomenclature` are blank for none, and `nomenclature` is
 otherwise a `NomenclatureKind`.
 
@@ -63,18 +66,20 @@ otherwise a `NomenclatureKind`.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
   the modal is a soft navigation, and the page calls the admin guard on every
   render.
-- **None is an em dash.** A null formal name or form shows "—" rather than an
-  empty cell: the Unknown list tells an entry with an unconfirmed formal name
-  from one with none by this column.
-- **Each Edit is named for its entry and its form**: the visible "Edit", then
-  the name and, when there is one, the form in a `visually-hidden` span, so a
-  screen reader hears "Edit Testwort, dried". The form is there because an
-  entry's identity is its formal name and its form, so two rows can share a
-  name.
+- **The Form column lists the entry's forms**, joined: "Herb, Oil".
+- **None is an em dash.** A null formal name, or an entry with no form, shows
+  "—" rather than an empty cell: the Unknown list tells an entry with an
+  unconfirmed formal name from one with none by this column.
+- **Each Edit is named for its entry and its formal name**: the visible
+  "Edit", then the label and, when there is one, the formal name in a
+  `visually-hidden` span, so a screen reader hears "Edit Testwort, Fixtura
+  testalis", or the label alone without a formal name. The formal name is
+  there because it is the entry's identity: two rows can share a label,
+  never a formal name.
 - **No entries reads "No compendium entries yet."**, with no table; a
   filtered list with no rows reads "No compendium entry matches." instead.
 
-**MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 makes the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is then named for the entry's label and formal name rather than its form, since identity is the formal name alone, so the contract above that names an Edit by its form changes with it. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ## Styling
 

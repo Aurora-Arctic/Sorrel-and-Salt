@@ -17,25 +17,25 @@ const entry = (
   name: string,
   nomenclature: NomenclatureKind,
   canonicalName: string | null,
-  form: string | null,
+  forms: string[],
 ): CompendiumListEntry => {
-  const slug = slugify(form ? `${name} ${form}` : name);
+  const slug = slugify(canonicalName ? `${name} ${canonicalName}` : name);
   return {
     id: slug,
     name,
     slug,
     nomenclature,
     canonicalName,
-    form,
+    forms,
     editHref: compendiumHref({}, { edit: slug }),
   };
 };
 
 const ENTRIES = [
-  entry('Testwort', 'botanical', 'Fixtura testalis', 'dried'),
-  entry('Testwort', 'botanical', 'Fixtura testalis', 'oil'),
-  entry('Fixture Salt', 'unknown', null, null),
-  entry('Mockroot', 'none', null, 'powder'),
+  entry('Testwort', 'botanical', 'Fixtura testalis', ['Dried', 'Oil']),
+  entry('Testwort', 'botanical', 'Fixtura alteralis', ['Dried']),
+  entry('Fixture Salt', 'unknown', null, []),
+  entry('Mockroot', 'none', null, ['Powder']),
 ];
 
 export const OnePageOfSeveral: Story = () => (

@@ -91,7 +91,7 @@ suggestion has neither, and a deity's has the first alone, below:
 
 - **Its group.** `ingredient_forms` is unique on the slug alone, so two live
   rows may share a display name ("Wax", animal and substance), and
-  `ingredients.form` stores the string. The group is the only thing that tells
+  a variant's `form` stores the string. The group is the only thing that tells
   them apart, so tiers 0 and 1 join `ingredient_form_groups` and return its
   name, and the tie-break is `lower(group name) || ' ' || id`, so a
   same-named pair reads in group order. **A form is curated only while its

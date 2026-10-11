@@ -128,7 +128,6 @@ const IngredientSuggestionsDocument = graphql(`
           id
           name
           canonicalName
-          form
           description
           isGlobal
           variants {
@@ -156,7 +155,6 @@ const CompendiumSubstitutesDocument = graphql(`
           id
           name
           canonicalName
-          form
           description
           isGlobal
           variants {
@@ -283,7 +281,7 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
     const link = {
       id: node.id,
       canonicalName,
-      form: node.form ?? null,
+      forms: node.variants.map((variant) => variant.form),
       description: node.description ?? null,
       isGlobal: node.isGlobal,
       variants: formsOf(node.variants),
@@ -301,19 +299,20 @@ const substituteOptions = (data: IngredientSuggestionsQuery): ListOption[] =>
     };
   });
 
-/** A compendium entry's row: what tells it from another is its form, since every row is the compendium's. */
+/** A compendium entry's row: its note is its forms, since every row is the compendium's. */
 const compendiumOptions = (data: CompendiumSubstitutesQuery): ListOption[] =>
   data.compendium.edges.map(({ node }) => {
     const canonicalName = node.canonicalName ?? null;
+    const forms = node.variants.map((variant) => variant.form);
     return {
       value: node.name,
       label: qualified(node.name, canonicalName),
-      note: node.form ?? undefined,
+      note: forms.length ? forms.join(', ') : undefined,
       key: node.id,
       link: {
         id: node.id,
         canonicalName,
-        form: node.form ?? null,
+        forms,
         description: node.description ?? null,
         isGlobal: node.isGlobal,
         variants: formsOf(node.variants),

@@ -6,7 +6,7 @@ import { A, B, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { FormSuggestionConnection } from './types';
 
 // The transport half of M4.7a's form lookup: the nodes, each curated row
@@ -25,14 +25,14 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   // A compendium entry claiming a curated form, and a workspace entry with an
   // uncurated one.
-  await insertIngredient(sql, makeIngredient({ form: 'root' }), A.id);
+  await insertIngredient(sql, makeIngredient({ variants: [makeVariant({ form: 'root' })] }), A.id);
   await insertIngredient(
     sql,
     makeIngredient({
       workspaceId: WORKSPACE_W_ID,
       name: 'Testbane',
       nomenclature: 'none',
-      form: 'root bark',
+      variants: [makeVariant({ form: 'root bark' })],
     }),
     A.id,
   );
@@ -113,7 +113,11 @@ describe('formSuggestions without a coven', () => {
   it("offers the curated forms with the compendium's claimants, and not the coven's value", async () => {
     await insertIngredient(
       sql,
-      makeIngredient({ name: 'Fixture Rootling', nomenclature: 'none', form: 'rootlet fixture' }),
+      makeIngredient({
+        name: 'Fixture Rootling',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'rootlet fixture' })],
+      }),
       A.id,
     );
     // Why its absence is the scope's: under W, the coven's value is offered.

@@ -127,9 +127,9 @@ describe('ingredient', () => {
       makeIngredient({ name: 'Fixture Linked', nomenclature: 'none' }),
       A.id,
     );
-    const [{ id: linkedHerb }] = await sql<{ id: string }[]>`
+    const [{ id: linkedForm }] = await sql<{ id: string }[]>`
       select id from ingredient_variants where ingredient_id = ${linkedId}`;
-    // Written after the fixture's own `herb`, and sorting before it.
+    // Written after the fixture's own `Testform`, and sorting before it.
     const variantId = await insertVariant(
       sql,
       compendiumId,
@@ -147,10 +147,10 @@ describe('ingredient', () => {
       },
       A.id,
     );
-    // The bark stands in for the linked ingredient's herb, and cites a book.
+    // The bark stands in for the linked ingredient's form, and cites a book.
     await insertSubstituteLink(sql, compendiumId, linkedId, A.id, {
       variantId,
-      substituteVariantId: linkedHerb,
+      substituteVariantId: linkedForm,
     });
     const book = await insertReference(sql, { title: 'Fixture Barks' }, E.id);
     await insertVariantReferenceLink(sql, variantId, book, A.id, 'p. 3');
@@ -188,16 +188,16 @@ describe('ingredient', () => {
           {
             name: 'Fixture Linked',
             ingredient: { id: linkedId },
-            variant: { id: linkedHerb, form: 'herb' },
+            variant: { id: linkedForm, form: 'Testform' },
           },
           { name: 'Testbane', ingredient: null, variant: null },
         ],
         references: [{ reference: { title: 'Fixture Barks' }, locator: 'p. 3' }],
         audit: { createdBy: A.id, updatedBy: A.id },
       },
-      // The ingredient's own herb, which owns none of the bark's children.
+      // The ingredient's own Testform, which owns none of the bark's children.
       expect.objectContaining({
-        form: 'herb',
+        form: 'Testform',
         formChoice: null,
         description: null,
         categories: [],
@@ -220,10 +220,10 @@ describe('ingredient', () => {
       makeIngredient({ name: 'Fixture Bare', nomenclature: 'none' }),
       A.id,
     );
-    const [{ id: formedHerb }] = await sql<{ id: string }[]>`
+    const [{ id: formedForm }] = await sql<{ id: string }[]>`
       select id from ingredient_variants where ingredient_id = ${formed}`;
     await insertSubstituteLink(sql, compendiumId, formed, A.id, {
-      substituteVariantId: formedHerb,
+      substituteVariantId: formedForm,
     });
     await insertSubstituteLink(sql, compendiumId, bare, A.id);
     const read = async () =>
@@ -239,11 +239,11 @@ describe('ingredient', () => {
 
     expect(await read()).toEqual([
       { name: 'Fixture Bare', variant: null },
-      { name: 'Fixture Formed', variant: { id: formedHerb } },
+      { name: 'Fixture Formed', variant: { id: formedForm } },
     ]);
 
     await sql`
-      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${formedHerb}`;
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${formedForm}`;
 
     expect(await read()).toEqual([
       { name: 'Fixture Bare', variant: null },

@@ -63,18 +63,14 @@ describe('suggestCommonNames', () => {
   // suggestion that does not say which is worse than none.
   describe('what a suggestion carries', () => {
     beforeEach(async () => {
-      await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa', form: 'bark' });
-      await addIngredient({
-        name: "Cat's Claw",
-        canonicalName: 'Senegalia greggii',
-        form: 'thorn',
-      });
+      await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
+      await addIngredient({ name: "Cat's Claw", canonicalName: 'Senegalia greggii' });
       await addIngredient({
         name: 'Wait-a-Minute Bush',
         canonicalName: 'Mimosa aculeaticarpa',
         folkNames: ["cat's claw"],
       });
-      await addIngredient({ name: "Cat's Claw", workspaceId: WORKSPACE_W_ID, form: 'claw' });
+      await addIngredient({ name: "Cat's Claw", workspaceId: WORKSPACE_W_ID });
     });
 
     it('offers a name once, naming every in-scope ingredient that answers to it', async () => {

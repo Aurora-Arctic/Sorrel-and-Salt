@@ -18,7 +18,7 @@ import type { IngredientFormValueInput } from '@/modules/vocabulary/validation/i
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // Story 18's form half (M5.6a): the curated form vocabulary's writes, the site
 // admin's alone, and the reads the admin page lists them by. A compendium
@@ -122,8 +122,8 @@ const variantsOf = (ingredientId: string) =>
     where ingredient_id = ${ingredientId} and deleted_at is null order by form`;
 
 /**
- * A fresh compendium entry, or W's own ingredient, holding `form` as its text
- * and picking `formId` when given — by its label alone unless a formal name is.
+ * A fresh compendium entry, or W's own ingredient, whose one form is `form`,
+ * picking `formId` when given — by its label alone unless a formal name is.
  */
 const entry = (
   name: string,
@@ -133,7 +133,12 @@ const entry = (
 ) =>
   insertIngredient(
     sql,
-    makeIngredient({ name, nomenclature: 'none', form, formId, ...overrides }),
+    makeIngredient({
+      name,
+      nomenclature: 'none',
+      variants: [makeVariant({ form, formId })],
+      ...overrides,
+    }),
     A.id,
   );
 
@@ -674,17 +679,6 @@ describe('deleteIngredientFormValue', () => {
       expect((await formOf(id)).deleted_at).toBeNull();
     });
 
-    it('refuses while only a second form of an entry picks it', async () => {
-      const id = await seed('Fixture Held');
-      const held = await entry('Testwort', 'Fixture Root', null);
-      await insertVariant(sql, held, { form: 'Fixture Held', formId: id }, A.id);
-      // Why only the variant can hold it: the row picks nothing.
-      expect((await ingredientOf(held)).form_id).toBeNull();
-
-      await expect(deleteIngredientFormValue(admin, id)).rejects.toThrow(Forbidden);
-      expect((await formOf(id)).deleted_at).toBeNull();
-    });
-
     it('names the first three holding entries and no more', async () => {
       const id = await seed('Fixture Crowded');
       for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
@@ -727,7 +721,7 @@ describe('deleteIngredientFormValue', () => {
     await sql`
       update ingredient_variants set deleted_at = now(), deleted_by = ${E.id} where id = ${dropped}`;
     // Why it could have been held: the deleted entry's and the dropped form's picks are still there.
-    expect((await ingredientOf(gone)).form_id).toBe(id);
+    expect((await variantsOf(gone)).map((row) => row.form_id)).toEqual([id]);
     const [pick] = await sql`select form_id from ingredient_variants where id = ${dropped}`;
     expect(pick.form_id).toBe(id);
 
@@ -739,13 +733,13 @@ describe('deleteIngredientFormValue', () => {
   it("is not held by a coven's ingredient that picked it, which keeps its pick", async () => {
     const id = await seed('Fixture Coven');
     const coven = await entry('Testwort', 'Fixture Coven', id, { workspaceId: WORKSPACE_W_ID });
-    const before = await ingredientOf(coven);
+    const before = await variantsOf(coven);
     // Why it could have been held: W's ingredient picked this very form.
-    expect(before).toMatchObject({ form_id: id, workspace_id: WORKSPACE_W_ID });
+    expect(before.map((row) => row.form_id)).toEqual([id]);
 
     await deleteIngredientFormValue(admin, id);
 
     expect((await formOf(id)).deleted_at).toBeInstanceOf(Date);
-    expect(await ingredientOf(coven)).toEqual(before);
+    expect(await variantsOf(coven)).toEqual(before);
   });
 });

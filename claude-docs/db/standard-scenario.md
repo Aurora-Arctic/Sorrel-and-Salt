@@ -62,7 +62,7 @@ the 26 entries carry §5's own hard cases:
   moon water or black salt; one does name Devil's Shoestring and nobody has
   looked it up, which is the row `where nomenclature = 'unknown'` returns as a
   curation to-do.
-- **Only curated values** in the four curated fields (MB.162): the fifteen
+- **Only curated values** in the four curated fields (MB.162): the sixteen
   in-use forms come from M4.3a's vocabulary, and every planet, zodiac sign and
   deity from MB.93's and MB.129's, each spelt as its curated row spells it
   (`Herb`, not `herb`), since the compendium may hold nothing else. A few
@@ -70,8 +70,14 @@ the 26 entries carry §5's own hard cases:
   Lavender's `Gemini` and `Virgo`, Mugwort's `Artemis` and `Diana` — so
   each list is in use. §5's uncurated `rhizome`, a value a member writes
   before an admin curates it and the second bucket of M4.7a's suggestion list,
-  is a coven's: `demo` seeds it on W's Fresh Ginger, and Ginger here is
+  is a coven's: `demo` seeds it on W's own Ginger, and Ginger here is
   `Root`.
+- **One entry with two forms**: Rosemary is `Herb` and `Oil` (MB.222), the
+  oil with its own description, "Sprigs steeped in olive oil for a month, then
+  strained, for anointing.", and its own safety note, "Dry the sprigs first: a
+  fresh herb in oil can grow botulism. Keep it cool, and never eat it." It is
+  the variant model's own hard case: two forms of one plant are one entry, and
+  a form adds to the entry without repeating it. Every other entry has one form.
 - **Comfrey beside foxglove**, both `Leaf`, both carrying safety notes: §5's
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
@@ -85,18 +91,23 @@ Entries also carry folk names (M4.4a's child table — "Uña de Gato" on both
 _Uncaria_ rows, which is the ambiguity that table exists to hold) and category
 assignments into §6's vocabulary.
 
-**MB.215: every entry gets a variant, and Rosemary a second.** MB.216 writes one variant beside each seeded entry's form, through `insertMissingBy` keyed `(ingredient_id, lower(form))`, so every entry has exactly one live variant and every seeded spell layer can name one. MB.222 moves the seed onto variants — `SeedIngredient.variants`, and `identityOf` keyed on `(name, canonicalName)` alone — and gives **Rosemary an Oil variant** with its own description and safety note: the new model's awkward case, one entry with two forms, added to the list above. The five Cat's Claws stay five entries, since their formal names differ; the claw from _Felis catus_ never needed its form to be told from the vine. MB.220 re-slugs the seeded entries without their forms on reseed and retires each compendium slug it moves, and MB.222 corrects this section and the entry key below ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: every entry gets a variant, and Rosemary a second.** MB.216 writes one variant beside each seeded entry's form, through `insertMissingBy` keyed `(ingredient_id, lower(form))`, so every entry has exactly one live variant and every seeded spell layer can name one. MB.222 moved the seed onto variants — `SeedIngredient.variants`, and `identityOf` keyed on the identity, the formal name or the label without one — and gave **Rosemary an Oil variant** with its own description and safety note: the new model's awkward case, one entry with two forms, added to the list above. The five Cat's Claws stay five entries, since their formal names differ; the claw from _Felis catus_ never needed its form to be told from the vine. MB.220 re-slugs the seeded entries without their forms on reseed and retires each compendium slug it moves, and MB.222 corrected this section and the entry key below ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
-**Every entry's form is a variant (MB.216).** After the entries,
-`insertMissingVariants` writes one `ingredient_variants` row per entry with a
-form, the form and its pick as the entry carries them, which is what migration
-`0062` writes for a database seeded before it. It reads the entries back
-rather than the literals, so `demo`'s coven entries take the same path, and
-keys on the entry and the folded form, the variant's unique index, through
-`insertMissingBy`: a variant an admin removed counts as present and is not
-restored. Every seeded entry carries a form, so every seeded entry has exactly
-one live variant, which `tests/db/seed/demo.test.ts` asserts after a `demo`
-run, `standard` inside it.
+**Every entry's forms are its variants (MB.216, MB.222).** An entry's literal
+lists its forms as `variants`, each a `SeedVariant`: a form, and optionally
+that form's own description and safety note. The literal has no form of its
+own, and neither has the row. After the entries,
+`insertMissingVariants(tx, entries, formIds?)` writes each one, given each
+entry's id beside the forms its literal lists. With `formIds`, the curated
+rows by name, each form is picked by name, as an admin's compendium form must
+be (MB.162); without it, as for `demo`'s coven entries, a form is typed. It
+keys on the entry and the folded form, `(ingredient_id, lower(form))`, the
+variant's unique index, through `insertMissingBy`: a variant an admin removed
+counts as present and is not restored, and one already there is not
+rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
+`standard` inside it, that every seeded entry holds exactly the live variants
+its literal names — Rosemary's `Herb` and `Oil`, W's Ginger's `rhizome` with
+no pick — and that a second run writes no variant.
 
 ### One transaction, every vocabulary
 
@@ -121,13 +132,13 @@ moves `beginSeedTransaction` makes), then hands over to
 up and for the same reason. Two of its internals are shared rather than copied
 for the same argument: `categoryIdByName(tx)` moved into `categories.ts`, since
 both scenarios file rows under §6's vocabulary by name, and `identityOf` is
-exported, since `demo` keys W's own ingredients on the same three columns. That
+exported, since `demo` keys W's own ingredients on the same identity. That
 key says nothing about which tier a row is in, so a caller builds its map from
 one tier's rows rather than from both at once.
 
 Idempotency is the category seed's, keyed on identity and **ignoring
 `deleted_at`**: users and workspaces by their fixed ids, memberships by their
-composite key, compendium entries by `(name, canonicalName, form)`, folk names
+composite key, compendium entries by identity (below), folk names
 by ingredient plus `lower(name)`, assignments by their pair. Nothing already
 present is updated, so a renamed workspace or a retitled entry survives a
 reseed, and an entry an admin soft-deleted stays deleted rather than coming
@@ -137,17 +148,22 @@ asserts it of the production seeds this one shares its helpers with; a
 developer scenario has no test of its own (MB.225). The one row a reseed of
 `standard` puts back on purpose is a compendium deity pick (below).
 
-The entry key is `(name, canonicalName, form)` rather than `canonicalKey`
-deliberately: those are the three columns §5's generated expression reads, and
-recomputing that normalisation in TypeScript would be a second implementation
-to keep in step — the one that lies is the one nobody runs. The form alone is
-folded, trimmed and lower-cased as the key folds it: a database seeded before
-MB.162 holds the compendium's forms lower-case, and compose's `db-init`
-reseeds it on every start, so a key on the spelling would insert each entry
-beside itself and fail the scenario on the canonical-key index.
-Ginger is the exception it cannot cover: its form changed rather than its
-case, so such a database keeps its old `rhizome` row beside the new `Root`
-one until a `db:reset`.
+The entry key is the entry's identity (MB.222): `identityOf(entry)`, the
+formal name, or the label where there is none, lower-cased — what the row's
+generated `identity_key` holds, and what the identity indexes keep once per
+tier. A database row's key is read off that generated column, so Postgres's
+own expression is the one that runs. A literal's key is folded in TypeScript,
+which agrees with Postgres's lower-casing on the seed's names, all of them
+ASCII. Where a deleted row and a live one hold the same key, the live one
+wins, so what the seed writes beside an entry lands on the live row.
+
+It was `(name, canonicalName, form)` until MB.222, and the identity was chosen
+over `(name, canonicalName)` for two reasons. An entry a person relabelled is
+still the one the seed wrote, where a key on the label would insert it again,
+and the identity index would refuse that second row and fail the scenario.
+And a `demo` database seeded when W's Ginger was "Fresh Ginger" finds it
+present under the same formal name, so it keeps its old label rather than
+failing ([demo-scenario.md](demo-scenario.md)).
 
 ### A reseed of `standard` puts a deity pick back; `demo` does not
 

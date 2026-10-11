@@ -67,7 +67,8 @@ export interface ListEntry {
 export interface SubstituteLink {
   id: string;
   canonicalName: string | null;
-  form: string | null;
+  /** Its live forms' text, in form order (MB.222): `[]` for none. */
+  forms: string[];
   description: string | null;
   /** A compendium entry, rather than this coven's own. */
   isGlobal: boolean;
@@ -243,8 +244,14 @@ export interface RedirectQuestion {
   input: IngredientFormInput;
 }
 
-/** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
-export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
+/**
+ * What the form sends: its values in the shape the shared schema and the
+ * mutation take, unparsed, its forms always listed, as every input type
+ * requires them (MB.222).
+ */
+export type IngredientFormInput = z.input<typeof LocalIngredientInput> & {
+  variants: NonNullable<z.input<typeof LocalIngredientInput>['variants']>;
+};
 
 export type TextFieldName =
   | 'name'

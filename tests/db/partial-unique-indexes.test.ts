@@ -58,7 +58,11 @@ const deity = async () =>
 const reference = async () =>
   stamped({ kind: 'book', title: `A Herbal of Fixture Covens ${token()}`, seed_key: token() });
 
-/** An ingredient with a formal name, in coven W or (`null`) the compendium. */
+/**
+ * An ingredient with a formal name, in coven W or (`null`) the compendium.
+ * Its `form` is a column undeclared since MB.222, written here only because
+ * the two `canonical_key` indexes below read it until MB.223 drops all three.
+ */
 function ingredient(workspaceId: string | null): () => Promise<Row> {
   return async () => {
     const t = token();

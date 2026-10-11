@@ -312,7 +312,7 @@ describe('the variantsByIngredient loader', () => {
   it('answers fifty ingredients across two tiers with one role lookup and one read', async () => {
     const written = await addFifty();
     // A second form on every other one, written after the fixture's own
-    // `herb` and sorting before it, so each answer shows the sort by form.
+    // `Testform` and sorting before it, so each answer shows the sort by form.
     for (let i = 1; i < written.length; i += 2) {
       await insertVariant(sql, written[i].ref.id, { form: 'Fixture Gum' }, A.id);
     }
@@ -321,7 +321,7 @@ describe('the variantsByIngredient loader', () => {
     const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
 
     expect(answers.map((variants) => variants.map((variant) => variant.form))).toEqual(
-      written.map((_, i) => (i % 2 === 1 ? ['Fixture Gum', 'herb'] : ['herb'])),
+      written.map((_, i) => (i % 2 === 1 ? ['Fixture Gum', 'Testform'] : ['Testform'])),
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
@@ -382,7 +382,7 @@ describe('who the ingredient-children loaders answer', () => {
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
     // The fixture's own form, a variant since MB.216, and the one added.
-    variantsByIngredient: ['Fixture Gum', 'herb'],
+    variantsByIngredient: ['Fixture Gum', 'Testform'],
     categoriesByVariant: ['Protection'],
     substitutesByVariant: ['Testbane'],
     referencesByVariant: ['Fixture Gums'],

@@ -74,8 +74,13 @@ one pages `(name, id)`; each entry carries a `score`, null on the second:
   form's pair carries the `ingredient_id` too (MB.217), so the arm matches the
   union, and since the table is hard-deleted a soft-deleted form's pairs stay
   behind, so the arm reads the form's liveness through a nested `EXISTS`.
-- **`form`** compares `lower(btrim(…))` on both sides, the fold
-  `ingredient_variants_form_unique` holds.
+- **`form`** matches an entry holding a live variant of that form (MB.222):
+  a correlated `EXISTS` over `ingredient_variants`, comparing
+  `lower(btrim(…))` on both sides, the fold `ingredient_variants_form_unique`
+  holds. An entry with two forms is found under either, once, so the count
+  agrees with the page. `form` and `formId` each read any of the entry's live
+  forms on their own: an entry with a variant picked as Root and another typed
+  as Herb answers `formId` Root with `form` `herb`.
 - **`formId`** matches an entry holding a live variant that picked the
   curated form, by the variant's `form_id` (MB.167, MB.220): a correlated
   `EXISTS` over `ingredient_variants`, read through
@@ -147,7 +152,7 @@ takes an optional `workspaceId`; with one it asks
 admin and a non-member get `Forbidden` — and reads both tiers, without one it
 reads the compendium alone, and a miss is `NotFound` either way.
 
-**MB.215: the read reaches an entry's forms.** Once each form is a row of `ingredient_variants` (DESIGN.md §5), MB.218 adds a third `UNION ALL` arm to the `query` match, over each live variant's accent-folded form and description through `foldedWordMatch`, keyed on the variant's ingredient, so the existing `max(score) … group by id` still folds an entry with two matching forms into one row; the variant table's trigram index serves it, and `compendium-search-query.test.ts`'s plan loop gains the arm. A bare "oil" then ranks every entry with an oil variant at 1.0, and the form filter is the precise tool for that question. MB.220 makes `formId` an `EXISTS` over live variants, so a form's delete finds every entry holding a variant that picked it, and MB.222 does the same for `form`, folded on both sides. A variant's category pair also carries its `ingredient_id`, so `categoryIds` matches the union of an entry's categories and its forms'; MB.220 holds it to the live forms', since a dropped form's pairs outlive it. Under the same union rule an entry counts as sourced, for `withoutReferences`, if it or one of its live variants cites a reference. M8.14's sort becomes `(lower(name), identity_key, id)`, and `findIngredientSuggestions` reaches the new arm through `compendiumList`.
+**MB.215: the read reaches an entry's forms.** Once each form is a row of `ingredient_variants` (DESIGN.md §5), MB.218 adds a third `UNION ALL` arm to the `query` match, over each live variant's accent-folded form and description through `foldedWordMatch`, keyed on the variant's ingredient, so the existing `max(score) … group by id` still folds an entry with two matching forms into one row; the variant table's trigram index serves it, and `compendium-search-query.test.ts`'s plan loop gains the arm. A bare "oil" then ranks every entry with an oil variant at 1.0, and the form filter is the precise tool for that question. MB.220 makes `formId` an `EXISTS` over live variants, so a form's delete finds every entry holding a variant that picked it, and MB.222 did the same for `form`, folded on both sides, so the row's own `form` column is read by nothing. A variant's category pair also carries its `ingredient_id`, so `categoryIds` matches the union of an entry's categories and its forms'; MB.220 holds it to the live forms', since a dropped form's pairs outlive it. Under the same union rule an entry counts as sourced, for `withoutReferences`, if it or one of its live variants cites a reference. M8.14's sort becomes `(lower(name), identity_key, id)`, and `findIngredientSuggestions` reaches the new arm through `compendiumList`.
 
 ## The ingredient picker's search (MB.138)
 

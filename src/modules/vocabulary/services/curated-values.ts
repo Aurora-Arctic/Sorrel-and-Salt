@@ -58,7 +58,7 @@ export async function curatedNames(
 /**
  * The curated forms by id, one answer per id in the order given: the row, or
  * null where no curated form carries the id — none ever did, or it or its
- * group is retired since it was picked, which `Ingredient.formChoice` reads
+ * group is retired since it was picked, which `IngredientVariant.formChoice` reads
  * as no pick (MB.167). One read whatever the batch size, and public, as the
  * forms are.
  */

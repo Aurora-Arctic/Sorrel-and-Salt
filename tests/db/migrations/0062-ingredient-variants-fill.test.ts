@@ -36,14 +36,30 @@ const EDITOR = FIXTURE_USERS.B.id;
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-/** A fresh ingredient under an invented formal name, written by A. */
-async function anIngredient(overrides: Parameters<typeof makeIngredient>[0] = {}) {
+/**
+ * A fresh ingredient under an invented formal name, written by A, with no
+ * variant, and the row's own `form` and `form_id` as the fill met them:
+ * columns undeclared since MB.222, so written raw.
+ */
+async function anIngredient(
+  overrides: Parameters<typeof makeIngredient>[0] = {},
+  { form, formId = null }: { form?: string; formId?: string | null } = {},
+) {
   const t = crypto.randomUUID().slice(0, 8);
-  return insertIngredient(
+  const id = await insertIngredient(
     sql,
-    makeIngredient({ name: `Testwort ${t}`, canonicalName: `Fixtura testalis ${t}`, ...overrides }),
+    makeIngredient({
+      name: `Testwort ${t}`,
+      canonicalName: `Fixtura testalis ${t}`,
+      variants: [],
+      ...overrides,
+    }),
     AUTHOR,
   );
+  if (form !== undefined) {
+    await sql`update ingredients set form = ${form}, form_id = ${formId} where id = ${id}`;
+  }
+  return id;
 }
 
 describe('0062: the fill', () => {
@@ -57,10 +73,13 @@ describe('0062: the fill', () => {
     [{ id: pick }] = await sql`
       select id from ingredient_forms where deleted_at is null order by name limit 1
     `;
-    padded = await anIngredient({ form: '  Testleaf  ', description: 'Kept on the entry.' });
-    picked = await anIngredient({ workspaceId: WORKSPACE_W_ID, form: 'Testroot', formId: pick });
-    formless = await anIngredient({ form: null });
-    deleted = await anIngredient({ form: 'Testbark' });
+    padded = await anIngredient({ description: 'Kept on the entry.' }, { form: '  Testleaf  ' });
+    picked = await anIngredient(
+      { workspaceId: WORKSPACE_W_ID },
+      { form: 'Testroot', formId: pick },
+    );
+    formless = await anIngredient();
+    deleted = await anIngredient({}, { form: 'Testbark' });
     // The last editor is B, not the author: the variant is stamped as B.
     await sql`update ingredients set updated_by = ${EDITOR} where id in ${sql([padded, picked])}`;
     await sql`
@@ -81,8 +100,9 @@ describe('0062: the fill', () => {
       group by i.id
     `;
 
-    // Precondition: both kinds of row are there, seeded entries among them.
-    expect(rows.filter((row) => row.has_form).length).toBeGreaterThan(3);
+    // Precondition: both kinds of row are there. Since MB.222 the seed writes
+    // no row's form, so the formed rows are this file's three.
+    expect(rows.filter((row) => row.has_form).length).toBe(3);
     expect(rows.some((row) => !row.has_form)).toBe(true);
     expect(rows.filter((row) => row.variants !== (row.has_form ? 1 : 0))).toEqual([]);
   });
@@ -138,20 +158,21 @@ describe('0062: the guard', () => {
 
   it('passes a database holding one formal name once per tier, the same name in two tiers included', async () => {
     const t = crypto.randomUUID().slice(0, 8);
-    await anIngredient({ canonicalName: `Fixtura bitieria ${t}`, form: 'Testleaf' });
-    await anIngredient({
-      workspaceId: WORKSPACE_W_ID,
-      canonicalName: `Fixtura bitieria ${t}`,
-      form: 'Testroot',
-    });
+    await anIngredient({ canonicalName: `Fixtura bitieria ${t}` });
+    await anIngredient({ workspaceId: WORKSPACE_W_ID, canonicalName: `Fixtura bitieria ${t}` });
 
     await expect(sql.unsafe(GUARD)).resolves.toBeDefined();
   });
 
   it('refuses two live entries of one formal name in a tier, naming the procedure, and passes once one is deleted', async () => {
     const t = crypto.randomUUID().slice(0, 8);
-    await anIngredient({ canonicalName: `Fixtura duplex ${t}`, form: 'Testleaf' });
-    const second = await anIngredient({ canonicalName: `Fixtura duplex ${t}`, form: 'Testroot' });
+    // Different forms on the rows, so the older `canonical_key` index, which
+    // still reads the row's form until MB.223, admits the pair.
+    await anIngredient({ canonicalName: `Fixtura duplex ${t}` }, { form: 'Testleaf' });
+    const second = await anIngredient(
+      { canonicalName: `Fixtura duplex ${t}` },
+      { form: 'Testroot' },
+    );
 
     const error = await failureOf(sql.unsafe(GUARD));
 

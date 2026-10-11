@@ -53,7 +53,7 @@ const substituteEntry =
           link: {
             id: ingredient.id,
             canonicalName: ingredient.canonicalName,
-            form: ingredient.form,
+            forms: (formsOf.get(ingredient.id) ?? []).map((variant) => variant.form),
             description: ingredient.description,
             isGlobal: ingredient.workspaceId === null,
             variants: formsOf.get(ingredient.id),

@@ -201,7 +201,7 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
         makeIngredient({
           name: 'Testwort',
           nomenclature: 'none',
-          form: null,
+          variants: [],
           [field]: ['Fixture Body'],
         }),
         E.id,

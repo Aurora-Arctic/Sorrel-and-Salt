@@ -223,13 +223,9 @@ const fields = {
   name: requiredText('Give the ingredient a name'),
   // No format regex: §5's formal names defeat one.
   canonicalName: optionalText(),
-  form: optionalText(),
-  // The curated form picked, beside its text (MB.165): whether it names one,
-  // and the text that row's name, are the service's to read.
-  formId: optionalText(),
   description: optionalText(),
   elements: elementList,
-  // Lists of free text like `form`'s one value (MB.134): the vocabularies
+  // Lists of free text like a variant's form (MB.134): the vocabularies
   // suggest, and nothing here refuses — the compendium service holds its tier
   // to them against the database (MB.162), and a coven's stay free text.
   planets: textList,
@@ -243,8 +239,8 @@ const fields = {
   // The categories it is filed under (MB.125): whether each names a live
   // category is the service's to read, and a repeat is written once there.
   categoryIds: z.array(z.string().trim()).nullish(),
-  // Its forms (MB.215). Absent, until MB.222, the top-level `form` and
-  // `formId` are the one form, which the service reads as such.
+  // Its forms (MB.215), the only place a form is written since MB.222.
+  // Absent is none, as every child list's absence is.
   variants: z.array(variant).nullish(),
 };
 
@@ -258,8 +254,7 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
 /**
  * The rules across fields: the database's kind↔name CHECK — `none` takes no
  * formal name, a named kind needs one, `unknown` takes either — a folk name
- * that is neither the name nor another folk name, a picked form with its
- * text, and each list entry once.
+ * that is neither the name nor another folk name, and each list entry once.
  */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
@@ -299,7 +294,6 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
-  formRules(value, ctx);
   for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
     refuseRepeats(field, value[field] ?? [], ctx);
   }
@@ -336,21 +330,6 @@ function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
     }
     ids.add(id);
   });
-}
-
-/**
- * A picked form is an id, and stands beside its text, as
- * `ingredients_form_id_has_form` holds it; whether the text is that row's name
- * is read against the database by the service (MB.167).
- */
-function formRules({ form, formId }: Parsed, ctx: z.RefinementCtx) {
-  if (formId == null) return;
-  // Not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(formId).success) {
-    ctx.addIssue({ code: 'custom', path: ['formId'], message: 'No such form to pick' });
-  } else if (form == null) {
-    ctx.addIssue({ code: 'custom', path: ['form'], message: 'Name the form you picked' });
-  }
 }
 
 /**

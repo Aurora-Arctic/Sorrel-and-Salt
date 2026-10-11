@@ -3,7 +3,7 @@ import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-e
 
 /**
  * One compendium entry as the list shows it: its classification, its identity
- * — the formal name and the form, each null for none — and the address that
+ * — the formal name, null for none — its live forms, and the address that
  * opens it to edit.
  */
 export interface CompendiumListEntry {
@@ -13,7 +13,8 @@ export interface CompendiumListEntry {
   /** Its naming system, shown by the label the filter gives it. */
   nomenclature: NomenclatureKind;
   canonicalName: string | null;
-  form: string | null;
+  /** Its live forms' text, in form order: `[]` for an entry with none. */
+  forms: string[];
   editHref: Route;
 }
 

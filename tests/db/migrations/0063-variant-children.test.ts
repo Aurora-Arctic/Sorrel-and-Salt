@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../support/db/database';
 import { insertIngredient } from '../../support/db/insert-ingredient';
-import { makeIngredient } from '../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../support/fixtures';
 import { fromRoot } from '../../support/paths';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
@@ -45,7 +45,7 @@ async function anIngredient(form: string | null): Promise<string> {
       workspaceId: WORKSPACE_W_ID,
       name: `Testwort ${t}`,
       canonicalName: `Fixtura testalis ${t}`,
-      form,
+      variants: form === null ? [] : [makeVariant({ form })],
     }),
     AUTHOR,
   );

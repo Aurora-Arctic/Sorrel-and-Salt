@@ -58,7 +58,7 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
 - **The DESIGN.md table sits outside the forms table's run.** §5's planet and
-  zodiac table is placed after the `ingredients.form` paragraph and before
+  zodiac table is placed after the forms paragraphs and before
   `categories`, where a test once parsing the forms' lines would not read it
   as one; no test parses §5 since MB.225.
 - **`standard` seeds no uncurated planet.** Its compendium's planet values are

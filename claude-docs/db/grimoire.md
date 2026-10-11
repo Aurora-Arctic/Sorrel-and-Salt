@@ -114,7 +114,7 @@ this is what holds it in the database.
   or linked, is a tombstone, and what joins through the table goes by
   `existsIn` ([`hard-delete-join-tables.md`](hard-delete-join-tables.md), "Hard
   delete on two join tables").
-- **`form` is text, not a foreign key**, for the reason `ingredients.form` is
+- **`form` is text, not a foreign key**, for the reason a variant's `form` is
   not (DESIGN.md §5).
 
 `spell-ingredients-schema.test.ts` proves every refusal by its

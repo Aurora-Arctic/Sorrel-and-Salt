@@ -16,14 +16,18 @@ What follows describes all three as built.
 
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
-  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, `form`, `formId` (MB.165; below), the generated `canonicalKey`, the correspondence
+  ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, the generated `identityKey` (MB.216; below), the correspondence
   columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), + audit. `name` is the display label —
   what it's called here — and stays freely relabellable, because identity
-  moved off it onto `canonicalName`/`nomenclature`/`form`. Of the
+  moved off it onto the formal name, `canonicalName` and its `nomenclature`.
+  The row has no form: each form an ingredient comes in is a row of
+  `ingredient_variants` beneath it (MB.216, below). The database still holds
+  the old model's `form`, `form_id` and `canonical_key` columns, undeclared
+  and read or written by nothing, until MB.223 drops them (below). Of the
   correspondences only `elements` is constrained: a list of the `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
-  the exact opposite of `form`, and the reason the two are easy to confuse
+  the exact opposite of a variant's `form`, and the reason the two are easy to confuse
   but never interchangeable. `planets`, `zodiacSigns` and
   `colors` are native `text[]` columns, one of the things SQLite could not
   have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
@@ -117,15 +121,18 @@ IMMUTABLE, which Postgres requires of anything inside a `GENERATED ALWAYS AS
 That's also why `form` had to lose its `pgEnum`: casting to an enum type
 raises an immutability question a plain `text` column doesn't, so relaxing
 `form` to text is what makes this generated column legal at all. Folding
-`form` into the key, rather than keying on the formal name alone, is what
-lets _Valeriana officinalis_ root and leaf exist as two separate identities.
+`form` into the key, rather than keying on the formal name alone, was what
+let _Valeriana officinalis_ root and leaf exist as two separate identities,
+until MB.216 made them one entry with two variants (below).
 
 **Three CHECKs ship with the table**, named
 `ingredients_nomenclature_declares_canonical_name` (the kind↔name CHECK above),
 `ingredients_canonical_name_not_blank` and `ingredients_form_not_blank`. The
 two non-blank checks exist because `btrim(x) <> ''` is what the kind↔name CHECK
 cannot say for itself: `canonical_name = '   '` satisfies "not null" while
-contributing nothing to the identity key. Their expressions, and the
+contributing nothing to the identity key. `ingredients_form_not_blank` went undeclared with its column in MB.222 and
+stays in the database until MB.223 drops it; a variant's form has its own,
+`ingredient_variants_form_not_blank`. The expressions, and the
 generated column's, are written as literal SQL rather than interpolated
 Drizzle columns, and transcribe DESIGN.md §5's SQL verbatim. The generated
 column has no choice — it names columns of the table whose column object is
@@ -182,28 +189,31 @@ partiality to the schema file's. What stays in
 index refuses that the others do not: identity in the compendium, identity
 and the folded label per workspace, and the slug per tier (MB.226).
 
-**`ingredients.form` is `text`, and deliberately not a foreign key to
-`ingredient_forms`.** To a coven the curated table is an autofill vocabulary,
-not a constraint: a foreign key would force identity to key on a surrogate id
-and make an uncurated value like `rhizome` unwritable until an admin curates
-it first. `ingredients-schema.test.ts` asserts the table's own foreign keys
-are its workspace and `form_id` and nothing else, since that is the property
-the whole free-text design rests on. **A pick is recorded beside
-the text** (MB.165): `ingredients.form_id`, a nullable foreign key to
-`ingredient_forms`, set only when a member picked a curated row, never
-resolved from typed text, and held to a `form` by
-`ingredients_form_id_has_form`. It is outside `canonicalKey`, so two entries
-with one formal name, one picked as each Wax, are still one identity, and a
-link to a soft-deleted form reads as no link, the text staying. A save
+**A variant's `form` is `text`, and deliberately not a foreign key to
+`ingredient_forms`.** It was the ingredient row's own `form` until MB.222,
+for the same reason. To a coven the curated table is an autofill vocabulary,
+not a constraint: a foreign key would make an uncurated value like `rhizome`
+unwritable until an admin curates it first. `ingredients-schema.test.ts`
+asserts the ingredient's own foreign keys are its workspace and nothing else,
+since that is the property the whole free-text design rests on. **A pick is
+recorded beside the text** (MB.165): a variant's `form_id`, a nullable foreign
+key to `ingredient_forms`, set only when a member picked a curated row, never
+resolved from typed text. A variant's `form` is `NOT NULL`, so a pick always
+stands beside its text and needs no CHECK of its own (the ingredient row's
+`ingredients_form_id_has_form` held its `form_id` to a `form` until MB.222;
+the database keeps it until MB.223). The pick is outside
+`ingredient_variants_form_unique`, which folds the text, so two forms of one
+ingredient, one picked as each Wax, still fold to one form, and a link to a
+soft-deleted form reads as no link, the text staying. A save
 writes a pick only of a curated form, live under a live group, beside text
 folding to its name and written in its spelling; anything else is refused
-beside `formId` or `form`, and a save sending no `formId` clears the column
+beside the variant's `formId` or `form`, and a save sending no `formId` clears the column
 and keeps the text (MB.167). The deities
 take the same model in `ingredient_deities`, above, so a vocabulary a member
 writes is text with an optional link to the curated row picked.
 
 **The compendium tier is held to the vocabularies, by the service (MB.162).**
-A compendium entry's `form` and each of its deities is a pick of a live
+Each of a compendium entry's forms and each of its deities is a pick of a live
 curated row — a form under a live group, a deity under a live tradition —
 held or not, so a curated value typed rather than picked is refused as an
 uncurated one is (MB.167, which moved the rule onto the pick). Its `planets`
@@ -212,8 +222,8 @@ and `zodiac_signs` each name one, matched as the suggestions fold,
 spelling. `createCompendiumEntry` and `updateCompendiumEntry` enforce it after
 the parse, the picks through `resolvePicks` and the planets and signs through
 `curatedSpellings` in `vocabulary`, and refuse a value as a `ValidationError`
-at `['form']` or `['formId']`, or `['planets', i]`, `['zodiacSigns', i]` or
-`['deities', i]` at the entry sent
+at `['variants', i, 'form']` or `['variants', i, 'formId']`, or
+`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
 ([`../validation.md`](../validation.md), "The two ingredient variants"). Not
 Zod, since the check reads the database, and not a key or a CHECK, since the
 columns are shared with the coven tier, which keeps free text. Deleting a
@@ -322,7 +332,7 @@ keeps the order chosen, and nothing sorts it.
   as none stands behind any list; it ANDs onto the compendium read's other
   predicates over one tier.
 
-**MB.215: identity moves onto the formal name alone, and each form becomes a variant.** DESIGN.md §5 now keys an ingredient on `identity_key`, `lower(coalesce(canonical_name, name))`, unique per tier, and holds each form it comes in as a row of `ingredient_variants` beneath it, one live row per ingredient and folded form, so Rosemary the herb and Rosemary the oil become one entry with two variants. A variant adds to its ingredient and never overrides it, and carries its own description, safety notes, correspondences, categories, substitutes and references, while deities and folk names stay on the ingredient ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)). This file describes the model as built until that lands: MB.216 adds the table, fills one variant from each row's form and adds `identity_key` with its two unique indexes beside `canonical_key`; MB.220 moves the identity finder, the collision mapping and the slug onto it; MB.222 stops reading `form` and `form_id`; and MB.223 drops `canonical_key`, `form`, `form_id`, their two CHECKs and the indexes over them, and gives this file its final wording. A variant's `form` stays text and not a foreign key, for the reason above: the curated vocabulary remains an autofill.
+**MB.215: identity moves onto the formal name alone, and each form becomes a variant.** DESIGN.md §5 now keys an ingredient on `identity_key`, `lower(coalesce(canonical_name, name))`, unique per tier, and holds each form it comes in as a row of `ingredient_variants` beneath it, one live row per ingredient and folded form, so Rosemary the herb and Rosemary the oil become one entry with two variants. A variant adds to its ingredient and never overrides it, and carries its own description, safety notes, correspondences, categories, substitutes and references, while deities and folk names stay on the ingredient ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)). This file follows the model as each step lands: MB.216 added the table, filled one variant from each row's form and added `identity_key` with its two unique indexes beside `canonical_key`; MB.220 moved the identity finder, the collision mapping and the slug onto it; MB.222 stopped reading and writing `form` and `form_id` and undeclared them, with their two CHECKs, the pick's foreign key and `ingredients_compendium_form_id_idx`, without running `db:generate`, so the database keeps them all, listed in `tests/db/schema-drift.test.ts`'s `PENDING_DROPS` with `droppedBy: 'MB.223'`; and MB.223 drops `canonical_key`, `form`, `form_id`, their two CHECKs and the indexes over them, and gives this file its final wording. A variant's `form` stays text and not a foreign key, for the reason above: the curated vocabulary remains an autofill.
 
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
@@ -332,8 +342,8 @@ keeps the order chosen, and nothing sorts it.
 ingredient is a row of `ingredient_variants`
 (`src/modules/ingredients/schema/ingredient-variants.ts`, migration
 `0061_ingredient-variants.sql`): `ingredient_id`, `form` (text, non-blank by
-`ingredient_variants_form_not_blank`), `form_id` (the curated pick, as on
-`ingredients`), `description`, `safety_notes`, the four lists, and the six
+`ingredient_variants_form_not_blank`), `form_id` (the curated pick, as
+`ingredients.form_id` was), `description`, `safety_notes`, the four lists, and the six
 audit columns, with its own `set_updated_at` trigger.
 `ingredient_variants_form_unique` holds one live row per ingredient and
 `lower(btrim(form))`, the fold `canonical_key` gave the form.

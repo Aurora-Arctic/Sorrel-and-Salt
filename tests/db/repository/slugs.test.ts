@@ -23,11 +23,7 @@ beforeEach(async () => {
 });
 
 const add = (name: string, overrides: Parameters<typeof makeIngredient>[0] = {}) =>
-  insertIngredient(
-    sql,
-    makeIngredient({ name, nomenclature: 'none', form: null, ...overrides }),
-    A.id,
-  );
+  insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 
 /** A retirement written by the raw client, as the entry's own scope holds it. */
 async function retire(

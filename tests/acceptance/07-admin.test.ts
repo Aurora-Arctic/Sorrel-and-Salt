@@ -8,7 +8,6 @@ import {
   deleteCompendiumEntry,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
-import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import {
   createAstrologyValue,
   createCategory,
@@ -38,7 +37,12 @@ import { A, B, C, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { curatedFormId } from '../support/db/curated-ids';
 import { insertIngredient } from '../support/db/insert-ingredient';
-import { type IngredientFixture, makeIngredient } from '../support/fixtures';
+import {
+  type IngredientFixture,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from '../support/fixtures';
 import type { Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2), the category
@@ -53,16 +57,29 @@ useTestDatabase((client) => {
 
 /**
  * The fixture as the shared Zod input: everything but the tier and the
- * category names, its form picked from the curated row it names, as the
- * admin's form picks one (MB.167).
+ * category names, each form picked from the curated row it names, as the
+ * admin's form picks one (MB.167) — so a fixture here states curated forms.
  */
-async function inputOf(fixture: IngredientFixture): Promise<CompendiumIngredientInput> {
-  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+async function inputOf(
+  fixture: IngredientFixture,
+): Promise<Parameters<typeof createCompendiumEntry>[1]> {
+  const {
+    workspaceId: _tier,
+    categories: _categories,
+    substitutes,
+    deities,
+    variants,
+    ...input
+  } = fixture;
   return {
     ...input,
-    formId: input.form == null ? null : await curatedFormId(sql, input.form),
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
+    variants: await Promise.all(
+      variants.map(async (variant) =>
+        variantInput(variant, { formId: await curatedFormId(sql, variant.form) }),
+      ),
+    ),
   };
 }
 
@@ -105,7 +122,7 @@ async function membershipRole(userId: string): Promise<string | undefined> {
 
 describe('Story 17: Be prevented from editing compendium entries.', () => {
   it('refuses an update and a delete from the owner, a member and a viewer of a coven alike, and the entry stays as it was', async () => {
-    const fixture = makeIngredient();
+    const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })] });
     const id = await insertIngredient(sql, fixture, E.id);
     const before = await entryRow(id);
 
@@ -144,7 +161,11 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     // Why each write could have been refused: E's row, not only the session, says admin.
     expect(await siteRole(E.id)).toBe('admin');
 
-    const fixture = makeIngredient({ name: 'Testcap', nomenclature: 'fungal' });
+    const fixture = makeIngredient({
+      name: 'Testcap',
+      nomenclature: 'fungal',
+      variants: [makeVariant({ form: 'Mushroom' })],
+    });
     const entry = await createCompendiumEntry(admin, await inputOf(fixture));
     expect(await entryRow(entry.id)).toMatchObject({
       name: 'Testcap',

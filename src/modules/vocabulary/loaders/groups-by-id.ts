@@ -23,7 +23,7 @@ export const ingredientFormGroupsById = definePublicLoader<string, IngredientFor
 export const deityTraditionsById = definePublicLoader<string, DeityTraditionRow>(deityTraditionsOf);
 
 /**
- * `Ingredient.formChoice`, batched: the curated form behind each pick on a
+ * `IngredientVariant.formChoice`, batched: the curated form behind each pick on a
  * page, null for one no longer curated (MB.167).
  */
 export const ingredientFormsById = definePublicLoader<string, IngredientFormValueRow | null>(

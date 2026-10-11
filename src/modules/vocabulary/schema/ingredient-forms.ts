@@ -12,11 +12,11 @@ export const ingredientFormGroups = pgTable(
   (table) => vocabularyIndexes('ingredient_form_groups', table, { trigram: false }),
 );
 
-// The vocabulary behind `ingredients.form`, and deliberately not a foreign key
-// target for that text (ingredients-schema.test.ts asserts so): `groupId`
-// can be a key because only an admin writes it, `ingredients.form` stays text
-// because a member must write `rhizome` before anyone curates it. A pick is
-// keyed beside the text, as `ingredients.form_id` (MB.165). The slug is unique
+// The vocabulary behind `ingredient_variants.form`, and deliberately not a
+// foreign key target for that text: `groupId` can be a key because only an
+// admin writes it, a variant's `form` stays text because a member must write
+// `rhizome` before anyone curates it. A pick is keyed beside the text, as
+// `ingredient_variants.form_id` (MB.165, MB.222). The slug is unique
 // globally rather than per group, and the display name is deliberately
 // unindexed: two live forms may both be "Wax", and the autofill tells them
 // apart by group (claude-docs/db/form-vocabulary-seed.md, "The form vocabulary

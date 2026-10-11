@@ -30,7 +30,7 @@ import {
   insertVariant,
 } from '../../support/db/insert-ingredient';
 import { insertReference, insertVariantReferenceLink } from '../../support/db/insert-reference';
-import { makeIngredient } from '../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
 
@@ -146,11 +146,14 @@ describe('findCompendiumPage', () => {
 
   describe('search', () => {
     beforeEach(async () => {
+      // No forms: the search reaches a form too (MB.218), and the fixture's
+      // default `Testform` would answer a `testoil` query below.
       await add('Fixture Mugwort', {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura mugwortis',
+        variants: [],
       });
-      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'] });
+      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'], variants: [] });
     });
 
     it('matches the display name, case-insensitively', async () => {
@@ -478,18 +481,57 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // The text, on any of an entry's live forms (MB.222): an entry with two
+  // forms is found under either, and once.
   describe('form', () => {
     beforeEach(async () => {
-      await add('Fixture Herb', { form: 'herb' });
-      await add('Fixture Root', { form: 'root' });
+      await add('Fixture Both', {
+        variants: [makeVariant({ form: 'Fixture Herb' }), makeVariant({ form: 'Fixture Oil' })],
+      });
+      await add('Fixture Root', { variants: [makeVariant({ form: 'Fixture Root' })] });
+      // Its oil dropped, its root kept.
+      const dropped = await add('Fixture Dropped', {
+        variants: [makeVariant({ form: 'Fixture Root' }), makeVariant({ form: 'Fixture Oil' })],
+      });
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where ingredient_id = ${dropped} and form = 'Fixture Oil'`;
     });
 
-    it('matches the form folded, as canonical_key folds it', async () => {
-      expect(await namesOf({ form: ' HERB ' })).toEqual(['Fixture Herb']);
+    it('finds an entry under each of its live forms, folded on both sides, and not under a dropped one', async () => {
+      // Why Fixture Dropped could have been found by its oil: the row is still there.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_variants where form = 'Fixture Oil'`;
+      expect(count).toBe(2);
+
+      expect(await namesOf({ form: ' fixture HERB ' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ form: 'FIXTURE OIL' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ form: 'fixture root' })).toEqual(['Fixture Dropped', 'Fixture Root']);
     });
 
-    it('combines with search', async () => {
-      expect(await namesOf({ query: 'fixture', form: 'root' })).toEqual(['Fixture Root']);
+    it('combines with search, under either form', async () => {
+      expect(await namesOf({ query: 'both', form: 'fixture herb' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture oil' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture root' })).toEqual([]);
+    });
+
+    // A search matching both of an entry's forms is still one row, so the
+    // count reads what the page holds.
+    it('counts what the page holds, alone and with a search', async () => {
+      for (const filter of [
+        { form: 'fixture oil' },
+        { form: 'fixture root' },
+        { query: 'fixture', form: 'fixture oil' },
+        { query: 'fixture', form: 'fixture root' },
+      ]) {
+        const page = await pageOf(filter, { first: 100 });
+        // Precondition: the page holds rows for the count to agree with.
+        expect(page.edges.length, JSON.stringify(filter)).toBeGreaterThan(0);
+        expect(await countFor(filter, page), JSON.stringify(filter)).toEqual({
+          totalCount: page.edges.length,
+          countBefore: 0,
+        });
+      }
     });
   });
 
@@ -509,31 +551,29 @@ describe('findCompendiumPage', () => {
     });
 
     beforeEach(async () => {
-      await add('Fixture Picked', { form: 'Herb', formId: herb });
-      // Its row and first form pick the root; its second form picked the herb.
-      const second = await add('Fixture Second', { form: 'Root', formId: root });
-      await insertVariant(sql, second, { form: 'Herb', formId: herb }, A.id);
-      await add('Fixture Typed', { form: 'Herb' });
-      await add('Fixture Coven', { form: 'Herb', formId: herb, workspaceId: WORKSPACE_W_ID });
-      const gone = await add('Fixture Gone', { form: 'Herb', formId: herb });
+      const picked = (form: string, formId?: string) =>
+        makeVariant(formId === undefined ? { form } : { form, formId });
+      await add('Fixture Picked', { variants: [picked('Herb', herb)] });
+      // Its first form picks the root; its second picked the herb.
+      await add('Fixture Second', { variants: [picked('Root', root), picked('Herb', herb)] });
+      await add('Fixture Typed', { variants: [picked('Herb')] });
+      await add('Fixture Coven', { variants: [picked('Herb', herb)], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { variants: [picked('Herb', herb)] });
       await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
       // Its root kept and its herb dropped.
-      const dropped = await add('Fixture Dropped', { form: 'Root', formId: root });
-      const herbOf = await insertVariant(sql, dropped, { form: 'Herb', formId: herb }, A.id);
+      const dropped = await add('Fixture Dropped', { variants: [picked('Root', root)] });
+      const herbOf = await insertVariant(sql, dropped, picked('Herb', herb), A.id);
       await sql`
         update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${herbOf}`;
     });
 
     it('lists the live compendium entries holding a live variant that picked the form, by name, and no other', async () => {
       // Why the others could have been listed: each holds a variant of the
-      // form's text, all but one picking it, and the second form is what
-      // holds Fixture Second, its row picking the root.
+      // form's text, all but one picking it.
       const [{ count }] = await sql`
         select count(distinct ingredient_id)::int as count from ingredient_variants
         where form = 'Herb' and form_id is not null`;
       expect(count).toBe(5);
-      const [row] = await sql`select form_id from ingredients where name = 'Fixture Second'`;
-      expect(row.form_id).toBe(root);
 
       expect(await namesOf({ formId: herb })).toEqual(['Fixture Picked', 'Fixture Second']);
       await expect(findCompendiumCount({ formId: herb }, undefined)).resolves.toEqual({
@@ -542,8 +582,10 @@ describe('findCompendiumPage', () => {
       });
     });
 
+    // Each arm reads any of the entry's live forms: Fixture Second picked the
+    // root on one and spells the herb on another; Fixture Dropped's herb is gone.
     it('combines with the form text', async () => {
-      expect(await namesOf({ formId: root, form: 'herb' })).toEqual([]);
+      expect(await namesOf({ formId: root, form: 'herb' })).toEqual(['Fixture Second']);
       expect(await namesOf({ formId: root, form: 'root' })).toEqual([
         'Fixture Dropped',
         'Fixture Second',
@@ -686,7 +728,7 @@ describe('findCompendiumCount', () => {
       await add(`Fixture Mugwort ${n}`, { categories: n % 2 === 1 ? ['Protection'] : [] });
     }
     for (let n = 1; n <= 5; n += 1) {
-      await add(`Fixture Nettle ${n}`, { form: 'root' });
+      await add(`Fixture Nettle ${n}`, { variants: [makeVariant({ form: 'Fixture Root' })] });
     }
     const gone = await add('Fixture Mugwort 8', { categories: ['Protection'] });
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
@@ -714,7 +756,7 @@ describe('findCompendiumCount', () => {
     const [{ count }] = await sql`
       select count(*)::int as count from ingredients
       where id in ${sql(excluded)}
-        and form = 'herb'
+        and exists (select 1 from ingredient_variants where ingredient_id = ingredients.id)
         and exists (select 1 from ingredient_categories where ingredient_id = ingredients.id)`;
     expect(count).toBe(2);
   });
@@ -728,7 +770,7 @@ describe('findCompendiumCount', () => {
   });
 
   it('counts by form', async () => {
-    await expectCountsToMatchTheWalk({ form: 'herb' }, 7);
+    await expectCountsToMatchTheWalk({ form: 'testform' }, 7);
   });
 
   // Read at pg_trgm's own 0.6, the count would find none of these rows while
@@ -840,7 +882,7 @@ describe('a variant read under its ingredient', () => {
   it("answers a coven's variants under its own coven's proof only, by direct id", async () => {
     // Why the refusals below could have passed wrongly: the variants are
     // there, and the right proof reaches them by this id.
-    expect(await formsOf([inW], localId)).toEqual(['Testoil', 'herb']);
+    expect(await formsOf([inW], localId)).toEqual(['Testform', 'Testoil']);
 
     expect(await formsOf([], localId)).toEqual([]);
     expect(await formsOf([inX], localId)).toEqual([]);
@@ -906,7 +948,7 @@ describe('findCompendiumEntryByIdentity', () => {
     entryId = await add('Testwort', {
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      form: 'root bark',
+      variants: [makeVariant({ form: 'Fixture Bark' })],
     });
   });
 
@@ -928,8 +970,8 @@ describe('findCompendiumEntryByIdentity', () => {
     const identity = { name: 'Testleaf', canonicalName: null };
     // Why nothing could still be found: both rows hold the key, one in a coven
     // and one deleted, and a live compendium row holding it is found.
-    const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, form: null });
-    const deletedId = await add('Testleaf', { form: null });
+    const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, variants: [] });
+    const deletedId = await add('Testleaf', { variants: [] });
     await expect(findCompendiumEntryByIdentity(identity)).resolves.toMatchObject({
       id: deletedId,
     });
@@ -1104,6 +1146,9 @@ describe('write.carryDeityRename', () => {
 // A curated form's rename carried onto the compendium's variants picking it
 // (M5.6a, MB.220): the text, in place, and nothing of the entry's address.
 describe('write.carryFormRename', () => {
+  const picked = (form: string, formId?: string) => [
+    makeVariant(formId === undefined ? { form } : { form, formId }),
+  ];
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
   const variantOf = async (id: string) =>
     (await sql`select * from ingredient_variants where id = ${id}`)[0];
@@ -1126,8 +1171,8 @@ describe('write.carryFormRename', () => {
   });
 
   it('renames every live compendium variant picking the form in place, stamped by the session', async () => {
-    const one = await add('Testwort', { form: 'Herb', formId: herb });
-    const two = await add('Testleaf', { form: 'Root', formId: root });
+    const one = await add('Testwort', { variants: picked('Herb', herb) });
+    const two = await add('Testleaf', { variants: picked('Root', root) });
     const second = await insertVariant(sql, two, { form: 'Herb', formId: herb }, A.id);
     const first = await firstVariantOf(one);
     const before = await Promise.all([rowOf(one), rowOf(two)]);
@@ -1142,28 +1187,25 @@ describe('write.carryFormRename', () => {
       updated_by: E.id,
       deleted_at: null,
     });
-    // The row mirrors its first form until MB.222, so the row picking the herb
-    // follows, its slug kept; the row picking the root is untouched.
-    expect(await rowOf(one)).toMatchObject({ form: 'Herba', slug: before[0].slug });
-    expect(await rowOf(two)).toEqual(before[1]);
+    // A rename moves no entry's address, and writes no ingredient row.
+    expect(await Promise.all([rowOf(one), rowOf(two)])).toEqual(before);
   });
 
   // Why each could have been written: each holds a variant spelling the form,
   // and all but the typed one and the other form's picked it.
   it("leaves a coven's variant, a deleted entry's, a dropped variant, a typed form and another form's pick as they were", async () => {
     const coven = await add('Testwort', {
-      form: 'Herb',
-      formId: herb,
+      variants: picked('Herb', herb),
       workspaceId: WORKSPACE_W_ID,
     });
-    const gone = await add('Testgone', { form: 'Herb', formId: herb });
+    const gone = await add('Testgone', { variants: picked('Herb', herb) });
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-    const dropping = await add('Testdrop', { form: 'Root', formId: root });
+    const dropping = await add('Testdrop', { variants: picked('Root', root) });
     const dropped = await insertVariant(sql, dropping, { form: 'Herb', formId: herb }, A.id);
     await sql`
       update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
-    const typed = await add('Testtyped', { form: 'Herb' });
-    const other = await add('Testroot', { form: 'Root', formId: root });
+    const typed = await add('Testtyped', { variants: picked('Herb') });
+    const other = await add('Testroot', { variants: picked('Root', root) });
     const variants = [
       await firstVariantOf(coven),
       await firstVariantOf(gone),

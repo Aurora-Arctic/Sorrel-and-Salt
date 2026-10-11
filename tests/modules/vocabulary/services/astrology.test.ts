@@ -104,7 +104,7 @@ describe.each(VOCABULARIES)('$field', ({ field, table, column }) => {
   ) =>
     insertIngredient(
       sql,
-      makeIngredient({ name, nomenclature: 'none', form: null, [field]: values, ...overrides }),
+      makeIngredient({ name, nomenclature: 'none', variants: [], [field]: values, ...overrides }),
       A.id,
     );
 

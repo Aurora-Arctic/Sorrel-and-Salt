@@ -108,16 +108,16 @@ Rules both variants enforce:
   `none` with a formal name is refused, any of the five named kinds without
   one is refused, and `unknown` takes either (MB.161). Both are pathed to `canonicalName`, so the CHECK is never
   what a user sees.
-- **`canonicalName` and `form`** are optional and trimmed, and a blank one
-  becomes `null` — which the database CHECKs on both columns accept, so a
-  blank never reaches them. Neither has a format regex, and neither schema
-  checks `form` against the curated vocabulary: on a coven's ingredient it is
-  an autofill and not a constraint, and the compendium's check reads the
-  database, so it is the service's (below). A `formId`, the curated form
-  picked (MB.167), must be a uuid, refused at `['formId']`, and needs a
-  `form` beside it, refused at `['form']`; whether it names a curated form,
-  and whether `form` folds to that form's name, read the database, so they
-  are the service's too (DESIGN.md §5, `ingredient_forms`).
+- **`canonicalName`** is optional and trimmed, and a blank one becomes
+  `null` — which the database CHECK on the column accepts, so a blank never
+  reaches it. It has no format regex. The ingredient has no form of its own:
+  each form is an entry of `variants` (below, and MB.222), and neither schema
+  checks a variant's `form` against the curated vocabulary: on a coven's
+  ingredient it is an autofill and not a constraint, and the compendium's
+  check reads the database, so it is the service's (below). Whether a
+  variant's `formId`, the curated form picked (MB.167), names a curated form,
+  and whether its `form` folds to that form's name, read the database too
+  (DESIGN.md §5, `ingredient_forms`).
 - **Folk names, within one ingredient.** `name` may not also be one of the
   same ingredient's folk names, pathed to `name`. One ingredient listing the
   same folk name twice, such as `["Cat's Claw", "cat's claw"]`, is refused at
@@ -189,8 +189,8 @@ Rules both variants enforce:
   a list, so a list is never silently stored doubled. An entry is never
   reordered, since each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
-- **Planets and zodiac signs are suggested rather than enforced**, like
-  `form` and `deities`: anything trimmed and non-blank passes either schema.
+- **Planets and zodiac signs are suggested rather than enforced**, like a
+  variant's `form` and `deities`: anything trimmed and non-blank passes either schema.
   The project serves a wide range of practices, and any closed list refuses
   some of them. The suggestions are the admin-curated `planets` and
   `zodiac_signs` vocabularies
@@ -200,14 +200,14 @@ Rules both variants enforce:
 
 **A compendium entry holds curated values alone** (MB.162). After
 `CompendiumIngredientInput` parses, `createCompendiumEntry` and
-`updateCompendiumEntry` hold `form` and each deity to a pick of a live
+`updateCompendiumEntry` hold each variant's `form` and each deity to a pick of a live
 curated row — a form under a live group, a deity under a live tradition —
 held or not, so a curated value typed rather than picked is refused as an
 uncurated one is (MB.167, which moved the rule onto the pick). Each entry of
 `planets` and `zodiacSigns` is matched against the live curated rows, folded
 as the suggestions fold, `lower(btrim(value)) = lower(name)`. Each value is
 written in its row's spelling. A value refused is a `ValidationError` beside
-it, `['form']` or `['formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
+it, `['variants', i, 'form']` or `['variants', i, 'formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
 entry had in what was sent, blanks counted, since the parse drops blank
 entries and the form numbers its rows by what it sent. Every such value is
 refused in one error, and each message names the list to add it to: `No
@@ -231,14 +231,15 @@ at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
 one form of the ingredient it links: an id, and only beside a link, refused at
 `['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
 form reads the database, so it is the service's. With no `variants` sent the
-list is left absent, and the service reads the top-level `form` as the one
-form until MB.222.
+list is left absent, and the service reads it as no form, as an absent child
+list always reads. The GraphQL input types require it (MB.222), so through the
+API a client sends `[]` for none.
 
 The schemas describe a whole ingredient, as the form submits it on create and
 on edit. A partial update would need its own schema: the local variant's
 default would otherwise overwrite a kind the input merely left out.
 
-**MB.215: both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 now adds are an ingredient's forms, and MB.219 gives each schema them as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. Until MB.222 the top-level `form` and `formId` still parse, and become one variant when `variants` is absent ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: both schemas take a list of forms.** "The two ingredient variants" here are the two input schemas, a coven's and the compendium's; the _variants_ DESIGN.md §5 now adds are an ingredient's forms, and MB.219 gives each schema them as a list, `variants`. Each entry is a form, its pick and the fields a form carries, through `requiredText`, `optionalText` and `RowId`: two entries folding to the same form are refused at `['variants', i, 'form']`; a form's substitutes, references and categories take the rules above, pathed beneath it (`['variants', i, 'substitutes', j]`); and a substitute's `substituteVariantId` must belong to its `substituteId`. The compendium's form rule moves with it: each variant's form must be a curated pick, refused at `['variants', i, 'form']` or `['variants', i, 'formId']`. Until MB.222 the top-level `form` and `formId` still parsed, and became one variant when `variants` was absent. MB.222 removed both, and the top-level rule that a picked `formId` stands beside its `form` text, refused at `['formId']` or `['form']`, went with them: every form rule is now per variant ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Stock
 

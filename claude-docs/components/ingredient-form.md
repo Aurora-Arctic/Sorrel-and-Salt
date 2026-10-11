@@ -47,8 +47,8 @@ planets, zodiac signs, colours, deities, substitute ingredients, categories,
 safety notes and references, then the variants, each a form with its own
 description, safety notes, elements, planets, zodiac signs, colours,
 categories, substitutes and references — every field `IngredientInput`
-takes but the top-level `form` and `formId`, which MB.222 retires
-(["The variants"](#the-variants)).
+takes (["The variants"](#the-variants)). The ingredient has no form of its
+own: its forms are its variants (MB.222).
 
 - **Name is the one field always required**, as story 29's stub needs, and
   says so twice: `aria-required` on the control for a screen reader, and a
@@ -139,16 +139,16 @@ takes but the top-level `form` and `formId`, which MB.222 retires
   group's name, "Folk Names About Folk Names". `substitutes` is labelled
   "Substitute Ingredients", its box "Substitute Ingredient". A substitute
   entry is typed text, or a link to an ingredient (MB.140): `{ value, link }`,
-  `value` the ingredient's label and `link` its id, formal name, form,
-  description and tier. A linked
+  `value` the ingredient's label and `link` its id, formal name, `forms` (the
+  forms it comes in, `[]` for none), description and tier. A linked
   entry's pill reads as the label with its formal name, "Mugwort (Artemisia
   vulgaris)", and so does its × and any error naming it, since two
   ingredients can share a label; one with no formal name reads as its label.
   What the pill leaves out is its `detail`, from `entryDetail` (MB.164): the
-  form, which with the formal name is the ingredient's identity, so two
-  pills reading alike are told apart; "Compendium entry" or "This coven’s
-  entry", as its lookup row said; and the description, "Dried leaf ·
-  Compendium entry — A fixture herb." It shows in the pill's tooltip and
+  form of it picked, when one is, or else every form it comes in, so two
+  pills reading alike, a compendium entry and a coven's copy, are told apart;
+  "Compendium entry" or "This coven’s entry", as its lookup row said; and the
+  description, "Dried leaf, Oil · Compendium entry — A fixture herb." It shows in the pill's tooltip and
   describes its ×, as the combobox's "An entry" sets out; a typed entry has
   none. The pill itself stays as it reads, the owner's call.
   `toInput` sends a link as `{ ingredientId }` and typed text as `{ name }`
@@ -266,10 +266,11 @@ first, so the tier is a note and not a heading, which would reorder them. Each
 row carries its ingredient's id as its key, since a compendium entry and a
 coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
 its `link`: picking one adds an entry linked to that ingredient, reading as
-the label and formal name, its tooltip telling its form, tier and
+the label and formal name, its tooltip telling its forms, tier and
 description (MB.164), and sent as `{ ingredientId }`. The lookup asks for
-each ingredient's `form` and `description` for that tooltip alone; the row
-shows neither. The typed row,
+each ingredient's `description` for that tooltip alone, and its forms
+through `variants`, which the tooltip and the ranking read; the row shows
+neither. The typed row,
 Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 **A lookup leaves out what its list holds** (MB.174), as the Element
 multi-select and the References search do, through the same `repeatOf`:
@@ -285,8 +286,8 @@ and Enter refuse one.
 
 A compendium entry's substitutes may link only the compendium, so on the
 compendium the box reads `compendium(query)` in their place,
-`useCompendiumSubstitutes`, each row a compendium entry with its form as its
-note, and leaves out the entry being edited, since nothing is its own
+`useCompendiumSubstitutes`, each row a compendium entry with its forms,
+joined, as its note, and leaves out the entry being edited, since nothing is its own
 substitute.
 
 ### The categories
@@ -515,7 +516,7 @@ the row's id, the name picked, its group and its description (MB.169).
 
 An edit is given its picks back in its values: the compendium page reads
 the curated form with its group, and each picked deity with its tradition,
-as `Ingredient.formChoice` and `IngredientDeity.deity` resolve them
+as `IngredientVariant.formChoice` and `IngredientDeity.deity` resolve them
 (MB.167; ["On the compendium"](#on-the-compendium)). A pick retired since
 then reads as typed text.
 
@@ -624,13 +625,12 @@ and the schema take: an unanswered select becomes `null`, a list entry
 becomes its text, and the boxes are left behind. A pick goes as its row's id
 (MB.169):
 
-- The forms go as `variants`, never as the top-level `form`: each variant
+- The forms go as `variants`, the only place a form is sent: each variant
   with every field but `id` present, `""` or `[]` for none, since an entry
   replaces the form it names (MB.219), its form as its text with `formId`,
   the picked form's id or `""` for typed text, and `id` when an edit opened
-  it. An edit's whole-row update input still declares the top-level `form`
-  and `formId` until MB.222, so the mutation sends each as `""`, which the
-  service reads as none beside the variants.
+  it. Every input type requires the list (MB.222), so a form with none sends
+  `[]`, as story 29's stub does.
 - A deity goes as `{ deityId }` when picked from the curated rows, and as
   `{ name }` when typed.
 - A substitute goes as `{ ingredientId }` when linked, with
@@ -778,17 +778,17 @@ code's, not a test's.
 Both sources go through **`fieldNameOf`**, which turns an issue's path into
 the form's field name:
 
-| Path                           | Field                                                                 |
-| ------------------------------ | --------------------------------------------------------------------- |
-| `['name']`                     | `name`                                                                |
-| `['folkNames', 2]`             | `folkNames.2.value`, the third entry                                  |
-| `['elements', 1]`              | `elements`, the whole control: its chips are not rows                 |
-| `['formId']`                   | `form`, whose box made the pick (MB.169)                              |
-| `['categoryIds', 1]`           | `categoryIds.1`, the second category picked: the picker's (MB.126)    |
-| `['references', 1]`            | `references.1.value`, the second reference's row (MB.154)             |
-| `['references', 1, 'locator']` | `references.1.locator`, its locator                                   |
-| `[]`                           | none: the root alert                                                  |
-| any path it cannot name        | none: the root alert, rather than an unseen error (`drafts` included) |
+| Path                           | Field                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| `['name']`                     | `name`                                                                  |
+| `['folkNames', 2]`             | `folkNames.2.value`, the third entry                                    |
+| `['elements', 1]`              | `elements`, the whole control: its chips are not rows                   |
+| `['variants', 1, 'formId']`    | `variants.1.form`, the variant's Form box, which made the pick (MB.169) |
+| `['categoryIds', 1]`           | `categoryIds.1`, the second category picked: the picker's (MB.126)      |
+| `['references', 1]`            | `references.1.value`, the second reference's row (MB.154)               |
+| `['references', 1, 'locator']` | `references.1.locator`, its locator                                     |
+| `[]`                           | none: the root alert                                                    |
+| any path it cannot name        | none: the root alert, rather than an unseen error (`drafts` included)   |
 
 The resolver returns an entry's issue at the entry (`folkNames.2`). The
 form's resolver wraps `zodResolver` and moves it onto the entry's `value`,
@@ -1024,7 +1024,7 @@ few it needs. It covers:
   remains, cleared inline by changing the kind to Unknown or to None.
 - **Fields**: Name alone marked required, the formal name while a named
   classification is chosen, and no classification for a typed formal name;
-  and `form` as free text, sent as typed — the column's being text rather
+  and a variant's `form` as free text, sent as typed — the column's being text rather
   than a foreign key is
   `tests/modules/ingredients/schema/ingredients-schema.test.ts`'s. A hint behind its info tip is InfoTip's, and a
   list's box, chevron and handle are ListField's and Combobox's.

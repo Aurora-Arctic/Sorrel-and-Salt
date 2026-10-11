@@ -13,7 +13,7 @@ import type { SpellFixture } from '../fixtures/types';
  * nothing checks the id's tier, which is how a test writes the cross-coven
  * link a finder has to withhold. A linked layer lays its ingredient's first
  * live variant (MB.217), which the shared inserter wrote from the fixture's
- * form; an ingredient with none leaves it null, for the CHECK to refuse.
+ * variants; an ingredient with none leaves it null, for the CHECK to refuse.
  * Categories are named as §6 does; a name with no live row is a thrown error
  * naming it.
  */

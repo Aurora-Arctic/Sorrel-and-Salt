@@ -10,7 +10,6 @@ export interface CompendiumNode {
   name: string;
   canonicalName: string | null;
   nomenclature: string;
-  form: string | null;
   isGlobal: boolean;
   folkNames: string[];
   categories: { name: string; group: { name: string; colorDark: string } }[];

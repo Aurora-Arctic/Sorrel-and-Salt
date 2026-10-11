@@ -91,7 +91,7 @@ colour is never the only cue.
   `aria-allowed-role`). The headings say where a value comes
   from, and are true because a compendium entry holds curated values alone
   (MB.162), so every value in use outside the lists is the coven's; a source whose rows carry no `curated`
-  lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since `ingredients.form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
+  lists them flat. The distinction is text, never colour alone. Two same-named rows, "Wax (Animal)" and "Wax (Substance)", are told apart in the list by the group in each label. Both write "Wax", since a variant's `form` stores the string, so after a pick the box tells them apart by its qualifier, the group a caller passes for the row it picked (MB.169; DESIGN.md §5).
 - **Or the source's own buckets** (MB.126). A row carrying a `heading` is
   grouped under it, a category under its group's name, with the same
   `role="group"` and heading as the curated buckets; once any row carries

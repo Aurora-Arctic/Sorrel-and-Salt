@@ -133,7 +133,7 @@ describe('the ingredient fields, on the local variant', () => {
     });
   });
 
-  describe('canonicalName and form', () => {
+  describe('canonicalName', () => {
     // A binomial regex would refuse this (§5, "No format regex").
     it('takes a formal name with no format regex', () => {
       expect(
@@ -142,14 +142,6 @@ describe('the ingredient fields, on the local variant', () => {
           nomenclature: 'botanical',
           canonicalName: "Fixtura testalis 'Hidcote' L.",
         }).success,
-      ).toBe(true);
-    });
-
-    // The curated vocabulary is an autofill, not a constraint: a member writes
-    // an uncurated value before an admin does.
-    it('takes a form the curated vocabulary does not hold', () => {
-      expect(
-        Schema.safeParse({ name: 'Testwort', nomenclature: 'none', form: 'rhizome' }).success,
       ).toBe(true);
     });
   });
@@ -489,7 +481,6 @@ describe('the ingredient fields, on the local variant', () => {
       name: 'Testwort',
       nomenclature: 'botanical',
       canonicalName: 'Fixtura testalis',
-      form: 'root',
       description: 'An invented herb.',
       elements: ['water', 'earth'],
       planets: ['moon', 'Venus'],
@@ -521,39 +512,6 @@ describe('the ingredient fields, on the local variant', () => {
     });
 
     expect(parsed).toMatchObject({ colors: null, folkNames: null });
-  });
-
-  // MB.167: the form a member picked, recorded beside its text (DESIGN.md §5,
-  // `ingredient_forms`). Whether the id names a curated row is the service's.
-  describe('formId', () => {
-    const base = { name: 'Testwort', nomenclature: 'none' };
-    const PICKED = '00000000-0000-4000-8000-0000000000f1';
-
-    it('takes a picked form beside its text', () => {
-      expect(Schema.parse({ ...base, form: 'Wax', formId: PICKED })).toMatchObject({
-        form: 'Wax',
-        formId: PICKED,
-      });
-    });
-
-    it('treats a blank id as no pick', () => {
-      expect(Schema.parse({ ...base, form: 'Wax', formId: '' })).toMatchObject({ formId: null });
-      expect(Schema.parse({ ...base, form: 'Wax' }).formId ?? null).toBeNull();
-    });
-
-    it('refuses an id that is not one, beside it', () => {
-      expect(failedPaths(Schema.safeParse({ ...base, form: 'Wax', formId: 'wax' }))).toEqual([
-        ['formId'],
-      ]);
-    });
-
-    // `ingredients_form_id_has_form` would refuse it; the text field is where
-    // the member sees why.
-    it('refuses a pick with no form text, beside the text', () => {
-      expect(failedPaths(Schema.safeParse({ ...base, form: ' ', formId: PICKED }))).toEqual([
-        ['form'],
-      ]);
-    });
   });
 
   // MB.167: each deity links a curated row or names one (DESIGN.md §5,
@@ -753,15 +711,6 @@ describe('the ingredient fields, on the local variant', () => {
       });
 
       expect(failedPaths(result)).toEqual([['variants', 1, ...path]]);
-    });
-
-    // The transition shim (MB.219 to MB.222): with no list sent, the
-    // top-level `form` is the one form, which the service reads.
-    it('leaves the list absent when none is sent, keeping the top-level form', () => {
-      const parsed = Schema.parse({ ...base, form: 'Herb' });
-
-      expect(parsed.variants ?? null).toBeNull();
-      expect(parsed.form).toBe('Herb');
     });
   });
 });
