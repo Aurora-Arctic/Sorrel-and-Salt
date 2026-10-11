@@ -298,6 +298,8 @@ site tier, `workspace_id IS NULL` spelled for that table alone so that no
 invitation read calls `inCompendium`. It is listed because it spells the
 tier's predicate, and the extraction task leaves it behind.
 
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gains MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers, which MB.218 adds to the list above in its own PR ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+
 ## Where types live
 
 A `type` or `interface` lives in a type-only file, one whose every statement

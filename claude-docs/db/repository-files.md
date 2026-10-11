@@ -25,6 +25,8 @@
 | `tokens.ts`            | `hashToken`, the one place a link's token is hashed, so no caller holds a hash (MB.69)                                                                                                                                                                                                                                                         |
 | `admin-roles.ts`       | The open admin-role-change pause, under the `SiteAdmin` proof (MB.62), the pause ledger's named pause and resume, and the live admins locked for a revoke (MB.59), which `writerFor` spreads into the writer (MB.198)                                                                                                                          |
 
+**MB.215: `ingredient-parent.ts` gains `readableVariantParent`.** MB.218 adds `readableVariantParent(memberships, variantColumn)` beside `readableIngredientParent`: a variant's child row read in its tier, through the variant to its ingredient. It sits in `ingredient-parent.ts` for the same reason, building on `select.ts`'s `existsIn`, and keeps the one-way imports MB.231's lint rule holds. The `ingredient-parent.ts` row above gains it, and the `ingredients.ts` row the finder built on it, `findManyOfVariants`, in MB.218's PR.
+
 **The rest of the folder is internal, and that is enforced rather than
 conventional.** `selectFrom` and `existsIn` are exported from `select.ts`
 because the finders beside them build on them, so the language no longer keeps

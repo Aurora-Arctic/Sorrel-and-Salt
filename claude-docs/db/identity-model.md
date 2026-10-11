@@ -318,6 +318,8 @@ keeps the order chosen, and nothing sorts it.
   as none stands behind any list; it ANDs onto the compendium read's other
   predicates over one tier.
 
+**MB.215: identity moves onto the formal name alone, and each form becomes a variant.** DESIGN.md §5 now keys an ingredient on `identity_key`, `lower(coalesce(canonical_name, name))`, unique per tier, and holds each form it comes in as a row of `ingredient_variants` beneath it, one live row per ingredient and folded form, so Rosemary the herb and Rosemary the oil become one entry with two variants. A variant adds to its ingredient and never overrides it, and carries its own description, safety notes, correspondences, categories, substitutes and references, while deities and folk names stay on the ingredient ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)). This file describes the model as built until that lands: MB.216 adds the table, fills one variant from each row's form and adds `identity_key` with its two unique indexes beside `canonical_key`; MB.220 moves the identity finder, the collision mapping and the slug onto it; MB.222 stops reading `form` and `form_id`; and MB.223 drops `canonical_key`, `form`, `form_id`, their two CHECKs and the indexes over them, and gives this file its final wording. A variant's `form` stays text and not a foreign key, for the reason above: the curated vocabulary remains an autofill.
+
 **Fuzzy matching: one index, and a rule every caller is bound by** has a file of its own: [`fuzzy-matching.md`](fuzzy-matching.md).
 
 **Ingredient slugs** has a file of its own: [`ingredient-slugs.md`](ingredient-slugs.md).
