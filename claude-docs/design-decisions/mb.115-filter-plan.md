@@ -2,6 +2,8 @@
 
 # MB.115: the admin filter row applies on change
 
+**As built (2026-10-12):** the focus restore below is not how it was done. A row drawn in the browser gets fresh `useId` ids, so `useApplyFilter` only marks that the focus is wanted back; the old row reads the focused control as it unmounts (a type-ahead applies on blur, when nothing is focused), and the new row refocuses the control at the same position once the list has arrived. The live account is [`filter-form.md`](../components/filter-form.md).
+
 ## Context
 
 The owner found the admin lists' filter rows awkward. Measured in the workshop (compendium and privilege ledger at 1280, 700 and 375), the causes are: the Filter submit is disabled until something changes and the disabled look is a dashed ghost, so the primary button reads as dead and the quiet Clear outranks it; alone on their line the two buttons stretch to the fields' reach (useActionsLine) and double the row's height; under 28rem only the search, the type-ahead and the buttons go full width, leaving ragged edges; the row ends short of the table and its labels sit 12px left of the column headings; and a switch followed by a submit contradicts Atlassian's and Primer's guidance that a toggle takes effect at once. The three agent reports are in the session scratchpad (`visual-critique.md`, `filter-patterns.md`, `filter-constraints.md`).
