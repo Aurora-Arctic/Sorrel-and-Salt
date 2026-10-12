@@ -2,7 +2,7 @@
 
 `src/components/EmailForm/` — the `/account/email` page's form: the account's
 address, its verification state, and the one field that changes it. Server
-component `src/app/account/email/page.tsx` reads the session, `getMe`, and
+component `src/app/(shell)/account/email/page.tsx` reads the session, `getMe`, and
 `?next=`/`?error=`, and hands the results down as props; this component does
 the rendering and the `setEmail` mutation.
 

@@ -7,7 +7,7 @@ import type { AdminTabbedFrameProps } from './types';
 
 // The admin layout's frame for a story, so the workshop shows a component as
 // an admin page holds it: nine stories drew it by hand before MB.115. Not the
-// app's own `src/app/admin/layout.tsx`, which is a server component that
+// app's own `src/app/(shell)/admin/layout.tsx`, which is a server component that
 // reads the session; this is its markup alone.
 
 /** The `.admin-layout` frame alone, for a story of a piece the frame holds: the nav, a page header. */

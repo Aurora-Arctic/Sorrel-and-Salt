@@ -57,11 +57,12 @@ screenshots. The button is
   padding is `space(3)`, one step more than its top, so Stop is not crowded
   by the rule when it wraps to a row of its own.
 - **Where a pointer can hover, it is fixed over the top of the page and sits
-  under the ThemeToggle** (`z-index: 1` under the toggle's `2`), so pointing
-  at the toggle reaches the toggle and never opens the banner. Its right padding keeps its content clear of the
+  under the corner ThemeToggle** (`layer('banner')`, 11, under the toggle's
+  `layer('toggle')`, 12, and over the shell's bar at `layer('shell')`, 10), so
+  pointing at the toggle reaches the toggle and never opens the banner. Its right padding keeps its content clear of the
   toggle's corner, `$toggle-corner` (3.9rem), the token ThemeToggle reads
-  too, so the two cannot drift (MB.115). The z-indices are raw, as the toggle's is, until MB.124's map of
-  layers.
+  too, so the two cannot drift (MB.115). The layers are `layer()`'s map in `_variables.scss`
+  ([`styling.md`](../styling.md), "The application shell and the layers").
 - **Tucked away until a pointer nears the top.** Where the pointer can hover
   (`@media (hover: hover)`), the banner is fixed to the top and translated up
   so only `space(2)` of it shows: the 3px rule and a sliver above it. An

@@ -36,7 +36,7 @@ parts, and the table passes through them from the server.
   press cannot send a second request. `kind` is the caller's. A filter's is
   always `soft`, through FilterForm's `useApplyFilter`, on every list,
   the three that once filtered by a full load too, since every page under
-  `/admin` runs the guard itself (`src/app/admin/layout.tsx`; MB.115, the
+  `/admin` runs the guard itself (`src/app/(shell)/admin/layout.tsx`; MB.115, the
   owner's call). A pager's `soft` says which its ends take.
   - `soft` pushes the address inside a React transition (`useTransition`).
     Next runs its navigation inside the caller's transition, so `pending`

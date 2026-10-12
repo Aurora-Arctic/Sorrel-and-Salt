@@ -25,7 +25,7 @@ Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabular
 turns the sections into `SectionNav` items (a page at its first tab, its other
 tabs as `matches`, the first page of each later section `apart`) and stays a
 server component; the links are `SectionNav`'s one client part.
-`src/app/admin/layout.tsx` renders the nav above the page, after the guard
+`src/app/(shell)/admin/layout.tsx` renders the nav above the page, after the guard
 has passed, so it appears for admins only
 ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard"). The
 site-wide nav's own Admin entry is AppShell's (MB.7), and is shown to admins
@@ -77,7 +77,7 @@ contents (MB.115, the owner's call): a `section` per entry of
 `ADMIN_SECTIONS`, each with its name as an `h2` and a list of its pages, each
 page a link to its first tab with its one line beneath it, which is the link's
 `aria-describedby` too. It reads the nav's own constant, so the index and
-the nav cannot list different pages. `src/app/admin/page.tsx` renders it
+the nav cannot list different pages. `src/app/(shell)/admin/page.tsx` renders it
 under the heading and a lede, a `<p class="lede">` saying what the area is
 for; `tests/e2e/admin.spec.ts` measures that paragraph against the reading
 measure, so the lede stays a `<p>` in `main`.
@@ -114,7 +114,7 @@ address: none on the index, its own on a page's first tab and on its other
 tabs, and a page's on an address beneath it; and More listing the last two
 pages and naming the current one when it is among them. Which tabs show at
 which width is presentation, the workshop's and the browser's.
-`tests/app/admin/layout.test.tsx` checks the layout renders the nav only
+`tests/app/(shell)/admin/layout.test.tsx` checks the layout renders the nav only
 once the guard resolves, and that the index links every page the nav does,
 in its order. `tests/e2e/admin.spec.ts` checks that an admin sees the nav
 and a non-admin's 403 page carries none of it.

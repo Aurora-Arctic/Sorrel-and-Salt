@@ -113,8 +113,8 @@ for a rule only one kind's rows need.
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
-  page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
-  route group's `@action` slot, built on `AddAction` in `src/app/admin/add-action.tsx`,
+  page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
+  route group's `@action` slot, built on `AddAction` in `src/app/(shell)/admin/add-action.tsx`,
   which takes the dialog's `heading` apart from the button's label, M9.18) and so the page's rather than this
   component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
@@ -212,7 +212,7 @@ filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
 [`filter-form.md`](filter-form.md), "Testing"); its loading state is
 CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
 presentation.
-`tests/app/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
+`tests/app/(shell)/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
 the guard refusing before any read; the first page of 25 read (26, to know of
 a next) and an unreadable cursor read as the first page; every group read on

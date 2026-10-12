@@ -43,6 +43,9 @@ const CreateWorkspaceForm = (): ReactElement => {
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
       router.push(`/coven/${slug}`);
+      // The shell's switcher lists the viewer's covens from the layout, which
+      // a client-side push does not re-run: refresh brings the new one in.
+      router.refresh();
     },
     onError: (failure) => {
       const { field, alert: message } = readGraphqlFailure(failure, ['name']);
@@ -98,9 +101,9 @@ const CreateWorkspaceForm = (): ReactElement => {
             className="btn btn--solid"
             disabled={empty || busy}
             busy={busy}
-            busyLabel="Creating Workspace"
+            busyLabel="Creating Coven"
           >
-            Create Workspace
+            Create Coven
           </BusyButton>
         </div>
       </form>

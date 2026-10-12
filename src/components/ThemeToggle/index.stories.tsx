@@ -24,3 +24,9 @@ Dark.meta = { theme: 'dark' };
 // transitions drop to instant and a click parks the outgoing facet at once.
 export const ReducedMotion: Story = () => <ThemeToggle />;
 ReducedMotion.meta = { reducedMotion: true };
+
+// The disc in the flow, as the shell's bar draws it, and its small size, as
+// the phone account panel does. No clip, no fixed position.
+export const Inline: Story = () => <ThemeToggle variant="inline" />;
+
+export const InlineSmall: Story = () => <ThemeToggle variant="inline" size="small" />;

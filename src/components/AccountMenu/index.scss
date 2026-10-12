@@ -1,0 +1,162 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The account button and its panel (MB.7). The button is a control tall
+// ($control-height) with the avatar disc, the name and a chevron; at a phone's
+// width the name and chevron leave and it is a square of the avatar alone.
+$account-menu-avatar: 1.75rem;
+
+.account-menu {
+  position: relative;
+  flex: none;
+}
+
+.account-menu__button {
+  @include button-reset;
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-height: $control-height;
+  padding: 0 space(2);
+  border-radius: radius('control');
+  color: $text-primary;
+  font: inherit;
+  @include theme-transition(background-color);
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background-color: $fill-quiet;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The initials on the accent: the same disc as the theme switch, so the two
+// read as one family. $text-on-color is the contrast-checked label for it.
+.account-menu__avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: $account-menu-avatar;
+  height: $account-menu-avatar;
+  border-radius: 50%;
+  background-color: $accent;
+  color: $text-on-color;
+  font-size: type-size('caption');
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.account-menu__name {
+  max-width: 14rem;
+  @include truncate;
+}
+
+.account-menu__chevron {
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  color: $text-muted;
+  @include theme-transition(transform);
+
+  [aria-expanded='true'] > & {
+    transform: rotate(180deg);
+  }
+}
+
+.account-menu__panel {
+  position: absolute;
+  top: calc(100% + #{space(2)});
+  right: 0;
+  z-index: layer('floating');
+  min-width: 13rem;
+  padding: space(1);
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  box-shadow: $shadow-floating;
+  @include list-reset(space(1), false);
+}
+
+// A link, a button, or the theme row: one row each, a control tall, the
+// pointer's wash on hover. SignOutButton brings its own `.btn`, flattened to
+// a row here so the panel reads as a list.
+.account-menu__item,
+.account-menu__panel .sign-out-button .btn {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: $control-height;
+  padding: 0 space(3);
+  border: 0;
+  border-radius: radius('control');
+  background-color: transparent;
+  color: $text-primary;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $fill-quiet;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &[aria-current='page'] {
+    background-color: $fill-quiet;
+    box-shadow: inset (-$rule-heavy) 0 0 $accent;
+    font-weight: 500;
+  }
+}
+
+.account-menu__panel .sign-out-button {
+  display: block;
+}
+
+.account-menu__link {
+  display: none;
+}
+
+.account-menu__theme {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
+  min-height: $control-height;
+  padding: 0 space(3);
+}
+
+@media (max-width: $shell-phone-width) {
+  .account-menu__button {
+    justify-content: center;
+    width: $control-height;
+    padding: 0;
+  }
+
+  // Out of sight, still in the button's name.
+  .account-menu__name {
+    @include visually-hidden;
+  }
+
+  .account-menu__chevron {
+    display: none;
+  }
+
+  .account-menu__theme {
+    display: flex;
+  }
+
+  .account-menu__link {
+    display: block;
+  }
+}

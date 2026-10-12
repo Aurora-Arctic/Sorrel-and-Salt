@@ -81,8 +81,8 @@ to.
   has to remember it. A component never widens a paragraph past it; running
   text that is not a `p`, such as a long list item or a description, takes
   `max-width: $measure` itself; and a narrower column, as the forms use, is a
-  component's own choice. A page with no AppShell takes its column from
-  `.page-frame`, which stops at the measure, or at the forms' narrower
+  component's own choice. A centred page, in the shell or outside it, takes its
+  column from `.page-frame`, which stops at the measure, or at the forms' narrower
   column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
 - **Browser baseline: Next's default modern targets** — Chrome, Edge and
@@ -455,12 +455,13 @@ What pins itself to the top of the window or sizes itself to it offsets by
 the inset, so it starts below the banner and the page does not scroll by the
 banner's height:
 
-- `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
+- The shell's bar (`position: sticky`), `ThemeToggle`'s corner variant and the
+  sorrel corner of `Backdrop` take `top: $top-inset`.
 - Every page a full screen high sits in `.page-frame`, which takes
-  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below):
-  `/`, `/sign-in`, `/account`, `/account/email`, the not-authorized
-  page and the invitation page. A page that needs the full height takes the
-  frame rather than restating the rule.
+  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below), less
+  `$shell-bar-height` inside the shell: `/`, `/sign-in`, `/account`,
+  `/account/email`, the not-authorized page and the invitation page. A page
+  that needs the full height takes the frame rather than restating the rule.
 
 Anything new fixed to the top offsets by the inset the same way.
 
@@ -721,13 +722,16 @@ draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 
 ## The page frame
 
-`.page-frame` is the centred, full-height column of a page with no AppShell:
-Welcome, sign-in, the account pages, the not-authorized page, the
-invitation and the create-workspace page. Its children stand `space(6)` apart and stop at `$measure`;
+`.page-frame` is the centred, full-height column of a page: Welcome, sign-in,
+the invitation (outside the shell), and the account pages, the not-authorized
+page and the create-coven page (inside it). Its children stand `space(6)` apart and stop at `$measure`;
 `.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
 column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
 and below and `space(4)` at the sides, `border-box`, so a page a screen high
-does not scroll by its own padding or the banner above it.
+does not scroll by its own padding or the banner above it. Inside the shell
+(`.app-shell .page-frame`) the bar takes room above it too, so the minimum
+height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
+`scroll-margin-top` adds it, so a jump lands below the sticky bar.
 
 - **The gap alone spaces the column.** `.page-frame > *` clears every
   child's block margins, which outranks bare `section`'s from
@@ -751,8 +755,9 @@ does not scroll by its own padding or the banner above it.
 
 ## The admin layout
 
-`.admin-layout` is the frame every `/admin` page sits in (MB.115): the admin
-nav above, the page below, a `space(5)` apart. It is a column as wide as
+`.admin-layout` is the frame every `/admin` page sits in (MB.115): the page's
+children a `space(5)` apart. The admin nav is no longer inside it but in the
+shell's context row above it (MB.7). It is a column as wide as
 `$wide-column` (80rem), centred, with `space(6)` above and below and
 `space(4)` at the sides, `border-box`. It is wider than `.page-frame`
 because its pages hold tables, and it is neither full height nor centred
@@ -770,7 +775,7 @@ components' stories use the class as their frame. Inside it a page header's
 action, and a tab's, spans the line at phone width ("Buttons", above).
 
 `.coven-layout` is the same frame around every `/coven/[slug]` page, its
-section nav (`CovenNav`) above and the page below (M9.15). It shares the rule
+page's children inside it; the section nav (`CovenNav`) is in the context row above (M9.15, MB.7). It shares the rule
 rather than copying it until the workspace section's design review decides
 its own; its pages will hold the ingredient and grimoire tables, so the wide
 column suits it in the meantime. The admin area's page-header rules stay
@@ -864,10 +869,9 @@ letters, where every other link has the browser's hairline. A colour alone
 would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
 nav is the first to mark its current page.
 
-**A tabbed page's tab row is not a `.link-row`** but a segmented control
-of its own: one rounded track, the open tab a raised pill inside it, the
-segments scrolling within the track where they run past it rather than
-wrapping ([`components/tabbed-page.md`](components/tabbed-page.md),
+**A tabbed page's tab row is not a `.link-row`** but a small pill track on
+the page's heading line, the open tab a raised pill, its hit areas padded
+invisibly to `$control-height` ([`components/tabbed-page.md`](components/tabbed-page.md),
 "Styling"). Its links are still a `nav` of links marked by `aria-current`.
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
@@ -877,6 +881,24 @@ their `fill` from `brand-color()`, and a white one its brand's `edge`, which
 holds 3:1 against both pages ("Brand colours", above). The circle is
 `border-box`, so an edged one is the same size as the rest. The markup is the
 `ProviderMark` component's ([`components/provider-mark.md`](components/provider-mark.md)).
+
+## The application shell and the layers
+
+Every signed-in page sits in the shell (MB.7; [`components/app-shell.md`](components/app-shell.md)):
+a sticky bar `$shell-bar-height` (3.25rem) tall, then a context row
+(`$context-row-height`, 3.5rem; `$context-row-height-phone` on a phone) that
+names the area and carries its section nav, then the page. At or under
+`$shell-phone-width` (40rem) the section nav is a bar fixed along the bottom,
+`$bottom-bar-height` tall plus the safe-area inset, and `.app-shell__main`
+pads its bottom by that calc when it holds a `.section-nav`. The bar, the
+row and the page column share `$wide-column`.
+
+**Every z-index that meets another at the window comes from `layer()`**
+(`_variables.scss`): `shell` 10 (the bars), `banner` 11 (the impersonation
+banner), `toggle` 12 (the corner theme toggle), `floating` 20 (a list or
+panel opened from the shell: the account panel, the coven switcher's list, the
+skip link) and `dialog` 30. A component inside its own stacking context keeps
+a small local index. No other number is added.
 
 ## Designing a section
 
@@ -889,7 +911,7 @@ What each section review (MB.115 to MB.124) designs to:
   not two component rules.
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
-- **A page with no AppShell sits in `.page-frame`**, or
+- **A centred page sits in `.page-frame`**, or
   `.page-frame--narrow` when its content is a form ("The page frame",
   above). A page's own row of links is a `ul.link-row`, and each titled
   section a `.page-frame__section` named by its `h2` through

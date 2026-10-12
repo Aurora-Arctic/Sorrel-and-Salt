@@ -1,12 +1,14 @@
 # CreateWorkspaceForm
 
 `src/components/CreateWorkspaceForm/` is the form on the create-workspace
-page, `/coven/new` (M9.16, Story 3). It takes one value, the coven's name,
+page, `/coven/new` (M9.16, Story 3), on screen the Create Coven page. It takes one value, the coven's name,
 and sends it to `createWorkspace`, the mutation M6.7 built. On success the
-browser goes to the new coven's index page, `/coven/<slug>` (M9.15). It is a
+browser goes to the new coven's index page, `/coven/<slug>` (M9.15), and the
+router refreshes, so the shell's coven switcher, listed from a layout a push
+does not re-run, includes the new coven (MB.7). It is a
 client component, and it takes no props.
 
-The page around it, `src/app/coven/new/page.tsx`, decides whether to draw it
+The page around it, `src/app/(shell)/coven/new/page.tsx`, decides whether to draw it
 at all. The page reads the signed-in user's row with `getMe` and shows the
 form only when `canCreateWorkspace` is true. Anyone else gets a quiet notice
 saying how to get the right instead. Hiding the form is presentation only:
@@ -15,10 +17,10 @@ the creation service still refuses a user without the right
 
 ## Creating
 
-- **Create Workspace stays disabled until there is a name.** A name of
+- **Create Coven stays disabled until there is a name.** A name of
   spaces only counts as empty, because the service would refuse it.
 - **Busy from the press until the next page.** The button is a `BusyButton`
-  ([`busy-button.md`](busy-button.md)) that reads "Creating Workspace" and
+  ([`busy-button.md`](busy-button.md)) that reads "Creating Coven" and
   carries `aria-busy` and the spinner. It stays busy after the answer too,
   while the browser goes to the new coven, so a second press cannot make a
   second coven.
@@ -68,7 +70,7 @@ page's real frame, panel and heading.
 queries against MSW, which answers in the route's own error shape. It covers
 nothing to create until a name is typed, the create and the address it goes
 to, the button held busy until the next page, and both error surfaces. The
-page is `tests/app/coven/new/page.test.tsx`: the form for a rights holder and
+page is `tests/app/(shell)/coven/new/page.test.tsx`: the form for a rights holder and
 a status notice for anyone else. `tests/e2e/coven-create.spec.ts` walks Story
 3 in a real browser: a coven made from the keyboard, a second one, the "New"
 slug, the page without the right, and an axe scan in both themes.

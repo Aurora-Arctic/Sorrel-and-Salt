@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { ModalHeading } from '../Modal/types';
 import type { PagePosition } from '../../lib/types';
 

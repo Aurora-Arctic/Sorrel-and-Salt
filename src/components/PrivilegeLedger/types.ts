@@ -1,4 +1,4 @@
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** A privilege on `users`, as the ledger names it. */

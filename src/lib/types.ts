@@ -211,3 +211,21 @@ export type ListDialog = 'new' | { edit: string };
  * `ListHrefParams` on its own: an interface carries no index signature.
  */
 export type ListDialogParams = { new: boolean; edit: string | undefined };
+
+/** The signed-in person as the application shell draws them (MB.7). */
+export interface ShellViewer {
+  /** The name the site shows for them; the account button's text and its initials. */
+  name: string;
+  /** A site admin: the shell adds the Admin and Your Coven links. */
+  isAdmin: boolean;
+  /** Holds `canCreateWorkspace`, read from the user row, never the session. */
+  canCreate: boolean;
+  /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
+  verified: boolean;
+}
+
+/** One coven the viewer belongs to, as the shell's switcher and brand link need it. */
+export interface ShellWorkspace {
+  slug: string;
+  name: string;
+}

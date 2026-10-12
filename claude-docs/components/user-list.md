@@ -140,7 +140,7 @@ head, both built by the page per row, as the other admin lists carry
   cursor; the pager and the filter leave it out, so paging or filtering
   closes the modal, as they drop `?edit=` elsewhere.
 - **The user modal is the page's, not the list's.** The page renders
-  `UserDialog` (`src/app/admin/(people)/users/user-dialog.tsx`), a
+  `UserDialog` (`src/app/(shell)/admin/(people)/users/user-dialog.tsx`), a
   `RouteModal` at one fixed place, whatever the address opens. Its head is
   `userHeading(user)` (`user-heading.tsx` beside the page): eyebrow User,
   the name as title and the address as qualifier, on a line beneath the name, so the dialog is named
@@ -262,11 +262,11 @@ head, both built by the page per row, as the other admin lists carry
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
   People page draws it beside its heading while Users is open, where the
   other admin tabs put their primary action, from
-  `src/app/admin/(people)/@action/users/page.tsx`
+  `src/app/(shell)/admin/(people)/@action/users/page.tsx`
   ([`tabbed-page.md`](tabbed-page.md)), and keys it by the state so the
   refresh after a flip mounts a fresh one (all on the owner's call). That
   page and the Users page read the pause through
-  `src/app/admin/(people)/pause-state.ts`, cached per request, so it is
+  `src/app/(shell)/admin/(people)/pause-state.ts`, cached per request, so it is
   read once. It is
   one row, `.user-list__pause`, centred with a `space(3)` gap. At a phone's
   width, where the heading line spans its action, the warning and the switch
@@ -462,7 +462,7 @@ locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Revoke kept on its own reason — which of the two reasons won is told by
 which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
-are presentation; paging is Pager's. `tests/app/admin/(people)/users/page.test.tsx` reads the page's
+are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
 pager's position; and the user modal (M9.19): `?user=<id>` reading the user and

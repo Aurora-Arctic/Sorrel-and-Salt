@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SectionNavItem } from '@/components/SectionNav/types';
@@ -16,7 +17,7 @@ const { default: SectionNav } = await import('@/components/SectionNav');
 // so a test sees every tab and, shut, no More list.
 
 const ITEMS: readonly SectionNavItem[] = [
-  { label: 'Overview', href: '/coven/fixture-coven', icon: 'overview', exact: true },
+  { label: 'Overview', href: '/coven/fixture-coven' as Route, icon: 'overview', exact: true },
   { label: 'Compendium', href: '/admin/compendium', icon: 'compendium' },
   {
     label: 'Categories',

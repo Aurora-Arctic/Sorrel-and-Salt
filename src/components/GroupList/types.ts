@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition } from '../../lib/types';
 import type { GroupKind } from '../GroupForm/types';

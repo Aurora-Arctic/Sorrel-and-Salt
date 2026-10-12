@@ -3,7 +3,7 @@
 `src/components/SignInMethods/` — the list inside the account page's
 Sign-In Methods section (MB.88): every way into the account, one row per
 roster provider, linked or addable, and removable while another one is left.
-Server component `src/app/account/page.tsx` reads the session,
+Server component `src/app/(shell)/account/page.tsx` reads the session,
 `linkedAccounts()`, whether the session is fresh (`sessionIsFresh()`),
 `?error=` and `?provider=`, and hands the results down as props. This component renders the list and makes the two Better Auth calls.
 Why a second provider is added this way and never at sign-in is
@@ -196,7 +196,7 @@ with every row state.
   and an unmapped refusal, Remove withheld and Sign In Again offered from a
   stale session, and Sign In Again signing out to `/sign-in` with
   `next=/account`.
-- `tests/app/account/page.test.tsx`: the page's nav reaches each section.
+- `tests/app/(shell)/account/page.test.tsx`: the page's nav reaches each section.
 - `tests/e2e/account.spec.ts`: `/account` signed in through
   `tests/e2e/session.ts`, axe-scanned with one provider in both themes and
   held at 375px without sideways scroll, and with two plus a callback error

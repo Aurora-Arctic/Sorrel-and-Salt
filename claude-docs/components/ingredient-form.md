@@ -1179,7 +1179,7 @@ empty form, `?edit=<slug>` the entry at that slug, through
 `resolveCompendiumSlug`. An edit's head is the eyebrow "Edit Ingredient" over the entry's saved name and its formal name, in italics for a binomial (`editHeading` in `page.tsx`; [`modal.md`](modal.md), "An edit dialog's head"), so it follows a rename once Save Ingredient re-reads the entry. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above
 the list. The edit's values are built on the navigation by
-`src/app/admin/compendium/entry-values.ts`, `server-only`, from the services
+`src/app/(shell)/admin/compendium/entry-values.ts`, `server-only`, from the services
 `Ingredient`'s fields resolve through — folk names, categories, substitutes,
 deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
