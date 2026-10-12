@@ -22,3 +22,34 @@ export function joinAnd(items: readonly string[]): string {
 export function addressTaken(holder: string, slug: string, remedy: string): string {
   return `${holder} already has the address "${slug}" — ${remedy}`;
 }
+
+/**
+ * `text` with its first letter upper-cased and the rest as written: "oil" is
+ * "Oil", "the form" is "The form". Not a title case, which would also raise
+ * "of" and "and"; a label that wants one is written so.
+ */
+export function capitalise(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * What an admin list says when it shows no rows (MB.115). With a filter in
+ * force, `parts` names each filter as the caller phrases it — `“wort”`, `the
+ * role Admin`, `No Refs` — and the sentence says nothing matches them and how
+ * to see more: "No users match “ada” and the role Admin. Change or clear the
+ * filter to see more." With none, the list itself is empty, and `emptyText`
+ * is the caller's own sentence for that.
+ *
+ * `noun` is the plural, matched by a plural verb: one wording for all six
+ * lists, where the compendium said "No entry matches", the invitations "No
+ * invitation matches", the users "No users match", the group and value lists
+ * "No category matches that filter. Try another name." and the ledger "No
+ * admin changes for “x”." The plural reads true however many rows the list
+ * could have held, and each filter is named rather than called "that filter",
+ * so an admin sees which one to change.
+ */
+export function noMatchText(noun: string, parts: readonly string[], emptyText: string): string {
+  return parts.length
+    ? `No ${noun} match ${joinAnd(parts)}. Change or clear the filter to see more.`
+    : emptyText;
+}
