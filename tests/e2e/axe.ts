@@ -1,7 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
+// Settles first: a spec that switches the theme and scans straight after would
+// otherwise read a colour part-way along its ease (the account disc, MB.7).
 export async function assertNoAccessibilityViolations(page: Page) {
+  await settleTransitions(page);
   const { violations } = await new AxeBuilder({ page }).analyze();
   const summary = violations
     .map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`)
