@@ -34,7 +34,7 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 
 /**
  * A section of the form as a disclosure (MB.115, the owner's calls): one of
- * the ingredient's own seven, under an `h3`, or one of an open variant's six,
+ * the ingredient's own six, under an `h3`, or one of an open variant's five,
  * a level beneath the Variants heading, under an `h4`. Its heading's text is
  * a button that opens and shuts it, with a chevron at the end of the line;
  * beneath the heading, while closed, one muted line of what has been entered,
@@ -52,7 +52,6 @@ export function CollapsibleSection({
   summary,
   fold: { open, invalid, onToggle },
   level = 3,
-  labelled = false,
   info,
   titleId,
   children,
@@ -93,13 +92,7 @@ export function CollapsibleSection({
         </span>
         <FoldFlag id={flagId} className="ingredient-form__fold-flag" shown={invalid} />
       </div>
-      <div
-        id={fieldsId}
-        className={
-          labelled ? 'ingredient-form__fold-fields is-labelled' : 'ingredient-form__fold-fields'
-        }
-        hidden={!open}
-      >
+      <div id={fieldsId} className="ingredient-form__fold-fields" hidden={!open}>
         {children}
       </div>
     </section>

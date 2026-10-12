@@ -12,7 +12,6 @@ import type {
   ListEntry,
   ReferenceListEntry,
   SectionSummaryProps,
-  TextSummaryProps,
   VariantFormValues,
   VariantSectionKey,
 } from './types';
@@ -79,8 +78,9 @@ function IdentitySummary(): ReactNode {
   ]);
 }
 
-/** A text field's line: its first words. */
-const textLine = (text: string): ReactNode => oneLine(text) || NOTHING;
+/** Details & Care's line: the description's first words, then the safety notes'. */
+const detailsLine = (description: string, safetyNotes: string): ReactNode =>
+  joined([oneLine(description), oneLine(safetyNotes)]);
 
 /** Correspondences' line, a variant's having no deities, which are the ingredient's alone. */
 function correspondencesLine(
@@ -154,9 +154,10 @@ export function variantSummary(variant: VariantFormValues): ReactNode {
   return joined(parts.map((part, at) => (at === 0 ? capitalise(part) : part)));
 }
 
-function TextSummary({ name }: TextSummaryProps): ReactNode {
+function DetailsSummary(): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
-  return textLine(useWatch({ control, name }));
+  const [description, safetyNotes] = useWatch({ control, name: ['description', 'safetyNotes'] });
+  return detailsLine(description, safetyNotes);
 }
 
 function CorrespondencesSummary(): ReactNode {
@@ -192,14 +193,12 @@ export function SectionSummary({ section }: SectionSummaryProps): ReactElement {
   switch (section) {
     case 'identity':
       return <IdentitySummary />;
-    case 'description':
-      return <TextSummary name="description" />;
+    case 'details':
+      return <DetailsSummary />;
     case 'correspondences':
       return <CorrespondencesSummary />;
     case 'relations':
       return <RelationsSummary />;
-    case 'safety':
-      return <TextSummary name="safetyNotes" />;
     case 'sources':
       return <SourcesSummary />;
     case 'variants':
@@ -224,8 +223,8 @@ export function variantSectionSummary(
       if (form === '') return NOTHING;
       return group ? `${form} (${group})` : form;
     }
-    case 'description':
-      return textLine(variant.description);
+    case 'details':
+      return detailsLine(variant.description, variant.safetyNotes);
     case 'correspondences':
       return correspondencesLine(
         variant.elements,
@@ -235,8 +234,6 @@ export function variantSectionSummary(
       );
     case 'relations':
       return relationsLine(variant.categoryIds, variant.substitutes);
-    case 'safety':
-      return textLine(variant.safetyNotes);
     case 'sources':
       return sourcesLine(variant.references);
   }

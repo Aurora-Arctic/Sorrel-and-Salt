@@ -8,10 +8,9 @@ import { fireEvent, screen, within } from '@testing-library/react';
 /** A variant's sections, in page order, each named by its heading. */
 export const VARIANT_SECTIONS = [
   'Identity',
-  'Description',
+  'Details & Care',
   'Correspondences',
   'Relations',
-  'Safety',
   'Sources',
 ];
 

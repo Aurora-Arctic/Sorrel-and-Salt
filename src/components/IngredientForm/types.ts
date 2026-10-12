@@ -478,7 +478,7 @@ export interface FormFieldProps extends LookupFieldProps {
  * every vocabulary box inside a variant.
  */
 export interface VariantsFieldProps extends LookupFieldProps {
-  /** Its section's open state, which the form owns, as it does the other six's. */
+  /** Its section's open state, which the form owns, as it does the other five's. */
   fold: SectionFold;
   /** Which of each variant's own sections are open, which the form owns too. */
   folds: VariantFolds;
@@ -555,7 +555,7 @@ export interface Claimant {
   canonicalName: string | null;
 }
 
-/** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
+/** One of the ingredient's six sections, each folding to a summary line (MB.115). */
 export type SectionKey = (typeof SECTION_KEYS)[number];
 
 /**
@@ -601,11 +601,6 @@ export interface SectionSummaryProps {
   section: SectionKey;
 }
 
-/** The closed line of a section that is one text field, its first words. */
-export interface TextSummaryProps {
-  name: 'description' | 'safetyNotes';
-}
-
 /** A variant's own sections, the ingredient's bar Variants, each folding as the ingredient's do (MB.115). */
 export type VariantSectionKey = (typeof VARIANT_SECTION_KEYS)[number];
 
@@ -643,8 +638,6 @@ interface CollapsibleSectionBase {
   fold: SectionFold;
   /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
   level?: 3 | 4;
-  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
-  labelled?: boolean;
   /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
   info?: ReactNode;
   /** The toggle's id, for a group inside that is named by the heading. */

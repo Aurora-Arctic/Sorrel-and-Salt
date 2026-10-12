@@ -30,7 +30,7 @@
   }
 }
 
-// The ingredient's seven sections, each a disclosure (MB.115, the owner's
+// The ingredient's six sections, each a disclosure (MB.115, the owner's
 // calls): flush, parted by hairlines rather than set on the card ground,
 // since the variant cards and reference rows inside already sit on it and a
 // card in a card reads as nesting the form does not have. Under them all,
@@ -158,12 +158,6 @@
   // Closed is the attribute's, which the display above would otherwise undo.
   &[hidden] {
     display: none;
-  }
-
-  // The one field's label repeats the heading, so it is the heading the eye
-  // reads, and the label stays the field's name for a screen reader.
-  &.is-labelled .field__label-row {
-    @include visually-hidden;
   }
 }
 
@@ -480,26 +474,6 @@
 
   .ingredient-form__section-title {
     font-size: 1.125rem;
-  }
-
-  // Description's label repeats its heading, so the label alone is hidden
-  // from the eye: the rest of its row, the tip and Copy From Ingredient,
-  // stays in view above the box, which the ingredient's own Description,
-  // with neither, has no need of.
-  .ingredient-form__fold-fields.is-labelled {
-    .field__label-row {
-      position: static;
-      width: auto;
-      height: auto;
-      margin: 0;
-      overflow: visible;
-      clip-path: none;
-      white-space: normal;
-    }
-
-    .field__label {
-      @include visually-hidden;
-    }
   }
 }
 

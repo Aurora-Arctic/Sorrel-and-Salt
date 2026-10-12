@@ -9,7 +9,7 @@ import { press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// The form's seven sections as disclosures (MB.115, the owner's calls): a
+// The form's six sections as disclosures (MB.115, the owner's calls): a
 // new entry opens with every one open, an edit with every one closed to its
 // summary line; each heading opens and closes its own; Open All / Close All
 // every one; and a save that finds an error in a closed section opens it so
@@ -18,10 +18,9 @@ import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredie
 
 const SECTIONS = [
   'Identity',
-  'Description',
+  'Details & Care',
   'Correspondences',
   'Relations',
-  'Safety',
   'Sources',
   'Variants',
 ];
@@ -50,10 +49,11 @@ const openSections = () => SECTIONS.filter(expanded);
 // Fields are found by label (`control`), which reaches a field in a closed
 // section too, so a test can say whether it is in view.
 
-/** Changes the entry's description, so Save has something to send. */
+/** Changes the entry's description, so Save has something to send, and closes its section again. */
 function changeDescription() {
-  fireEvent.click(toggle('Description'));
+  fireEvent.click(toggle('Details & Care'));
   type('Description', 'A fixture herb.');
+  fireEvent.click(toggle('Details & Care'));
 }
 
 const save = () => press('Save Ingredient');
@@ -89,11 +89,11 @@ describe('IngredientForm’s sections', () => {
     expect(control('Celestial Body')).toBeVisible();
     expect(control('Name')).not.toBeVisible();
 
-    fireEvent.click(toggle('Safety'));
-    expect(openSections()).toEqual(['Correspondences', 'Safety']);
+    fireEvent.click(toggle('Details & Care'));
+    expect(openSections()).toEqual(['Details & Care', 'Correspondences']);
 
     fireEvent.click(toggle('Correspondences'));
-    expect(openSections()).toEqual(['Safety']);
+    expect(openSections()).toEqual(['Details & Care']);
     expect(control('Celestial Body')).not.toBeVisible();
   });
 
@@ -154,7 +154,7 @@ describe('IngredientForm’s sections', () => {
     const colour = control('Colour');
     expect(colour).toBeInvalid();
     expect(colour).toHaveFocus();
-    expect(openSections()).toEqual(['Description', 'Correspondences']);
+    expect(openSections()).toEqual(['Correspondences']);
     expect(calls).toHaveLength(0);
   });
 
@@ -165,11 +165,11 @@ describe('IngredientForm’s sections', () => {
     });
     renderForm(TESTWORT);
     changeDescription();
-    expect(expanded('Safety')).toBe(false);
+    expect(expanded('Details & Care')).toBe(false);
 
     save();
 
-    await waitFor(() => expect(expanded('Safety')).toBe(true));
+    await waitFor(() => expect(expanded('Details & Care')).toBe(true));
     const notes = control('Safety Notes');
     expect(notes).toBeInvalid();
     expect(notes).toHaveFocus();

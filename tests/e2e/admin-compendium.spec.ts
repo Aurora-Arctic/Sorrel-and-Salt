@@ -200,10 +200,10 @@ test(
     await reopened.getByRole('button', { name: 'Variants', exact: true }).click();
     await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
     // A variant opens closed to its summary line (MB.115): its Edit shows its
-    // sections, each closed. Safety is the oil's own, inside its card.
+    // sections, each closed. Details & Care is the oil's own, inside its card.
     await reopened.getByRole('button', { name: 'Edit Oil' }).click();
     const reopenedOil = reopened.getByRole('group', { name: 'Oil', exact: true });
-    await reopenedOil.getByRole('button', { name: 'Safety', exact: true }).click();
+    await reopenedOil.getByRole('button', { name: 'Details & Care', exact: true }).click();
     await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
       'Dilute before use.',
     );

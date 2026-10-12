@@ -702,10 +702,9 @@ export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compen
 /** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
 export const VARIANT_SECTION_KEYS = [
   'identity',
-  'description',
+  'details',
   'correspondences',
   'relations',
-  'safety',
   'sources',
 ] as const;
 
@@ -717,14 +716,14 @@ export const SECTION_KEYS = [...VARIANT_SECTION_KEYS, 'variants'] as const;
  * ingredient's and a variant's tables below each spread it, so the two agree.
  */
 const SHARED_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
-  description: 'description',
+  description: 'details',
   elements: 'correspondences',
   planets: 'correspondences',
   zodiacSigns: 'correspondences',
   colors: 'correspondences',
   categoryIds: 'relations',
   substitutes: 'relations',
-  safetyNotes: 'safety',
+  safetyNotes: 'details',
   references: 'sources',
   referencePanelOpen: 'sources',
 };
