@@ -4,6 +4,7 @@
 export * from './services/access-control';
 export * from './services/membership';
 export * from './services/memberships';
+export * from './services/workspace-creation';
 export * from './loaders/memberships-by-user';
 export * from './graphql/workspace';
 export type { MembershipWithWorkspace, WorkspaceRole, WorkspaceRow } from './types';

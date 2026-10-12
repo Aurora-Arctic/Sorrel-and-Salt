@@ -6,7 +6,7 @@ import { Forbidden } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Session } from '@/lib/session';
 import type { Message } from '@/lib/types';
-import { assertMembership, type WorkspaceRole } from '@/modules/coven';
+import { assertMembership, createWorkspace, type WorkspaceRole } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { acceptInvitation, invitationStanding } from '@/modules/identity';
 import {
@@ -19,6 +19,7 @@ import { A, B, C, D, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
+import { asManualFix } from '../support/db/privileges';
 import {
   makeIngredient,
   makeSpell,
@@ -55,11 +56,6 @@ let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
-
-/** M6.7's write: the creator becomes owner. The name is the scaffold's guess. */
-interface WorkspaceCreation {
-  createWorkspace(session: Session, input: { name: string }): Promise<{ id: string; slug: string }>;
-}
 
 /** M6.13's read, over M6.11's loader. The name is the scaffold's guess. */
 interface MemberListing {
@@ -238,15 +234,12 @@ describe("Story 2: As a newly signed-in user, be told plainly what I can do next
 
 describe('Story 3: Create a workspace once I hold creation rights, for my coven or household.', () => {
   it('makes the creator its owner, and refuses a user without the right', async () => {
-    const { createWorkspace } = surface<WorkspaceCreation>(
-      await coven(),
-      ['createWorkspace'],
-      'M6.7',
-    );
-
     // Why D's refusal is the gate's: every fixture user starts holding the
     // right (the seed), so clearing it is the only difference, and A still holds it.
-    await sql`update users set can_create_workspace = false where id = ${D.id}`;
+    await asManualFix(
+      sql,
+      (tx) => tx`update users set can_create_workspace = false where id = ${D.id}`,
+    );
     const [{ can_create_workspace: stillHolds }] = await sql`
       select can_create_workspace from users where id = ${A.id}`;
     expect(stillHolds).toBe(true);

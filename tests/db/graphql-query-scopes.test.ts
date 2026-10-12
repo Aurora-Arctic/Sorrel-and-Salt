@@ -284,6 +284,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
+  // A blank name, so a caller past the scope that may create one is refused by
+  // the service before anything is written.
+  createWorkspace: write('mutation { createWorkspace(name: "") { id } }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
@@ -432,6 +435,8 @@ const OPEN_WRITES = [
   // The invited address is what admits, which the service checks (MB.70).
   'acceptInvitation',
   'setName',
+  // The flag decides who may, which the service reads (M6.7).
+  'createWorkspace',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',
