@@ -119,12 +119,12 @@ different groups, so the page offers each name once, whatever its case.
   itself is empty, and the paragraph says how to begin it: "The compendium is
   empty. Add the first entry with Add Ingredient." A filtered list with no
   rows names each filter in use, so an admin sees what to change, then says
-  to change or clear it: "No entry matches “wort”, the form “Oil”, the
+  to change or clear it: "No entries match “wort”, the form “Oil”, the
   classification Botanical and No Refs. Change or clear the
   filter to see more." The query and the form are quoted, the
   classification is its label, and Without
-  References is the switch's (MB.115, the owner's call; the user list's
-  says the same of its own filters, [`user-list.md`](user-list.md)).
+  References is the switch's (MB.115, the owner's call). The sentence is
+  `noMatchText` (`src/lib/text.ts`), one wording for every admin list.
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
@@ -134,15 +134,13 @@ None of its own; the stylesheet went in MB.115. The list's root is
 `.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
 `.field`, `.input`, `.select`, `.switch` and `.btn` primitives, Filter
 `.btn--solid` ([`styling.md`](../styling.md), "Form fields"). The table is
-the `.data-table` primitive with the `--stack` modifier: banded on
-`$surface-card` with a 1px `$text-muted` hairline under the header row at
-desktop width, and each row a card once its frame is under
-`$table-stack-width`, as on a phone ("Tables at phone width" there). So every
-part carries its role written out, `table`, `rowgroup`, `row`,
-`columnheader` and `cell`, spread from `src/lib/table-roles.ts` since lint refuses a
-literal role it takes for redundant, and every cell names its column in
-`data-label`, the Edit cell's empty and its `.data-table__card-action`
-standing it at the card's top right. Each row's Edit is the larger green
+[`StackTable`](data-table.md): the `.data-table` primitive with the
+`--stack` modifier, banded on `$surface-card` with a 1px `$text-muted`
+hairline under the header row at desktop width, and each row a card once
+its frame is under `$table-stack-width`, as on a phone ("Tables at phone
+width" there). StackTable writes out every part's role and names each cell's
+column in `data-label`; Edit is a `'corner'` action column, its heading
+hidden, its cell unlabelled at the card's top right. Each row's Edit is the larger green
 pencil ([`icon-tip.md`](icon-tip.md)), and the pager is `Pager` ([`pager.md`](pager.md)),
 soft. The formal name is plain, not italic: a binomial is italicised, a
 mineral's or a chemical's name is not, and the row does not carry its kind.

@@ -101,8 +101,9 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   form again clears it. No link is ever shown: the mutation answers none.
 - **No invitation waiting is a sentence**: "No admin invitations are
   waiting." Under a filter it names the filters in use, as the user list's
-  and the compendium's do: "No invitation matches “fern” and Expires in 24
-  Hrs. Change or clear the filter to see more."
+  and the compendium's do, through the one wording `noMatchText`
+  (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
+  Change or clear the filter to see more."
 - **Four columns**: Email, Reason, Expires and Revoke, drawn by
   [`StackTable`](data-table.md), which gives each cell its heading as its
   card label and writes the table's roles out so it can stack into cards at

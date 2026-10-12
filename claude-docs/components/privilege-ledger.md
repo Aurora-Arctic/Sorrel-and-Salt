@@ -52,22 +52,25 @@ id.
   case-insensitive substring, so an address inside another (`ada@…` in
   `bada@…`) matches both.
 - **Seven columns**: When, User, Privilege, Change, How, Changed By and Note,
-  each heading in title case (DESIGN.md §9), the headings and each cell's
-  `data-label` from one `COLUMNS` list, the table's roles written out so it
-  can stack into cards at phone width. When is the UTC minute, saying
+  each heading in title case (DESIGN.md §9), drawn by
+  [`StackTable`](data-table.md), so each heading is also its cells'
+  `data-label` and the table's roles are written out to stack into cards at
+  phone width. When is the UTC minute, saying
   UTC since the server renders it, in a `<time>` carrying the full instant.
-  Privilege reads Admin or Coven creation, Change Granted or Revoked, and How
+  Privilege reads Admin or Coven Creation, from `PRIVILEGE_LABELS`
+  (`privileges.ts`), the one option list the privilege filter, this column
+  and the page's reading of `?privilege` share. Change reads Granted or Revoked, and How
   Primary admin bootstrap, By an admin, Invitation accepted or Manual fix.
 - **User and Changed By link to the person's `/admin/users` row**, the list
   filtered to their address. A person the user list leaves out, the seed's
   bootstrap user, is named without a link, and an id no live account holds
   reads "Deleted account".
 - **The note shows only where one was given**: an empty cell otherwise.
-- **Nothing to show is a sentence, not an empty table**, in plain words for
-  the filter, on the owner's wording: "No privilege changes yet.", "No
-  privilege changes for “<query>”.", "No admin changes yet.", "No coven
-  creation changes yet.", "No admin changes for “<query>”." or "No coven
-  creation changes for “<query>”."
+- **Nothing to show is a sentence, not an empty table**: "No privilege
+  changes yet." With a filter in force it names each one and what to do, in
+  the one wording every admin list uses (`noMatchText`, `src/lib/text.ts`):
+  "No privilege changes match “ada” and the privilege Admin. Change or clear
+  the filter to see more."
 - **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors and
   the page's position, as every admin list's.
 
@@ -76,7 +79,7 @@ id.
 Built from the shared list primitives ([`styling.md`](../styling.md),
 "Designing a section"): the root is a `.list-frame`, the filter
 `FilterForm`'s `.filter-row` on the `.field`, `.input`, `.select` and `.btn`
-primitives, the table a `.data-table` with `--stack` in its
+primitives, the table [`StackTable`](data-table.md), a `.data-table` with `--stack` in its
 `.data-table-frame`, and the pager the `.pager`. Under `$table-stack-width`
 of its frame each change is a card, every fact led by its column's name. Its
 own stylesheet keeps the time on one line and holds the note to `$measure`.

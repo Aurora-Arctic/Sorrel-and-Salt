@@ -841,9 +841,10 @@ column's cell names its column in a `data-label` attribute:
   `display` changes on its parts, so a screen reader in Safari would read the
   cards as loose text; the explicit roles put the meaning back. They are the
   roles the elements have already, so nothing else changes, and a jsdom test's
-  `getByRole('cell')` finds a `td` either way. Every stacking table spreads
-  them from one helper, `src/lib/table-roles.ts`: `tableRole('row')` for a
-  part, and `stackCell(label)` for a cell, which carries its `data-label` too.
+  `getByRole('cell')` finds a `td` either way. Every admin list's table is
+  [`StackTable`](components/data-table.md), which spreads them from one
+  helper, `src/lib/table-roles.ts`: `tableRole('row')` for a part, and
+  `stackCell(label)` for a cell, which carries its `data-label` too.
 - **The label is written twice.** `content: attr(data-label)` and then
   `content: attr(data-label) / ''`: the second gives the label an empty
   alternative text, so a screen reader, which has the header, does not hear
@@ -999,7 +1000,9 @@ heavier than the reverse; light reverts to the browser default.
   admin menu's summary share); `arrived` (the fade a list or tab's new
   content comes in with, the one `list-frame-fade-in` keyframe); and
   `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
-  rows; its one-line cells, wrapping again as cards).
+  rows; its one-line cells, wrapping again as cards), each emitted once by
+  `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
+  modifiers a table takes by class.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

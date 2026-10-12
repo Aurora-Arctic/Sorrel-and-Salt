@@ -58,11 +58,11 @@ for a rule only one kind's rows need.
 
 - **An entry's group is drawn in its own chip where it has a pair**, the
   owner's call: `groupColors`, the group's pair from the page's read of the
-  groups, through `chipColors`, as the category picker draws it. The
-  categories page passes it; an entry without one, as every form and every
-  deity is, shows the name plain. A category's rows take more room than the
-  table primitive gives and centre their contents, as the group list's do,
-  since a chip stands taller than a line of text.
+  groups, through [`GroupChip`](data-table.md), as the category picker draws
+  it. The categories page passes it; an entry without one, as every form and
+  every deity is, shows the name plain. A category's rows take more room
+  than the table primitive gives and centre their contents, as the group
+  list's do, since a chip stands taller than a line of text.
 - **The filter is a GET form to the page itself** (MB.178), as the user
   list's is ([`user-list.md`](user-list.md)): named by the kind's title,
   "Filter Categories" or "Filter Zodiac Signs", inside a `<search>` landmark, a search
@@ -142,10 +142,11 @@ for a rule only one kind's rows need.
 - **An empty list says so and what to do, with no table**: "There are no
   categories yet. Add one with Add Category.", from the kind's `plural`
   and `label`, which name the tab's Add. A filtered list with no
-  rows says what to change instead, from its `noun` and its group's
-  `label`: "No category matches that filter. Try another name or group.",
-  "…or tradition." for a deity, and "No zodiac sign matches that filter.
-  Try another name." for a flat kind, which has no group to try.
+  rows names each filter in force and what to do, in the one wording every
+  admin list uses (`noMatchText`, `src/lib/text.ts`): "No categories match
+  “wort” and the group Fixture Healing. Change or clear the filter to see
+  more.", the group by its name and the kind's group `label`, "the
+  tradition …" for a deity.
 
 ## Styling
 
@@ -153,21 +154,20 @@ The list is the list primitives ([`styling.md`](../styling.md), "Designing
 a section"): the root a `.list-frame`, a [`ListFrame`](list-frame.md); the filter a
 [`FilterForm`](filter-form.md), so a `.filter-row` whose fields are
 `FieldShell`s around a native input and select and whose Filter is a solid
-button; and the table a `.data-table` in its `.data-table-frame`,
-banded at desktop width (every even row on the card surface, the owner's
-M5.6 call, kept at MB.115's sign-off over a hairline rule), with the
-`--stack` modifier, its roles written out
-(`tableRole` and `stackCell`, `src/lib/table-roles.ts`, as every admin
-table does) and a `data-label` on every cell, so under `$table-stack-width` of its
-frame each row turns into a card ("Tables at phone width"). The Edit cell's
-`data-label` is empty, so it has no label, and its
-`.data-table__card-action` stands it at the card's top right, beside the
-name (MB.115, the owner's call).
+button; and the table [`StackTable`](data-table.md), a `.data-table` in
+its `.data-table-frame`, banded at desktop width (every even row on the
+card surface, the owner's M5.6 call, kept at MB.115's sign-off over a
+hairline rule), with the `--stack` modifier, its roles written out and a
+`data-label` on every cell, so under `$table-stack-width` of its frame each
+row turns into a card ("Tables at phone width"). A flat kind passes no
+group column. Edit is a `'corner'` action column: its cell has no label,
+and stands at the card's top right, beside the name (MB.115, the owner's
+call).
 
-What the list has of its own: a description keeps to `$measure`; and under
-`.grouped-value-list--category`, while the table is wider than
-`$table-stack-width`, the cells take `space(3)` above and below and centre
-their contents, for the chip. As cards they keep the card's own spacing. The
+What the list has of its own: a description keeps to `$measure`; and the
+categories' table alone takes the `data-table--roomy` modifier, so while it
+is wider than `$table-stack-width` the cells take `space(3)` above and below
+and centre their contents, for the chip. As cards they keep the card's own spacing. The
 page's Add is `.btn--solid` beside its heading, its one primary action, and
 each row's Edit is the larger green pencil, a 2rem target
 ([`icon-tip.md`](icon-tip.md), "Styling"). The pager is `Pager`
