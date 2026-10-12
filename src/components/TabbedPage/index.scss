@@ -201,9 +201,11 @@ $track-inset: calc(1px + 0.125rem);
   height: $control-height;
   gap: 2px;
   overflow-x: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the tabs moves the page behind them, not yet Baseline
   overscroll-behavior-x: contain;
   // What a keyboard focus or the open tab scrolls into view clears the edge.
   scroll-padding-inline: space(6);
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: an older Safari shows a scrollbar under the tabs, widely available 2027-06-11
   scrollbar-width: none;
 
   &::-webkit-scrollbar {

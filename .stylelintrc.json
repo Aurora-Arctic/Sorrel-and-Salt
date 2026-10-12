@@ -30,7 +30,15 @@
     "color-function-notation": null,
     "color-function-alias-notation": null,
     "alpha-value-notation": null,
-    "media-feature-range-notation": null
+    "media-feature-range-notation": null,
+    "plugin/use-baseline": [
+      true,
+      {
+        "available": "widely",
+        "ignoreAtRules": ["function"],
+        "ignoreFunctions": ["light-dark"]
+      }
+    ]
   },
   "overrides": [
     {
@@ -40,5 +48,6 @@
         "color-named": null
       }
     }
-  ]
+  ],
+  "plugins": ["stylelint-plugin-use-baseline"]
 }

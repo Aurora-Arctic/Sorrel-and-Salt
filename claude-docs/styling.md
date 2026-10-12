@@ -89,13 +89,23 @@ to.
   column from `.page-frame`, which stops at the measure, or at the forms' narrower
   column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
-- **Browser baseline: Next's default modern targets** — Chrome, Edge and
-  Firefox 111, Safari 16.4, "baseline widely available" as of 2025-10-01
-  (`node_modules/next/dist/shared/lib/modern-browserslist-target.js`).
-  Turbopack's Lightning CSS lowers newer syntax to them, as it does
-  `light-dark()` (below). Each review checks the CSS it adds against this
-  baseline. Playwright's projects are Chromium only, so the owner's own look at
-  the dev server in Safari and Firefox is part of every sign-off.
+- **Browser floor: Baseline Widely Available, and below it the app degrades,
+  never breaks** (M10.24). A feature may be used freely once Chrome, Edge,
+  Firefox and Safari have all shipped it for 30 months. `package.json`'s
+  `browserslist` holds the one statement, `["baseline widely available"]`, and
+  it rolls forward each month with the data the lockfile pins, so a check that
+  passes today still passes tomorrow. On 2026-10-12 it resolved to Chrome and
+  Edge 123, Firefox 124, and Safari and iOS Safari 17.4. Turbopack's Lightning
+  CSS reads the same entry and lowers newer syntax to it, as it does
+  `light-dark()` (below), and `npm run lint:css` refuses CSS past it
+  (`stylelint-plugin-use-baseline`). A date was not pinned, because a pinned date
+  is the hand-kept version list this replaces under another name. A feature past
+  the floor is allowed only in the three shapes
+  [`.claude/rules/components.md`](../.claude/rules/components.md) lists.
+  JavaScript past it is held by `tests/guards/browser-floor.test.ts`.
+  Playwright's projects are Chromium only, so the owner's own look at the dev
+  server in Safari and Firefox is part of every sign-off. The decision:
+  [`design-decisions/m10.24-browser-floor.md`](design-decisions/m10.24-browser-floor.md).
 
 ## The palette
 
@@ -315,8 +325,8 @@ per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
 `chip()` refuses a slug at compile time.
 
-`light-dark()` is newer than Next's default browser targets (Safari 16.4), so
-Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
+`light-dark()` is newer than the browser floor (it needs Safari 17.5, the floor
+is 17.4), so Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
 a pair of `--lightningcss-*` switches, and the chip reads those. Nothing in this
 project writes either.
 
@@ -350,7 +360,7 @@ worded as `badge-token()`'s. It is a compile-time map rather than custom
 properties because the hues do not follow the theme and nothing reads them at
 runtime; a part that ever does differ by theme is written
 `(dark: …, light: …)`, and the accessor returns `light-dark()`, which
-Lightning CSS lowers to the baseline. SignInPanel's buttons and the
+Lightning CSS lowers to the browser floor. SignInPanel's buttons and the
 `.provider-mark` circle are its consumers; an SVG fill inside a mark is
 artwork, and stays in `icons.tsx`.
 
@@ -855,9 +865,8 @@ column's cell names its column in a `data-label` attribute:
 - **The label is written twice.** `content: attr(data-label)` and then
   `content: attr(data-label) / ''`: the second gives the label an empty
   alternative text, so a screen reader, which has the header, does not hear
-  the column name twice. Safari 16.4, the oldest browser supported ("Binding
-  rules"), drops the second declaration and keeps the first, so there the
-  name is read twice, which is acceptable.
+  the column name twice. A browser that drops the slash form (Firefox before 128) keeps the first declaration, so there the name is read twice, which is
+  acceptable: it is an enhancement past the floor ("Binding rules").
 - **A sticky cell is reset in its component.** A cell made
   `position: sticky`, as UserList's Impersonate column is, only works while
   the frame scrolls, and in a card it would sit over its neighbours, so the
@@ -919,6 +928,10 @@ What each section review (MB.115 to MB.124) designs to:
   `radius()` and its small type from `type-size()`. A shape two sections
   need is a primitive in `_primitives.scss`, drawn on the `Foundations` page,
   not two component rules.
+- **Each review checks the CSS it adds against `npm run lint:css`**, and looks
+  at the section in Safari and Firefox, in the audit profiles when a layout
+  changed. A feature past the floor needs one of the three shapes in
+  [`.claude/rules/components.md`](../.claude/rules/components.md).
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
 - **A centred page sits in `.page-frame`**, or

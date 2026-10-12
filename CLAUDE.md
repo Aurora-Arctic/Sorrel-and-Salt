@@ -99,6 +99,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 ## Conventions
 
 - **One task per PR.** Do not combine tasks, even small adjacent ones. A sub-hour fix noticed along the way rides in that task's PR and is named in its body, without an `MB` id (MB.31).
+- **The browser floor is Baseline Widely Available, and below it the app degrades, never breaks.** `package.json`'s `browserslist` is the one statement of it; the build lowers CSS to it and `npm run lint:css` refuses CSS past it. A feature past the floor is allowed only as a pure enhancement, inside `@supports` with a fallback, or in JavaScript behind a `typeof` or `in` check, and says so in a comment. `tests/guards/browser-floor.test.ts` holds client-reachable JavaScript. Playwright gates on Chromium alone. Long form: `.claude/rules/components.md` (M10.24).
 - **A table task, then a behaviour task.** Never bundle `CREATE TABLE` with the policy or service that governs it.
 - **The sweep-task rule.** A sweep over **database objects** lands once, right after the last object it covers, under a catalogue-introspection test. A sweep over **code** lands as a mechanism plus a mechanical guard, as early as it can be written, and each later task adopts it in its own PR. The tell: can the thing be made _impossible_, or only _absent_?
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.

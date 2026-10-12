@@ -43,7 +43,11 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 `category_groups` row, set inline from data, so the linter never sees it; a
 hex in a comment is not a colour to it either. It extends
 `stylelint-config-standard-scss`, adjusted where that set fights Prettier or
-the repo's Sass:
+the repo's Sass. It also runs `stylelint-plugin-use-baseline` with
+`available: "widely"` (M10.24), which refuses CSS past the browser floor
+([`styling.md`](styling.md), "Binding rules"); a feature that is an
+enhancement carries a disable comment saying what is lost and when it becomes
+widely available.
 
 - **Configured rather than off**: `selector-class-pattern` takes the repo's
   BEM names (`block__element--modifier`, each part kebab-case) where the
@@ -66,7 +70,7 @@ the repo's Sass:
   and `alpha-value-notation` (the two shadows are Sass's `rgba()` with an
   alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
   says what they mean), and `media-feature-range-notation` (both notations
-  sit inside the browser baseline; the repo writes `max-width:`).
+  sit inside the browser floor; the repo writes `max-width:`).
 
 ## Tests
 

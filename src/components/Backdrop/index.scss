@@ -78,6 +78,7 @@ body:has(.context-row) .backdrop--sorrel {
   @supports (animation-timeline: scroll()) {
     animation: sorrel-follow-bar linear both;
     animation-timeline: scroll(root block);
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above, a browser without scroll-driven animations never reads it, not yet Baseline
     animation-range: 0 var(--sorrel-row);
   }
 }

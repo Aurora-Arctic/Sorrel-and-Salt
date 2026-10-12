@@ -53,6 +53,7 @@
     margin: 0 0 space(1);
     translate: none;
 
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
     @starting-style {
       opacity: 0;
       transform: translateY(2px);
@@ -849,8 +850,9 @@
   //   elements have already.
   // - The label is written twice: `attr(data-label) / ''` gives it an empty
   //   alternative text, so a screen reader, which already has the header,
-  //   does not read the name twice. Safari 16.4 drops the second
-  //   declaration and keeps the first, which doubles the name there.
+  //   does not read the name twice. A browser that drops the slash
+  //   form (Firefox before 128) keeps the first declaration, which doubles the
+  //   name there.
   // - A cell a component makes `position: sticky`, as the user list's
   //   Impersonate column is, must be reset to `static` under this rule in the
   //   component's own stylesheet: a sticky cell only works while the frame
@@ -1169,6 +1171,7 @@
   .textarea {
     min-height: 6rem;
     line-height: 1.5;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the textarea has no drag handle, it keeps its height, not yet Baseline
     resize: vertical;
   }
 
@@ -1216,6 +1219,7 @@
       width: 1.125rem;
       height: 1.125rem;
       margin: 0;
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: an older Safari draws the native tick in its default blue, not yet Baseline
       accent-color: $accent;
       cursor: inherit;
 
@@ -1347,11 +1351,13 @@
       @include forced-colors {
         &::before {
           background-color: CanvasText;
+          // stylelint-disable-next-line plugin/use-baseline -- enhancement: the browser applies its own forced colours to the mark, still legible, not yet Baseline
           forced-color-adjust: none;
         }
 
         &:checked {
           background-color: Highlight;
+          // stylelint-disable-next-line plugin/use-baseline -- enhancement: the browser applies its own forced colours to the mark, still legible, not yet Baseline
           forced-color-adjust: none;
 
           &::before {
@@ -1540,6 +1546,7 @@
       @include forced-colors {
         &:checked {
           border-color: Highlight;
+          // stylelint-disable-next-line plugin/use-baseline -- enhancement: the browser applies its own forced colours to the mark, still legible, not yet Baseline
           forced-color-adjust: none;
 
           &::before {

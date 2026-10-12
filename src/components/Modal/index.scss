@@ -69,6 +69,7 @@ $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
   min-height: 0;
   padding: 0 space(5) space(5);
   overflow: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: scrolling past the end of the dialog moves the page behind it, not yet Baseline
   overscroll-behavior: contain;
   isolation: isolate;
 }
@@ -94,6 +95,7 @@ $modal-fade: 150ms ease-out;
     background-color $theme-transition-duration $theme-transition-easing,
     color $theme-transition-duration $theme-transition-easing;
 
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
@@ -102,6 +104,7 @@ $modal-fade: 150ms ease-out;
     opacity: 1;
     transition: opacity $modal-fade;
 
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
     @starting-style {
       opacity: 0;
     }
@@ -128,6 +131,7 @@ $modal-fade: 150ms ease-out;
 // dialog keeps its own scroll, so nothing in it is out of reach.
 :root:has(.modal-dialog:modal) {
   overflow: hidden;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the content shifts by a scrollbar width once it starts to scroll, widely available 2027-06-11
   scrollbar-gutter: stable;
 }
 
@@ -268,6 +272,7 @@ $modal-fade: 150ms ease-out;
   opacity: 1;
   transition: opacity $motion-short ease-out;
 
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
   }
