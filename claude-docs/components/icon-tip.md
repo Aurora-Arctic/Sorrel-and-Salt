@@ -24,10 +24,17 @@ Edit link.
 
 `EditLink`:
 
-| Prop   | Meaning                                                                                                       |
-| ------ | ------------------------------------------------------------------------------------------------------------- |
-| `href` | Where the edit opens, a typed `Route`: a list's address with its modal open (a soft navigation, `next/link`). |
-| `name` | What it edits. The link is named "Edit" and this, "Edit Aluminium, Aluminium", in `visually-hidden` text.     |
+| Prop      | Meaning                                                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `href`    | Where the edit opens, a typed `Route`: a list's address with its modal open (a soft navigation, `next/link`).                            |
+| `name`    | What it edits. The link is named "Edit" and this, "Edit Aluminium, Aluminium", in `visually-hidden` text.                                |
+| `heading` | The head of the modal the link opens, a `ModalHeading` (M9.18). The page builds it on the server with the builder the loaded modal uses. |
+
+`EditLink` is a client component since M9.18. A plain press of it opens the
+modal at once under `heading`, over a skeleton, and the form arrives in the
+same dialog ([`modal.md`](modal.md), "Opening at once"). It is still a link:
+a press with a modifier key, a new tab, or one before the script has loaded
+follows `href` as before.
 
 ## Where it is used
 

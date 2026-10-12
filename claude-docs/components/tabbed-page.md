@@ -111,7 +111,8 @@ it renders.
   in place of the list under the filter, and greys the filter row as this
   greys the tab row, `aria-busy` on it and its controls `aria-disabled`;
   the tab row stays live. A modal's `?edit=` or `?new` link navigates
-  within the tab with neither, so the list stays in place behind it.
+  within the tab with neither, so the list stays in place behind it; the
+  modal shows its own skeleton ([`modal.md`](modal.md), "Opening at once").
 - **A nav of links, not a `role="tablist"`.** Each tab navigates to another
   address. A tablist promises arrow-key movement between panels shown in
   place, which these are not. The row is a `nav` named by the page's title,
@@ -219,8 +220,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 - **Its fill** is the muted ink 18% into the card surface, as the combobox's
   quiet fills are, so both themes carry it on the page and on a card; its
   shimmer, a band 7% into the card surface, passes across every shape every
-  1.4s. The fill is the `$fill-quiet` token; the shimmer is a local
-  `color-mix` of existing tokens, and no text sits on either. The filter's
+  1.4s. The fill is the `$fill-quiet` token; the shimmer is the shared
+  `skeleton-shape` mixin (`src/scss/_mixins.scss`, keyframes
+  `skeleton-shimmer` in `_primitives.scss`; M9.18 moved it there, for the
+  modal's skeleton to share), a `color-mix` of existing tokens, and no text sits on either. The filter's
   bars and the pager's stand at `$control-height`, and the filter's fields
   at `$filter-choice-width`, so the skeleton is as tall and wide as the
   controls that replace it.

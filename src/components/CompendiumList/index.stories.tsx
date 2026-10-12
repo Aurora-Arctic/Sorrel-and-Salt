@@ -41,6 +41,7 @@ const entry = (
     canonicalName,
     forms,
     editHref: compendiumHref({}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Ingredient', title: name, qualifier: canonicalName ?? undefined },
   };
 };
 

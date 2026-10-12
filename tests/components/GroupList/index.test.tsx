@@ -22,6 +22,7 @@ const WARDS: GroupListEntry = {
   colorDark: '#4e8bc2',
   colorLight: '#0c5393',
   editHref: groupsHref('category', {}, { edit: 'fixture-wards' }),
+  editHeading: { eyebrow: 'Edit Category Group', title: 'Fixture Wards' },
 };
 
 describe('GroupList', () => {

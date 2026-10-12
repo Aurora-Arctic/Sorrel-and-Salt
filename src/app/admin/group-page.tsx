@@ -24,8 +24,10 @@ import {
 } from '@/modules/vocabulary';
 import GroupDialog from './group-dialog';
 import { GROUP_READERS } from './group-readers';
-import { AddAction, pagerHrefs, readEditPlace, readListPlace } from './list-page';
+import AddAction from './add-action';
+import { pagerHrefs, readEditPlace, readListPlace } from './list-page';
 import MissingNotice from './missing-notice';
+import type { ModalHeading } from '../../components/Modal/types';
 import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';
 
 // The page every group vocabulary shares (MB.115): the category groups and
@@ -110,6 +112,15 @@ async function readGroup(kind: GroupKind, slug: string) {
 }
 
 /**
+ * A group's edit dialog head (MB.115): the name it was saved under, which a
+ * rename leaves until it saves, under the kind; its row's Edit opens with the
+ * same head (M9.18).
+ */
+function editHeading(kind: GroupKind, name: string): ModalHeading {
+  return { eyebrow: `Edit ${KINDS[kind].label}`, title: name };
+}
+
+/**
  * The kind's Add, the open tab's action beside the page's heading: its
  * route group's `@action` slot renders it, so it changes with the tab
  * (claude-docs/components/tabbed-page.md). It keeps the list's search and
@@ -118,7 +129,12 @@ async function readGroup(kind: GroupKind, slug: string) {
 export async function GroupAction({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { here } = readPlace(kind, await searchParams);
-  return <AddAction href={groupsHref(kind, here, 'new')}>{KINDS[kind].add}</AddAction>;
+  const { add, label } = KINDS[kind];
+  return (
+    <AddAction href={groupsHref(kind, here, 'new')} heading={{ title: `Add ${label}` }}>
+      {add}
+    </AddAction>
+  );
 }
 
 /**
@@ -147,6 +163,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
     colorDark: node.colorDark,
     colorLight: node.colorLight,
     editHref: groupsHref(kind, here, { edit: node.slug }),
+    editHeading: editHeading(kind, node.name),
   }));
   const closeHref = groupsHref(kind, here);
 
@@ -160,34 +177,30 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
         filter={search ? { query } : undefined}
         {...pagerHrefs(page.pageInfo, (cursor) => groupsHref(kind, { query, ...cursor }))}
       />
-      {adding && (
-        <GroupDialog
-          kind={kind}
-          heading={{ title: `Add ${label}` }}
-          closeHref={closeHref}
-          groups={choices}
-        />
-      )}
-      {edited && (
-        <GroupDialog
-          // A fresh form per group: one opened after another starts from its own values.
-          key={edited.group.id}
-          kind={kind}
-          // Named by the name it was saved under, which a rename leaves until it saves (MB.115).
-          heading={{ eyebrow: `Edit ${label}`, title: edited.group.name }}
-          closeHref={closeHref}
-          group={{
-            id: edited.group.id,
-            name: edited.group.name,
-            description: edited.group.description,
-            // A form group's and a tradition's are `''`: they have none.
-            colorDark: edited.group.colorDark ?? '',
-            colorLight: edited.group.colorLight ?? '',
-          }}
-          groups={choices}
-          memberCount={edited.memberCount}
-        />
-      )}
+      {/* One dialog in one place for an add and an edit alike, rendered
+          whatever the address opens, so a press opens it at once and its form
+          arrives in it (M9.18). */}
+      <GroupDialog
+        kind={kind}
+        closeHref={closeHref}
+        opened={
+          adding
+            ? { heading: { title: `Add ${label}` } }
+            : edited && {
+                heading: editHeading(kind, edited.group.name),
+                group: {
+                  id: edited.group.id,
+                  name: edited.group.name,
+                  description: edited.group.description,
+                  // A form group's and a tradition's are `''`: they have none.
+                  colorDark: edited.group.colorDark ?? '',
+                  colorLight: edited.group.colorLight ?? '',
+                },
+                memberCount: edited.memberCount,
+              }
+        }
+        groups={choices}
+      />
     </>
   );
 }

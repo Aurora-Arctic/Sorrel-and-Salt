@@ -43,6 +43,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     cell: (entry) => (
       <EditLink
         href={entry.editHref}
+        heading={entry.editHeading}
         name={entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
       />
     ),

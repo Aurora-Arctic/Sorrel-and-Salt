@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { PagerHrefs } from '../../app/admin/types';
+import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
@@ -39,6 +40,8 @@ export interface GroupedValueListEntry {
   /** The group's chip pair, which its name is drawn in; none draws it plain. */
   groupColors?: GroupColors;
   editHref: Route;
+  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  editHeading: ModalHeading;
 }
 
 export interface GroupedValueListProps extends Partial<PagerHrefs> {

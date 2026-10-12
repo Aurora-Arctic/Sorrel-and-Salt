@@ -8,7 +8,8 @@ import type { GroupedValueListEntry } from '../../components/GroupedValueList/ty
 import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import { single } from '../../lib/search-params';
-import { AddAction, pagerHrefs, readEditPlace, readListPlace } from './list-page';
+import AddAction from './add-action';
+import { pagerHrefs, readEditPlace, readListPlace } from './list-page';
 import MissingNotice from './missing-notice';
 import ValueDialog from './value-dialog';
 import { VALUE_KINDS } from './value-kinds';
@@ -81,7 +82,7 @@ async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
  */
 function editHeading(
   kind: GroupedValueKind,
-  { name, groupId }: ValueRow,
+  { name, groupId }: Pick<ValueRow, 'name' | 'groupId'>,
   groupsById: ReadonlyMap<string, ValueGroupRow>,
 ): ModalHeading {
   const tradition = kind === 'deity' && groupId ? groupsById.get(groupId)?.name : undefined;
@@ -97,7 +98,12 @@ function editHeading(
 export async function ValueAction({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { here } = await readPlace(kind, await searchParams);
-  return <AddAction href={groupedValuesHref(kind, here, 'new')}>Add {KINDS[kind].label}</AddAction>;
+  const title = `Add ${KINDS[kind].label}`;
+  return (
+    <AddAction href={groupedValuesHref(kind, here, 'new')} heading={{ title }}>
+      {title}
+    </AddAction>
+  );
 }
 
 /**
@@ -132,6 +138,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
           ? { colorDark: own.colorDark, colorLight: own.colorLight }
           : undefined,
       editHref: groupedValuesHref(kind, here, { edit: node.slug }),
+      editHeading: editHeading(kind, node, groupsById),
     };
   });
   const closeHref = groupedValuesHref(kind, here);
@@ -150,30 +157,27 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
           groupedValuesHref(kind, { ...filter, ...cursor }),
         )}
       />
-      {adding && (
-        <ValueDialog
-          kind={kind}
-          heading={{ title: `Add ${label}` }}
-          closeHref={closeHref}
-          groups={choices}
-        />
-      )}
-      {edited && (
-        <ValueDialog
-          // A fresh form per value: one opened after another starts from its own values.
-          key={edited.id}
-          kind={kind}
-          heading={editHeading(kind, edited, groupsById)}
-          closeHref={closeHref}
-          value={{
-            id: edited.id,
-            name: edited.name,
-            description: edited.description,
-            groupId: edited.groupId,
-          }}
-          groups={choices}
-        />
-      )}
+      {/* One dialog in one place for an add and an edit alike, rendered
+          whatever the address opens, so a press opens it at once and its form
+          arrives in it (M9.18). */}
+      <ValueDialog
+        kind={kind}
+        closeHref={closeHref}
+        opened={
+          adding
+            ? { heading: { title: `Add ${label}` } }
+            : edited && {
+                heading: editHeading(kind, edited, groupsById),
+                value: {
+                  id: edited.id,
+                  name: edited.name,
+                  description: edited.description,
+                  groupId: edited.groupId,
+                },
+              }
+        }
+        groups={choices}
+      />
     </>
   );
 }

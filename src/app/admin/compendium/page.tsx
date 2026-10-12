@@ -23,7 +23,8 @@ import {
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { listIngredientFormValues } from '@/modules/vocabulary';
-import { AddAction, pagerHrefs, readEditPlace, readListPlace } from '../list-page';
+import AddAction from '../add-action';
+import { pagerHrefs, readEditPlace, readListPlace } from '../list-page';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { IngredientFormValues } from '../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
@@ -111,6 +112,9 @@ const readEntry = async (slug: string) => {
   };
 };
 
+/** The add dialog's head and the button that opens it. */
+const ADD_TITLE = 'Add Ingredient';
+
 /**
  * The nomenclatures whose formal name is a binomial, set in italics; a
  * mineral's or a chemical's is set upright (claude-docs/styling.md, "Type").
@@ -124,9 +128,19 @@ const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
 /**
  * An entry's edit dialog head (MB.115): the name it was saved under, not the
  * Name field's, and its formal name after it, as the list's rows name it.
+ * Its row's Edit opens with the same head (M9.18), so it reads the fields the
+ * row and the form's values share; a row's missing formal name is `null`.
  */
-function editHeading({ name, canonicalName, nomenclature }: IngredientFormValues): ModalHeading {
-  const formal = canonicalName.trim();
+function editHeading({
+  name,
+  canonicalName,
+  nomenclature,
+}: {
+  name: string;
+  canonicalName: string | null;
+  nomenclature: IngredientFormValues['nomenclature'];
+}): ModalHeading {
+  const formal = (canonicalName ?? '').trim();
   const set = BINOMIAL_KINDS.has(nomenclature) ? (
     <span className="binomial">{formal}</span>
   ) : (
@@ -179,13 +193,18 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     canonicalName: node.canonicalName,
     forms: page.forms[i],
     editHref: compendiumHref(here, { edit: node.slug }),
+    editHeading: editHeading(node),
   }));
 
   return (
     <main>
       <PageHeader
         title="Compendium"
-        action={<AddAction href={compendiumHref(here, 'new')}>Add Ingredient</AddAction>}
+        action={
+          <AddAction href={compendiumHref(here, 'new')} heading={{ title: ADD_TITLE }}>
+            {ADD_TITLE}
+          </AddAction>
+        }
       />
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumList
@@ -197,14 +216,22 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       />
       {/* One dialog in one place for both, so Save Ingredient's move from ?new
           to ?edit= keeps the modal open rather than fading it out and in; the
-          form inside is keyed by the entry, so each opens on its own values. */}
-      {(adding || editing) && (
-        <CompendiumDialog
-          heading={editing ? editHeading(editing.values) : { title: 'Add Ingredient' }}
-          place={here}
-          entry={editing && { id: editing.id, values: editing.values }}
-        />
-      )}
+          form inside is keyed by the entry, so each opens on its own values.
+          Rendered whatever the address opens, so a press opens it at once and
+          its form arrives in it (M9.18). */}
+      <CompendiumDialog
+        place={here}
+        opened={
+          editing
+            ? {
+                heading: editHeading(editing.values),
+                entry: { id: editing.id, values: editing.values },
+              }
+            : adding
+              ? { heading: { title: ADD_TITLE } }
+              : undefined
+        }
+      />
     </main>
   );
 }

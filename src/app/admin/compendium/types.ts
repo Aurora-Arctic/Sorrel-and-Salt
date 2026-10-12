@@ -26,10 +26,17 @@ export interface EditedEntry {
   values: IngredientFormValues;
 }
 
-export interface CompendiumDialogProps {
+/** What the page's address opens: an add, or the entry it edits. */
+export interface OpenedEntry {
   /** "Add Ingredient", or the edited entry's eyebrow, name and formal name (MB.115). */
   heading: ModalHeading;
+  /** The entry edited; none for an add. */
+  entry?: EditedEntry;
+}
+
+export interface CompendiumDialogProps {
   /** The list the modal opened over, which closing it returns to and a save reopens from. */
   place: CompendiumPlace;
-  entry?: EditedEntry;
+  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  opened?: OpenedEntry;
 }

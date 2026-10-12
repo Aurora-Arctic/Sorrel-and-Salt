@@ -4,6 +4,7 @@ import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
 import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
 import Modal, { ConfirmQuestion, DiscardQuestion, RouteModal, useDiscardGuard } from '.';
+import { RouteModalContext } from './route-modal-provider';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
@@ -140,18 +141,43 @@ EditingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
 // nowhere, so Close, Escape and Done fade it out and leave it gone until the
 // story is reloaded. Done stands for a form's save.
 export const OpenedByItsAddress: Story = () => (
-  <RouteModal eyebrow="Edit Category" title="Testcraft" closeHref={'/admin/categories' as Route}>
-    {(done) => (
-      <div className="modal__actions">
-        <button type="button" className="btn btn--solid" onClick={done}>
-          Done
-        </button>
-      </div>
-    )}
-  </RouteModal>
+  <RouteModal
+    closeHref={'/admin/categories' as Route}
+    content={{
+      heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
+      body: (done) => (
+        <div className="modal__actions">
+          <button type="button" className="btn btn--solid" onClick={done}>
+            Done
+          </button>
+        </div>
+      ),
+    }}
+  />
 );
 
 OpenedByItsAddress.meta = { iframed: true };
+
+// A route modal pressed open while its page is on its way (M9.18): the
+// pressed row's head over the form's skeleton, through a provider whose
+// navigation never arrives, since the workshop's router goes nowhere.
+export const Loading: Story = () => (
+  <RouteModalContext.Provider
+    value={{
+      loading: { eyebrow: 'Edit Category', title: 'Testcraft' },
+      open: () => undefined,
+      cancel: () => undefined,
+    }}
+  >
+    <RouteModal closeHref={'/admin/categories' as Route} />
+  </RouteModalContext.Provider>
+);
+export const LoadingPhoneDark: Story = () => <Loading />;
+export const LoadingPhoneLight: Story = () => <Loading />;
+
+Loading.meta = { iframed: true };
+LoadingPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+LoadingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
 
 /**
  * A form with a change, asked on opening whether to discard it, as Cancel,

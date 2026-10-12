@@ -39,6 +39,7 @@ const category = (name: string, groupName: string, description: string) => {
     groupName,
     groupColors: COLORS[groupName],
     editHref: groupedValuesHref('category', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Category', title: name },
   };
 };
 
@@ -53,6 +54,7 @@ const form = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     editHref: groupedValuesHref('form', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Form', title: name },
   };
 };
 
@@ -67,6 +69,7 @@ const deity = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     editHref: groupedValuesHref('deity', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Deity', title: name, qualifier: groupName },
   };
 };
 
@@ -239,6 +242,7 @@ const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) 
     description,
     groupName: '',
     editHref: groupedValuesHref(kind, {}, { edit: slug }),
+    editHeading: { title: name },
   };
 };
 

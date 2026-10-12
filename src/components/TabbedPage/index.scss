@@ -41,7 +41,7 @@
 // sits under WCAG 1.4.11's 3:1 against the track; the others plain muted
 // text. The page ground would sit darker than the track in the light theme
 // and read as a dent rather than a pill. The mixes are this row's alone, so
-// local rather than tokens, as the skeleton's are; `tests/scss/tokens.test.ts`
+// local rather than tokens, as the skeleton shape's are; `tests/scss/tokens.test.ts`
 // holds the open tab's label and edge to their floors. A size container, so
 // the row measures its own width rather than the screen's.
 $segment-edge: color-mix(in srgb, $text-muted 35%, $surface-card);
@@ -234,17 +234,12 @@ $segment-shade: $hairline;
   @include arrived;
 }
 
-// The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`).
-// Its fill is the muted ink a little way into the card surface, as the
-// combobox's quiet fills are, so both themes carry it on the page and on a
-// card; its shimmer a lighter step of the same. Shown at once, with a short
+// The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`),
+// its shapes the shared `skeleton-shape` (_mixins.scss). Shown at once, with a short
 // fade: the press has already taken the old content away, so holding the
 // skeleton back would leave the panel blank, which is the snap it is there
 // to avoid. A size container, so its rows turn to cards under the width the
 // real table stacks at.
-$skeleton-fill: $fill-quiet;
-$skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
-
 .tab-skeleton {
   container: tab-skeleton / inline-size;
   @include arrived($motion-short);
@@ -255,24 +250,9 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
   @include stack;
 }
 
-// Every shape: a rounded bar of the fill, the shimmer passing across it.
-// Still, with no shimmer, where motion is reduced.
+// Every shape: a rounded bar, the shimmer passing across it.
 .tab-skeleton__shapes span {
-  display: block;
-  height: 1rem;
-  border-radius: radius('control');
-  background-image: linear-gradient(
-    90deg,
-    $skeleton-fill 0%,
-    $skeleton-shine 50%,
-    $skeleton-fill 100%
-  );
-  background-size: 200% 100%;
-  animation: tab-skeleton-shimmer 1.4s ease-in-out infinite;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include skeleton-shape;
 }
 
 // The filter row: the search box and a narrower select, a control's height
@@ -387,15 +367,5 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 @container tab-skeleton (max-width: #{$narrow-column}) {
   .tab-skeleton__filter > span {
     flex-basis: 100%;
-  }
-}
-
-@keyframes tab-skeleton-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
   }
 }

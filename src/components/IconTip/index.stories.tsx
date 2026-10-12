@@ -28,7 +28,7 @@ const Rows = (): ReactElement => (
           <tr key={name}>
             <td data-label="Name">{name}</td>
             <td className="data-table__card-action" data-label="">
-              <EditLink href={`#edit-${name}`} name={name} />
+              <EditLink href={`#edit-${name}`} name={name} heading={{ title: name }} />
             </td>
           </tr>
         ))}

@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { PagerHrefs } from '../../app/admin/types';
+import type { ModalHeading } from '../Modal/types';
 import type { PagePosition } from '../../lib/types';
 
 /**
@@ -18,6 +19,8 @@ export interface CompendiumListEntry {
   /** Its live forms' text, in form order: `[]` for an entry with none. */
   forms: string[];
   editHref: Route;
+  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  editHeading: ModalHeading;
 }
 
 export interface CompendiumListProps extends Partial<PagerHrefs> {

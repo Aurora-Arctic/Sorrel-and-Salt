@@ -49,6 +49,7 @@ const Modal = ({
   qualifier,
   onClose,
   size,
+  loading = false,
   children,
 }: ModalProps): ReactElement => {
   const ref = useRef<HTMLDialogElement>(null);
@@ -71,6 +72,19 @@ const Modal = ({
     }
     return () => dialog.close();
   }, []);
+
+  // Contents that arrive after it opened (M9.18), a route modal's form in
+  // place of its skeleton, take the focus as contents there from the start
+  // do: their first field, if the focus is still on the dialog itself and
+  // not on Close, where a person may have tabbed while it loaded.
+  const wasLoading = useRef(loading);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (wasLoading.current && !loading && dialog && document.activeElement === dialog) {
+      firstShownField(body.current ?? dialog)?.focus();
+    }
+    wasLoading.current = loading;
+  }, [loading]);
 
   // It fades out before the owner is asked to close it, the owner's call
   // during M5.5: the owner's unmount would take it away at once. Asked once,
@@ -215,7 +229,7 @@ const Modal = ({
       {/* The body scrolls beneath the header, rather than the whole dialog,
           so a question's layer can lie over exactly the part in view. */}
       <div className="modal-dialog__main">
-        <div ref={body} className="modal-dialog__body">
+        <div ref={body} className="modal-dialog__body" aria-busy={loading || undefined}>
           <CloseGuardContext.Provider value={guard}>
             <HeaderSlotContext.Provider value={headerSlot}>
               <ConfirmLayerContext.Provider value={layer}>
