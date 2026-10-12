@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listHref } from '@/lib/list-href';
+import { dialogParams, listHref } from '@/lib/list-href';
 
 // The one shared path every list's address goes through (rule 5): a bare flag
 // is what the pages read `?new` and `?awaiting` by, and a blank filter must
@@ -21,5 +21,20 @@ describe('listHref', () => {
     expect(listHref('/admin/compendium', { after: 'x/y z', new: true })).toBe(
       '/admin/compendium?after=x%2Fy+z&new',
     );
+  });
+});
+
+// The modal's half of a list's address: the three href.ts files encoded it
+// alike before MB.115, and the pages read `new` by presence.
+describe('dialogParams', () => {
+  it('writes the add form as a bare flag and an edit by its slug', () => {
+    expect(listHref('/admin/categories', dialogParams('new'))).toBe('/admin/categories?new');
+    expect(listHref('/admin/categories', dialogParams({ edit: 'testwort' }))).toBe(
+      '/admin/categories?edit=testwort',
+    );
+  });
+
+  it('writes no modal as neither', () => {
+    expect(listHref('/admin/categories', dialogParams())).toBe('/admin/categories');
   });
 });

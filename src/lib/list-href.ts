@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ListHrefParams } from './types';
+import type { ListDialog, ListDialogParams, ListHrefParams } from './types';
 
 // The address of a list page under its filter, at a cursor, with a modal open
 // over it or not: `/admin/users?query=wort&awaiting`. Every list's links,
@@ -24,4 +24,15 @@ export function listHref(path: string, params: ListHrefParams = {}): Route {
     return value ? [pair(name, value)] : [];
   });
   return (parts.length ? `${path}?${parts.join('&')}` : path) as Route;
+}
+
+/**
+ * The modal open over a list, as the two parameters its address carries,
+ * spread into `listHref`'s params after the filter and cursor: `?new`, or
+ * `?edit=<slug>`, or neither. Both names are always given, the absent one
+ * as `false` or `undefined`, which `listHref` leaves out, so a caller
+ * cannot write both.
+ */
+export function dialogParams(dialog?: ListDialog): ListDialogParams {
+  return { new: dialog === 'new', edit: dialog === 'new' ? undefined : dialog?.edit };
 }
