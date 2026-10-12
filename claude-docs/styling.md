@@ -722,8 +722,8 @@ draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 ## The page frame
 
 `.page-frame` is the centred, full-height column of a page with no AppShell:
-Welcome, sign-in, the account pages, the not-authorized page and the
-invitation. Its children stand `space(6)` apart and stop at `$measure`;
+Welcome, sign-in, the account pages, the not-authorized page, the
+invitation and the create-workspace page. Its children stand `space(6)` apart and stop at `$measure`;
 `.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
 column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
 and below and `space(4)` at the sides, `border-box`, so a page a screen high

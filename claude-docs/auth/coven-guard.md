@@ -88,3 +88,36 @@ land.**
 Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
 for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
 (the same in a browser, keyboard reach and an axe scan).
+
+## The create page (M9.16)
+
+`/coven/new` is where someone holding `canCreateWorkspace` names a new
+coven. It is `src/app/coven/new/page.tsx`, and it is reached two ways: from
+`/coven`, which offers it to a rights holder with no coven yet (M2.8), and
+from the switcher's Create Workspace choice, offered to anyone holding the
+right (M6.9). A successful create lands on the new coven's index page as its
+owner ([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
+
+- **A static segment beside `[slug]`.** Next routes `/coven/new` to this page
+  before it tries `[slug]`, so the coven layout and its guard never run here.
+  The page runs `requireSession()` itself.
+- **`new` is never a coven's slug.** Otherwise a coven named "New" could
+  never be reached. `isReservedCovenSlug` in `src/lib/coven-path.ts` names
+  the segment, and the creation service skips it when it picks a slug, as it
+  skips a taken one, so "New" becomes `new-2`. The service is the one place
+  a workspace slug is made, so nothing else needs the check. `covenSlugOf`
+  reads `/coven/new` as no workspace too, so the switcher shows none chosen
+  there.
+- **The right is read from the row, not the session.** Accepting an
+  invitation sets it mid-session (`Session`), so the page asks `getMe`.
+- **A user without the right gets a notice, not a 404.** The page exists for
+  everyone, so hiding it hides nothing. They see a quiet notice saying how to
+  get the right, and no form. Hiding the form is presentation:
+  `createWorkspace` refuses them with `Forbidden` whatever the page shows.
+- **Centred like the email page** (the owner's call, 2026-10-12): a
+  `.panel` in `.page-frame--narrow`.
+
+Tests: `tests/app/coven/new/page.test.tsx` (the form for a holder, the notice
+for anyone else), `tests/modules/coven/services/workspace-creation.test.ts`
+(the refusal, and "New" taking `new-2`), `tests/lib/coven-path.test.ts` and
+`tests/e2e/coven-create.spec.ts` (Story 3 in a real browser).

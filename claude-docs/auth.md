@@ -88,6 +88,10 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds the places for Leave Workspace, shown to every role, and Delete Workspace, shown to roles holding `workspace: delete`; both stay disabled until M6.15 and M6.14 wire them. [`auth/coven-guard.md`](auth/coven-guard.md)
 
+## The create page (M9.16)
+
+`/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as owner. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
+
 ## The user list (MB.52)
 
 `/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)

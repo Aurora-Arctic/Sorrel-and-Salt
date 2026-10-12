@@ -7,4 +7,10 @@ export interface SwitcherWorkspace {
 export interface WorkspaceSwitcherProps {
   /** Every workspace the viewer is a member of, in the order to list them. */
   workspaces: readonly SwitcherWorkspace[];
+  /**
+   * The viewer holds `canCreateWorkspace`, read from the row: the list ends
+   * with a Create Workspace choice going to the create page (M9.16). Hiding it
+   * is presentation; the creation service is still the gate.
+   */
+  canCreate?: boolean;
 }
