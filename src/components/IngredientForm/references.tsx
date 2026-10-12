@@ -50,18 +50,30 @@ import { draftOf, sourceTierOf } from './values';
 // id and locator are sent (claude-docs/components/ingredient-form.md, "The
 // references" and "Editing a source").
 
+/**
+ * What the form holds of a source: its id and tier, its full citation, and
+ * the fields its short form is made from. One fragment for the search and
+ * the panel's two saves, so a row reads the same whichever way it came.
+ * Defined before its first use, as codegen reads the documents in order.
+ */
+export const ReferenceRowFragment = graphql(`
+  fragment ReferenceRow on Reference {
+    id
+    citation
+    isGlobal
+    kind
+    authors
+    title
+    container
+  }
+`);
+
 export const ReferenceSuggestionsDocument = graphql(`
   query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {
     referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
-          id
-          citation
-          isGlobal
-          kind
-          authors
-          title
-          container
+          ...ReferenceRow
         }
       }
     }
