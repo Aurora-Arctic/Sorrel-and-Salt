@@ -1319,18 +1319,37 @@ _Story:_ As a user, I want one persistent navigation frame so that every page is
 
 `AppShell`, added to §9's Components list by this audit. M8.16 and M8.17 require the add and edit modals to be "reachable from the main nav on any page", but no task and no route built an app-wide nav — `WorkspaceSwitcher` (M6.9) and the coven layout (M6.10) do not cover it, and both compendium and ingredient detail sit outside `/coven/` entirely. `/admin` is the other layout it wraps: M5.4's admin layout nests inside it as the coven layout does, and `AdminNav` becomes the admin area's section nav beneath the shell's own.
 
-**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell leaves a place in its nav for them, MB.122 designs that place, and M8.16 and M8.17 fill it.
+**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell carries one global Add Ingredient button, disabled until M8.16 builds the modal, and M8.17 builds Edit Ingredient where an ingredient is shown (amended 2026-10-12, see "Folded in").
+
+**Folded in: MB.122, 2026-10-12.** MB.122 was minted during M5.4 so that the nav would be designed once this task built it. The owner folded it into this task on 2026-10-12: once the design is chosen before the build, the review and the build are one piece of work. The design was chosen from a rendered mock-up the same day: **Option C, the "context header"**. It is a slim global bar (brand, Add Ingredient, account menu, theme toggle); beneath it a context row that names the coven as the switcher, or "Admin" as plain text, with the section nav as icon tabs beside it; and on a phone the section nav becomes a bottom bar. The options drawn, the research and the reasons are in [`design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md); the approved plan is [`mb.7-plan.md`](../design-decisions/mb.7-plan.md). MB.122 is retired (below).
+
+This task now also does the design review MB.122 described. It reviews and builds the primary nav, where `WorkspaceSwitcher` and the global Add Ingredient button sit, the Admin entry, the section navs beneath the shell's nav (the coven layout's and `AdminNav`) and the whole at phone width (375px). A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built, in the workshop and the running app, in both themes, at desktop and at phone width, and builds what the owner signed off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change except where this entry says so; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; this task moves it into the shell's bar on shell pages, and the fixed corner stays only on pages outside the shell.
+
+_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). It was a wrapping row of links wider than a phone and a `<details>` disclosure at a phone's width. This task settles where it sits under the shell's nav and replaces both shapes with the one section nav component (icon tabs in the context row; a bottom bar on a phone), so the disclosure goes. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
 
 _Acceptance criteria:_
 
 - Wraps every signed-in page, inside and outside `/coven/`
-- Carries the primary nav and the `WorkspaceSwitcher`, passing it `canCreate` from the user row so a rights holder sees its Create Workspace choice (M9.16), which an e2e spec walks to `/coven/new` (`@story-3`), and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
+- Carries the primary nav and the `WorkspaceSwitcher`, passing it `canCreate` from the user row so a rights holder sees its Create Coven choice (M9.16), which an e2e spec walks to `/coven/new` (`@story-3`)
+- Carries one global Add Ingredient button, a labelled button at every width, disabled until M8.16 and absent for an unverified account. Its target follows the area: a coven page adds to that coven's ingredients, an admin page to the compendium, elsewhere the viewer's only coven or a choice. There is no Edit Ingredient in the shell: editing lives wherever an ingredient is shown, never inside a relational field, and M8.16 and M8.17 build to that (amended 2026-10-12)
+- The brand link goes to `/admin` for an admin and to the viewer's coven otherwise. The shell works that out itself (the first coven by slug, `/coven/new` for someone who holds none and may create, `/account` otherwise) until M2.8 (#270) builds the `/coven` landing, which then replaces the href with `/coven`
+- No switcher on admin pages: the context row reads "Admin", and a Your Coven link takes its place in the bar. On coven pages the context row's name is the switcher
+- On-screen copy says Coven ("Select Coven", "Create Coven", "Your Coven", the section nav labelled "Coven"); code, schema and docs keep saying workspace
 - The coven layout nests inside it and adds only workspace-scoped chrome
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
 - Admin entry appears only for admins
-- An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries (added 2026-10-10, on the owner's call)
-- axe clean, keyboard navigable
+- An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries, and the theme toggle on a phone (added 2026-10-10, on the owner's call)
+- The owner signs off the design, in both themes and at phone width, recorded as a comment on this issue (given 2026-10-12 on the mock-up; the comment is still to be posted)
+- No page in the shell scrolls sideways at 375px, and its body copy keeps to the reading measure
+- Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
+- axe clean with visible keyboard focus; the e2e specs and stories pass
+- Each component's doc updates its Styling section, and its stories show the reviewed design
+- Every nav marks the current page, with `aria-current` as well as visually
+- At phone width the nav is reachable and operable by keyboard and by screen reader
+- The section navs read as beneath the shell's nav, not beside it
 
 **MB.8 — Zod schema for spells** · 1h
 
@@ -3671,28 +3690,19 @@ _Acceptance criteria:_
 - A row being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
 
-**MB.122 — Design review: the navigation** · 2h
+**MB.122 — ~~Design review: the navigation~~** · **RETIRED 2026-10-12, folded into MB.7**
 
-_Story:_ As a user, I want the navigation to look finished and show me where I am, so that moving around the site is effortless on any screen.
+> **Retired without being done as its own task.** The ID is kept because task IDs
+> are immutable. The review and the build are one piece of work once the design is
+> chosen before the build, and the design was chosen from a rendered mock-up on
+> 2026-10-12 (the owner's call). MB.7 now carries the review's scope, its "Left by
+> MB.116" and "Left by MB.115" notes and its acceptance criteria. The design
+> chosen, its options and its reasons are in
+> [`design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
+> MB.7 keeps its own 2h. The two entries added up to 4h, and no new figure
+> has been invented for the merged task; the owner sets it.
 
-Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control. It moved to Wave 9 with MB.7 (2026-10-11), before the add and edit modals exist, so it designs the place MB.7 leaves for them, and M8.16 and M8.17 build to that design.
-
-A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
-
-_Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; where it goes is this review's to settle once the nav exists.
-
-_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). Wider than a phone it is a wrapping row of links; at a phone's width it is a `<details>` disclosure listing them in the `/admin` index's sections, the owner's jump menu built as real links so it works before the page's script has loaded. Where it sits under the shell's nav, and whether the disclosure stays, is this review's to settle. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
-
-_Acceptance criteria:_
-
-- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
-- No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
-- Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
-- Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
-- Each component's doc updates its Styling section, and its stories show the reviewed design
-- Every nav marks the current page, with `aria-current` as well as visually
-- At phone width the nav is reachable and operable by keyboard and by screen reader
-- The section navs read as beneath the shell's nav, not beside it
+See **MB.7**.
 
 **MB.123 — Design review: the grimoire** · 3h
 
