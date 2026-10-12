@@ -7,22 +7,30 @@ import type { MembershipWithWorkspace } from '../types';
 
 /**
  * The live memberships of each user named, one answer per id in the order
- * given: a DataLoader's batch. A user may list only their own covens — a site
- * admin included, since an admin reaches no workspace — so any other id is
+ * given: a DataLoader's batch. A caller may list their own covens, and a site
+ * admin may list anyone's, by workspace and role alone; any other id is
  * answered with a `Forbidden` in its own slot, and the rest of the batch
  * stands. Two queries whatever the batch size.
+ *
+ * An admin's reading widens this list and nothing else: it yields no
+ * `Membership` proof, so a coven's ingredients and grimoire stay out of reach
+ * (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). The role is
+ * read off the session, as `identity`'s own admin check does, because
+ * `coven` may import only that module's index, which does not export it.
  */
 export async function membershipsOf(
   session: Session,
   userIds: readonly string[],
 ): Promise<(MembershipWithWorkspace[] | Forbidden)[]> {
-  const permitted = userIds.filter((id) => id === session.userId);
+  const isAdmin = session.role === 'admin';
+  const mayList = (id: string) => isAdmin || id === session.userId;
+  const permitted = userIds.filter(mayList);
   const rows = await findMembershipsOfUsers([...new Set(permitted)]);
   const covens = await findManyByIds(workspaces, [...new Set(rows.map((row) => row.workspaceId))]);
   const byId = new Map(covens.map((workspace) => [workspace.id, workspace]));
 
   return userIds.map((id) => {
-    if (id !== session.userId) return new Forbidden();
+    if (!mayList(id)) return new Forbidden();
     return rows.flatMap((row) => {
       const workspace = byId.get(row.workspaceId);
       // The finder already excludes a soft-deleted workspace; this narrows the

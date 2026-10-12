@@ -105,8 +105,9 @@ not `identity`, because `identity` may import no module
 ([`modules.md`](../modules.md)). It resolves through the `membershipsByUser`
 loader, whose service, `membershipsOf(session, userIds)`, answers each id with
 that user's live memberships in live workspaces — or a `Forbidden` in that
-id's slot for anyone but the caller, a site admin included, since an admin
-reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
+id's slot for anyone but the caller, unless the caller is a site admin, who
+may list anyone's by name and role (M9.19) and reaches none of those
+workspaces' contents. A `WorkspaceMember` carries `role`, `joinedAt`,
 `workspace` and `audit`; `Workspace` is `id`, `name`, `slug` and `audit`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
