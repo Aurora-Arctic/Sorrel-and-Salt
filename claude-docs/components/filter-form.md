@@ -111,10 +111,16 @@ fields and button are the primitives'. On a phone the row stacks: under 28rem of
 its own width the query takes the whole line and the selects and switches
 wrap beneath it, the owner's call at MB.115's review over a filter folded
 behind a disclosure. Filter and Clear are one block, `.filter-row__actions`,
-so they wrap together, and on that narrow row they take a line of their own
-at the fields' full width, Filter two thirds and Clear one; once a third is
-too narrow for Clear's label (`$filter-clear-width`, 5.5rem, three times over
-and the gap) they take half each (the owner's calls).
+so they wrap together. **Alone on their line, at any width, they span the
+fields above them**, Filter two thirds and Clear one; once a third is too
+narrow for Clear's label (`$filter-clear-width`, 5.5rem, three times over and
+the gap) they take half each (the owner's calls). Sharing a line with a
+field, they keep their own width. CSS cannot ask whether a flex item
+wrapped, so `useActionsLine` (`actions-line.ts`) measures it on each render
+and as the row resizes: `data-alone` on the block and
+`--filter-actions-width`, the row's start to the furthest field's end. On
+the narrow row the block takes the whole line by CSS alone, so it does
+before hydration too.
 
 **The row while a list is on its way** is `.filter-row[aria-busy='true']`,
 in the primitives under `body` so it outweighs the fields' own hover in
@@ -174,3 +180,5 @@ type-ahead included; each other list asserts which of its values offer it
 and that its fields empty in place, and `UserList` its full load: the
 status and the row off from the press, a field press changing nothing, and
 the list back on a `pageshow` from the cache.
+
+Where Filter and Clear stand is presentation, the workshop's (rule 4): `FilteredWrappedDark` and `FilteredWrappedLight`, at 600px, show them alone on their line spanning both fields, and the phone stories them across a narrow row.

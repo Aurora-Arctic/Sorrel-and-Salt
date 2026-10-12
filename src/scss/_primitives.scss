@@ -365,12 +365,14 @@
     gap: space(3) space(5);
   }
 
-  // On a phone they take the whole line, the fields' width above them,
-  // Filter two thirds and Clear one, the owner's call at MB.115's review;
-  // halves once a third is too narrow for Clear's label, its own width
-  // `$filter-clear-width` three times over and the gap. A size container
-  // only here, where the line sets its width: on a wide row its width is its
-  // buttons', which a size container would not count.
+  // Alone on their line they span the fields above them, Filter two thirds
+  // and Clear one, the owner's calls at MB.115's review; halves once a third
+  // is too narrow for Clear's label, its own width `$filter-clear-width`
+  // three times over and the gap. FilterForm marks the block `data-alone`
+  // with the fields' reach, since CSS cannot ask whether it wrapped. On a
+  // phone's narrow row it takes the whole line before hydration too. A size
+  // container only then, when the line sets its width: otherwise its width
+  // is its buttons', which a size container would not count.
   @container filter-row (max-width: #{$narrow-column}) {
     .filter-row > :first-child,
     .filter-row > .filter-row__typeahead,
@@ -392,8 +394,23 @@
     }
   }
 
+  // `:where`, so the halves below outrank its two thirds.
+  .filter-row > .filter-row__actions:where([data-alone]) {
+    flex-basis: var(--filter-actions-width);
+    container: filter-actions / inline-size;
+
+    > .btn {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+
+    > .btn:first-child {
+      flex-grow: 2;
+    }
+  }
+
   @container filter-actions (max-width: #{$filter-clear-width * 3 + space(5)}) {
-    .filter-row__actions > .btn:first-child {
+    .filter-row > .filter-row__actions > .btn:first-child {
       flex-grow: 1;
     }
   }

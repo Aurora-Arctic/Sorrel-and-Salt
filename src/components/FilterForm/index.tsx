@@ -12,6 +12,7 @@ import {
 } from 'react';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useListNavigation } from '../ListFrame';
+import { useActionsLine } from './actions-line';
 import type { FilterFormProps, FilterValue } from './types';
 
 // A list's filter: a GET form to the page itself (MB.52, MB.178), so before
@@ -54,6 +55,8 @@ const FilterForm = ({
   const filtered = shown.some(isSet);
   const drafted = draft.some(isSet);
   const form = useRef<HTMLFormElement>(null);
+  const actions = useRef<HTMLDivElement>(null);
+  useActionsLine(form, actions);
   // Bumped by an in-place clear, which keys the fields: a type-ahead keeps
   // its own text, which may name no choice and so be no value, and starts
   // again empty only by being drawn again.
@@ -127,9 +130,9 @@ const FilterForm = ({
         onSubmit={submit}
       >
         <Fragment key={emptied}>{children}</Fragment>
-        {/* The two controls, one block, so on a phone they wrap together and
-            share the line the fields above it fill. */}
-        <div className="filter-row__actions">
+        {/* The two controls, one block, so they wrap together, and alone on
+            their line span the fields above them. */}
+        <div className="filter-row__actions" ref={actions}>
           {/* `disabled` with nothing to send, a submit with nothing to do;
               `aria-disabled` while a list is on its way, so a focus on it stays. */}
           <button

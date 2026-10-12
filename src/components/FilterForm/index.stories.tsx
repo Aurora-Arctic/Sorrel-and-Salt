@@ -92,3 +92,11 @@ FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const FilteredPhoneLight: Story = () => <ValueFilter shown={FILTER} />;
 FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+
+// Wide enough that the two fields share a line but Filter and Clear do not:
+// alone on theirs, they span both fields, two thirds to one.
+export const FilteredWrappedDark: Story = () => <ValueFilter shown={FILTER} />;
+FilteredWrappedDark.meta = { theme: 'dark', width: 600 };
+
+export const FilteredWrappedLight: Story = () => <ValueFilter shown={FILTER} />;
+FilteredWrappedLight.meta = { theme: 'light', width: 600 };
