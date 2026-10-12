@@ -6,6 +6,7 @@ import type {
   GroupedValueKind,
 } from '../../components/GroupedValueForm/types';
 import type { EditedGroup, GroupChoice, GroupKind } from '../../components/GroupForm/types';
+import type { ModalHeading } from '../../components/Modal/types';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type { GroupFilter } from '@/modules/vocabulary';
 
@@ -117,7 +118,8 @@ export interface ValueKindSource {
 
 export interface ValueDialogProps {
   kind: GroupedValueKind;
-  title: string;
+  /** "Add Category", or the edited value's eyebrow and name, and a deity's tradition (MB.115). */
+  heading: ModalHeading;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
   value?: EditedGroupedValue;
@@ -155,9 +157,9 @@ export interface GroupKindPage {
   noun: string;
   /** The Add link's label: "Add Group". */
   add: string;
-  /** The modal's titles: "Add Category Group", "Edit Category Group". */
+  /** The add modal's title, "Add Category Group"; the edit modal's eyebrow, "Edit Category Group". */
   addTitle: string;
-  editTitle: string;
+  editEyebrow: string;
   /**
    * Whether the list takes a name search (MB.115): the traditions' alone. A
    * kind without one reads no `query` from its address, so its readers are
@@ -173,7 +175,8 @@ export interface GroupKindPage {
 
 export interface GroupDialogProps {
   kind: GroupKind;
-  title: string;
+  /** "Add Category Group", or the edited group's eyebrow and name (MB.115). */
+  heading: ModalHeading;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
   group?: EditedGroup;

@@ -14,10 +14,10 @@ import type { RouteModalProps } from './types';
 // carried this, and the one that passed the navigation straight to its form
 // skipped the fade (claude-docs/components/modal.md, "RouteModal").
 export default function RouteModal({
-  title,
   closeHref,
   size,
   children,
+  ...heading
 }: RouteModalProps): ReactElement {
   const router = useRouter();
   const close = () => {
@@ -25,7 +25,7 @@ export default function RouteModal({
     router.refresh();
   };
   return (
-    <Modal title={title} size={size} onClose={close}>
+    <Modal {...heading} size={size} onClose={close}>
       {(done) => children(done)}
     </Modal>
   );

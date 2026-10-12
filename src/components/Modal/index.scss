@@ -142,8 +142,29 @@ $modal-fade: 150ms ease-out;
   padding-bottom: space(4);
 }
 
+// The eyebrow over the title, in the `.header` primitive's column, closer
+// than its gap. It may shrink past its content, so a long name wraps rather
+// than pushing the × out, and a name with no break in it breaks anywhere
+// rather than overflow.
+.modal-dialog__heading {
+  gap: space(1);
+  min-width: 0;
+}
+
 .modal-dialog__title {
   margin: 0;
+  overflow-wrap: anywhere;
+}
+
+// A second identifier after the name, an ingredient's formal name or a
+// deity's tradition (MB.115): quieter than the name, the body's face at its
+// size and weight in the muted ink.
+.modal-dialog__qualifier {
+  font-family: $font-body;
+  font-size: type-size('body');
+  font-weight: 400;
+  letter-spacing: normal;
+  color: $text-muted;
 }
 
 // Beside the title, a control the contents put there, and then the space

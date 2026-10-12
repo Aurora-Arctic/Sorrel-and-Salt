@@ -42,7 +42,7 @@ export const AddingACategory: Story = () => (
 );
 
 export const EditingACategory: Story = () => (
-  <Modal title="Edit Category" onClose={done}>
+  <Modal eyebrow="Edit Category" title="Testcraft" onClose={done}>
     <GroupedValueForm
       kind="category"
       value={{
@@ -65,7 +65,7 @@ export const AddingAForm: Story = () => (
 
 // Rename it to see the note by Save that the rename carries onto the compendium.
 export const EditingAForm: Story = () => (
-  <Modal title="Edit Form" onClose={done}>
+  <Modal eyebrow="Edit Form" title="Testwort Shard" onClose={done}>
     <GroupedValueForm
       kind="form"
       value={{
@@ -86,9 +86,11 @@ export const AddingADeity: Story = () => (
   </Modal>
 );
 
-// Rename it to see the note by Save that the rename carries onto the compendium.
+// Rename it to see the note by Save that the rename carries onto the
+// compendium, and the head keep the name it was saved under, its tradition
+// after it, as a deity's pills name it (MB.115).
 export const EditingADeity: Story = () => (
-  <Modal title="Edit Deity" onClose={done}>
+  <Modal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural" onClose={done}>
     <GroupedValueForm
       kind="deity"
       value={{
@@ -112,7 +114,7 @@ export const AddingAPlanet: Story = () => (
 // A flat kind has no group field. Rename it to see the note by Save that the
 // rename carries onto the compendium.
 export const EditingAZodiacSign: Story = () => (
-  <Modal title="Edit Zodiac Sign" onClose={done}>
+  <Modal eyebrow="Edit Zodiac Sign" title="Fixture Ram" onClose={done}>
     <GroupedValueForm
       kind="zodiacSign"
       value={{
@@ -142,6 +144,12 @@ export const AskingToDelete: Story = () => {
 export const PhoneDark: Story = () => <EditingACategory />;
 export const PhoneLight: Story = () => <EditingACategory />;
 
+// An edit's head in each theme, at a desktop's width and a phone's (MB.115).
+export const EditingADeityDark: Story = () => <EditingADeity />;
+export const EditingADeityLight: Story = () => <EditingADeity />;
+export const EditingADeityPhoneDark: Story = () => <EditingADeity />;
+export const EditingADeityPhoneLight: Story = () => <EditingADeity />;
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategory.meta = { iframed: true };
@@ -155,3 +163,7 @@ EditingAZodiacSign.meta = { iframed: true };
 AskingToDelete.meta = { iframed: true };
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+EditingADeityDark.meta = { iframed: true, theme: 'dark' };
+EditingADeityLight.meta = { iframed: true, theme: 'light' };
+EditingADeityPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+EditingADeityPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

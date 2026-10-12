@@ -56,6 +56,9 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
 
 const { default: AdminCompendiumPage } = await import('@/app/admin/compendium/page');
 
+/** The edit dialog's name: its eyebrow, then the entry and its formal name (MB.115). */
+const EDITING_TESTWORT = 'Edit Ingredient, Testwort, Fixtura testalis';
+
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
 const TESTWORT = {
@@ -347,7 +350,7 @@ describe('the /admin/compendium modal', () => {
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
     expect(entryValues).toHaveBeenCalledWith(TESTWORT);
-    const dialog = screen.getByRole('dialog', { name: 'Edit Ingredient' });
+    const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     // An edit opens with its sections closed (MB.115).
     openSections('Identity', 'Variants');
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
@@ -358,6 +361,19 @@ describe('the /admin/compendium modal', () => {
       within(dialog).queryByRole('button', { name: 'Save & Add Another' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  // The owner's call at MB.115: the head says what is being edited, by the
+  // name it was saved under, so it holds still while the Name field changes.
+  it('names the dialog by the entry as saved, however its Name field is changed', async () => {
+    await renderPage({ edit: TESTWORT.slug });
+
+    openSections('Identity');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Renamed Testwort' },
+    });
+
+    expect(screen.getByRole('dialog', { name: EDITING_TESTWORT })).toBeInTheDocument();
   });
 
   it('sends an old slug on to the entry at its new one, keeping the filter', async () => {

@@ -165,8 +165,10 @@ kind, its groups), each mapped onto the page's own names, so the deities'
 `traditionId` and the astrology services' leading vocabulary stop there.
 
 The page opens the form in a `RouteModal` ([`modal.md`](modal.md)) from its
-address. `?new` opens an empty form, and `?edit=<slug>` opens the value at
-that slug. `value-dialog.tsx` is the client edge between the server page and
+address. `?new` opens an empty form, titled "Add Category", and
+`?edit=<slug>` opens the value at that slug, under an eyebrow, "Edit
+Category", with the value's saved name as its title and a deity's tradition
+after it (`editHeading`; [`modal.md`](modal.md), "An edit dialog's head"). `value-dialog.tsx` is the client edge between the server page and
 the form, since a server component cannot hand `RouteModal` the function its
 contents take. Closing, saving or deleting fades the modal out, then
 `router.replace`s the page it opened over, filter and cursor kept

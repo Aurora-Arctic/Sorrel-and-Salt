@@ -13,7 +13,8 @@ import { pagerHrefs, readListPlace, readOrMissing } from './list-page';
 import MissingNotice from './missing-notice';
 import ValueDialog from './value-dialog';
 import { VALUE_KINDS } from './value-kinds';
-import type { ValuePageProps, ValueSearchParams } from './types';
+import type { ModalHeading } from '../../components/Modal/types';
+import type { ValueGroupRow, ValuePageProps, ValueRow, ValueSearchParams } from './types';
 
 // The page every curated value vocabulary shares (MB.115): the categories
 // (M5.6, MB.178), forms (M5.6a) and deities (MB.132), each filed under a
@@ -71,6 +72,21 @@ async function readPlace(kind: GroupedValueKind, params: ValueSearchParams) {
     groups,
     group,
   };
+}
+
+/**
+ * A value's edit dialog head (MB.115): the name it was saved under, not the
+ * Name field's, and a deity's tradition after it, as its pills name it
+ * ("Hecate (Greek)"), since two traditions may share a deity's name. A
+ * category's or a form's group is where it is filed, not part of its name.
+ */
+function editHeading(
+  kind: GroupedValueKind,
+  { name, groupId }: ValueRow,
+  groupsById: ReadonlyMap<string, ValueGroupRow>,
+): ModalHeading {
+  const tradition = kind === 'deity' && groupId ? groupsById.get(groupId)?.name : undefined;
+  return { eyebrow: `Edit ${KINDS[kind].label}`, title: name, qualifier: tradition };
 }
 
 /**
@@ -142,14 +158,19 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
         )}
       />
       {adding && (
-        <ValueDialog kind={kind} title={`Add ${label}`} closeHref={closeHref} groups={choices} />
+        <ValueDialog
+          kind={kind}
+          heading={{ title: `Add ${label}` }}
+          closeHref={closeHref}
+          groups={choices}
+        />
       )}
       {edited && (
         <ValueDialog
           // A fresh form per value: one opened after another starts from its own values.
           key={edited.id}
           kind={kind}
-          title={`Edit ${label}`}
+          heading={editHeading(kind, edited, groupsById)}
           closeHref={closeHref}
           value={{
             id: edited.id,
