@@ -22,6 +22,7 @@ import './controls.scss';
 const ConfirmedAction = ({
   label,
   accessibleName,
+  confirmLabel,
   openClass,
   title,
   question,
@@ -119,7 +120,7 @@ const ConfirmedAction = ({
     </>
   );
   const answerProps = {
-    label,
+    label: confirmLabel ?? label,
     busy,
     confirmClass,
     describedBy: warning ? warningId : undefined,

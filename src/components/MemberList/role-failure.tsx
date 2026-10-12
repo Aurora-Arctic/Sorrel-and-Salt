@@ -4,7 +4,7 @@ import { createContext, type ReactElement, useContext, useMemo, useState } from 
 import Notice from '../Notice';
 import type { RoleFailureProps } from './types';
 
-// Where a refused Promote or Demote is said (M6.13): above the table, naming
+// Where a refused Change Role is said (M6.13): above the table, naming
 // the member, rather than beside one row's buttons where a narrow column would
 // wrap it. The page wraps the list in it; the role controls report to it
 // (claude-docs/components/member-list.md).

@@ -103,11 +103,11 @@ with owners.
   `listMembers`, which checks `member: read`; a `Forbidden` becomes
   `notFound()`. The nav link is the other half: `covenSections(slug, role)`
   shows Members when `rolePermits(role, { member: ['read'] })`, never by rank.
-- **Role controls are the owner's.** The page passes Promote and Demote to
+- **Role controls are the owner's.** The page passes Change Role to
   `MemberList` only when the caller holds `member: update`. They are client
   components that send `updateMemberRole` through `/api/graphql`; the service
-  refuses anyone else, and a demotion that would leave no owner. Each moves
-  one rung along viewer, member, owner, and only ever an existing member:
+  refuses anyone else, and a change that would leave no owner. It moves a
+  member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
 - **Not here yet.** Remove is M6.15's and the invite action and pending list
   are M7.6's; the page draws neither, and their lists will be owner-only.

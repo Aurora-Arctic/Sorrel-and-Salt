@@ -151,17 +151,19 @@ test.describe('the members page', () => {
     await page.goto(`/coven/${COVEN_SLUG}/members`);
 
     await expect(page.getByRole('table', { name: 'Members' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /^(Promote|Demote)/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Change Role/ })).toHaveCount(0);
   });
 
-  test('demoting the only owner is refused above the table, naming them', async ({ page }) => {
+  test('changing the only owner to a member is refused above the table, naming them', async ({
+    page,
+  }) => {
     await signInAgainAs(page, users.owner.id);
     await page.goto(`/coven/${COVEN_SLUG}/members`);
 
     await page
       .getByRole('row')
       .filter({ hasText: 'Owner' })
-      .getByRole('button', { name: /^Demote / })
+      .getByRole('button', { name: /^Change Role / })
       .click();
     await page.getByRole('dialog').getByRole('button', { name: 'Demote', exact: true }).click();
 
@@ -185,10 +187,13 @@ test.describe('the members page', () => {
     await assertNoSidewaysScroll(page);
 
     await page
-      .getByRole('button', { name: /^Promote / })
+      .getByRole('row')
+      .filter({ hasText: 'Member' })
       .first()
+      .getByRole('button', { name: /^Change Role / })
       .click();
     const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: /^Owner/ }).check();
     await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
     await expect(dialog).toHaveCount(0);
 

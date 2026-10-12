@@ -83,26 +83,12 @@ export default async function MembersPage({
           roleAction={
             canChangeRoles
               ? (member) => (
-                  <>
-                    {member.role !== 'owner' && (
-                      <RoleControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                        direction="promote"
-                        options={member.role === 'viewer' ? ['member', 'owner'] : ['owner']}
-                      />
-                    )}
-                    {member.role !== 'viewer' && (
-                      <RoleControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                        direction="demote"
-                        options={member.role === 'owner' ? ['member', 'viewer'] : ['viewer']}
-                      />
-                    )}
-                  </>
+                  <RoleControl
+                    workspaceId={workspace.id}
+                    userId={member.userId}
+                    name={member.name}
+                    currentRole={member.role}
+                  />
                 )
               : undefined
           }

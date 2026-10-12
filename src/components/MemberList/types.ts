@@ -21,7 +21,7 @@ export interface MemberListProps {
   /** The signed-in user, whose own row is marked "You". */
   currentUserId: string;
   /**
-   * The role change beside each role — Promote, Demote — given the member it
+   * The role change beside each role — Change Role — given the member it
    * is for; it may return nothing for a row with none. When absent, the Role
    * column holds the role alone.
    */
@@ -40,9 +40,8 @@ export interface RoleControlProps {
   /** The member the change is for. */
   userId: string;
   name: string;
-  direction: 'promote' | 'demote';
-  /** The roles the member may move to, nearest their own first; the first is chosen to start. */
-  options: readonly [WorkspaceRole, ...WorkspaceRole[]];
+  /** The role they hold now, which is left out of the choices. */
+  currentRole: WorkspaceRole;
 }
 
 export interface RoleFailureProps {
