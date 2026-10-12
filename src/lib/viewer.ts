@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { membershipsOf } from '@/modules/coven';
+import { membershipsOf, rolePermits } from '@/modules/coven';
 import { getMe } from '@/modules/identity';
 import { requireSession } from './request-session';
 import type { ShellViewer, ShellWorkspace } from './types';
@@ -30,7 +30,11 @@ export const viewerOf = cache(
       },
       // Alphabetical: the service's order is the database's, which looks random.
       workspaces: memberships
-        .map(({ workspace: { slug, name } }) => ({ slug, name }))
+        .map(({ role, workspace: { slug, name } }) => ({
+          slug,
+          name,
+          canReadMembers: rolePermits(role, { member: ['read'] }),
+        }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     };
   },

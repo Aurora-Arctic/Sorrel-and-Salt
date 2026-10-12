@@ -19,6 +19,7 @@
     font-weight: 700;
     letter-spacing: 0.01em;
     margin: 0 0 space(4);
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the heading wraps in the ordinary way, uneven lines, widely available 2026-11-13
     text-wrap: balance;
   }
 

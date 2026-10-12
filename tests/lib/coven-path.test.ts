@@ -35,3 +35,13 @@ describe('isReservedCovenSlug', () => {
     expect(isReservedCovenSlug('fixture-coven')).toBe(false);
   });
 });
+
+describe('pathInCoven for a viewer', () => {
+  it.each([
+    ['/coven/a/members', '/coven/b'],
+    ['/coven/a/invitations', '/coven/b'],
+    ['/coven/a/ingredients', '/coven/b/ingredients'],
+  ])('takes %s to %s when members are unreadable there', (path, expected) => {
+    expect(pathInCoven(path, 'b', false)).toBe(expected);
+  });
+});

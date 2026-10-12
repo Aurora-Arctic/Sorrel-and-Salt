@@ -228,4 +228,5 @@ export interface ShellViewer {
 export interface ShellWorkspace {
   slug: string;
   name: string;
+  canReadMembers: boolean;
 }

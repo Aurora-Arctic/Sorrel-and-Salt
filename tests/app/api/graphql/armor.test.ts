@@ -78,8 +78,10 @@ afterEach(() => {
 describe('graphql-armor', () => {
   describe('depth', () => {
     // The precondition: the schema answers seven levels, so a refusal one
-    // level further is the limit and not a schema that stops short.
-    it('answers a query seven levels deep', async () => {
+    // level further is the limit and not a schema that stops short. It is the
+    // file's first request, so it pays for loading the route and building the
+    // schema: about 1.5 s alone, past the 5 s default in a busy full run.
+    it('answers a query seven levels deep', { timeout: 20_000 }, async () => {
       const result = await query(nested(7));
 
       expect(result.errors).toBeUndefined();

@@ -30,6 +30,7 @@
   @include tip-bubble;
   @include tip-bubble-open;
 
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
     transform: translateX(2px);
@@ -53,6 +54,7 @@
   margin: 0 0 space(1);
   translate: -50% 0;
 
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
     opacity: 0;
     transform: translateY(2px);
