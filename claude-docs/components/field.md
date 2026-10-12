@@ -45,6 +45,37 @@ the same shell until its design review (MB.120).
 | `TextField`        | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
 | `SelectField`      | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
 | `SwitchField`      | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `FormActions`      | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
+| `ReasonField`      | An admin change's optional Reason, in a plain-state form                                                      |
+
+### `FormActions`
+
+The row beneath a form, written once for the four forms that drew their own
+(MB.115): `GroupForm`, `GroupedValueForm`, `IngredientForm` and its reference
+panel. Save is first, "Save Group", off until `dirty` and while
+`submitting`, and busy from the press to the answer, "Saving Group" with the
+spinner (`BusyButton`), the owner's rules for every form (M5.6); a form with
+several saves passes `busy` for the one pressed, its `saveValue`, and the
+others as children, between Save and Cancel, as the ingredient form's Save &
+Add Another is. Save is the form's submit, or with `onSave` a plain button,
+for the reference panel, which sits inside the ingredient form's own `<form>`.
+Cancel, quiet, is drawn when `onCancel` is given and calls it: each form
+passes its discard guard's `request` (claude-docs/components/modal.md,
+"Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
+as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
+end, is drawn when `onDelete` is given, "Delete Group", and asks the form's
+own question. The row is `.form__actions`, which wraps, so a third button
+never squeezes it.
+
+### `ReasonField`
+
+The optional Reason an admin gives a change (MB.115): a text box under
+"Reason", "Add a reason" its placeholder, held by the caller in plain state,
+its hint behind the ⓘ saying where the reason is kept, by default "Kept with
+the change in the record of who changed what." The invitation form passes its
+own `hint`, since an invitation's reason is kept with the invitation first.
+`UserList`'s confirmed actions and the invitation form use it; the wrapper
+takes the caller's class, which holds the field's room above and below.
 
 ## Props
 
@@ -156,8 +187,10 @@ can place itself above it, and `.field__required` the asterisk
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 `WithError`, `Multiline` and `Disabled`, each in a `FormProvider`; and
-`PlainShell`, the shell around a native input with an error; and `Switch`,
-`SwitchField` off, on, and disabled off and on.
+`PlainShell`, the shell around a native input with an error; `Switch`,
+`SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
+nothing to save, with something to save and Delete, and saving; and `Reason`,
+`ReasonField`.
 
 ## Testing
 
@@ -165,7 +198,8 @@ No file of its own: the forms that use it cover it (claude-docs/testing/layer-ow
 "What a test may assert", rule 5). `tests/components/IngredientForm/` covers
 `TextField` and `SelectField`, and `tests/components/GroupedValueForm/` (with
 `tests/support/grouped-value-form.tsx`) its `typeahead`; the NameForm and EmailForm tests cover the
-shell around a plain control. The CompendiumList and UserList tests cover
+shell around a plain control. `FormActions` is covered by the forms that use
+it, `ReasonField` by the UserList and AdminInvitations tests. The CompendiumList and UserList tests cover
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
 form, the server's before hydration included, emptied by Clear, and
 `aria-disabled` while a list is on its way. Space is the platform's and

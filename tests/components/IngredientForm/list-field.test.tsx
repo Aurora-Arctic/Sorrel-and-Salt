@@ -9,6 +9,7 @@ import type {
   ListOption,
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
+import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
@@ -120,7 +121,6 @@ function renderList(
 }
 
 const box = (entry: string) => screen.getByRole('combobox', { name: entry });
-const type = (entry: string, value: string) => fireEvent.change(box(entry), { target: { value } });
 const group = (legend: string) => screen.getByRole('group', { name: legend });
 const entries = (legend: string) =>
   within(group(legend))
@@ -137,11 +137,7 @@ const add = ({ entry, pickOnly }: Omit<Variant, 'variant'>, value: string) => {
   else fireEvent.click(addButton(entry));
 };
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
-const save = () => {
-  const button = screen.getByRole('button', { name: 'Save Ingredient' });
-  button.focus();
-  fireEvent.click(button);
-};
+const save = () => press('Save Ingredient');
 /** Lets a submit that may have started reach its handler. */
 const settle = () => act(async () => {});
 

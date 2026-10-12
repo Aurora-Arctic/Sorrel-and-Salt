@@ -1,12 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
@@ -17,28 +9,27 @@ import {
   EMPTY_VARIANT,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
-import type {
-  CreateWorkspaceIngredientMutation,
-  CreateWorkspaceIngredientMutationVariables,
-} from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import {
+  chooseKind,
+  inPanel,
+  labelled,
+  referencePanel,
+  renderWithClient,
+  waitFor,
+} from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
+import { mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
   WORKSPACE_ID,
+  acceptCreate,
   acceptReference,
   acceptReferenceUpdate,
-  offerDeities,
-  offerDuplicates,
-  offerForms,
-  offerIngredients,
-  offerNames,
-  offerPlanets,
+  offerNothing,
   offerReference,
   offerReferences,
-  offerSigns,
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
@@ -95,57 +86,17 @@ function renderField() {
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   return onSubmit;
 }
 
 /** The whole form, every lookup answered empty, as index.test.tsx renders it. */
 function renderForm() {
   const onSaved = vi.fn();
-  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
-    categories: { edges: [] },
-  }));
-  offerForms([]);
-  offerNames([]);
-  offerPlanets([]);
-  offerSigns([]);
-  offerDeities([]);
-  offerIngredients([]);
-  offerReferences([]);
-  offerDuplicates([]);
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
-    </QueryClientProvider>,
-  );
+  offerNothing();
+  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
   return onSaved;
 }
-
-/** Answers `CreateWorkspaceIngredient` with a saved row, recording each ask. */
-function acceptCreate() {
-  const calls: CreateWorkspaceIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateWorkspaceIngredientMutation,
-    CreateWorkspaceIngredientMutationVariables
-  >('CreateWorkspaceIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
-    };
-  });
-  return calls;
-}
-
-/**
- * RTL's waitFor polled every 5 ms rather than its 50, as index.test.tsx's
- * is: most waits here are for a mock to have been asked (MB.181).
- */
-const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
 
 // Found by label rather than by role and name, so the whole form's tests
 // below do not name every element of a role in a 25-field form (MB.181).
@@ -173,21 +124,11 @@ const shownIn = (item: HTMLElement) => {
   return copy.textContent;
 };
 const changes = () => within(references()).getByRole('status', { name: 'References changes' });
-const panel = () => within(references()).getByRole('group', { name: 'New Reference' });
+const panel = () => referencePanel(references());
 const noPanel = () =>
   expect(within(references()).queryByRole('group', { name: 'New Reference' })).toBeNull();
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
-/** A label's text less a required field's asterisk, which is hidden from its name. */
-const labelled = (label: string) => (content: string) => content.replace(/\*$/, '') === label;
-const inPanel = (label: string) => within(panel()).getByLabelText(labelled(label));
 const nameBox = () => screen.getByLabelText(labelled('Name'), { selector: 'input' });
-const typeIn = (control: HTMLElement, value: string) =>
-  fireEvent.change(control, { target: { value } });
-/** Presses a button, focusing it first as a real click would: fireEvent moves no focus. */
-const press = (button: HTMLElement) => {
-  button.focus();
-  fireEvent.click(button);
-};
 /** The harness's save, or the form's, by name. */
 const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
@@ -202,14 +143,6 @@ const locatorOf = (short: string) => {
   const edit = inRow.getByRole('button', { name: `Edit ${short}` });
   if (edit.getAttribute('aria-expanded') !== 'true') press(edit);
   return inRow.getByRole('textbox', { name: 'Locator' });
-};
-const chooseKind = (label: string) => {
-  fireEvent.click(kindBox());
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Kind choices' })).getByRole('option', {
-      name: label,
-    }),
-  );
 };
 
 const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
@@ -449,9 +382,9 @@ describe('ReferencesField', () => {
       const onSubmit = renderField();
       newReference();
 
-      chooseKind('Book');
-      typeIn(inPanel('Title'), 'A Fixture Grimoire');
-      typeIn(inPanel('Published'), '1999');
+      chooseKind('Book', references());
+      typeIn(inPanel('Title', references()), 'A Fixture Grimoire');
+      typeIn(inPanel('Published', references()), '1999');
       press(within(panel()).getByRole('button', { name: 'Save Reference' }));
 
       await waitFor(noPanel);
@@ -474,7 +407,7 @@ describe('ReferencesField', () => {
       renderField();
       newReference();
 
-      chooseKind('Book');
+      chooseKind('Book', references());
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
 
       noPanel();
@@ -557,11 +490,7 @@ describe('ReferencesField', () => {
           </FormProvider>
         );
       };
-      render(
-        <QueryClientProvider client={makeQueryClient()}>
-          <Harness />
-        </QueryClientProvider>,
-      );
+      renderWithClient(<Harness />);
       return onSubmit;
     }
 

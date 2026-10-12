@@ -1,12 +1,12 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NameField, useDuplicateWarning } from '@/components/IngredientForm/duplicates';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithClient } from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { WORKSPACE_ID, offerDuplicates } from '../../support/msw/ingredient-lookups';
 import type { DuplicateNode } from './types';
@@ -67,17 +67,14 @@ function renderName(opened?: string) {
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   return sent;
 }
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
-const type = (value: string) => fireEvent.change(name(), { target: { value } });
-const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+/** Types into the Name box, the one field here. */
+const type = (value: string) => typeIn(name(), value);
+const save = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 /** Lets a save that may have started reach its end. */

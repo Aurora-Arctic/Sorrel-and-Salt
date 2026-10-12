@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import { EntryHrefContext } from '@/components/IngredientForm/substitute-summary';
@@ -11,7 +10,7 @@ import type {
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type { IngredientSummaryQuery, IngredientSummaryQueryVariables } from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithClient } from '../../support/ingredient-form';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 
@@ -97,11 +96,7 @@ function renderSubstitutes(entryHref?: (ingredient: { slug: string }) => string)
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
 }
 
 const LINKED_TEXT = 'Mockwort (Fixtura vulgaris) · Dried leaf';

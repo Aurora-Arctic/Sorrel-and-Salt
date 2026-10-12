@@ -6,21 +6,28 @@ import { type ReactElement, useId, useRef, useState } from 'react';
 import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { HEX_COLOR } from '../../lib/contrast';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { readGraphqlIssues } from '../../lib/graphql-failure';
+import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
+import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
 import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
-import { FieldShell, TextField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import type { DeleteStep, GroupFormKind, GroupFormProps, GroupKind, GroupValues } from './types';
+import type {
+  DeleteStep,
+  GroupFormKind,
+  GroupFormProps,
+  GroupKind,
+  GroupKindSpec,
+  GroupValues,
+} from './types';
 
 // The admin's form for a group (M5.6b), one for both group vocabularies so
 // MB.132's traditions can take it too: a name and a description, and for a
@@ -109,11 +116,35 @@ type FieldName = (typeof FIELDS)[number];
 const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '' };
 
 /**
+ * A kind as the form uses it, from its declaration, as GroupedValueForm's
+ * `defineKind` builds its own: the input type stays inside, so `KINDS` holds
+ * kinds whose inputs differ without a cast at each request.
+ */
+function defineKind<Input extends object>({
+  schema,
+  create,
+  update,
+  remove,
+  ...copy
+}: GroupKindSpec<Input>): GroupFormKind {
+  const send = saveRequest(create, update);
+  return {
+    ...copy,
+    // The schema's output is the input the mutation takes; its type is the values'.
+    resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
+    save: (values, id) => send(values as unknown as Input, id),
+    remove: async (variables) => {
+      await graphqlRequest(remove, variables);
+    },
+  };
+}
+
+/**
  * What differs between the vocabularies: what a group is called, the rows it
  * holds, what a move does to them, and the requests that write it.
  */
 const KINDS: Record<GroupKind, GroupFormKind> = {
-  category: {
+  category: defineKind({
     group: 'group',
     title: 'Group',
     one: 'category',
@@ -121,17 +152,12 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
     describe: 'What the categories in this group share',
-    // The schema's output is the input the mutation takes; its type is the values'.
-    resolver: zodResolver(CategoryGroupInput) as unknown as Resolver<GroupValues>,
-    save: async (input, id) => {
-      if (id) await graphqlRequest(UpdateCategoryGroupDocument, { id, input });
-      else await graphqlRequest(CreateCategoryGroupDocument, { input });
-    },
-    remove: async (variables) => {
-      await graphqlRequest(DeleteCategoryGroupDocument, variables);
-    },
-  },
-  form: {
+    schema: CategoryGroupInput,
+    create: CreateCategoryGroupDocument,
+    update: UpdateCategoryGroupDocument,
+    remove: DeleteCategoryGroupDocument,
+  }),
+  form: defineKind({
     group: 'group',
     title: 'Group',
     one: 'form',
@@ -141,17 +167,13 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     // The question a form group answers: what kind of thing is it (DESIGN.md §5).
     describe: 'What kind of thing the forms in this group are',
     // Drops the two empty colours, which a form group's input does not take.
-    resolver: zodResolver(IngredientFormGroupInput) as unknown as Resolver<GroupValues>,
-    save: async (input, id) => {
-      if (id) await graphqlRequest(UpdateIngredientFormGroupDocument, { id, input });
-      else await graphqlRequest(CreateIngredientFormGroupDocument, { input });
-    },
-    remove: async (variables) => {
-      await graphqlRequest(DeleteIngredientFormGroupDocument, variables);
-    },
-  },
+    schema: IngredientFormGroupInput,
+    create: CreateIngredientFormGroupDocument,
+    update: UpdateIngredientFormGroupDocument,
+    remove: DeleteIngredientFormGroupDocument,
+  }),
   // A deity's tradition (MB.132): a form group's shape, under its own name.
-  tradition: {
+  tradition: defineKind({
     group: 'tradition',
     title: 'Tradition',
     one: 'deity',
@@ -160,15 +182,11 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
     describe: 'The people or religion whose deities it holds',
-    resolver: zodResolver(DeityTraditionInput) as unknown as Resolver<GroupValues>,
-    save: async (input, id) => {
-      if (id) await graphqlRequest(UpdateDeityTraditionDocument, { id, input });
-      else await graphqlRequest(CreateDeityTraditionDocument, { input });
-    },
-    remove: async (variables) => {
-      await graphqlRequest(DeleteDeityTraditionDocument, variables);
-    },
-  },
+    schema: DeityTraditionInput,
+    create: CreateDeityTraditionDocument,
+    update: UpdateDeityTraditionDocument,
+    remove: DeleteDeityTraditionDocument,
+  }),
 };
 
 const PARTNER: Record<GroupColorColumn, GroupColorColumn> = {
@@ -267,13 +285,9 @@ const GroupForm = ({
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const [field, ...rest] = path;
-        if (rest.length === 0 && isField(field)) setError(field, { type: 'server', message });
-        else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
+        rest.length === 0 && isField(field) ? field : undefined,
+      );
     }
   };
 
@@ -442,39 +456,6 @@ const GroupForm = ({
     return null;
   };
 
-  const actions = (): ReactElement => (
-    // `.form__actions` rather than `.modal__actions`: it wraps, so a third
-    // button never squeezes the row.
-    <div className="form__actions">
-      {/* Offered only when there is something to save — the owner's rule
-            for every form. */}
-      <BusyButton
-        type="submit"
-        className="btn btn--solid"
-        busy={isSubmitting}
-        busyLabel={`Saving ${title}`}
-        disabled={!isDirty || isSubmitting}
-      >
-        {`Save ${title}`}
-      </BusyButton>
-      <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
-        Cancel
-      </button>
-      {group && (
-        <button
-          type="button"
-          className="btn btn--destructive form__aside"
-          onClick={() => {
-            setAlert(undefined);
-            setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-          }}
-        >
-          Delete {title}
-        </button>
-      )}
-    </div>
-  );
-
   return (
     <FormProvider {...methods}>
       <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
@@ -545,7 +526,19 @@ const GroupForm = ({
               </FieldShell>
             );
           })}
-        {actions()}
+        <FormActions
+          noun={title}
+          dirty={isDirty}
+          submitting={isSubmitting}
+          onCancel={() => discard.request(onDone)}
+          onDelete={
+            group &&
+            (() => {
+              setAlert(undefined);
+              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+            })
+          }
+        />
         {question()}
       </form>
     </FormProvider>

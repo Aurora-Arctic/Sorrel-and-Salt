@@ -22,6 +22,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { choose, press, typeIn } from '../../support/interact';
 import {
   expectAnswered,
   expectAskingOver,
@@ -66,20 +67,6 @@ const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const dark = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const light = () => screen.getByRole('textbox', { name: 'Light Theme Colour' });
-const type = (field: HTMLElement, value: string) => fireEvent.change(field, { target: { value } });
-const press = (label: string) => {
-  const button = screen.getByRole('button', { name: label });
-  button.focus();
-  fireEvent.click(button);
-};
-const choose = (box: string, label: string) => {
-  fireEvent.click(screen.getByRole('combobox', { name: box }));
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: `${box} choices` })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
 
 // Every way out asks first while the form has changes (MB.115): the
 // guard's shape is tests/components/Modal's, and this its wiring.
@@ -89,7 +76,7 @@ describe('GroupForm, its unsaved changes', () => {
       <GroupForm kind="category" group={WARDS} groups={GROUPS} onDone={done} />
     ));
 
-    expectGuardedWaysOut(onClose, () => type(description(), 'A change'));
+    expectGuardedWaysOut(onClose, () => typeIn(description(), 'A change'));
   });
 });
 
@@ -143,7 +130,7 @@ describe('GroupForm, for a category group', () => {
         expect(field).toHaveAttribute('aria-required', 'true');
       }
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeDisabled();
-      type(name(), 'F');
+      typeIn(name(), 'F');
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
@@ -158,10 +145,10 @@ describe('GroupForm, for a category group', () => {
       );
       const onDone = renderForm();
 
-      type(name(), 'Fixture Wards');
-      type(description(), 'A group the test made');
-      type(dark(), '#4E8BC2');
-      type(light(), '#0c5393');
+      typeIn(name(), 'Fixture Wards');
+      typeIn(description(), 'A group the test made');
+      typeIn(dark(), '#4E8BC2');
+      typeIn(light(), '#0c5393');
       press('Save Group');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -181,10 +168,10 @@ describe('GroupForm, for a category group', () => {
     it('refuses a colour under the floor beside its own picker, naming the ratio, before asking the server', async () => {
       const onDone = renderForm();
 
-      type(name(), 'Fixture Wards');
-      type(description(), 'Invented');
-      type(dark(), '#0c5393');
-      type(light(), '#0c5393');
+      typeIn(name(), 'Fixture Wards');
+      typeIn(description(), 'Invented');
+      typeIn(dark(), '#0c5393');
+      typeIn(light(), '#0c5393');
       press('Save Group');
 
       await waitFor(() => expect(dark()).toHaveAttribute('aria-invalid', 'true'));
@@ -203,12 +190,12 @@ describe('GroupForm, for a category group', () => {
           <GroupForm kind="category" groups={GROUPS} onDone={vi.fn()} />
         </QueryClientProvider>,
       );
-      type(dark(), '#4e8bc2');
+      typeIn(dark(), '#4e8bc2');
       expect(light()).toHaveValue(pairedColor('#4e8bc2', 'colorLight'));
       unmount();
 
       renderForm();
-      type(light(), '#0c5393');
+      typeIn(light(), '#0c5393');
       expect(dark()).toHaveValue(pairedColor('#0c5393', 'colorDark'));
     });
 
@@ -216,20 +203,20 @@ describe('GroupForm, for a category group', () => {
     it('waits for a whole hex, and keeps the partner following while it is still the one it filled', () => {
       renderForm();
 
-      type(dark(), '#4e8bc');
+      typeIn(dark(), '#4e8bc');
       expect(light()).toHaveValue('');
 
-      type(dark(), '#4e8bc2');
-      type(dark(), '#35987d');
+      typeIn(dark(), '#4e8bc2');
+      typeIn(dark(), '#35987d');
       expect(light()).toHaveValue(pairedColor('#35987d', 'colorLight'));
     });
 
     it('stops once the admin sets the partner themselves', () => {
       renderForm();
 
-      type(dark(), '#4e8bc2');
-      type(light(), '#0c5393');
-      type(dark(), '#4a87bf');
+      typeIn(dark(), '#4e8bc2');
+      typeIn(light(), '#0c5393');
+      typeIn(dark(), '#4a87bf');
 
       expect(light()).toHaveValue('#0c5393');
     });
@@ -237,7 +224,7 @@ describe('GroupForm, for a category group', () => {
     it('sets a colour from the other on Match, as the other stands now', () => {
       renderForm({ group: WARDS });
 
-      type(light(), '#a13ba5');
+      typeIn(light(), '#a13ba5');
       fireEvent.click(screen.getByRole('button', { name: 'Match Light Theme Colour' }));
 
       expect(dark()).toHaveValue(pairedColor('#a13ba5', 'colorDark'));
@@ -247,7 +234,7 @@ describe('GroupForm, for a category group', () => {
     it("leaves an existing group's pair alone", () => {
       renderForm({ group: WARDS });
 
-      type(dark(), '#4a87bf');
+      typeIn(dark(), '#4a87bf');
 
       expect(light()).toHaveValue(WARDS.colorLight);
     });
@@ -265,8 +252,8 @@ describe('GroupForm, for a category group', () => {
     it("warns of another group's colour in the same theme, naming it, and leaves Save enabled", () => {
       renderForm({ groups: COLOURED });
 
-      type(name(), 'Fixture Near');
-      type(dark(), '#5a87ae');
+      typeIn(name(), 'Fixture Near');
+      typeIn(dark(), '#5a87ae');
 
       expect(screen.getAllByRole('status')[0]).toHaveTextContent('Fixture Mineral');
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
@@ -275,7 +262,7 @@ describe('GroupForm, for a category group', () => {
     it('never warns an edited group of its own colours', () => {
       renderForm({ group: WARDS, groups: [COLOURED[2]] });
 
-      type(dark(), '#5d8ab2');
+      typeIn(dark(), '#5d8ab2');
 
       for (const status of screen.getAllByRole('status')) expect(status).toBeEmptyDOMElement();
     });
@@ -295,7 +282,7 @@ describe('GroupForm, for a category group', () => {
 
       expect(name()).toHaveValue('Fixture Wards');
       expect(dark()).toHaveValue('#4e8bc2');
-      type(name(), 'Fixture Shields');
+      typeIn(name(), 'Fixture Shields');
       press('Save Group');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -325,7 +312,7 @@ describe('GroupForm, for a category group', () => {
       });
       renderForm({ group: WARDS });
 
-      type(name(), 'Fixture Shields');
+      typeIn(name(), 'Fixture Shields');
       press('Save Group');
 
       await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
@@ -466,8 +453,8 @@ describe('GroupForm, for a form group', () => {
     const onDone = renderForm({ kind: 'form' });
 
     expect(screen.queryByRole('textbox', { name: 'Dark Theme Colour' })).not.toBeInTheDocument();
-    type(name(), 'Fixture Matter');
-    type(description(), 'A group the test made');
+    typeIn(name(), 'Fixture Matter');
+    typeIn(description(), 'A group the test made');
     press('Save Group');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -513,8 +500,8 @@ describe('GroupForm, for a deity tradition', () => {
     const onDone = renderForm({ kind: 'tradition' });
 
     expect(screen.queryByRole('textbox', { name: 'Dark Theme Colour' })).not.toBeInTheDocument();
-    type(name(), 'Fixtural');
-    type(description(), 'A tradition the test made');
+    typeIn(name(), 'Fixtural');
+    typeIn(description(), 'A tradition the test made');
     press('Save Tradition');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));

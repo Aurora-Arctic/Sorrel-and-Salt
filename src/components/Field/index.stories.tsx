@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import { type ReactNode, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
-import { FieldShell, SwitchField, TextField, fieldDescription } from '.';
+import { FieldShell, FormActions, ReasonField, SwitchField, TextField, fieldDescription } from '.';
 
 // Render-only; the fields are exercised by the forms that use them
 // (IngredientForm, the admin forms, NameForm, EmailForm). Each TextField sits
@@ -129,3 +129,25 @@ export const Switch: Story = () => (
     <Toggle label="On and Shut" on disabled />
   </div>
 );
+
+// A form's row of actions: Save off until there is something to save, then
+// on, then busy; Cancel quiet; Delete apart at the far end on an edit.
+const noop = () => {};
+
+export const Actions: Story = () => (
+  <div className="form" style={{ maxWidth: '32rem' }}>
+    <FormActions noun="Group" dirty={false} submitting={false} onCancel={noop} />
+    <FormActions noun="Group" dirty submitting={false} onCancel={noop} onDelete={noop} />
+    <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} />
+  </div>
+);
+
+// An admin change's optional Reason, held in plain state, its hint behind the ⓘ.
+export const Reason: Story = () => {
+  const [reason, setReason] = useState('');
+  return (
+    <div className="form" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
+      <ReasonField value={reason} onChange={setReason} />
+    </div>
+  );
+};
