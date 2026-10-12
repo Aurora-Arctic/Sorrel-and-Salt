@@ -31,8 +31,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 - **The filter is a GET form to `/admin/users`**, named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
   native Role select (`role`: All Roles, Admin or User), a "Needs Approval"
-  switch (`awaiting`), each label in title case on the owner's call, and a
-  Filter button. The switch is `SwitchField`, a slide toggle with its label
+  switch (`awaiting`), each label in title case on the owner's call, and no
+  Filter button (MB.115). The switch is `SwitchField`, a slide toggle with its label
   above as the other fields have, over a native checkbox; it was a checkbox
   until the owner found it out of place in the row, and the compendium's
   No Refs changed with it, so the filters match (MB.115;
@@ -40,25 +40,25 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   as no role. A
   filtered page is an address, and filtering starts again from the first page,
   since the form carries no cursor. It is `filter.tsx`, a client file: the
-  fields and their state, inside the shared `FilterForm`
-  ([`filter-form.md`](filter-form.md)), which holds the form, the Filter
-  button and the full-load navigation, so from the press until the browser
-  leaves the row is greyed and off and the list beneath it, table and pager,
-  is the tabs' skeleton (MB.115; [`list-frame.md`](list-frame.md)). Its Clear
-  Filters link, offered while the page shows a query, a role or Needs
-  Approval, opens `/admin/users` with none as the same full load, and while
-  only the fields hold one empties them in place
-  ([`filter-form.md`](filter-form.md)).
-- **Filter is offered only when there is a new filter to apply** (MB.53, on
-  the owner's word). It is `disabled` while the trimmed query, the role and the switch
-  match the filter the page shows, enabled once any differs, and disabled
-  again when they are put back. `disabled` rather than `aria-disabled`, as
-  the primitives reserve it for a submit with nothing to send.
+  search text, held in state, inside the shared `FilterForm`
+  ([`filter-form.md`](filter-form.md)). The search applies from its
+  magnifier or Enter; the role select and the switch are uncontrolled and
+  apply the moment they change, carrying the search text, each softly from
+  the first page, so from the change until the new list arrives the row is
+  greyed and off and the list beneath it, table and pager, is the tabs’
+  skeleton (MB.115; [`list-frame.md`](list-frame.md)). Soft because every
+  page under `/admin` runs the guard itself. Its Clear link, offered only
+  while the page shows a query, a role or Needs Approval, opens
+  `/admin/users` with none. The list keys the filter by the one shown, so a
+  page showing another starts it again from that one.
+- **A new filter applies without a button** (MB.115, replacing MB.53's Filter
+  button, disabled until something differed): the search’s magnifier is
+  always live, and the role and the switch send on change.
 - **`awaiting` is a bare flag**, read by its presence (MB.53, on the owner's
   word). A submit builds the address itself with `href.ts`'s `userListHref`,
   a thin typed wrapper over the shared `listHref` (`src/lib/list-href.ts`),
   the pager's builder too, so it reads `?query=bo&awaiting` rather than
-  `awaiting=1`, and opens it as a full load, as the pager's anchors do. Before
+  `awaiting=1`, and opens it softly. Before
   hydration the form submits natively, with the switch as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
@@ -405,10 +405,9 @@ People page with its Users tab open:
 coven-creation flag and signup date in the order given, the flag's and the
 address's marks the one rendering of their state; a provider outside the
 roster; no table when no user matches; the filter form's action, method,
-names and kept values, Needs Approval found as a `switch`; the Filter button's disabled and enabled states, the
-bare `awaiting` it opens, the Role select's values and the `role` it opens;
-Clear offered by each filter shown, off with none, emptying the
-fields in place when none is applied, and its full load;
+names and kept values, Needs Approval found as a `switch`; no Filter button, the
+bare `awaiting` a change of the switch opens, the Role select's values and the `role` a change opens, the search text carried along;
+Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;
 the history link before every name and its address; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy

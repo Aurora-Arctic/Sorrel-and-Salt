@@ -224,7 +224,7 @@ export const PhoneLight: Story = () => (
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// The filtered list at a phone's width, Clear beside Filter.
+// The filtered list at a phone's width, Clear beneath the fields.
 export const FilteredPhoneDark: Story = () => <Filtered />;
 FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
 

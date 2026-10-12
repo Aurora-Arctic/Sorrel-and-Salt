@@ -40,8 +40,8 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   `.pager__mark` spans.
 - **`soft` is the list's choice.** GroupedValueList's pages guard themselves on
   every render, so a soft navigation is enough, and opening its modal works
-  the same way. UserList, PrivilegeLedger and AdminInvitations keep plain anchors, whose full load also runs the
-  admin layout's guard again, as AdminNav does.
+  the same way. UserList, PrivilegeLedger and AdminInvitations keep plain anchors for their pagers, whose full load also runs the
+  admin layout's guard again, as AdminNav does; their filters are soft, since every page under `/admin` runs the guard itself.
 - **The end followed puts the list's loading state up** (the owner's call
   at MB.115's review, replacing MB.178's spinner in the end's chevron): the
   pager renders inside its list's [`ListFrame`](list-frame.md), and a

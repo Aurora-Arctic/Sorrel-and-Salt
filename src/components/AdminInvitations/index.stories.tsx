@@ -94,8 +94,8 @@ export const Paused: Story = () => (
 );
 
 // At phone width: Invite Admin across the line beneath the heading, the
-// filter row stacked, the Email box across the line and the switch, Filter
-// and Clear beneath it, and each invitation a card, Revoke across its
+// filter row stacked, the Email box across the line and the switch, and
+// Clear beneath it, and each invitation a card, Revoke across its
 // foot.
 export const PhoneDark: Story = () => <Frame invitations={INVITATIONS} />;
 PhoneDark.meta = { theme: 'dark', width: 375 };

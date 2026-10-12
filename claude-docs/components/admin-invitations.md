@@ -29,12 +29,12 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   as `?email=fern&expiring`, `expiring` a bare flag read by its presence,
   so a native submit's `expiring=` reads the same; `href.ts`'s
   `invitationsHref(filter, cursor, invite)` builds every address the tab
-  links to. Filter opens the filtered list from its first page, since it
-  names no cursor, as a full load, as the user list's does: it agrees with
-  the pager's plain anchors, whose full load runs the admin layout's guard
-  again, and the row is greyed and the list a skeleton until the browser
-  leaves. Clear opens `/admin/invitations`, or empties
-  the fields in place when neither is applied. The list keys the filter by
+  links to. There is no Filter button: the email applies from its magnifier or
+  Enter, the switch the moment it changes, each carrying the other, and
+  both open the first page softly, since they name no cursor and every page
+  under `/admin` runs the guard itself; the row is greyed and the list a
+  skeleton until the new list arrives. Clear, offered only while a filter is
+  shown, opens `/admin/invitations`. The list keys the filter by
   the one shown, so a page showing another starts it again from that one.
 - **25 to a page, with the shared [`Pager`](pager.md)** (MB.115, on the
   owner's call: a fixed number per page with a pager, as the Users list has;
@@ -122,7 +122,7 @@ centres each cell on its row. Under
 `$table-stack-width` of its frame each invitation is a card, its cells
 wrapping, each led by its column's name, and Revoke across the card's foot
 with no label. The filter row is the `.filter-row` primitive, which stacks at phone
-width: the Email box across the line, the switch, Filter and Clear
+width: the Email box across the line, the switch, and Clear
 beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet holds the tab's column, the sent
 notice and the list's frame `space(5)` apart as the tab's content is, the
 muted "None given", and the sent confirmation's
@@ -165,9 +165,9 @@ and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
 Revoke after its confirmation; both controls locked with the pause's
-reason; and the filter: the address Filter opens as a full load, from the first
+reason; and the filter: the address a change or the magnifier opens, from the first
 page whatever page is shown, the email trimmed and the switch a bare flag,
-which values offer Clear, the fields emptied in place, and Invite Admin and
+which values offer Clear, the row starting again from a filter shown anew, and Invite Admin and
 the form's close keeping the filter and the page. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address

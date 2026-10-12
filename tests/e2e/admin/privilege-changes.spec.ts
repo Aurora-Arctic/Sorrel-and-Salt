@@ -63,6 +63,7 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await tab.click();
   await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
   await expect(tab).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('form', { name: 'Filter Privilege Changes' })).toBeVisible();
 
   // Newest first: the approval heads the ledger, by the admin who made it.
   const first = page.getByRole('row').nth(1);
@@ -83,11 +84,12 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
     await assertNoAccessibilityViolations(page);
   }
 
-  // The search, by part of an address, then the privilege dropdown.
+  // The search, by part of an address, then the privilege dropdown, which
+  // applies the moment it changes, and only once the page has hydrated.
+  await page.waitForLoadState('networkidle');
   const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
   await filter.getByLabel('Name or Email').fill('SUBJECT@privilege');
   await filter.getByLabel('Privilege').selectOption('create_workspace');
-  await filter.getByRole('button', { name: 'Filter' }).click();
   await expect(page).toHaveURL(
     /\/admin\/privilege-changes\?query=SUBJECT%40privilege&privilege=create_workspace$/,
   );
@@ -95,7 +97,6 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await expect(page.getByRole('row').nth(1).getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
 
   await filter.getByLabel('Privilege').selectOption('admin');
-  await filter.getByRole('button', { name: 'Filter' }).click();
   await expect(page).toHaveURL(/privilege=admin$/);
   await expect(page.getByRole('table')).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
