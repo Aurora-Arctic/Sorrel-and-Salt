@@ -19,29 +19,19 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
   const [draftQuery, setDraftQuery] = useState(query);
   const [draftAwaiting, setDraftAwaiting] = useState(awaitingApproval);
   const [draftRole, setDraftRole] = useState<UserRole | ''>(role ?? '');
-  const changed =
-    draftQuery.trim() !== query || draftAwaiting !== awaitingApproval || draftRole !== (role ?? '');
 
   return (
     <FilterForm
       label="Filter Users"
       action="/admin/users"
-      href={() =>
+      searchHref={() =>
         userListHref({
           query: draftQuery.trim(),
           awaitingApproval: draftAwaiting,
           role: draftRole || undefined,
         })
       }
-      disabled={!changed}
       shown={[query, role, awaitingApproval]}
-      draft={[draftQuery, draftRole, draftAwaiting]}
-      onClear={() => {
-        setDraftQuery('');
-        setDraftRole('');
-        setDraftAwaiting(false);
-      }}
-      navigation="full"
     >
       <div className="field">
         <label className="field__label" htmlFor="user-list-query">

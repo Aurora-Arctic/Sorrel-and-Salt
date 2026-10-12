@@ -32,7 +32,6 @@ const GroupedValueListFilter = ({
   const groupField = fieldDescription({ id: `${useId()}-group` });
   const [draftQuery, setDraftQuery] = useState(filter.query);
   const [draftGroup, setDraftGroup] = useState(filter.group);
-  const changed = draftQuery.trim() !== filter.query || draftGroup !== filter.group;
   const hydrated = useSyncExternalStore(
     noSubscription,
     () => true,
@@ -47,15 +46,8 @@ const GroupedValueListFilter = ({
     <FilterForm
       label={`Filter ${title}`}
       action={path}
-      href={() => groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup })}
-      disabled={!changed}
+      searchHref={() => groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup })}
       shown={[filter.query, filter.group]}
-      draft={[draftQuery, draftGroup]}
-      onClear={() => {
-        setDraftQuery('');
-        setDraftGroup('');
-      }}
-      navigation="soft"
     >
       <FieldShell label="Name" {...query}>
         <input

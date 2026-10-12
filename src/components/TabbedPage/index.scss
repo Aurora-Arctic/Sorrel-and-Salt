@@ -275,13 +275,15 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
   }
 }
 
-// The filter row: the query field, a narrower select, and the Filter button,
-// a control's height each, wrapping as `.filter-row` does.
+// The filter row: the search box and a narrower select, a control's height
+// each, wrapping and inset as `.filter-row` is. No button: the real row has
+// none, its search submitting from the magnifier inside its box (MB.115).
 .tab-skeleton__filter {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: space(3) space(5);
+  padding-inline: $table-cell-inset;
 
   > span {
     height: $control-height;
@@ -289,15 +291,11 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 }
 
 .tab-skeleton__field {
-  flex: 1 1 $filter-choice-width;
+  flex: 1 1 $filter-search-basis;
 }
 
 .tab-skeleton__field--short {
   flex: 0 1 $filter-choice-width;
-}
-
-.tab-skeleton__button {
-  flex: 0 0 6rem;
 }
 
 // The table: a heading over the muted hairline and six rows, every second
@@ -385,8 +383,8 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
   }
 }
 
-// Under the forms' column the filter's fields and button stack full width,
-// as the real filter's do.
+// Under the forms' column the filter's fields stack full width, as the real
+// filter's do.
 @container tab-skeleton (max-width: #{$narrow-column}) {
   .tab-skeleton__filter > span {
     flex-basis: 100%;

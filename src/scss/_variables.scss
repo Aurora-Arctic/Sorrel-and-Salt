@@ -398,6 +398,13 @@ $tip-width: 18rem;
 // the box; its option in the list is drawn whole.
 $filter-choice-width: 14rem;
 
+// Where a filter's search box starts before it grows into the row's spare
+// room (MB.115): wide enough for its placeholder and a name or an email typed
+// in, so on a row with a select or two beside it the search keeps the line's
+// lead rather than shrinking to their width, and the choices wrap beneath it
+// sooner than the search gives way.
+$filter-search-basis: 16rem;
+
 // The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
 // during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
 // `Modal/index.scss`.
@@ -460,6 +467,11 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The admin table's inline cell padding (MB.115): a step of space, written
+// once so the filter row above a table insets its fields by the same amount
+// and each label stands flush with the column heading beneath it.
+$table-cell-inset: space(3);
 
 $radii: (
   // A badge: square enough not to read as a chip.

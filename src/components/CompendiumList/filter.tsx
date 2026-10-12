@@ -34,11 +34,6 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
   const [draftForm, setDraftForm] = useState(filter.form);
   const [draftKind, setDraftKind] = useState(filter.nomenclature);
   const [draftUnsourced, setDraftUnsourced] = useState(filter.withoutReferences);
-  const changed =
-    draftQuery.trim() !== filter.query ||
-    draftForm !== filter.form ||
-    draftKind !== filter.nomenclature ||
-    draftUnsourced !== filter.withoutReferences;
   const hydrated = useSyncExternalStore(
     noSubscription,
     () => true,
@@ -51,7 +46,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
     <FilterForm
       label="Filter the Compendium"
       action="/admin/compendium"
-      href={() =>
+      searchHref={() =>
         compendiumHref({
           query: draftQuery.trim(),
           form: draftForm,
@@ -59,16 +54,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
           withoutReferences: draftUnsourced,
         })
       }
-      disabled={!changed}
       shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
-      draft={[draftQuery, draftForm, draftKind, draftUnsourced]}
-      onClear={() => {
-        setDraftQuery('');
-        setDraftForm('');
-        setDraftKind('');
-        setDraftUnsourced(false);
-      }}
-      navigation="soft"
     >
       <FieldShell label="Name" {...query}>
         <input

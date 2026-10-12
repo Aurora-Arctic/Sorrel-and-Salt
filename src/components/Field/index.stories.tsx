@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import { type ReactNode, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
-import { FieldShell, SwitchField, TextField, fieldDescription } from '.';
+import { FieldShell, SearchField, SwitchField, TextField, fieldDescription } from '.';
 
 // Render-only; the fields are exercised by the forms that use them
 // (IngredientForm, the admin forms, NameForm, EmailForm). Each TextField sits
@@ -129,3 +129,27 @@ export const Switch: Story = () => (
     <Toggle label="On and Shut" on disabled />
   </div>
 );
+
+// A list filter's search box, its submit the magnifier at its end, named
+// Search. Its form goes nowhere here: a filter's FilterForm opens the list
+// (Forms / Filter Form). Tab past the text for the submit's focus ring.
+const Search = () => {
+  const [query, setQuery] = useState('');
+  return (
+    <form
+      className="form"
+      style={{ maxWidth: '32rem' }}
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={query}
+        onChange={setQuery}
+      />
+    </form>
+  );
+};
+
+export const SearchBox: Story = () => <Search />;
