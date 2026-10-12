@@ -55,6 +55,16 @@ export interface TabPanelLoadingProps {
   filter?: boolean;
 }
 
+export interface SwapPanelProps {
+  /** Whether the next content is on its way, so the skeleton shows in its place. */
+  pending: boolean;
+  /** The panel's own class: "tabbed-page__panel", "list-frame__body". */
+  className: string;
+  /** Whether the skeleton draws a filter row, as `TabPanelLoading`'s. */
+  filter?: boolean;
+  children: ReactNode;
+}
+
 export interface TabPanelProps {
   /** The open tab's content, which the loading state replaces while a tab is on its way. */
   children: ReactNode;

@@ -1,12 +1,10 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement, ReactNode } from 'react';
-import { WorkshopPathname } from '../../../.ladle/navigation';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import { INVITATIONS } from '../../../.ladle/fixtures';
 import AdminInvitations, { InviteAdmin } from '../AdminInvitations';
-import type { AdminInvitationEntry } from '../AdminInvitations/types';
-import AdminNav from '../AdminNav';
 import { ADMIN_PAGES } from '../AdminNav/sections';
 import PrivilegeLedger from '../PrivilegeLedger';
-import TabbedPage from '.';
 import { TabSwitchContext } from './tab-switch';
 import type { TabSwitch } from './types';
 
@@ -22,21 +20,6 @@ export default {
   title: 'Admin / Tabbed Page',
 };
 
-const INVITATIONS: AdminInvitationEntry[] = [
-  {
-    id: 'i1',
-    email: 'ada@example.test',
-    note: 'Curates the resins',
-    expiresAt: new Date('2026-10-17T20:05:00Z'),
-  },
-  {
-    id: 'i2',
-    email: 'brook.fixturewort@example.test',
-    note: null,
-    expiresAt: new Date('2026-10-16T09:00:00Z'),
-  },
-];
-
 // Users pressed and on its way, a tab whose list opens with a filter.
 const ON_ITS_WAY = { pending: true, target: ADMIN_PAGES.people.tabs[0], go: () => undefined };
 
@@ -49,14 +32,9 @@ const People = ({
   action?: ReactNode;
   children: ReactNode;
 }): ReactElement => (
-  <WorkshopPathname.Provider value={open}>
-    <div className="admin-layout">
-      <AdminNav />
-      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs} action={action}>
-        {children}
-      </TabbedPage>
-    </div>
-  </WorkshopPathname.Provider>
+  <AdminTabbedFrame page="people" open={open} action={action} nav>
+    {children}
+  </AdminTabbedFrame>
 );
 
 const Invitations = () => (

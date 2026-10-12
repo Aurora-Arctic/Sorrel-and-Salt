@@ -46,14 +46,6 @@ const redirect = vi.fn((href: string) => {
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router, redirect }));
 
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
-
 const { default: AdminCompendiumPage } = await import('@/app/admin/compendium/page');
 
 /** The edit dialog's name: its eyebrow, then the entry and its formal name (MB.115). */

@@ -23,7 +23,8 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
 wrapper), `TabPanel` (the content area) and `useTabSwitch`.
-`panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
+`swap-panel.tsx` is `SwapPanel`, the keyed swap of content for skeleton that
+`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
 shows while a pressed tab is on its way. A tab's `filtered`, set in
 `ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
 to draw a filter row. A list reuses it, with no filter row, while a filter
