@@ -436,12 +436,15 @@
 
 // A chevron in a `$glyph-size` box, turned over while `$open` (a selector
 // for the open state's element) matches an ancestor: a disclosure's marker.
+// Drawn only, so a press on it reaches the control beneath: turned over, it
+// paints above an overlay stretched from a button, and would take the press.
 @mixin disclosure-chevron($open) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
   height: $glyph-size;
   color: $text-muted;
+  pointer-events: none;
 
   svg {
     width: 100%;
