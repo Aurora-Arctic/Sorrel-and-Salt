@@ -247,13 +247,9 @@ its delete refusal. The flat kinds, the planet and the zodiac sign, are rows of
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
 built from, `TextField`, `SelectField` and `BusyButton`, have no test file
-of their own: this one covers them as it uses them. The pages' half is
-`tests/app/admin/value-page.test.tsx`, its shape run on the categories and
-every other kind getting only its path and its services: `?new` opening the empty modal
-without a read, `?edit=` reading the value by its slug and filling the modal
-from it, a slug no value holds an alert and any other failure thrown, and
-the modal closing back to the page, filter and cursor included, that it
-opened over. What the modal shows once open is this file's. `tests/e2e/admin.spec.ts`
+of their own: this one covers them as it uses them. The pages' half, `tests/app/admin/value-page.test.tsx`, is
+described in [`grouped-value-list.md`](grouped-value-list.md#testing); what the
+modal shows once open is this file's. `tests/e2e/admin.spec.ts`
 adds, renames and deletes a category, a form and a planet through the real server, adds
 a deity under a new tradition and moves it when the tradition goes, and is
 refused deleting Protection, which seeded compendium entries are filed under.

@@ -563,11 +563,9 @@ so a centred button reads high and one on the baseline low. The row wraps on
 a narrow screen rather than squeezing the heading. The header is a size
 container, so it measures its own width rather than the screen's: under
 28rem of it, the forms' column, the action goes beneath the heading and loses
-the quarter-rem drop, which only lined it up beside the heading (MB.115). In
-the admin area it then spans the line, so on a phone every admin page's Add
-stretches across the column (the owner's call at MB.115's review, over the
-natural width recommended); elsewhere, as on the account page, it keeps its
-natural width. The markup is the `PageHeader` component's
+the quarter-rem drop, which only lined it up beside the heading (MB.115).
+Where it then spans the line, and where it keeps its natural width, is
+[`components/page-header.md`](components/page-header.md#styling). The markup is the `PageHeader` component's
 ([`components/page-header.md`](components/page-header.md)). A tabbed admin
 page draws its heading in a `PageHeader` too, the open tab's action beside
 it, so the same rule holds there
@@ -611,29 +609,22 @@ The class layer every form is built from, in `_primitives.scss`:
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
   the owner's call in M5.9, once a form of many fields read as a wall of
   hints. The tip's text stays in the field's `aria-describedby`, so it is read
-  with the field whether open or not, and the tip opens while the field has
-  focus, so a keyboard that skips the ⓘ still shows it. `.field__hint` remains for a line that
+  with the field whether the tip is open or not. The tip opens on hover, a
+  tap or the ⓘ's own focus, and never on the field's focus
+  ([`components/info-tip.md`](components/info-tip.md#behaviour)). `.field__hint` remains for a line that
   must stay in view, such as why a field is disabled, since a shut field that
   does not say why reads as broken. `IngredientForm` was the first form built
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
   its own design review.
-- **Every text, textarea, select and type-ahead field shows a placeholder,
-  a short action of one or two words** ("Add a name", "Choose a group",
-  "Search names"), or on a multi-line description a one-line prompt for
-  what to write ("What this category covers"), and what the field is for goes in its hint's
-  info tip, never in the placeholder: the owner's call at MB.115's review. A
-  box of several values keeps its placeholder after its chips, with room for
-  it, while it can take another.
-  The label stays its name. The placeholder reads in `$text-placeholder`,
-  held at 4.5:1 on the field's ground in both themes by
-  `tests/scss/tokens.test.ts`
-  ([`components/field.md`](components/field.md), "Contracts").
-- **A field is optional unless it carries the required mark**, so no label
-  says "(Optional)": the asterisk, `.field__required`, marks the fields a
-  save asks for, and every other field may be left empty (the owner's call at
-  MB.115's review). The label stays the field's name, "Reason", not
-  "Reason (Optional)".
+- **Every text, textarea, select and type-ahead field shows a placeholder**,
+  a short action, and what the field is for goes in its hint's info tip
+  ([`components/field.md`](components/field.md#contracts) holds the rule).
+  The placeholder reads in `$text-placeholder`, held at 4.5:1 on the field's
+  ground in both themes by `tests/scss/tokens.test.ts`.
+- **A field is optional unless it carries the required mark**, the asterisk
+  `.field__required`, so no label says "(Optional)"
+  ([`components/field.md`](components/field.md#contracts)).
 - **The error sits beneath its control**, nearest what was typed, and is
   drawn the same whichever side found it: the resolver before a request, or
   the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
