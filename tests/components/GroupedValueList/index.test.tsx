@@ -1,7 +1,5 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { hydrateRoot } from 'react-dom/client';
-import { renderToString } from 'react-dom/server';
-import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
@@ -9,7 +7,8 @@ import type {
   GroupedValuesPlace,
 } from '@/components/GroupedValueList/types';
 import type { ListDialog } from '@/lib/types';
-import type { GroupedValueListSubject } from '../../support/types';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import type { FilterFormSubject, GroupedValueListSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -161,31 +160,47 @@ describe('GroupedValueList', () => {
     const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
     const groupBox = () => screen.getByRole('combobox', { name: DEITIES.groupLabel });
 
-    it('filters by a GET search to the page itself, keeping what was asked', () => {
-      render(<GroupedValueList {...props({ filter: shown })} />);
+    // The group goes under its own parameter by slug, from the type-ahead's
+    // hidden input, as the server's select sends it.
+    const group = (slug: string) => `${DEITIES.groupParam}=${slug}`;
+    const SUBJECT: FilterFormSubject = {
+      label: DEITIES.filterName,
+      path,
+      searchLabel: 'Name',
+      push: router.push,
+      none: { list: <GroupedValueList {...props()} />, sends: `query=&${group('')}` },
+      shown: {
+        list: (
+          <GroupedValueList
+            {...props({
+              filter: shown,
+              previousHref: groupedValuesHref(DEITIES.kind, { ...shown, before: 'b' }),
+            })}
+          />
+        ),
+        sends: `query=${DEITIES.query}&${group(groups[0].slug)}`,
+      },
+      alone: [
+        {
+          list: <GroupedValueList {...props({ filter: { query: DEITIES.query, group: '' } })} />,
+          sends: `query=${DEITIES.query}&${group('')}`,
+        },
+        {
+          list: <GroupedValueList {...props({ filter: { query: '', group: groups[0].slug } })} />,
+          sends: `query=&${group(groups[0].slug)}`,
+        },
+      ],
+      searched: `${path}?query=Two+words&${group(groups[0].slug)}`,
+    };
 
-      // The <search> landmark around it is the e2e spec's to find, as the user
-      // list's is: jsdom's role table predates the element.
-      const search = screen.getByRole('form', { name: DEITIES.filterName });
-      expect(search).toHaveAttribute('action', path);
-      expect(search).toHaveAttribute('method', 'get');
-      const name = within(search).getByRole('searchbox', { name: 'Name' });
-      expect(name).toHaveValue(DEITIES.query);
-      expect(name).toHaveAttribute('name', 'query');
-      const group = within(search).getByRole('combobox', { name: DEITIES.groupLabel });
-      expect(group).toHaveValue(groups[0].name);
-      // The group goes under its own parameter, by slug, as the select sends it.
-      expect(new FormData(search as HTMLFormElement).get(DEITIES.groupParam)).toBe(groups[0].slug);
-    });
+    it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
     // The owner's call (MB.115): typed into once hydrated, but drawn as a
     // native select by the server, so the filter works before JavaScript.
     it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
-      const page = <GroupedValueList {...props({ filter: shown })} />;
-      const container = document.createElement('div');
-      container.innerHTML = renderToString(page);
-      document.body.append(container);
-      onTestFinished(() => container.remove());
+      const { container, hydrate } = drawnOnServer(
+        <GroupedValueList {...props({ filter: shown })} />,
+      );
 
       const served = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
       expect(served).toHaveValue(groups[0].slug);
@@ -193,39 +208,10 @@ describe('GroupedValueList', () => {
       expect(within(served).getAllByRole('option')).toHaveLength(groups.length + 1);
       expect(served).not.toHaveAttribute('aria-autocomplete');
 
-      const root = await act(async () => hydrateRoot(container, page));
-      onTestFinished(() => act(() => root.unmount()));
+      await hydrate();
       const hydrated = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
       expect(hydrated).toHaveAttribute('aria-autocomplete', 'list');
       expect(hydrated).toHaveValue(groups[0].name);
-    });
-
-    it('narrows the groups as their name is typed, applying nothing', () => {
-      render(<GroupedValueList {...props()} />);
-
-      fireEvent.click(groupBox());
-      expect(screen.getAllByRole('option')).toHaveLength(groups.length);
-      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4).toUpperCase() } });
-      expect(screen.getAllByRole('option')).toHaveLength(1);
-      expect(router.push).not.toHaveBeenCalled();
-    });
-
-    it('opens the searched list from its first page, keeping the group shown', () => {
-      render(
-        <GroupedValueList
-          {...props({
-            filter: { query: '', group: groups[0].slug },
-            previousHref: groupedValuesHref(DEITIES.kind, { before: 'b' }),
-          })}
-        />,
-      );
-
-      fireEvent.change(searchbox(), { target: { value: ' Two words ' } });
-      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-
-      expect(router.push.mock.calls).toEqual([
-        [`${path}?query=Two+words&${DEITIES.groupParam}=${groups[0].slug}`],
-      ]);
     });
 
     it('applies a group picked, carrying the name typed', () => {
@@ -247,23 +233,6 @@ describe('GroupedValueList', () => {
       fireEvent.click(screen.getByRole('button', { name: `Clear ${DEITIES.groupLabel}` }));
 
       expect(router.push.mock.calls).toEqual([[`${path}?query=${DEITIES.query}`]]);
-    });
-
-    // Clear is CompendiumList's to test; this asserts which of the
-    // list's values count as a filter.
-    it('draws Clear to the unfiltered list while the name or the group is shown', () => {
-      for (const filter of [
-        { query: DEITIES.query, group: '' },
-        { query: '', group: groups[0].slug },
-      ]) {
-        const { unmount } = render(<GroupedValueList {...props({ filter })} />);
-
-        expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', path);
-        unmount();
-      }
-
-      render(<GroupedValueList {...props()} />);
-      expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
     });
   });
 });

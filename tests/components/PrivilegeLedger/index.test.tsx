@@ -4,7 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import PrivilegeLedger from '@/components/PrivilegeLedger';
 import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
 import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
+import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
+import type { FilterFormSubject } from '../../support/types';
 
 // `/admin/privilege-changes`' filter, table and pager (MB.200): render-only,
 // so the page owns the read and this owns what an admin sees of it
@@ -83,18 +85,37 @@ describe('PrivilegeLedger', () => {
     afterEach(() => router.push.mockReset());
     const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
 
-    it('is a GET form to the page: the search and the privilege select', () => {
-      render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
+    // All Privileges is blank, so a native submit sends `privilege=`, which
+    // the page reads as no privilege.
+    const SUBJECT: FilterFormSubject = {
+      label: 'Filter Privilege Changes',
+      path: '/admin/privilege-changes',
+      searchLabel: 'Name or Email',
+      push: router.push,
+      none: { list: <PrivilegeLedger changes={[GRANT]} filter={{}} />, sends: 'query=&privilege=' },
+      shown: {
+        list: <PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />,
+        sends: 'query=ada&privilege=admin',
+      },
+      alone: [
+        {
+          list: <PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada' }} />,
+          sends: 'query=ada&privilege=',
+        },
+        {
+          list: <PrivilegeLedger changes={[GRANT]} filter={{ privilege: 'admin' }} />,
+          sends: 'query=&privilege=admin',
+        },
+      ],
+      searched: privilegeLedgerHref({ query: 'Two words', privilege: 'admin' }),
+    };
 
-      const form = screen.getByRole('form', { name: 'Filter Privilege Changes' });
-      expect(form).toHaveAttribute('method', 'get');
-      expect(form).toHaveAttribute('action', '/admin/privilege-changes');
-      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
-      expect(query).toHaveAttribute('name', 'query');
-      expect(query).toHaveValue('ada');
+    it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+    it('offers every privilege, after the option for all', () => {
+      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+
       const privilege = screen.getByRole('combobox', { name: 'Privilege' });
-      expect(privilege).toHaveAttribute('name', 'privilege');
-      expect(privilege).toHaveValue('admin');
       expect(
         within(privilege)
           .getAllByRole('option')
@@ -102,16 +123,8 @@ describe('PrivilegeLedger', () => {
       ).toEqual(['', 'admin', 'create_workspace']);
     });
 
-    it('starts empty when the ledger is not filtered', () => {
-      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
-
-      expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('');
-      expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('');
-    });
-
-    it('offers no Filter button, and opens a new privilege from the first page the moment it changes', async () => {
+    it('opens a new privilege from the first page the moment it changes', async () => {
       inFlight(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
-      expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
 
       await act(async () => {
         fireEvent.change(screen.getByRole('combobox', { name: 'Privilege' }), {
@@ -121,22 +134,6 @@ describe('PrivilegeLedger', () => {
 
       expect(router.push).toHaveBeenCalledTimes(1);
       expect(router.push).toHaveBeenCalledWith(privilegeLedgerHref({ query: 'ada' }));
-    });
-
-    it('opens a new query from its magnifier, trimmed, keeping the privilege', async () => {
-      inFlight(<PrivilegeLedger changes={[GRANT]} filter={{ privilege: 'admin' }} />);
-
-      fireEvent.change(screen.getByRole('searchbox', { name: 'Name or Email' }), {
-        target: { value: ' Ada ' },
-      });
-      expect(router.push).not.toHaveBeenCalled();
-      await act(async () => {
-        fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-      });
-
-      expect(router.push).toHaveBeenCalledWith(
-        privilegeLedgerHref({ query: 'Ada', privilege: 'admin' }),
-      );
     });
 
     it('carries the query typed so far when the privilege changes', async () => {
@@ -154,39 +151,6 @@ describe('PrivilegeLedger', () => {
       expect(router.push).toHaveBeenCalledWith(
         privilegeLedgerHref({ query: 'Ada', privilege: 'create_workspace' }),
       );
-    });
-
-    // Clear is CompendiumList's to test; this asserts which of the
-    // ledger's values count as a filter.
-    it('offers Clear to the unfiltered ledger only while the query or the privilege is shown', () => {
-      for (const filter of [{ query: 'ada' }, { privilege: 'admin' as const }]) {
-        const { unmount } = render(<PrivilegeLedger changes={[GRANT]} filter={filter} />);
-
-        expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute(
-          'href',
-          '/admin/privilege-changes',
-        );
-        unmount();
-      }
-
-      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
-      expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
-    });
-
-    // The page renders again with another filter on Back or Forward; the row
-    // starts from it rather than from what was typed.
-    it('starts again from the filter shown when the page shows another', () => {
-      const { rerender } = render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada' }} />);
-      fireEvent.change(screen.getByRole('searchbox', { name: 'Name or Email' }), {
-        target: { value: 'draft' },
-      });
-
-      rerender(
-        <PrivilegeLedger changes={[GRANT]} filter={{ query: 'bram', privilege: 'admin' }} />,
-      );
-
-      expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('bram');
-      expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('admin');
     });
   });
 

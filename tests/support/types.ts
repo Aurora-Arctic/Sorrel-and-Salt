@@ -5,7 +5,7 @@ import type {
 } from '@/components/GroupedValueList/types';
 import type { users } from '@/modules/identity/schema/users';
 import type { ViteUserConfig } from 'vitest/config';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import type { Mock } from 'vitest';
 
 export interface Profile {
@@ -184,3 +184,37 @@ export interface CachedDeclaration {
 export interface TemplateBuildRegistry {
   __sorrelTemplateBuilds?: WeakMap<object, Promise<void>>;
 }
+
+/** A list rendered under one filter, and what its filter form sends for it, as a native submit would. */
+export interface FilterShown {
+  /** The list, as its page renders it under the filter. */
+  list: ReactElement;
+  /** The form's fields as an address query, in the row's order: `query=bo&role=&awaiting=`. */
+  sends: string;
+}
+
+/** One list's filter, as tests/support/filter-form.tsx drives it. */
+export interface FilterFormSubject {
+  /** The form's accessible name: `Filter Users`. */
+  label: string;
+  /** The page itself, which the form submits to and Clear opens: `/admin/users`. */
+  path: string;
+  /** The search box's label: `Name or Email`. */
+  searchLabel: string;
+  /** The mocked router's `push`, which every filter applies through. */
+  push: Mock;
+  /** The list showing no filter. */
+  none: FilterShown;
+  /** The list showing every part of its filter. */
+  shown: FilterShown;
+  /** The list showing each part of its filter alone, each drawing Clear. */
+  alone: readonly FilterShown[];
+  /** Where the search opens with ` Two words ` typed over `shown`. */
+  searched: string;
+}
+
+/** A shared filter test: its title, and what it does to a subject. */
+export type FilterFormCase = [
+  title: string,
+  run: (subject: FilterFormSubject) => void | Promise<void>,
+];

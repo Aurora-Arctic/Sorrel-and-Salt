@@ -182,8 +182,20 @@ does none of it; the changed field has the focus again in the new row; a
 type-ahead applies on a pick, its clear and leaving the box, never while
 typed; the Search submit is in the server's markup; and Clear is absent
 while the page shows no filter, text typed or not, and with a filter opens
-the unfiltered list softly. Each list asserts the address each of its
-fields applies, and which of its values draw Clear.
+the unfiltered list softly. What every list must do with its own wiring is
+written once, as `FILTER_ROWS` in `tests/support/filter-form.tsx`, which
+each of the six lists' tests runs with `it.each` on a subject of its own:
+the form a GET to the page itself with no Filter button, sending the filter
+shown under the names the page reads; the search opening its first page on
+the magnifier or Enter, trimmed, carrying the rest; each value shown alone
+drawing Clear to the page, and none with no filter; and the row starting
+again from a filter shown anew, which proves the list's key. A subject
+names what the form sends as an address query, as a native submit would.
+Each list asserts the rest itself: the address each of its other fields
+applies, a select's options, a type-ahead's pick and clear. The type-ahead's
+narrowing as it is typed is Combobox's ([`combobox.md`](combobox.md));
+the lists assert only that their field is one, drawn as a native select by
+the server (`drawnOnServer`, beside the rows).
 
 Where the row's fields stand, and Clear at its end, is presentation, the
 workshop's (rule 4): the stories above at desktop and phone widths.

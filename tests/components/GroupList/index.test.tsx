@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import GroupList from '@/components/GroupList';
 import { groupsHref } from '@/components/GroupList/href';
 import type { GroupListEntry } from '@/components/GroupList/types';
+import { FILTER_ROWS } from '../../support/filter-form';
+import type { FilterFormSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -42,49 +44,45 @@ describe('GroupList', () => {
 });
 
 // The traditions' name search (MB.115): FilterForm's controls are its own
-// to test (CompendiumList's, GroupedValueList's); this asserts the search
-// reaches the address and leaves it, and that a kind not handed one draws none.
+// to test (CompendiumList's, GroupedValueList's); the shared rows assert the
+// search reaches the address and leaves it, and this that a kind not handed
+// one draws none.
 describe('GroupList, searched by name', () => {
   beforeEach(() => {
     router.push.mockReset();
   });
 
   const path = '/admin/deity-traditions';
-  const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Deity Traditions',
+    path,
+    searchLabel: 'Name',
+    push: router.push,
+    none: {
+      list: <GroupList kind="tradition" groups={[WARDS]} filter={{ query: '' }} />,
+      sends: 'query=',
+    },
+    shown: {
+      list: (
+        <GroupList
+          kind="tradition"
+          groups={[WARDS]}
+          filter={{ query: 'wort' }}
+          previousHref={groupsHref('tradition', { query: 'wort', before: 'b' })}
+        />
+      ),
+      sends: 'query=wort',
+    },
+    alone: [
+      {
+        list: <GroupList kind="tradition" groups={[]} filter={{ query: 'wort' }} />,
+        sends: 'query=wort',
+      },
+    ],
+    searched: `${path}?query=Two+words`,
+  };
 
-  it('opens the searched list from its first page on Search, the query in the address', () => {
-    render(
-      <GroupList
-        kind="tradition"
-        groups={[WARDS]}
-        filter={{ query: '' }}
-        previousHref={groupsHref('tradition', { before: 'b' })}
-      />,
-    );
-
-    const search = screen.getByRole('form', { name: 'Filter Deity Traditions' });
-    expect(search).toHaveAttribute('action', path);
-    expect(searchbox()).toHaveAttribute('name', 'query');
-    fireEvent.change(searchbox(), { target: { value: ' Test wort ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-
-    expect(router.push).toHaveBeenCalledWith(`${path}?query=Test+wort`);
-  });
-
-  it('opens the unsearched list from Clear while a search is shown, and draws none without one', () => {
-    const { unmount } = render(
-      <GroupList kind="tradition" groups={[]} filter={{ query: 'wort' }} />,
-    );
-
-    expect(searchbox()).toHaveValue('wort');
-    fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
-
-    expect(router.push).toHaveBeenCalledWith(path);
-    unmount();
-
-    render(<GroupList kind="tradition" groups={[WARDS]} filter={{ query: '' }} />);
-    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
-  });
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
   it('draws no search for a kind not handed one', () => {
     render(<GroupList kind="category" groups={[WARDS]} />);

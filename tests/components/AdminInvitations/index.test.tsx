@@ -9,8 +9,10 @@ import type {
   RevokeAdminInvitationMutationVariables,
 } from '@/gql/graphql';
 import { expectGuardedWaysOut } from '../../support/discard-guard';
+import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import type { FilterFormSubject } from '../../support/types';
 
 // The Invitations tab (MB.70; MB.115): render-only, so the page owns the read
 // and this owns what an admin sees of it and sends, Invite Admin beside the
@@ -204,15 +206,48 @@ describe('AdminInvitations', () => {
 });
 
 // The filter (MB.115): FilterForm's loading state and Clear are
-// CompendiumList's to test; this asserts the address this one builds, which
-// of its values count as a filter, and that the invite form keeps it and the
-// page shown. Soft, from the first page, as every page under /admin runs its
+// CompendiumList's to test; the shared rows assert the address this one
+// builds and which of its values count as a filter, and this that the switch
+// carries the email and the invite form keeps the filter and the page shown. Soft, from the first page, as every page under /admin runs its
 // own guard.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
   const email = () => screen.getByRole('searchbox', { name: 'Email' });
   const soon = () => screen.getByRole('switch', { name: 'Expires in 24 Hrs' });
-  const clearLink = () => screen.getByRole('link', { name: 'Clear' });
+
+  // Expires in 24 Hrs is a native checkbox valued empty, so a native submit
+  // sends `expiring=`, which the page reads as the bare flag.
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Invitations',
+    path: '/admin/invitations',
+    searchLabel: 'Email',
+    push: router.push,
+    none: { list: <AdminInvitations invitations={INVITATIONS} />, sends: 'email=' },
+    shown: {
+      list: (
+        <AdminInvitations
+          invitations={INVITATIONS}
+          filter={FERN}
+          cursor={{ after: 'c25' }}
+          previousHref="/admin/invitations?email=fern&expiring&before=c1"
+        />
+      ),
+      sends: 'email=fern&expiring=',
+    },
+    alone: [
+      {
+        list: <AdminInvitations invitations={[]} filter={{ email: 'fern', expiringSoon: false }} />,
+        sends: 'email=fern',
+      },
+      {
+        list: <AdminInvitations invitations={[]} filter={{ email: '', expiringSoon: true }} />,
+        sends: 'email=&expiring=',
+      },
+    ],
+    searched: '/admin/invitations?email=Two+words&expiring',
+  };
+
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
   it('opens the email from the first page on the magnifier, trimmed, then Expires in 24 Hrs as a bare flag carrying it', async () => {
     render(
@@ -224,8 +259,6 @@ describe('AdminInvitations filter', () => {
         />
       </Navigating>,
     );
-    expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
-
     fireEvent.change(email(), { target: { value: ' Fern ' } });
     expect(router.push).not.toHaveBeenCalled();
     await act(async () => {
@@ -234,48 +267,6 @@ describe('AdminInvitations filter', () => {
 
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
-  });
-
-  it('applies the email from its magnifier, keeping Expires in 24 Hrs', async () => {
-    render(
-      <Navigating push={router.push}>
-        <AdminInvitations invitations={INVITATIONS} filter={{ email: '', expiringSoon: true }} />
-      </Navigating>,
-    );
-
-    fireEvent.change(email(), { target: { value: 'fern' } });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    });
-
-    expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring');
-  });
-
-  it('starts from the filter shown, and offers Clear to the unfiltered list only while either part is shown', () => {
-    for (const filter of [
-      { email: 'fern', expiringSoon: false },
-      { email: '', expiringSoon: true },
-    ]) {
-      const { unmount } = render(<AdminInvitations invitations={[]} filter={filter} />);
-
-      expect(email()).toHaveValue(filter.email);
-      expect(soon()).toHaveProperty('checked', filter.expiringSoon);
-      expect(clearLink()).toHaveAttribute('href', '/admin/invitations');
-      unmount();
-    }
-
-    render(<AdminInvitations invitations={[]} />);
-    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
-  });
-
-  it('starts again from the filter shown when the page shows another', () => {
-    const { rerender } = render(<AdminInvitations invitations={[]} filter={FERN} />);
-    fireEvent.change(email(), { target: { value: 'draft' } });
-
-    rerender(<AdminInvitations invitations={[]} filter={{ email: 'moss', expiringSoon: false }} />);
-
-    expect(email()).toHaveValue('moss');
-    expect(soon()).not.toBeChecked();
   });
 
   it('keeps the filter and the page shown in Invite Admin and in the invite form’s close', () => {

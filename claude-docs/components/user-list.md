@@ -405,7 +405,7 @@ People page with its Users tab open:
 `tests/components/UserList/index.test.tsx` covers each row's name, address,
 coven-creation flag and signup date in the order given, the flag's and the
 address's marks the one rendering of their state; a provider outside the
-roster; no table when no user matches; the filter form's action, method,
+roster; no table when no user matches; through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter form's action, method,
 names and kept values, Needs Approval found as a `switch`; no Filter button, the
 bare `awaiting` a change of the switch opens, the Role select's values and the `role` a change opens, the search text carried along;
 Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;

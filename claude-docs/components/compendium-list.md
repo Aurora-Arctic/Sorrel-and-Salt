@@ -166,13 +166,12 @@ Render-only, no test ids, no snapshots.
 ## Testing
 
 `tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit
-links and their names, no table when there are none, the filter form's
+links and their names, no table when there are none, through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter form's
 action, method, names, kept values and classification values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
 No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
-the Search submit in the server's markup,
-its narrowing as a name is typed, the address each field applies (the
+the Search submit in the server's markup, the address each field applies (the
 search on Search or Enter, Classification on its change, No Refs on its
 press, the Form box on a pick, its clear and leaving it, never while typed,
 each carrying the name typed), the loading state while the filtered list
