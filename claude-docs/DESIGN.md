@@ -1068,7 +1068,7 @@ type User {
   email: String! # self or admin: a Pothos scope behind the service (§7, "The three GraphQL costs")
   role: UserRole! # self or admin
   canCreateWorkspace: Boolean! # self or admin
-  memberships: [WorkspaceMember!]! # the caller's own only, through a loader
+  memberships: [WorkspaceMember!]! # the caller's own, or anyone's to a site admin (M9.19), through a loader
   audit: AuditInfo!
 }
 
@@ -1185,7 +1185,7 @@ Belt and braces is warranted here: an application bug leaks one person's grimoir
 
 Layer one: every workspace-scoped call passes `assertMembership(session, workspaceId, permission)` in the service. A write additionally runs inside `withAudit()`, so it cannot reach the database without both a membership check and audit stamping.
 
-`permission` is what the call is about to do — `{ spell: ['create'] }` — checked against per-role permission statements built with better-auth's `createAccessControl`, not a minimum role compared against a rank. `viewer < member < owner` is a line today; a role that is not on it would leave every "at least member" call site meaning something nobody checked, and the statements also make `{ spell: ['publish'] }` a compile error rather than a permission nobody holds. Several resources in one request are ANDed; an empty request throws, since it would authorize vacuously. The site role (`users.role`) is a different axis and is not consulted — an admin curates the compendium and reaches no workspace. Reasoning: [`m6.3-permission-statements.md`](design-decisions/m6.3-permission-statements.md).
+`permission` is what the call is about to do — `{ spell: ['create'] }` — checked against per-role permission statements built with better-auth's `createAccessControl`, not a minimum role compared against a rank. `viewer < member < owner` is a line today; a role that is not on it would leave every "at least member" call site meaning something nobody checked, and the statements also make `{ spell: ['publish'] }` a compile error rather than a permission nobody holds. Several resources in one request are ANDed; an empty request throws, since it would authorize vacuously. The site role (`users.role`) is a different axis and is not consulted — an admin curates the compendium and reaches no workspace. An admin may read which covens a user belongs to, by name and role, and nothing beneath (M9.19; [`m9.19-admin-sees-user-covens.md`](design-decisions/m9.19-admin-sees-user-covens.md)). Reasoning: [`m6.3-permission-statements.md`](design-decisions/m6.3-permission-statements.md).
 
 Layer two: what that call returns.
 
@@ -1236,7 +1236,7 @@ The same shape covers spell `visibility`: the finders that reach a `private` one
 | `/admin/zodiac-signs`            | Admin CRUD on the zodiac vocabulary                                                                                                                                                                                                                                                                                                                                                           |
 | `/admin/deities`                 | Admin CRUD on the deity vocabulary, each deity under its tradition                                                                                                                                                                                                                                                                                                                            |
 | `/admin/deity-traditions`        | Admin CRUD on the deity traditions                                                                                                                                                                                                                                                                                                                                                            |
-| `/admin/users`                   | Every account with its role and its right to create a coven; an admin grants and revokes both here (M2.9, M5.8)                                                                                                                                                                                                                                                                               |
+| `/admin/users`                   | Every account with its role and its right to create a coven; an admin grants and revokes both here (M2.9, M5.8); a user's name opens their covens in a modal, `?user=<id>`, with Impersonate (M9.19)                                                                                                                                                                                          |
 | `/admin/invitations`             | The pending invitations to become an admin, with Revoke on each, and the invite form `?invite` opens (MB.70)                                                                                                                                                                                                                                                                                  |
 | `/admin/privilege-changes`       | Who changed which privilege, and when, read from `user_privilege_changes` (MB.200)                                                                                                                                                                                                                                                                                                            |
 | `/invite/[token]`                | Accept invitation                                                                                                                                                                                                                                                                                                                                                                             |
@@ -1311,7 +1311,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 16. See a warning when the name I'm entering resembles something existing.
 17. Be prevented from editing compendium entries.
 18. As an admin, add, edit, and soft-delete compendium entries and categories.
-19. As an admin, have no special access to any workspace's private data.
+19. As an admin, have no special access to any workspace's contents — its ingredients, grimoire and members — while seeing which covens a user belongs to and with what role.
 
 ### Ingredients
 

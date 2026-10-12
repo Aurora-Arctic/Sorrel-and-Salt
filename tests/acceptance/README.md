@@ -21,7 +21,7 @@ Story 19 is covered by the workspace-isolation suite (M6.6),
 `tests/db/workspace-isolation.test.ts`: the per-entity sweep of a coven's
 ingredients and grimoire, refused to a member of another coven and to a site
 admin through the services a caller reaches them by, with the refusal the same
-for a real id and a made-up one (MB.187). Numbers 35–46 belong to v2 and are
+for a real id and a made-up one (MB.187). The same suite holds the story's positive half, a site admin reading a user's covens, in the same test as the refusal (M9.19). Numbers 35–46 belong to v2 and are
 not reused, and every top-level `describe` here names a v1 story — held by
 review since MB.224 retired the guard that checked it.
 
