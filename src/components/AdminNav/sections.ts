@@ -52,7 +52,7 @@ export const ADMIN_PAGES = {
   },
   astrology: {
     label: 'Astrology',
-    description: 'The planets and zodiac signs an ingredient can be linked with.',
+    description: 'The celestial bodies and zodiac signs an ingredient can be linked with.',
     tabs: [valueTab('planet'), valueTab('zodiacSign')],
   },
   people: {

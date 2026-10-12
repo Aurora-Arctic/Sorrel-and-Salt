@@ -72,14 +72,14 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
 
   expect(response?.status()).toBe(200);
   // One link per page, each at its first tab: a group list is a tab of the
-  // list it organises, and Astrology holds the planets and zodiac signs (MB.115).
+  // list it organises, and Astrology holds the celestial bodies and zodiac signs (MB.115).
   const nav = page.getByRole('navigation', { name: 'Admin' });
   const pages = [
     ['Compendium', '/admin/compendium'],
     ['Categories', '/admin/categories'],
     ['Forms', '/admin/forms'],
     ['Deities', '/admin/deities'],
-    ['Astrology', '/admin/planets'],
+    ['Astrology', '/admin/celestial-bodies'],
     ['People', '/admin/users'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
@@ -492,12 +492,12 @@ test('an admin adds, renames and deletes a form in the modal over the list', asy
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });
 
-test('a signed-in non-admin is refused at /admin/planets and /admin/zodiac-signs with the 403 page', async ({
+test('a signed-in non-admin is refused at /admin/celestial-bodies and /admin/zodiac-signs with the 403 page', async ({
   page,
 }) => {
   await signInAs(page, 'not-an-admin@admin-astrology.test');
 
-  for (const path of ['/admin/planets?new', '/admin/zodiac-signs?new']) {
+  for (const path of ['/admin/celestial-bodies?new', '/admin/zodiac-signs?new']) {
     const response = await page.goto(path);
 
     expect(response?.status()).toBe(403);
@@ -506,34 +506,42 @@ test('a signed-in non-admin is refused at /admin/planets and /admin/zodiac-signs
   }
 });
 
-// MB.95: the planets in M5.6a's page shape without the group — the list, and
+// MB.95: the celestial bodies in M5.6a's page shape without the group — the list, and
 // its modal opened by the address, added to, renamed and retired from.
-test('an admin adds, renames and deletes a planet in the modal over the list', async ({ page }) => {
+test('an admin adds, renames and deletes a celestial body in the modal over the list', async ({
+  page,
+}) => {
   await signInAs(page, 'an-admin@admin-astrology.test', ['discord'], 'admin');
 
-  const response = await page.goto('/admin/planets');
+  // The old address is gone, with no redirect.
+  expect((await page.goto('/admin/planets'))?.status()).toBe(404);
+
+  const response = await page.goto('/admin/celestial-bodies');
   expect(response?.status()).toBe(200);
   // The seeded nineteen bodies, on one page.
   await expect(page.getByRole('row').filter({ has: page.getByRole('cell') })).toHaveCount(19);
 
-  await page.getByRole('link', { name: 'Add Planet' }).click();
-  const adding = page.getByRole('dialog', { name: 'Add Planet' });
+  await page.getByRole('link', { name: 'Add Celestial Body' }).click();
+  const adding = page.getByRole('dialog', { name: 'Add Celestial Body' });
   await expect(adding).toBeVisible();
-  await expect(page).toHaveURL(/\/admin\/planets\?new$/);
+  await expect(page).toHaveURL(/\/admin\/celestial-bodies\?new$/);
   await assertNoAccessibilityViolations(page);
-  await expect(adding.getByRole('button', { name: 'Save Planet' })).toBeDisabled();
+  await expect(adding.getByRole('button', { name: 'Save Celestial Body' })).toBeDisabled();
   await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Star');
   await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
-  await adding.getByRole('button', { name: 'Save Planet' }).click();
+  await adding.getByRole('button', { name: 'Save Celestial Body' }).click();
   await expect(adding).toHaveCount(0);
   const row = page.getByRole('row', { name: /Aaa Testwort Star/ });
   await expect(row.getByRole('cell', { name: 'Made by the e2e spec' })).toBeVisible();
 
   await row.getByRole('link', { name: 'Edit Aaa Testwort Star' }).click();
-  const editing = page.getByRole('dialog', { name: 'Edit Planet, Aaa Testwort Star', exact: true });
-  await expect(page).toHaveURL(/\/admin\/planets\?edit=aaa-testwort-star$/);
+  const editing = page.getByRole('dialog', {
+    name: 'Edit Celestial Body, Aaa Testwort Star',
+    exact: true,
+  });
+  await expect(page).toHaveURL(/\/admin\/celestial-bodies\?edit=aaa-testwort-star$/);
   // A rename carries onto the compendium, and Save says so before it is pressed.
-  const save = editing.getByRole('button', { name: 'Save Planet' });
+  const save = editing.getByRole('button', { name: 'Save Celestial Body' });
   await expect(save).toHaveAccessibleDescription('');
   await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Comet');
   await expect(save).toHaveAccessibleDescription(/\S/);
@@ -544,8 +552,11 @@ test('an admin adds, renames and deletes a planet in the modal over the list', a
   await expect(renamed).toBeVisible();
 
   await renamed.getByRole('link', { name: 'Edit Aaa Testwort Comet' }).click();
-  const comet = page.getByRole('dialog', { name: 'Edit Planet, Aaa Testwort Comet', exact: true });
-  await comet.getByRole('button', { name: 'Delete Planet' }).click();
+  const comet = page.getByRole('dialog', {
+    name: 'Edit Celestial Body, Aaa Testwort Comet',
+    exact: true,
+  });
+  await comet.getByRole('button', { name: 'Delete Celestial Body' }).click();
   const confirm = comet.getByRole('button', { name: 'Delete', exact: true });
   await expect(confirm).toBeVisible();
   await confirm.click();
@@ -553,7 +564,7 @@ test('an admin adds, renames and deletes a planet in the modal over the list', a
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });
 
-// The zodiac page's one flow, since the planets' CRUD covers the shared
+// The zodiac page's one flow, since the celestial bodies' CRUD covers the shared
 // modal: its list read through the address a filter makes.
 test('an admin filters the zodiac signs by part of a name', async ({ page }) => {
   await signInAs(page, 'filter-admin@admin-astrology.test', ['discord'], 'admin');

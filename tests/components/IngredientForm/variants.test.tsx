@@ -410,7 +410,7 @@ describe('IngredientForm’s variants', () => {
       const sectionOf = (element: HTMLElement) => element.closest('section');
       expect(sectionOf(control(oil, 'Form'))).toBe(sectionOf(headings[0]));
       expect(sectionOf(control(oil, 'Description'))).toBe(sectionOf(headings[1]));
-      expect(sectionOf(control(oil, 'Planet'))).toBe(sectionOf(headings[2]));
+      expect(sectionOf(control(oil, 'Celestial Body'))).toBe(sectionOf(headings[2]));
       expect(sectionOf(control(oil, 'Substitute Ingredient'))).toBe(sectionOf(headings[3]));
       expect(sectionOf(control(oil, 'Safety Notes'))).toBe(sectionOf(headings[4]));
     });
@@ -508,7 +508,7 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(sectionOf(oil, 'Correspondences'));
 
       expect(openIn(oil)).toEqual(['Correspondences']);
-      expect(control(oil, 'Planet')).toBeVisible();
+      expect(control(oil, 'Celestial Body')).toBeVisible();
       // The ingredient's own Correspondences, a level up, stays closed.
       expect(screen.getAllByRole('button', { name: 'Correspondences' })[0]).toHaveAttribute(
         'aria-expanded',
@@ -792,7 +792,7 @@ describe('IngredientForm’s variants', () => {
     const COPIED = [
       'Description',
       'Element',
-      'Planets',
+      'Celestial Bodies',
       'Zodiac Signs',
       'Colours',
       'Categories',
@@ -907,7 +907,7 @@ describe('IngredientForm’s variants', () => {
 
       for (const field of [
         'Element',
-        'Planets',
+        'Celestial Bodies',
         'Zodiac Signs',
         'Colours',
         'Categories',
@@ -919,9 +919,9 @@ describe('IngredientForm’s variants', () => {
         expect(button).toHaveFocus();
       }
       // Pressed again, it adds nothing more.
-      fireEvent.click(copyOf(oil, 'Planets'));
+      fireEvent.click(copyOf(oil, 'Celestial Bodies'));
       expect(
-        within(oil).getByRole('status', { name: 'Planets changes' }),
+        within(oil).getByRole('status', { name: 'Celestial Bodies changes' }),
       ).not.toBeEmptyDOMElement();
 
       expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeEnabled();

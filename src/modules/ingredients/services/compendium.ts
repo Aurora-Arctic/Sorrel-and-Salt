@@ -256,7 +256,10 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
 }
 
 /** What each field named by spelling is called in a refusal. */
-const NOUN_OF: Record<CuratedField, string> = { planets: 'planet', zodiacSigns: 'zodiac sign' };
+const NOUN_OF: Record<CuratedField, string> = {
+  planets: 'celestial body',
+  zodiacSigns: 'zodiac sign',
+};
 
 const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
 

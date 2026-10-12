@@ -56,16 +56,16 @@ export const VARIANT_LISTS = ['planets', 'zodiacSigns', 'colors', 'substitutes']
 
 /**
  * What each field is called where the form counts or names its entries: the
- * variant's Copy From Ingredient ("Copy From Ingredient: Planets", "Copied 2
- * planets"), a folded section's line ("2 colours") and a variant's card ("1
- * planet"). One table, so each says a field alike.
+ * variant's Copy From Ingredient ("Copy From Ingredient: Celestial Bodies", "Copied 2
+ * celestial bodies"), a folded section's line ("2 colours") and a variant's card ("1
+ * celestial body"). One table, so each says a field alike.
  */
 export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
   description: { label: 'Description', one: 'description', many: 'description' },
   safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
   elements: { label: 'Element', one: 'element', many: 'elements' },
-  planets: { label: 'Planets', one: 'planet', many: 'planets' },
+  planets: { label: 'Celestial Bodies', one: 'celestial body', many: 'celestial bodies' },
   zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
   colors: { label: 'Colours', one: 'colour', many: 'colours' },
   deities: { label: 'Deities', one: 'deity', many: 'deities' },

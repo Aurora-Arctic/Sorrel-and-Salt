@@ -45,7 +45,7 @@ function listPart(entries: readonly string[], { many }: FieldNoun): string | nul
   return `${entries.length} ${many}`;
 }
 
-/** `n` and the noun it counts: "1 planet", "2 planets". */
+/** `n` and the noun it counts: "1 celestial body", "2 celestial bodies". */
 const count = (n: number, { one, many }: Pick<FieldNoun, 'one' | 'many'>) =>
   `${n} ${plural(n, one, many)}`;
 /** A text field's words on one line: its line breaks and runs of spaces are one space. */
@@ -129,7 +129,7 @@ const CARD_COUNTED = [
   'substitutes',
 ] as const;
 
-/** A count of `variant`'s entries in `field`, "2 planets", or null for none. */
+/** A count of `variant`'s entries in `field`, "2 celestial bodies", or null for none. */
 function countedIn(
   variant: VariantFormValues,
   field: (typeof CARD_COUNTED)[number] | 'references',
@@ -139,7 +139,7 @@ function countedIn(
 }
 
 /**
- * A variant's card line: what it carries, in its sections' order, "1 planet ·
+ * A variant's card line: what it carries, in its sections' order, "1 celestial body ·
  * 2 categories · Safety note", or that it carries nothing. The parts are the
  * section lines' own, joined by the same middle dot.
  */
@@ -150,7 +150,7 @@ export function variantSummary(variant: VariantFormValues): ReactNode {
     variant.safetyNotes.trim() !== '' && 'safety note',
     countedIn(variant, 'references'),
   ].filter((part): part is string => typeof part === 'string');
-  // A line of its own, so it opens on a capital: "1 planet · Safety note".
+  // A line of its own, so it opens on a capital: "1 celestial body · Safety note".
   return joined(parts.map((part, at) => (at === 0 ? capitalise(part) : part)));
 }
 

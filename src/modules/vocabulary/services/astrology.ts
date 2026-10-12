@@ -44,8 +44,8 @@ const VOCABULARY = {
   planets: {
     table: planets,
     input: PlanetInput,
-    noun: 'planet',
-    listNoun: 'planets',
+    noun: 'celestial body',
+    listNoun: 'celestial bodies',
     slugIndex: 'planets_slug_unique',
     holding: (name: string) => ({ planet: name }),
   },

@@ -166,7 +166,7 @@ export const Sortable: Story = () => {
   return (
     <Combobox
       id="planet"
-      label="Planet"
+      label="Celestial Body"
       value={value}
       onChange={setValue}
       onPick={add}
@@ -180,7 +180,11 @@ export const Sortable: Story = () => {
           />
         )
       }
-      clear={{ label: 'Clear Planets', onClear: () => setEntries([]), empty: entries.length === 0 }}
+      clear={{
+        label: 'Clear Celestial Bodies',
+        onClear: () => setEntries([]),
+        empty: entries.length === 0,
+      }}
     />
   );
 };

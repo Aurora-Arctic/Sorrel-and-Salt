@@ -27,7 +27,13 @@ const row = () =>
 const SECTIONS = [
   [
     'Compendium',
-    ['/admin/compendium', '/admin/categories', '/admin/forms', '/admin/deities', '/admin/planets'],
+    [
+      '/admin/compendium',
+      '/admin/categories',
+      '/admin/forms',
+      '/admin/deities',
+      '/admin/celestial-bodies',
+    ],
   ],
   ['People', ['/admin/users']],
 ] as const;

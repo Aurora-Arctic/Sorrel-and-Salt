@@ -33,11 +33,11 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Tradition', plural: 'Traditions', param: 'tradition' },
   },
   planet: {
-    path: '/admin/planets',
-    title: 'Planets',
-    label: 'Planet',
-    noun: 'planet',
-    plural: 'planets',
+    path: '/admin/celestial-bodies',
+    title: 'Celestial Bodies',
+    label: 'Celestial Body',
+    noun: 'celestial body',
+    plural: 'celestial bodies',
   },
   zodiacSign: {
     path: '/admin/zodiac-signs',

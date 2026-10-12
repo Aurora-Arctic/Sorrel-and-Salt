@@ -129,12 +129,12 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   await expect(adding).toBeVisible();
 
   // A lookup open inside the dialog: the suggestions float in its top layer.
-  await adding.getByRole('combobox', { name: 'Planet' }).click();
-  await adding.getByRole('combobox', { name: 'Planet' }).fill('M');
-  await expect(adding.getByRole('listbox', { name: 'Planet suggestions' })).toBeVisible();
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
+  await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
-  // Left in the box, the text would hold the save: a planet here is a pick.
-  await adding.getByRole('combobox', { name: 'Planet' }).fill('');
+  // Left in the box, the text would hold the save: a celestial body here is a pick.
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('');
 
   /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
   const addForm = async (dialog: Locator, form: string) => {

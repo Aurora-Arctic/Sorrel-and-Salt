@@ -135,7 +135,7 @@ describe('a substitute list’s chips', () => {
     expect(fact('Form')).toHaveTextContent('Dried leaf');
     expect(fact('Elements')).toHaveTextContent('Water');
     // The ingredient's planet and the form's own, together.
-    expect(fact('Planets')).toHaveTextContent('Moon, Saturn');
+    expect(fact('Celestial Bodies')).toHaveTextContent('Moon, Saturn');
     // A list with nothing in it is left out.
     expect(within(summary()).queryByText('Colours', { selector: 'dt' })).not.toBeInTheDocument();
     // No page to link, so no link.

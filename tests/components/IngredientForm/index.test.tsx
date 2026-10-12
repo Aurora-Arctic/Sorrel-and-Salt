@@ -179,8 +179,8 @@ describe('IngredientForm', () => {
       type('Formal Name', 'Fixtura testalis');
       type('Description', 'A fixture herb.');
       chooseEach('Element', 'Water', 'Air');
-      addEntry('Planet', 'Mercury');
-      addEntry('Planet', 'Venus');
+      addEntry('Celestial Body', 'Mercury');
+      addEntry('Celestial Body', 'Venus');
       addEntry('Zodiac Sign', 'Gemini');
       addEntry('Colour', 'Silver-green');
       type('Safety Notes', 'None known.');
@@ -216,7 +216,7 @@ describe('IngredientForm', () => {
       const onSaved = renderForm();
 
       type('Name', 'Testwort');
-      addEntry('Planet', 'Mercury');
+      addEntry('Celestial Body', 'Mercury');
       save();
 
       await waitFor(() =>
@@ -257,7 +257,7 @@ describe('IngredientForm', () => {
       type('Formal Name', 'Fixtura testalis');
       type('Description', 'A fixture herb.');
       chooseEach('Element', 'Air');
-      addEntry('Planet', 'Mercury');
+      addEntry('Celestial Body', 'Mercury');
       addEntry('Folk Name', 'Hedge Fixture');
       await pickCategory('Trialcraft');
       type('Safety Notes', 'None known.');
@@ -310,7 +310,7 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
-      addEntry('Planet', 'Mercury');
+      addEntry('Celestial Body', 'Mercury');
       save();
 
       await screen.findByRole('alert');
@@ -857,7 +857,7 @@ describe('IngredientForm', () => {
           option: /^Hedge Fixture/,
         },
         {
-          entry: 'Planet',
+          entry: 'Celestial Body',
           calls: offerPlanets([{ value: 'Moon', description: null, curated: true }]),
           option: /^Moon/,
         },

@@ -11,7 +11,7 @@ import './index.scss';
 
 // A curated vocabulary's filter, table and pager: grouped — `/admin/categories`'
 // (M5.6, MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132) — or
-// flat, with no group column or group filter, `/admin/planets`' and
+// flat, with no group column or group filter, `/admin/celestial-bodies`' and
 // `/admin/zodiac-signs`' (MB.95, folded in at MB.115). One for every such
 // vocabulary, as GroupList is for their groups. Render-only: the page reads
 // one page of the vocabulary under the address's filter through the service

@@ -334,7 +334,7 @@ describe('a curated value page, for each other kind', () => {
     },
     {
       kind: 'planet',
-      path: '/admin/planets',
+      path: '/admin/celestial-bodies',
       address: {},
       list: listAstrologyValues,
       count: countAstrologyValues,
@@ -343,7 +343,7 @@ describe('a curated value page, for each other kind', () => {
       filter: { query: 'te' },
       getArgs: ['planets', 'testwort-shard'],
       row: { ...VALUE, description: 'A planet' },
-      dialog: 'Edit Planet, Testwort Shard',
+      dialog: 'Edit Celestial Body, Testwort Shard',
     },
     {
       kind: 'zodiacSign',

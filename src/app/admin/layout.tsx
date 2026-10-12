@@ -3,7 +3,7 @@ import AdminNav from '../../components/AdminNav';
 import { requireAdminSession } from '../../lib/request-session';
 import type { AdminLayoutProps } from './types';
 
-// Each page under `/admin` gives its own name ('Planets') and this template
+// Each page under `/admin` gives its own name ('Celestial Bodies') and this template
 // finishes it. Next does not apply a layout's template to a page in the same
 // segment, so `/admin` itself takes the `default` as its title.
 export const metadata: Metadata = {
