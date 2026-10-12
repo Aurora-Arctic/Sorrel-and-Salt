@@ -130,8 +130,8 @@ for a rule only one kind's rows need.
   presence, as the user list's `awaiting` is.
 - **`next/link`, not a plain anchor.** Opening the modal is a soft navigation:
   the page renders again with the modal open, and the page itself calls the
-  admin guard on every render. AdminNav keeps plain anchors for its own
-  reason, which is that typed routes refuse a route not built yet.
+  admin guard on every render. AdminNav uses `<Link>` too, now that every
+  route it names is built ([`admin-nav.md`](admin-nav.md)).
 - **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its
   value**: "Edit" and the name in `visually-hidden` text, so a screen
   reader hears "Edit Testcraft" rather than a column of "Edit", and a
