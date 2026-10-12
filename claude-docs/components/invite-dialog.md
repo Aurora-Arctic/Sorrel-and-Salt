@@ -2,8 +2,9 @@
 
 `src/components/InviteDialog/` — an owner's Invite button and the dialog it opens (M7.4, story 4). A
 client component taking the `workspaceId` of the coven invited into. It draws the button and the
-dialog together, so the button can take the focus back when the dialog closes. M7.6 mounts it on the
-members page, for owners only; until then nothing renders it but its story and its test.
+dialog together, so the button can take the focus back when the dialog closes. M7.6 mounts it for owners only, as the
+`@action` of the coven's People page, so it sits beside the heading on both the Members and
+Invitations tabs (`src/app/(shell)/coven/[slug]/(people)/@action`).
 
 ## Contracts
 
@@ -51,7 +52,7 @@ holding exactly viewer and member, its description, the confirmation naming the 
 refreshing the page, no link at any point, Done, Escape, Cancel and Close with focus returned, the
 guard over a typed address, a blank reopening, and a field refusal against an alert one.
 
-**Not yet asserted in a real browser:** axe and a real dialog's focus trap and focus restore. The
-dialog is reachable from no page until M7.6 mounts it, and accessibility is asserted in Playwright
-(CLAUDE.md, Testing), so M7.6's e2e spec opens it from the members page and scans it open and sent.
+**Not yet asserted in a real browser:** axe and a real dialog's focus trap and focus restore. Accessibility is asserted in
+Playwright (CLAUDE.md, Testing): M7.6's e2e spec (`tests/e2e/coven.spec.ts`) opens it from the
+Invitations tab and scans it open; the sent state is not yet scanned.
 The focus trap itself is the platform's `showModal()` ([`modal.md`](modal.md), "Contracts").

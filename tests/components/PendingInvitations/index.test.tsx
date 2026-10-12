@@ -1,0 +1,67 @@
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import PendingInvitations from '@/components/PendingInvitations';
+
+const { refresh, graphqlRequest } = vi.hoisted(() => ({
+  refresh: vi.fn(),
+  graphqlRequest: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh }) }));
+vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
+
+const WORKSPACE = '00000000-0000-0000-0000-000000000001';
+const INVITATIONS = [
+  { id: 'i-1', email: 'fern@fixture.test', role: 'member', expiresAt: new Date('2026-10-19') },
+  { id: 'i-2', email: 'moss@fixture.test', role: 'viewer', expiresAt: new Date('2026-10-18') },
+] as const;
+
+const show = () => render(<PendingInvitations workspaceId={WORKSPACE} invitations={INVITATIONS} />);
+
+describe('PendingInvitations', () => {
+  beforeEach(() => {
+    refresh.mockReset();
+    graphqlRequest.mockReset();
+  });
+
+  it('lists one row per invitation, each with its own Revoke', () => {
+    show();
+
+    const table = screen.getByRole('table', { name: 'Pending Invitations' });
+    expect(within(table).getAllByRole('row')).toHaveLength(1 + INVITATIONS.length);
+    for (const { email } of INVITATIONS)
+      expect(
+        screen.getByRole('button', { name: `Revoke the invitation to ${email}` }),
+      ).toBeInTheDocument();
+  });
+
+  it('sends nothing until confirmed, then revokes that invitation in this coven and reads the page again', async () => {
+    graphqlRequest.mockResolvedValue({ revokeInvitation: { id: 'i-2' } });
+    show();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Revoke the invitation to moss@fixture.test' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    expect(graphqlRequest).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Revoke' }));
+
+    await waitFor(() => expect(refresh).toHaveBeenCalled());
+    expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), {
+      workspaceId: WORKSPACE,
+      id: 'i-2',
+    });
+  });
+
+  it('says why when the service refuses, and does not read the page again', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+    show();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Revoke the invitation to fern@fixture.test' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Revoke' }));
+
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+});

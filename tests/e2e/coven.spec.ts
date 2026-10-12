@@ -209,6 +209,106 @@ test.describe('the members page', () => {
   });
 });
 
+// The Invitations tab (story 5; M7.6): an owner sees the pending list and
+// revokes from it; a member sees the roll with neither the tab nor the
+// list, and the address itself is a 404. Invite sits on both tabs for an
+// owner and on neither for anyone else.
+test.describe('the invitations tab', { tag: '@story-5' }, () => {
+  const INVITED = ['fern@invited.test', 'moss@invited.test'];
+
+  test('an owner sees the tab, the list and Invite on both tabs, and revoking removes the row', async ({
+    page,
+  }) => {
+    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+    try {
+      const [coven] = await sql`select id from workspaces where slug = ${COVEN_SLUG}`;
+      for (const email of INVITED) {
+        await sql`
+            insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
+            values (${email}, ${email + '-hash'}, ${coven.id}, 'member', ${users.owner.id}, ${users.owner.id})`;
+      }
+
+      await signInAgainAs(page, users.owner.id);
+      await page.goto(`/coven/${COVEN_SLUG}/members`);
+      const tabs = page.getByRole('navigation', { name: 'People' });
+      await expect(tabs.getByRole('link', { name: 'Members' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+      await expect(
+        page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }),
+      ).toBeVisible();
+
+      await tabs.getByRole('link', { name: 'Invitations' }).click();
+      await page.waitForURL(`**/coven/${COVEN_SLUG}/invitations`);
+      const table = page.getByRole('table', { name: 'Pending Invitations' });
+      await expect(table.getByRole('row')).toHaveCount(1 + INVITED.length);
+      await expect(
+        page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }),
+      ).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await assertNoSidewaysScroll(page);
+
+      await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+
+      await page.getByRole('button', { name: `Revoke the invitation to ${INVITED[0]}` }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Revoke', exact: true }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(table.getByRole('row')).toHaveCount(INVITED.length);
+      await expect(table.getByRole('cell', { name: INVITED[0] })).toHaveCount(0);
+
+      const [row] = await sql`
+          select revoked_at is not null as revoked from invitations where email = ${INVITED[0]}`;
+      expect(row.revoked).toBe(true);
+    } finally {
+      await sql.end();
+    }
+  });
+
+  test('a member has the Members tab without Invitations or Invite, and the address is a 404', async ({
+    page,
+  }) => {
+    // A member of this test's own, never promoted: the members page's tests
+    // make `users.member` an owner, so it is no member here.
+    const { userId: memberId } = await signInAs(page, 'invitations-member@coven-page.test');
+    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+    try {
+      const [coven] = await sql`select id from workspaces where slug = ${COVEN_SLUG}`;
+      await sql`
+          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+          values (${coven.id}, ${memberId}, 'member', ${users.owner.id}, ${users.owner.id})`;
+      await sql`
+          insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
+          values ('heath@invited.test', 'heath@invited.test-hash', ${coven.id}, 'member', ${users.owner.id}, ${users.owner.id})`;
+
+      // Why the 404 could have been a page: this member's seat is live, and a
+      // pending invitation is there to list.
+      const [seat] = await sql`
+          select role::text from workspace_members
+          where workspace_id = ${coven.id} and user_id = ${memberId} and deleted_at is null`;
+      expect(seat.role).toBe('member');
+      const [pending] = await sql`
+          select count(*)::int as n from invitations
+          where workspace_id = ${coven.id} and accepted_at is null and revoked_at is null`;
+      expect(pending.n).toBeGreaterThan(0);
+    } finally {
+      await sql.end();
+    }
+    await page.goto(`/coven/${COVEN_SLUG}/members`);
+
+    const tabs = page.getByRole('navigation', { name: 'People' });
+    await expect(tabs.getByRole('link', { name: 'Members' })).toBeVisible();
+    await expect(tabs.getByRole('link', { name: 'Invitations' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
+
+    expect((await page.goto(`/coven/${COVEN_SLUG}/invitations`))?.status()).toBe(404);
+  });
+});
+
 // The only owner's guided exit (story 10; M6.16): Leave stays enabled, opens a
 // dialog asking what happens to the coven, a hand-over or the deletion, and
 // Promote and Leave hands the coven to the member picked by name before

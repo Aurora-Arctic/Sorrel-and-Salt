@@ -8,10 +8,12 @@ current-page mark and the rest are [`SectionNav`](section-nav.md)'s.
 
 It takes the slug and the caller's `covenRole`, and holds:
 
-| Label    | Route                   | Icon     | Shown to                     | Built by |
-| -------- | ----------------------- | -------- | ---------------------------- | -------- |
-| Overview | `/coven/[slug]`         | overview | every role                   | M9.15    |
-| Members  | `/coven/[slug]/members` | members  | roles holding `member: read` | M6.13    |
+| Label    | Route           | Icon     | Shown to   | Built by |
+| -------- | --------------- | -------- | ---------- | -------- |
+| Overview | `/coven/[slug]` | overview | every role | M9.15    |
+
+Members stays the open section on `/coven/[slug]/invitations`, its sibling tab (`matches`, M7.6).
+| Members | `/coven/[slug]/members` | members | roles holding `member: read` | M6.13 |
 
 `sections.ts` holds the list, as `covenSections(slug, canReadMembers)`, each entry a
 `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx` renders
