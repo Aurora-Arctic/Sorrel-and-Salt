@@ -152,3 +152,15 @@ needs to offer a way out: `remedy` is `'promote'` when other members exist
 (`promotable` lists their user ids) and `'delete'` when the owner is the only
 member. A change that keeps an owner an owner, or touches someone who is not the
 last owner, passes.
+
+## Changing a role (M9.14)
+
+`updateMemberRole(session, workspaceId, userId, role)` in
+`src/modules/coven/services/member-role.ts` is the one way a role changes. It
+asks for `member: update`, which only owners hold, then — in the transaction
+that writes — runs `assertNotLastOwner` and calls `write.updateMembershipRole`.
+That writer sets the role on the one live row of the proof's workspace and
+`userId`, so a pending invitation, a removed member or someone from another
+workspace matches nothing and is refused as `Forbidden`; no row is ever
+inserted. `joined_at` is not written. The `updateMemberRole` mutation does
+nothing but call it.

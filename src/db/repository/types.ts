@@ -446,6 +446,17 @@ export interface AuditWriter {
     role: WorkspaceRole,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * Set the role of one live member of the proof's workspace (M9.14). The
+   * workspace is the proof's, so another coven's row is out of reach; an
+   * empty result means no such live member. Touches the role and the audit
+   * stamps, never `joined_at`. The caller has run the last-owner guard.
+   */
+  updateMembershipRole(
+    membership: Membership,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
    * The proof's workspace's live members, locked `for update` until the
    * transaction ends (M6.8): what the last-owner guard counts before a role
    * change or removal writes, so two owners stepping down at once cannot both

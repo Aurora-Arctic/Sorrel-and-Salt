@@ -63,6 +63,8 @@ export interface AdminWrite {
 export interface WorkspaceIdProbe {
   source: string;
   variables?: () => Record<string, unknown>;
+  /** Runs as W's owner, A, for a field only an owner is admitted to; B otherwise. */
+  asOwner?: boolean;
 }
 
 /** A GraphQL response body, as far as a probe reads it. */

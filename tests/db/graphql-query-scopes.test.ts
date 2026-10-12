@@ -287,6 +287,10 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   // A blank name, so a caller past the scope that may create one is refused by
   // the service before anything is written.
   createWorkspace: write('mutation { createWorkspace(name: "") { id } }'),
+  // A malformed person id, so a caller past the scope is refused by the service.
+  updateMemberRole: write(
+    `mutation { updateMemberRole(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id", role: member) { role } }`,
+  ),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
@@ -437,6 +441,8 @@ const OPEN_WRITES = [
   'setName',
   // The flag decides who may, which the service reads (M6.7).
   'createWorkspace',
+  // The owner's `member: update` decides, which the service checks (M9.14).
+  'updateMemberRole',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',

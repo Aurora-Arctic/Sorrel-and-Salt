@@ -67,8 +67,12 @@ export async function findMembershipsOfUsers(
  */
 export function membershipWrites({
   insert,
+  update,
   tx,
-}: WriterContext): Pick<AuditWriter, 'insertMembership' | 'lockLiveMembers'> {
+}: WriterContext): Pick<
+  AuditWriter,
+  'insertMembership' | 'lockLiveMembers' | 'updateMembershipRole'
+> {
   return {
     // In user-id order, so two changes at once queue on the first row rather
     // than each holding one the other wants (the order `lockLiveAdmins` uses).
@@ -77,6 +81,12 @@ export function membershipWrites({
         workspaceMembers,
         and(notSoftDeleted(workspaceMembers), scopedTo(membership, workspaceMembers)),
         { lockIn: tx, lockOrder: workspaceMembers.userId },
+      ),
+    updateMembershipRole: (membership, userId, role) =>
+      update(
+        workspaceMembers,
+        { role },
+        and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
       ),
     insertMembership: (workspaceId, userId, role) =>
       insert(workspaceMembers, { workspaceId, userId, role }),
