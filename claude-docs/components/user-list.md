@@ -366,7 +366,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   from their left edge; and a locked control's reason is the button's
   description, re-announced as an alert and placed against the viewport,
   where IconTip's word is decoration hidden from a screen reader.
-- **The Impersonate column** has a 1px red rule down its left, red text and
+- **The Impersonate column** is the shared `row-action-column` mixin
+  (`src/scss/_mixins.scss`), which MemberList's Remove column includes too, and has a 1px red rule down its left, red text and
   a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
   row's `$surface-card`, since at 6% the dark card leaves the wax label at
   4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It

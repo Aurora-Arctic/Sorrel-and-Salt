@@ -1024,7 +1024,10 @@ heavier than the reverse; light reverts to the browser default.
   `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
   rows; its one-line cells, wrapping again as cards), each emitted once by
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
-  modifiers a table takes by class.
+  modifiers a table takes by class; `value-and-control` (a cell's value on
+  the left and the control that changes it on the right); and
+  `row-action-column($layer)` (a stacking table's red, sticky row-action
+  column, Impersonate or Remove, and its card placement).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

@@ -409,6 +409,66 @@
   }
 }
 
+// A table cell holding a value and the control that changes it: the value on
+// the left, the control on the right, centred on one line. The user list's
+// role and creation cells and the member list's role cell.
+@mixin value-and-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+// A stacking table's dangerous row action as a column of its own, Impersonate
+// or Remove (MB.115, the owner's call): a red hairline down its left, a faded
+// red tint and red text, since it acts on someone else. It stays at the
+// table's right edge while the other columns scroll beneath it, so its ground
+// is opaque: the tint mixed into the band it sits on, the page or a banded
+// row's card. `$layer` is its z-index. At phone width the cell gives up its
+// sticky place and stands at the card's top right on the card's own ground,
+// placed by the grid (`StackColumn.action: 'corner'`). Include it in the
+// class given to the column as both `className` and `headingClassName`.
+// claude-docs/styling.md, "Tables at phone width".
+@mixin row-action-column($layer: 1) {
+  position: sticky;
+  right: 0;
+  z-index: $layer;
+  // A hairline, as the headings' rule is: the red marks it, not the weight.
+  border-left: 1px solid $secondary;
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+  color: $secondary;
+
+  @at-root .data-table tbody tr:nth-child(even) #{&} {
+    // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
+    // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+    background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+  }
+
+  // Its heading's hairline red too, where every other column's is the muted
+  // ink; scoped past the primitive's own `thead th` rule.
+  @at-root .data-table thead th#{&} {
+    border-bottom-color: $secondary;
+  }
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    @at-root .data-table--stack > tbody > tr > #{&} {
+      position: static;
+      border-left: 0;
+      background-color: transparent;
+    }
+
+    // Spelled out past the primitive's `display: block` on a stacked cell.
+    @at-root .data-table--stack > tbody > tr > #{&}:empty {
+      display: none;
+    }
+
+    // Past the banded row's rule above, so the card's ground wins.
+    @at-root .data-table--stack tbody tr:nth-child(even) #{&} {
+      background-color: transparent;
+    }
+  }
+}
+
 // A square icon control, a pencil or a ×: no text, a WCAG 2.2 target around
 // its mark, in the muted ink until pointed at or focused. `$icon-size`
 // around `$glyph-size` by default; a list row's pencil takes the large pair
