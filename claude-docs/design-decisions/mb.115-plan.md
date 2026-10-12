@@ -421,7 +421,7 @@ that replaced it, or "left" with the reason.
 | C13 | "Under 28rem every row stacks"                                | 5      | `styling.md`, "A narrow form stacks its buttons"                                                                                    |
 | C14 | The `.filter-row` layout                                      | 4      | `filter-form.md`, "Styling"; `styling.md` keeps a line and a link                                                                   |
 | C15 | The type-ahead width rule                                     | 3      | `filter-form.md`, "Styling", "A choice takes one width"                                                                             |
-| C16 | Soft and full navigation with the `pageshow` rule             | 4      | `list-frame.md`, "Contracts"; see filter section for the filter and user-list docs                                                  |
+| C16 | Soft and full navigation with the `pageshow` rule             | 4      | `list-frame.md`, "Contracts"; `filter-form.md`, `pager.md` and `user-list.md` keep a line and a link                                |
 | C17 | The page-header action spanning the line                      | 3      | `page-header.md`, "Styling"                                                                                                         |
 | C18 | The ConfirmOverlay visuals                                    | 2      | `modal.md`, "Asking over the form"; `styling.md` keeps the tokens                                                                   |
 | C19 | The placeholder rule                                          | 3; 5   | `field.md`, "Contracts"; "keeps its placeholder after the chips" in `combobox.md`                                                   |
