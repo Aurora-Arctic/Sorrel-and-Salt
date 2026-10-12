@@ -20,21 +20,16 @@
   vertical-align: middle;
 }
 
-.user-list {
-  @include data-table-nowrap;
-}
-
 // No cell wraps, heading or body, since the table scrolls inside its frame
 // (the owner's call, during MB.59): a row stays one line however narrow the
-// screen. Separate borders, not the primitive's collapsed ones, so each rule
+// screen, and its rows are a step taller (`.data-table--nowrap` and
+// `--roomy`, through DataTable). Separate borders, not the primitive's collapsed ones, so each rule
 // belongs to its own cell: a collapsed rule belongs to the table's grid, and
 // the headings' muted hairline was drawn across the sticky Impersonate
 // heading's red one as the columns scrolled beneath it.
 .user-list .data-table {
   border-collapse: separate;
   border-spacing: 0;
-
-  @include data-table-roomy;
 }
 
 // A yes-or-no column's mark: green for yes, red for no, the colours the

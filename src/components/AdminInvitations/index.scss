@@ -14,15 +14,13 @@
 }
 
 // No cell wraps, heading or body: the table scrolls inside its frame, as the
-// user list's does (the owner's call, during MB.59).
-.admin-invitations {
-  @include data-table-nowrap;
-
-  .data-table {
-    th,
-    td {
-      vertical-align: middle;
-    }
+// user list's does (the owner's call, during MB.59), through DataTable's
+// `.data-table--nowrap`. Each cell centred on its row, a Revoke button
+// standing taller than its text.
+.admin-invitations .data-table {
+  th,
+  td {
+    vertical-align: middle;
   }
 }
 

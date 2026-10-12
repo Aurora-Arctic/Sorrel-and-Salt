@@ -656,6 +656,20 @@
     }
   }
 
+  // The two row tweaks a list's table asks for (MB.115), as modifiers the
+  // table takes by class (DataTable's `className`): `--roomy`, taller rows
+  // centred on their cells, for a chip or a button taller than a line of
+  // text; `--nowrap`, every cell on one line, the table scrolling in its
+  // frame, wrapping again as cards. Both classes, to outrank `.data-table`'s
+  // own cells.
+  .data-table.data-table--roomy {
+    @include data-table-roomy;
+  }
+
+  .data-table.data-table--nowrap {
+    @include data-table-nowrap;
+  }
+
   // A table whose rows turn into cards when its frame is narrower than
   // `$table-stack-width` (MB.115), where its columns would otherwise scroll
   // sideways out of sight on a phone. Each row is a card on the surface the

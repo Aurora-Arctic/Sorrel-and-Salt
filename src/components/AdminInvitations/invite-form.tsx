@@ -97,7 +97,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         />
       </FieldShell>
       <ReasonField
-        className="admin-invitations__note"
+        className="user-list__note"
         hint={NOTE_HINT}
         value={note}
         onChange={setNote}

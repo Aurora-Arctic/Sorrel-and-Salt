@@ -1,12 +1,17 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import { stackCell, tableRole } from '../../lib/table-roles';
+import StackTable from '../DataTable';
+import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
 import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
-import type { CompendiumListFilter as Filter, CompendiumListProps } from './types';
+import type {
+  CompendiumListEntry,
+  CompendiumListFilter as Filter,
+  CompendiumListProps,
+} from './types';
 
 // `/admin/compendium`'s filter, table and pager (M5.5), as the category
 // list's. Render-only: the page reads one page of the compendium under the
@@ -19,6 +24,30 @@ import type { CompendiumListFilter as Filter, CompendiumListProps } from './type
 // None, rather than an empty cell: the to-do list tells an unconfirmed formal
 // name from no formal name by this column.
 const NONE = '—';
+
+/** The columns; Edit's pencil stands at a card's top right on a phone. */
+const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
+  { heading: 'Name', cell: (entry) => entry.name },
+  { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },
+  {
+    heading: 'Classification',
+    cell: (entry) => labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature),
+  },
+  { heading: 'Form', cell: (entry) => (entry.forms.length ? entry.forms.join(', ') : NONE) },
+  {
+    heading: 'Edit',
+    hiddenHeading: true,
+    action: 'corner',
+    // Named with the formal name too, as two entries can share a label but
+    // never a formal name.
+    cell: (entry) => (
+      <EditLink
+        href={entry.editHref}
+        name={entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name}
+      />
+    ),
+  },
+];
 
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
@@ -57,60 +86,12 @@ const CompendiumList = ({
     />
 
     <ListBody>
-      {entries.length ? (
-        <div className="data-table-frame">
-          <table className="data-table data-table--stack" {...tableRole('table')}>
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Name
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Formal Name
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Classification
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Form
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  <span className="visually-hidden">Edit</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {entries.map((entry) => (
-                // Each cell names its column for the card it becomes; the Edit
-                // cell's empty name drops the label, and on a phone it stands
-                // at the card's top right.
-                <tr key={entry.id} {...tableRole('row')}>
-                  <td {...stackCell('Name')}>{entry.name}</td>
-                  <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
-                  <td {...stackCell('Classification')}>
-                    {labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature)}
-                  </td>
-                  <td {...stackCell('Form')}>
-                    {entry.forms.length ? entry.forms.join(', ') : NONE}
-                  </td>
-                  <td className="data-table__card-action" {...stackCell('')}>
-                    {/* Named with the formal name too, as two entries can share a
-                      label but never a formal name. */}
-                    <EditLink
-                      href={entry.editHref}
-                      name={
-                        entry.canonicalName ? `${entry.name}, ${entry.canonicalName}` : entry.name
-                      }
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>{emptyText(filter)}</p>
-      )}
+      <StackTable
+        columns={COLUMNS}
+        rows={entries}
+        rowKey={(entry) => entry.id}
+        empty={emptyText(filter)}
+      />
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
     </ListBody>

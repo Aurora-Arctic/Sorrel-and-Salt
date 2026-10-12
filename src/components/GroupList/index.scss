@@ -2,21 +2,10 @@
 @use '../../scss/mixins' as *;
 
 // What a group list adds to the list primitives (`.list-frame`, `.data-table`
-// with `--stack`, `.chip`, `.pager`, and IconTip's Edit pencil): the
-// description's measure, and the taller, centred rows a chip needs.
+// with `--stack` and `--roomy` through DataTable, `.chip`, `.pager`, and
+// IconTip's Edit pencil): the description's measure.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .group-list__description {
   max-width: $measure;
-}
-
-// More room in a row than the primitive gives, and its contents centred: a
-// chip and the Edit pencil stand taller than a line of text, so on the
-// primitive's baseline they sat hard against the band's top edge while the
-// text sat on its bottom (the owner's call). Both classes, to outrank the
-// primitive's `body` scope. Only while it is a table: as cards, under
-// `$table-stack-width`, the stack primitive spaces each cell, and this would
-// pad every line of the card apart.
-.data-table.group-list__table {
-  @include data-table-roomy;
 }

@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
-import { stackCell, tableRole } from '../../lib/table-roles';
+import StackTable from '../DataTable';
+import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
 import { privilegeLabel } from './privileges';
@@ -18,17 +19,6 @@ import './index.scss';
 // the page reads one page of the ledger through the identity service and
 // hands it over (claude-docs/components/privilege-ledger.md). The filter is
 // `filter.tsx`, its one client file.
-
-/** The columns: each heading, and the label its cell carries as a card at phone width. */
-const COLUMNS = {
-  when: 'When',
-  user: 'User',
-  privilege: 'Privilege',
-  change: 'Change',
-  how: 'How',
-  changedBy: 'Changed By',
-  note: 'Note',
-} as const;
 
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 
@@ -63,25 +53,19 @@ const Person = ({ person }: { person: LedgerPerson | null }): ReactElement => {
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;
 };
 
-const ChangeRow = ({ change }: { change: PrivilegeLedgerEntry }): ReactElement => (
-  <tr {...tableRole('row')}>
-    <td {...stackCell(COLUMNS.when)}>
-      <time dateTime={change.at.toISOString()}>{when(change.at)}</time>
-    </td>
-    <td {...stackCell(COLUMNS.user)}>
-      <Person person={change.subject} />
-    </td>
-    <td {...stackCell(COLUMNS.privilege)}>{privilegeLabel(change.privilege)}</td>
-    <td {...stackCell(COLUMNS.change)}>{CHANGE_LABELS[change.change]}</td>
-    <td {...stackCell(COLUMNS.how)}>{ROUTE_LABELS[change.via]}</td>
-    <td {...stackCell(COLUMNS.changedBy)}>
-      <Person person={change.actor} />
-    </td>
-    <td className="privilege-ledger__note" {...stackCell(COLUMNS.note)}>
-      {change.note}
-    </td>
-  </tr>
-);
+/** The columns, each heading the label its cell carries as a card at phone width. */
+const COLUMNS: readonly StackColumn<PrivilegeLedgerEntry>[] = [
+  {
+    heading: 'When',
+    cell: (change) => <time dateTime={change.at.toISOString()}>{when(change.at)}</time>,
+  },
+  { heading: 'User', cell: (change) => <Person person={change.subject} /> },
+  { heading: 'Privilege', cell: (change) => privilegeLabel(change.privilege) },
+  { heading: 'Change', cell: (change) => CHANGE_LABELS[change.change] },
+  { heading: 'How', cell: (change) => ROUTE_LABELS[change.via] },
+  { heading: 'Changed By', cell: (change) => <Person person={change.actor} /> },
+  { heading: 'Note', className: 'privilege-ledger__note', cell: (change) => change.note },
+];
 
 const PrivilegeLedger = ({
   changes,
@@ -94,28 +78,12 @@ const PrivilegeLedger = ({
     <LedgerFilterForm filter={filter} />
 
     <ListBody>
-      {changes.length ? (
-        <div className="data-table-frame">
-          <table className="data-table data-table--stack" {...tableRole('table')}>
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                {Object.values(COLUMNS).map((heading) => (
-                  <th key={heading} scope="col" {...tableRole('columnheader')}>
-                    {heading}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {changes.map((change) => (
-                <ChangeRow key={change.id} change={change} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>{nothingToShow(filter)}</p>
-      )}
+      <StackTable
+        columns={COLUMNS}
+        rows={changes}
+        rowKey={(change) => change.id}
+        empty={nothingToShow(filter)}
+      />
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
     </ListBody>
