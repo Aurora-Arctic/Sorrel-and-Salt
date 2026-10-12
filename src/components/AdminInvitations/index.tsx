@@ -10,11 +10,12 @@ import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import ListFrame, { ListBody } from '../ListFrame';
+import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
 import { invitationsHref } from './href';
-import InviteForm from './invite-form';
+import InviteForm, { INVITE_TITLE } from './invite-form';
 import type {
   RevokeInvitationProps,
   AdminInvitationsFilter as Filter,
@@ -93,20 +94,24 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
  * link to `?invite`, which opens the form over the list, or locked with the
  * pause as its reason. A link rather than a button holding the form, since
  * the heading line and the list are rendered apart (MB.115). It keeps the
- * tab's filter and page, as a value page's Add does.
+ * tab's filter and page, as a value page's Add does, and opens the modal at
+ * once as Add does (M9.18), the form arriving with the navigation.
  */
 export const InviteAdmin = ({
   locked,
   filter = NO_FILTER,
   cursor,
-}: InviteAdminProps): ReactElement =>
-  locked ? (
-    <LockedControl label="Invite Admin" className="btn btn--solid" reason={locked} />
+}: InviteAdminProps): ReactElement => {
+  const href = invitationsHref(filter, cursor, true);
+  const onClick = useOpenModalClick(href, { title: INVITE_TITLE });
+  return locked ? (
+    <LockedControl label={INVITE_TITLE} className="btn btn--solid" reason={locked} />
   ) : (
-    <Link className="btn btn--solid" href={invitationsHref(filter, cursor, true)}>
-      Invite Admin
+    <Link className="btn btn--solid" href={href} onClick={onClick}>
+      {INVITE_TITLE}
     </Link>
   );
+};
 
 // A region named as a heading would name it, though it shows none: the page's
 // heading and its open tab already say what it holds, and the name keeps the
@@ -175,9 +180,12 @@ const AdminInvitations = ({
           <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
         </ListBody>
       </ListFrame>
-      {inviting && !locked && (
-        <InviteForm onSent={setSent} closeHref={invitationsHref(filter, cursor)} />
-      )}
+      {/* Rendered whatever the address opens, so a press opens it at once (M9.18). */}
+      <InviteForm
+        open={inviting && !locked}
+        onSent={setSent}
+        closeHref={invitationsHref(filter, cursor)}
+      />
     </section>
   );
 };

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../components/AdminNav';
+import { RouteModalProvider } from '../../components/Modal';
 import { requireAdminSession } from '../../lib/request-session';
 import type { AdminLayoutProps } from './types';
 
@@ -12,13 +13,17 @@ export const metadata: Metadata = {
 
 // Every page under `/admin` calls the guard too: a layout does not re-run on
 // client-side navigation (claude-docs/auth/admin-guard.md, "The admin guard").
+// The route-modal provider holds a pressed modal on its way (M9.18), shared
+// by every page's Add and Edit and the page's one modal place.
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   await requireAdminSession();
 
   return (
-    <div className="admin-layout">
-      <AdminNav />
-      {children}
-    </div>
+    <RouteModalProvider>
+      <div className="admin-layout">
+        <AdminNav />
+        {children}
+      </div>
+    </RouteModalProvider>
   );
 }

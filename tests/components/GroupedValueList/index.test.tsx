@@ -38,6 +38,7 @@ const DEITIES: GroupedValueListSubject = {
       description: 'An invented god',
       groupName: 'Fixtural',
       editHref: groupedValuesHref('deity', {}, { edit: 'testra-fixtural' }),
+      editHeading: { title: 'Testra' },
     },
     {
       id: 'd2',
@@ -46,6 +47,7 @@ const DEITIES: GroupedValueListSubject = {
       description: 'Another',
       groupName: 'Mockish',
       editHref: groupedValuesHref('deity', {}, { edit: 'mockra-mockish' }),
+      editHeading: { title: 'Mockra' },
     },
   ],
   groups: [

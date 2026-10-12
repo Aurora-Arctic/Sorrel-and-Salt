@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { ModalHeading } from '../Modal/types';
 
 export interface IconTipProps {
   /**
@@ -16,4 +17,6 @@ export interface EditLinkProps {
   href: Route;
   /** What it edits, read after "Edit": "Aluminium, Aluminium" names the link "Edit Aluminium, Aluminium". */
   name: string;
+  /** The head of the modal it opens, shown at once over a skeleton while the form loads (M9.18). */
+  heading: ModalHeading;
 }

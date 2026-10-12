@@ -10,8 +10,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 // AdminNav marks the page you are on from the address, which Next reads from
-// the App Router's state; a test mounts no router, so the address is given.
-vi.mock('next/navigation', () => ({ usePathname: () => '/admin' }));
+// the App Router's state; a test mounts no router, so the address is given,
+// and the route-modal provider's router is a stand-in that goes nowhere.
+vi.mock('next/navigation', () => ({ usePathname: () => '/admin', useRouter: () => ({}) }));
 
 const { default: AdminLayout } = await import('@/app/admin/layout');
 const { default: AdminPage } = await import('@/app/admin/page');

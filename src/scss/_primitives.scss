@@ -478,6 +478,18 @@
     }
   }
 
+  // A skeleton shape's shimmer (`skeleton-shape`, _mixins.scss), here so
+  // it is emitted once for the tab's and the modal's skeletons alike.
+  @keyframes skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+
+    to {
+      background-position: -100% 0;
+    }
+  }
+
   // The centred, full-height frame of a page with no AppShell: Welcome,
   // sign-in, the account pages, the 403, the invitation. One column, its
   // children a `space(6)` apart, held below the top inset so a page with the

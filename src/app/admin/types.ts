@@ -117,13 +117,20 @@ export interface ValueKindSource {
   readGroups?: () => Promise<ValueGroupRow[]>;
 }
 
-export interface ValueDialogProps {
-  kind: GroupedValueKind;
+/** What a value page's address opens: an add, or the value it edits. */
+export interface OpenedValue {
   /** "Add Category", or the edited value's eyebrow and name, and a deity's tradition (MB.115). */
   heading: ModalHeading;
+  /** The value edited; none for an add. */
+  value?: EditedGroupedValue;
+}
+
+export interface ValueDialogProps {
+  kind: GroupedValueKind;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
-  value?: EditedGroupedValue;
+  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  opened?: OpenedValue;
   groups: readonly GroupedValueGroupChoice[];
 }
 
@@ -167,16 +174,23 @@ export interface GroupKindPage {
   countMembers: (groupId: string) => Promise<number>;
 }
 
-export interface GroupDialogProps {
-  kind: GroupKind;
+/** What a group page's address opens: an add, or the group it edits. */
+export interface OpenedGroup {
   /** "Add Category Group", or the edited group's eyebrow and name (MB.115). */
   heading: ModalHeading;
-  /** The page the modal opened over, which closing it returns to. */
-  closeHref: Route;
+  /** The group edited; none for an add. */
   group?: EditedGroup;
-  groups: readonly GroupChoice[];
   /** How many live rows the edited group holds. */
   memberCount?: number;
+}
+
+export interface GroupDialogProps {
+  kind: GroupKind;
+  /** The page the modal opened over, which closing it returns to. */
+  closeHref: Route;
+  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  opened?: OpenedGroup;
+  groups: readonly GroupChoice[];
 }
 
 /** The admin pages that are tabbed pages, by their key in `ADMIN_PAGES`: every one but the single-tab compendium. */
@@ -184,5 +198,7 @@ export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
 
 export interface AddActionProps {
   href: Route;
+  /** The head of the modal it opens, "Add Category", shown at once while the form loads (M9.18). */
+  heading: ModalHeading;
   children: ReactNode;
 }
