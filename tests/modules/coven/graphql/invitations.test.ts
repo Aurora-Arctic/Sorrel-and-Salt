@@ -21,13 +21,13 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 
 /** A sender that records what it was asked to mail, so a test holds the token the inbox would. */
 function recordingSender() {
-  const sent: { to: string; token: string; role: string; name: string }[] = [];
+  const sent: { to: string; token: string; role: string; name: string; inviterName: string }[] = [];
   const sender: InvitationSender = {
     siteInvitation: async () => {
       throw new Error('a coven invitation mails no admin');
     },
-    workspaceInvitation: async (to, token, { name, role }) => {
-      sent.push({ to, token, role, name });
+    workspaceInvitation: async (to, token, { name, role, inviterName }) => {
+      sent.push({ to, token, role, name, inviterName });
     },
   };
   return { sent, sender };
@@ -72,7 +72,14 @@ describe('Mutation.createInvitation', () => {
       audit: { createdBy: A.id },
     });
     expect(sent).toEqual([
-      { to: INVITED, token: expect.any(String), role: 'member', name: expect.any(String) },
+      {
+        to: INVITED,
+        token: expect.any(String),
+        role: 'member',
+        name: expect.any(String),
+        // The acting owner's own name, read from their row.
+        inviterName: (await sql`select name from users where id = ${A.id}`)[0].name,
+      },
     ]);
     const [{ token }] = sent;
     expect(JSON.stringify(result)).not.toContain(token);

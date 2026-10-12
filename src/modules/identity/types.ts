@@ -62,15 +62,16 @@ export interface AdminRoleChangePauseState {
  */
 export interface InvitationSender {
   /** Mails `to` the link that accepts the invitation `token` names. Never throws on a failed send. */
-  siteInvitation(to: string, token: string): Promise<void>;
+  siteInvitation(to: string, token: string, inviter: { name: string }): Promise<void>;
   /**
    * Mails `to` the link that accepts the coven invitation `token` names,
-   * saying which coven and in what role (M7.3). Never throws on a failed send.
+   * saying which coven, in what role and who invited them (M7.3). Never
+   * throws on a failed send.
    */
   workspaceInvitation(
     to: string,
     token: string,
-    coven: { name: string; role: 'viewer' | 'member' },
+    coven: { name: string; role: 'viewer' | 'member'; inviterName: string },
   ): Promise<void>;
 }
 

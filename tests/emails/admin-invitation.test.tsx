@@ -6,9 +6,15 @@ import { adminInvitationMessage } from '@/emails/admin-invitation';
 
 const URL = 'http://localhost:8000/invite/fixture-token';
 
+const INVITER = 'Fixture Owner';
+
 describe('adminInvitationMessage', () => {
   it('addresses the mail and carries the link in both the html and the text', async () => {
-    const message = await adminInvitationMessage({ to: 'someone@admin-invitation.test', url: URL });
+    const message = await adminInvitationMessage({
+      to: 'someone@admin-invitation.test',
+      url: URL,
+      inviterName: INVITER,
+    });
 
     expect(message.to).toBe('someone@admin-invitation.test');
     expect(message.html).toContain(`href="${URL}"`);
@@ -21,9 +27,20 @@ describe('adminInvitationMessage', () => {
     const { html, text } = await adminInvitationMessage({
       to: 'someone@admin-invitation.test',
       url: URL,
+      inviterName: INVITER,
     });
 
     expect(text.split(URL)).toHaveLength(2);
     expect(html.split(`href="${URL}"`)).toHaveLength(3);
+  });
+
+  it('names the admin who sent it', async () => {
+    const { text } = await adminInvitationMessage({
+      to: 'someone@admin-invitation.test',
+      url: URL,
+      inviterName: INVITER,
+    });
+
+    expect(text).toContain(INVITER);
   });
 });

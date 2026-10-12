@@ -2,6 +2,7 @@ import 'server-only';
 import {
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
+  findOneById,
   findUserByEmail,
   withAudit,
 } from '../../../db/repository';
@@ -11,6 +12,7 @@ import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
+import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
@@ -58,7 +60,9 @@ export async function createAdminInvitation(
     write.insertInvitation(admin, { email, token, note: adminDeclaration(note).note ?? null }),
   );
   // After the commit, so a mailed link always names a row.
-  await sender.siteInvitation(email, token);
+  // The mail names who sent it; the session holds the id alone, so the name is read here.
+  const inviter = await findOneById(users, session.userId);
+  await sender.siteInvitation(email, token, { name: inviter?.name ?? '' });
   return row;
 }
 

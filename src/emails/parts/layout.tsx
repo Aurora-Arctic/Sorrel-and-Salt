@@ -57,7 +57,10 @@ function stylesheet(origin: string): string {
       `src:url('${origin}/email/fonts/${file}') format('woff2'),url('${google}') format('woff2');}`,
   ).join('');
   return (
-    faces +
+    // Under `screen` because Outlook for Windows (the Word engine) skips the
+    // block: it then never sees a first face it has not installed, and falls to
+    // the next font in the stack instead of Times New Roman.
+    `@media screen{${faces}}` +
     `${LIGHT_MEDIA}{` +
     // Every light rule hangs off the one page cell, so a client applies all of
     // them or none. A bare class per element let a client keep the text rules
@@ -76,8 +79,19 @@ function stylesheet(origin: string): string {
   );
 }
 
-// How far each photograph runs under the text, in CSS pixels.
+// How far the sorrel runs under the heading, in CSS pixels. Only the 32px bold
+// heading meets it, at 4.78:1 (measured in MB.118).
 const OVERLAP = 56;
+
+// Word treats a unitless or fractional line height unreliably; this makes it keep the pixel one.
+// React's CSSProperties does not list the Word-only property, hence the cast.
+const EXACT_LINES = { msoLineHeightRule: 'exactly' } as CSSProperties;
+
+// The margin every Paragraph ends on. The salt's padding is built from it, so
+// the photograph meets the text block's edge and never a glyph: measured in
+// MB.118, the light salt's darkest pixel holds the muted ink at 2.14:1 and the
+// link at 1.66:1, and no opacity fixes the link.
+const PARAGRAPH_GAP = 16;
 
 // The wordmark's row, top right, beside the sorrel.
 const WORDMARK_TOP = 24;
@@ -94,11 +108,35 @@ function ornament(corner: Corner, origin: string, position: string): CSSProperti
   };
 }
 
+// Outlook for Windows ignores `max-width`, so the container sits in a fixed-width
+// table only it reads. React cannot write a comment, so the layout renders
+// these two placeholders and `renderParts` swaps each for its conditional
+// comment in the HTML part.
+const MSO_OPEN = '<span data-mso="open"></span>';
+const MSO_CLOSE = '<span data-mso="close"></span>';
+const MSO_OPEN_COMMENT =
+  '<!--[if mso]><table role="presentation" width="600" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->';
+const MSO_CLOSE_COMMENT = '<!--[if mso]></td></tr></table><![endif]-->';
+
+/** A padded block as a table of its own: Word honours padding only on a cell, not on a Section's. */
+function PaddedCell({ padding, children }: { padding: string; children: ReactNode }) {
+  return (
+    <table role="presentation" width="100%" border={0} cellPadding={0} cellSpacing={0}>
+      <tbody>
+        <tr>
+          <td style={{ padding }}>{children}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
 export function EmailLayout({ preview, heading, origin, children }: EmailLayoutProps) {
   return (
     <Html lang="en">
       <Head>
         {/* Tells Apple Mail the mail has its own dark and light, so it does not invert it. */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="dark light" />
         <meta name="supported-color-schemes" content="dark light" />
         <style dangerouslySetInnerHTML={{ __html: stylesheet(origin) }} />
@@ -131,12 +169,13 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                 className="ss-page"
                 style={{ backgroundColor: dark.page, color: dark.text, padding: '0 0 24px' }}
               >
+                <span data-mso="open" />
                 {/* Backgrounds rather than images, so the text can run over their edges:
               Gmail strips the negative margins an overlap would otherwise take. */}
                 <Container style={{ maxWidth: '600px' }}>
                   <Section className="ss-sorrel" style={ornament('sorrel', origin, 'left top')}>
                     <Section className="ss-salt" style={ornament('salt', origin, 'right bottom')}>
-                      <Section style={{ padding: `${WORDMARK_TOP}px 32px 0` }}>
+                      <PaddedCell padding={`${WORDMARK_TOP}px 32px 0`}>
                         <Text
                           style={{
                             margin: 0,
@@ -159,12 +198,10 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                             Sorrel &amp; Salt
                           </Link>
                         </Text>
-                      </Section>
-                      <Section
-                        style={{
-                          // The heading starts OVERLAP above the sorrel's lower edge.
-                          padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - OVERLAP}px`,
-                        }}
+                      </PaddedCell>
+                      <PaddedCell
+                        // The heading starts OVERLAP above the sorrel's lower edge.
+                        padding={`${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - PARAGRAPH_GAP}px`}
                       >
                         <Heading
                           as="h1"
@@ -176,16 +213,18 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                             fontSize: '32px',
                             fontWeight: 700,
                             letterSpacing: '0.01em',
-                            lineHeight: 1.2,
+                            lineHeight: '38px',
+                            ...EXACT_LINES,
                           }}
                         >
                           {heading}
                         </Heading>
                         {children}
-                      </Section>
+                      </PaddedCell>
                     </Section>
                   </Section>
                 </Container>
+                <span data-mso="close" />
               </td>
             </tr>
           </tbody>
@@ -200,10 +239,12 @@ export function Paragraph({ children, muted = false }: { children: ReactNode; mu
     <Text
       className={muted ? 'ss-muted' : 'ss-text'}
       style={{
-        margin: '0 0 16px',
+        margin: `0 0 ${PARAGRAPH_GAP}px`,
         color: muted ? dark.muted : dark.text,
+        fontFamily: BODY_FONT,
         fontSize: muted ? '14px' : '16px',
-        lineHeight: 1.6,
+        lineHeight: muted ? '22px' : '26px',
+        ...EXACT_LINES,
       }}
     >
       {children}
@@ -224,7 +265,8 @@ export function Action({ href, label, part }: { href: string; label: string; par
             backgroundColor: dark.accent,
             color: dark.onAccent,
             borderRadius: '8px',
-            padding: '12px 24px',
+            padding: '14px 24px',
+            fontFamily: BODY_FONT,
             fontSize: '16px',
             fontWeight: 500,
             textDecoration: 'none',
@@ -239,7 +281,7 @@ export function Action({ href, label, part }: { href: string; label: string; par
         <Link
           href={href}
           className="ss-link"
-          style={{ color: dark.accent, wordBreak: 'break-all' }}
+          style={{ color: dark.accent, fontFamily: BODY_FONT, wordBreak: 'break-all' }}
         >
           {href}
         </Link>
@@ -271,11 +313,20 @@ export async function renderParts(
   email: (part: Part) => ReactElement,
 ): Promise<{ html: string; text: string }> {
   return {
-    html: await render(email('html')),
+    html: (await render(email('html')))
+      .replace(MSO_OPEN, MSO_OPEN_COMMENT)
+      .replace(MSO_CLOSE, MSO_CLOSE_COMMENT),
     text: await render(email('text'), {
       plainText: true,
-      // Headings as written: the converter capitalises them by default.
-      htmlToTextOptions: { selectors: [{ selector: 'h1', options: { uppercase: false } }] },
+      htmlToTextOptions: {
+        selectors: [
+          // Headings as written: the converter capitalises them by default.
+          { selector: 'h1', options: { uppercase: false } },
+          // The wordmark's link is decoration; with its address the first one in the
+          // text would be the site's, not the action's.
+          { selector: 'a.ss-wordmark', format: 'anchor', options: { ignoreHref: true } },
+        ],
+      },
     }),
   };
 }
@@ -285,15 +336,16 @@ export async function renderParts(
  * rendered to both parts `send` takes, so a caller never renders anything
  * itself. The template is handed `to` along with its own props and ignores
  * it: dropping it first would leave a generic `Omit` TypeScript cannot
- * prove is the template's props again.
+ * prove is the template's props again. `subject` is a function when the
+ * subject names something the message carries, such as a coven.
  */
 export function defineMessage<Props extends BaseEmailProps>(
-  subject: string,
+  subject: string | ((input: MessageInput<Props>) => string),
   Template: (props: Omit<Props, 'part'> & { part: Part }) => ReactElement,
 ): (input: MessageInput<Props>) => Promise<Message> {
   return async (input) => ({
     to: input.to,
-    subject,
+    subject: typeof subject === 'function' ? subject(input) : subject,
     ...(await renderParts((part) => <Template {...input} part={part} />)),
   });
 }
