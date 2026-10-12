@@ -484,6 +484,13 @@
       "when": 1791833022988,
       "tag": "0068_celestial-bodies-refill",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1791834252712,
+      "tag": "0069_drop-planet-columns",
+      "breakpoints": true
     }
   ]
 }

@@ -245,10 +245,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   reference_links_ingredient_variant_unique: {
     row: referenceLink('ingredient_variant_id', 'ingredient_variants', variant),
   },
-  // The old column's, still in the database until MB.254 drops it (PENDING_DROPS).
-  reference_links_planet_unique: {
-    row: referenceLink('planet_id', 'celestial_bodies', celestialBody),
-  },
   reference_links_zodiac_sign_unique: {
     row: referenceLink('zodiac_sign_id', 'zodiac_signs', zodiacSign),
   },
