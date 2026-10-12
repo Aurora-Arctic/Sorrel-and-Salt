@@ -53,3 +53,15 @@ Object.defineProperty(window, 'localStorage', {
 afterEach(() => {
   window.localStorage.clear();
 });
+
+// jsdom implements no modal dialog: `showModal` and `close` are missing from
+// its `<dialog>`, and every Modal in a test calls them. Stood in for here, as
+// a browser behaves — the element gains and loses `open` — rather than in
+// each test that renders one. A test asserting the calls themselves
+// (tests/components/Modal) puts its own spies over these.
+HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+  this.setAttribute('open', '');
+};
+HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+  this.removeAttribute('open');
+};

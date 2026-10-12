@@ -14,19 +14,13 @@ import { makeQueryClient } from '@/lib/graphql-client';
 /**
  * Renders the form in a modal, handed the modal's own close as its page's
  * dialog hands it; answers the modal's `onClose`, which every way out ends at.
+ * The modal's `<dialog>` runs on tests/support/setup-dom.ts's stand-in.
  * `strict` renders it under React's development double mount.
  */
 export function renderInModal(
   form: (done: () => void) => ReactNode,
   { strict = false }: { strict?: boolean } = {},
 ): Mock {
-  // jsdom implements no modal dialog; stood in for as a browser behaves.
-  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-    this.setAttribute('open', '');
-  };
-  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-    this.removeAttribute('open');
-  };
   const onClose = vi.fn();
   const tree = (
     <QueryClientProvider client={makeQueryClient()}>
