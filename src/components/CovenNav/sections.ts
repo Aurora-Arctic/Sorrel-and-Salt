@@ -1,5 +1,4 @@
 import type { Route } from 'next';
-import { type WorkspaceRole, rolePermits } from '@/modules/coven';
 import type { SectionNavItem } from '../SectionNav/types';
 
 // `Route<T>` checks a dynamic address against the built routes only when `T`
@@ -16,11 +15,13 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 // route the build does not contain: Ingredients (M9.6), Grimoire (M10.11),
 // each with its icon (`ingredients`, `grimoire`) already drawn in
 // `SectionNav/icons.tsx`. Members (M6.13) is shown by what the caller's role
-// may do (`member: read`), never by a rank, so a viewer is not offered a page
+// may do (`member: read`), which the layout asks of the service and passes
+// in as a boolean: this file loads in the workshop's browser build, where the
+// server-only access-control module cannot. Never by a rank, so a viewer is not offered a page
 // that answers them with a 404.
-export const covenSections = (slug: string, role: WorkspaceRole): readonly SectionNavItem[] => [
+export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
   { label: 'Overview', href: route(`/coven/${slug}`), icon: 'overview', exact: true },
-  ...(rolePermits(role, { member: ['read'] })
+  ...(canReadMembers
     ? [{ label: 'Members', href: route(`/coven/${slug}/members`), icon: 'members' } as const]
     : []),
 ];

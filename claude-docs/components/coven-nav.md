@@ -13,7 +13,7 @@ It takes the slug and the caller's `covenRole`, and holds:
 | Overview | `/coven/[slug]`         | overview | every role                   | M9.15    |
 | Members  | `/coven/[slug]/members` | members  | roles holding `member: read` | M6.13    |
 
-`sections.ts` holds the list, as `covenSections(slug, role)`, each entry a
+`sections.ts` holds the list, as `covenSections(slug, canReadMembers)`, each entry a
 `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx` renders
 `SectionNav` with it and stays a server component.
 
@@ -23,8 +23,10 @@ It takes the slug and the caller's `covenRole`, and holds:
   a row to `sections.ts` in their own PR, with its icon (`ingredients`,
   `grimoire`, already drawn), and it is the task that builds the
   page that adds it: `typedRoutes` refuses a link to a route the build does
-  not contain. Members (M6.13) is shown by `rolePermits(role, { member: ['read'] })`,
-  the statement and never a rank. The coven's four sections all fit a phone's
+  not contain. Members (M6.13) is shown by `canReadMembers`, which the layout takes from
+  `rolePermits(role, { member: ['read'] })`, the statement and never a rank, and
+  passes in as a boolean because `access-control` is server-only and this file
+  loads in the workshop's browser build. The coven's four sections all fit a phone's
   bottom bar, so it never needs More.
 - **Every address goes through `route()`** in `sections.ts`, never an
   `as Route` cast. Next checks a dynamic address against the built routes

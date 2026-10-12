@@ -1,7 +1,5 @@
-import type { WorkspaceRole } from '@/modules/coven';
-
 export interface CovenNavProps {
   slug: string;
-  /** The caller's role in this coven, which decides the sections they are shown. */
-  covenRole: WorkspaceRole;
+  /** Whether the caller's role holds `member: read`, which decides if the Members page is offered. */
+  canReadMembers?: boolean;
 }
