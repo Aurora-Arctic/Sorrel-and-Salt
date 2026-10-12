@@ -4,13 +4,11 @@ import UserList from '../../../../components/UserList';
 import { userListHref } from '../../../../components/UserList/href';
 import type { UserListEntry } from '../../../../components/UserList/types';
 import { impersonationEnabled } from '../../../../lib/impersonation';
-import { DEFAULT_PAGE_SIZE, resolvePage } from '../../../../lib/pagination';
 import { requireAdminSession } from '../../../../lib/request-session';
 import { single } from '../../../../lib/search-params';
 import type { Session, UserRole } from '../../../../lib/session';
-import type { ConnectionArgs } from '../../../../lib/types';
-import { isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
-import { pagerHrefs, readListPlace } from '../../list-page';
+import { countUsers, isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
+import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
 import { readPauseState } from '../pause-state';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
@@ -19,8 +17,10 @@ export const metadata: Metadata = {
 };
 
 // The page and GraphQL's `users` end at the same service, paged by the same
-// helper (CLAUDE.md rule 1, rule 8); cached so a second render in the request
-// reads once.
+// helper (CLAUDE.md rule 1, rule 8), and counted for the pager's "Page X of
+// Y" as every admin list is (MB.115): the first page again for a cursor that
+// names no row of the list. Cached so a second render in the request reads
+// once.
 const readUsers = cache(
   async (
     session: Session,
@@ -30,11 +30,11 @@ const readUsers = cache(
     after: string | undefined,
     before: string | undefined,
   ) => {
-    const args: ConnectionArgs = before
-      ? { last: DEFAULT_PAGE_SIZE, before }
-      : { first: DEFAULT_PAGE_SIZE, after };
-    const page = await resolvePage(args, (request) =>
-      listUsers(session, { query: query || undefined, awaitingApproval, role }, request),
+    const filter = { query: query || undefined, awaitingApproval, role };
+    const page = await readNumberedPage(
+      { after, before },
+      (request) => listUsers(session, filter, request),
+      (start) => countUsers(session, filter, start),
     );
     const providers = await providersOf(
       session,
@@ -47,7 +47,7 @@ const readUsers = cache(
       // Read from ADMIN_BOOTSTRAP_EMAIL now, so the label follows the variable (MB.59).
       return { ...node, providers: linked, primaryAdmin: isPrimaryAdmin(node) };
     });
-    return { users, pageInfo: page.pageInfo };
+    return { users, pageInfo: page.pageInfo, position: page.position };
   },
 );
 
@@ -66,7 +66,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const roleParam = single(params.role);
   const role = roleParam === 'admin' || roleParam === 'user' ? roleParam : undefined;
 
-  const [{ users, pageInfo }, adminChanges] = await Promise.all([
+  const [{ users, pageInfo, position }, adminChanges] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
     // The pause on admin changes and whether this admin may flip it (MB.63),
     // which the switch beside the heading reads too (`@action/users`).
@@ -81,6 +81,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       role={role}
       canImpersonate={impersonationEnabled()}
       adminChanges={adminChanges}
+      position={position}
       {...pagerHrefs(pageInfo, (cursor) => userListHref({ query, awaitingApproval, role }, cursor))}
     />
   );

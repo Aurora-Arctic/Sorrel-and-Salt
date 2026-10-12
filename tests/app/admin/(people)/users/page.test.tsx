@@ -1,11 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 
-// The `/admin/users` page (MB.52): the guard, then the two identity reads, the
-// search parameters turned into the filter and the page, and the pager's
-// links keeping the filter. The guard and the services are mocked: what they
+// The `/admin/users` page (MB.52): the guard, then the identity reads, a
+// page of users and its count, the search parameters turned into the filter
+// and the page, and the pager's links keeping the filter. The guard and the services are mocked: what they
 // decide is tests/lib/request-session.test.ts's and
 // tests/modules/identity/services/user-list.test.ts's.
 
@@ -16,11 +17,13 @@ vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const listUsers = vi.fn();
+const countUsers = vi.fn();
 const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
+  countUsers,
   isPrimaryAdmin,
   listUsers,
   providersOf,
@@ -70,6 +73,8 @@ beforeEach(() => {
   requireAdminSession.mockResolvedValue(ADMIN);
   listUsers.mockReset();
   listUsers.mockResolvedValue([entry(1), entry(2)]);
+  countUsers.mockReset();
+  countUsers.mockResolvedValue({ totalCount: 2, countBefore: 0 });
   providersOf.mockReset();
   providersOf.mockImplementation(async (_session, ids: string[]) =>
     ids.map((_, index) => (index === 0 ? ['google'] : [])),
@@ -86,11 +91,12 @@ describe('the /admin/users page', () => {
 
     await expect(renderPage()).rejects.toThrow('forbidden');
     expect(listUsers).not.toHaveBeenCalled();
+    expect(countUsers).not.toHaveBeenCalled();
     expect(adminRoleChangePauseState).not.toHaveBeenCalled();
     expect(providersOf).not.toHaveBeenCalled();
   });
 
-  it("reads the first page of 25 as the guard's session, with no filter", async () => {
+  it("reads the first page of 25 and its count as the guard's session, with no filter", async () => {
     await renderPage();
 
     expect(listUsers).toHaveBeenCalledOnce();
@@ -101,6 +107,13 @@ describe('the /admin/users page', () => {
         limit: 26,
         inverted: false,
       },
+    );
+    // Counted from the page's first row, under the same filter.
+    expect(countUsers).toHaveBeenCalledOnce();
+    expect(countUsers).toHaveBeenCalledWith(
+      ADMIN,
+      { query: undefined, awaitingApproval: false },
+      entry(1).cursor,
     );
     expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id, user(2).id]);
   });
@@ -148,6 +161,7 @@ describe('the /admin/users page', () => {
     await renderPage({ query: 'fixture', awaiting: '' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
+    expect(countUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('fixture');
     expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
   });
@@ -175,10 +189,22 @@ describe('the /admin/users page', () => {
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
   });
 
+  // A cursor copied from another list decodes, then names no row of this one.
+  it('reads the first page when the cursor is not one of this list', async () => {
+    listUsers.mockRejectedValueOnce(new InvalidCursor());
+    const cursor = { key: ['-1767225600'], id: user(5).id };
+
+    await renderPage({ after: encodeCursor(cursor) });
+
+    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
+    expect(screen.getByRole('row', { name: /Listed Fixture 01/ })).toBeInTheDocument();
+  });
+
   it('reads ?role as the role filter', async () => {
     await renderPage({ role: 'admin' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false, role: 'admin' });
+    expect(countUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false, role: 'admin' });
     expect(screen.getByLabelText('Role')).toHaveValue('admin');
   });
 
@@ -190,8 +216,9 @@ describe('the /admin/users page', () => {
     expect(screen.getByLabelText('Role')).toHaveValue('');
   });
 
-  it('links the pages either side, keeping the filter', async () => {
+  it('links the pages either side, keeping the filter, and says where it stands', async () => {
     listUsers.mockResolvedValue(Array.from({ length: 26 }, (_, index) => entry(index + 1)));
+    countUsers.mockResolvedValue({ totalCount: 60, countBefore: 25 });
 
     await renderPage({
       query: 'listed',
@@ -209,6 +236,7 @@ describe('the /admin/users page', () => {
       'href',
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });
 
