@@ -158,11 +158,11 @@ describe('a save carrying references', () => {
 
     const created = await createCompendiumEntry(
       asUser(E),
-      input('Testwort', [cite(book, 's.v. Testwort')]),
+      input('Testwort', [cite(book, 'under "Testwort"')]),
     );
 
     expect(await readBack(null, created.id, null)).toEqual([
-      { title: 'Fixture Herbal', locator: 's.v. Testwort' },
+      { title: 'Fixture Herbal', locator: 'under "Testwort"' },
     ]);
   });
 

@@ -55,7 +55,7 @@ describe('dashRanges', () => {
   });
 
   it('leaves a hyphen that joins words, and a day written as a date, alone', () => {
-    expect(dashRanges('s.v. Jack-in-the-green')).toBe('s.v. Jack-in-the-green');
+    expect(dashRanges('under "Jack-in-the-green"')).toBe('under "Jack-in-the-green"');
     expect(dashRanges('2013-10-06')).toBe('2013-10-06');
   });
 });
@@ -110,7 +110,7 @@ describe('formatLocator', () => {
   it('tidies a locator and dashes its ranges, and leaves its words as typed', () => {
     expect(formatLocator('  pp. 12-19,  40;  chap. 3 ')).toBe('pp. 12–19, 40; chap. 3');
     expect(formatLocator('112')).toBe('112');
-    expect(formatLocator('s.v. Hecate')).toBe('s.v. Hecate');
+    expect(formatLocator('under "Hecate"')).toBe('under "Hecate"');
   });
 });
 

@@ -212,7 +212,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Mugwort; p. 266',
+          locator: 'under "Mugwort"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -226,7 +226,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Mugwort',
+          locator: 'under "Mugwort"',
           supports: [
             'canonicalName',
             'elements',
@@ -265,7 +265,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Mugwort',
+              locator: 'under "Mugwort"',
               supports: ['form'],
             },
           ],
@@ -277,7 +277,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Mugwort',
+              locator: 'under "Mugwort"',
               supports: ['form'],
             },
             {
@@ -358,7 +358,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Yarrow; p. 266',
+          locator: 'under "Yarrow"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -371,7 +371,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Yarrow',
+          locator: 'under "Yarrow"',
           supports: [
             'canonicalName',
             'elements',
@@ -404,7 +404,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Yarrow',
+              locator: 'under "Yarrow"',
               supports: ['form'],
             },
           ],
@@ -416,7 +416,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Yarrow',
+              locator: 'under "Yarrow"',
               supports: ['form'],
             },
             {
@@ -466,7 +466,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Cinnamon; p. 266',
+          locator: 'under "Cinnamon"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -480,7 +480,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Cinnamon',
+          locator: 'under "Cinnamon"',
           supports: [
             'canonicalName',
             'elements',
@@ -514,7 +514,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Cinnamon',
+              locator: 'under "Cinnamon"',
               supports: ['form'],
             },
             {
@@ -532,12 +532,12 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Cinnamon',
+              locator: 'under "Cinnamon"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Cinnamon',
+              locator: 'under "Cinnamon"',
               supports: ['form', 'description'],
             },
             {
@@ -592,7 +592,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bladderwrack; p. 266',
+          locator: 'under "Bladderwrack"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -605,7 +605,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Seaweed',
+          locator: 'under "Seaweed"',
           supports: [
             'canonicalName',
             'elements',
@@ -638,7 +638,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Seaweed',
+              locator: 'under "Seaweed"',
               supports: ['form'],
             },
           ],
@@ -671,7 +671,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Lichen',
+          locator: 'under "Lichen"',
           supports: ['description', 'elements', 'planets', 'colors', 'folkNames', 'categories'],
         },
         {
@@ -691,7 +691,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Lichen',
+              locator: 'under "Lichen"',
               supports: ['form'],
             },
           ],
@@ -740,7 +740,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Frankincense',
+          locator: 'under "Frankincense"',
           supports: [
             'elements',
             'planets',
@@ -753,7 +753,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Frankincense',
+          locator: 'under "Frankincense"',
           supports: [
             'canonicalName',
             'description',
@@ -792,7 +792,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Frankincense',
+              locator: 'under "Frankincense"',
               supports: ['form'],
             },
             {
@@ -812,7 +812,7 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Frankincense',
+              locator: 'under "Frankincense"',
               supports: ['form'],
             },
           ],
@@ -857,7 +857,7 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Sandalwood, White',
+          locator: 'under "Sandalwood, White"',
           supports: [
             'canonicalName',
             'elements',
@@ -869,7 +869,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Sandalwood',
+          locator: 'under "Sandalwood"',
           supports: [
             'canonicalName',
             'description',
@@ -904,12 +904,12 @@ export const PILOT: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sandalwood, White',
+              locator: 'under "Sandalwood, White"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Sandalwood',
+              locator: 'under "Sandalwood"',
               supports: ['form', 'description'],
             },
             {
@@ -925,12 +925,12 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sandalwood, White',
+              locator: 'under "Sandalwood, White"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Sandalwood',
+              locator: 'under "Sandalwood"',
               supports: ['form'],
             },
           ],
@@ -944,7 +944,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Sandalwood',
+              locator: 'under "Sandalwood"',
               supports: ['form', 'description'],
             },
             {
@@ -966,7 +966,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sandalwood, White',
+              locator: 'under "Sandalwood, White"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -1232,7 +1232,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Amethyst',
+          locator: 'under "Amethyst"',
           supports: ['colors', 'safetyNotes', 'categories', 'description'],
         },
         {
@@ -1248,7 +1248,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Amethyst',
+              locator: 'under "Amethyst"',
               supports: ['form', 'description'],
             },
             {
@@ -1288,7 +1288,7 @@ export const PILOT: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Hematite',
+          locator: 'under "Hematite"',
           supports: ['colors', 'safetyNotes', 'categories', 'description'],
         },
         {
@@ -1304,7 +1304,7 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Hematite',
+              locator: 'under "Hematite"',
               supports: ['form', 'description'],
             },
             {
@@ -1343,12 +1343,12 @@ export const PILOT: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: "s.v. Devil's Shoestring",
+          locator: 'under "Devil\'s Shoestring"',
           supports: ['categories', 'description'],
         },
         {
           source: 'kynes-plants',
-          locator: "s.v. Devil's Shoestring; s.v. Yucca",
+          locator: 'under "Devil\'s Shoestring"; under "Yucca"',
           supports: ['nomenclature', 'elements', 'planets', 'categories', 'description'],
         },
         {
@@ -1368,12 +1368,12 @@ export const PILOT: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: "s.v. Devil's Shoestring",
+              locator: 'under "Devil\'s Shoestring"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: "s.v. Devil's Shoestring",
+              locator: 'under "Devil\'s Shoestring"',
               supports: ['form', 'description'],
             },
           ],

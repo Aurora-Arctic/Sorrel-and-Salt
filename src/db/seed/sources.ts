@@ -4220,11 +4220,11 @@ export const SOURCES: SeedSource[] = [
     deities: [
       {
         name: 'Hina',
-        locator: 's.v. "Hina"',
+        locator: 'under "Hina"',
       },
       {
         name: 'Kane',
-        locator: 's.v. "Kāne"',
+        locator: 'under "Kāne"',
       },
     ],
   },

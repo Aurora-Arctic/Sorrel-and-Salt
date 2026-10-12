@@ -255,7 +255,7 @@ export type CompendiumVariantField =
  */
 export interface SeedCitation<Field extends string> {
   source: string;
-  /** `p. 112`, `s.v. Mugwort`: required of a book or a chapter. */
+  /** `p. 112`, `under "Mugwort"`: required of a book or a chapter. */
   locator?: string;
   supports: readonly Field[];
 }
