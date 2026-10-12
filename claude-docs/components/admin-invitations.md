@@ -103,29 +103,32 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   waiting." Under a filter it names the filters in use, as the user list's
   and the compendium's do: "No invitation matches “fern” and Expires in 24
   Hrs. Change or clear the filter to see more."
-- **Four columns**: Email, Reason, Expires and Revoke, the headings and each
-  cell's `data-label` from one `COLUMNS` list, the table's roles written out
-  so it can stack into cards at phone width.
+- **Four columns**: Email, Reason, Expires and Revoke, drawn by
+  [`StackTable`](data-table.md), which gives each cell its heading as its
+  card label and writes the table's roles out so it can stack into cards at
+  phone width. Revoke is a `'foot'` action, across the card's foot.
 - **The expiry** is `inUtc` (`src/lib/utc.ts`), in a `<time>`: a date and a
   time, since a link lasts seven days to the minute.
 
 ## Styling
 
-The table is the `.data-table` primitive with the `--stack` modifier in its
-`.data-table-frame` ([`styling.md`](../styling.md), "Tables at phone
-width"). At desktop width no cell wraps and the table scrolls in its frame, as
-the user list's does (the owner's call during MB.59). Under
+The table is [`StackTable`](data-table.md): the `.data-table` primitive with
+the `--stack` modifier in its `.data-table-frame` ([`styling.md`](../styling.md),
+"Tables at phone width"). At desktop width no cell wraps and the table
+scrolls in its frame, as the user list's does (the owner's call during
+MB.59), through the `data-table--nowrap` modifier; its own stylesheet only
+centres each cell on its row. Under
 `$table-stack-width` of its frame each invitation is a card, its cells
 wrapping, each led by its column's name, and Revoke across the card's foot
 with no label. The filter row is the `.filter-row` primitive, which stacks at phone
 width: the Email box across the line, the switch, Filter and Clear
 beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet holds the tab's column, the sent
 notice and the list's frame `space(5)` apart as the tab's content is, the
-muted "None given", the wrapper of the Reason field, the shared [`ReasonField`](field.md) (`.admin-invitations__note`, which shares
-`UserList/controls.scss`'s rule with the user list's: a step of room above
-and `space(6)` below) and the sent confirmation's
+muted "None given", and the sent confirmation's
 margin and full line, `.notice.admin-invitations__sent` compounded with its
-primitive, which the app scopes as `body .notice`. The section's look is MB.115's,
+primitive, which the app scopes as `body .notice`. The Reason field, the
+shared [`ReasonField`](field.md), takes the user list's `.user-list__note` (`UserList/controls.scss`: a step of room
+above and `space(6)` below), as the user list's reason does. The section's look is MB.115's,
 signed off as it stands.
 
 The sent confirmation and the modal's refusal are `Notice`s

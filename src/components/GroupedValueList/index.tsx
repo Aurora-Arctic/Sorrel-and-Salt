@@ -1,7 +1,6 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import { chipColors } from '../../lib/chip-colors';
-import { stackCell, tableRole } from '../../lib/table-roles';
+import StackTable, { GroupChip } from '../DataTable';
 import { noMatchText } from '../../lib/text';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
@@ -56,62 +55,33 @@ const GroupedValueList = ({
       />
 
       <ListBody>
-        {values.length ? (
-          <div className="data-table-frame">
-            <table
-              className="data-table data-table--stack"
-              aria-label={title}
-              {...tableRole('table')}
-            >
-              <thead {...tableRole('rowgroup')}>
-                <tr {...tableRole('row')}>
-                  <th scope="col" {...tableRole('columnheader')}>
-                    Name
-                  </th>
-                  {group && (
-                    <th scope="col" {...tableRole('columnheader')}>
-                      {group.label}
-                    </th>
-                  )}
-                  <th scope="col" {...tableRole('columnheader')}>
-                    Description
-                  </th>
-                  <th scope="col" {...tableRole('columnheader')}>
-                    <span className="visually-hidden">Edit</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody {...tableRole('rowgroup')}>
-                {values.map((entry) => (
-                  <tr key={entry.id} {...tableRole('row')}>
-                    <td {...stackCell('Name')}>{entry.name}</td>
-                    {group && (
-                      <td {...stackCell(group.label)}>
-                        {/* The group in its own chip, as the category picker shows it. */}
-                        {entry.groupColors ? (
-                          <span className="chip" style={chipColors(entry.groupColors)}>
-                            {entry.groupName}
-                          </span>
-                        ) : (
-                          entry.groupName
-                        )}
-                      </td>
-                    )}
-                    <td className="grouped-value-list__description" {...stackCell('Description')}>
-                      {entry.description}
-                    </td>
-                    {/* No label: on a phone, the action stands at its card's top right. */}
-                    <td className="data-table__card-action" {...stackCell('')}>
-                      <EditLink href={entry.editHref} name={entry.name} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>{empty}</p>
-        )}
+        {/* A flat kind has no group column. Roomy for the categories alone,
+            whose groups are drawn in chips taller than a line of text. */}
+        <StackTable
+          columns={[
+            { heading: 'Name', cell: (entry) => entry.name },
+            group && {
+              heading: group.label,
+              cell: (entry) => <GroupChip name={entry.groupName} colors={entry.groupColors} />,
+            },
+            {
+              heading: 'Description',
+              className: 'grouped-value-list__description',
+              cell: (entry) => entry.description,
+            },
+            {
+              heading: 'Edit',
+              hiddenHeading: true,
+              action: 'corner',
+              cell: (entry) => <EditLink href={entry.editHref} name={entry.name} />,
+            },
+          ]}
+          rows={values}
+          rowKey={(entry) => entry.id}
+          empty={empty}
+          aria-label={title}
+          className={kind === 'category' ? 'data-table--roomy' : undefined}
+        />
 
         <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
       </ListBody>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { stackCell, tableRole } from '../../lib/table-roles';
+import StackTable from '../DataTable';
 import { noMatchText } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
@@ -16,7 +16,7 @@ import AdminInvitationsFilter from './filter';
 import { invitationsHref } from './href';
 import InviteForm from './invite-form';
 import type {
-  AdminInvitationEntry,
+  RevokeInvitationProps,
   AdminInvitationsFilter as Filter,
   AdminInvitationsProps,
   InviteAdminProps,
@@ -33,10 +33,6 @@ import './index.scss';
 // confirmation and the locked control are the user list's own, so the page
 // asks one way, and each brings its own rules with it
 // (claude-docs/components/admin-invitations.md).
-
-/** The columns: each heading, and the label its cell carries as a card at phone width. */
-const COLUMNS = { email: 'Email', reason: 'Reason', expires: 'Expires' } as const;
-const REVOKE = 'Revoke';
 
 /** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
@@ -61,13 +57,7 @@ const RevokeAdminInvitationDocument = graphql(`
   }
 `);
 
-const Revoke = ({
-  invitation,
-  locked,
-}: {
-  invitation: AdminInvitationEntry;
-  locked?: string;
-}): ReactElement => {
+const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => {
   const accessibleName = `Revoke the invitation to ${invitation.email}`;
   if (locked) {
     return (
@@ -151,44 +141,35 @@ const AdminInvitations = ({
         {/* Keyed by the filter shown, so another one starts the form again from it. */}
         <AdminInvitationsFilter key={`${filter.email}\n${filter.expiringSoon}`} filter={filter} />
         <ListBody>
-          {invitations.length === 0 ? (
-            <p>{emptyText(filter)}</p>
-          ) : (
-            <div className="data-table-frame">
-              <table className="data-table data-table--stack" {...tableRole('table')}>
-                <thead {...tableRole('rowgroup')}>
-                  <tr {...tableRole('row')}>
-                    {[...Object.values(COLUMNS), REVOKE].map((heading) => (
-                      <th key={heading} scope="col" {...tableRole('columnheader')}>
-                        {heading}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody {...tableRole('rowgroup')}>
-                  {invitations.map((invitation) => (
-                    <tr key={invitation.id} {...tableRole('row')}>
-                      <td {...stackCell(COLUMNS.email)}>{invitation.email}</td>
-                      <td {...stackCell(COLUMNS.reason)}>
-                        {invitation.note ?? (
-                          <span className="admin-invitations__none">None given</span>
-                        )}
-                      </td>
-                      <td {...stackCell(COLUMNS.expires)}>
-                        <time dateTime={invitation.expiresAt.toISOString()}>
-                          {inUtc(invitation.expiresAt)}
-                        </time>
-                      </td>
-                      {/* An action, so a card's foot with no label of its own. */}
-                      <td {...stackCell('')}>
-                        <Revoke invitation={invitation} locked={locked} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          {/* Each cell on one line, the table scrolling in its frame. */}
+          <StackTable
+            columns={[
+              { heading: 'Email', cell: (invitation) => invitation.email },
+              {
+                heading: 'Reason',
+                cell: (invitation) =>
+                  invitation.note ?? <span className="admin-invitations__none">None given</span>,
+              },
+              {
+                heading: 'Expires',
+                cell: (invitation) => (
+                  <time dateTime={invitation.expiresAt.toISOString()}>
+                    {inUtc(invitation.expiresAt)}
+                  </time>
+                ),
+              },
+              // An action, so a card's foot with no label of its own.
+              {
+                heading: 'Revoke',
+                action: 'foot',
+                cell: (invitation) => <Revoke invitation={invitation} locked={locked} />,
+              },
+            ]}
+            rows={invitations}
+            rowKey={(invitation) => invitation.id}
+            empty={emptyText(filter)}
+            className="data-table--nowrap"
+          />
 
           {/* Plain anchors, as the user list's: a full load runs the admin layout's guard again. */}
           <Pager previousHref={previousHref} nextHref={nextHref} position={position} />

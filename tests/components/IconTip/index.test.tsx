@@ -81,19 +81,10 @@ describe('IconTip', () => {
     expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(true);
   });
 
-  // jsdom has no `showModal`, and no Escape turned into the dialog's
-  // `cancel`; both are stood in for as a browser behaves, the cancel fired
-  // only for a keydown left unhandled.
+  // jsdom turns no Escape into the dialog's `cancel`; stood in for as a
+  // browser behaves, the cancel fired only for a keydown left unhandled. Its
+  // `showModal` and `close` are the shared stub's (tests/support/setup-dom.ts).
   describe('inside a modal', () => {
-    beforeEach(() => {
-      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-        this.setAttribute('open', '');
-      };
-      HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-        this.removeAttribute('open');
-      };
-    });
-
     const escape = (target: HTMLElement) => {
       if (fireEvent.keyDown(target, { key: 'Escape' })) {
         fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));

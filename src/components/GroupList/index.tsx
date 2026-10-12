@@ -1,10 +1,10 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import { chipColors } from '../../lib/chip-colors';
+import StackTable, { GroupChip } from '../DataTable';
 import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
-import { stackCell, tableRole } from '../../lib/table-roles';
+
 import { noMatchText } from '../../lib/text';
 import GroupListFilter from './filter';
 import { KINDS } from './kinds';
@@ -49,58 +49,34 @@ const GroupList = ({
     {filter && <GroupListFilter key={filter.query} kind={kind} filter={filter} />}
 
     <ListBody>
-      {groups.length ? (
-        <div className="data-table-frame">
-          <table
-            className="data-table data-table--stack group-list__table"
-            {...tableRole('table')}
-            aria-label={KINDS[kind].title}
-          >
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Name
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  Description
-                </th>
-                <th scope="col" {...tableRole('columnheader')}>
-                  <span className="visually-hidden">Edit</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {groups.map((group) => (
-                <tr key={group.id} {...tableRole('row')}>
-                  <td {...stackCell('Name')}>
-                    {kind === 'category' && group.colorDark && group.colorLight ? (
-                      <span
-                        className="chip"
-                        style={chipColors({
-                          colorDark: group.colorDark,
-                          colorLight: group.colorLight,
-                        })}
-                      >
-                        {group.name}
-                      </span>
-                    ) : (
-                      group.name
-                    )}
-                  </td>
-                  <td {...stackCell('Description')} className="group-list__description">
-                    {group.description}
-                  </td>
-                  <td className="data-table__card-action" {...stackCell('')}>
-                    <EditLink href={group.editHref} name={group.name} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>{emptyMessage(kind, filter)}</p>
-      )}
+      {/* Roomy: a chip and the Edit pencil stand taller than a line of text. */}
+      <StackTable
+        columns={[
+          // A category group's name in its own chip, which is how a reader meets the pair.
+          {
+            heading: 'Name',
+            cell: (group) => (
+              <GroupChip name={group.name} colors={kind === 'category' ? group : undefined} />
+            ),
+          },
+          {
+            heading: 'Description',
+            className: 'group-list__description',
+            cell: (group) => group.description,
+          },
+          {
+            heading: 'Edit',
+            hiddenHeading: true,
+            action: 'corner',
+            cell: (group) => <EditLink href={group.editHref} name={group.name} />,
+          },
+        ]}
+        rows={groups}
+        rowKey={(group) => group.id}
+        empty={emptyMessage(kind, filter)}
+        aria-label={KINDS[kind].title}
+        className="data-table--roomy"
+      />
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
     </ListBody>

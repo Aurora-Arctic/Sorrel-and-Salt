@@ -5,39 +5,29 @@ import CreationControl from './creation-control';
 import { CheckIcon, CrossIcon } from './icons';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
+import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
 import { roleLabel } from './roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
-import { stackCell, tableRole } from '../../lib/table-roles';
+import StackTable from '../DataTable';
+import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
+import type {
+  MarkProps,
+  ProviderLogoProps,
+  UserListEntry,
+  UserListFilterProps,
+  UserListProps,
+} from './types';
 import './index.scss';
 
 // `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
 // the list through the identity service and hands this one page of it. The
 // filter is a GET form to the page itself, so a filtered page is an address
 // (claude-docs/components/user-list.md).
-
-/**
- * The columns, in the owner's order (MB.59): each heading, and the label its
- * cell carries when the table stacks into cards at phone width
- * (claude-docs/styling.md, "Tables at phone width"), from one place so the
- * two cannot drift. Impersonate is apart: it exists only where impersonation
- * is registered, and its cell is an action that spans the card unlabelled.
- */
-const COLUMNS = {
-  name: 'Name',
-  email: 'Email',
-  role: 'Role',
-  creation: 'Coven Creation',
-  methods: 'Sign-In Methods',
-  signedUp: 'Signed Up',
-} as const;
-
-const IMPERSONATE = 'Impersonate';
 
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
@@ -64,7 +54,7 @@ function providerLabel(id: string): string {
  * provider with no logo, one since dropped from the roster, keeps its id as
  * text, so the account still says it is linked.
  */
-const ProviderLogo = ({ id }: { id: string }): ReactElement => {
+const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
   return (
@@ -84,15 +74,7 @@ const ProviderLogo = ({ id }: { id: string }): ReactElement => {
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
  * does not say it. The bubble is the eye's copy, hidden from the reader.
  */
-const Mark = ({
-  value,
-  label,
-  hint = false,
-}: {
-  value: boolean;
-  label: string;
-  hint?: boolean;
-}): ReactElement => (
+const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => (
   <span
     className={[
       'user-list__mark',
@@ -112,27 +94,31 @@ const Mark = ({
   </span>
 );
 
-const UserRow = ({
-  user,
-  canImpersonate,
-  changesPaused,
-}: {
-  user: UserListEntry;
-  canImpersonate: boolean;
-  /** Admin changes are paused and the viewer is not the primary admin (MB.63). */
-  changesPaused: boolean;
-}): ReactElement => (
-  <tr {...tableRole('row')}>
-    {/* The way into their privilege history (MB.200), then the name, on
-        every row: an admin's changes are the ones most worth reading. */}
-    <td {...stackCell(COLUMNS.name)}>
+/**
+ * The columns, in the owner's order (MB.59). Impersonate is last, and only
+ * where impersonation is registered: an action, its cell unlabelled as a
+ * card, at the card's top right beside the name. `changesPaused`: admin
+ * changes are paused and the viewer is not the primary admin (MB.63).
+ */
+const columns = (
+  canImpersonate: boolean,
+  changesPaused: boolean,
+): readonly (StackColumn<UserListEntry> | false)[] => [
+  {
+    heading: 'Name',
+    // The way into their privilege history (MB.200), then the name, on every
+    // row: an admin's changes are the ones most worth reading.
+    cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
         {user.name}
       </span>
-    </td>
-    {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
-    <td {...stackCell(COLUMNS.email)}>
+    ),
+  },
+  {
+    heading: 'Email',
+    // Whether the address is verified, then the address, in one cell (the owner's call).
+    cell: (user) => (
       <span className="user-list__email">
         <Mark
           value={user.emailVerified}
@@ -141,13 +127,16 @@ const UserRow = ({
         />
         {user.email}
       </span>
-    </td>
-    {/* An admin's role in bold, on the owner's call: the rows to notice. On
-        the right, the control that changes it (MB.59), as Coven Creation holds
-        its own: one column rather than a second saying the same thing. The
-        primary admin is marked by a crown with a tip, and its Revoke's tip
-        says why it cannot be used. */}
-    <td {...stackCell(COLUMNS.role)}>
+    ),
+  },
+  {
+    heading: 'Role',
+    // An admin's role in bold, on the owner's call: the rows to notice. On
+    // the right, the control that changes it (MB.59), as Coven Creation holds
+    // its own: one column rather than a second saying the same thing. The
+    // primary admin is marked by a crown with a tip, and its Revoke's tip
+    // says why it cannot be used.
+    cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">
           {user.role === 'admin' ? (
@@ -169,10 +158,13 @@ const UserRow = ({
           action={user.role === 'admin' ? 'revoke' : 'grant'}
         />
       </div>
-    </td>
-    {/* Whether they may, and beside it the control that changes it (M5.8);
-        none on an admin's row, whom the users CHECK holds to the flag (MB.177). */}
-    <td {...stackCell(COLUMNS.creation)}>
+    ),
+  },
+  {
+    heading: 'Coven Creation',
+    // Whether they may, and beside it the control that changes it (M5.8);
+    // none on an admin's row, whom the users CHECK holds to the flag (MB.177).
+    cell: (user) => (
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
         {user.role === 'admin' ? null : (
@@ -188,30 +180,41 @@ const UserRow = ({
           />
         )}
       </div>
-    </td>
-    {/* Logos, empty when none, on the owner's call: a blank reads as none.
-        This and Signed Up are facts no control changes, so muted (index.scss). */}
-    <td className="user-list__fact" {...stackCell(COLUMNS.methods)}>
+    ),
+  },
+  {
+    heading: 'Sign-In Methods',
+    // Logos, empty when none, on the owner's call: a blank reads as none.
+    // This and Signed Up are facts no control changes, so muted (index.scss).
+    className: 'user-list__fact',
+    cell: (user) => (
       <span className="user-list__providers">
         {user.providers.map((id) => (
           <ProviderLogo key={id} id={id} />
         ))}
       </span>
-    </td>
-    <td className="user-list__fact" {...stackCell(COLUMNS.signedUp)}>
+    ),
+  },
+  {
+    heading: 'Signed Up',
+    className: 'user-list__fact',
+    cell: (user) => (
       <time dateTime={user.createdAt.toISOString()}>
         {user.createdAt.toISOString().slice(0, 10)}
       </time>
-    </td>
-    {/* Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
-        as acting as someone else is the table's one dangerous control. */}
-    {canImpersonate && (
-      <td className="user-list__impersonate data-table__card-action" {...stackCell('')}>
-        {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
-      </td>
-    )}
-  </tr>
-);
+    ),
+  },
+  // Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
+  // as acting as someone else is the table's one dangerous control.
+  canImpersonate && {
+    heading: 'Impersonate',
+    action: 'corner',
+    headingClassName: 'user-list__impersonate',
+    className: 'user-list__impersonate',
+    cell: (user) =>
+      user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />,
+  },
+];
 
 const UserList = ({
   users,
@@ -228,40 +231,14 @@ const UserList = ({
     <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
 
     <ListBody>
-      {users.length ? (
-        <div className="data-table-frame">
-          <table className="data-table data-table--stack" {...tableRole('table')}>
-            <thead {...tableRole('rowgroup')}>
-              <tr {...tableRole('row')}>
-                {Object.values(COLUMNS).map((heading) => (
-                  <th key={heading} scope="col" {...tableRole('columnheader')}>
-                    {heading}
-                  </th>
-                ))}
-                {canImpersonate && (
-                  <th scope="col" className="user-list__impersonate" {...tableRole('columnheader')}>
-                    {IMPERSONATE}
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody {...tableRole('rowgroup')}>
-              {users.map((user) => (
-                <UserRow
-                  key={user.id}
-                  user={user}
-                  canImpersonate={canImpersonate}
-                  // The page's own read of the pause, not a second query: the
-                  // primary admin (`canToggle`) is exempt. The service still refuses.
-                  changesPaused={Boolean(adminChanges?.paused && !adminChanges.canToggle)}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p>{noMatch({ query, role, awaitingApproval })}</p>
-      )}
+      {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
+      <StackTable
+        columns={columns(canImpersonate, Boolean(adminChanges && changesLocked(adminChanges)))}
+        rows={users}
+        rowKey={(user) => user.id}
+        empty={noMatch({ query, role, awaitingApproval })}
+        className="data-table--roomy data-table--nowrap"
+      />
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
     </ListBody>
