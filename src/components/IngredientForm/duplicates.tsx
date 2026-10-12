@@ -172,13 +172,18 @@ export function NameField({
           {shown.length > 0 && (
             <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
               {/* Plain anchors rather than <Link>: typed routes refuse a page
-                  not built yet, and /ingredients/[id] is M8.19's. */}
+                  not built yet, and /ingredients/[id] is M8.19's. Each in a
+                  new tab, so the form and its unsaved changes stay where they
+                  are (the owner's call at MB.115's review). */}
               <p id={warningId}>
                 Did you mean{' '}
                 {shown.map((match, index) => (
                   <Fragment key={match.id}>
                     {joinerAt(index, shown.length)}
-                    <a href={hrefOf(match)}>{titleOf(match)}</a>
+                    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+                      {titleOf(match)}
+                      <span className="visually-hidden"> (opens in a new tab)</span>
+                    </a>
                   </Fragment>
                 ))}
                 ?

@@ -952,7 +952,10 @@ name, since the label alone can name five plants; one with no formal name
 shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by
 default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
-reaches compendium and coven entries alike. It is a plain anchor,
+reaches compendium and coven entries alike. It opens in a new tab, so the
+form and what is typed in it stay where they are (the owner's call at
+MB.115's review), and its name ends "(opens in a new tab)" for a screen
+reader, as the substitute summary's Open Entry does. It is a plain anchor,
 as [`AdminNav`](admin-nav.md)'s were until each of their pages had landed,
 since typed routes refuse a page the build does not contain; M8.19 builds the page, and the link becomes a
 `<Link>`. Nothing refuses the create on the server: the warning is the
@@ -1195,7 +1198,7 @@ Ingredient replaces the address with the saved entry's `?edit=`, at the
 slug its name now spells; Save & Add Another stays on `?new`; a delete,
 Cancel and the modal's close replace it with the list's, filter and cursor
 kept; and each refreshes, so the list re-reads. A near match opens its own
-modal over the same list. Why a modal, and `?edit=` after a save:
+modal over the same list, in a new tab. Why a modal, and `?edit=` after a save:
 [`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md).
 
 ## One error element, two sources

@@ -159,7 +159,8 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
   });
 
-  it('names each near match by its label and formal name, linked to the entry', async () => {
+  // Each in a new tab, so the form and what is typed in it stay where they are.
+  it('names each near match by its label and formal name, linked to the entry in a new tab', async () => {
     renderName();
     offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
 
@@ -167,14 +168,15 @@ describe('NameField, with useDuplicateWarning', () => {
     settle();
 
     const tomentosa = await within(warning()).findByRole('link', {
-      name: "Cat's Claw (Uncaria tomentosa)",
+      name: /^Cat's Claw \(Uncaria tomentosa\)/,
     });
     expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
-    expect(screen.getByRole('link', { name: "Cat's Claw (Felis catus)" })).toHaveAttribute(
+    expect(tomentosa).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: /^Cat's Claw \(Felis catus\)/ })).toHaveAttribute(
       'href',
       '/ingredients/claw-2',
     );
-    expect(screen.getByRole('link', { name: 'Mockleaf' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^Mockleaf/ })).toHaveAttribute(
       'href',
       '/ingredients/mock-1',
     );
@@ -231,7 +233,7 @@ describe('NameField, with useDuplicateWarning', () => {
     await waitFor(() => expect(name()).toBeInvalid());
     expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
     expect(within(warning()).getByRole('link')).toHaveAccessibleName(
-      "Cat's Claw (Uncaria tomentosa)",
+      /^Cat's Claw \(Uncaria tomentosa\)/,
     );
     expect(sent).not.toHaveBeenCalled();
   });
@@ -248,7 +250,9 @@ describe('NameField, with useDuplicateWarning', () => {
     offerDuplicates([TOMENTOSA, FELIS]);
     type("Cat's Claws");
     settle();
-    await within(warning()).findByRole('link', { name: "Cat's Claw (Felis catus)" });
+    await within(warning()).findByRole('link', {
+      name: /^Cat's Claw \(Felis catus\)/,
+    });
 
     expect(name()).not.toBeInvalid();
     expect(sent).not.toHaveBeenCalled();
@@ -293,7 +297,7 @@ describe('NameField, with useDuplicateWarning', () => {
     type("Cat's Clawe");
     settle();
     const felis = await within(warning()).findByRole('link', {
-      name: "Cat's Claw (Felis catus)",
+      name: /^Cat's Claw \(Felis catus\)/,
     });
     expect(felis).toBeInTheDocument();
     expect(within(warning()).queryByRole('link', { name: /tomentosa/ })).not.toBeInTheDocument();
