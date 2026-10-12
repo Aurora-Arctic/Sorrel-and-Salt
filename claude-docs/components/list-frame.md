@@ -52,7 +52,8 @@ parts, and the table passes through them from the server.
   status. The filter row greys out and is off
   ([`filter-form.md`](filter-form.md)).
 - **When the new page renders** the body shows it, keyed afresh so it fades
-  in over 200ms, as a tab's new content does. A list the server drew,
+  in over 200ms, as a tab's new content does: `ListBody` and the tabbed
+  page's `TabPanel` both swap through `SwapPanel` (`TabbedPage/swap-panel.tsx`). A list the server drew,
   before any press, carries no `data-arrived` and shows at once.
 - **Only the filter and the pager trigger it.** A row's Edit and the page's
   Add (`?edit=`, `?new`) are `next/link` soft navigations of their own and

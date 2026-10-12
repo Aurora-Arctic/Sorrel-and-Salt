@@ -19,7 +19,7 @@ tabs, each tab at its own address, and the nav links a page at its first tab
 It takes no props. The list is in `sections.ts`: `ADMIN_PAGES`, each page
 a label, the one line the index says about it and its tabs, each a route and
 a short label; and `ADMIN_SECTIONS`, each section a name and its pages.
-Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too. `index.tsx`
+Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabulary's tabs take their address and label from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`). `index.tsx`
 renders the nav and stays a server component; `nav-links.tsx`, the links, is the one client
 part, since only a client component can read the address.
 `src/app/admin/layout.tsx` renders the nav above the page, after the guard

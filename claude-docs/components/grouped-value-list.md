@@ -38,7 +38,7 @@ terms.
 ## Kinds
 
 Everything that tells one kind's list from another's is its entry in
-`kinds.ts`'s `KINDS`, so a new kind is an entry there and nothing else:
+`kinds.ts`'s `KINDS`, so a new kind is an entry there and nothing else (the nav's tab and the form's `noun` read it too):
 `path`, the page's address; `title`, the table's name ("Zodiac Signs"),
 since the heading is now the tabbed page's ("Astrology";
 [`tabbed-page.md`](tabbed-page.md)); `label`, one row in title case, as Add says it ("Zodiac
