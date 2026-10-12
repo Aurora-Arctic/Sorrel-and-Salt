@@ -3490,7 +3490,7 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), and is the frame for the coven create page too: a form page with no AppShell (`styling.md`, "The page frame"). Every notice in the section shows through `Notice` (`components/notice.md`).
 
-_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
+_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads and a type-ahead after, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
 
 _Acceptance criteria:_
 
@@ -3533,7 +3533,7 @@ Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flo
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, and `BusyButton` for a button whose request is in flight.
+_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads and a type-ahead after, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
 
@@ -3576,7 +3576,7 @@ Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoi
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
+_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads and a type-ahead after, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
 
 _Acceptance criteria:_
 
