@@ -370,8 +370,8 @@ that replaced it, or "left" with the reason.
 | #   | What repeated                                                               | Copies | Replaced by                                                                                                                               |
 | --- | --------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | B1  | The admin page title `'X — Admin — Sorrel & Salt'`                          | 12     | `title.template` in `src/app/admin/layout.tsx`                                                                                            |
-| B2  | Draft state in the filters                                                  | 6      | see filter section                                                                                                                        |
-| B3  | The text search field                                                       | 6      | see filter section                                                                                                                        |
+| B2  | Draft state in the filters                                                  | 6      | Closed, nothing built: the filters apply on change through `useApplyFilter()`, so no draft state is left to extract                       |
+| B3  | The text search field                                                       | 6      | `SearchField` (`src/components/Field/search-field.tsx`), adopted in all six filters                                                       |
 | B4  | The data table scaffold                                                     | 6      | `StackTable` (`src/components/DataTable/`)                                                                                                |
 | B5  | Tab layouts and `@action/default.tsx` differing by a key                    | 5 + 5  | `tabbedLayout(key)` in `src/app/admin/tabbed-layout.tsx` and one `no-action.tsx`                                                          |
 | B6  | `n === 1 ? one : many`                                                      | 5      | `plural` from `src/lib/text.ts`                                                                                                           |
@@ -387,7 +387,7 @@ that replaced it, or "left" with the reason.
 | B16 | The reference GraphQL selection                                             | 3      | `fragment ReferenceRow`                                                                                                                   |
 | B17 | The nomenclature label lookup                                               | 3      | `labelOf` from `IngredientForm/options.ts`                                                                                                |
 | B18 | Enum option lists re-typed, labels drifted                                  | 3      | One `{value, label}[]` per enum                                                                                                           |
-| B19 | The hydration-fallback type-ahead                                           | 2      | see filter section                                                                                                                        |
+| B19 | The hydration-fallback type-ahead                                           | 2      | `FilterSelectField` (`src/components/Field/filter-select-field.tsx`), a native select until hydrated, then the type-ahead                 |
 | B20 | IngredientForm summaries two ways, `fold`/`texts` twice                     | 2-3    | `variantSummary` built from the `summaries.tsx` helpers, one `FIELD_NOUNS`, `useFoldIds` and `FoldFlag`; `fold` and `texts` exported once |
 | B21 | Runtime arrays repeating type unions                                        | 2 each | `as const` arrays that derive the unions                                                                                                  |
 | B22 | `'new' \| { edit }` and its encoding                                        | 3      | `ListDialog` and `dialogParams` in `src/lib/list-href.ts`                                                                                 |
@@ -408,19 +408,19 @@ that replaced it, or "left" with the reason.
 | --- | ------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | C1  | The jsdom `<dialog>` stub                                     | 9      | `tests/support/setup-dom.ts`                                                                                                        |
 | C2  | The IngredientForm test harness rebuilt per file              | 2-7    | `tests/support/ingredient-form.tsx`, `tests/support/interact.tsx` (`press`, `choose`, `type`), additions to `ingredient-lookups.ts` |
-| C3  | The list filter test rows                                     | 3-5    | see filter section                                                                                                                  |
+| C3  | The list filter test rows                                     | 3-5    | `FILTER_ROWS` and `drawnOnServer()` in `tests/support/filter-form.tsx`; per-list rows stay in each test                             |
 | C4  | AdminInvitations re-implementing `expectGuardedWaysOut`       | 1      | The helper called, with an optional `cancel` getter                                                                                 |
-| C5  | Type-ahead option narrowing asserted outside its owner        | 3      | see filter section                                                                                                                  |
+| C5  | Type-ahead option narrowing asserted outside its owner        | 3      | The two narrowing tests dropped; Combobox's type-ahead test owns it                                                                 |
 | C6  | `hrefs(links)` filter; a block re-asserting the Combobox test | 2      | Left in part: kept where a test asserted wiring the owner's test did not; the duplicated Combobox block dropped                     |
 | C7  | The admin frame wrapper in stories                            | 9      | `.ladle/admin-frame.tsx` (`AdminFrame`, `AdminTabbedFrame`)                                                                         |
 | C8  | Fixture data in stories                                       | 3-5    | `.ladle/fixtures.ts`                                                                                                                |
 | C9  | "Press a button by its text" effect                           | 3      | `.ladle/press.ts` (`press`, `usePressOnMount`)                                                                                      |
 | C10 | Phone Dark and Light story pairs                              | 38     | Left: repo convention that pre-dates the branch                                                                                     |
 | C11 | The unsaved-changes question                                  | 6      | `modal.md`, "Unsaved changes"; form docs keep a line and a link                                                                     |
-| C12 | The filter's "disabled while it matches" rule                 | 6      | see filter section                                                                                                                  |
+| C12 | The filter's "disabled while it matches" rule                 | 6      | `filter-form.md`, "Contracts"; list docs keep a line and a link                                                                     |
 | C13 | "Under 28rem every row stacks"                                | 5      | `styling.md`, "A narrow form stacks its buttons"                                                                                    |
-| C14 | The `.filter-row` layout                                      | 4      | see filter section                                                                                                                  |
-| C15 | The type-ahead width rule                                     | 3      | see filter section                                                                                                                  |
+| C14 | The `.filter-row` layout                                      | 4      | `filter-form.md`, "Styling"; `styling.md` keeps a line and a link                                                                   |
+| C15 | The type-ahead width rule                                     | 3      | `filter-form.md`, "Styling", "A choice takes one width"                                                                             |
 | C16 | Soft and full navigation with the `pageshow` rule             | 4      | `list-frame.md`, "Contracts"; see filter section for the filter and user-list docs                                                  |
 | C17 | The page-header action spanning the line                      | 3      | `page-header.md`, "Styling"                                                                                                         |
 | C18 | The ConfirmOverlay visuals                                    | 2      | `modal.md`, "Asking over the form"; `styling.md` keeps the tokens                                                                   |
@@ -452,7 +452,7 @@ that replaced it, or "left" with the reason.
 - **`src/app/admin/`**: `layout.tsx` (`title.template`), `tabbed-layout.tsx`
   (`tabbedLayout`), `no-action.tsx`, `list-page.tsx` (the edit-place helper,
   `AddAction`).
-- **Filter pieces**: see filter section.
+- **Filter pieces**: `SearchField` and `FilterSelectField` in `src/components/Field/`; `useApplyFilter()` from `src/components/FilterForm`; `USERS_PATH`, `PRIVILEGE_CHANGES_PATH`, `INVITATIONS_PATH` and `COMPENDIUM_PATH` from each `href.ts`; `ROLE_LABELS` and `PRIVILEGE_LABELS` from `UserList/roles.ts` and `PrivilegeLedger/privileges.ts`; `tests/support/filter-form.tsx`.
 - **Tests**: `tests/support/setup-dom.ts`, `interact.tsx`,
   `ingredient-form.tsx`, additions to `msw/ingredient-lookups.ts`.
 - **Workshop**: `.ladle/admin-frame.tsx`, `fixtures.ts`, `press.ts`, `types.ts`.
@@ -462,5 +462,4 @@ The three corrections people could see: the TabbedPage skeleton's heights, the
 
 ### Filter section
 
-To be filled in once the filter docs are released: B2, B3, B19, C3, C5, C12,
-C14, C15 and C16's filter half.
+The filter lanes had already redesigned the filters when the audit's filter findings were worked, which settled most of them. B2 closed with nothing built: each filter's fields apply on change through `useApplyFilter()`, and only the search text keeps state, so no draft state was left to extract. B3 was met by adopting `SearchField` in all six filters. B19 became `FilterSelectField`, replacing the five hand-drawn filter selects and the FilterForm story's. The filters import their path (`USERS_PATH`, `PRIVILEGE_CHANGES_PATH`, `INVITATIONS_PATH`, `COMPENDIUM_PATH`) and their labels from the list's own files (B10, B18), and `oneOf` replaces CompendiumList's hand guard. C3 is `FILTER_ROWS` and `drawnOnServer()`; C5 dropped the two narrowing tests.
