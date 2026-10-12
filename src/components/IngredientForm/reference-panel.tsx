@@ -14,6 +14,8 @@ import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
 import { FormActions, SelectField, TextField } from '../Field';
 import type { ReferenceQuery } from '../../gql/graphql';
 import type {
+  EditSourcePanelProps,
+  PanelFormProps,
   ReferenceFieldName,
   ReferenceFieldSpec,
   ReferenceFormValues,
@@ -347,10 +349,7 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
  * The tier is the source's own: a coven's under its coven, the compendium's
  * without one, as `updateReference` will write it.
  */
-function EditSourcePanel({
-  editing,
-  ...props
-}: ReferencePanelProps & { editing: NonNullable<ReferencePanelProps['editing']> }): ReactElement {
+function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElement {
   const legendId = useId();
   const { data, isError } = useQuery({
     ...graphqlQuery(ReferenceDocument, {
@@ -390,7 +389,7 @@ function PanelForm({
   summons,
   onSaved,
   onCancel,
-}: ReferencePanelProps & { defaults: ReferenceFormValues }): ReactElement {
+}: PanelFormProps): ReactElement {
   const methods = useForm<ReferenceFormValues, unknown, ReferenceSendInput>({
     defaultValues: defaults,
     resolver: referenceResolver,

@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { currentHrefs, hrefs } from '../../support/links';
 
 // The page the test pretends to be on; Next's own hook reads the App
 // Router's state, which a component test does not mount.
@@ -17,14 +18,10 @@ const { default: AdminNav } = await import('@/components/AdminNav');
 const nav = () => screen.getByRole('navigation', { name: 'Admin' });
 // The disclosure: a `<details>`, whose role is group.
 const menu = () => within(nav()).getByRole('group');
-const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
 const row = () =>
   within(nav())
     .getAllByRole('link')
     .filter((link) => !menu().contains(link));
-
-const current = (links: HTMLElement[]) =>
-  hrefs(links.filter((link) => link.getAttribute('aria-current') === 'page'));
 
 // Each page linked at its first tab (MB.115).
 const SECTIONS = [
@@ -71,8 +68,8 @@ describe('AdminNav', () => {
 
       render(<AdminNav />);
 
-      expect(current(row())).toEqual(expected);
-      expect(current(within(menu()).getAllByRole('link'))).toEqual(expected);
+      expect(currentHrefs(row())).toEqual(expected);
+      expect(currentHrefs(within(menu()).getAllByRole('link'))).toEqual(expected);
     },
   );
 
@@ -88,6 +85,6 @@ describe('AdminNav', () => {
     rerender(<AdminNav />);
 
     expect(menu()).not.toHaveAttribute('open');
-    expect(current(within(menu()).getAllByRole('link'))).toEqual(['/admin/categories']);
+    expect(currentHrefs(within(menu()).getAllByRole('link'))).toEqual(['/admin/categories']);
   });
 });

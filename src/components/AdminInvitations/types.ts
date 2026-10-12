@@ -70,3 +70,10 @@ export interface InviteFieldsProps extends Pick<InviteFormProps, 'onSent'> {
   /** The modal's close, unguarded: a sent invitation goes at once. */
   close: () => void;
 }
+
+/** A row's Revoke: the invitation it withdraws, and why it is locked, if it is. */
+export interface RevokeInvitationProps {
+  invitation: AdminInvitationEntry;
+  /** Why this admin may not revoke, while admin changes are paused; absent when they may. */
+  locked?: string;
+}

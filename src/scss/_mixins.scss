@@ -346,7 +346,9 @@
   }
 }
 
-// The two row tweaks a data table's owner asks for. Roomy: taller rows,
+// The two row tweaks a data table's owner asks for, each emitted once as a
+// modifier of the table by `_primitives.scss` (`.data-table--roomy`,
+// `.data-table--nowrap`), which a table takes by class. Roomy: taller rows,
 // centred on their cells, for a chip or a button taller than the text. Only
 // while it is a table: a card's cells already carry its padding. Nest inside
 // the table's selector.
@@ -361,21 +363,19 @@
 
 // No cell wraps, so a row stays one line and the table scrolls in its frame;
 // a confirmation opened from a cell wraps as prose again, and a card, which
-// does not scroll, wraps too. Nest inside the list's root.
+// does not scroll, wraps too. Nest inside the table's selector.
 @mixin data-table-nowrap {
-  .data-table {
-    th,
-    td {
-      white-space: nowrap;
-    }
+  th,
+  td {
+    white-space: nowrap;
+  }
 
-    .modal-dialog {
-      white-space: normal;
-    }
+  .modal-dialog {
+    white-space: normal;
   }
 
   @container data-table (max-width: #{$table-stack-width}) {
-    .data-table--stack {
+    &.data-table--stack {
       th,
       td {
         white-space: normal;

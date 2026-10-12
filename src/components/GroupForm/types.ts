@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { FieldValues, Resolver } from 'react-hook-form';
 import type { z } from 'zod';
-import type { GroupColors } from '../../lib/types';
+import type { GroupColorColumn, GroupColors } from '../../lib/types';
 
 /**
  * Which group vocabulary the form writes: the category groups, whose rows
@@ -20,7 +20,20 @@ export interface GroupFormKind {
   /** Creates the group, or updates the one at `id`. */
   save: (input: GroupValues, id: string | undefined) => Promise<void>;
   /** Deletes it, moving its rows to `moveTo` when given. */
-  remove: (variables: { id: string; moveTo?: string }) => Promise<void>;
+  remove: (variables: GroupDeleteVariables) => Promise<void>;
+}
+
+/** A group's delete: the group, and where its rows go when it holds any. */
+export interface GroupDeleteVariables {
+  id: string;
+  moveTo?: string;
+}
+
+/** One of a category group's two colour fields: the column it writes, its label and its hint. */
+export interface GroupColorField {
+  column: GroupColorColumn;
+  label: string;
+  hint: string;
 }
 
 /** What a group vocabulary's copy is: everything of `GroupFormKind` but its schema and requests. */

@@ -206,6 +206,41 @@ form's Delete question are drawn through it.
   form's width, which is the main area's less the body's padding
   (`$narrow-column + $modal-padding`, a container query on `modal-main`).
 
+### `ConfirmQuestion`
+
+The yes-or-no question a form asks over itself, in `confirm-question.tsx`
+beside `DiscardQuestion`, written once for the questions the forms drew each
+on their own (MB.115): `GroupForm`'s Delete and Move and Delete,
+`GroupedValueForm`'s Delete, and `IngredientForm`'s Delete and MB.82's End
+Redirect & Save. A `ConfirmOverlay` holding the acting answer, a
+`BusyButton`, and the safe one, quiet, which takes the focus.
+
+| Prop           | What it is                                                                           |
+| -------------- | ------------------------------------------------------------------------------------ |
+| `question`     | The question, which names the card                                                   |
+| `asked`        | Its own question is being asked; true by default, for a form that draws it only then |
+| `guard`        | The form's `useDiscardGuard`, whose question shows in its place while it asks        |
+| `confirmLabel` | The acting answer: "Delete" by default                                               |
+| `busyLabel`    | What it says while busy: "Deleting" by default                                       |
+| `tone`         | `'destructive'` by default, `'solid'` for a save                                     |
+| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                        |
+| `busy`         | The action is in flight: the acting answer busy and shut                             |
+| `onConfirm`    | The action, a promise                                                                |
+| `onKeep`       | The safe answer's                                                                    |
+| `onRefused`    | Told a refusal's sentence when `onConfirm` rejects, for the form's alert             |
+
+- **Which question shows.** Given the form's guard, the unsaved changes'
+  question shows while it asks, ahead of the form's own, since they are what
+  a way out would lose; Keep Editing brings the form's question back. A form
+  with steps, as `GroupForm`'s delete is, settles that itself and passes no
+  guard.
+- **A refusal.** When `onConfirm` rejects, the question reads the refusal,
+  the server's first sentence or the one generic sentence, and hands it to
+  `onRefused`, where the form closes the question and shows it in its alert: a
+  refusal naming its remedy, not a bad value in a box (DESIGN.md §7). A form
+  that places a refusal itself, as `GroupForm` puts a refused move back at
+  the choice, catches it in `onConfirm` and passes no `onRefused`.
+
 ## An edit dialog's head
 
 It is not apparent from an edit form alone what is being edited, so every
@@ -376,7 +411,10 @@ unsaved changes, and `expectAskingOver` and `expectAnswered` for a Delete
 question in a modal (the form inert, the question a named group, the focus
 on the safe answer; then gone, the form live). The `AskingToDiscardChanges`
 story, and its `PhoneDark` and `PhoneLight` pair, show the question over a
-short form; pressing Escape or Close there flashes it. IngredientForm's
+short form; pressing Escape or Close there flashes it. `AskingToConfirm`
+shows `ConfirmQuestion`'s Delete and Keep It, Delete busy once pressed. The
+forms' own tests cover `ConfirmQuestion` through their Delete questions.
+IngredientForm's
 `AskingToDeleteInModal` and `AskingToDiscardInModal` show it over the long
 form scrolled down, each with a phone pair.
 

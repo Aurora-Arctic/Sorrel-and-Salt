@@ -150,3 +150,17 @@ export interface LockedControlProps {
   className: string;
   reason: string;
 }
+
+/** A linked sign-in provider in the Sign-In Methods cell, by its roster id. */
+export interface ProviderLogoProps {
+  id: string;
+}
+
+/** A yes-or-no drawn as a check or a cross, with its word for a screen reader. */
+export interface MarkProps {
+  value: boolean;
+  /** The word the mark stands for: "Verified", "Yes". */
+  label: string;
+  /** Whether a tip bubble shows the word on hover too, where the heading does not say it. */
+  hint?: boolean;
+}

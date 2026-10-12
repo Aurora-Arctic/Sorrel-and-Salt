@@ -3,21 +3,11 @@
 
 // What the list has of its own. The root is `.list-frame`, the filter
 // `.filter-row` (through FilterForm), the table `.data-table` stacking into
-// cards on a phone (`.data-table--stack`), the chip and the pager are
+// cards on a phone (`.data-table--stack`, and `--roomy` for the categories,
+// whose chips stand taller than a line), the chip and the pager are
 // primitives too (`.chip`, `.pager`), and Edit is IconTip's pencil.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .grouped-value-list__description {
   max-width: $measure;
-}
-
-// More room in a category's row than the primitive gives, and its contents
-// centred, as the group list's: a chip and a small button stand taller than
-// a line of text (the owner's call). The category kind's alone, since only
-// its groups are drawn in chips. Only while the table is a table: as cards
-// (`$table-stack-width` and under) each cell is a block with the card's own
-// padding, which this would double. Under the list's class, which outranks
-// the primitive's `body` scope.
-.grouped-value-list--category .data-table {
-  @include data-table-roomy;
 }

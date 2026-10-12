@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { type ReactElement, createContext, useContext, useState, useTransition } from 'react';
-import TabPanelLoading from './panel-loading';
+import SwapPanel from './swap-panel';
 import type {
   PageTab,
   TabActionProps,
@@ -69,23 +69,13 @@ export const TabAction = ({ children }: TabActionProps): ReactElement => {
 
 /**
  * The open tab's content, or the pressed tab's skeleton in its place while it
- * is on its way. Keyed by which it shows, so each mounts afresh and fades in
- * (the stylesheet): the skeleton as the press takes the old content away, and
- * the new content as it replaces the skeleton. Content that was there from
- * the server's render, before any tab was pressed, is marked as such and
- * shown at once.
+ * is on its way (`SwapPanel`).
  */
 export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
   const { pending, target } = useTabSwitch();
-  const [switched, setSwitched] = useState(false);
-  if (pending && !switched) setSwitched(true);
-  return pending ? (
-    <div key="loading" className="tabbed-page__panel">
-      <TabPanelLoading filter={target?.filtered} />
-    </div>
-  ) : (
-    <div key="content" className="tabbed-page__panel" data-arrived={switched || undefined}>
+  return (
+    <SwapPanel pending={pending} className="tabbed-page__panel" filter={target?.filtered}>
       {children}
-    </div>
+    </SwapPanel>
   );
 };

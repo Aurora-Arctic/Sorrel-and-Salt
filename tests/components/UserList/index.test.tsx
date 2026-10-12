@@ -8,14 +8,6 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = { refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
-
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
 const impersonateUserMock = vi.fn();

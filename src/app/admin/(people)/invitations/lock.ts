@@ -1,4 +1,5 @@
 import 'server-only';
+import { changesLocked } from '../../../../components/UserList/lock';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../../../lib/primary-admin';
 import type { Session } from '../../../../lib/session';
 import { readPauseState } from '../pause-state';
@@ -9,6 +10,5 @@ import { readPauseState } from '../pause-state';
  * may: what the Invitations tab and its Invite Admin both lock on.
  */
 export async function invitationsLock(session: Session): Promise<string | undefined> {
-  const { paused, canToggle } = await readPauseState(session);
-  return paused && !canToggle ? ADMIN_CHANGES_PAUSED_REFUSAL : undefined;
+  return changesLocked(await readPauseState(session)) ? ADMIN_CHANGES_PAUSED_REFUSAL : undefined;
 }

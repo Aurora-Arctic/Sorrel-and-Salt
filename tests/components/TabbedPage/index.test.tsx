@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { currentHrefs, hrefs } from '../../support/links';
 import { Navigating } from '../../support/navigating';
 
 // The page the test pretends to be on, and the router a tab press navigates
@@ -23,8 +24,7 @@ const TABS = [
 ] as const;
 
 const tabs = () => within(screen.getByRole('navigation', { name: 'People' })).getAllByRole('link');
-const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
-const open = () => hrefs(tabs().filter((link) => link.getAttribute('aria-current') === 'page'));
+const open = () => currentHrefs(tabs());
 const busy = () => hrefs(tabs().filter((link) => link.getAttribute('aria-busy') === 'true'));
 
 beforeEach(() => {
