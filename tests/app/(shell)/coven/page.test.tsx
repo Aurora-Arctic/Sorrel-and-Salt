@@ -9,6 +9,8 @@ import type { WorkspaceRole } from '@/modules/coven';
 // tests/lib/request-session.test.ts's and the service's; here it is mocked.
 // The role check is the real one, read off the access-control statements.
 
+// The Delete control reads the router, which a page test has no app to give.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 const requireCovenMembership = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCovenMembership }));
 vi.mock('@/modules/coven', async () => ({
@@ -62,6 +64,6 @@ describe('the /coven/[slug] page', () => {
     await renderAs('owner');
 
     expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Delete Workspace' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
   });
 });

@@ -1,4 +1,5 @@
 import { rolePermits } from '@/modules/coven';
+import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
 import { requireCovenMembership } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
 
@@ -17,8 +18,8 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
       <h1>{workspace.name}</h1>
       {/* Leave is here, not on the members page, because a viewer cannot
           open that page and must still be able to go. Delete asks for the
-          permission M6.14's service checks, never a rank. Both stay disabled
-          until M6.15 and M6.14 wire them (claude-docs/auth/coven-guard.md,
+          permission M6.14's service checks, never a rank. Leave stays disabled
+          until M6.15 wires it (claude-docs/auth/coven-guard.md,
           "The coven index page"). */}
       <section className="page-frame__section" aria-labelledby="coven-membership">
         <h2 id="coven-membership">Your Membership</h2>
@@ -27,9 +28,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
             Leave Workspace
           </button>
           {rolePermits(membership.role, { workspace: ['delete'] }) && (
-            <button type="button" className="btn btn--destructive" disabled>
-              Delete Workspace
-            </button>
+            <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
           )}
         </div>
       </section>
