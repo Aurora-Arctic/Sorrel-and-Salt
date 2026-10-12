@@ -6,7 +6,7 @@ tied to each other by id. MB.115 lifted it out of `IngredientForm`, which had
 the one good copy, once the same block had been written by hand fifteen
 times across the admin forms and the account forms.
 
-It has four ways in:
+It has five ways in:
 
 - **The shell**, `FieldShell` with `fieldDescription`, knows no form library.
   A plain-state form (one holding its values in `useState`, such as NameForm
@@ -20,39 +20,43 @@ It has four ways in:
   Approval (MB.115).
 - **The search box**, `SearchField`, a list filter's text box with its own
   submit, a magnifier named Search, at its end (MB.115).
+- **The filter select**, `FilterSelectField`, a list filter's closed set: a
+  native select, or a type-ahead once hydrated (MB.115).
 
 `IngredientForm`'s three fields of its own, `SuggestField`,
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
 the same shell until its design review (MB.120).
 
-| File               | What it holds                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| `index.tsx`        | The exports, below                                                                  |
-| `shell.tsx`        | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them |
-| `description.ts`   | `fieldDescription`                                                                  |
-| `use-field.ts`     | `useField`, `fieldDescription` over a react-hook-form field's own error             |
-| `text-field.tsx`   | `TextField`                                                                         |
-| `select-field.tsx` | `SelectField`                                                                       |
-| `switch-field.tsx` | `SwitchField`                                                                       |
-| `search-field.tsx` | `SearchField`                                                                       |
-| `icons.tsx`        | `MagnifierIcon`, the search's mark                                                  |
-| `types.ts`         | The props, and `SelectOption`                                                       |
+| File                      | What it holds                                                                       |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `index.tsx`               | The exports, below                                                                  |
+| `shell.tsx`               | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them |
+| `description.ts`          | `fieldDescription`                                                                  |
+| `use-field.ts`            | `useField`, `fieldDescription` over a react-hook-form field's own error             |
+| `text-field.tsx`          | `TextField`                                                                         |
+| `select-field.tsx`        | `SelectField`                                                                       |
+| `switch-field.tsx`        | `SwitchField`                                                                       |
+| `search-field.tsx`        | `SearchField`                                                                       |
+| `filter-select-field.tsx` | `FilterSelectField`                                                                 |
+| `icons.tsx`               | `MagnifierIcon`, the search's mark                                                  |
+| `types.ts`                | The props, and `SelectOption`                                                       |
 
 ## The exports
 
-| Name               | What it is                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------- |
-| `FieldShell`       | The `.field` block around a control the caller renders                                                        |
-| `FieldError`       | The `.field__error` paragraph, rendered only when there is a message                                          |
-| `Required`         | The `*` after a label, hidden from assistive technology                                                       |
-| `fieldDescription` | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it |
-| `useField`         | `fieldDescription` for a react-hook-form field, its error read by name                                        |
-| `TextField`        | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
-| `SelectField`      | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
-| `SwitchField`      | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
-| `FormActions`      | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
-| `ReasonField`      | An admin change's optional Reason, in a plain-state form                                                      |
-| `SearchField`      | A list filter's search box, its submit a magnifier at the box's end                                           |
+| Name                | What it is                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `FieldShell`        | The `.field` block around a control the caller renders                                                        |
+| `FieldError`        | The `.field__error` paragraph, rendered only when there is a message                                          |
+| `Required`          | The `*` after a label, hidden from assistive technology                                                       |
+| `fieldDescription`  | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it |
+| `useField`          | `fieldDescription` for a react-hook-form field, its error read by name                                        |
+| `TextField`         | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
+| `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
+| `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
+| `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
+| `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
+| `FilterSelectField` | A list filter's closed set: a native select, or with `typeahead` a type-ahead once hydrated                   |
 
 ### `FormActions`
 
@@ -82,6 +86,28 @@ the change in the record of who changed what." The invitation form passes its
 own `hint`, since an invitation's reason is kept with the invitation first.
 `UserList`'s confirmed actions and the invitation form use it; the wrapper
 takes the caller's class, which holds the field's room above and below.
+
+### `FilterSelectField`
+
+A list filter's closed set, written once for the five selects the admin
+filters drew by hand (MB.115): the user list's Role, the ledger's
+Privilege, the compendium's Classification and Form, and the curated
+lists' group. A native `<select>` whose first choice, `all` ("All Roles"),
+is blank, so a native submit sends `role=` and the page reads no filter;
+the rest are `options`. It is uncontrolled from `defaultValue`, the value
+the page shows, and calls `onChange` on its change, since the list keys
+its filter by the filter shown and draws it again from the new one
+([`filter-form.md`](filter-form.md)). With `typeahead`, for a set long
+enough to want a search, the browser draws Combobox's type-ahead box once
+hydrated ([`combobox.md`](combobox.md), "The type-ahead box"), `all` its
+placeholder and its clear the way back to blank, and `onChange` runs once
+a choice other than the one shown settles; the server, and the render that
+hydrates, draw the native select, told apart by `useHydrated()`
+(`src/lib/hydrated.ts`), so a press on the search's magnifier before the
+script loads still sends it. A hidden input carries the same parameter
+after. Both stand in `filter-row__typeahead`, one width, so the swap moves
+nothing. Not `SelectField`: a filter has no form state, and its select
+must submit natively.
 
 ## Props
 
@@ -157,6 +183,14 @@ before hydration the same press sends the whole form as a GET. It is never
 disabled: the same text again reads the list again, which is harmless. The
 button carries an id, `<control id>-submit`.
 
+`FilterSelectField` (`FilterSelectFieldProps`) takes `label`, `name`, `all`
+(the blank first choice, and a type-ahead's placeholder), `options`
+(`SelectOption`s, the same shape `SelectField` takes, so a list's one
+label list, `ROLE_LABELS` say, is passed as it is), `defaultValue`,
+`onChange(value)` and `typeahead`. `onChange` hands over the raw string; a
+caller narrowing it to its own type reads it with `oneOf`
+(`src/lib/search-params.ts`), as the page reads the address.
+
 ## Contracts
 
 - **The control names its hint, note and error** in `aria-describedby`, and
@@ -219,7 +253,9 @@ Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, and saving; `Reason`,
-`ReasonField`; and `SearchBox`, `SearchField` in a form that goes nowhere.
+`ReasonField`; `SearchBox`, `SearchField` in a form that goes nowhere; and
+`FilterSelect`, `FilterSelectField` as a select and as a type-ahead in a
+filter row.
 
 ## Testing
 
@@ -235,4 +271,6 @@ form, the server's before hydration included, applying the filter on its change,
 jsdom does not run it, so it was checked in the workshop's Chromium. The
 lists' tests cover `SearchField` too, found by its `searchbox` role and its
 `Search` button: the submit applying the search, and the button in the
-server's markup.
+server's markup. They cover `FilterSelectField` by the address each
+change applies, its options and its name in the form, and the type-ahead
+drawn as a native select in the server's markup and swapped once hydrated.

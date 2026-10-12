@@ -41,7 +41,7 @@ different groups, so the page offers each name once, whatever its case.
 
 ## Contracts
 
-- **The filter is a GET form to `/admin/compendium`** (MB.178), as the
+- **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178), as the
   category list's is: named "Filter the Compendium" inside a `<search>`
   landmark, a search box labelled "Name" (`query`) with its own submit, a
   magnifier named Search (`SearchField`, [`field.md`](field.md)), a type-ahead labelled
@@ -75,13 +75,15 @@ different groups, so the page offers each name once, whatever its case.
   Form", back to blank. A hidden input carries `form` for a native submit.
   The server draws it as a native `<select>` instead, "All Forms" valued
   `""` then one option per form, so the filter works before JavaScript;
-  `useHydrated()` (`src/lib/hydrated.ts`) tells the two renders apart. The value is the form's text, `?form=Oil`, which the compendium
+  `FilterSelectField` with `typeahead` draws both ([`field.md`](field.md)),
+  as it does the curated lists' group. The value is the form's text, `?form=Oil`, which the compendium
   read matches whatever its case, so the address reads plainly and an
   uncurated form on a seeded entry is still reachable by typing the address.
 - **Classification offers "Any", valued `""`, then every kind in
   `NOMENCLATURE_KINDS`'s order**, labelled by IngredientForm's
   `NOMENCLATURE_OPTIONS` (`options.ts`), as its Classification select is: the
-  value capitalised. Before hydration every control is native, so the
+  value capitalised. It is a `FilterSelectField`, its change read with
+  `oneOf(NOMENCLATURE_KINDS, …)`. Before hydration every control is native, so the
   form submits as `query=&form=&nomenclature=`, plus
   `withoutReferences=1` when on. The page reads a blank value as no filter
   and ignores a kind it does not know.

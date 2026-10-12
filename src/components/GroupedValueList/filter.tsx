@@ -1,9 +1,7 @@
 'use client';
 
-import { type ReactElement, useId, useMemo, useState } from 'react';
-import { useHydrated } from '@/lib/hydrated';
-import { ComboboxTypeahead } from '../Combobox/typeahead';
-import { FieldShell, SearchField, fieldDescription } from '../Field';
+import { type ReactElement, useMemo, useState } from 'react';
+import { FilterSelectField, SearchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
@@ -17,11 +15,10 @@ import type { GroupedValueListFilterProps } from './types';
 // the name on the magnifier or Enter. `FilterForm` holds the form, Clear and
 // the soft navigation; this holds what the fields say and what each applies.
 // The group is typed into once hydrated, the owner's call (MB.115), but the
-// server draws it as a native `<select>`, so before hydration a press on the
-// magnifier submits natively, as `query=&group=`, which the page reads as
-// the same filter; a hidden input carries the same parameter after. The list
-// keys this by the filter shown, so a page showing another, Back say, draws
-// it afresh from that one.
+// server draws it as a native `<select>` (`FilterSelectField`), so before
+// hydration a press on the magnifier submits natively, as `query=&group=`,
+// which the page reads as the same filter. The list keys this by the filter
+// shown, so a page showing another, Back say, draws it afresh from that one.
 
 const GroupedValueListFilter = ({
   kind,
@@ -29,10 +26,7 @@ const GroupedValueListFilter = ({
   groups,
 }: GroupedValueListFilterProps): ReactElement => {
   const { path, title, group } = KINDS[kind];
-  const groupField = fieldDescription({ id: `${useId()}-group` });
   const [draftQuery, setDraftQuery] = useState(filter.query);
-  const [draftGroup, setDraftGroup] = useState(filter.group);
-  const hydrated = useHydrated();
   const apply = useApplyFilter();
   const choices = useMemo(
     () => groups.map((each) => ({ value: each.slug, label: each.name })),
@@ -58,43 +52,15 @@ const GroupedValueListFilter = ({
         onChange={setDraftQuery}
       />
       {group && (
-        // One width for the select and the type-ahead, so hydration moves nothing.
-        <FieldShell label={group.label} className="filter-row__typeahead" {...groupField}>
-          {hydrated ? (
-            <>
-              {/* Every group while blank, as the select's first choice says;
-                  the clear is the way back to it. */}
-              <ComboboxTypeahead
-                id={groupField.controlId}
-                label={group.label}
-                labelId={groupField.labelId}
-                value={draftGroup}
-                onChange={setDraftGroup}
-                onSettle={(chosen) => {
-                  if (chosen !== filter.group) apply(hrefWith(chosen));
-                }}
-                choices={choices}
-                placeholder={`All ${group.plural}`}
-                clearable
-              />
-              <input type="hidden" name={group.param} value={draftGroup} />
-            </>
-          ) : (
-            <select
-              id={groupField.controlId}
-              className="select"
-              name={group.param}
-              defaultValue={filter.group}
-            >
-              <option value="">All {group.plural}</option>
-              {groups.map((each) => (
-                <option key={each.slug} value={each.slug}>
-                  {each.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </FieldShell>
+        <FilterSelectField
+          label={group.label}
+          name={group.param}
+          all={`All ${group.plural}`}
+          options={choices}
+          defaultValue={filter.group}
+          onChange={(chosen) => apply(hrefWith(chosen))}
+          typeahead
+        />
       )}
     </FilterForm>
   );

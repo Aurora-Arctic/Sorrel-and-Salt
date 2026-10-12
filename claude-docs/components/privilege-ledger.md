@@ -26,12 +26,13 @@ id.
 ## Contracts
 
 - **One ledger, filtered, not a page per privilege.** The filter is a GET
-  form to `/admin/privilege-changes`, named "Filter Privilege Changes" inside
+  form to `/admin/privilege-changes` (`PRIVILEGE_CHANGES_PATH`, `href.ts`), named "Filter Privilege Changes" inside
   a `<search>` landmark, as the user list's is
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
   (`query`), matching part of the subject's name or email, a native Privilege
-  dropdown (`privilege`: All Privileges, Admin or Coven Creation, in title
-  case as every label is), both on the owner's call, and no Filter button (MB.115). It is `filter.tsx`, the one client file here:
+  dropdown (`privilege`: All Privileges, then `PRIVILEGE_LABELS`, Admin or
+  Coven Creation, in title case as every label is; a `FilterSelectField`,
+  [`field.md`](field.md)), both on the owner's call, and no Filter button (MB.115). It is `filter.tsx`, the one client file here:
   the search text, held in state, inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)), so from the change until the new list
   arrives the row is greyed and off and the list beneath it is the tabs'

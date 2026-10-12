@@ -1,10 +1,12 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField } from '../Field';
+import { oneOf } from '../../lib/search-params';
+import { FilterSelectField, SearchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
-import { privilegeLedgerHref } from './href';
-import type { LedgerPrivilege, PrivilegeLedgerFilterProps } from './types';
+import { PRIVILEGE_CHANGES_PATH, privilegeLedgerHref } from './href';
+import { PRIVILEGES, PRIVILEGE_LABELS } from './privileges';
+import type { PrivilegeLedgerFilter, PrivilegeLedgerFilterProps } from './types';
 
 // The ledger's filter (MB.52, MB.115), in the shared `FilterForm`, as the
 // user list's is. Only the search text, part of the subject's name or email,
@@ -17,14 +19,15 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
   const query = filter.query ?? '';
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
+  /** The filter shown with the privilege given, the search text typed carried, from the first page. */
+  const hrefWith = (privilege: PrivilegeLedgerFilter['privilege']) =>
+    privilegeLedgerHref({ query: draftQuery.trim(), privilege });
 
   return (
     <FilterForm
       label="Filter Privilege Changes"
-      action="/admin/privilege-changes"
-      searchHref={() =>
-        privilegeLedgerHref({ query: draftQuery.trim(), privilege: filter.privilege })
-      }
+      action={PRIVILEGE_CHANGES_PATH}
+      searchHref={() => hrefWith(filter.privilege)}
       shown={[filter.query, filter.privilege]}
     >
       <SearchField
@@ -34,29 +37,14 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
         value={draftQuery}
         onChange={setDraftQuery}
       />
-      <div className="field">
-        <label className="field__label" htmlFor="privilege-ledger-privilege">
-          Privilege
-        </label>
-        <select
-          id="privilege-ledger-privilege"
-          className="select"
-          name="privilege"
-          defaultValue={filter.privilege ?? ''}
-          onChange={(event) =>
-            apply(
-              privilegeLedgerHref({
-                query: draftQuery.trim(),
-                privilege: (event.target.value || undefined) as LedgerPrivilege | undefined,
-              }),
-            )
-          }
-        >
-          <option value="">All Privileges</option>
-          <option value="admin">Admin</option>
-          <option value="create_workspace">Coven Creation</option>
-        </select>
-      </div>
+      <FilterSelectField
+        label="Privilege"
+        name="privilege"
+        all="All Privileges"
+        options={PRIVILEGE_LABELS}
+        defaultValue={filter.privilege ?? ''}
+        onChange={(chosen) => apply(hrefWith(oneOf(PRIVILEGES, chosen)))}
+      />
     </FilterForm>
   );
 };

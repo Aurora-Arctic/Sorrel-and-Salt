@@ -1,11 +1,12 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SearchField, SwitchField } from '../Field';
+import { oneOf } from '../../lib/search-params';
+import { FilterSelectField, SearchField, SwitchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
-import { userListHref } from './href';
-import type { UserRole } from '../../lib/session';
-import type { UserListFilterProps } from './types';
+import { USERS_PATH, userListHref } from './href';
+import { ROLES, ROLE_LABELS } from './roles';
+import type { UserListFilterProps, UserListFilterValue } from './types';
 
 // The user list's filter (MB.52, MB.115), in the shared `FilterForm`. Only
 // the search text is held here, until the magnifier or Enter sends it. The
@@ -18,21 +19,15 @@ import type { UserListFilterProps } from './types';
 const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
   const apply = useApplyFilter();
-  const applying = (change: { awaitingApproval?: boolean; role?: UserRole | undefined }) =>
-    apply(
-      userListHref({
-        query: draftQuery.trim(),
-        awaitingApproval,
-        role,
-        ...change,
-      }),
-    );
+  /** The filter shown with one field changed, the search text typed carried, from the first page. */
+  const hrefWith = (change: Partial<UserListFilterValue>) =>
+    userListHref({ query: draftQuery.trim(), awaitingApproval, role, ...change });
 
   return (
     <FilterForm
       label="Filter Users"
-      action="/admin/users"
-      searchHref={() => userListHref({ query: draftQuery.trim(), awaitingApproval, role })}
+      action={USERS_PATH}
+      searchHref={() => hrefWith({})}
       shown={[query, role, awaitingApproval]}
     >
       <SearchField
@@ -42,28 +37,20 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
         value={draftQuery}
         onChange={setDraftQuery}
       />
-      <div className="field">
-        <label className="field__label" htmlFor="user-list-role">
-          Role
-        </label>
-        <select
-          id="user-list-role"
-          className="select"
-          name="role"
-          defaultValue={role ?? ''}
-          onChange={(event) => applying({ role: (event.target.value || undefined) as UserRole })}
-        >
-          <option value="">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="user">User</option>
-        </select>
-      </div>
+      <FilterSelectField
+        label="Role"
+        name="role"
+        all="All Roles"
+        options={ROLE_LABELS}
+        defaultValue={role ?? ''}
+        onChange={(chosen) => apply(hrefWith({ role: oneOf(ROLES, chosen) }))}
+      />
       <SwitchField
         label="Needs Approval"
         name="awaiting"
         value=""
         defaultChecked={awaitingApproval}
-        onChange={(checked) => applying({ awaitingApproval: checked })}
+        onChange={(checked) => apply(hrefWith({ awaitingApproval: checked }))}
       />
     </FilterForm>
   );

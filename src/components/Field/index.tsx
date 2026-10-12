@@ -11,6 +11,7 @@ export { TextField } from './text-field';
 export { SelectField } from './select-field';
 export { SwitchField } from './switch-field';
 export { SearchField } from './search-field';
+export { FilterSelectField } from './filter-select-field';
 export { useField } from './use-field';
 export { FormActions } from './form-actions';
 export { ReasonField } from './reason-field';

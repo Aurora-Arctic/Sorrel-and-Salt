@@ -23,13 +23,13 @@ a full page load.
 
 `FilterFormProps` (`types.ts`):
 
-| Prop         | What it is                                                                                                                                          |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`      | The form's accessible name, title case: "Filter Users"                                                                                              |
-| `action`     | The page itself: what the form submits to natively before hydration, and the unfiltered first page Clear opens                                      |
-| `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref` |
-| `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                            |
-| `children`   | The fields, a `SearchField` first, each with the `name` the page reads                                                                              |
+| Prop         | What it is                                                                                                                                            |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`      | The form's accessible name, title case: "Filter Users"                                                                                                |
+| `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens |
+| `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`   |
+| `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                              |
+| `children`   | The fields, a `SearchField` first, each with the `name` the page reads                                                                                |
 
 Beside the component, `index.tsx` exports `useApplyFilter()`, which returns
 `apply(href)`: it opens `href` softly through the list's `ListFrame` and
@@ -49,9 +49,9 @@ already above them.
   it is submitted, and typing in a type-ahead nothing until a choice settles
   (`onSettle`, [`combobox.md`](combobox.md)): a pick, the clear, or leaving
   the box, applied when the settled choice differs from the one shown. Only
-  the search text is the caller's state; a plain select is uncontrolled
-  (`defaultValue` the value shown) and a switch takes `defaultChecked`
-  ([`field.md`](field.md)), since the new list draws the filter again from
+  the search text is the caller's state; a select, `FilterSelectField`, is
+  uncontrolled (`defaultValue` the value shown) and a switch takes
+  `defaultChecked` ([`field.md`](field.md)), since the new list draws the filter again from
   what it shows.
 - **The search carries its own submit**, `SearchField`'s magnifier named
   Search ([`field.md`](field.md)). It is the form's one submit button, so
@@ -67,7 +67,8 @@ already above them.
   `awaiting=` or `withoutReferences=1`. A field that is a script's control,
   the curated lists' type-ahead group, is drawn as a native control by the
   server and swapped once hydrated, so the press before the script still
-  sends it (`GroupedValueList`, MB.115). A select or a switch changed before
+  sends it (`FilterSelectField` with `typeahead`, [`field.md`](field.md);
+  MB.115). A select or a switch changed before
   hydration applies nothing until the magnifier is pressed.
 - **Every filter navigates softly**, through the list's `ListFrame`
   ([`list-frame.md`](list-frame.md)): the address is pushed inside the
@@ -161,8 +162,8 @@ its hover and press look.
 
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),
 `Forms / Filter Form`: a name search, a group select and a No Refs switch,
-as a value list's filter has them, the select and the switch applying
-through `useApplyFilter`. `Default`, with `PhoneDark` and `PhoneLight`, a
+as a value list's filter has them, the select a `FilterSelectField`, the
+select and the switch applying through `useApplyFilter`. `Default`, with `PhoneDark` and `PhoneLight`, a
 page showing no filter, so no Clear; `Filtered`, with `FilteredPhoneDark`
 and `FilteredPhoneLight`, a page showing one, Clear at the row's end. Each
 sits in a `ListFrame`, whose navigation it needs; the workshop's router goes
