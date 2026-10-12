@@ -375,11 +375,6 @@ $tip-width: 18rem;
 // the box; its option in the list is drawn whole.
 $filter-choice-width: 14rem;
 
-// Clear, a filter row's second button, at its own width: its label and
-// `.btn`'s padding and border. Below three of it and a gap, Filter and Clear
-// stop sharing their line two to one and take half each (MB.115).
-$filter-clear-width: 5.5rem;
-
 // The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
 // during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
 // `Modal/index.scss`.

@@ -112,9 +112,7 @@ its own width the query takes the whole line and the selects and switches
 wrap beneath it, the owner's call at MB.115's review over a filter folded
 behind a disclosure. Filter and Clear are one block, `.filter-row__actions`,
 so they wrap together. **Alone on their line, at any width, they span the
-fields above them**, Filter two thirds and Clear one; once a third is too
-narrow for Clear's label (`$filter-clear-width`, 5.5rem, three times over and
-the gap) they take half each (the owner's calls). Sharing a line with a
+fields above them**, half each (the owner's calls). Sharing a line with a
 field, they keep their own width. CSS cannot ask whether a flex item
 wrapped, so `useActionsLine` (`actions-line.ts`) measures it on each render
 and as the row resizes: `data-alone` on the block and
@@ -181,4 +179,4 @@ and that its fields empty in place, and `UserList` its full load: the
 status and the row off from the press, a field press changing nothing, and
 the list back on a `pageshow` from the cache.
 
-Where Filter and Clear stand is presentation, the workshop's (rule 4): `FilteredWrappedDark` and `FilteredWrappedLight`, at 600px, show them alone on their line spanning both fields, and the phone stories them across a narrow row.
+Where Filter and Clear stand is presentation, the workshop's (rule 4): `FilteredWrappedDark` and `FilteredWrappedLight`, at 600px, show them alone on their line spanning both fields, half each, and the phone stories them across a narrow row.
