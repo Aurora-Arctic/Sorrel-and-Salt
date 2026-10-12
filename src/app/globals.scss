@@ -13,7 +13,7 @@
   @include theme-dark;
 }
 
-@media (prefers-color-scheme: light) {
+@include color-scheme-light {
   html:not([data-theme='dark']) {
     @include theme-light;
   }
@@ -30,6 +30,10 @@ body {
   margin: 0;
   background-color: $surface-page;
   color: $text-primary;
+  // No platform tap highlight: iOS and Android Chrome lay a blue box over
+  // whatever is tapped, unthemed. Inherited, so this covers every link and
+  // button; their own :active and focus styles are the feedback instead.
+  -webkit-tap-highlight-color: transparent;
   @include theme-transition(background-color, color);
 }
 

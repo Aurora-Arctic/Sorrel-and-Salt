@@ -9,7 +9,7 @@ import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Sign in — Sorrel & Salt',
+  title: 'Sign In — Sorrel & Salt',
 };
 
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is
@@ -21,7 +21,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const configured = configuredProviders();
 
   return (
-    <main className="sign-in-page">
+    <main className="page-frame page-frame--narrow">
       <SignInPanel next={next} error={error} configured={configured} />
     </main>
   );

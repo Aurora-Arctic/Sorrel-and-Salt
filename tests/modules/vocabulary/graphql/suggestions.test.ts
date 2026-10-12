@@ -1,19 +1,18 @@
-import { graphql, type ExecutionResult } from 'graphql';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { A, B, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { AstrologySuggestionConnection } from './types';
 
 // The transport half of MB.94: two connection fields over one type, a page
-// each, refused by the schema before the service is reached when signed
-// out and by the service when signed in elsewhere (DESIGN.md §7).
+// each, and the compendium-only mode. Who is
+// refused, what each bucket holds and the thresholds are
+// services/suggestions.test.ts's, and a signed-out caller at every field is
+// tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -42,20 +41,18 @@ const PAGE = `{
   pageInfo { hasNextPage endCursor }
 }`;
 
-function run(
+const run = (
   session: Session | null,
   field: 'planetSuggestions' | 'zodiacSuggestions',
   variables: Record<string, unknown>,
-): Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>> {
-  return graphql({
-    schema,
-    source: `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
+) =>
+  runOperation<Record<string, AstrologySuggestionConnection>>(
+    session,
+    `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
       ${field}(workspaceId: $workspaceId, query: $query, first: $first, after: $after) ${PAGE}
     }`,
-    variableValues: { workspaceId: WORKSPACE_W_ID, ...variables },
-    contextValue: { session, loaders: createLoaders(session) },
-  }) as Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>>;
-}
+    { workspaceId: WORKSPACE_W_ID, ...variables },
+  );
 
 describe('planetSuggestions', () => {
   it('answers a member with a page of both buckets', async () => {
@@ -64,16 +61,6 @@ describe('planetSuggestions', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.planetSuggestions.edges.map((edge) => edge.node)).toEqual([
       { value: 'Sedna', description: null, curated: false },
-    ]);
-  });
-
-  it('lists the whole vocabulary, alphabetically, when no query is given', async () => {
-    const result = await run(asUser(B), 'planetSuggestions', { first: 2 });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.planetSuggestions.edges.map((edge) => edge.node.value)).toEqual([
-      'Ceres',
-      'Chiron',
     ]);
   });
 
@@ -95,24 +82,6 @@ describe('planetSuggestions', () => {
     expect(rest.edges.map((edge) => edge.node.value)).not.toContain('Moon');
     expect(rest.edges[0]?.node).toMatchObject({ value: 'Lilith', curated: true });
     expect(rest.pageInfo.hasNextPage).toBe(false);
-  });
-
-  it('is refused signed out, before the service is reached', async () => {
-    const result = await run(null, 'planetSuggestions', { query: 'sedna' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.path).toEqual(['planetSuggestions']);
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
-  });
-
-  it('is refused for a workspace the caller is not a member of', async () => {
-    // Why it could have succeeded: D is signed in and a member elsewhere.
-    expect(asUser(D).userId).toBe(D.id);
-
-    const result = await run(asUser(D), 'planetSuggestions', { query: 'sedna' });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
   });
 });
 
@@ -153,14 +122,13 @@ describe.each([
   });
 
   const runInCompendium = (session: Session | null, variables: Record<string, unknown>) =>
-    graphql({
-      schema,
-      source: `query ($workspaceId: ID, $query: String) {
+    runOperation<Record<string, AstrologySuggestionConnection>>(
+      session,
+      `query ($workspaceId: ID, $query: String) {
         ${field}(workspaceId: $workspaceId, query: $query, first: 100) ${PAGE}
       }`,
-      variableValues: { workspaceId: null, ...variables },
-      contextValue: { session, loaders: createLoaders(session) },
-    }) as Promise<ExecutionResult<Record<string, AstrologySuggestionConnection>>>;
+      { workspaceId: null, ...variables },
+    );
 
   it("offers the compendium's value and not the coven's", async () => {
     // Why its absence is the scope's: under W, the coven's value is offered beside it.
@@ -176,20 +144,5 @@ describe.each([
     expect(result.data?.[field].edges.map((edge) => edge.node)).toEqual([
       { value: compendiums, description: null, curated: false },
     ]);
-  });
-
-  it('offers the curated rows', async () => {
-    const result = await runInCompendium(asUser(E), {});
-
-    expect(result.errors).toBeUndefined();
-    const nodes = result.data?.[field].edges.map((edge) => edge.node) ?? [];
-    expect(nodes.filter((node) => node.curated).length).toBeGreaterThan(10);
-  });
-
-  it('is refused signed out', async () => {
-    const result = await runInCompendium(null, { query });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.originalError).toBeInstanceOf(Forbidden);
   });
 });

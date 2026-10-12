@@ -1,0 +1,14 @@
+@use '../../scss/variables' as *;
+
+// The privilege ledger's own rules: the time on one line, and the note held
+// to the reading measure. The column, filter, table and pager are primitives
+// (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`).
+
+.privilege-ledger .data-table time {
+  white-space: nowrap;
+}
+
+// A note is running text in a narrow column, held to the reading measure.
+.privilege-ledger__note {
+  max-width: $measure;
+}

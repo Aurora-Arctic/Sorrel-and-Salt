@@ -1,24 +1,26 @@
 import type { Route } from 'next';
-import type { CompendiumDialog, CompendiumPlace } from './types';
+import { dialogParams, listHref } from '../../lib/list-href';
+import type { ListDialog } from '../../lib/types';
+import type { CompendiumPlace } from './types';
 
 // The address of `/admin/compendium` under a filter, at a page, with a modal
 // open over it or not: the list's links, the pager, the filter's submit and
-// the modal's way back all build it, as `categoriesHref` does for the
-// categories. A blank filter is written as none, and Without References as
-// `withoutReferences=1`, the value its checkbox submits natively. `new` is a
-// bare flag, read by its presence.
+// the modal's way back all build it. A typed wrapper on `listHref`, which
+// writes a blank filter as none and `new` as a bare flag; the form is its
+// text, `form=Oil`, and No Refs is `withoutReferences=1`, the
+// value its checkbox submits natively.
 
-const PATH = '/admin/compendium';
+/** The page itself, unfiltered: where the filter submits, and what Clear opens. */
+export const COMPENDIUM_PATH: Route = '/admin/compendium';
 
-export function compendiumHref(place: CompendiumPlace, dialog?: CompendiumDialog): Route {
-  const pair = (name: string, value: string) => new URLSearchParams({ [name]: value }).toString();
-  const parts = [
-    ...(place.query ? [pair('query', place.query)] : []),
-    ...(place.nomenclature ? [pair('nomenclature', place.nomenclature)] : []),
-    ...(place.withoutReferences ? ['withoutReferences=1'] : []),
-    ...(place.after ? [pair('after', place.after)] : []),
-    ...(place.before ? [pair('before', place.before)] : []),
-    ...(dialog === 'new' ? ['new'] : dialog ? [pair('edit', dialog.edit)] : []),
-  ];
-  return (parts.length ? `${PATH}?${parts.join('&')}` : PATH) as Route;
+export function compendiumHref(place: CompendiumPlace, dialog?: ListDialog): Route {
+  return listHref(COMPENDIUM_PATH, {
+    query: place.query,
+    form: place.form,
+    nomenclature: place.nomenclature,
+    withoutReferences: place.withoutReferences ? '1' : undefined,
+    after: place.after,
+    before: place.before,
+    ...dialogParams(dialog),
+  });
 }

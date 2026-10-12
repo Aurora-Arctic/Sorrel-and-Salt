@@ -56,9 +56,13 @@ In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#provisional-accounts-mb67
 
 In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-email-page-mb54).
 
-### Granting a second admin — decided, not built (M2.9)
+### The account page (MB.88)
 
-In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin--decided-not-built-m29).
+In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#the-account-page-mb88).
+
+### Granting a second admin (M2.9, MB.59)
+
+In [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md#granting-a-second-admin-m29-mb59).
 
 ### The self-created user
 
@@ -79,6 +83,22 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 ## The user list (MB.52)
 
 `/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)
+
+### Approving workspace creation (M5.8)
+
+In [`auth/admin-users.md`](auth/admin-users.md#approving-workspace-creation-m58).
+
+### Granting and revoking admin (MB.59)
+
+An admin grants or revokes admin from a user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; a grant sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be revoked, a count under a `for update` lock refuses leaving no admin, and a revoke takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#granting-and-revoking-admin-mb59).
+
+### Pausing admin changes (MB.63)
+
+The primary admin alone can pause and resume admin grants and revokes for every other admin, each pause a row of MB.62's ledger stamped from the session; while paused `setUserRole`, and coven creation's approve and revoke, refuse every admin but the primary one, which stays exempt. In [`auth/admin-users.md`](auth/admin-users.md#pausing-admin-changes-mb63).
+
+### Inviting an admin (MB.70)
+
+An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
 
 ## Plugins (MB.74)
 

@@ -6,21 +6,23 @@ import type { NavigatingProps } from './types';
 // transition, suspended until a server render that never arrives. An
 // already-shown boundary keeps the transition pending rather than showing a
 // fallback, so the caller's `isPending` stays true, as it does in a browser
-// until the next page renders.
+// until the next page renders. A test that needs the page to arrive passes
+// `arrives` and settles it.
 
 const never = new Promise<never>(() => undefined);
 
-function Hang(): ReactNode {
-  return use(never);
+function Hang({ until }: { until: Promise<void> }): ReactNode {
+  use(until);
+  return null;
 }
 
-export function Navigating({ push, children }: NavigatingProps): ReactNode {
+export function Navigating({ push, children, arrives = never }: NavigatingProps): ReactNode {
   const [going, setGoing] = useState(false);
   push.mockImplementation(() => setGoing(true));
   return (
     <>
       {children}
-      <Suspense fallback={null}>{going && <Hang />}</Suspense>
+      <Suspense fallback={null}>{going && <Hang until={arrives} />}</Suspense>
     </>
   );
 }

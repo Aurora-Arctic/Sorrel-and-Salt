@@ -4,29 +4,35 @@ import { cache } from 'react';
 import { assertSiteAdmin } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
-import type { Session, UserRole, SessionState } from './session';
+import type { Session, SessionState } from './session';
 import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
-import { SOCIAL_PROVIDERS } from './social-providers';
-import type { LinkedAccount, ProviderId } from './types';
+import { isRosterProvider } from './social-providers';
+import { toUserRole } from './session-role';
+import type { LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
 // never calls it — the import is banned there (claude-docs/auth/route-protection.md, "Route
 // protection").
 
-const USER_ROLES: readonly UserRole[] = ['user', 'admin'];
-
-function toUserRole(role: unknown): UserRole {
-  if (USER_ROLES.includes(role as UserRole)) return role as UserRole;
-  // Better Auth types the additional field as a plain string. Reading an
-  // unknown value as 'user' would hide whatever wrote it.
-  throw new Error(`Unrecognised user role: ${String(role)}`);
+/**
+ * Whether Better Auth would still call a session created at `createdAt`
+ * fresh: the check its `/unlink-account` makes, restated so the account page
+ * can withhold Remove rather than offer a press that is refused. The window
+ * is Better Auth's own resolved `freshAge` (a day by default, pinned in
+ * tests/lib/auth.test.ts), not a copy of its default; 0 turns the check off,
+ * as it does there.
+ */
+async function isFresh(createdAt: Date | string): Promise<boolean> {
+  const { freshAge } = (await auth.$context).sessionConfig;
+  if (freshAge === 0) return true;
+  return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
 }
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
   const result = await auth.api.getSession({ headers: requestHeaders });
-  if (!result) return { session: null, emailVerified: false };
+  if (!result) return { session: null, emailVerified: false, sessionFresh: false };
   // Present only while the `admin` plugin is registered and this session is
   // an impersonation (MB.53); the type holds the plugin in either way.
   const { impersonatedBy } = result.session as { impersonatedBy?: string | null };
@@ -37,6 +43,7 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,
+    sessionFresh: await isFresh(result.session.createdAt),
   };
 }
 
@@ -56,6 +63,15 @@ const getSessionState = cache(async (): Promise<SessionState> => stateFromHeader
 /** The signed-in user, or `null`. */
 export async function getSession(): Promise<Session | null> {
   return (await getSessionState()).session;
+}
+
+/**
+ * Whether this request's session is recent enough for Better Auth to remove a
+ * sign-in method; `false` with no session. For the account page, after
+ * `requireSession()`, from the same per-request lookup.
+ */
+export async function sessionIsFresh(): Promise<boolean> {
+  return (await getSessionState()).sessionFresh;
 }
 
 /**
@@ -92,10 +108,6 @@ export async function requireAdminSession(): Promise<Session> {
     throw error;
   }
   return session;
-}
-
-function isRosterProvider(providerId: string): providerId is ProviderId {
-  return SOCIAL_PROVIDERS.some((provider) => provider.id === providerId);
 }
 
 /**

@@ -1,20 +1,12 @@
-import { sql } from 'drizzle-orm';
-import {
-  pgEnum,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from '../../identity/schema/users';
 import { auditColumns } from '../../identity/schema/users';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
 // own permission statements (../services/access-control.ts), so the order here
-// is documentation. `owner` is not invitable — workspace_invitations carries
-// the CHECK.
+// is documentation. `owner` is not invitable — `invitations` carries the
+// CHECK (MB.201).
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // No `kind` column and no automatic workspace: every workspace takes members
@@ -22,18 +14,14 @@ export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owne
 export const workspaces = pgTable(
   'workspaces',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
     ...auditColumns,
   },
   (table) => [
     // Partial per CLAUDE.md rule 4: the slug is what /coven/[slug] routes on.
-    uniqueIndex('workspaces_slug_unique')
-      .on(table.slug)
-      .where(sql`${table.deletedAt} is null`),
+    liveUnique('workspaces_slug_unique', table, table.slug),
   ],
 );
 

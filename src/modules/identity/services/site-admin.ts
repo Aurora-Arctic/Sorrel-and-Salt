@@ -1,6 +1,7 @@
 import 'server-only';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { isSiteAdmin } from './admin-changes';
 
 // CLAUDE.md rule 5's two layers, on the site role rather than a workspace
 // role: `assertSiteAdmin` is the check, and the `SiteAdmin` it returns is the
@@ -32,6 +33,6 @@ export function assertSiteAdmin(
   session: Session,
   reason = 'Only a site admin may do this',
 ): SiteAdmin {
-  if (session.role !== 'admin') throw new Forbidden(reason);
+  if (!isSiteAdmin(session)) throw new Forbidden(reason);
   return { userId: session.userId } as SiteAdmin;
 }

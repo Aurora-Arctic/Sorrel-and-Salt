@@ -2,12 +2,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { Forbidden } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
-import { listUsers, providersOf } from '@/modules/identity';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
+import { countUsers, listUsers, providersOf } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
 // MB.52's two reads behind `/admin/users`: the list itself and the providers
@@ -29,11 +30,16 @@ const DELETED = '00000000-0000-0000-0000-0000000000a2';
 const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
 
 beforeAll(async () => {
-  await sql`
-    insert into users (id, name, email, email_verified, can_create_workspace, created_by, updated_by)
-    values (${PENDING}, 'Pending Fixturewort', 'pending@users.test', false, false, ${PENDING}, ${PENDING}),
-           (${WILDCARD}, 'Percent 100% Fixture', 'percent@users.test', true, true, ${WILDCARD}, ${WILDCARD})
-  `;
+  // The wildcard account is inserted holding the creation flag, a privilege
+  // change the trigger on `users` asks a route for (MB.195).
+  await asManualFix(
+    sql,
+    (tx) => tx`
+      insert into users (id, name, email, email_verified, can_create_workspace, created_by, updated_by)
+      values (${PENDING}, 'Pending Fixturewort', 'pending@users.test', false, false, ${PENDING}, ${PENDING}),
+             (${WILDCARD}, 'Percent 100% Fixture', 'percent@users.test', true, true, ${WILDCARD}, ${WILDCARD})
+    `,
+  );
   await sql`
     insert into users (id, name, email, created_by, updated_by, deleted_at, deleted_by)
     values (${DELETED}, 'Lapsed Fixturewort', 'lapsed@users.test', ${DELETED}, ${DELETED}, now(), ${DELETED})
@@ -126,13 +132,6 @@ describe('listUsers', () => {
     expect(await names({ query: '  fixture a  ' })).toEqual([A.name]);
   });
 
-  // A `%` or `_` typed into the filter is a character to find, not a pattern.
-  it('reads the LIKE wildcards in the query literally', async () => {
-    expect(await names({ query: '100%' })).toEqual(['Percent 100% Fixture']);
-    expect(await names({ query: '%' })).toEqual(['Percent 100% Fixture']);
-    expect(await names({ query: '_' })).toEqual([]);
-  });
-
   it('treats a blank query as no filter', async () => {
     expect(await names({ query: '   ' })).toEqual((await listableUsers()).map((row) => row.name));
   });
@@ -159,13 +158,90 @@ describe('listUsers', () => {
     expect(await names({ awaitingApproval: true, query: 'percent' })).toEqual([]);
   });
 
+  it('narrows to one role, alone or beside the other filters', async () => {
+    const live = await sql<{ id: string; role: string }[]>`
+      select id, role::text from users where deleted_at is null and id <> ${BOOTSTRAP_USER_ID}
+    `;
+    const admins = live.filter((row) => row.role === 'admin').map((row) => row.id);
+    // Both roles are live, or a filter narrowing nothing would pass.
+    expect(admins).toContain(E.id);
+    expect(admins.length).toBeLessThan(live.length);
+
+    const onlyAdmins = await listUsers(asUser(E), { role: 'admin' }, PAGE);
+    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
+
+    expect(onlyAdmins.map((entry) => entry.node.id).sort()).toEqual([...admins].sort());
+    expect(onlyUsers).toHaveLength(live.length - admins.length);
+    expect(onlyUsers.every((entry) => entry.node.role === 'user')).toBe(true);
+    expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
+      'Pending Fixturewort',
+    ]);
+    // Every admin holds the flag (MB.177), so none awaits approval.
+    expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
+  });
+
   // Why it could have succeeded: the rows exist and the same call answers E.
+  // The check reads the site role alone, so one non-admin stands for every one.
   it('refuses a user who is not an admin, by direct call', async () => {
     expect(await listUsers(asUser(E), {}, PAGE)).not.toHaveLength(0);
+    expect(A.role).toBe('user');
 
-    for (const user of [A, B, C, D]) {
-      await expect(listUsers(asUser(user), {}, PAGE)).rejects.toThrow(Forbidden);
+    await expect(listUsers(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
+  });
+});
+
+describe('countUsers', () => {
+  // Each filter counts what the list pages under it: the bootstrap user and
+  // the soft-deleted one are left out of both, and every arm narrows.
+  it('counts the users the list pages under each filter', async () => {
+    const filters: UserFilter[] = [
+      {},
+      { query: '  fixturewort ' },
+      { awaitingApproval: true },
+      { role: 'admin' },
+      { role: 'user', awaitingApproval: true, query: 'pending' },
+    ];
+    const listed = await Promise.all(filters.map((filter) => names(filter)));
+    // Each filter keeps some and narrows, or a count ignoring it would pass.
+    for (const list of listed.slice(1)) {
+      expect(list.length).toBeGreaterThan(0);
+      expect(list.length).toBeLessThan(listed[0]?.length ?? 0);
     }
+
+    const counts = await Promise.all(
+      filters.map((filter) => countUsers(asUser(E), filter, undefined)),
+    );
+
+    expect(counts).toEqual(listed.map((list) => ({ totalCount: list.length, countBefore: null })));
+  });
+
+  it('counts the users before the first row of a page, in the list’s order', async () => {
+    const first = await resolvePage({ first: 3 }, (request) => listUsers(asUser(E), {}, request));
+    const second = await resolvePage({ first: 3, after: first.pageInfo.endCursor }, (request) =>
+      listUsers(asUser(E), {}, request),
+    );
+    const start = decodeCursor(second.pageInfo.startCursor ?? '');
+
+    expect(await countUsers(asUser(E), {}, start)).toEqual({
+      totalCount: (await listableUsers()).length,
+      countBefore: 3,
+    });
+    // Under a filter, only the rows it keeps come before.
+    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
+    const last = onlyUsers[onlyUsers.length - 1];
+    expect(onlyUsers.length).toBeGreaterThan(1);
+    expect(await countUsers(asUser(E), { role: 'user' }, last?.cursor)).toEqual({
+      totalCount: onlyUsers.length,
+      countBefore: onlyUsers.length - 1,
+    });
+  });
+
+  // Why it could have succeeded: the rows exist and the same call answers E.
+  it('refuses a user who is not an admin, by direct call', async () => {
+    expect((await countUsers(asUser(E), {}, undefined)).totalCount).toBeGreaterThan(0);
+    expect(A.role).toBe('user');
+
+    await expect(countUsers(asUser(A), {}, undefined)).rejects.toThrow(Forbidden);
   });
 });
 

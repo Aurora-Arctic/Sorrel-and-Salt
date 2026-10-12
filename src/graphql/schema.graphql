@@ -50,16 +50,17 @@ input CompendiumIngredientInput {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]
-  form: String
-
-  """The curated form picked for `form`."""
-  formId: ID
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
+  """
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]
 }
 
@@ -76,16 +77,17 @@ input CompendiumIngredientUpdateInput {
   description: String!
   elements: [IngredientElement!]!
   folkNames: [String!]!
-  form: String!
-
-  """The curated form picked for `form`; "" when there is none."""
-  formId: ID!
   name: String!
   nomenclature: Nomenclature!
   planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
+  """
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]!
 }
 
@@ -108,6 +110,12 @@ type Deity {
   tradition: DeityTradition!
 }
 
+input DeityInput {
+  description: String!
+  name: String!
+  traditionId: ID!
+}
+
 type DeitySuggestion {
   curated: Boolean!
   description: String
@@ -123,6 +131,11 @@ type DeityTradition {
   id: ID!
   name: String!
   slug: String!
+}
+
+input DeityTraditionInput {
+  description: String!
+  name: String!
 }
 
 type FormSuggestion {
@@ -149,12 +162,6 @@ type Ingredient {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]!
-  form: String
-
-  """
-  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
-  """
-  formChoice: IngredientFormValue
   id: ID!
   isGlobal: Boolean!
   name: String!
@@ -164,6 +171,7 @@ type Ingredient {
   safetyNotes: String
   slug: String!
   substitutes: [Substitute!]!
+  variants: [IngredientVariant!]!
   zodiacSigns: [String!]
 }
 
@@ -218,7 +226,6 @@ type IngredientFormValue {
 
 input IngredientFormValueInput {
   description: String!
-  endRedirect: Boolean
   groupId: ID!
   name: String!
 }
@@ -233,16 +240,17 @@ input IngredientInput {
   description: String
   elements: [IngredientElement!]
   folkNames: [String!]
-  form: String
-
-  """The curated form picked for `form`; none when it was typed."""
-  formId: ID
   name: String!
   nomenclature: Nomenclature
   planets: [String!]
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
+  """
+  variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]
 }
 
@@ -259,12 +267,61 @@ input IngredientUpdateInput {
   description: String!
   elements: [IngredientElement!]!
   folkNames: [String!]!
+  name: String!
+  nomenclature: Nomenclature!
+  planets: [String!]!
+  references: [ReferenceLinkInput!]!
+  safetyNotes: String!
+  substitutes: [SubstituteInput!]!
+
+  """
+  Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
+  """
+  variants: [IngredientVariantInput!]!
+  zodiacSigns: [String!]!
+}
+
+"""
+One form an ingredient comes in, and what that form adds to the ingredient: its lists add to the ingredient's, and nothing overrides it.
+"""
+type IngredientVariant {
+  audit: AuditInfo!
+  categories: [Category!]!
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+  form: String!
+
+  """
+  The curated form picked for `form`: null when the form was typed, and once that form or its group is retired.
+  """
+  formChoice: IngredientFormValue
+  id: ID!
+  planets: [String!]
+  references: [ReferenceLink!]!
+  safetyNotes: String
+  substitutes: [Substitute!]!
+  zodiacSigns: [String!]
+}
+
+"""
+One form of the ingredient, replacing the form it names. Every field but id is sent, and "" or [] clears one.
+"""
+input IngredientVariantInput {
+  """The categories this form is filed under."""
+  categoryIds: [ID!]!
+  colors: [String!]!
+  description: String!
+  elements: [IngredientElement!]!
   form: String!
 
   """The curated form picked for `form`; "" when it was typed."""
   formId: ID!
-  name: String!
-  nomenclature: Nomenclature!
+
+  """
+  The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added.
+  """
+  id: ID
   planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
@@ -273,11 +330,35 @@ input IngredientUpdateInput {
 }
 
 """
+An invitation, pending or not. Its link is mailed to the address and never answered.
+"""
+type Invitation {
+  acceptedAt: DateTime
+  audit: AuditInfo!
+  email: String!
+  expiresAt: DateTime!
+  id: ID!
+
+  """Why the person is invited, where the inviter gave a reason."""
+  note: String
+  revokedAt: DateTime
+}
+
+"""
 A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
 """
 scalar LocalDate
 
 type Mutation {
+  """
+  Accepts the invitation a link's token names, as the signed-in account, which must hold the invited address, verified; answers it accepted.
+  """
+  acceptInvitation(token: String!): Invitation!
+
+  """
+  Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
+  """
+  createAdminInvitation(email: String!, note: String): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCompendiumIngredient(
@@ -287,6 +368,8 @@ type Mutation {
     endRedirect: Boolean
     input: CompendiumIngredientInput!
   ): Ingredient!
+  createDeity(input: DeityInput!): Deity!
+  createDeityTradition(input: DeityTraditionInput!): DeityTradition!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
   createPlanet(input: PlanetInput!): Planet!
@@ -308,6 +391,16 @@ type Mutation {
 
   """A soft delete; a spell holding the entry still reaches it."""
   deleteCompendiumIngredient(id: ID!): ID!
+
+  """
+  A soft delete, refused while a live compendium entry picked the deity; a coven keeps its pick.
+  """
+  deleteDeity(id: ID!): ID!
+
+  """
+  A soft delete; the live deities under it move to `moveTo` first, re-slugged there, which they need when there are any.
+  """
+  deleteDeityTradition(id: ID!, moveTo: ID): ID!
   deleteIngredient(id: ID!, workspaceId: ID!): ID!
 
   """
@@ -329,7 +422,36 @@ type Mutation {
   A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
   """
   deleteZodiacSign(id: ID!): ID!
+
+  """Lets a user with no invitation create a coven. Refused once they may."""
+  grantWorkspaceCreation(note: String, userId: ID!): User!
+
+  """
+  Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
+  """
+  pauseAdminRoleChanges: Boolean!
+
+  """
+  Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
+  """
+  resumeAdminRoleChanges: Boolean!
+
+  """
+  Withdraws a pending admin invitation, so its link says so. Refused while admin changes are paused, but to the primary admin.
+  """
+  revokeAdminInvitation(id: ID!): Invitation!
+
+  """
+  Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
+  """
+  revokeWorkspaceCreation(note: String, userId: ID!): User!
   setEmail(email: String!, next: String): User!
+  setName(name: String!): User!
+
+  """
+  Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.
+  """
+  setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -348,6 +470,16 @@ type Mutation {
     id: ID!
     input: CompendiumIngredientUpdateInput!
   ): Ingredient!
+
+  """
+  Replaces the deity; the slug follows the name and the tradition. A rename is carried onto every live compendium entry that picked the deity.
+  """
+  updateDeity(id: ID!, input: DeityInput!): Deity!
+
+  """
+  Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
+  """
+  updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
   updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
 
   """
@@ -356,7 +488,7 @@ type Mutation {
   updateIngredientFormGroup(id: ID!, input: IngredientFormGroupInput!): IngredientFormGroup!
 
   """
-  Replaces the form; the slug follows the name and the group. A rename is carried onto every live compendium entry that picked the form.
+  Replaces the form; the slug follows the name and the group. A rename is carried onto every form of a live compendium entry that picked it, moving no entry address.
   """
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
 
@@ -403,6 +535,37 @@ input PlanetInput {
   name: String!
 }
 
+type PrivilegeChange {
+  """Who made the change; null if no live account holds the id."""
+  actor: User
+  audit: AuditInfo!
+  change: PrivilegeChangeKind!
+  id: ID!
+
+  """Why, where the one who made the change gave a reason."""
+  note: String
+  privilege: UserPrivilege!
+
+  """Whose privilege changed; null if no live account holds the id."""
+  subject: User
+  via: PrivilegeRoute!
+}
+
+enum PrivilegeChangeKind {
+  grant
+  revoke
+}
+
+"""
+How a change came about: the primary admin's bootstrap, an admin's act, an invitation accepted, or a declared manual fix.
+"""
+enum PrivilegeRoute {
+  admin
+  bootstrap
+  invitation
+  manual
+}
+
 type Query {
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
@@ -410,7 +573,17 @@ type Query {
   categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
+
+  """
+  The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
+  """
+  deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
   deitySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryDeitySuggestionsConnection!
+
+  """
+  The live traditions by name: the tradition a deity is filed under is picked from these.
+  """
+  deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
@@ -433,8 +606,28 @@ type Query {
   """
   planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
+
+  """
+  Every change to who is an admin and who may create a coven, newest first.
+  """
+  privilegeChanges(
+    after: String
+    before: String
+    first: Int
+    last: Int
+    privilege: UserPrivilege
+
+    """Part of the subject's name or email, case-insensitively."""
+    query: String
+    userId: ID
+  ): QueryPrivilegeChangesConnection!
+
+  """
+  A null workspaceId reads the compendium's alone; a coven's reads its own or the compendium's, never another coven's.
+  """
+  reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String): QueryUsersConnection!
+  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
   The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.
@@ -487,9 +680,26 @@ type QueryCompendiumConnectionEdge {
   node: Ingredient!
 
   """
-  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name and folk names. Null without a query.
+  The search's rank, 0 to 1: the query's word similarity to each matched field — label, formal name, folk name, variant form or description — times that field's weight, the best kept. Null without a query.
   """
   score: Float
+}
+
+type QueryDeitiesConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryDeitiesConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryDeitiesConnectionEdge {
+  cursor: String!
+  node: Deity!
 }
 
 type QueryDeitySuggestionsConnection {
@@ -500,6 +710,16 @@ type QueryDeitySuggestionsConnection {
 type QueryDeitySuggestionsConnectionEdge {
   cursor: String!
   node: DeitySuggestion!
+}
+
+type QueryDeityTraditionsConnection {
+  edges: [QueryDeityTraditionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryDeityTraditionsConnectionEdge {
+  cursor: String!
+  node: DeityTradition!
 }
 
 type QueryFormSuggestionsConnection {
@@ -589,6 +809,16 @@ type QueryPossibleDuplicatesConnectionEdge {
   The name's trigram similarity to the entry, 0.4 to 1 — its best across the label, formal name and folk names. 1 is an exact match.
   """
   score: Float!
+}
+
+type QueryPrivilegeChangesConnection {
+  edges: [QueryPrivilegeChangesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryPrivilegeChangesConnectionEdge {
+  cursor: String!
+  node: PrivilegeChange!
 }
 
 type QueryReferenceSuggestionsConnection {
@@ -729,6 +959,11 @@ type Substitute {
   The linked ingredient's label, its last once deleted; the typed name otherwise.
   """
   name: String!
+
+  """
+  The linked ingredient's form the link names: null when it names none, on a typed name, and once that ingredient or form is deleted.
+  """
+  variant: IngredientVariant
 }
 
 """
@@ -737,6 +972,11 @@ An ingredient to link, or the name of one not entered: exactly one of the two.
 input SubstituteInput {
   ingredientId: ID
   name: String
+
+  """
+  One of the linked ingredient's forms, when the substitute is that form alone.
+  """
+  substituteVariantId: ID
 }
 
 type SuggestionClaimant {
@@ -757,6 +997,14 @@ type User {
   """The sign-in providers linked to the account, by id, sorted."""
   providers: [String!]!
   role: UserRole!
+}
+
+"""
+A privilege on `users`: `admin` is the site role, `create_workspace` the flag.
+"""
+enum UserPrivilege {
+  admin
+  create_workspace
 }
 
 enum UserRole {

@@ -1,60 +1,33 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { tableFacts } from '../../../support/db/table-metadata';
 import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { IngredientOverrides, Inserted } from './types';
 
-// §5's three partial unique indexes. Identity is `canonical_key`, so the
-// compendium is unique on identity and label uniqueness survives only inside
-// a workspace — claude-docs/db/identity-model.md, "The ingredient identity model".
-const COMPENDIUM_IDENTITY = 'ingredients_compendium_identity_unique';
-const WORKSPACE_IDENTITY = 'ingredients_workspace_identity_unique';
+// §5's five declared unique indexes, by what each refuses; that each is
+// partial on deleted_at, and frees its slot on a soft delete, is
+// tests/db/partial-unique-indexes.test.ts's. Identity is `identity_key`, the
+// formal name alone, once per tier whatever the form, which is a variant's
+// (MB.215, MB.220), so the compendium is unique on identity and label
+// uniqueness survives only inside a workspace —
+// claude-docs/db/identity-model.md, "The ingredient identity model".
 const WORKSPACE_LABEL = 'ingredients_workspace_label_unique';
+const COMPENDIUM_IDENTITY_KEY = 'ingredients_compendium_identity_key_unique';
+const WORKSPACE_IDENTITY_KEY = 'ingredients_workspace_identity_key_unique';
 // MB.80's two: the public address unique per tier —
 // claude-docs/db/ingredient-slugs.md, "Ingredient slugs".
 const COMPENDIUM_SLUG = 'ingredients_compendium_slug_unique';
 const WORKSPACE_SLUG = 'ingredients_workspace_slug_unique';
-const DECLARED = [
-  COMPENDIUM_IDENTITY,
-  WORKSPACE_IDENTITY,
-  WORKSPACE_LABEL,
-  COMPENDIUM_SLUG,
-  WORKSPACE_SLUG,
-];
-// §9's, neither unique nor partial; ingredients-trigram.test.ts owns it, and
-// ingredients-unaccent.test.ts its folded twin.
-const TRIGRAM = 'ingredients_trgm';
-const UNACCENT_TRIGRAM = 'ingredients_unaccent_trgm';
-// M5.6a's reverse index on the pick, for the form delete's and rename's reads
-// of the live compendium entries picking a form (MB.167).
-const COMPENDIUM_FORM_PICKS = 'ingredients_compendium_form_id_idx';
-
-describe('ingredients index declarations', () => {
-  const { byIndexName: byName } = tableFacts(ingredients);
-
-  // "Exactly", not "at least": a sixth unique index is what this list exists to catch.
-  it('declares exactly §5’s five unique indexes, the two trigram ones and the pick index', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [...DECLARED, TRIGRAM, UNACCENT_TRIGRAM, COMPENDIUM_FORM_PICKS].sort(),
-    );
-  });
-
-  it('makes all five unique and all five partial', () => {
-    for (const name of DECLARED) {
-      expect(byName[name].config.unique).toBe(true);
-      expect(byName[name].config.where).toBeDefined();
-    }
-  });
-});
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const WORKSPACE_A = WORKSPACE_W_ID;
 const WORKSPACE_B = WORKSPACE_X_ID;
 
-// The shared factory plus this file's author; the audit stamps are never the fixture's.
+/**
+ * The shared factory plus this file's author; the audit stamps are never the
+ * fixture's.
+ */
 function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
   return {
     ...ingredientColumns(makeIngredient(overrides)),
@@ -64,19 +37,13 @@ function row(overrides: IngredientOverrides = {}): Record<string, unknown> {
 }
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function insert(overrides: IngredientOverrides = {}): Promise<Inserted> {
   const [inserted] = await sql`
-    insert into ingredients ${sql(row(overrides))} returning id, canonical_key
+    insert into ingredients ${sql(row(overrides))} returning id, identity_key
   `;
-  return { id: inserted.id as string, canonicalKey: inserted.canonical_key as string };
-}
-
-async function softDelete(id: string): Promise<void> {
-  await sql`
-    update ingredients set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}
-  `;
+  return { id: inserted.id as string, identityKey: inserted.identity_key as string };
 }
 
 async function liveCount(): Promise<number> {
@@ -90,136 +57,39 @@ beforeEach(async () => {
 });
 
 describe('ingredients unique indexes', () => {
-  // The rendered predicate, not "some predicate": a dropped WHERE reserves a
-  // deleted identity forever, and no test below re-uses one without deleting first.
-  describe('catalogue introspection', () => {
-    it('makes the compendium unique on identity, among live compendium rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_IDENTITY);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (canonical_key)');
-    });
-
-    it('makes each workspace unique on identity, among its live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_IDENTITY);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (workspace_id, canonical_key)');
-    });
-
-    it('makes each workspace unique on the folded label, among its live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_LABEL);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NOT NULL) AND (deleted_at IS NULL))');
-      // `lower(name)`: Mugwort and mugwort are one label inside a workspace.
-      expect(index?.definition).toContain('USING btree (workspace_id, lower(name))');
-    });
-
-    // The address, unique per tier among live rows: `(slug)` over the
-    // compendium, `(workspace_id, slug)` over the locals — the latter with no
-    // tier predicate, as DESIGN.md §5 writes it, since a null workspace_id
-    // collides with nothing in a btree.
-    it('makes the compendium unique on slug, among live compendium rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (slug)');
-    });
-
-    it('makes each workspace unique on slug, among live rows only', async () => {
-      const index = await catalogue.indexRow('ingredients', WORKSPACE_SLUG);
-
-      expect(index?.unique).toBe(true);
-      expect(index?.predicate).toBe('(deleted_at IS NULL)');
-      expect(index?.definition).toContain('USING btree (workspace_id, slug)');
-    });
-
-    // Not unique: many entries pick one form. Partial on the compendium's live
-    // rows, the only ones the form writes read, since a coven's pick never
-    // blocks a delete or follows a rename.
-    it('indexes form_id over live compendium rows only, not uniquely', async () => {
-      const index = await catalogue.indexRow('ingredients', COMPENDIUM_FORM_PICKS);
-
-      expect(index?.unique).toBe(false);
-      expect(index?.predicate).toBe('((workspace_id IS NULL) AND (deleted_at IS NULL))');
-      expect(index?.definition).toContain('USING btree (form_id)');
-    });
-
-    // A sixth unique index — most likely a label index over the compendium —
-    // is exactly the constraint §5 dropped.
-    it('carries no unique index beyond those five and the primary key', async () => {
-      expect(await catalogue.uniqueIndexNames('ingredients')).toEqual(
-        [...DECLARED, 'ingredients_pkey'].sort(),
-      );
-    });
-  });
-
   describe('the compendium tier', () => {
     // "Cat's Claw" is a vine, a shrub and a claw; uniqueness on lower(name) held one.
     it('holds two entries that share a label but not a formal name', async () => {
-      const vine = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
-      const shrub = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Senegalia greggii',
-        form: 'bark',
-      });
+      const vine = await insert({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
+      const shrub = await insert({ name: "Cat's Claw", canonicalName: 'Senegalia greggii' });
 
       // Precondition: the labels are identical and the identities are not.
-      expect(vine.canonicalKey).not.toBe(shrub.canonicalKey);
-      const labels = await sql`select name from ingredients order by canonical_key`;
+      expect(vine.identityKey).not.toBe(shrub.identityKey);
+      const labels = await sql`select name from ingredients order by identity_key`;
       expect(labels.map((r) => r.name)).toEqual(["Cat's Claw", "Cat's Claw"]);
       expect(await liveCount()).toBe(2);
     });
 
-    it('refuses a second entry that shares an identity', async () => {
-      const first = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
+    // Valerian root and leaf are one entry with two forms (MB.215), so a
+    // second entry of the formal name is refused whatever its label.
+    it('refuses a second entry of one formal name under another label', async () => {
+      const root = await insert({ name: 'Valerian root', canonicalName: 'Valeriana officinalis' });
 
-      // Proof the colliding row is otherwise insertable and really shares the identity.
-      const elsewhere = await insert({
-        workspaceId: WORKSPACE_A,
-        name: 'Uña de gato',
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
-      expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
-
-      const error = await failureOf(
-        insert({ name: 'Uña de gato', canonicalName: 'Uncaria tomentosa', form: 'bark' }),
-      );
-
-      // The constraint name pins which index refused; the labels differ.
-      expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY);
-    });
-
-    // Folding the form into the key makes valerian root and leaf two identities.
-    it('holds Valeriana officinalis root and leaf as two entries', async () => {
-      const root = await insert({
-        name: 'Valerian root',
-        canonicalName: 'Valeriana officinalis',
-        form: 'root',
-      });
+      // Why it could have been admitted: the label and the slug differ, and
+      // the same formal name stands in a coven.
       const leaf = await insert({
+        workspaceId: WORKSPACE_A,
         name: 'Valerian leaf',
         canonicalName: 'Valeriana officinalis',
-        form: 'leaf',
       });
+      expect(leaf.identityKey).toBe(root.identityKey);
 
-      expect(root.canonicalKey).toBe('valeriana officinalis :: root');
-      expect(leaf.canonicalKey).toBe('valeriana officinalis :: leaf');
-      expect(await liveCount()).toBe(2);
+      const error = await failureOf(
+        insert({ name: 'Valerian leaf', canonicalName: 'Valeriana Officinalis' }),
+      );
+
+      expect(error.code).toBe('23505');
+      expect(error.constraint_name).toBe(COMPENDIUM_IDENTITY_KEY);
     });
 
     // The label index stops at the compendium's edge, and the tier predicates
@@ -228,7 +98,7 @@ describe('ingredients unique indexes', () => {
       const global = await insert();
       const local = await insert({ workspaceId: WORKSPACE_A });
 
-      expect(local.canonicalKey).toBe(global.canonicalKey);
+      expect(local.identityKey).toBe(global.identityKey);
       expect(await liveCount()).toBe(2);
     });
   });
@@ -238,20 +108,22 @@ describe('ingredients unique indexes', () => {
       const mine = await insert({ workspaceId: WORKSPACE_A });
       const yours = await insert({ workspaceId: WORKSPACE_B });
 
-      expect(yours.canonicalKey).toBe(mine.canonicalKey);
+      expect(yours.identityKey).toBe(mine.identityKey);
       expect(await liveCount()).toBe(2);
     });
 
-    it('refuses two locals of one workspace that share an identity', async () => {
+    it('refuses two locals of one workspace sharing a formal name under different labels', async () => {
       const first = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
 
+      // Why it could have been admitted: the label differs, and the other
+      // workspace holds the pair.
       const elsewhere = await insert({ workspaceId: WORKSPACE_B, name: 'Cronewort' });
-      expect(elsewhere.canonicalKey).toBe(first.canonicalKey);
+      expect(elsewhere.identityKey).toBe(first.identityKey);
 
       const error = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
 
       expect(error.code).toBe('23505');
-      expect(error.constraint_name).toBe(WORKSPACE_IDENTITY);
+      expect(error.constraint_name).toBe(WORKSPACE_IDENTITY_KEY);
     });
 
     it('refuses two locals of one workspace that share a label', async () => {
@@ -267,7 +139,7 @@ describe('ingredients unique indexes', () => {
         name: 'Mugwort',
         canonicalName: 'Artemisia absinthium',
       });
-      expect(elsewhere.canonicalKey).not.toBe(first.canonicalKey);
+      expect(elsewhere.identityKey).not.toBe(first.identityKey);
 
       const error = await failureOf(
         insert({
@@ -297,33 +169,22 @@ describe('ingredients unique indexes', () => {
     });
   });
 
-  // MB.80/MB.81: the slug is the label, the form and the formal name, so it
+  // MB.80/MB.81: the slug is the label and the formal name (MB.220), so it
   // collides only where `slugify` folds two different identities together —
   // punctuation or accents in a formal name, or a label differing only in
   // punctuation. Those pairs are refused here, not by identity or the label.
   describe('the slug indexes', () => {
-    it('holds two compendium entries that share a label and a form, under distinct slugs', async () => {
-      const first = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Uncaria tomentosa',
-        form: 'bark',
-      });
-      const second = await insert({
-        name: "Cat's Claw",
-        canonicalName: 'Uncaria guianensis',
-        form: 'bark',
-      });
+    it('holds two compendium entries that share a label, under distinct slugs', async () => {
+      const first = await insert({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
+      const second = await insert({ name: "Cat's Claw", canonicalName: 'Uncaria guianensis' });
 
       // Precondition: nothing but the formal name separates them.
-      expect(first.canonicalKey).not.toBe(second.canonicalKey);
-      const rows = await sql`select name, form, slug from ingredients order by slug`;
-      expect(rows.map((r) => [r.name, r.form])).toEqual([
-        ["Cat's Claw", 'bark'],
-        ["Cat's Claw", 'bark'],
-      ]);
+      expect(first.identityKey).not.toBe(second.identityKey);
+      const rows = await sql`select name, slug from ingredients order by slug`;
+      expect(rows.map((r) => r.name)).toEqual(["Cat's Claw", "Cat's Claw"]);
       expect(rows.map((r) => r.slug)).toEqual([
-        'cats-claw-bark-uncaria-guianensis',
-        'cats-claw-bark-uncaria-tomentosa',
+        'cats-claw-uncaria-guianensis',
+        'cats-claw-uncaria-tomentosa',
       ]);
       expect(await liveCount()).toBe(2);
     });
@@ -331,14 +192,14 @@ describe('ingredients unique indexes', () => {
     it('refuses two compendium entries whose formal names the slug rule folds together', async () => {
       const first = await insert({ canonicalName: 'Fixtura testalis' });
 
-      // Why identity could not refuse it: `canonical_key` keeps the hyphen that
+      // Why identity could not refuse it: `identity_key` keeps the hyphen that
       // `slugify` turns into the same separator a space becomes, so the keys differ.
       const elsewhere = await insert({
         workspaceId: WORKSPACE_A,
         canonicalName: 'Fixtura-testalis',
       });
-      expect(first.canonicalKey).toBe('fixtura testalis :: herb');
-      expect(elsewhere.canonicalKey).toBe('fixtura-testalis :: herb');
+      expect(first.identityKey).toBe('fixtura testalis');
+      expect(elsewhere.identityKey).toBe('fixtura-testalis');
 
       const error = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
 
@@ -351,7 +212,6 @@ describe('ingredients unique indexes', () => {
         workspaceId: WORKSPACE_A,
         name: "Cat's Claw",
         nomenclature: 'none',
-        form: 'bark',
       });
 
       // With no formal name the key is the label, apostrophe kept, so the
@@ -361,17 +221,16 @@ describe('ingredients unique indexes', () => {
         workspaceId: WORKSPACE_B,
         name: 'Cats Claw',
         nomenclature: 'none',
-        form: 'bark',
       });
-      expect(first.canonicalKey).toBe("cat's claw :: bark");
-      expect(elsewhere.canonicalKey).toBe('cats claw :: bark');
+      expect(first.identityKey).toBe("cat's claw");
+      expect(elsewhere.identityKey).toBe('cats claw');
       const [{ same_label }] = await sql`
         select lower('Cats Claw') = lower(${"Cat's Claw"}) as same_label
       `;
       expect(same_label).toBe(false);
 
       const error = await failureOf(
-        insert({ workspaceId: WORKSPACE_A, name: 'Cats Claw', nomenclature: 'none', form: 'bark' }),
+        insert({ workspaceId: WORKSPACE_A, name: 'Cats Claw', nomenclature: 'none' }),
       );
 
       expect(error.code).toBe('23505');
@@ -385,71 +244,6 @@ describe('ingredients unique indexes', () => {
 
       expect(await sql`select distinct slug from ingredients`).toHaveLength(1);
       expect(await liveCount()).toBe(3);
-    });
-
-    it('frees a compendium slug on soft delete', async () => {
-      const { id } = await insert({ canonicalName: 'Fixtura testalis' });
-      const blocked = await failureOf(insert({ canonicalName: 'Fixtura-testalis' }));
-      expect(blocked.constraint_name).toBe(COMPENDIUM_SLUG);
-
-      await softDelete(id);
-      await insert({ canonicalName: 'Fixtura-testalis' });
-
-      expect(await liveCount()).toBe(1);
-    });
-  });
-
-  // Each asserts the collision first, so an index that reserved nothing at all
-  // fails the first half.
-  describe('soft delete releases the reservation', () => {
-    it('frees a compendium identity', async () => {
-      // The identity stated on both rows rather than left to the factory's default.
-      const { id } = await insert({ canonicalName: 'Artemisia vulgaris', form: 'herb' });
-
-      const blocked = await failureOf(
-        insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' }),
-      );
-      expect(blocked.constraint_name).toBe(COMPENDIUM_IDENTITY);
-
-      await softDelete(id);
-      const reborn = await insert({ name: 'Cronewort', canonicalName: 'Artemisia vulgaris' });
-
-      expect(reborn.canonicalKey).toBe('artemisia vulgaris :: herb');
-      expect(await liveCount()).toBe(1);
-    });
-
-    it('frees a workspace identity', async () => {
-      const { id } = await insert({ workspaceId: WORKSPACE_A });
-
-      const blocked = await failureOf(insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' }));
-      expect(blocked.constraint_name).toBe(WORKSPACE_IDENTITY);
-
-      await softDelete(id);
-      await insert({ workspaceId: WORKSPACE_A, name: 'Cronewort' });
-
-      expect(await liveCount()).toBe(1);
-    });
-
-    it('frees a workspace label', async () => {
-      const { id } = await insert({ workspaceId: WORKSPACE_A, name: 'Mugwort' });
-
-      const blocked = await failureOf(
-        insert({
-          workspaceId: WORKSPACE_A,
-          name: 'Mugwort',
-          canonicalName: 'Artemisia absinthium',
-        }),
-      );
-      expect(blocked.constraint_name).toBe(WORKSPACE_LABEL);
-
-      await softDelete(id);
-      await insert({
-        workspaceId: WORKSPACE_A,
-        name: 'Mugwort',
-        canonicalName: 'Artemisia absinthium',
-      });
-
-      expect(await liveCount()).toBe(1);
     });
   });
 });

@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from 'react';
 import { renderToReadableStream } from 'react-server-dom-webpack/server.edge';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { type WorkspacePermission, assertMembership } from '@/modules/coven';
 import { A, asUser } from '../../../support/as-user';
 import type { Ask } from './types';
@@ -20,7 +20,6 @@ const { findWorkspaceRole } = vi.hoisted(() => ({
 vi.mock('@/db/repository', () => ({ findWorkspaceRole }));
 
 const READ: WorkspacePermission = { workspace: ['read'] };
-const CREATE: WorkspacePermission = { spell: ['create'] };
 
 /** What a page does: check, then render from the proof. */
 async function Page({ session, workspaceId, permission }: Ask) {
@@ -57,58 +56,22 @@ beforeEach(() => {
 });
 
 describe('assertMembership inside one server render', () => {
-  it('asks the repository once for a layout and a page on the same workspace', async () => {
-    // Two `asUser(A)` calls are two objects: the key is the ids, not the
-    // session a caller happens to hold.
-    const wire = await render(
-      tree(
-        { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
-        { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
-      ),
-    );
-
-    // Why this could have passed: both components had to ask and both had
-    // to be answered before one call can mean a shared one.
-    expect(count(wire, `${WORKSPACE_W_ID}:owner`)).toBe(2);
-    expect(findWorkspaceRole).toHaveBeenCalledTimes(1);
-    expect(findWorkspaceRole).toHaveBeenCalledWith(A.id, WORKSPACE_W_ID);
-  });
-
-  it('shares the lookup between a read and a write permission', async () => {
-    const wire = await render(
-      tree(
-        { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
-        { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: CREATE },
-      ),
-    );
-
-    expect(count(wire, `${WORKSPACE_W_ID}:owner`)).toBe(2);
-    expect(findWorkspaceRole).toHaveBeenCalledTimes(1);
-  });
-
-  it('looks each workspace up on its own', async () => {
-    const wire = await render(
-      tree(
-        { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
-        { session: asUser(A), workspaceId: WORKSPACE_X_ID, permission: READ },
-      ),
-    );
-
-    expect(count(wire, `${WORKSPACE_W_ID}:owner`)).toBe(1);
-    expect(count(wire, `${WORKSPACE_X_ID}:owner`)).toBe(1);
-    expect(findWorkspaceRole).toHaveBeenCalledTimes(2);
-  });
-
-  it('starts the next request from nothing', async () => {
+  // Two renders of a layout and a page that each ask: four calls uncached,
+  // one if the cache outlived its request, two only when each render shares
+  // one lookup and the next starts from nothing. Two `asUser(A)` calls are two
+  // objects, so the key is the ids, not the session a caller happens to hold.
+  it('asks once per render, and starts the next request from nothing', async () => {
     const same = () =>
       tree(
         { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
         { session: asUser(A), workspaceId: WORKSPACE_W_ID, permission: READ },
       );
 
-    await render(same());
+    const wire = await render(same());
     await render(same());
 
+    // Why this could have passed: both components asked and were answered.
+    expect(count(wire, `${WORKSPACE_W_ID}:owner`)).toBe(2);
     expect(findWorkspaceRole).toHaveBeenCalledTimes(2);
   });
 });

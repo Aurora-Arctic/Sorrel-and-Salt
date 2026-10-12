@@ -92,9 +92,16 @@ this is what holds it in the database.
   the `ingredients_form_not_blank` idiom, since a blank name would satisfy
   `num_nonnulls` and name nothing.
 - **Two partial unique indexes, one per kind of row.**
-  `spell_ingredients_spell_id_ingredient_id_unique` on
-  `(spell_id, ingredient_id) WHERE ingredient_id IS NOT NULL` is one ingredient
-  per jar — what the M10.2 key used to give — and
+  `spell_ingredients_spell_id_variant_id_unique` on
+  `(spell_id, variant_id)`, live rows only, is one form per jar since MB.217,
+  where `spell_ingredients_spell_id_ingredient_id_unique` was one ingredient
+  per jar — what the M10.2 key used to give. A linked layer names its form in
+  `variant_id`, set exactly when `ingredient_id` is
+  (`spell_ingredients_variant_with_ingredient`) and held to it by the
+  composite key `spell_ingredients_variant_fk`, so a jar may lay Rosemary
+  herb and Rosemary oil. Migration `0063` filled each existing linked layer
+  from its ingredient's one live variant, refusing a database where one had
+  none or several; and
   `spell_ingredients_spell_id_custom_name_unique` on
   `(spell_id, lower(name)) WHERE ingredient_id IS NULL` is one custom name per
   jar, the shape of `ingredients_workspace_label_unique`. Both are partial on
@@ -107,7 +114,7 @@ this is what holds it in the database.
   or linked, is a tombstone, and what joins through the table goes by
   `existsIn` ([`hard-delete-join-tables.md`](hard-delete-join-tables.md), "Hard
   delete on two join tables").
-- **`form` is text, not a foreign key**, for the reason `ingredients.form` is
+- **`form` is text, not a foreign key**, for the reason a variant's `form` is
   not (DESIGN.md §5).
 
 `spell-ingredients-schema.test.ts` proves every refusal by its
@@ -115,8 +122,9 @@ this is what holds it in the database.
 succeeded: `form` on a linked row is refused where the same `form` on a custom
 row is accepted; `Threshold Salt` and `threshold salt` collide in one jar and
 not across two; the same ingredient twice is refused by the partial index, a
-layer collision by the layer index. Each reuse after a removal — the depth, the
-ingredient, the custom name — is shown refused while the row was live. What Wave 13 inherits — the Zod exclusive-or, the
+layer collision by the layer index. That a removal frees the depth, the
+ingredient and the custom name is `tests/db/partial-unique-indexes.test.ts`'s,
+once for every partial unique index (MB.226). What Wave 13 inherits — the Zod exclusive-or, the
 skip in derived categories, no suppression, no held/not-held, no safety source
 — is written into each task's criteria rather than left to be remembered.
 
@@ -140,7 +148,8 @@ skip in derived categories, no suppression, no held/not-held, no safety source
   type and not a second copy of it: a tablespoon in a spell is the tablespoon a
   jar is measured in, and M9.5 converts between them. The type keeps its
   `inventory_unit` name — renaming it to suit a second consumer would be a
-  `RENAME` under rule 10 for no gain. `quantity` is `numeric(12, 3)`, matching
+  `RENAME` under rule 10 for no gain. `quantity` is `numeric(12, 3)`, built from
+  `quantities.ts`'s precision and scale as the stock columns are (MB.207), matching
   `inventory_items.quantityOnHand` exactly, so "do I have enough for this spell"
   loses no precision on the comparison. Both are nullable: a layer may name no
   measurement at all.

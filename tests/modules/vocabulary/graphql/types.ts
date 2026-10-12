@@ -70,21 +70,6 @@ export interface FilteredCategories {
   edges: { node: { name: string } }[];
 }
 
-/** One error as the route sends it: the message, and the code and field errors MB.43 attaches. */
-export interface WireError {
-  message: string;
-  path?: (string | number)[];
-  extensions?: {
-    code?: string;
-    fieldErrors?: { path: (string | number)[]; message: string }[];
-  };
-}
-
-export interface Answer<T> {
-  data?: T | null;
-  errors?: WireError[];
-}
-
 export interface AstrologyValueNode {
   id: string;
   name: string;
@@ -116,4 +101,19 @@ export interface FormGroupNode {
   name: string;
   slug: string;
   description: string;
+}
+
+/** A deity as the admin writes ask for it back: its own fields, and its tradition's name. */
+export interface DeityNode {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  tradition: { name: string };
+}
+
+/** A filtered `deities` page as the filter test asks for it: the count, and each name with its tradition's. */
+export interface FilteredDeities {
+  totalCount: number;
+  edges: { node: { name: string; tradition: { name: string } } }[];
 }

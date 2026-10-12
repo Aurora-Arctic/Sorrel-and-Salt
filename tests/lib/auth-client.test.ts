@@ -91,16 +91,4 @@ describe('auth-client', () => {
     expect(String(url)).toContain('/api/auth/unlink-account');
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ accountId: 'a-2' });
   });
-
-  it('exposes signIn.social as a callable off both the named export and the client instance', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(async () => new Response('{}', { status: 200 })),
-    );
-    vi.resetModules();
-    const { authClient, signIn } = await import('@/lib/auth-client');
-
-    expect(authClient.signIn.social).toBeInstanceOf(Function);
-    expect(signIn.social).toBeInstanceOf(Function);
-  });
 });

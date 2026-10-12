@@ -9,7 +9,7 @@ table spreads, built by calling them with `() => users.id`:
 - **`deletionColumnsReferencing(usersId)`** → `deletedAt` and `deletedBy`,
   which `users.ts` spreads after the stamp _instance_ to make
   `auditColumns`. The six-column set is the four-column one plus two, from
-  the same builders, and `tests/db/audit.test.ts` asserts that identity.
+  the same builders.
 
 The factories take the referenced column rather than importing `users`, so
 `audit.ts` depends on nothing in a module; the instances live beside `users`
@@ -17,14 +17,32 @@ because every stamp references it, and a table imports them from there —
 `import { auditColumns } from '../../identity/schema/users'`, relative, since
 the schema graph is what drizzle-kit loads.
 
+**The factories' keys are the only list of the audit field names** (MB.207).
+`src/db/types.ts` reads `StampField` and `DeletionField` off their return
+types and builds `AuditFields` from them, each field typed as its column
+holds it; `applyAudit`'s overloads `Pick` those, the seed's `InsertStamps`
+is `StampField`, and the runtime `AUDIT_FIELD_NAMES` that `applyAudit`
+strips a payload of is `Object.keys` of the two factories' output, built
+with a reference that is never resolved. A column renamed or added in a
+factory reaches all of them without a second edit.
+
 Every table spreads `...auditColumns` **except two join tables**:
 `ingredient_categories` and `spell_categories` spread `...auditStampColumns`
 and are hard-deleted (MB.34) — see ["Hard delete on two join tables"](hard-delete-join-tables.md) for
 why, and note that `workspace_members`, `ingredient_folk_names` and, since
 MB.110, `spell_ingredients` are _not_ in that set. Writing the six columns as the
 four plus two rather than listing them twice is what stops the two sets
-drifting, and `tests/db/audit.test.ts` asserts each stamp column is literally
-the same builder object in both.
+drifting.
+
+**Where a table's audit columns are proved** (MB.188; MB.225). Once, in
+`tests/db/audit-columns.test.ts`'s one catalogue sweep: every audited table
+in the migrated database carries the set — the four stamps required, the
+delete pair nullable but on the two hard-deleted joins, every id a key to
+`users.id` — and no unaudited table carries an audit id. That each table
+spreads them is its module schema test's exact column set,
+`[...OWN, ...AUDIT_COLUMNS]` or the stamp set. `tests/db/audit.test.ts`
+keeps `applyAudit` alone ([`testing/db-harness.md`](../testing/db-harness.md), "The db
+test harness").
 
 `createdBy`/`updatedBy`/`deletedBy` carry
 `.references((): AnyPgColumn => users.id)` per DESIGN.md §5, including for

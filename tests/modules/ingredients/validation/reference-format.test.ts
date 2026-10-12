@@ -55,7 +55,7 @@ describe('dashRanges', () => {
   });
 
   it('leaves a hyphen that joins words, and a day written as a date, alone', () => {
-    expect(dashRanges('s.v. Jack-in-the-green')).toBe('s.v. Jack-in-the-green');
+    expect(dashRanges('under "Jack-in-the-green"')).toBe('under "Jack-in-the-green"');
     expect(dashRanges('2013-10-06')).toBe('2013-10-06');
   });
 });
@@ -110,7 +110,7 @@ describe('formatLocator', () => {
   it('tidies a locator and dashes its ranges, and leaves its words as typed', () => {
     expect(formatLocator('  pp. 12-19,  40;  chap. 3 ')).toBe('pp. 12–19, 40; chap. 3');
     expect(formatLocator('112')).toBe('112');
-    expect(formatLocator('s.v. Hecate')).toBe('s.v. Hecate');
+    expect(formatLocator('under "Hecate"')).toBe('under "Hecate"');
   });
 });
 
@@ -151,24 +151,38 @@ describe('addressProblem', () => {
 });
 
 describe('holdsYear', () => {
-  it.each(['1985', 'November 1950', 'Summer/Autumn 2013', '1882–88', 'n.d.', 'Forthcoming'])(
-    'takes %s',
-    (published) => expect(holdsYear(published)).toBe(true),
-  );
+  it('takes a date holding a year, or n.d. or forthcoming', () => {
+    for (const published of [
+      '1985',
+      'November 1950',
+      'Summer/Autumn 2013',
+      '1882–88',
+      'n.d.',
+      'Forthcoming',
+    ]) {
+      expect(holdsYear(published), published).toBe(true);
+    }
+  });
 
-  it.each(['soon', '85', 'November', 'nd'])('refuses %s', (published) =>
-    expect(holdsYear(published)).toBe(false),
-  );
+  it('refuses one with no year', () => {
+    for (const published of ['soon', '85', 'November', 'nd']) {
+      expect(holdsYear(published), published).toBe(false);
+    }
+  });
 });
 
 describe('isNumberList', () => {
-  it.each(['51', 'xii', 'XIV', '399–412', '12a', '12–19, 40', 'iv–ix'])('takes %s', (text) =>
-    expect(isNumberList(text)).toBe(true),
-  );
+  it('takes numbers, roman numerals and ranges, in a list', () => {
+    for (const text of ['51', 'xii', 'XIV', '399–412', '12a', '12–19, 40', 'iv–ix']) {
+      expect(isNumberList(text), text).toBe(true);
+    }
+  });
 
-  it.each(['Summer', 'no. 2', 'vol. 3', '12–', '–19', '1,'])('refuses %s', (text) =>
-    expect(isNumberList(text)).toBe(false),
-  );
+  it('refuses words, and a range or a list left open', () => {
+    for (const text of ['Summer', 'no. 2', 'vol. 3', '12–', '–19', '1,']) {
+      expect(isNumberList(text), text).toBe(false);
+    }
+  });
 });
 
 describe('latestDay', () => {

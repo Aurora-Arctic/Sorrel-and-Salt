@@ -33,7 +33,8 @@ The seed is the one sanctioned writer outside `withAudit` (CLAUDE.md rule 3),
 and a test inserter is the same kind of thing, so it does what the seed does.
 [`tests/support/db/insert-ingredient.ts`](../../tests/support/db/insert-ingredient.ts)'s
 `insertIngredient(sql, fixture, author)` writes an `IngredientFixture`'s row,
-its folk names and its category links in one transaction, stamps every row's
+a variant row for each of its forms with what that form adds, its folk names
+and its category links in one transaction, stamps every row's
 `created_by`/`updated_by` from `author`, and publishes `app.current_user_id`
 inside the transaction, so a v2 history trigger would record the author
 rather than nothing; category names are resolved through the seeded
@@ -54,16 +55,15 @@ partial unique indexes reserve each seeded identity — so a default that
 matched one would be a fixture no test could insert. A real ingredient merely
 absent from the seed today is only safe until someone seeds it, so the
 defaults are names that cannot be seeded: `makeIngredient()` is Testwort /
-_Fixtura testalis_, every formal name the nomenclature table supplies is of
+_Fixtura testalis_ in the form Testform, every formal name the nomenclature table supplies is of
 the same kind, `makeSpell()`'s default custom layer is Fixture Ash, and
 `makeWorkspace()` is Fixture Coven. A fixture is what a test writes _beside_
 the seeded world, so the rule binds a factory's own defaults and not a name a
 test states (`.claude/rules/testing.md`, "Fixtures"). `makeSpell()` still lands in W — `workspaceId` is a reference,
 not an insert, and a fixture spell and a seeded spell belong in the same
-coven. `ingredient.test.ts` and `workspace.test.ts` also check the defaults
-against `COMPENDIUM_INGREDIENTS` and `FIXTURE_WORKSPACES`, read from
-`src/db/seed/standard` rather than copied — a backstop rather than the
-mechanism.
+coven. No test checks the defaults against the seed (MB.224 retired the
+factories' own tests): a clash fails the first test that inserts one, at the
+partial unique index.
 
 ### Overrides merge; arrays replace
 
@@ -77,7 +77,7 @@ override does not mention keeps its default. Three decisions make that useful:
   categories it never named.
 - **`undefined` says nothing; `null` says null.** `undefined` is what an absent
   optional property reads as, so treating it as a value would let
-  `{ form: maybeForm }` erase a default whenever the caller's own variable
+  `{ description: maybeDescription }` erase a default whenever the caller's own variable
   happened to be unset.
 - **Every call gets its own copy.** The defaults are cloned before anything is
   written into them, so a test that pushes a category onto one fixture is not
@@ -99,6 +99,18 @@ a reason it was never about.
   `ingredients_nomenclature_declares_canonical_name` ties the two, so
   `{ nomenclature: 'none' }` drops the formal name and `{ nomenclature:
 'mineral' }` supplies one. Every one of §5's seven kinds has an answer.
+- **An ingredient's forms are its `variants`** (MB.222). `IngredientFixture`
+  has no `form` or `formId`: the row has none, so a form is a
+  `VariantFixture` in its `variants` list, a form and whatever that form
+  adds — its own description, safety notes, lists, categories and typed
+  substitutes. The default is `[makeVariant()]`, one variant of the invented
+  form `Testform`, which adds nothing; `makeIngredient({ variants: [] })` is
+  an entry with no form at all, and `makeVariant({ form: 'Fixture Oil', formId
+})` a pick of a curated form. `variantInput(variant, overrides)` turns a
+  `VariantFixture` into the variant input a write sends, every field present,
+  `""` or `[]` for what the fixture leaves out. `insertVariant(sql,
+ingredientId, variant, author)` writes one more form beside those an
+  inserted fixture already has.
 - **`makeSpell` derives a layer's shape from whether it names an ingredient.**
   A layer points at an ingredient _or_ names one of its own
   (`num_nonnulls(ingredient_id, name) = 1`, MB.40), with `form` allowed only
@@ -120,9 +132,9 @@ vulgaris' })` is the CHECK's own counterexample, and it has to stay writable.
 The db tests talk to Postgres through `postgres` directly, so they insert by
 column name rather than by field. `ingredientColumns`, `spellColumns`,
 `spellLayerColumns` and `workspaceColumns` translate, dropping what belongs to
-another table — an ingredient's folk names and categories, a spell's
+another table — an ingredient's variants, folk names and categories, a spell's
 categories and layers, a workspace's members. `ingredientColumns` also adds
-the ingredient's `slug`, derived from its label, form and formal name through
+the ingredient's `slug`, derived from its label and formal name through
 `ingredientSlug` exactly as the seed derives it, so a raw insert satisfies the
 column's `NOT NULL` without a test writing a slug down beside a name.
 

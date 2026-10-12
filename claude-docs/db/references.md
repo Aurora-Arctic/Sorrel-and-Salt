@@ -49,6 +49,22 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
+**The sourced tables are listed once** (MB.207). `SOURCED` in
+`src/modules/ingredients/schema/reference-links.ts` maps each property —
+`ingredientId`, `deityId`, `deityTraditionId`, `planetId`, `zodiacSignId` —
+to its column and the table it keys into, and the five foreign keys, the five
+partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
+A sixth sourced table is one entry there, and the migration `db:generate`
+writes from it drops and re-adds `reference_links_one_row`, which takes an
+`.ack.md` sidecar ([destructive DDL](expand-contract.md)). MB.217's
+`ingredientVariantId`, a form's own sources beside its ingredient's, was the
+first: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
+and a six-column CHECK, in migration `0063`. The repository
+reads the links of any of them through the registry (MB.208):
+`findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
+column and its table from `SOURCED`. What writes the new links is still code
+of its own.
+
 **One link per reference per row, and the index serves the read.** Each
 partial unique index leads on its sourced id, so a read of one ingredient's
 links — `ingredient_id = $1 AND deleted_at IS NULL` — implies the predicate
@@ -58,10 +74,16 @@ read of all a row's substitutes implies neither of its unique indexes'
 predicates. No index leads on `reference_id`: nothing reads from a reference
 back to its links, and a reference is never hard-deleted.
 
-**A link carries a locator and nothing else.** "p. 112", "chap. 13", "s.v.
-Hecate" — free text, because locators vary by the kind of work. The renderer
-leaves it out of the citation, since a bibliography entry names the work, and
-the page shows it beside the citation.
+**A link carries a locator and nothing else.** "p. 112", "chap. 13",
+`under "Hecate"` — free text, because locators vary by the kind of work. An
+entry in a work arranged by headword, a dictionary or an encyclopedia, is
+cited by its headword in quotation marks after the word "under". The 18th
+edition of the _Chicago Manual of Style_ (2024, 14.130) no longer recommends
+the Latin "s.v." the 17th used and allows "under" for clarity; the project
+always writes it, in the locator and in an `entry`'s citation alike, so the
+two never differ. The renderer leaves the locator out of the citation, since
+a bibliography entry names the work, and the page shows it beside the
+citation.
 
 **The tier rule is the service's.** A compendium entry's or a vocabulary
 row's link names a compendium reference; a coven ingredient's names the
@@ -71,7 +93,8 @@ the read ANDs the same rule. A compendium reference is written only under the
 `SiteAdmin` proof and a coven's only under its `Membership`, whoever links it.
 
 **Alphabetical by the rendered citation, sorted in the service.** The key is
-the plain citation, less a leading quotation mark and an initial _A_, _An_ or
+the plain citation, less a leading quotation mark (any the formatter
+pairs, `QUOTE_PAIRS` in `src/lib/citation.ts`) and an initial _A_, _An_ or
 _The_, compared case- and accent-insensitively. The citation exists only in
 TypeScript, so nothing stores an order and the service sorts, as
 `folkNamesOf` does. `referenceSuggestions` cannot match it — rule 7 filters
@@ -107,20 +130,28 @@ their coven the id names nothing in the coven's tier, and without one the
 admin check refuses. An update replaces the row — a field left out is
 cleared — and reaches every row citing it. The `ingredient` statements stand
 for a reference's, since a coven's reference exists to be cited by its
-ingredients and the roles that write one write the other. Revalidating the
-`compendium` tag on a compendium-tier write is M8.7's, with every admin
-mutation, the owner's call in MB.153: nothing is cached under the tag yet,
-and Next 16's `revalidateTag` throws outside a request, so the service would
-have been the first caller every test had to mock it for.
+ingredients and the roles that write one write the other. A
+compendium-tier write expires the `compendium` tag once it has committed,
+and a coven's does not, since no cached read holds a coven's reference (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
+
+**One reference is read whole by id** for the form that edits it (MB.115):
+`getReference(session, workspaceId, id)`, through `readersOf` under
+`ingredient: ['read']` and `findManyReferences`, so its tiers are the
+picker's — without a coven the compendium's alone, with one that coven's
+own or the compendium's — and it returns no row the picker would not
+already offer. Another coven's reference, a soft-deleted one and an id
+that is not a uuid are all `NotFound`, the first because that coven's
+contents are private.
 
 **An ingredient's links are written in its own save.** Both tiers' create and
-update call `addReferenceLinks` and `replaceReferenceLinks` in
-`services/ingredient-rows.ts`, inside the ingredient's `withAudit`, as they
-call the substitutes' writes. The list is brought to what was sent: a link is
+update reach `addReferenceLinks` and `replaceReferenceLinks` in
+`services/ingredient-rows.ts` through `writeChildren`, inside the ingredient's
+`withAudit`, as they reach the substitutes' writes (MB.211). The list is brought to what was sent: a link is
 matched by its reference, so one still listed keeps its row and takes the
 locator sent, one dropped is soft-deleted, a new one is inserted, and a list
 that changes nothing writes nothing. Only the links the ingredient shows are
-compared, read through `findReferencesOfIngredients`, so a link to a
+compared, read through `findReferencesOf(memberships, 'ingredientId', …)`, so a link to a
 soft-deleted reference — which the form never sees, and so never sends back
 — is left in place. A new link is held to the tier rule by one read,
 `findManyReferences(memberships, ids)`: a live reference in the compendium
@@ -128,28 +159,43 @@ or, for a coven's ingredient, its coven. Anything else is a `ValidationError`
 at `['references', i]`, the same for an id naming another coven's reference
 as for one naming nothing, since that coven's contents are private.
 
-**The read is one statement for a page.** `findReferencesOfIngredients`
-left-joins each live link's live reference, takes only a row that joined
-one, and reads the parent through `existsIn` as `findManyOfIngredients`
-does, with the tier rule ANDed inside: the reference is the compendium's or
-the parent's own coven's. `referencesOf` renders each citation and files the
+**The read is one statement for a page.** `findReferencesOf(memberships,
+key, ids)` left-joins each live link's live reference, takes only a row that
+joined one, and reads the parent through `existsIn`. An ingredient is read
+as `findManyOfIngredients` reads one, with the tier rule ANDed inside: the
+reference is the compendium's or the parent's own coven's. Every other
+sourced table is global reference data, so its row need only be live, and
+its reference is the compendium's, the one tier every reader shares. The key
+rather than a column: the registry maps it to the parent's table, which the
+finder needs, and a `SourcedKey` cannot name a column that is not a sourced
+link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
-`referencesByIngredient` batches it behind `Ingredient.references`.
+`referencesByIngredient` batches it behind `Ingredient.references`. A
+variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
+through `readableVariantParent`, the variant live and its ingredient readable
+(MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
+`IngredientVariant.references`.
 
 **The picker's search** is `findReferenceSuggestions(memberships, query,
 page)`: the live references of the compendium and a proof's coven — no
 proof, for a compendium entry, reads the compendium's alone (M5.5) — whose
 `authors`, `title` or `container` the query is word-similar to (`<%` at the
 compendium search's 0.5), each side through `unaccent_immutable`, keyed
-`[-score, title]`; a blank query pages both tiers by title. No trigram index
+`[-score, title]`. The score is the best field's word similarity, a field
+holding the query verbatim scoring 1 as the compendium search's does, so a
+title holding "brim" inside _Kettlebrim_ ranks above a near miss
+([The compendium read](compendium-read.md)); a blank query pages both tiers by title. No trigram index
 is built: the table holds the sources a few hundred entries cite, and the
 scan is the search's whole cost at that size. An index is a later task's,
 measured, if the table outgrows it.
 
 **The admin's to-do list** is `compendium(withoutReferences: true)`, whose
-arm `citesNothing()` keeps an entry with no live link to a live compendium
+arm `citesNothing('ingredientId')` keeps an entry with no live link to a live compendium
 reference — the entries whose bibliography reads empty, so one whose only
-link was unlinked, or cites a retracted source, is listed.
+link was unlinked, or cites a retracted source, is listed. Under the union
+rule (MB.218) a source on one of the entry's live forms sources the entry, so
+the arm also asks that no live variant `cites('ingredientVariantId')`: an
+entry whose only citation is on its oil is not listed.
 
 Every finder here is on the tier seam, named in `TIER_SEAM`
 ([`modules.md`](../modules.md#the-tier-seam)).
@@ -172,7 +218,7 @@ applies as each field is left, so what is seen is what is saved.
 | `published`                | and a range between numbers dashed, "1882-88" → "1882–88", a day written as a date left alone (`dashRanges`)                        |
 | `edition`                  | and one given as a number or a word written as Chicago does, "2", "second edition" → "2nd ed."; anything else, "Rev. ed.", as typed |
 | `url`                      | trimmed, and one with no scheme but a host, "example.org/x", taken as `https://` (`withScheme`)                                     |
-| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, "s.v. Hecate", "chap. 3", as typed                                       |
+| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, `under "Hecate"`, "chap. 3", as typed                                    |
 
 Locator shorthand — "112" to "p. 112" — was offered and not chosen: a
 locator's words vary too much by the kind of work to guess.
@@ -211,7 +257,7 @@ admin's later edit of a seeded source is.
 
 `renderCitation(ref): CitationPart[]` in `src/lib/citation.ts` (MB.153), pure
 and client-safe, beside `slugify`: the page, the picker, the service's sort
-and the seed's test all call it. Each part is `{ text, italic }`. `citation`
+call it. Each part is `{ text, italic }`. `citation`
 on the wire is the parts joined, plain — `citationText` — and a surface that
 shows italics renders the parts itself. `byCitation` compares two plain
 citations in bibliography order, the sort `referencesOf` files by. A field
@@ -228,7 +274,7 @@ word is not a mark, so `_Internet Encyclopedia of Ukraine_` is italic and
 `Greek_Mythology` in a URL is not; `url` is never parsed, and a marked span
 inside a field the kind already italicises renders roman. A test joins the
 parts back with `_` around the italic ones, which is the seed doc's own
-Markdown, so the seed's and the page's tests compare strings. A roman span
+Markdown, so a test compares strings. A roman span
 inside an italic field has no spelling in that form, and no source needs one.
 
 Each part ends in a period unless it already carries one ("Smith, William,
@@ -252,16 +298,60 @@ drops each missing piece with its punctuation.
   (Note) — and without a volume, _Container_, Published, Pages.
   - Nwokocha, Eziaku Atuama. "An Equilibrist Vodou Goddess." _Harvard Divinity Bulletin_, Summer/Autumn 2013. Accessed October 6, 2026. https://bulletin.hds.harvard.edu/an-equilibrist-vodou-goddess/.
   - With a volume, from an invented source: Testwort, Fixtura. "A Note on Fixture Covens." _Journal of Invented Botany_ 51, no. 2 (1988): 399.
-- **`entry`** — Authors. Container, Edition, s.v. "Title." Contributors.
+- **`entry`** — Authors. Container, Edition, under "Title." Contributors.
   Place: Publisher, Published. Host. Last modified Modified. Accessed
   Accessed. URL. (Note)
-  - Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
+  - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last
   modified Modified. Accessed Accessed. URL. (Note) — "Last modified" is
   capitalised when it stands without a published date.
   - Cartwright, Mark. "Greek Mythology." World History Encyclopedia. July 29, 2012. Accessed October 6, 2026. https://www.worldhistory.org/Greek_Mythology/.
   - Cartwright, Mark. "Seven Lucky Gods." World History Encyclopedia. June 24, 2013; last modified September 27, 2024. Accessed October 6, 2026. https://www.worldhistory.org/Shichifukujin/.
+
+### The short form
+
+`renderShortCitation(fields, continued?)` in `src/lib/short-citation.ts`
+(MB.115), beside the renderer and as pure, gives a source's Chicago short
+form, as the notes-bibliography style shortens a note, as the same `{ text, italic }`
+parts, and `shortCitationText` as one plain string. The ingredient form's
+reference rows show it where the whole entry would not fit on a line
+([`ingredient-form.md`](../components/ingredient-form.md), "The
+references"); nothing stores it, and the server does not render it: it
+reads four fields, `kind`, `authors`, `title` and `container`
+(`ShortCitationFields`), which `Reference` already exposes, so a read
+that shows it selects them beside `citation` and the schema is unchanged.
+
+- **The authors' surnames.** `authors` is one text field written as a
+  bibliography prints it, the first name inverted and the rest not, so the
+  first comma ends the first surname and each later name's surname is its
+  last word, with a particle before it kept ("van der Testwort") and a
+  suffix ("Jr.", "III") dropped. A role after the names, ", ed.",
+  ", eds.", ", ed. and trans.", is dropped. One name stands alone, two
+  are joined by "and", three are a series, "Fixture, Testwort, and
+  Mockley", and four or more, or a field ending "et al.", are the first
+  and "et al.". A field with no comma is one name as written, an
+  organisation's or a single name, "Wellcome Collection": the field
+  cannot tell a corporate name holding a comma from an inverted person's,
+  and reads it as the person's.
+- **The short title.** The main title, less a subtitle after a colon, or
+  after a question or exclamation the title asks, whose mark stays; less an
+  initial _A_, _An_ or _The_ unless that is the whole title; cut to four
+  words, and a cut title ends on no "and", "of" or other short
+  function word and on no comma. Its `_…_` marks are read as the renderer
+  reads them, before the cut, so a mark the cut splits is never printed.
+- **Italics or quotation marks, by the kind.** A `book` is a whole work,
+  its short title italic; a `chapter`, `article`, `entry` and
+  `web_page` are each part of a larger one, theirs in quotation marks. No
+  kind is a website as a whole, so nothing else is italic.
+- **No authors: the title leads**, `_Testwort Herbal_`, `"Testwort"` —
+  except a reference-work `entry`, which Chicago cites by its work, "under"
+  and its headword whole, `Fixture Encyclopedia, under "Testwort"`, since
+  its title alone would not say which work.
+- **Continued by a locator**, the form takes the comma before it, inside
+  the quotation marks, `Placeholder, "Notes on Mockleaf," p. 14`, and none
+  after a title ending in "?" or "!". Unlike a note, it ends in no period:
+  the row is a label.
 
 ### How the seed reads the docs (MB.156)
 
@@ -269,9 +359,12 @@ drops each missing piece with its punctuation.
 as compendium-tier rows: the deity doc's "Sources" and the astrology doc's.
 The categories and the forms are the project's own design and cite nothing.
 `SOURCES` is a literal, each entry a reference's fields and the rows it
-supports, and `sources.test.ts` parses both docs and compares them with it
-through the renderer, citation by citation, so a doc edited without the
-literal, or the reverse, fails there. The docs hold one shape the parse reads:
+supports, transcribed from both docs; review holds the two in step, since
+MB.225 retired the test that parsed the docs and compared them through the
+renderer. `sources.test.ts` keeps the seed's behaviour: compendium rows keyed
+by citation, a tradition's source reaching every deity under it, and what a
+re-run leaves of an admin's edits. The docs hold one shape the literal
+transcribes:
 
 - **The deity doc.** The bullets before the first tradition chose which
   deities to list and link nothing, the owner's call. Each tradition's own
@@ -302,3 +395,30 @@ to. Link targets are found by the `seed_key` their own seed gave them, so a
 renamed deity keeps its sources, and a link present in any state is not
 written again. `migrate.yml` runs the target after the vocabularies it
 links, and `standard` seeds it inside its own transaction.
+
+### How the compendium seed cites its sources (MB.242)
+
+`src/db/seed/compendium.ts` writes the compendium's entries with their
+sources, through the same reference insert as the sources seed:
+`insertMissingReferences(tx, wanted)` in `src/db/seed/reference-rows.ts`, taken
+out of `sources.ts` unchanged but for being handed the works it wants. Both
+seeds key a work on its rendered citation, so a work the sources seed already
+wrote — the same fields, to the letter — is linked by the compendium, never
+written twice, and a work an admin soft-deleted is neither re-inserted nor
+linked anew.
+
+A shard names a source by a **handle**. The works several shards cite, the
+owner's library books, are declared once in `src/db/seed/compendium/works.ts`
+as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
+web page, are its own `sources`. Each citation on an entry or a form becomes
+one `reference_links` row, `ingredient_id` for the entry and
+`ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
+`under "Mugwort"`). Every entry cites at least one source of its own, because the
+admin's "unsourced" filter counts the entry's own links and its forms'.
+
+Which fields a citation backs (`supports`) is the guard's to check and is not
+stored: a link says which work supports the row, and the shard doc
+(`claude-docs/db/compendium-seed/<shard>.md`) says which fields each source
+gave. The links are written once, with the entry, as everything beneath an
+entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
+and how a correction lands").

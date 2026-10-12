@@ -3,7 +3,7 @@ import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
-import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
+import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
 
 // DESIGN.md §5's seven values. `nomenclature` names the naming system, not a
 // rank within it; `fungal` is split from botanical because curators shelve
@@ -12,41 +12,40 @@ import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
 // (claude-docs/db/identity-model.md, "The ingredient identity model").
 export const nomenclatureKind = pgEnum('nomenclature_kind', NOMENCLATURE_KINDS);
 
-// A correspondence, not identity: five values, closed — the opposite of `form`.
+// A correspondence, not identity: five values, closed — the opposite of a
+// variant's `form`, which is free text.
 export const ingredientElement = pgEnum('ingredient_element', INGREDIENT_ELEMENTS);
 
 /**
- * DESIGN.md §5's identity key over its three parts: the generated column's
- * own expression, and what a finder compares that column against to find the
- * row a write's values would key as. One builder, so the key has one spelling.
+ * An ingredient's identity since MB.215: its formal name, falling back to the
+ * label, and never the form, which is a variant's. The generated column's own
+ * expression, and what a finder compares that column against to find the row
+ * a write's values would key as. One builder, so the key has one spelling.
  */
-export function canonicalKeyOf(name: SQLWrapper, canonicalName: SQLWrapper, form: SQLWrapper): SQL {
-  return sql`
-  lower(coalesce(${canonicalName}, ${name})) || coalesce(' :: ' || lower(btrim(${form})), '')
-`;
+export function identityKeyOf(name: SQLWrapper, canonicalName: SQLWrapper): SQL {
+  return sql`lower(coalesce(${canonicalName}, ${name}))`;
 }
 
 // The column names raw because they name columns of the table still being
 // built; every function in the key is IMMUTABLE and no enum cast is involved,
 // which is what makes a stored generated column legal. The text is the
 // migrations' own, byte for byte, so `db:generate` sees no change.
-const CANONICAL_KEY = canonicalKeyOf(sql.raw('name'), sql.raw('canonical_name'), sql.raw('form'));
+const IDENTITY_KEY = identityKeyOf(sql.raw('name'), sql.raw('canonical_name'));
 
 // One table, two tiers: `workspace_id IS NULL` is the compendium (everyone
 // reads, admins write), set is local to that workspace, where a formal name
-// is optional. Identity is the formal name plus the form, never the display
-// label — see above.
+// is optional. Identity is the formal name, never the display label or the
+// form — see above.
 export const ingredients = pgTable(
   'ingredients',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     workspaceId: uuid('workspace_id').references(() => workspaces.id),
     name: text('name').notNull(),
-    // The public address: `ingredientSlug` of the label, the form and the
-    // formal name (src/lib/slugify.ts). No default: one in SQL would be a
-    // second slug rule. It follows a change to any of the three, and a
+    // The public address: `ingredientSlug` of the label and the formal name
+    // (src/lib/slugify.ts), no form since MB.220. No default: one in SQL would
+    // be a second slug rule, so a row written before keeps its form in the
+    // slug until its next save. It follows a change to either, and a
     // compendium entry's old one moves to `retired_ingredient_slugs`
     // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
     slug: text('slug').notNull(),
@@ -54,16 +53,17 @@ export const ingredients = pgTable(
     // No database default: the workspace-local Zod variant supplies `none`
     // and the compendium variant makes the admin answer.
     nomenclature: nomenclatureKind('nomenclature').notNull(),
-    // Free text over the curated `ingredient_forms` vocabulary, not a foreign
-    // key: an uncurated value must stay writable.
-    form: text('form'),
-    // The curated row a member picked, beside the text and never instead of
-    // it (MB.165): two live forms may share a name, and only the link says
-    // which. Identity stays on `form`; typed text links nothing.
-    formId: uuid('form_id').references(() => ingredientForms.id),
-    // GENERATED ALWAYS, so Postgres refuses a direct write — and Drizzle
-    // omits generated columns from $inferInsert, so TypeScript refuses first.
-    canonicalKey: text('canonical_key').notNull().generatedAlwaysAs(CANONICAL_KEY),
+    // No form: an entry's forms are its variants (`ingredient_variants`,
+    // MB.215). MB.222 undeclared the row's `form` and `form_id`, and MB.223
+    // dropped them.
+
+    // The formal name alone (MB.216): what the tier-split unique indexes
+    // below hold once per tier. GENERATED ALWAYS, so Postgres refuses a direct
+    // write — and Drizzle omits generated columns from $inferInsert, so
+    // TypeScript refuses first. It replaced the three-part `canonical_key`,
+    // the formal name plus the form, which MB.220 undeclared and MB.223
+    // dropped (claude-docs/db/identity-model.md).
+    identityKey: text('identity_key').notNull().generatedAlwaysAs(IDENTITY_KEY),
     description: text('description'),
     // A list of the five rather than the single `element` it replaced
     // (MB.157), a new name for the reason the three lists below have one.
@@ -83,6 +83,11 @@ export const ingredients = pgTable(
     // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
     // stopped declaring `deities text[]` and MB.168 dropped it
     // (claude-docs/db/identity-model.md, "The ingredient identity model").
+
+    // The key the compendium seed (MB.242) gives the entry it writes, so an
+    // entry an admin renames is not seeded again beside itself (MB.241). The
+    // `standard` fixture keys on identity and writes none.
+    seedKey: seedKeyColumn(),
     ...auditColumns,
   },
   (table) => [
@@ -98,19 +103,17 @@ export const ingredients = pgTable(
       'ingredients_canonical_name_not_blank',
       sql`canonical_name is null or btrim(canonical_name) <> ''`,
     ),
-    check('ingredients_form_not_blank', sql`form is null or btrim(form) <> ''`),
-    // A link names the text it was picked as; one alone would key nothing.
-    check('ingredients_form_id_has_form', sql`form_id is null or form is not null`),
 
-    // Partial per CLAUDE.md rule 4, and indexes rather than constraints: a
-    // constraint carries no WHERE, and `nullsNotDistinct()` exists only on
-    // constraints, so the two tiers need two indexes. Uniqueness is on
-    // `canonicalKey`, never the label.
-    uniqueIndex('ingredients_compendium_identity_unique')
-      .on(table.canonicalKey)
+    // The formal name once per tier, whatever the form (MB.216): two forms of
+    // one plant are one entry and two variants. Partial per CLAUDE.md rule 4,
+    // and indexes rather than constraints: a constraint carries no WHERE, and
+    // `nullsNotDistinct()` exists only on constraints, so the two tiers need
+    // two indexes. Uniqueness is on `identityKey`, never the label.
+    uniqueIndex('ingredients_compendium_identity_key_unique')
+      .on(table.identityKey)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
-    uniqueIndex('ingredients_workspace_identity_unique')
-      .on(table.workspaceId, table.canonicalKey)
+    uniqueIndex('ingredients_workspace_identity_key_unique')
+      .on(table.workspaceId, table.identityKey)
       .where(sql`${table.workspaceId} is not null and ${table.deletedAt} is null`),
     // Label uniqueness in the workspace tier only: inside one drawer an
     // ambiguous label is a mistake; in the compendium it is the point.
@@ -124,18 +127,8 @@ export const ingredients = pgTable(
     uniqueIndex('ingredients_compendium_slug_unique')
       .on(table.slug)
       .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
-    uniqueIndex('ingredients_workspace_slug_unique')
-      .on(table.workspaceId, table.slug)
-      .where(sql`${table.deletedAt} is null`),
-
-    // The pick read backwards (M5.6a): the live compendium entries picking a
-    // form, which hold its delete and follow its rename (MB.167). Partial on
-    // the compendium's live rows, the only ones either reads — a coven's pick
-    // never blocks a delete or follows a rename, and a form is soft-deleted,
-    // so the foreign key's own check never runs.
-    index('ingredients_compendium_form_id_idx')
-      .on(table.formId)
-      .where(sql`${table.workspaceId} is null and ${table.deletedAt} is null`),
+    liveUnique('ingredients_workspace_slug_unique', table, table.workspaceId, table.slug),
+    seedKeyUnique('ingredients_seed_key_unique', table),
 
     // One multicolumn `gin_trgm_ops` index serves a predicate on either column
     // alone (asserted by EXPLAIN in ingredients-trigram.test.ts). Not partial:

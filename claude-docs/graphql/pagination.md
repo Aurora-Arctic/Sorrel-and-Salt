@@ -43,9 +43,11 @@ each keep to their own rules:
   resolved from what the finder carried on its entry — `resolvePage` copies
   everything an entry holds but its cursor onto the edge. The compendium's
   `score` is the one so far. `count` adds `totalCount` and `countBefore` to
-  the connection (below).
+  the connection (below), and `authScopes` is the field's scope, as on any
+  field (`privilegeChanges`'s `admin`, MB.199).
 - **`findPage` and `findPageInWorkspace`** in the repository run the keyset
-  query (claude-docs/db/keyset-pages.md, "Keyset pages").
+  query, and `findPageCount` counts a `findPage` list
+  (claude-docs/db/keyset-pages.md, "Keyset pages").
 
 **A cursor is the sort key and the id, never an offset**: base64url of
 `{"k": [<part>, …], "i": <id>}`, one part per sort part. An offset moves when
@@ -72,7 +74,10 @@ type QueryCompendiumConnection {
 
 - **The client derives "Page X of Y".** For a page of `size` rows, the page
   is `floor(countBefore / size) + 1` and the number of pages is
-  `max(1, ceil(totalCount / size))`. "Showing 11–20 of 26" is
+  `max(1, ceil(totalCount / size))`. The admin pages, which read services
+  rather than the connection, do it once in `resolveNumberedPage`
+  (`src/lib/pagination.ts`), which reads a page through `resolvePage` and
+  counts it from its first row (MB.132). "Showing 11–20 of 26" is
   `countBefore + 1` to `countBefore + edges.length` of `totalCount`.
 - **A count, so it has no base to guess.** The first page's `countBefore` is
   0 because no rows come before it. The name is not `startIndex`: Google's
@@ -109,15 +114,11 @@ bounded by its parent.
 **Cost** is priced at the page each connection will fetch
 (["Protections"](protections.md)).
 
-**The guard.** `tests/guards/pagination.test.ts` fails:
-
-- a `Query` field that returns a bare list;
-- a `*Connection` field without `first` and `after`;
-- a `.connection(` call anywhere in `src/` except `src/graphql/pagination.ts`,
-  untracked files included.
-
-It also proves that the first two checks can fail, by running them against a
-throwaway schema.
+**The guard.** `tests/guards/pagination.test.ts` reads the built schema and
+fails a `Query` field that returns a bare list, and a `*Connection` field
+without `first` and `after`. Lint's `sorrel/pagination-helper`
+(`lint/sorrel-lint.js`) fails a `.connection(` call anywhere but
+`src/graphql/pagination.ts`.
 
 The tests: `tests/lib/pagination.test.ts` covers the numbers, the clamp and the
 cursor codec. `tests/graphql/pagination.test.ts` covers the field over the

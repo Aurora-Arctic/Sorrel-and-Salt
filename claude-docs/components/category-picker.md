@@ -10,19 +10,21 @@ filter. A client component, for the box's text.
 
 `CategoryPickerProps` (`types.ts`):
 
-| Prop         | What it is                                                               |
-| ------------ | ------------------------------------------------------------------------ |
-| `legend`     | The fieldset's name, "Categories"                                        |
-| `hint`       | The legend's `InfoTip` text, if any                                      |
-| `entry`      | The box's name, "Category": what a pick adds                             |
-| `categories` | Every `PickerCategory` on offer, in any order                            |
-| `pending`    | The categories are still being read: the box says it is looking          |
-| `value`      | The picked ids, in the order they were picked                            |
-| `onChange`   | Called with the new id list after a pick is added or taken out           |
-| `invalid`    | The ids an error names: each entry edged, its x described by the error   |
-| `errorId`    | The id of the element `error` renders, set only while an error shows     |
-| `error`      | The one error element, drawn beneath the box: the form's `FieldError`    |
-| `status`     | Said beneath the box, and read with it: the categories could not be read |
+| Prop          | What it is                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `legend`      | The fieldset's name, "Categories"                                                                                                      |
+| `hint`        | The legend's `InfoTip` text, if any                                                                                                    |
+| `entry`       | The box's name, "Category": what a pick adds                                                                                           |
+| `placeholder` | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |
+| `categories`  | Every `PickerCategory` on offer, in any order                                                                                          |
+| `pending`     | The categories are still being read: the box says it is looking                                                                        |
+| `value`       | The picked ids, in the order they were picked                                                                                          |
+| `onChange`    | Called with the new id list after a pick is added or taken out                                                                         |
+| `invalid`     | The ids an error names: each entry edged, its x described by the error                                                                 |
+| `errorId`     | The id of the element `error` renders, set only while an error shows                                                                   |
+| `error`       | The one error element, drawn beneath the box: the form's `FieldError`                                                                  |
+| `status`      | Said beneath the box, and read with it: the categories could not be read                                                               |
+| `action`      | A control at the legend's end, handed the picker's announcer (`LegendAction`): an ingredient variant's Copy From Ingredient (MB.115)   |
 
 A `PickerCategory` is the category's id, name, optional `description` and its
 `group`, a `PickerGroup`: id, name, `colorDark` and `colorLight`.
@@ -57,8 +59,7 @@ A `PickerCategory` is the category's id, name, optional `description` and its
   picked deity reads with its tradition, since the colour alone cannot name
   the group, and its description beneath, the entry's `detail` — "Testward
   (Wards & Fixtures)" over "Keeps a fixture from harm." — both read as its
-  x's description, the owner's call. The chip itself reads the bare name. Never a Sass token by slug:
-  `tests/guards/chip-colour-source.test.ts` fails one.
+  x's description, the owner's call. The chip itself reads the bare name. Never a Sass token by slug.
 - **An error is the box's, and names its entries.** While `errorId` is set
   the box is `aria-invalid` and described by the error, so the form's focus
   after a failed save lands on it, as on every list field; each id in
@@ -85,10 +86,10 @@ screen scrolls nothing sideways.
 `tests/components/CategoryPicker/index.test.tsx`: the group and its box;
 every category under its group, both alphabetical, with a novel group; the
 rows narrowed by the text and no typed row; a pick added after the others,
-the box emptied, said, and the pick offered no more; the picks reported in
-order; each row and each entry in its group's colour pair, its tooltip naming the group
-then the description; an x, the
-focus kept in the box; Backspace; Clear, shown only with picks; Enter adding
-the one category named whole and nothing for part of a name; the box and the
-entries an error names, each described; the status read with the box; and a
-pick not yet named held while the read is on, then drawn by its id.
+the box emptied, announced, and the pick offered no more; the picks reported
+in order as one is added, removed, taken by Backspace or cleared; each entry described by its group and description, its tooltip
+naming the group; Enter adding the one category named whole and nothing for
+part of a name; the box and the entries an error names, each described; the
+status read with the box; and a pick not yet named held while the read is
+on, then drawn by its id. The ×, Backspace and Clear themselves are
+Combobox's, the colours presentation.

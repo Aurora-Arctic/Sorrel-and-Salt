@@ -181,7 +181,7 @@
     border-color: $text-muted;
     border-style: dashed;
     color: $text-muted;
-    opacity: 0.55;
+    opacity: $opacity-disabled;
     cursor: not-allowed;
     box-shadow: none;
 
@@ -228,31 +228,27 @@
   // A paged list's Prev and Next, centred under its table (the owner's
   // calls, M5.6): a `nav` holding a list of full-size `.btn--quiet` anchors,
   // quiet because paging changes nothing. The ‹ and › marks are
-  // `aria-hidden` spans, leaving each link named "Prev" or "Next".
+  // `aria-hidden` spans, leaving each link named "Prev" or "Next". One
+  // line at every width (the owner's call at MB.115's review), closing up
+  // on a narrow pager below.
+  .pager {
+    container: pager / inline-size;
+  }
+
   .pager > ul {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     gap: space(3);
-    margin: 0;
-    padding: 0;
-    list-style: none;
 
     // Two controls, not a bulleted list: no typography-base ◆ marker.
-    > li {
-      margin: 0;
-
-      &::before {
-        content: none;
-      }
-    }
+    @include list-reset;
   }
 
   // Twice the label, so the direction reads at a glance; a line height of 1
   // so the mark does not make the button taller.
-  // A box of its own, a label's em wide, so the spinner that takes the
-  // chevron's place while the end's page is on the way leaves the button the
-  // size it was (the owner's call, MB.178).
+  // A box of its own, a label's em wide, so either guillemet leaves its
+  // button the same size.
   .pager__mark {
     display: inline-flex;
     align-items: center;
@@ -260,23 +256,12 @@
     inline-size: 0.5em;
     font-size: 2em;
     line-height: 1;
-
-    // The label's size, back from the mark's double.
-    > .spinner {
-      font-size: 0.5em;
-    }
   }
 
   // The guillemet sits on the text's line, below the middle of the button,
   // so it is brought up to the label's centre (the owner's call).
   .pager__chevron {
     translate: 0 -0.08em;
-  }
-
-  // A busy button's left side comes in for a spinner ahead of a word; an
-  // end's spinner stands in its chevron's box, so its padding stays put.
-  .pager .btn[aria-busy='true'] {
-    padding-left: space(5);
   }
 
   // "Page 2 of 3" between the ends, in the muted ink at the body size: it
@@ -288,6 +273,23 @@
     padding-inline: space(4);
     color: $text-muted;
     font-size: type-size('body');
+    white-space: nowrap;
+  }
+
+  // A phone's pager: the ends' padding and the room around "Page X of Y"
+  // given up, so the three stay on one line down to a 320px screen.
+  @container pager (max-width: #{$pager-tight-width}) {
+    .pager > ul {
+      gap: space(2);
+    }
+
+    .pager .btn {
+      padding-inline: space(3);
+    }
+
+    .pager__position {
+      padding-inline: 0;
+    }
   }
 
   // A page's heading with its one primary action on the same line, at the
@@ -296,6 +298,12 @@
   // carries room below its letters, so a centred button reads high and one on
   // the baseline low. It wraps beneath on a narrow screen rather than
   // squeezing the heading.
+  // A size container as well as the row (MB.115), since only its children
+  // change by its width: a container query styles what is inside the
+  // container, never the container itself. Keyed off its own width rather
+  // than the screen's, as `.form` is, so a header in a narrow column wraps too.
+  // Size containment means its width cannot come from its content, which
+  // holds wherever it sits: as a block, or a stretched flex item.
   .page-header {
     display: flex;
     flex-wrap: wrap;
@@ -303,6 +311,7 @@
     justify-content: space-between;
     gap: space(3) space(5);
     margin-bottom: space(5);
+    container: page-header / inline-size;
 
     > h1 {
       margin: 0;
@@ -313,10 +322,315 @@
     }
   }
 
+  // Under the forms' column, 28rem of its own width, the action goes
+  // beneath the heading (MB.115), rather than squeezing a long heading onto
+  // three lines beside it. On a line of its own it needs no bringing down to
+  // the heading's letters.
+  @container page-header (max-width: #{$narrow-column}) {
+    .page-header > h1 {
+      flex-basis: 100%;
+    }
+
+    .page-header > :not(h1) {
+      translate: none;
+    }
+
+    // In the admin area the action then spans the line (the owner's call at
+    // MB.115's review, against the natural width recommended), so it reads
+    // as the page's one primary action, as a narrow form's stacked buttons
+    // do. Scoped to `.admin-layout` because the call was the admin area's,
+    // and because the account page's header sits in the 28rem column at every
+    // window size, so an unscoped rule would stretch its Sign Out on desktop.
+    .admin-layout .page-header > :not(h1) {
+      flex-basis: 100%;
+    }
+
+    // An action wrapped in a box of its own (a tab's, the pause, a locked
+    // control) is a flex box whose children grow to span it, a line each
+    // when there are several. A bare button is its own span, and an empty
+    // wrapper stays hidden.
+    .admin-layout .page-header > :not(h1, .btn, :empty) {
+      display: flex;
+      flex-wrap: wrap;
+
+      > * {
+        flex: 1 1 100%;
+      }
+    }
+  }
+
+  // A filter form's row (MB.115), a toolbar that applies as it changes
+  // (claude-docs/components/filter-form.md): the search box first, then any
+  // selects, type-aheads and switches, then Clear while a filter is shown,
+  // wrapping, all on the line's end so a switch stands level with the boxes
+  // beside it. Edge to edge with the table beneath it, the owner's call at
+  // MB.115's review, so its boxes reach the bands' edges; a label stands a
+  // cell inset left of the heading text under it, which the owner preferred
+  // to boxes narrower than the table. Written five times as each list's own `__search` rule
+  // until it was one. A size container for the same reason `.page-header` is:
+  // under 28rem of its own width every child takes the whole line, rather
+  // than a phone squeezing the search box to the width of a select.
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: space(3) space(5);
+    container: filter-row / inline-size;
+
+    // The search, always first, starts at `$filter-search-basis` and takes
+    // the line's spare room, so the row reaches the table's width without a
+    // gap at its end, and the choices wrap beneath it before it gives way.
+    // Its grow factor dwarfs a choice's, so beside it a choice keeps its
+    // width to the pixel.
+    > :first-child {
+      flex: 9999 1 $filter-search-basis;
+      min-width: 0;
+    }
+
+    // A choice, a plain select or a type-ahead, stands at one width,
+    // `$filter-choice-width`, rather than its control's own: a native select
+    // sizes itself by its longest option, and a type-ahead by its few
+    // letters, so the server's select and the type-ahead that replaces it
+    // once hydrated would differ, and two selects beside each other would
+    // too. `FilterSelectField` marks every form of a choice `filter-row__choice`,
+    // since once hydrated it holds a Combobox box, not a select; a bare `.field`
+    // holding a select counts too. A switch, a `.field` with no select in it,
+    // keeps its own width. Each gives way on a narrow row, and grows, a little
+    // against the search and in earnest once wrapped onto a line without it,
+    // so a choice on its own line fills it rather than standing at a select's
+    // width in the middle of a row (the owner's call, MB.115).
+    > :is(.field:has(> .select), .filter-row__choice) {
+      flex: 1 1 $filter-choice-width;
+      min-width: 0;
+    }
+  }
+
+  // Clear, drawn only while the page shows a filter: a plain text link, the
+  // owner's call over a quiet button, so it takes the page's own link style
+  // from typography-base and nothing here. Pushed to the line's end, and a
+  // control's height with its text centred, so it stands level with the
+  // boxes and its target is as tall as theirs.
+  .filter-row__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: $control-height;
+    margin-inline-start: auto;
+  }
+
+  // On a phone's narrow row every child takes the whole line, so the boxes
+  // share one edge, and Clear ends the line beneath them. One `:is()`, its
+  // weight the choice rule's above, so it overrides that rule by coming
+  // later rather than by a heavier selector.
+  @container filter-row (max-width: #{$narrow-column}) {
+    .filter-row > :is(*, .field:has(> .select)) {
+      flex-basis: 100%;
+    }
+  }
+
+  // The row while the list it filters is on its way, greyed as a tabbed
+  // page's tabs are (claude-docs/components/filter-form.md): every field,
+  // and Clear, faded to 55% with its colour taken out and the not-allowed
+  // cursor, and hover changing nothing. Here, under `body`, so it outweighs
+  // the fields' own hover.
+  .filter-row[aria-busy='true'] {
+    > * {
+      opacity: 0.55;
+      filter: grayscale(1);
+    }
+
+    *,
+    *:hover {
+      cursor: not-allowed;
+    }
+
+    :is(.input, .select, .textarea):hover {
+      border-color: $text-muted;
+    }
+  }
+
+  // A list page's root (MB.115): the filter, the notice or empty state, the
+  // table and the pager, a `space(5)` apart. Written four times as each
+  // list's own root rule. A paragraph in it, an empty state, takes no margin,
+  // since the gap alone spaces the column, as `.page-frame`'s does.
+  // Its body, ListFrame's `ListBody`, is the list under the filter, the
+  // empty state, the table and the pager, spaced the same way, since the
+  // skeleton stands in for all of it while another page is on its way.
+  .list-frame,
+  .list-frame__body {
+    @include stack;
+
+    > p {
+      margin: 0;
+    }
+  }
+
+  // The new list, faded in as it replaces the skeleton, as a tab's content
+  // is (claude-docs/components/list-frame.md); a list the server drew,
+  // before any press, has no `data-arrived` and shows at once.
+  .list-frame__body[data-arrived] {
+    @include arrived;
+  }
+
+  @keyframes list-frame-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  // The centred, full-height frame of a page with no AppShell: Welcome,
+  // sign-in, the account pages, the 403, the invitation. One column, its
+  // children a `space(6)` apart, held below the top inset so a page with the
+  // impersonation banner above it still fits the window.
+  // claude-docs/styling.md, "The page frame".
+  .page-frame {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: space(6);
+    min-height: calc(100dvh - #{$top-inset});
+    padding: space(6) space(4);
+  }
+
+  // The gap alone spaces the column: this outranks `section`'s margins from
+  // layout-base and `.page-header`'s own, which would otherwise stack on it.
+  // `border-box`, so a padded child such as a `.panel` keeps its padding
+  // inside the column rather than growing past it at 375px.
+  .page-frame > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+
+  // Inside `:where()`, so the width and cap carry no specificity and a
+  // component's own narrower column (the sign-in panel's) wins in the app,
+  // where this layer compiles as `body .x` and would otherwise outrank a
+  // single class.
+  :where(.page-frame) > * {
+    width: 100%;
+    max-width: $measure;
+  }
+
+  // The forms' column, for the pages whose content is a form.
+  :where(.page-frame--narrow) > * {
+    max-width: $narrow-column;
+  }
+
+  // A titled section of a framed page: its head, then its content. Clear of
+  // the top inset when the page's own nav jumps to it.
+  .page-frame__section {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+    scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+
+    > h2 {
+      margin: 0;
+    }
+  }
+
+  // The hairline between two sections, in the muted ink a table's header
+  // rule wears; not `hr`'s inset, bevelled default.
+  .page-frame__rule {
+    border: 0;
+    border-top: 1px solid $text-muted;
+  }
+
+  // The admin area's frame (MB.115), around the nav it carries: the nav
+  // above, the page below, a `space(5)` apart. Wider than `.page-frame`, at
+  // `$wide-column`, for the tables its pages hold, and neither full height
+  // nor centred down the window, since a list page runs as long as its rows.
+  // A primitive rather than AdminNav's own rule, since the admin layout and
+  // three stories use the class as their frame.
+  .admin-layout {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+    margin-inline: auto;
+    padding: space(6) space(4);
+  }
+
+  // Inside `:where()`, as `.page-frame`'s width is, so a story or page that
+  // wants the frame narrower or wider can say so with a single class.
+  :where(.admin-layout) {
+    width: 100%;
+    max-width: $wide-column;
+  }
+
+  // A wrapping row of links that is not a bulleted list: a page's own nav,
+  // the admin nav. typography-base's ◆ marker would sit against the link
+  // before and hang outside the first, and its list indent and item margins
+  // would offset the row, so all three are cleared.
+  .link-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(2) space(5);
+
+    @include list-reset;
+  }
+
+  // The link to the page you are on (MB.115), marked by `aria-current`,
+  // which is what tells a screen reader too. Told apart by shape rather than
+  // hue: a firmer weight and the heavy rule as its underline, set clear of
+  // the letters, where every other link has the browser's hairline. A
+  // different colour alone would fail WCAG 1.4.1. The admin nav is the first.
+  .link-row a[aria-current='page'] {
+    font-weight: 500;
+    text-decoration-line: underline;
+    text-decoration-thickness: $rule-heavy;
+    text-underline-offset: space(1);
+  }
+
+  // A provider's mark on a small circle of its brand's own ground, as its
+  // sign-in button gives it one: the marks are drawn for those grounds,
+  // Discord's white for its blurple. A white ground takes the brand's edge so
+  // it holds 3:1 against the page. Facebook's mark is its own blue circle
+  // with a white "f", so it fills the whole box.
+  // claude-docs/styling.md, "Link rows and provider marks".
+  .provider-mark {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    // The mark's own geometry, a circle sized to sit on a line of text.
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+
+    > svg {
+      width: 0.875rem;
+      height: auto;
+    }
+  }
+
+  @each $brand, $parts in $brand-palettes {
+    .provider-mark--#{$brand} {
+      background-color: brand-color($brand, 'fill');
+
+      @if map.has-key($parts, 'edge') {
+        border: 1px solid brand-color($brand, 'edge');
+      }
+    }
+  }
+
+  .provider-mark--facebook > svg {
+    width: 100%;
+    height: 100%;
+  }
+
   // A table is as wide as its columns: on a narrow screen it scrolls inside
   // its frame rather than widening the page.
+  // Also the size container a `.data-table--stack` table stacks by, named so
+  // that a `.form` or `.page-header` container around it is not the one asked.
+  // Size containment means the frame's width cannot come from the table
+  // inside it, so the frame must sit as a block or a stretched flex item,
+  // as it does in `.list-frame`, never in a row that shrinks to its content.
   .data-table-frame {
     overflow-x: auto;
+    container: data-table / inline-size;
   }
 
   // The admin lists' table (M5.6), a primitive once a third list carried it
@@ -328,8 +642,9 @@
 
     th,
     td {
-      // Inset on both sides, as the rows are banded, so no text meets a band's edge.
-      padding: space(2) space(3);
+      // Inset on both sides, as the rows are banded, so no text meets a band's
+      // edge; `$table-cell-inset` across.
+      padding: space(2) $table-cell-inset;
       text-align: start;
       // The baseline, so a row's small button reads on its text's line.
       vertical-align: baseline;
@@ -337,12 +652,133 @@
 
     // The muted ink, as every hairline here is (the footer's, a specimen's):
     // the body ink would draw a rule heavier than the text it heads.
+    // On the cell's bottom, on the owner's call, so a heading that wraps
+    // keeps its last line on the hairline, level with its neighbours.
     thead th {
+      vertical-align: bottom;
       border-bottom: 1px solid $text-muted;
     }
 
     tbody tr:nth-child(even) {
       background-color: $surface-card;
+    }
+  }
+
+  // The two row tweaks a list's table asks for (MB.115), as modifiers the
+  // table takes by class (DataTable's `className`): `--roomy`, taller rows
+  // centred on their cells, for a chip or a button taller than a line of
+  // text; `--nowrap`, every cell on one line, the table scrolling in its
+  // frame, wrapping again as cards. Both classes, to outrank `.data-table`'s
+  // own cells.
+  .data-table.data-table--roomy {
+    @include data-table-roomy;
+  }
+
+  .data-table.data-table--nowrap {
+    @include data-table-nowrap;
+  }
+
+  // A table whose rows turn into cards when its frame is narrower than
+  // `$table-stack-width` (MB.115), where its columns would otherwise scroll
+  // sideways out of sight on a phone. Each row is a card on the surface the
+  // bands use, every cell a block beneath the last, led by its column's name
+  // from the cell's own `data-label`, since the header row is hidden: still
+  // read by a screen reader, drawn nowhere. A cell whose `data-label` is
+  // empty, an action such as Impersonate, loses the label and spans the card.
+  // claude-docs/styling.md, "Tables at phone width".
+  //
+  // - Every stacking table carries explicit `role` attributes (`table`,
+  //   `rowgroup`, `row`, `columnheader`, `cell`): WebKit drops a table's
+  //   semantics once `display` changes on its parts, and the roles put them
+  //   back. They change nothing elsewhere, since they are the roles the
+  //   elements have already.
+  // - The label is written twice: `attr(data-label) / ''` gives it an empty
+  //   alternative text, so a screen reader, which already has the header,
+  //   does not read the name twice. Safari 16.4 drops the second
+  //   declaration and keeps the first, which doubles the name there.
+  // - A cell a component makes `position: sticky`, as the user list's
+  //   Impersonate column is, must be reset to `static` under this rule in the
+  //   component's own stylesheet: a sticky cell only works while the frame
+  //   scrolls, and in a card it would sit over its neighbours. The primitive
+  //   does not reset `position` itself, since a cell may be `relative` to
+  //   anchor a tip.
+  @container data-table (max-width: #{$table-stack-width}) {
+    .data-table--stack {
+      display: block;
+
+      > thead {
+        @include visually-hidden;
+      }
+
+      > tbody {
+        display: flex;
+        flex-direction: column;
+        gap: space(3);
+      }
+
+      // Every card on the card surface, so the bands give way: each row is
+      // already its own box. Room around and between the cells, a step more
+      // than a table row's, the owner's call (MB.115): a card of text alone,
+      // as the privilege ledger's, read cramped at the row's spacing.
+      > tbody > tr {
+        display: grid;
+        gap: space(3);
+        padding: space(4);
+        border-radius: radius('surface');
+        background-color: $surface-card;
+      }
+
+      > tbody > tr > :is(td, th) {
+        display: block;
+        padding: 0;
+      }
+
+      > tbody > tr > :is(td, th)::before {
+        content: attr(data-label);
+        content: attr(data-label) / '';
+        display: block;
+        // A step from its value, well inside the gap between cells, so a label sits
+        // with its own value: a row of logos would otherwise touch it (MB.115,
+        // the owner's call).
+        margin-bottom: space(1);
+        color: $text-muted;
+        font-size: type-size('caption');
+        font-weight: 500;
+      }
+
+      > tbody > tr > [data-label='']::before {
+        content: none;
+      }
+
+      // A cell with no label is an action: across the card, whatever columns
+      // a component gives the grid.
+      > tbody > tr > [data-label=''] {
+        grid-column: 1 / -1;
+      }
+
+      // A row's Edit, as a card, at its top right beside the first line
+      // (MB.115, the owner's call), as the user list's Impersonate stands:
+      // two tracks, the first cell and the action sharing the first line and
+      // every other cell spanning both beneath. Placed by the grid, not moved
+      // in the markup, so the columns and the keyboard order stay as the
+      // desktop has them. After the rule above, which it outranks.
+      > tbody > tr:has(> .data-table__card-action) {
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        > :is(td, th) {
+          grid-column: 1 / -1;
+        }
+
+        > :first-child {
+          grid-column: 1;
+        }
+
+        > .data-table__card-action {
+          grid-row: 1;
+          grid-column: 2;
+          align-self: start;
+        }
+      }
     }
   }
 
@@ -428,7 +864,7 @@
   // A phone-width form stacks its buttons, full width and in order, rather
   // than wrapping them unevenly with a Delete pushed off to one side (the
   // owner's call): every form's row of three fits on one line above 28rem.
-  @container (max-width: 28rem) {
+  @container (max-width: #{$narrow-column}) {
     .form .form__actions,
     .form .modal__actions {
       flex-direction: column;
@@ -457,6 +893,14 @@
     margin-block: space(2);
   }
 
+  // The button apart from the rest at the row's far end, an edit's Delete,
+  // so it is not pressed for Save or Cancel. A margin rather than a spacer
+  // element, so a narrow form's stacking rule can take it back: under 28rem
+  // the row is a column and every button full width, in order.
+  .form__aside {
+    margin-inline-start: auto;
+  }
+
   .field {
     display: flex;
     flex-direction: column;
@@ -466,6 +910,25 @@
   .field__label {
     font-size: type-size('small');
     font-weight: 500;
+  }
+
+  // A label with something beside it on its line, an InfoTip's ⓘ or a
+  // required mark (MB.115, from IngredientForm's own rule). The positioning
+  // context for a tip that opens over the label, so it lines up with the
+  // field rather than the page.
+  .field__label-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: space(1);
+  }
+
+  // The asterisk on a label whose field a save will ask for, in the error
+  // red. The markup hides it from a screen reader, which hears `aria-required`
+  // on the control instead. Written five times as each form's own `__required`
+  // rule.
+  .field__required {
+    color: $secondary;
   }
 
   // The control itself, not any disabled descendant: a select's placeholder
@@ -496,17 +959,12 @@
   .input,
   .textarea,
   .select {
-    box-sizing: border-box;
-    width: 100%;
     // Level with a button and a suggesting box, whatever the platform's line
     // height ($control-height).
-    min-height: $control-height;
+    @include field-box;
+
+    width: 100%;
     margin: 0;
-    padding: space(2) space(3);
-    border: 1px solid $text-muted;
-    border-radius: radius('control');
-    background-color: $surface-card;
-    color: $text-primary;
     font-family: $font-body;
     font-size: type-size('body');
     font-weight: 400;
@@ -573,7 +1031,7 @@
     cursor: pointer;
 
     // Forced colours drop background images, and the chevron with them.
-    @media (forced-colors: active) {
+    @include forced-colors {
       appearance: auto;
       background-image: none;
     }
@@ -619,6 +1077,230 @@
     }
   }
 
+  // A switch (MB.115), the owner's call for a filter's on-or-off choice over a
+  // checkbox, which stood small and out of place among the row's boxes: a
+  // native checkbox with `role="switch"`, drawn as a rounded track whose thumb
+  // slides from the start, off, to the end, on. Native, so it submits with
+  // its form before hydration and keeps Space and its label's click, and a
+  // screen reader hears its checked state as the switch's. A `.field` block,
+  // its `.field__label` above and the toggle beneath in `.switch__control`,
+  // a control's height, so it lines up under its label level with the boxes
+  // beside it, as the owner asked (claude-docs/styling.md, "Form fields").
+  .switch {
+    // From the track's inner edge to the thumb, on every side.
+    $inset: calc((#{$icon-size} - 2px - #{$glyph-size}) / 2);
+    // Pressed, the thumb stretches by a step, back from the end it sits at.
+    $stretch: space(1);
+
+    > .field__label {
+      cursor: pointer;
+    }
+
+    // The row the toggle stands in: a field's height, the toggle centred in
+    // it, and no wider than the toggle, so only the toggle and its label are
+    // pressed.
+    .switch__control {
+      display: flex;
+      align-items: center;
+      align-self: flex-start;
+      min-height: $control-height;
+    }
+
+    // The track: off, the field's ground and its muted 1px edge, so it reads
+    // as one of the row's controls.
+    input {
+      position: relative;
+      flex: none;
+      box-sizing: border-box;
+      inline-size: $switch-width;
+      block-size: $icon-size;
+      margin: 0;
+      border: 1px solid $text-muted;
+      border-radius: radius('pill');
+      background-color: $surface-card;
+      appearance: none;
+      cursor: pointer;
+      // The state's colour keeps pace with the thumb, rather than trailing it
+      // at the theme's 400ms.
+      transition:
+        background-color $motion-short ease-out,
+        border-color $motion-short ease-out;
+
+      // The thumb: off, the muted ink at the track's start. Where it sits,
+      // not its colour, is what tells on from off (WCAG 1.4.1).
+      &::before {
+        content: '';
+        position: absolute;
+        inset-block-start: $inset;
+        inset-inline-start: $inset;
+        inline-size: $glyph-size;
+        block-size: $glyph-size;
+        border-radius: radius('pill');
+        background-color: $text-muted;
+        transition:
+          translate $motion-short ease-out,
+          inline-size $motion-short ease-out,
+          background-color $motion-short ease-out;
+      }
+
+      // On: the track filled with the accent, as a solid button is, and the
+      // thumb at its end in the page's colour, as that button's label is.
+      &:checked {
+        border-color: $accent;
+        background-color: $accent;
+
+        &::before {
+          background-color: $text-on-color;
+          translate: calc(#{$switch-width} - #{$icon-size}) 0;
+        }
+      }
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+
+      // Dashed and unfilled, as a disabled field is, on or off: the thumb in
+      // the muted ink either way, so it still shows on the unfilled track,
+      // and where it sits still says which.
+      &:disabled {
+        border-color: $text-muted;
+        border-style: dashed;
+        background-color: transparent;
+        opacity: 0.7;
+
+        &::before {
+          background-color: $text-muted;
+        }
+      }
+
+      @include reduced-motion {
+        transition: none;
+
+        &::before {
+          transition: none;
+        }
+      }
+
+      // Forced colours repaint the thumb in the track's own ground, so it is
+      // painted in the system's ink instead, and on in its highlight.
+      @include forced-colors {
+        &::before {
+          background-color: CanvasText;
+          forced-color-adjust: none;
+        }
+
+        &:checked {
+          background-color: Highlight;
+          forced-color-adjust: none;
+
+          &::before {
+            background-color: HighlightText;
+          }
+        }
+      }
+    }
+
+    // Hover and press, on the toggle or its label, never on a switch that
+    // is off: `disabled`, or `aria-disabled` while a filter row's list is on
+    // its way, which refuses the press itself.
+    &:not(:has(input:disabled, input[aria-disabled='true'])) {
+      // The edge in the body ink, as a field's; on, the solid button's hover.
+      &:has(> .field__label:hover, input:hover) input {
+        border-color: $text-primary;
+
+        &:checked {
+          border-color: $accent-solid-hover;
+          background-color: $accent-solid-hover;
+        }
+      }
+
+      // Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts`
+      // marks a tap, which `:active` alone misses on a phone): the thumb
+      // stretches towards the end it would go to, so a press answers before
+      // the switch turns.
+      &:has(> .field__label:is(:active, [data-pressed]), input:is(:active, [data-pressed])) input {
+        &::before {
+          inline-size: calc(#{$glyph-size} + #{$stretch});
+        }
+
+        &:checked::before {
+          translate: calc(#{$switch-width} - #{$icon-size} - #{$stretch}) 0;
+        }
+      }
+    }
+
+    // The label dims with a disabled switch through `.field`'s own rule.
+    &:has(input:disabled, input[aria-disabled='true']) > .field__label {
+      cursor: not-allowed;
+    }
+
+    input:is(:disabled, [aria-disabled='true']) {
+      cursor: not-allowed;
+    }
+  }
+
+  // A list filter's search box (MB.115), `SearchField`: one `.input` box on a
+  // flex row holding a borderless text input and, at its end, the submit, a
+  // magnifier named Search, as Combobox's control holds its text and its
+  // indicators. Here among the primitives, after `.input`, rather than in a
+  // stylesheet of the Field folder's own: the folder has none, since every
+  // control it draws, `.input`, `.select` and `.switch`, is a primitive, and
+  // coming after `.input` under the same `body` this outweighs its padding
+  // without compounding, where Combobox's own stylesheet has to write
+  // `.input.combobox__control`.
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: space(1);
+    padding-block: 0;
+    padding-inline-end: space(2);
+
+    // The ring is the inner input's focus, drawn on the box that looks like
+    // the input.
+    &:has(.search-field__input:focus-visible) {
+      @include focus-ring;
+    }
+  }
+
+  // The text itself, unboxed: the box around it is the edge. It takes the
+  // row's rest and its whole height, so a press anywhere left of the mark
+  // puts the caret in it.
+  .search-field__input {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+
+    &::placeholder {
+      color: $text-placeholder;
+      opacity: 1;
+    }
+  }
+
+  // The submit: a square `$icon-size` target around the mark, muted until
+  // pointed at or focused, then the accent, the colour of what acts, as a
+  // link's is.
+  .search-field__submit {
+    @include icon-button;
+
+    flex: none;
+
+    &:hover,
+    &:focus-visible {
+      color: $accent;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
   // Groups rows under one name — checkboxes, or a list of entries.
   .fieldset {
     display: flex;
@@ -640,15 +1322,15 @@
   // Read by a screen reader, drawn nowhere: a live region's news, say. The
   // clip rather than `display: none`, which would take it from the reader too.
   .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+    @include visually-hidden;
+  }
+
+  // A comma heard but not seen, between two parts of a name read as one, as a
+  // dialog's "Edit Deity, Testra, Greek" (MB.115). Drawn at no size rather than
+  // `.visually-hidden`, whose box is taken out of the flow: Chrome then puts a
+  // space either side of it in the name, "Edit Deity , Testra".
+  .spoken-separator {
+    font-size: 0;
   }
 
   // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.

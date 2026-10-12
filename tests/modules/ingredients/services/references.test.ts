@@ -7,6 +7,7 @@ import type { Session } from '@/lib/session';
 import {
   createReference,
   createWorkspaceIngredient,
+  getReference,
   referencesOf,
   suggestReferences,
   updateReference,
@@ -84,10 +85,17 @@ describe('createReference', () => {
     expect(row).toEqual({ title: 'A Herbal of Fixture Covens', edition: '2nd ed.' });
   });
 
-  // The same input the admin's write above saves: the proof is what refuses,
-  // checked before the input is read.
-  it('refuses a compendium reference to anyone but a site admin, before reading the input', async () => {
+  // The same input the admin's write above saves: the proof is what refuses.
+  // The compendium tier reads the site role alone, so one non-admin — the
+  // coven's owner, the highest workspace role — stands for every one.
+  it('refuses a compendium reference to a non-admin, writing nothing', async () => {
+    expect(asUser(A).role).toBe('user');
+
     await expect(createReference(asUser(A), null, BOOK)).rejects.toThrow(Forbidden);
+    expect(await sql`select id from "references"`).toHaveLength(0);
+  });
+
+  it('refuses a compendium reference to a non-admin before reading the input', async () => {
     await expect(createReference(asUser(B), null, { kind: 'book' } as never)).rejects.toThrow(
       Forbidden,
     );
@@ -102,26 +110,15 @@ describe('createReference', () => {
   });
 
   // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees
-  // them: each issue on the field that failed, never a constraint's name.
-  it.each([
-    [
-      'a web page with no address or day',
-      { kind: 'web_page', title: 'Testwort' },
-      ['url', 'accessed'],
-    ],
-    ['a chapter with no book', { kind: 'chapter', title: 'On Testwort' }, ['container']],
-    ['an article with no journal', { kind: 'article', title: 'On Testwort' }, ['container']],
-    ['an entry with no reference work', { kind: 'entry', title: 'Testwort' }, ['container']],
-    ['a book with no date', { kind: 'book', title: 'Fixtures' }, ['published']],
-    // An address with a host but no scheme is taken as https (MB.154); one
-    // with no host to read is still refused.
-    ['a relative address', { ...BOOK, url: 'fixtures/a' }, ['url']],
-    ['a day read with no address', { ...BOOK, accessed: '2026-10-06' }, ['accessed']],
-    ['a blank title', { ...BOOK, title: '  ' }, ['title']],
-  ])('refuses %s, pathed to the field', async (_case, input, fields) => {
-    const issues = await refusal(createReference(asUser(B), WORKSPACE_W_ID, input as never));
+  // them: each issue on the field that failed, never a constraint's name. One
+  // case proves the service parses its input; every rule the schema holds is
+  // tests/modules/ingredients/validation/reference.test.ts's.
+  it('refuses a web page with no address or day, pathed to each field', async () => {
+    const issues = await refusal(
+      createReference(asUser(B), WORKSPACE_W_ID, { kind: 'web_page', title: 'Testwort' } as never),
+    );
 
-    expect(issues.map((issue) => issue.path)).toEqual(fields.map((field) => [field]));
+    expect(issues.map((issue) => issue.path)).toEqual([['url'], ['accessed']]);
     for (const { message } of issues) expect(message).not.toMatch(/references_|violates/);
   });
 });
@@ -170,6 +167,18 @@ describe('updateReference', () => {
     ).rejects.toThrow(NotFound);
     await expect(
       updateReference(asUser(B), null, id, { ...BOOK, title: 'Hijacked' }),
+    ).rejects.toThrow(Forbidden);
+    expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
+  });
+
+  // The precondition is the admin's own replace, above, of the same row shape;
+  // the site role alone is read, so the coven's owner stands for every non-admin.
+  it('refuses the coven’s owner a compendium reference by direct id, leaving it as it was', async () => {
+    const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
+    expect(await rowOf(id)).toMatchObject({ workspace_id: null });
+
+    await expect(
+      updateReference(asUser(A), null, id, { ...BOOK, title: 'Hijacked' }),
     ).rejects.toThrow(Forbidden);
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });
@@ -223,6 +232,60 @@ describe('updateReference', () => {
   });
 });
 
+// MB.115: the edit panel opens on the source whole, read in the tiers the
+// picker offers.
+describe('getReference', () => {
+  it('reads a compendium reference whole without a coven, and under one', async () => {
+    const id = await insertReference(sql, { title: 'Compendium Herbal', place: 'Testford' }, E.id);
+
+    expect(await getReference(asUser(E), null, id)).toMatchObject({
+      id,
+      workspaceId: null,
+      title: 'Compendium Herbal',
+      place: 'Testford',
+    });
+    expect(await getReference(asUser(B), WORKSPACE_W_ID, id)).toMatchObject({ id });
+  });
+
+  it('reads a coven’s own reference for its viewer, and not without the coven', async () => {
+    const id = await insertReference(
+      sql,
+      { workspace_id: WORKSPACE_W_ID, title: 'W Herbal' },
+      A.id,
+    );
+
+    expect(await getReference(asUser(C), WORKSPACE_W_ID, id)).toMatchObject({
+      workspaceId: WORKSPACE_W_ID,
+      title: 'W Herbal',
+    });
+    await expect(getReference(asUser(B), null, id)).rejects.toThrow(NotFound);
+  });
+
+  // The precondition: the row is live and readable, by its own coven's
+  // member. Another coven's member reaches it under neither coven.
+  it('refuses another coven’s reference, by direct id under either coven', async () => {
+    const id = await insertReference(
+      sql,
+      { workspace_id: WORKSPACE_W_ID, title: 'W Herbal' },
+      A.id,
+    );
+    expect(await getReference(asUser(B), WORKSPACE_W_ID, id)).toMatchObject({ id });
+
+    await expect(getReference(asUser(D), WORKSPACE_X_ID, id)).rejects.toThrow(NotFound);
+    await expect(getReference(asUser(D), WORKSPACE_W_ID, id)).rejects.toThrow(Forbidden);
+    await expect(getReference(asUser(E), WORKSPACE_W_ID, id)).rejects.toThrow(Forbidden);
+  });
+
+  it('answers NotFound for a soft-deleted reference and for an id that is not one', async () => {
+    const id = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+    expect(await getReference(asUser(B), WORKSPACE_W_ID, id)).toMatchObject({ id });
+    await sql`update "references" set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+
+    await expect(getReference(asUser(B), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
+    await expect(getReference(asUser(B), WORKSPACE_W_ID, 'not-an-id')).rejects.toThrow(NotFound);
+  });
+});
+
 describe('suggestReferences', () => {
   async function titles(session: Session, workspaceId: string, query: string) {
     const page = await resolvePage({ first: 10 }, (request) =>
@@ -263,6 +326,26 @@ describe('suggestReferences', () => {
     expect(await titles(asUser(B), WORKSPACE_W_ID, 'perkunas')).toEqual(['Perkūnas']);
     expect(await titles(asUser(B), WORKSPACE_W_ID, 'mockley')).toEqual(['Fixtures']);
     expect(await titles(asUser(B), WORKSPACE_W_ID, 'mortar')).toEqual(['On Grinding']);
+  });
+
+  // As the compendium search scores a field: word similarity scores a
+  // fragment inside a longer word by the trigrams it shares, so a title
+  // holding the query verbatim counts as a full hit.
+  it('ranks a title holding the query inside a longer word above a near miss', async () => {
+    await insertReference(sql, { title: 'A Bri Herbal' }, E.id);
+    await insertReference(sql, { title: 'The Kettlebrim Reader' }, E.id);
+    // The precondition: by word similarity alone the two titles tie, so the
+    // title order would put the near miss first.
+    const [similarity] = await sql<{ nearMiss: number; holding: number }[]>`
+      select word_similarity('brim', 'A Bri Herbal') as "nearMiss",
+             word_similarity('brim', 'The Kettlebrim Reader') as holding`;
+    expect(similarity.holding).toBeGreaterThanOrEqual(0.5);
+    expect(similarity.nearMiss).toBeGreaterThanOrEqual(similarity.holding);
+
+    expect(await titles(asUser(B), WORKSPACE_W_ID, 'brim')).toEqual([
+      'The Kettlebrim Reader',
+      'A Bri Herbal',
+    ]);
   });
 
   it('lists everything by title on a blank query, and leaves out a soft-deleted reference', async () => {

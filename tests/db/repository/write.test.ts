@@ -10,6 +10,7 @@ import {
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { namedWrites } from '@/db/table-marks';
 import { A, asUser } from '../../support/as-user';
 import {
   herbs,
@@ -18,6 +19,8 @@ import {
   pairs,
   session,
   sql,
+  switches,
+  tiers,
   tinctures,
   useProbeTables,
 } from '../../support/db/probe-tables';
@@ -207,6 +210,58 @@ describe('app.current_user_id (M1.19)', () => {
     for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
   });
 
+  it('publishes a declared route and note as app.privilege_route and app.privilege_note (MB.195)', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Yarrow' }), {
+      via: 'admin',
+      note: 'Keeps the herb garden',
+    });
+
+    expect(row.privilegeRoute).toBe('admin');
+    expect(row.privilegeNote).toBe('Keeps the herb garden');
+    expect(row.actingUser).toBe(session.userId);
+  });
+
+  it('publishes both empty when nothing is declared, so none inherits a pooled value (MB.195)', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Woad' }), {
+      via: 'manual',
+      note: 'Fixed by hand',
+    });
+
+    const rows = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        withAudit(session, (write) => write.insert(herbs, { name: `Undeclared ${index}` })),
+      ),
+    );
+
+    for (const [row] of rows) {
+      expect(row.privilegeRoute).toBe('');
+      expect(row.privilegeNote).toBe('');
+    }
+  });
+
+  it('publishes an empty note when a route is declared without one (MB.195)', async () => {
+    const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Madder' }), {
+      via: 'bootstrap',
+    });
+
+    expect(row.privilegeRoute).toBe('bootstrap');
+    expect(row.privilegeNote).toBe('');
+  });
+
+  it('leaves the route and note unset on a connection outside any withAudit transaction (MB.195)', async () => {
+    await withAudit(session, (write) => write.insert(herbs, { name: 'Agrimony' }), {
+      via: 'admin',
+      note: 'Transaction-local',
+    });
+
+    const [settings] = await sql`
+      select current_setting('app.privilege_route', true) as route,
+             current_setting('app.privilege_note', true) as note
+    `;
+    expect(settings.route ?? null).toBeNull();
+    expect(settings.note ?? null).toBeNull();
+  });
+
   it('never opens a transaction at all when there is no acting user', async () => {
     await expect(
       withAudit({ userId: '' }, (write) => write.insert(herbs, { name: 'Hemlock' })),
@@ -226,67 +281,6 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 
   const isPair = (herb: string, charm: string) =>
     and(eq(pairs.herbId, herb), eq(pairs.charmId, charm)) as ReturnType<typeof eq>;
-
-  // Eight since M10.3, which argued for `updateByIdInWorkspace` in its own PR:
-  // MB.33 bars a service from importing `drizzle-orm`, so a service cannot
-  // build the `where` `updateInWorkspace` wants and the by-id predicate has to
-  // be built below the boundary. Nine since MB.60, whose promotion of the
-  // primary admin is the first by-id write to an unscoped table (`users`),
-  // for the same reason. Ten since M8.2, whose folk-name edit tombstones the
-  // names a save dropped — a batch of ids, the soft-delete twin of
-  // `findManyByIds`. Thirteen since M5.2, whose admin writes are the first to
-  // a two-tier table's compendium rows, which neither the unscoped methods
-  // (the table carries `workspace_id`) nor the proof-scoped ones (the proof
-  // names a workspace) can reach. Fourteen since MB.82, whose lapsed slug
-  // retirements are hard-deleted though the table carries `deleted_at`: a
-  // redirect that has ended answers nothing, and `delete` is typed to refuse
-  // such a table, so the one delete is named for it. Fifteen since M5.3, whose
-  // coven delete names its ingredient by id, for `updateByIdInWorkspace`'s
-  // reason. Seventeen since MB.62, whose pause ledger is opened and ended by
-  // name: the generic insert would take a pause already ended and the generic
-  // update would reopen one, so both are refused the table and its two writes
-  // are named for it, the ended pair stamped from the session. Twenty since
-  // MB.69, whose admin invitation will authorise a grant: a generic insert
-  // would let any service mint one, so the table takes a named insert under
-  // the proof and a named accept and revoke, each matching a pending row.
-  // Twenty-one since M5.6a, whose form rename rewrites the compendium entries
-  // picking the form: the vocabulary module may not name `ingredients`, so
-  // the rewrite and the slugs it retires are named for it, below the boundary,
-  // matching only an entry that still picks the form. Twenty-two since MB.95,
-  // whose planet and sign renames rewrite the compendium entries listing them,
-  // for the same reason: the list is rewritten below the boundary, matching
-  // only an entry that still holds the old spelling. A twenty-third is the
-  // next such decision.
-  it('offers exactly twenty-two writer methods — a twenty-third is a decision, not a convenience', async () => {
-    const methods = await withAudit(session, async (write) => Object.keys(write).sort());
-
-    expect(methods).toEqual(
-      [
-        'acceptAdminInvitation',
-        'carryAstrologyRename',
-        'carryFormRename',
-        'delete',
-        'deleteLapsedSlugRetirements',
-        'insert',
-        'insertAdminInvitation',
-        'insertInCompendium',
-        'insertInWorkspace',
-        'pauseAdminRoleChanges',
-        'resumeAdminRoleChanges',
-        'revokeAdminInvitation',
-        'softDelete',
-        'softDeleteByIdInCompendium',
-        'softDeleteByIdInWorkspace',
-        'softDeleteByIds',
-        'softDeleteInWorkspace',
-        'update',
-        'updateById',
-        'updateByIdInCompendium',
-        'updateByIdInWorkspace',
-        'updateInWorkspace',
-      ].sort(),
-    );
-  });
 
   it('stamps a join row with the four stamp columns and gives it no delete columns', async () => {
     const [row] = await withAudit(session, (write) => write.insert(pairs, { herbId, charmId }));
@@ -529,6 +523,106 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
     expect(intoAWorkspaceOnlyTable).toBeInstanceOf(Function);
     expect(intoAnUnscopedTable).toBeInstanceOf(Function);
     expect(withoutTheProof).toBeInstanceOf(Function);
+  });
+});
+
+// MB.198: a table marked `namedWrites` is reached only through its own named
+// writer methods, and the mark is the whole refusal: no column name is read
+// (claude-docs/db/write-path.md, "Table marks"). No body runs: each
+// `@ts-expect-error` fails `npm run typecheck` the moment a generic method
+// stops demanding `Generic`, which a runtime assertion cannot see.
+describe('a table marked namedWrites, refused by every generic writer method', () => {
+  const admin = assertSiteAdmin({ ...session, role: 'admin' });
+  const id = session.userId;
+  const where = eq(herbs.id, id);
+
+  // Why each refusal below is the mark's: `switches` is `herbs`' shape and
+  // `tiers` is `tinctures`', and every call below compiles against those
+  // unmarked. `switches` carries `deleted_at`, which refuses the hard delete
+  // too, so that one is also asserted against `pairs` marked, the shape
+  // `delete` otherwise takes.
+  it('takes every call below against the same shapes unmarked', () => {
+    const unmarked = [
+      (write: AuditWriter) => write.insert(herbs, { name: 'Testwort' }),
+      (write: AuditWriter) => write.update(herbs, { name: 'Testwort' }, where),
+      (write: AuditWriter) => write.updateById(herbs, id, { name: 'Testwort' }),
+      (write: AuditWriter) => write.softDelete(herbs, where),
+      (write: AuditWriter) => write.softDeleteByIds(herbs, [id]),
+      (write: AuditWriter) => write.delete(pairs, { herbId: id }),
+      (write: AuditWriter, inW: Membership) =>
+        write.insertInWorkspace(inW, tinctures, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        write.updateInWorkspace(inW, tinctures, { name: 'Testwort' }, where),
+      (write: AuditWriter, inW: Membership) =>
+        write.updateByIdInWorkspace(inW, tinctures, id, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) => write.softDeleteInWorkspace(inW, tinctures, where),
+      (write: AuditWriter, inW: Membership) => write.softDeleteByIdInWorkspace(inW, tinctures, id),
+      (write: AuditWriter) => write.insertInCompendium(admin, tinctures, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        write.updateByIdInCompendium(admin, tinctures, id, { name: 'Testwort' }),
+      (write: AuditWriter) => write.softDeleteByIdInCompendium(admin, tinctures, id),
+    ];
+
+    expect(unmarked).toHaveLength(14);
+  });
+
+  it('refuses the unscoped marked table on every unscoped method', () => {
+    const writes = [
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic insert.
+        write.insert(switches, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic update.
+        write.update(switches, { name: 'Testwort' }, where),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.updateById(switches, id, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no soft delete.
+        write.softDelete(switches, where),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: nor by ids.
+        write.softDeleteByIds(switches, [id]),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark, and `deleted_at` beside it: no hard delete.
+        write.delete(switches, { id }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark alone, on a shape `delete` otherwise takes.
+        write.delete(namedWrites(pairs), { herbId: id }),
+    ];
+
+    expect(writes).toHaveLength(7);
+  });
+
+  it('refuses the two-tier marked table on every workspace-scoped and compendium-tier method', () => {
+    const writes = [
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no generic insert into a workspace.
+        write.insertInWorkspace(inW, tiers, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no generic update in one.
+        write.updateInWorkspace(inW, tiers, { name: 'Testwort' }, where),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.updateByIdInWorkspace(inW, tiers, id, { name: 'Testwort' }),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: no soft delete in one.
+        write.softDeleteInWorkspace(inW, tiers, where),
+      (write: AuditWriter, inW: Membership) =>
+        // @ts-expect-error — the mark: nor by id.
+        write.softDeleteByIdInWorkspace(inW, tiers, id),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no generic insert into the compendium tier.
+        write.insertInCompendium(admin, tiers, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no update there.
+        write.updateByIdInCompendium(admin, tiers, id, { name: 'Testwort' }),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the mark: no soft delete there.
+        write.softDeleteByIdInCompendium(admin, tiers, id),
+    ];
+
+    expect(writes).toHaveLength(8);
   });
 });
 

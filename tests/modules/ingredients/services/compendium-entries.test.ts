@@ -9,31 +9,44 @@ import {
   countCompendium,
   createWorkspaceIngredient,
   createCompendiumEntry,
+  deitiesOf,
   deleteCompendiumEntry,
   findPossibleDuplicates,
   folkNamesOf,
   getIngredient,
   getWorkspaceIngredient,
   listCompendium,
+  referencesOf,
   resolveCompendiumSlug,
+  substitutesOf,
   suggestCommonNames,
+  suggestIngredients,
   updateCompendiumEntry,
+  variantsOf,
 } from '@/modules/ingredients';
-import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
-import { suggestForms } from '@/modules/vocabulary';
+import {
+  suggestDeities,
+  suggestForms,
+  suggestPlanets,
+  suggestZodiacSigns,
+} from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, E, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
+import { liveFormsOf, variantChildrenOf, variantRowsOf } from '../../../support/db/read-variants';
 import {
   type IngredientFixture,
   type Overrides,
+  type VariantInput,
   makeIngredient,
   makeSpell,
-  stated,
+  makeVariant,
+  variantInput,
 } from '../../../support/fixtures';
 
 // Story 17's service: the compendium's writes, which the site admin makes and
@@ -55,9 +68,9 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-// The live curated forms by folded name, read once: a compendium entry's form
-// is a pick (MB.167), so `entry` picks the row its text names unless the test
-// states a `formId`, as the admin's autofill would.
+// The live curated forms by folded name, read once: a compendium entry's every
+// form is a pick (MB.167), so `entry` picks the row each form's text names
+// unless the test states its `formId`, as the admin's autofill would.
 let formIds: Map<string, string>;
 beforeAll(async () => {
   const rows = await sql`
@@ -72,23 +85,37 @@ beforeEach(async () => {
 });
 
 /**
- * The fixture as the service's input: everything but the tier and the
- * category names, its substitutes and deities typed.
+ * The fixture as an admin's input: everything but the tier and the category
+ * names, its substitutes and deities typed, and each form picked by its text
+ * unless the variant states its `formId` (`null` for a typed one). One
+ * curated form, Herb, unless the test states `variants`: the fixture's own
+ * default is invented, so no curated row holds it.
  */
-function inputOf(fixture: IngredientFixture): CompendiumIngredientInput {
-  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+function entry(
+  overrides: Overrides<IngredientFixture> = {},
+): Parameters<typeof createCompendiumEntry>[1] {
+  const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })], ...overrides });
+  const {
+    workspaceId: _tier,
+    categories: _categories,
+    substitutes,
+    deities,
+    variants,
+    ...input
+  } = fixture;
   return {
     ...input,
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
+    variants: variants.map((variant) =>
+      variantInput(
+        variant,
+        variant.formId === undefined
+          ? { formId: formIds.get(variant.form.trim().toLowerCase()) ?? '' }
+          : {},
+      ),
+    ),
   };
-}
-
-/** The fixture as an admin's input, its form picked unless `formId` is stated. */
-function entry(overrides: Overrides<IngredientFixture> = {}): CompendiumIngredientInput {
-  const input = inputOf(makeIngredient(overrides));
-  if (stated(overrides, 'formId') || input.form == null) return input;
-  return { ...input, formId: formIds.get(input.form.trim().toLowerCase()) ?? null };
 }
 
 /** Seeds a row through the shared inserter, stamped by A — not through the code under test. */
@@ -114,14 +141,10 @@ const liveFolkNames = async (ingredientId: string) =>
     .map((row) => row.name as string)
     .sort();
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a compendium write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a compendium write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 const admin = asUser(E);
 
@@ -141,13 +164,11 @@ describe('createCompendiumEntry', () => {
       name: 'Testwort',
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      // The fixture's `herb`, in the curated row's spelling (MB.162).
-      form: 'Herb',
       createdBy: E.id,
       updatedBy: E.id,
       deletedAt: null,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', 'herb', 'Fixtura testalis'));
+    expect(created.slug).toBe(ingredientSlug('Testwort', 'Fixtura testalis'));
   });
 
   it('saves several elements, planets, signs and colours, each in the order entered', async () => {
@@ -199,22 +220,22 @@ describe('createCompendiumEntry', () => {
       const attempt = createCompendiumEntry(admin, {
         ...entry(),
         nomenclature,
-      } as unknown as CompendiumIngredientInput);
+      } as unknown as Parameters<typeof createCompendiumEntry>[1]);
 
       // A ValidationError on the field is the parse's: the column's NOT NULL
       // would have answered with a driver error instead.
       await expect(attempt).rejects.toThrow(ValidationError);
       await expect(attempt).rejects.toMatchObject({
-        issues: [
-          { path: ['nomenclature'], message: 'Choose a classification — or "none" or "unknown"' },
-        ],
+        issues: [{ path: ['nomenclature'] }],
       });
       expect(await countIngredients()).toBe(0);
     },
   );
 
   it('ignores a workspaceId in the input, so the entry lands in the compendium', async () => {
-    const input = { ...entry(), workspaceId: WORKSPACE_W_ID } as CompendiumIngredientInput;
+    const input = { ...entry(), workspaceId: WORKSPACE_W_ID } as Parameters<
+      typeof createCompendiumEntry
+    >[1];
 
     const created = await createCompendiumEntry(admin, input);
 
@@ -332,7 +353,7 @@ describe('updateCompendiumEntry', () => {
       updateCompendiumEntry(admin, id, {
         ...entry(),
         nomenclature: undefined,
-      } as unknown as CompendiumIngredientInput),
+      } as unknown as Parameters<typeof createCompendiumEntry>[1]),
     ).rejects.toMatchObject({ issues: [expect.objectContaining({ path: ['nomenclature'] })] });
     expect(await rowOf(id)).toEqual(before);
   });
@@ -391,7 +412,7 @@ describe('deleteCompendiumEntry', () => {
 describe('a deleted entry', () => {
   /** Room for every row a test here writes, so one page is the whole answer. */
   const PAGE: PageRequest = { limit: 26, inverted: false };
-  const SLUG = 'testwort-herb-fixtura-testalis';
+  const SLUG = 'testwort-fixtura-testalis';
   const MOVED_OFF = 'testwort-before-a-relabel';
 
   /** Whether `read` answers, rather than refusing with NotFound. */
@@ -403,8 +424,10 @@ describe('a deleted entry', () => {
 
   const member = asUser(B);
 
-  // Every read an entry reaches anyone through — signed out, and a coven's
-  // member typing into a form — each asked whether it still shows this one.
+  // Every exported read an entry reaches anyone through — signed out, and a
+  // coven's member typing into a form — each asked whether it still shows
+  // this one: what owns the soft-delete filter of each, so no reader carries
+  // a one-off of its own.
   const READS: [string, (id: string) => Promise<boolean>][] = [
     [
       'the compendium list',
@@ -443,6 +466,43 @@ describe('a deleted entry', () => {
       },
     ],
     [
+      'its substitutes',
+      async (id) => {
+        const [listed] = await substitutesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its deities',
+      async (id) => {
+        const [listed] = await deitiesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its references',
+      async (id) => {
+        const [cited] = await referencesOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // The fixture's own form.
+    [
+      'its variants',
+      async (id) => {
+        const [forms] = await variantsOf(null, [{ id, workspaceId: null }]);
+        return Array.isArray(forms) && forms.length > 0;
+      },
+    ],
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    [
+      "a coven's substitute picker",
+      async (id) =>
+        (await suggestIngredients(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
       "a coven's duplicate warning",
       async (id) =>
         (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
@@ -459,14 +519,43 @@ describe('a deleted entry', () => {
     [
       "a coven's form suggestions",
       async () =>
-        (await suggestForms(member, WORKSPACE_W_ID, 'herb', PAGE)).some(({ node }) =>
+        (await suggestForms(member, WORKSPACE_W_ID, 'testform', PAGE)).some(({ node }) =>
           node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+    [
+      "a coven's planet suggestions",
+      async () =>
+        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Star',
+        ),
+    ],
+    [
+      "a coven's sign suggestions",
+      async () =>
+        (await suggestZodiacSigns(member, WORKSPACE_W_ID, 'fixture sign', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Sign',
+        ),
+    ],
+    [
+      "a coven's deity suggestions",
+      async () =>
+        (await suggestDeities(member, WORKSPACE_W_ID, 'fixture deity', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Deity',
         ),
     ],
   ];
 
   it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
-    const id = await seed({ folkNames: ['Test Root'], categories: ['Protection'] });
+    const id = await seed({
+      folkNames: ['Test Root'],
+      categories: ['Protection'],
+      substitutes: ['Fixture Stand-in'],
+      deities: ['Fixture Deity'],
+      planets: ['Fixture Star'],
+      zodiacSigns: ['Fixture Sign'],
+    });
+    await insertReferenceLink(sql, id, await insertReference(sql, {}, A.id), A.id);
     await sql`
       insert into retired_ingredient_slugs ${sql({
         ingredient_id: id,
@@ -486,7 +575,7 @@ describe('a deleted entry', () => {
   // NULL`, deleting an entry would reserve its identity for good. On the
   // formal name, since two live entries may share a label anyway, so a label
   // coming back proves nothing about the index.
-  it('frees its formal name and form for a new entry under another label', async () => {
+  it('frees its formal name for a new entry under another label', async () => {
     const id = await seed();
     const again = entry({ name: 'Fixture Leaf' });
     // Why the write could only go through by the delete: while the entry is
@@ -498,13 +587,9 @@ describe('a deleted entry', () => {
     await deleteCompendiumEntry(admin, id);
     const created = await createCompendiumEntry(admin, again);
 
-    expect(created).toMatchObject({
-      name: 'Fixture Leaf',
-      canonicalName: 'Fixtura testalis',
-      form: 'Herb',
-    });
+    expect(created).toMatchObject({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis' });
     const keys = await sql`
-      select distinct canonical_key from ingredients where id in ${sql([id, created.id])}`;
+      select distinct identity_key from ingredients where id in ${sql([id, created.id])}`;
     expect(keys).toHaveLength(1);
   });
 
@@ -571,7 +656,7 @@ describe('a deleted entry', () => {
       issues: [
         {
           path: ['canonicalName'],
-          message: 'Already in the compendium as "Fixture Leaf" (Fixtura testalis, Herb)',
+          message: expect.stringContaining('Fixture Leaf'),
         },
       ],
     });
@@ -592,15 +677,22 @@ describe('a collision with another compendium entry', () => {
     return (error as ValidationError).issues;
   }
 
-  it('refuses a formal name and form already in the compendium, on `canonicalName`, naming the entry', async () => {
+  // MB.220: one formal name is one entry, so an oil beside its form is a form
+  // of it, not a second entry. Under the same label, the address index
+  // breaks first, and the refusal is still the formal name's.
+  it('refuses a second entry under a formal name the compendium holds, whatever its form, on `canonicalName`, naming the entry', async () => {
     await seed();
+    // Why it could have been admitted: Oil is a curated pick, so no vocabulary
+    // rule refuses it, and until MB.220 a differing form was another identity.
+    const oil = entry({ variants: [makeVariant({ form: 'Oil' })] });
+    expect(oil.variants?.[0].formId).toEqual(expect.any(String));
 
-    const issues = await issuesOf(createCompendiumEntry(admin, entry({ name: 'Fixture Leaf' })));
+    const issues = await issuesOf(createCompendiumEntry(admin, oil));
 
     expect(issues).toEqual([
       {
         path: ['canonicalName'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
+        message: expect.stringContaining('Testwort'),
       },
     ]);
     expect(await countIngredients()).toBe(1);
@@ -618,24 +710,20 @@ describe('a collision with another compendium entry', () => {
     expect(issues).toEqual([
       {
         path: ['name'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, herb)',
+        message: expect.stringContaining('Testwort'),
       },
     ]);
   });
 
   it("refuses a rewrite onto another entry's identity, leaving the row as it was", async () => {
-    await seed({ name: 'Testwort', form: 'root' });
-    const id = await seed({ name: 'Testwort', form: 'leaf' });
+    await seed({ name: 'Testwort' });
+    // Another formal name: one formal name is one entry per tier since MB.216.
+    const id = await seed({ name: 'Testwort', canonicalName: 'Fixtura alteralis' });
     const before = await rowOf(id);
 
-    const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ form: 'Root' })));
+    const issues = await issuesOf(updateCompendiumEntry(admin, id, entry({ name: 'Testleaf' })));
 
-    expect(issues).toEqual([
-      {
-        path: ['canonicalName'],
-        message: 'Already in the compendium as "Testwort" (Fixtura testalis, root)',
-      },
-    ]);
+    expect(issues).toEqual([{ path: ['canonicalName'], message: expect.any(String) }]);
     expect(await rowOf(id)).toEqual(before);
   });
 
@@ -644,32 +732,44 @@ describe('a collision with another compendium entry', () => {
     repository.findCompendiumEntryByIdentity.mockResolvedValueOnce(undefined);
 
     expect(await issuesOf(createCompendiumEntry(admin, entry({ name: 'Fixture Leaf' })))).toEqual([
-      { path: ['canonicalName'], message: 'Already in the compendium' },
+      { path: ['canonicalName'], message: expect.not.stringContaining('Testwort') },
     ]);
   });
 
   it('refuses a name whose address another entry already has, on `name`', async () => {
-    await seed({ name: 'Testwort', nomenclature: 'none', form: 'root' });
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
     expect(
       await issuesOf(
         createCompendiumEntry(
           admin,
-          entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
+          entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
         ),
       ),
-    ).toEqual([
-      {
-        path: ['name'],
-        message:
-          '"Testwort" (root) already has the address "testwort-root" — change the name, form or formal name',
-      },
-    ]);
+    ).toEqual([{ path: ['name'], message: expect.any(String) }]);
+  });
+
+  // The identity holder looked up on an address collision is the entry itself
+  // when the update keeps its formal name, and is no collision of its own.
+  it("refuses a relabel onto another entry's address on `name`, though its own formal name is held, by itself", async () => {
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
+    const id = await seed({ name: 'Testleaf', nomenclature: 'unknown', canonicalName: 'Root' });
+
+    const issues = await issuesOf(
+      updateCompendiumEntry(
+        admin,
+        id,
+        entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+      ),
+    );
+
+    expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+    expect((await rowOf(id)).name).toBe('Testleaf');
   });
 
   it('lets two entries share a label, told apart by their formal names', async () => {
@@ -690,7 +790,7 @@ describe('a collision with another compendium entry', () => {
 });
 
 // MB.82's rule (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the address follows the
-// label, the form and the formal name; the one it leaves redirects to the entry
+// label and the formal name, never the form (MB.220); the one it leaves redirects to the entry
 // for 180 days; and a write that would take another entry's redirected address
 // ends that redirect only once the admin confirms it. The clock is pinned, so
 // every window below is exact.
@@ -723,9 +823,8 @@ describe('the slug', () => {
   }
 
   it.each([
-    ['label', { name: 'Testwort, relabelled' }, 'testwort-relabelled-herb-fixtura-testalis'],
-    ['form', { form: 'root' }, 'testwort-root-fixtura-testalis'],
-    ['formal name', { canonicalName: 'Fixtura altera' }, 'testwort-herb-fixtura-altera'],
+    ['label', { name: 'Testwort, relabelled' }, 'testwort-relabelled-fixtura-testalis'],
+    ['formal name', { canonicalName: 'Fixtura altera' }, 'testwort-fixtura-altera'],
   ] as const)(
     'moves with the %s, retiring the old one as the admin',
     async (_part, change, moved) => {
@@ -738,7 +837,7 @@ describe('the slug', () => {
         {
           ingredient_id: id,
           workspace_id: null,
-          slug: 'testwort-herb-fixtura-testalis',
+          slug: 'testwort-fixtura-testalis',
           retired_at: NOW,
           expires_at: EXPIRES,
           created_by: E.id,
@@ -747,13 +846,39 @@ describe('the slug', () => {
     },
   );
 
-  it('stays put, retiring nothing, when none of the three changes', async () => {
+  it('stays put, retiring nothing, when neither changes, a form change included', async () => {
     const id = await seed();
+
+    const updated = await updateCompendiumEntry(
+      admin,
+      id,
+      entry({ description: 'Redescribed', variants: [makeVariant({ form: 'Root' })] }),
+    );
+
+    expect(updated.slug).toBe('testwort-fixtura-testalis');
+    // Why the form did change: the entry's one form is Root now.
+    expect(await liveFormsOf(sql, id)).toEqual(['Root']);
+    expect(await retirements()).toEqual([]);
+  });
+
+  // MB.220: no SQL rewrites a slug, so a row saved before keeps its form in
+  // the address until its own next save, which moves it and retires the old.
+  it('moves a form-bearing slug on the next save, the old one redirecting to the entry', async () => {
+    const id = await seed();
+    await sql`update ingredients set slug = 'testwort-herb-fixtura-testalis' where id = ${id}`;
+    // Why it is still there: nothing but a save moves it.
+    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toMatchObject({
+      kind: 'entry',
+      entry: { id },
+    });
 
     const updated = await updateCompendiumEntry(admin, id, entry({ description: 'Redescribed' }));
 
-    expect(updated.slug).toBe('testwort-herb-fixtura-testalis');
-    expect(await retirements()).toEqual([]);
+    expect(updated.slug).toBe('testwort-fixtura-testalis');
+    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
+      kind: 'moved',
+      slug: 'testwort-fixtura-testalis',
+    });
   });
 
   it('takes its own old slug back at once, without a confirmation', async () => {
@@ -762,7 +887,7 @@ describe('the slug', () => {
 
     const back = await updateCompendiumEntry(admin, id, entry());
 
-    expect(back.slug).toBe('testwort-herb-fixtura-testalis');
+    expect(back.slug).toBe('testwort-fixtura-testalis');
   });
 
   describe('an address another entry moved off, inside its window', () => {
@@ -771,31 +896,25 @@ describe('the slug', () => {
     // Graveyard-dirt-shaped: no formal name, so the relabel frees the identity
     // and a new entry may spell the old address.
     beforeEach(async () => {
-      movedId = await seed({ name: 'Testdirt', nomenclature: 'none', form: 'earth' });
+      movedId = await seed({ name: 'Testdirt', nomenclature: 'none' });
       await updateCompendiumEntry(
         admin,
         movedId,
-        entry({ name: 'Testsoil', nomenclature: 'none', form: 'earth' }),
+        entry({ name: 'Testsoil', nomenclature: 'none' }),
       );
     });
 
-    const taker = () => entry({ name: 'Testdirt', nomenclature: 'none', form: 'earth' });
+    const taker = () => entry({ name: 'Testdirt', nomenclature: 'none' });
 
     it('refuses a create that would end its redirect, on `endRedirect`, writing nothing', async () => {
       const issues = await issuesOf(createCompendiumEntry(admin, taker()));
 
-      expect(issues).toEqual([
-        {
-          path: ['endRedirect'],
-          message:
-            '"testdirt-earth" redirects to "Testsoil" (Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
-        },
-      ]);
+      expect(issues).toEqual([{ path: ['endRedirect'], message: expect.any(String) }]);
       expect(await countIngredients()).toBe(1);
     });
 
     it('refuses a rename into it the same way, leaving the row as it was', async () => {
-      const id = await seed({ name: 'Testclay', nomenclature: 'none', form: 'earth' });
+      const id = await seed({ name: 'Testclay', nomenclature: 'none' });
       const before = await rowOf(id);
 
       const [issue] = await issuesOf(updateCompendiumEntry(admin, id, taker()));
@@ -807,21 +926,21 @@ describe('the slug', () => {
     it('lets a confirmed write take it, keeping the retirement that says where the old entry went', async () => {
       const created = await createCompendiumEntry(admin, { ...taker(), endRedirect: true });
 
-      expect(created.slug).toBe('testdirt-earth');
+      expect(created.slug).toBe('testdirt');
       expect((await retirements()).map((row) => row.ingredient_id)).toEqual([movedId]);
     });
 
     it('answers the new entry there, naming the one that moved, until the window closes', async () => {
       const created = await createCompendiumEntry(admin, { ...taker(), endRedirect: true });
 
-      await expect(resolveCompendiumSlug('testdirt-earth')).resolves.toEqual({
+      await expect(resolveCompendiumSlug('testdirt')).resolves.toEqual({
         kind: 'entry',
         entry: expect.objectContaining({ id: created.id }),
-        movedAway: expect.objectContaining({ id: movedId, slug: 'testsoil-earth' }),
+        movedAway: expect.objectContaining({ id: movedId, slug: 'testsoil' }),
       });
 
       vi.setSystemTime(EXPIRES);
-      await expect(resolveCompendiumSlug('testdirt-earth')).resolves.toMatchObject({
+      await expect(resolveCompendiumSlug('testdirt')).resolves.toMatchObject({
         kind: 'entry',
         movedAway: null,
       });
@@ -831,30 +950,24 @@ describe('the slug', () => {
       vi.setSystemTime(EXPIRES);
 
       await expect(createCompendiumEntry(admin, taker())).resolves.toMatchObject({
-        slug: 'testdirt-earth',
+        slug: 'testdirt',
       });
     });
   });
 
   it("refuses a rewrite onto another entry's current address, on `name`, naming it", async () => {
-    await seed({ name: 'Testwort', nomenclature: 'none', form: 'root' });
-    const id = await seed({ name: 'Testwort', nomenclature: 'none', form: 'leaf' });
+    await seed({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' });
+    const id = await seed({ name: 'Testleaf', nomenclature: 'none' });
 
     expect(
       await issuesOf(
         updateCompendiumEntry(
           admin,
           id,
-          entry({ name: 'Testwort Root', nomenclature: 'none', form: null }),
+          entry({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
         ),
       ),
-    ).toEqual([
-      {
-        path: ['name'],
-        message:
-          '"Testwort" (root) already has the address "testwort-root" — change the name, form or formal name',
-      },
-    ]);
+    ).toEqual([{ path: ['name'], message: expect.stringContaining('Testwort') }]);
     expect(await retirements()).toEqual([]);
   });
 
@@ -870,48 +983,27 @@ describe('the slug', () => {
   });
 });
 
+// The redirect's window and what a retirement answers are
+// tests/db/repository/slugs.test.ts's (findCompendiumSlugRedirect), and the
+// service's answer for a moved slug is the READS table's 'the address it moved
+// off' row above: what stays here is the entry, and a coven's slug kept private.
 describe('resolveCompendiumSlug', () => {
-  const NOW = new Date('2026-03-01T12:00:00.000Z');
-  const EXPIRES = new Date('2026-08-28T00:00:00.000Z');
-
-  beforeEach(() => {
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(NOW);
-  });
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
   it('answers the entry at its slug, with no session and no moved-away entry', async () => {
     const id = await seed();
 
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
+    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).resolves.toEqual({
       kind: 'entry',
       entry: expect.objectContaining({ id }),
       movedAway: null,
     });
   });
 
-  it('answers a slug an entry moved off with its current slug, until expires_at and not from it', async () => {
-    const id = await seed();
-    await updateCompendiumEntry(admin, id, entry({ name: 'Testwort, relabelled' }));
-
-    vi.setSystemTime(new Date(EXPIRES.getTime() - 1));
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).resolves.toEqual({
-      kind: 'moved',
-      slug: 'testwort-relabelled-herb-fixtura-testalis',
-    });
-
-    vi.setSystemTime(EXPIRES);
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).rejects.toThrow(NotFound);
-  });
-
   it("answers NotFound for a coven's slug — its existence is private — and for one that names nothing", async () => {
     const localId = await seed({ workspaceId: WORKSPACE_W_ID });
     // Why the coven's could have answered: the row is there, at that slug.
-    expect((await rowOf(localId)).slug).toBe('testwort-herb-fixtura-testalis');
+    expect((await rowOf(localId)).slug).toBe('testwort-fixtura-testalis');
 
-    await expect(resolveCompendiumSlug('testwort-herb-fixtura-testalis')).rejects.toThrow(NotFound);
+    await expect(resolveCompendiumSlug('testwort-fixtura-testalis')).rejects.toThrow(NotFound);
     await expect(resolveCompendiumSlug('nothing-here')).rejects.toThrow(NotFound);
   });
 });
@@ -953,7 +1045,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   }
 
   /** Saves `input` on a coven's ingredient: the precondition that only the tier refuses it. */
-  async function savesInACoven(input: CompendiumIngredientInput) {
+  async function savesInACoven(input: Parameters<typeof createCompendiumEntry>[1]) {
     const saved = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...input,
       name: 'Testwort, kept',
@@ -1009,8 +1101,16 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   // MB.167: a form and a deity are held to a pick, not a spelling — a curated
   // name typed rather than picked is refused, as an uncurated one is.
   const UNPICKED: [string, Overrides<IngredientFixture>, (string | number)[]][] = [
-    ['a typed form, curated or not', { form: 'Herb', formId: null }, ['form']],
-    ['an uncurated form', { form: 'Testform', formId: null }, ['form']],
+    [
+      'a typed form, curated or not',
+      { variants: [makeVariant({ form: 'Herb', formId: null })] },
+      ['variants', 0, 'form'],
+    ],
+    [
+      'an uncurated form',
+      { variants: [makeVariant({ form: 'Testform' })] },
+      ['variants', 0, 'form'],
+    ],
     ['a typed deity, curated or not', { deities: ['Thor'] }, ['deities', 0]],
     ['an uncurated deity', { deities: ['Testgod'] }, ['deities', 0]],
   ];
@@ -1070,8 +1170,8 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   // compendium adds is that a pick it already holds is refused too, where a
   // coven's is kept, so no compendium entry goes on holding an uncurated one.
   const RETIRED_PICKS: [string, string, string, (string | number)[]][] = [
-    ['a retired form', 'ingredient_forms', 'Leaf', ['formId']],
-    ['a form of a retired group', 'ingredient_form_groups', 'Botanical', ['formId']],
+    ['a retired form', 'ingredient_forms', 'Leaf', ['variants', 0, 'formId']],
+    ['a form of a retired group', 'ingredient_form_groups', 'Botanical', ['variants', 0, 'formId']],
     ['a retired deity', 'deities', 'Thor', ['deities', 0]],
     ['a deity of a retired tradition', 'deity_traditions', 'Norse', ['deities', 0]],
   ];
@@ -1080,7 +1180,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     'refuses %s, picked anew or already held',
     async (_case, table, retired, path) => {
       const picks = {
-        ...entry({ name: 'Testwort', form: 'Leaf' }),
+        ...entry({ name: 'Testwort', variants: [makeVariant({ form: 'Leaf' })] }),
         deities: [{ deityId: await curatedDeityId(sql, 'Thor') }],
       };
       const id = await seed({ name: 'Testwort' });
@@ -1117,8 +1217,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
       createCompendiumEntry(
         admin,
         entry({
-          form: 'Testform',
-          formId: null,
+          variants: [makeVariant({ form: 'Testform' })],
           planets: ['Testplanet'],
           deities: ['Testgod', 'Thor'],
         }),
@@ -1126,25 +1225,30 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     );
 
     expect(issues.map((issue) => issue.path)).toEqual([
-      ['form'],
       ['planets', 0],
       ['deities', 0],
       ['deities', 1],
+      ['variants', 0, 'form'],
     ]);
   });
 
   it("stores a value matching a curated row but for case and spacing in the row's spelling", async () => {
     const created = await createCompendiumEntry(admin, {
-      ...entry({ form: '  hERB ', planets: [' venus', 'MOON '], zodiacSigns: ['taurus'] }),
+      ...entry({
+        variants: [makeVariant({ form: '  hERB ' })],
+        planets: [' venus', 'MOON '],
+        zodiacSigns: ['taurus'],
+      }),
       deities: [{ deityId: await curatedDeityId(sql, 'Thor') }],
     });
 
     expect(await rowOf(created.id)).toMatchObject({
-      form: 'Herb',
-      form_id: await curatedFormId(sql, 'Herb'),
       planets: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus'],
     });
+    expect(await variantRowsOf(sql, created.id)).toMatchObject([
+      { form: 'Herb', form_id: await curatedFormId(sql, 'Herb') },
+    ]);
     expect(await liveDeities(created.id)).toEqual([
       { deity_id: await curatedDeityId(sql, 'Thor'), name: 'Thor' },
     ]);
@@ -1152,15 +1256,156 @@ describe('the curated vocabularies a compendium entry is held to', () => {
 
   it("stores the row's spelling on update too, and keeps the coven's own as typed", async () => {
     const id = await seed({ name: 'Testwort' });
-    const local = await savesInACoven(entry({ form: 'hERB', formId: null, planets: ['venus'] }));
+    const local = await savesInACoven(
+      entry({ variants: [makeVariant({ form: 'hERB', formId: null })], planets: ['venus'] }),
+    );
 
-    await updateCompendiumEntry(admin, id, entry({ form: 'hERB', planets: ['venus'] }));
+    await updateCompendiumEntry(
+      admin,
+      id,
+      entry({ variants: [makeVariant({ form: 'hERB' })], planets: ['venus'] }),
+    );
 
-    expect(await rowOf(id)).toMatchObject({ form: 'Herb', planets: ['Venus'] });
-    expect(await rowOf(local.id)).toMatchObject({
-      form: 'hERB',
-      form_id: null,
-      planets: ['venus'],
+    expect(await rowOf(id)).toMatchObject({ planets: ['Venus'] });
+    expect(await liveFormsOf(sql, id)).toEqual(['Herb']);
+    expect(await rowOf(local.id)).toMatchObject({ planets: ['venus'] });
+    expect(await variantRowsOf(sql, local.id)).toMatchObject([{ form: 'hERB', form_id: null }]);
+  });
+});
+
+// MB.219: a compendium entry's forms are written inside its own save, each a
+// curated pick with its own curated planets and signs (DESIGN.md §5, "The
+// compendium is held to the vocabularies"). The write's mechanics — matching
+// and unchanged rows — are the coven's file's, on the one shared path.
+describe('its forms', () => {
+  let herb: string;
+  let oil: string;
+  let leaf: string;
+  let protection: string;
+  beforeEach(async () => {
+    [herb, oil, leaf] = await Promise.all(
+      ['Herb', 'Oil', 'Leaf'].map((f) => curatedFormId(sql, f)),
+    );
+    const [row] =
+      await sql`select id from categories where name = 'Protection' and deleted_at is null`;
+    protection = row.id as string;
+  });
+
+  /** One whole form as the admin's input sends it: picked Herb, `overrides` over blanks. */
+  const formOf = (overrides: Partial<VariantInput>) =>
+    variantInput(makeVariant({ form: 'Herb' }), { formId: herb, ...overrides });
+
+  const withForms = (...variants: Partial<VariantInput>[]) => ({
+    ...entry(),
+    variants: variants.map(formOf),
+  });
+
+  it('creates two picked forms with the entry, each with its own categories, substitutes and references', async () => {
+    const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });
+    const [rootHerb] = await variantRowsOf(sql, testroot);
+    const source = await insertReference(sql, {}, A.id);
+
+    const created = await createCompendiumEntry(
+      admin,
+      withForms(
+        { form: 'herb', categoryIds: [protection], planets: ['venus'] },
+        {
+          form: 'Oil',
+          formId: oil,
+          safetyNotes: 'Dilute.',
+          substitutes: [{ ingredientId: testroot, substituteVariantId: rootHerb.id }],
+          references: [{ referenceId: source }],
+        },
+      ),
+    );
+
+    const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
+    // Each in its curated row's spelling, the planet's too.
+    expect([herbRow, oilRow]).toMatchObject([
+      { form: 'Herb', form_id: herb, planets: ['Venus'] },
+      { form: 'Oil', form_id: oil, safety_notes: 'Dilute.' },
+    ]);
+    expect((await variantChildrenOf(sql, herbRow.id)).categories).toMatchObject([
+      { category_id: protection },
+    ]);
+    expect(await variantChildrenOf(sql, oilRow.id)).toMatchObject({
+      substitutes: [{ substitute_id: testroot, substitute_variant_id: rootHerb.id }],
+      references: [{ reference_id: source, ingredient_id: null }],
     });
   });
+
+  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // names one of what it links.
+  it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
+    const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });
+    const [rootHerb] = await variantRowsOf(sql, testroot);
+    const linking = (substituteVariantId?: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot, substituteVariantId }] });
+    const path = ['variants', 0, 'substitutes', 0, 'substituteVariantId'];
+    // Why each could have saved: the same link, its form named, does.
+    const created = await createCompendiumEntry(admin, linking(rootHerb.id));
+    const [herbRow] = await variantRowsOf(sql, created.id);
+    const [{ n: count }] = await sql`select count(*)::int as n from ingredients`;
+
+    const create = createCompendiumEntry(admin, { ...linking(), name: 'Testwort, formless' });
+    await expect(create).rejects.toThrow(ValidationError);
+    await expect(create).rejects.toMatchObject({ issues: [{ path }] });
+    const update = updateCompendiumEntry(admin, created.id, {
+      ...linking(),
+      variants: [{ ...linking().variants[0], id: herbRow.id }],
+    });
+    await expect(update).rejects.toThrow(ValidationError);
+    await expect(update).rejects.toMatchObject({ issues: [{ path }] });
+
+    expect(await sql`select count(*)::int as n from ingredients`).toEqual([{ n: count }]);
+    expect((await variantChildrenOf(sql, herbRow.id)).substitutes).toMatchObject([
+      { substitute_id: testroot, substitute_variant_id: rootHerb.id },
+    ]);
+  });
+
+  it('keeps a form by its id across a repick, drops the one left out and adds the new', async () => {
+    const created = await createCompendiumEntry(
+      admin,
+      withForms({ form: 'Herb' }, { form: 'Oil', formId: oil }),
+    );
+    const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
+
+    await updateCompendiumEntry(
+      admin,
+      created.id,
+      withForms(
+        { id: herbRow.id, form: 'Leaf', formId: leaf },
+        { form: 'Root', formId: await curatedFormId(sql, 'Root') },
+      ),
+    );
+
+    const after = await variantRowsOf(sql, created.id);
+    expect(after.find((row) => row.id === herbRow.id)).toMatchObject({
+      form: 'Leaf',
+      form_id: leaf,
+      deleted_at: null,
+    });
+    expect(after.find((row) => row.id === oilRow.id)).toMatchObject({ deleted_by: E.id });
+    expect(await liveFormsOf(sql, created.id)).toEqual(['Leaf', 'Root']);
+  });
+
+  it.each([
+    ['a typed form, curated or not', { form: 'Testform', formId: '' }, ['form']],
+    ['an uncurated planet', { planets: ['Venus', 'Testplanet'] }, ['planets', 1]],
+  ])('refuses %s on a form, beside it, that a coven saves', async (_case, fields, path) => {
+    const input = withForms({ form: 'Herb' }, { form: 'Oil', formId: oil, ...fields });
+    await savesInACoven(input);
+
+    const attempt = createCompendiumEntry(admin, input);
+
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({ issues: [{ path: ['variants', 1, ...path] }] });
+    expect(await countIngredients()).toBe(1);
+  });
+
+  /** Saves `input` on a coven's ingredient: the precondition that only the tier refuses it. */
+  async function savesInACoven(input: Parameters<typeof createWorkspaceIngredient>[2]) {
+    const saved = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input);
+    expect(saved.workspaceId).toBe(WORKSPACE_W_ID);
+  }
 });

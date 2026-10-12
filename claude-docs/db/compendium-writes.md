@@ -13,12 +13,62 @@ role counts for nothing: a coven's owner is refused as its viewer is.
 the tier. The input is the whole entry, so an update replaces the row. Folk
 names are written in the same transaction, the update's diff reading the live
 ones through `findManyOfIngredients` with no proofs, which is the compendium
-alone. The slug follows the label, the form and the formal name, and the one
+alone. The slug follows the label and the formal name (MB.220), and the one
 an update leaves is retired and redirects for 180 days
 (["Ingredient slugs"](ingredient-slugs.md)).
-The row mapping and the folk-name diff live in one internal file,
-`services/ingredient-rows.ts`, which both services import. The categories
-are `categoryIds`, written in the same transaction as a coven's are (MB.125).
+The categories are `categoryIds`, written in the same transaction as a
+coven's are (MB.125).
+
+**What both tiers write the same way is written once** (MB.211), in one
+internal file, `services/ingredient-rows.ts`, which both services import and
+the module's index does not. `splitChildren` splits the parse into the row's
+fields, the deities to check and the child lists written as sent;
+`ingredientColumns` maps the fields to columns, the slug among them;
+`writeChildren(write, memberships, id, children, mode)` is each write's one
+child call, `'add'` on a create and `'replace'` on an update, writing the folk
+names, substitutes, deities, references, categories and forms in that order; and
+`softDeleteIngredient` is both deletes' body, each passing its tier's writer.
+`memberships` is the tier: none here, the proof's coven for a coven's.
+**A sixth child table costs one writer, one loader and one input field**: its
+add and replace pair in `ingredient-rows.ts`, a line in each branch of
+`writeChildren` and its list in `splitChildren` and `IngredientChildren`; a
+key in the record of loaders in `loaders/ingredient-children.ts`, exported by
+name for `src/graphql/loaders/index.ts` to register, which both update
+mutations clear through `clearIngredientChildren`; and a field in
+`graphql/ingredient-input.ts`'s `ingredientInputFields`, which the four input
+types spread. No service, mutation or input type is edited, and
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` proves the
+mutations clear what the record names.
+
+**Variants are the recipe's first adopter** (MB.219). An entry's forms are
+`variants`, a field of `ingredientInputFields`, and `writeChildren` writes
+them last, through `addVariants` and `replaceVariants`. Each form's own
+substitutes, references and categories go through the same writers as the
+entry's, now taking an owner, `{ ingredientId, variantId, at }`. `variantId`
+is null for the entry's own rows. `at` is where the input sent the form,
+`['variants', i]`, and every issue about one of its rows is pathed beneath
+it. A replace matches each form sent to a row by its `id` when the entry
+holds that row, and otherwise by its text folded, `lower(btrim(form))`, so a
+form can be respelt in place. A row no form keeps is soft-deleted and its
+children are left for a restore. A kept row is rewritten only where it
+differs, so a save that changes nothing writes no form and none of its
+children. The recipe needed one more edit: the services pass the lists
+`resolvePicks` checks as one bundle. A form's pick and categories are read
+against the database, as the deities and categories already were, so
+`splitChildren` hands `resolvePicks` the deities and the forms together, and
+its `children` go to `writeChildren` whole. The next child, checked or not,
+edits neither service. `ingredient_variants_form_unique` is mapped where the
+form is written, onto that form's `form`, since only that write knows which
+entry it was writing. The compendium holds each form to the curated rules. Each form must be a pick, refused at
+`['variants', i, 'form']` or `['variants', i, 'formId']`. Each form's planets
+and signs must name curated rows, at `['variants', i, 'planets', j]`.
+
+`variants` is the only place a form is written (MB.222). The ingredient row
+has no form of its own, so nothing copies a variant onto it, and an input
+carries no top-level `form` or `formId`. Each of the four input types
+requires `variants`, and `[]` is an entry with no form, as story 29's
+one-field stub sends it. The Zod schema still accepts it absent, reading that
+as none, as every child list's absence reads.
 
 **`nomenclature` is required.** `CompendiumIngredientInput` gives it no
 default, because every compendium entry declares a naming system, `none` and
@@ -31,14 +81,14 @@ error instead.
 coven's write keeps what was typed; these two do not. After the parse,
 `inCuratedValues` checks the form and the deities by pick and the planets and
 signs by spelling (MB.167, which moved the form and deities onto the pick).
-The form and every deity must be a pick of a curated row, held or not,
+Each form and every deity must be a pick of a curated row, held or not,
 through `resolvePicks`, which `vocabulary`'s `curatedNames` answers by id: a
 curated value typed rather than picked is refused as an uncurated one is, and
 a held deity pick is refused once its deity is retired, where a coven keeps
 it. The planets and signs read the live curated rows each value folds to,
 through `vocabulary`'s `curatedSpellings`. Every value refused is one issue of
-one `ValidationError`, beside its field — `['form']` or `['formId']`, or
-`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+one `ValidationError`, beside its field — `['variants', i, 'form']` or
+`['variants', i, 'formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
 — naming the list to pick from or add it to. A value that passes is written in
 the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
 group and a deity only under a live tradition, as the autofill reads them
@@ -48,10 +98,11 @@ deleting a row at the same instant can see one entry written with it, the
 window MB.148 would let a lock close
 ([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
 The vocabulary writes keep the rule after the write: deleting a row a live
-entry holds — picks, for a form or a deity — is refused, and a rename carries onto the entries (M5.6a, MB.95,
-MB.132). Deleting a form group is not refused for the compendium: its forms
-move to another live group first, so they stay curated and no entry's pick
-is rewritten (M5.6b).
+entry holds — picks, for a form or a deity — is refused, and a rename carries
+onto the entries (M5.6a, MB.95, MB.132). Deleting a form group or a deity
+tradition is not refused for the compendium: its forms or deities move to
+another live one first, so they stay curated and no entry's pick is rewritten
+(M5.6b, MB.132).
 
 **The reach is the compendium's live rows.** A coven's ingredient, a
 soft-deleted entry, an id that names nothing and one that is not a uuid are
@@ -65,11 +116,15 @@ and their unique indexes are per ingredient. A `workspaceId` in the input is str
 and `insertInCompendium` would overwrite it if it were not.
 
 **A deleted entry is gone from every read and frees what it held** (M5.3).
-The service test asks each read an entry reaches anyone through — the list
-and its count, the read by id, its address and one it moved off, its folk
-names and categories, and a coven's duplicate warning and its common-name and
-form suggestions — whether it shows the entry, before the delete and after.
-It then adds the entry's formal name and form again under another label, the
+The service test's `READS` table asks every exported read an entry reaches
+anyone through — the list and its count, the read by id, its address and one
+it moved off, its folk names, categories, substitutes, deities and
+references, and a coven's substitute picker, duplicate warning, and
+common-name, form, planet, sign and deity suggestions — whether it shows the
+entry, before the delete and after. The table is where each reader's
+soft-delete filter is proved, so no reader's own test carries a one-off
+(MB.187).
+It then adds the entry's formal name again under another label, the
 write the identity index refused while the entry was live: the index's
 `deleted_at IS NULL` is all that lets it through. The proof is on the formal
 name, because two live entries may share a label anyway, so a label coming
@@ -84,21 +139,32 @@ entry that already holds the identity.** As in the coven's writes, the service
 catches the write's failure and reads the index off it with
 `violatedUniqueIndex`:
 
-- `ingredients_compendium_identity_unique` lands on `canonicalName` when the
-  input declares a formal name, and on `name` when it does not. A `none` or
+- `ingredients_compendium_identity_key_unique` (MB.216; mapped since
+  MB.220), the formal name alone, lands on `canonicalName` when the input
+  declares a formal name, and on `name` when it does not. A `none` or
   `unknown` entry keys as its label, and §5's cross-namespace case is a label
   equal to another entry's formal name, where a message beside the empty
   formal-name field would point at a box the admin never filled in. The
-  message names the holder by its label, formal name and form:
-  `Already in the compendium as "Mugwort" (Artemisia vulgaris, herb)`.
+  message names the holder by its label and formal name, and points at
+  adding the form to it: an oil of a plant the compendium holds is a variant
+  of that entry, not an entry beside it. The three-part key's
+  `ingredients_compendium_identity_unique` was mapped the same way until
+  MB.223 dropped it.
 - `ingredients_compendium_slug_unique` lands on `name`, as the coven's does,
-  naming the address and the entry holding it: `"Testwort" (root) already has
-the address "testwort-root" — change the name, form or formal name`.
+  naming the address and the entry holding it, unless another entry holds
+  the identity too: the address index is older than the identity one, so an
+  oil written under the herb's own label meets it first, and the refusal is
+  then the identity's.
+
+Both name the entry through the vocabulary's `describeEntry`, its label
+unquoted as every vocabulary refusal names one, so a list of entries reads as
+one sentence (MB.210).
 
 The holder is read after the write has rolled back, by
-`findCompendiumEntryByIdentity({ name, canonicalName, form })`: the live
-compendium row whose `canonical_key` equals the key those values would take.
-The key comes from `canonicalKeyOf` in the table's schema file, the builder
+`findCompendiumEntryByIdentity({ name, canonicalName })`: the live
+compendium row whose `identity_key` equals the key those values would take,
+the form no part of it since MB.220.
+The key comes from `identityKeyOf` in the table's schema file, the builder
 the generated column is built from too, so the finder folds the values
 exactly as Postgres folded the row and the key has one spelling. Given the
 bare column names it renders the text the migrations hold, byte for byte, so
@@ -106,8 +172,10 @@ bare column names it renders the text the migrations hold, byte for byte, so
 between the two statements — leaves the message without a name rather than
 surfacing the raw error.
 
-Firing `revalidateTag` after each write is M8.7's, once M8.6 has put the
-compendium behind the cache (CLAUDE.md rule 6). The GraphQL mutations over
+Each write expires the `compendium` tag once it has committed, so the
+cached list answers it on the next read (M8.7; ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")). The GraphQL mutations over
 these services are M5.5's: `createCompendiumIngredient`,
 `updateCompendiumIngredient` and `deleteCompendiumIngredient`
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
+
+**MB.215: variants are the sixth child, the recipe's first adopter.** An entry's forms become rows of `ingredient_variants` (DESIGN.md §5), and MB.219 writes them by the recipe above rather than through mutations of their own: `ingredientInputFields` gains `variants`, optional on all four input types while the old top-level form still saved, so the four carry it unedited; `splitChildren` and `IngredientChildren` gain the list; and `writeChildren` gains `addVariants` and `replaceVariants` in its two branches, which write each variant's own categories, substitutes and references through the existing add and replace helpers, widened to take an owner of `{ ingredientId, variantId }`. On replace a variant is matched by its `id` when the input carries one the entry holds, else by its folded form, so a form can be respelt in place; one no longer sent is soft-deleted, its children left; a new one is inserted. `resolvePicks` runs per variant, so each compendium form must be a pick, and a collision on `ingredient_variants_form_unique` lands at `['variants', i, 'form']`. MB.220 moves the identity collision onto `identity_key`: `findCompendiumEntryByIdentity({ name, canonicalName })` names the holder by its label and formal name, and the message points the admin at adding a form to it instead. Until MB.222 the top-level `form` and `formId` still saved, read as one variant when `variants` was absent (the shim), and the row's `form` and `formId` were the first variant's (the dual write). MB.222 removed both: `form` and `formId` left `ingredientInputFields`, `variants` became required on all four input types, the two creates included, and the row's two columns are undeclared and written by nothing until MB.223 drops them.

@@ -5,9 +5,11 @@ import {
   cookieHeader,
   expectSignedIn,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message } from '@/lib/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance } from '../support/types';
 
 // `account.encryptOAuthTokens` through a real sign-in: the access and refresh
 // tokens in `accounts` are unreadable without BETTER_AUTH_SECRET, and a row
@@ -37,21 +39,18 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials and nothing else, so one import serves every test.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+});
 
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
-
-  stubProviderCredentials(vi.stubEnv);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
-});
-
-afterEach(() => {
-  vi.unstubAllEnvs();
 });
 
 async function signedIn(): Promise<string> {

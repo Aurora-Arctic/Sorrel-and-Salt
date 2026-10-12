@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { findIngredientsInSpellsIncludingSoftDeleted } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
@@ -7,32 +7,63 @@ import { ingredientSlug } from '@/lib/slugify';
 import {
   categoriesOf,
   createWorkspaceIngredient,
+  deitiesOf,
   deleteWorkspaceIngredient,
   findPossibleDuplicates,
   folkNamesOf,
   getIngredient,
   getWorkspaceIngredient,
+  referencesOf,
+  substitutesOf,
   suggestCommonNames,
+  suggestIngredients,
   updateWorkspaceIngredient,
+  variantsOf,
 } from '@/modules/ingredients';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import { assertMembership } from '@/modules/coven';
-import { suggestForms } from '@/modules/vocabulary';
+import {
+  suggestDeities,
+  suggestForms,
+  suggestPlanets,
+  suggestZodiacSigns,
+} from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
+import {
+  liveFormsOf,
+  variantChildrenOf,
+  variantIdOf,
+  variantRowsOf,
+} from '../../../support/db/read-variants';
 import {
   type IngredientFixture,
   type Overrides,
   makeIngredient,
   makeSpell,
+  makeVariant,
+  variantInput,
+  type VariantInput,
 } from '../../../support/fixtures';
 
 // Story 15's service: a coven's own ingredients, written by its owners and
 // members and read by its members, never by anyone else. The table is emptied
 // per test, so every row a result could come from is one this file wrote.
+
+// The identity holder lookup, wrapped so one test can have the holder gone by
+// the time it is read without changing what it answers for the rest.
+const repository = vi.hoisted(() => ({ findWorkspaceIngredientByIdentity: vi.fn() }));
+vi.mock('@/db/repository', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/db/repository')>();
+  repository.findWorkspaceIngredientByIdentity.mockImplementation(
+    actual.findWorkspaceIngredientByIdentity,
+  );
+  return { ...actual, ...repository };
+});
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -51,12 +82,20 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
 
 /**
  * The fixture as the service's input: everything but the tier and the
- * category names, its substitutes and deities typed.
+ * category names, its substitutes and deities typed, and its forms whole.
  */
-function inputOf(fixture: IngredientFixture): LocalIngredientInput {
-  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+function inputOf(fixture: IngredientFixture): Parameters<typeof createWorkspaceIngredient>[2] {
+  const {
+    workspaceId: _tier,
+    categories: _categories,
+    substitutes,
+    deities,
+    variants,
+    ...input
+  } = fixture;
   return {
     ...input,
+    variants: variants.map((variant) => variantInput(variant)),
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
   };
@@ -100,22 +139,17 @@ describe('createWorkspaceIngredient', () => {
     ['an owner', A],
     ['a member', B],
   ])('lets %s create one, in their own coven and stamped by them', async (_role, user) => {
-    const created = await createWorkspaceIngredient(
-      asUser(user),
-      WORKSPACE_W_ID,
-      inputOf(local({ form: 'root' })),
-    );
+    const created = await createWorkspaceIngredient(asUser(user), WORKSPACE_W_ID, inputOf(local()));
 
     expect(created).toMatchObject({
       workspaceId: WORKSPACE_W_ID,
       name: 'Testwort',
       nomenclature: 'none',
       canonicalName: null,
-      form: 'root',
       createdBy: user.id,
       updatedBy: user.id,
     });
-    expect(created.slug).toBe(ingredientSlug('Testwort', 'root', null));
+    expect(created.slug).toBe(ingredientSlug('Testwort', null));
   });
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
@@ -148,7 +182,8 @@ describe('createWorkspaceIngredient', () => {
       name: 'Testwort',
     } as LocalIngredientInput);
 
-    expect(created).toMatchObject({ nomenclature: 'none', canonicalName: null, form: null });
+    expect(created).toMatchObject({ nomenclature: 'none', canonicalName: null });
+    expect(await liveFormsOf(sql, created.id)).toEqual([]);
   });
 
   it('refuses a viewer, who is a member and can read the coven', async () => {
@@ -247,53 +282,93 @@ describe('a collision with another of the coven’s ingredients', () => {
   const create = (overrides: Overrides<IngredientFixture>) =>
     createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, inputOf(local(overrides)));
 
-  it('refuses a label already in the coven, whatever its case, on `name`', async () => {
-    await seed(local({ name: 'Testwort', form: 'herb' }));
+  it('refuses a label already in the coven under another formal name, whatever its case, on `name`', async () => {
+    await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis' }));
 
-    expect(await issuesOf(create({ name: 'testwort', form: 'root' }))).toEqual([
-      { path: ['name'], message: 'This coven already has an ingredient called "testwort"' },
+    expect(await issuesOf(create({ name: 'testwort', canonicalName: 'Fixtura altera' }))).toEqual([
+      { path: ['name'], message: expect.any(String) },
     ]);
     expect(await countIngredients()).toBe(1);
   });
 
-  it('refuses a formal name and form already in the coven, on `canonicalName`', async () => {
-    await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis', form: 'herb' }));
+  // MB.220: one formal name is one ingredient, so an oil beside the herb is a
+  // form of it. Under the herb's own label the label index breaks first, and
+  // the refusal is still the formal name's, naming the ingredient holding it.
+  it('refuses a formal name already in the coven whatever its form, on `canonicalName`, naming the ingredient', async () => {
+    await seed(
+      local({
+        name: 'Testwort',
+        canonicalName: 'Fixtura testalis',
+        variants: [makeVariant({ form: 'Testleaf' })],
+      }),
+    );
 
     expect(
       await issuesOf(
-        create({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis', form: 'herb' }),
+        create({
+          name: 'Testwort',
+          canonicalName: 'Fixtura testalis',
+          variants: [makeVariant({ form: 'Testoil' })],
+        }),
       ),
-    ).toEqual([
-      {
-        path: ['canonicalName'],
-        message: 'This coven already has an ingredient that is Fixtura testalis, herb',
-      },
-    ]);
+    ).toEqual([{ path: ['canonicalName'], message: expect.stringContaining('Testwort') }]);
+    expect(await countIngredients()).toBe(1);
+  });
+
+  it('names no ingredient when the holder is gone by the time it is read, rather than surfacing the raw error', async () => {
+    await seed(local({ name: 'Testwort', canonicalName: 'Fixtura testalis' }));
+    repository.findWorkspaceIngredientByIdentity.mockResolvedValueOnce(undefined);
+
+    // Another label and address, so only the identity index can refuse it.
+    expect(await issuesOf(create({ name: 'Testleaf', canonicalName: 'Fixtura testalis' }))).toEqual(
+      [{ path: ['canonicalName'], message: expect.not.stringContaining('Testwort') }],
+    );
   });
 
   it('refuses an identity that is only a label on `name`, since the label is the identity', async () => {
-    await seed(local({ name: 'Testwort', form: 'root' }));
+    await seed(local({ name: 'Testwort' }));
 
-    const [issue] = await issuesOf(create({ name: 'testwort', form: 'root' }));
+    const [issue] = await issuesOf(create({ name: 'testwort' }));
 
     expect(issue.path).toEqual(['name']);
   });
 
   it('refuses a name whose address another ingredient already has, on `name`', async () => {
-    await seed(local({ name: 'Testwort', form: 'root' }));
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
 
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
-    expect(await issuesOf(create({ name: 'Testwort Root', form: null }))).toEqual([
-      {
-        path: ['name'],
-        message:
-          'Another ingredient in this coven already has the address "testwort-root" — change the name, form or formal name',
-      },
-    ]);
+    expect(
+      await issuesOf(
+        create({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+      ),
+    ).toEqual([{ path: ['name'], message: expect.any(String) }]);
+  });
+
+  // The identity holder looked up on an address collision is the row itself
+  // when the update keeps its formal name, and is no collision of its own.
+  it("refuses a relabel onto another ingredient's address on `name`, though its own formal name is held, by itself", async () => {
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
+    const id = await seed(
+      local({ name: 'Testleaf', nomenclature: 'unknown', canonicalName: 'Root' }),
+    );
+
+    const issues = await issuesOf(
+      updateWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        id,
+        inputOf(
+          local({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+        ),
+      ),
+    );
+
+    expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+    expect((await rowOf(id)).name).toBe('Testleaf');
   });
 
   it('refuses a relabel onto a label already in the coven, leaving the row as it was', async () => {
@@ -309,9 +384,7 @@ describe('a collision with another of the coven’s ingredients', () => {
       ),
     );
 
-    expect(issues).toEqual([
-      { path: ['name'], message: 'This coven already has an ingredient called "taken wort"' },
-    ]);
+    expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
     expect((await rowOf(id)).name).toBe('Testwort');
   });
 
@@ -369,13 +442,6 @@ describe('getWorkspaceIngredient', () => {
 
     await expect(getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
   });
-
-  it('does not answer a soft-deleted ingredient', async () => {
-    const id = await seed(local());
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-    await expect(getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, id)).rejects.toThrow(NotFound);
-  });
 });
 
 describe('updateWorkspaceIngredient', () => {
@@ -386,13 +452,12 @@ describe('updateWorkspaceIngredient', () => {
       asUser(B),
       WORKSPACE_W_ID,
       id,
-      inputOf(local({ name: 'Testroot', form: 'root', description: 'Dug at dusk' })),
+      inputOf(local({ name: 'Testroot', description: 'Dug at dusk' })),
     );
 
     expect(updated).toMatchObject({
       id,
       name: 'Testroot',
-      form: 'root',
       description: 'Dug at dusk',
       createdBy: A.id,
       updatedBy: B.id,
@@ -401,28 +466,28 @@ describe('updateWorkspaceIngredient', () => {
 
   // No route reads a coven ingredient's slug, so it follows the name and
   // nothing redirects from the old one (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
-  it('moves the slug with the label, form and formal name, retiring nothing', async () => {
+  it('moves the slug with the label and formal name, retiring nothing', async () => {
     const id = await seed(local());
 
     const updated = await updateWorkspaceIngredient(
       asUser(B),
       WORKSPACE_W_ID,
       id,
-      inputOf(local({ name: 'Testroot', form: 'root', canonicalName: 'Fixtura radix' })),
+      inputOf(local({ name: 'Testroot', canonicalName: 'Fixtura radix' })),
     );
 
-    expect(updated.slug).toBe(ingredientSlug('Testroot', 'root', 'Fixtura radix'));
+    expect(updated.slug).toBe('testroot-fixtura-radix');
     const [{ n }] = await sql`select count(*)::int as n from retired_ingredient_slugs`;
     expect(n).toBe(0);
   });
 
   it("refuses a rewrite onto another of the coven's addresses, on `name`, leaving the row", async () => {
-    await seed(local({ name: 'Testwort', form: 'root' }));
-    const id = await seed(local({ name: 'Testleaf', form: 'leaf' }));
+    await seed(local({ name: 'Testwort', nomenclature: 'unknown', canonicalName: 'Fixtura root' }));
+    const id = await seed(local({ name: 'Testleaf' }));
     const before = await rowOf(id);
     // Why only the slug index is left to catch it: label and identity both differ.
-    expect(ingredientSlug('Testwort Root', null, null)).toBe(
-      ingredientSlug('Testwort', 'root', null),
+    expect(ingredientSlug('Testwort Fixtura', 'Root')).toBe(
+      ingredientSlug('Testwort', 'Fixtura root'),
     );
 
     await expect(
@@ -430,17 +495,11 @@ describe('updateWorkspaceIngredient', () => {
         asUser(B),
         WORKSPACE_W_ID,
         id,
-        inputOf(local({ name: 'Testwort Root', form: null })),
+        inputOf(
+          local({ name: 'Testwort Fixtura', nomenclature: 'unknown', canonicalName: 'Root' }),
+        ),
       ),
-    ).rejects.toMatchObject({
-      issues: [
-        {
-          path: ['name'],
-          message:
-            'Another ingredient in this coven already has the address "testwort-root" — change the name, form or formal name',
-        },
-      ],
-    });
+    ).rejects.toMatchObject({ issues: [{ path: ['name'] }] });
     expect(await rowOf(id)).toEqual(before);
   });
 
@@ -453,7 +512,8 @@ describe('updateWorkspaceIngredient', () => {
       name: 'Testwort',
     } as LocalIngredientInput);
 
-    expect(updated).toMatchObject({ description: null, colors: null, form: null });
+    expect(updated).toMatchObject({ description: null, colors: null });
+    expect(await liveFormsOf(sql, id)).toEqual([]);
   });
 
   it('replaces each list whole, an empty one clearing it', async () => {
@@ -509,6 +569,18 @@ describe('updateWorkspaceIngredient', () => {
     ).rejects.toThrow(NotFound);
     await expect(
       updateWorkspaceIngredient(asUser(D), WORKSPACE_W_ID, id, inputOf(local({ name: 'Nope' }))),
+    ).rejects.toThrow(Forbidden);
+    expect((await rowOf(id)).name).toBe('Testwort');
+  });
+
+  it('refuses the site admin, whose role reaches no coven', async () => {
+    const id = await seed(local());
+    // Why it could have succeeded: the row is live, and E's role is admin.
+    await expect(getWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id)).resolves.toBeDefined();
+    expect(asUser(E).role).toBe('admin');
+
+    await expect(
+      updateWorkspaceIngredient(asUser(E), WORKSPACE_W_ID, id, inputOf(local({ name: 'Nope' }))),
     ).rejects.toThrow(Forbidden);
     expect((await rowOf(id)).name).toBe('Testwort');
   });
@@ -753,8 +825,9 @@ describe('a deleted coven ingredient', () => {
       throw error;
     });
 
-  // Every read a member reaches the coven's own ingredients through, each asked
-  // whether it still shows this one.
+  // Every exported read a member reaches the coven's own ingredients through,
+  // each asked whether it still shows this one: what owns the soft-delete
+  // filter of each, so no reader carries a one-off of its own.
   const READS: [string, (id: string) => Promise<boolean>][] = [
     [
       'a read by id',
@@ -779,6 +852,43 @@ describe('a deleted coven ingredient', () => {
       },
     ],
     [
+      'its substitutes',
+      async (id) => {
+        const [listed] = await substitutesOf(member, ref(id));
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its deities',
+      async (id) => {
+        const [listed] = await deitiesOf(member, ref(id));
+        return Array.isArray(listed) && listed.length > 0;
+      },
+    ],
+    [
+      'its references',
+      async (id) => {
+        const [cited] = await referencesOf(member, ref(id));
+        return Array.isArray(cited) && cited.length > 0;
+      },
+    ],
+    // The fixture's own form, a variant since MB.216 (MB.218).
+    [
+      'its variants',
+      async (id) => {
+        const [forms] = await variantsOf(member, ref(id));
+        return Array.isArray(forms) && forms.length > 0;
+      },
+    ],
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    [
+      'the substitute picker',
+      async (id) =>
+        (await suggestIngredients(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
+          ({ node }) => node.id === id,
+        ),
+    ],
+    [
       'the duplicate warning',
       async (id) =>
         (await findPossibleDuplicates(member, WORKSPACE_W_ID, 'Testwort', PAGE)).some(
@@ -795,14 +905,45 @@ describe('a deleted coven ingredient', () => {
     [
       'the form suggestions',
       async () =>
-        (await suggestForms(member, WORKSPACE_W_ID, 'herb', PAGE)).some(({ node }) =>
+        (await suggestForms(member, WORKSPACE_W_ID, 'testform', PAGE)).some(({ node }) =>
           node.claimants.some((claimant) => claimant.name === 'Testwort'),
+        ),
+    ],
+    [
+      'the planet suggestions',
+      async () =>
+        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Star',
+        ),
+    ],
+    [
+      'the sign suggestions',
+      async () =>
+        (await suggestZodiacSigns(member, WORKSPACE_W_ID, 'fixture sign', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Sign',
+        ),
+    ],
+    [
+      'the deity suggestions',
+      async () =>
+        (await suggestDeities(member, WORKSPACE_W_ID, 'fixture deity', PAGE)).some(
+          ({ node }) => node.value === 'Fixture Deity',
         ),
     ],
   ];
 
   it.each(READS)('is gone from %s, which showed it until the delete', async (_read, shows) => {
-    const id = await seed(local({ folkNames: ['Test Root'], categories: ['Protection'] }));
+    const id = await seed(
+      local({
+        folkNames: ['Test Root'],
+        categories: ['Protection'],
+        substitutes: ['Fixture Stand-in'],
+        deities: ['Fixture Deity'],
+        planets: ['Fixture Star'],
+        zodiacSigns: ['Fixture Sign'],
+      }),
+    );
+    await insertReferenceLink(sql, id, await insertReference(sql, {}, A.id), A.id);
     // Why the read could have gone on showing it: it does, until the delete.
     expect(await shows(id)).toBe(true);
 
@@ -852,22 +993,19 @@ describe('a deleted coven ingredient', () => {
   // here a label coming back does prove its index's predicate.
   it('frees its label, for an ingredient of another form', async () => {
     const id = await seed(local());
-    const again = inputOf(local({ form: 'root' }));
+    const again = inputOf(local({ variants: [makeVariant({ form: 'Testroot' })] }));
     await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).rejects.toMatchObject({
-      issues: [
-        { path: ['name'], message: 'This coven already has an ingredient called "Testwort"' },
-      ],
+      issues: [{ path: ['name'] }],
     });
 
     await deleteWorkspaceIngredient(member, WORKSPACE_W_ID, id);
 
     await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).resolves.toMatchObject({
       name: 'Testwort',
-      form: 'root',
     });
   });
 
-  it('frees its formal name and form, for an ingredient under another label', async () => {
+  it('frees its formal name, for an ingredient under another label', async () => {
     const id = await seed(local({ canonicalName: 'Fixtura testalis' }));
     const again = inputOf(local({ name: 'Fixture Leaf', canonicalName: 'Fixtura testalis' }));
     await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).rejects.toMatchObject({
@@ -879,7 +1017,6 @@ describe('a deleted coven ingredient', () => {
     await expect(createWorkspaceIngredient(member, WORKSPACE_W_ID, again)).resolves.toMatchObject({
       name: 'Fixture Leaf',
       canonicalName: 'Fixtura testalis',
-      form: 'herb',
     });
   });
 
@@ -894,5 +1031,350 @@ describe('a deleted coven ingredient', () => {
 
     expect(created.id).not.toBe(id);
     expect(created.slug).toBe((await rowOf(id)).slug);
+  });
+});
+
+// MB.219: an ingredient's forms are written inside its own save, each with its
+// own substitutes, references and categories (DESIGN.md §5, "Variants are
+// written inside the ingredient's save"). What the schema refuses is
+// `validation/ingredient.test.ts`'s; what is read back is MB.218's.
+describe('its forms', () => {
+  let protection: string;
+  let love: string;
+  beforeEach(async () => {
+    const rows = await sql`
+      select name, id from categories where name in ('Protection', 'Love') and deleted_at is null`;
+    const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+    protection = byName.get('Protection') as string;
+    love = byName.get('Love') as string;
+  });
+
+  /** One whole form as the input sends it: every field, `overrides` over blanks. */
+  const formOf = (overrides: Partial<VariantInput>) =>
+    variantInput(makeVariant({ form: 'Testleaf' }), overrides);
+
+  /** The fixture's input with `variants` as its forms. */
+  const withForms = (...variants: Partial<VariantInput>[]) => ({
+    ...inputOf(local()),
+    variants: variants.map(formOf),
+  });
+
+  /** A compendium entry with its one fixture form: what a coven's substitute may link. */
+  async function compendiumEntry(name: string) {
+    const id = await seed(makeIngredient({ name, canonicalName: null, nomenclature: 'none' }));
+    return { id, form: await variantIdOf(sql, id, 'Testform') };
+  }
+
+  it('creates two forms with the ingredient, each with its own categories, substitutes and references', async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const source = await insertReference(sql, {}, A.id);
+
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms(
+        {
+          form: 'Testleaf',
+          description: 'Pressed.',
+          planets: ['Venus'],
+          categoryIds: [protection],
+          substitutes: [
+            { ingredientId: testroot.id, substituteVariantId: testroot.form },
+            { name: 'Mock Root' },
+          ],
+          references: [{ referenceId: source, locator: 'p. 3' }],
+        },
+        { form: 'Testoil', safetyNotes: 'Dilute.', categoryIds: [love] },
+      ),
+    );
+
+    const [leaf, oil] = await variantRowsOf(sql, created.id);
+    expect([leaf, oil]).toMatchObject([
+      { form: 'Testleaf', description: 'Pressed.', planets: ['Venus'], deleted_at: null },
+      { form: 'Testoil', safety_notes: 'Dilute.', deleted_at: null },
+    ]);
+    expect(await variantChildrenOf(sql, leaf.id)).toMatchObject({
+      categories: [{ ingredient_id: created.id, category_id: protection }],
+      substitutes: [
+        { substitute_id: null, name: 'Mock Root' },
+        { substitute_id: testroot.id, substitute_variant_id: testroot.form, name: null },
+      ],
+      // A form's link names the form alone.
+      references: [{ ingredient_id: null, reference_id: source, locator: 'p. 3' }],
+    });
+    expect((await variantChildrenOf(sql, oil.id)).categories).toMatchObject([
+      { category_id: love },
+    ]);
+    // The ingredient's own lists stay its own: nothing was filed on it.
+    expect(
+      await sql`select 1 from ingredient_categories where ingredient_id = ${created.id} and variant_id is null`,
+    ).toHaveLength(0);
+  });
+
+  it('keeps a form by its id across a respelling, and one sent without an id by its text, drops the one left out and adds the new', async () => {
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms(
+        { form: 'Testleaf', categoryIds: [protection] },
+        { form: 'Testoil', substitutes: [{ name: 'Mock Root' }] },
+        { form: 'Testresin' },
+      ),
+    );
+    const before = await variantRowsOf(sql, created.id);
+    const id = (form: string) => before.find((row) => row.form === form)?.id as string;
+
+    await updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      created.id,
+      withForms(
+        { id: id('Testleaf'), form: 'Testleaves', categoryIds: [protection] },
+        { form: ' TESTRESIN ' },
+        { form: 'Testpowder' },
+      ),
+    );
+
+    const after = await variantRowsOf(sql, created.id);
+    expect(after.find((row) => row.id === id('Testleaf'))).toMatchObject({
+      form: 'Testleaves',
+      deleted_at: null,
+    });
+    expect(after.find((row) => row.id === id('Testresin'))).toMatchObject({
+      form: 'TESTRESIN',
+      deleted_at: null,
+    });
+    expect(after.find((row) => row.id === id('Testoil'))).toMatchObject({ deleted_by: B.id });
+    expect(after.find((row) => row.form === 'Testpowder')).toMatchObject({ deleted_at: null });
+    expect(after).toHaveLength(4);
+    // The dropped form keeps its children for a restore; the kept, its pair.
+    expect((await variantChildrenOf(sql, id('Testoil'))).substitutes).toMatchObject([
+      { name: 'Mock Root' },
+    ]);
+    expect((await variantChildrenOf(sql, id('Testleaf'))).categories).toMatchObject([
+      { category_id: protection },
+    ]);
+  });
+
+  it("refuses a substitute's form that is not of the ingredient it links, on that form, writing nothing", async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const mockwort = await compendiumEntry('Mockwort');
+    const naming = (ingredientId: string) =>
+      withForms({ substitutes: [{ ingredientId, substituteVariantId: mockwort.form }] });
+    // Why it could have saved: the form is live, and is Mockwort's.
+    await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...naming(mockwort.id),
+      name: 'Testwort, kept',
+    });
+
+    const attempt = createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, naming(testroot.id));
+
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({
+      issues: [{ path: ['variants', 0, 'substitutes', 0, 'substituteVariantId'] }],
+    });
+    expect(await countIngredients()).toBe(3);
+  });
+
+  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // names one of what it links.
+  it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const linking = (substituteVariantId?: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot.id, substituteVariantId }] });
+    const path = ['variants', 0, 'substitutes', 0, 'substituteVariantId'];
+    // Why each could have saved: the same link, its form named, does.
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      linking(testroot.form),
+    );
+    const leaf = await variantIdOf(sql, created.id, 'Testleaf');
+    const count = await countIngredients();
+
+    const create = createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...linking(),
+      name: 'Testwort, formless',
+    });
+    await expect(create).rejects.toThrow(ValidationError);
+    await expect(create).rejects.toMatchObject({ issues: [{ path }] });
+    const update = updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, {
+      ...linking(),
+      variants: [{ ...linking().variants[0], id: leaf }],
+    });
+    await expect(update).rejects.toThrow(ValidationError);
+    await expect(update).rejects.toMatchObject({ issues: [{ path }] });
+
+    expect(await countIngredients()).toBe(count);
+    expect(
+      await sql`
+        select substitute_variant_id from ingredient_substitutes
+        where variant_id = ${leaf} and deleted_at is null`,
+    ).toEqual([{ substitute_variant_id: testroot.form }]);
+  });
+
+  // MB.217's narrowed `not_itself`: the same ingredient and the same form.
+  it('lets a form name a sibling form as its substitute, refusing the form itself on that entry', async () => {
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms({ form: 'Testleaf' }, { form: 'Testoil' }),
+    );
+    const [leaf, oil] = await variantRowsOf(sql, created.id);
+    const naming = (form: string) =>
+      withForms(
+        { id: leaf.id, form: 'Testleaf' },
+        {
+          id: oil.id,
+          form: 'Testoil',
+          substitutes: [{ ingredientId: created.id, substituteVariantId: form }],
+        },
+      );
+
+    const attempt = updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      created.id,
+      naming(oil.id),
+    );
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({
+      issues: [{ path: ['variants', 1, 'substitutes', 0] }],
+    });
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, naming(leaf.id));
+    expect((await variantChildrenOf(sql, oil.id)).substitutes).toMatchObject([
+      { substitute_id: created.id, substitute_variant_id: leaf.id },
+    ]);
+  });
+
+  it('keeps a substitute link that names another form of what it links, in place', async () => {
+    const testroot = await compendiumEntry('Testroot');
+    const rootOil = await insertVariant(sql, testroot.id, { form: 'Testoil' }, A.id);
+    const naming = (form: string) =>
+      withForms({ substitutes: [{ ingredientId: testroot.id, substituteVariantId: form }] });
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      naming(testroot.form),
+    );
+    const leaf = await variantIdOf(sql, created.id, 'Testleaf');
+    const [before] = await sql`
+      select id from ingredient_substitutes where variant_id = ${leaf}`;
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, {
+      ...naming(rootOil),
+      variants: [{ ...naming(rootOil).variants[0], id: leaf }],
+    });
+
+    expect(
+      await sql`
+        select id, substitute_variant_id from ingredient_substitutes
+        where variant_id = ${leaf} and deleted_at is null`,
+    ).toEqual([{ id: before.id, substitute_variant_id: rootOil }]);
+  });
+
+  it('refuses a form another of its live forms still holds, on that entry, rather than the raw index error', async () => {
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms({ form: 'Testleaf' }, { form: 'Testoil' }),
+    );
+    const [leaf, oil] = await variantRowsOf(sql, created.id);
+
+    // Each kept row is rewritten in turn, so the first takes a form the second still holds.
+    const attempt = updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      created.id,
+      withForms({ id: leaf.id, form: 'Testoil' }, { id: oil.id, form: 'Testleaf' }),
+    );
+
+    await expect(attempt).rejects.toThrow(ValidationError);
+    await expect(attempt).rejects.toMatchObject({ issues: [{ path: ['variants', 0, 'form'] }] });
+    expect(await liveFormsOf(sql, created.id)).toEqual(['Testleaf', 'Testoil']);
+  });
+
+  // A form's pair carries its ingredient too (MB.217), so a drop from the
+  // ingredient's own list names the ingredient's pairs alone.
+  it("drops a category from the ingredient's own list, leaving a form filed under it", async () => {
+    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
+      ...withForms({ form: 'Testleaf', categoryIds: [protection] }),
+      categoryIds: [protection],
+    });
+    const leaf = await variantIdOf(sql, created.id, 'Testleaf');
+    // Why the drop could reach it: both pairs name the ingredient and the category.
+    expect(
+      await sql`select variant_id from ingredient_categories
+        where ingredient_id = ${created.id} and category_id = ${protection}`,
+    ).toHaveLength(2);
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, created.id, {
+      ...withForms({ id: leaf, form: 'Testleaf', categoryIds: [protection] }),
+      categoryIds: [],
+    });
+
+    expect(
+      await sql`select variant_id from ingredient_categories where ingredient_id = ${created.id}`,
+    ).toEqual([{ variant_id: leaf }]);
+  });
+
+  it('refuses a viewer, who reads its forms, and leaves them as they were', async () => {
+    const created = await createWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      withForms({ form: 'Testleaf' }),
+    );
+    // Why it could have succeeded: C holds a live membership of W and reads the forms.
+    const [forms] = await variantsOf(asUser(C), [{ id: created.id, workspaceId: WORKSPACE_W_ID }]);
+    expect(forms).toMatchObject([{ form: 'Testleaf' }]);
+
+    await expect(
+      updateWorkspaceIngredient(
+        asUser(C),
+        WORKSPACE_W_ID,
+        created.id,
+        withForms({ form: 'Testoil' }),
+      ),
+    ).rejects.toThrow(Forbidden);
+    expect(await liveFormsOf(sql, created.id)).toEqual(['Testleaf']);
+  });
+
+  it('writes no form and none of its children on a save that changes nothing', async () => {
+    // The coven's own source, which a form's links are read back beside (MB.218).
+    const source = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+    const input = (ids: string[] = []) =>
+      withForms(
+        {
+          id: ids[0],
+          form: 'Testleaf',
+          planets: ['Venus'],
+          categoryIds: [protection],
+          substitutes: [{ name: 'Mock Root' }],
+          references: [{ referenceId: source, locator: 'p. 3' }],
+        },
+        { id: ids[1], form: 'Testoil' },
+      );
+    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input());
+    const rows = await variantRowsOf(sql, created.id);
+    const written = async () =>
+      Promise.all(
+        rows.map(async (row) => ({
+          row: (await variantRowsOf(sql, created.id)).find((other) => other.id === row.id)?.xmin,
+          children: await variantChildrenOf(sql, row.id),
+        })),
+      );
+    const before = await written();
+
+    await updateWorkspaceIngredient(
+      asUser(B),
+      WORKSPACE_W_ID,
+      created.id,
+      input(rows.map((row) => row.id as string)),
+    );
+
+    // Why the comparison could fail: the ingredient row itself was rewritten.
+    expect(await writtenBy(created.id)).not.toBe(before[0].row);
+    expect(await written()).toEqual(before);
   });
 });

@@ -14,9 +14,8 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryDocument,
-    "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryDocument,
-    "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": typeof types.DeleteCategoryDocument,
+    "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
+    "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
@@ -24,35 +23,54 @@ type Documents = {
     "\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateIngredientFormGroupDocument,
     "\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateIngredientFormGroupDocument,
     "\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n": typeof types.DeleteIngredientFormGroupDocument,
-    "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
-    "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
-    "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
-    "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateCompendiumIngredientDocument,
-    "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.UpdateCompendiumIngredientDocument,
-    "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": typeof types.DeleteCompendiumIngredientDocument,
-    "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      id\n      citation\n      isGlobal\n    }\n  }\n": typeof types.CreateReferenceDocument,
-    "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          citation\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.ReferenceSuggestionsDocument,
-    "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.FormSuggestionsDocument,
-    "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.CommonNameSuggestionsDocument,
-    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.PlanetSuggestionsDocument,
-    "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.ZodiacSuggestionsDocument,
-    "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": typeof types.DeitySuggestionsDocument,
-    "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.IngredientSuggestionsDocument,
-    "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
+    "\n  mutation CreateDeityTradition($input: DeityTraditionInput!) {\n    createDeityTradition(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateDeityTraditionDocument,
+    "\n  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {\n    updateDeityTradition(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateDeityTraditionDocument,
+    "\n  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {\n    deleteDeityTradition(id: $id, moveTo: $moveTo)\n  }\n": typeof types.DeleteDeityTraditionDocument,
+    "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryDocument,
+    "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryDocument,
+    "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": typeof types.DeleteCategoryDocument,
     "\n  mutation CreateIngredientFormValue($input: IngredientFormValueInput!) {\n    createIngredientFormValue(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateIngredientFormValueDocument,
     "\n  mutation UpdateIngredientFormValue($id: ID!, $input: IngredientFormValueInput!) {\n    updateIngredientFormValue(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateIngredientFormValueDocument,
     "\n  mutation DeleteIngredientFormValue($id: ID!) {\n    deleteIngredientFormValue(id: $id)\n  }\n": typeof types.DeleteIngredientFormValueDocument,
+    "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateDeityDocument,
+    "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateDeityDocument,
+    "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": typeof types.DeleteDeityDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
     "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": typeof types.DeletePlanetDocument,
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
+    "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
+    "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
+    "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
+    "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateCompendiumIngredientDocument,
+    "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.UpdateCompendiumIngredientDocument,
+    "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": typeof types.DeleteCompendiumIngredientDocument,
+    "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": typeof types.CreateReferenceDocument,
+    "\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": typeof types.UpdateReferenceDocument,
+    "\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n": typeof types.ReferenceDocument,
+    "\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n": typeof types.ReferenceRowFragmentDoc,
+    "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n": typeof types.ReferenceSuggestionsDocument,
+    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": typeof types.IngredientSummaryDocument,
+    "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.FormSuggestionsDocument,
+    "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.CommonNameSuggestionsDocument,
+    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.PlanetSuggestionsDocument,
+    "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.ZodiacSuggestionsDocument,
+    "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": typeof types.DeitySuggestionsDocument,
+    "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.IngredientSuggestionsDocument,
+    "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
+    "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
+    "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
+    "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
+    "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
+    "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": typeof types.ResumeAdminRoleChangesDocument,
+    "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
 };
 const documents: Documents = {
-    "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryDocument,
-    "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryDocument,
-    "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": types.DeleteCategoryDocument,
+    "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
+    "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
@@ -60,30 +78,50 @@ const documents: Documents = {
     "\n  mutation CreateIngredientFormGroup($input: IngredientFormGroupInput!) {\n    createIngredientFormGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateIngredientFormGroupDocument,
     "\n  mutation UpdateIngredientFormGroup($id: ID!, $input: IngredientFormGroupInput!) {\n    updateIngredientFormGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateIngredientFormGroupDocument,
     "\n  mutation DeleteIngredientFormGroup($id: ID!, $moveTo: ID) {\n    deleteIngredientFormGroup(id: $id, moveTo: $moveTo)\n  }\n": types.DeleteIngredientFormGroupDocument,
-    "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
-    "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
-    "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
-    "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateCompendiumIngredientDocument,
-    "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.UpdateCompendiumIngredientDocument,
-    "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": types.DeleteCompendiumIngredientDocument,
-    "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      id\n      citation\n      isGlobal\n    }\n  }\n": types.CreateReferenceDocument,
-    "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          citation\n          isGlobal\n        }\n      }\n    }\n  }\n": types.ReferenceSuggestionsDocument,
-    "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.FormSuggestionsDocument,
-    "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.CommonNameSuggestionsDocument,
-    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.PlanetSuggestionsDocument,
-    "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.ZodiacSuggestionsDocument,
-    "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": types.DeitySuggestionsDocument,
-    "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": types.IngredientSuggestionsDocument,
-    "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
+    "\n  mutation CreateDeityTradition($input: DeityTraditionInput!) {\n    createDeityTradition(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateDeityTraditionDocument,
+    "\n  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {\n    updateDeityTradition(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateDeityTraditionDocument,
+    "\n  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {\n    deleteDeityTradition(id: $id, moveTo: $moveTo)\n  }\n": types.DeleteDeityTraditionDocument,
+    "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryDocument,
+    "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryDocument,
+    "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n": types.DeleteCategoryDocument,
     "\n  mutation CreateIngredientFormValue($input: IngredientFormValueInput!) {\n    createIngredientFormValue(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateIngredientFormValueDocument,
     "\n  mutation UpdateIngredientFormValue($id: ID!, $input: IngredientFormValueInput!) {\n    updateIngredientFormValue(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateIngredientFormValueDocument,
     "\n  mutation DeleteIngredientFormValue($id: ID!) {\n    deleteIngredientFormValue(id: $id)\n  }\n": types.DeleteIngredientFormValueDocument,
+    "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateDeityDocument,
+    "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateDeityDocument,
+    "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": types.DeleteDeityDocument,
     "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
     "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
     "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": types.DeletePlanetDocument,
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
+    "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
+    "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
+    "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
+    "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateCompendiumIngredientDocument,
+    "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.UpdateCompendiumIngredientDocument,
+    "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n": types.DeleteCompendiumIngredientDocument,
+    "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": types.CreateReferenceDocument,
+    "\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n": types.UpdateReferenceDocument,
+    "\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n": types.ReferenceDocument,
+    "\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n": types.ReferenceRowFragmentDoc,
+    "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n": types.ReferenceSuggestionsDocument,
+    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": types.IngredientSummaryDocument,
+    "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.FormSuggestionsDocument,
+    "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.CommonNameSuggestionsDocument,
+    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.PlanetSuggestionsDocument,
+    "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.ZodiacSuggestionsDocument,
+    "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": types.DeitySuggestionsDocument,
+    "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.IngredientSuggestionsDocument,
+    "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
+    "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
+    "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
+    "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
+    "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
+    "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n": types.ResumeAdminRoleChangesDocument,
+    "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": types.SetUserRoleDocument,
 };
 
 /**
@@ -103,15 +141,11 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n"];
+export function graphql(source: "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n"];
+export function graphql(source: "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -143,63 +177,27 @@ export function graphql(source: "\n  mutation DeleteIngredientFormGroup($id: ID!
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreateDeityTradition($input: DeityTraditionInput!) {\n    createDeityTradition(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateDeityTradition($input: DeityTraditionInput!) {\n    createDeityTradition(input: $input) {\n      id\n      slug\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {\n    updateDeityTradition(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {\n    updateDeityTradition(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n"];
+export function graphql(source: "\n  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {\n    deleteDeityTradition(id: $id, moveTo: $moveTo)\n  }\n"): (typeof documents)["\n  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {\n    deleteDeityTradition(id: $id, moveTo: $moveTo)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCategory($input: CategoryInput!) {\n    createCategory(input: $input) {\n      id\n      slug\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"];
+export function graphql(source: "\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCategory($id: ID!, $input: CategoryInput!) {\n    updateCategory(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      id\n      citation\n      isGlobal\n    }\n  }\n"): (typeof documents)["\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      id\n      citation\n      isGlobal\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          citation\n          isGlobal\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          citation\n          isGlobal\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          form\n          description\n          isGlobal\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCategory($id: ID!) {\n    deleteCategory(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -212,6 +210,18 @@ export function graphql(source: "\n  mutation UpdateIngredientFormValue($id: ID!
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteIngredientFormValue($id: ID!) {\n    deleteIngredientFormValue(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteIngredientFormValue($id: ID!) {\n    deleteIngredientFormValue(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -236,6 +246,110 @@ export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input:
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCompendiumIngredient(\n    $id: ID!\n    $input: CompendiumIngredientUpdateInput!\n    $endRedirect: Boolean\n  ) {\n    updateCompendiumIngredient(id: $id, input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCompendiumIngredient($id: ID!) {\n    deleteCompendiumIngredient(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n"): (typeof documents)["\n  mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {\n    createReference(workspaceId: $workspaceId, input: $input) {\n      ...ReferenceRow\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {\n    updateReference(workspaceId: $workspaceId, id: $id, input: $input) {\n      ...ReferenceRow\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n"): (typeof documents)["\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n"): (typeof documents)["\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"): (typeof documents)["\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"): (typeof documents)["\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n"): (typeof documents)["\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n"): (typeof documents)["\n  mutation ResumeAdminRoleChanges {\n    resumeAdminRoleChanges\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n"): (typeof documents)["\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n"];
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

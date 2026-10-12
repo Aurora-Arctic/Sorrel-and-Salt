@@ -1,11 +1,11 @@
 # Testing — summary
 
-Vitest 5, configured as four projects in `vitest.config.mts` (`.mts`, not
+Vitest 5, configured as five projects in `vitest.config.mts` (`.mts`, not
 `.ts` — the root `package.json` deliberately carries no `"type"` field per
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it), plus
 the acceptance suite on a config of its own, `vitest.stories.config.mts` (M1.28,
-below). `db` and the acceptance config share the Postgres harness through
+below). `db`, `db-mocking` and the acceptance config share the Postgres harness through
 `tests/support/db-project.mts` — `.mts` and imported with its extension for the
 same reason, since a config's imports run at config-load time.
 
@@ -15,15 +15,19 @@ names that file, not this page.
 
 ## Where tests live
 
-Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it to the `unit`, `dom`, `db` or `rsc` project, `db` re-clones each worker's database from the seeded `sorrel_test_template` before every file, and `npm run test:coverage` runs all four against an 80% threshold. [`testing/where-tests-live.md`](testing/where-tests-live.md)
+Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it to the `unit`, `dom`, `db` or `rsc` project (`db` splitting into `db-mocking` for the files that mock), `db` re-clones each worker's database from the seeded `sorrel_test_template` before every file, and `npm run test:coverage` runs all five against an 80% threshold. [`testing/where-tests-live.md`](testing/where-tests-live.md)
 
 ## The db test harness — `tests/support/db/` (MB.51)
 
 `tests/support/db/` is the one part of `tests/support/` allowed a runtime `drizzle-orm` import, and holds `useTestDatabase`'s per-file client and catalogue reads, `tableFacts` and the audit lists, and the `insertIngredient` and `insertSpell` setup inserters. [`testing/db-harness.md`](testing/db-harness.md)
 
+### Two db projects (MB.238)
+
+`db` shares one module registry per worker (`isolate: false`) so a file does not reload the modules the previous one loaded, and the files whose source mocks, stubs, resets the registry or fakes the clock — found by a scan of their source at config load, not a list — run isolated in `db-mocking`; the database is still re-cloned before every file in both. [`testing/db-harness.md`](testing/db-harness.md#two-db-projects-mb238)
+
 ### Connections per run (MB.179)
 
-A full run holds at most 97 connections — twelve workers at most, each an app client and a test-file client capped at four by `tests/support/db/bounded-postgres.ts`, plus global setup's one — against the image's `max_connections=200`, so the limit holds with half left for a second run or the e2e servers; measured, a run peaks at 28 where it held 59 before, and `tests/guards/db-connection-budget.test.ts` fails a change to any of the three numbers that breaks the arithmetic. [`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)
+A full run holds at most 97 connections — twelve workers at most, each an app client and a test-file client capped at four by `tests/support/db/bounded-postgres.ts`, plus global setup's one — against the image's `max_connections=200`, so the limit holds with half left for a second run or the e2e servers; measured, a run peaks at 28 where it held 59 before; a change to any of the three numbers redoes the arithmetic. [`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)
 
 ## Acceptance — `make test-stories` (M1.28)
 
@@ -67,7 +71,7 @@ Playwright's e2e coverage is JS only, collected per test by `tests/e2e/fixtures.
 
 ## Test-layer ownership, and the file budget (MB.180)
 
-Each kind of assertion has one owning layer — a zod rule in `tests/modules/*/validation/`, a service rule in `tests/modules/*/services/`, the transport's half in `tests/modules/*/graphql/`, the `Membership` mechanism in `tests/db/repository/`, a table's shape in its module schema test, a component behaviour in the smallest component that has it, seed content in `seeded-template.test.ts` — and a test elsewhere proves only what that layer adds; `.github/scripts/summarize-vitest.mjs` names the ten slowest files in the PR comment and marks any over the 10 s budget, a warning that is answered by splitting the file along its owner, never by raising the budget. [`testing/layer-ownership.md`](testing/layer-ownership.md)
+Each kind of assertion has one owning layer — a zod rule in `tests/modules/*/validation/`, a service rule in `tests/modules/*/services/`, the transport's half in `tests/modules/*/graphql/`, the `Membership` mechanism in `tests/db/repository/`, a table's shape in its module schema test, a component behaviour in the smallest component that has it — and a test elsewhere proves only what that layer adds; `.github/scripts/summarize-vitest.mjs` names the ten slowest files in the PR comment and marks any over the 10 s budget, a warning that is answered by splitting the file along its owner, never by raising the budget. What any test may assert — a functional requirement, by the state it leaves, never copy, presentation, the harness or a rule lint can carry — is the same page's "What a test may assert" (MB.224). [`testing/layer-ownership.md`](testing/layer-ownership.md)
 
 ## Debugging tests (MB.22)
 

@@ -5,8 +5,8 @@ import { Fragment, type MouseEvent, type ReactElement, useId, useState } from 'r
 import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
-import { TextField } from './fields';
-import type { Duplicate, DuplicateWarning, NameFieldProps } from './types';
+import { TextField } from '../Field';
+import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps } from './types';
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
 // the typing settles, on the debounce the other lookups wait on, and each
@@ -14,7 +14,9 @@ import type { Duplicate, DuplicateWarning, NameFieldProps } from './types';
 // to its entry. It has to be answered: a save asks about the very name it is
 // sending, settled or not, and while a match shows the save is held, the
 // warning turns to an error on the name, and the focus goes to Create
-// Anyway, which sets the matches aside so the next save goes
+// Anyway, which sets the matches aside so the next save goes. An edit's
+// warning only names the matches: renaming makes nothing new, so its save
+// is never held and it offers no Create Anyway (MB.115, the owner's call)
 // (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const PossibleDuplicatesDocument = graphql(`
@@ -43,16 +45,33 @@ const lookup = (workspaceId: string | null, name: string) =>
  * held on them, and the two things that move it on — a save's `check`, and
  * `dismiss`. The form owns it, since its save waits on it; `NameField` draws it.
  * A null coven asks about the compendium alone, and `omit` is the entry being
- * edited, which its own name always matches.
+ * edited, which its own name always matches. `opened` is the name the form
+ * opened with: until the name has been typed in, nothing is asked or held, so
+ * an edit that leaves the name alone never warns; once typed in, it asks as
+ * any name does, back at the opened name too (MB.115, the owner's calls).
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
   text: string,
   omit?: string,
+  opened = '',
 ): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
-  const name = useDebouncedValue(typed);
+  // Typed in since the form opened, or since a save moved `opened` on: set
+  // during render, as React allows for a component's own state, so the first
+  // keystroke already asks.
+  const [baseline, setBaseline] = useState(opened);
+  const [edited, setEdited] = useState(false);
+  if (baseline !== opened) {
+    setBaseline(opened);
+    setEdited(false);
+  } else if (!edited && typed !== opened.trim()) {
+    setEdited(true);
+  }
+  const untouched = !edited && typed === opened.trim();
+  // The untouched name asks nothing, as a blank one does.
+  const name = useDebouncedValue(untouched ? '' : typed);
   const { data } = useQuery({
     ...lookup(workspaceId, name),
     // A blank name has nothing to resemble, and the server answers it empty.
@@ -76,7 +95,7 @@ export function useDuplicateWarning(
 
   const check = async (value: string): Promise<boolean> => {
     const sending = value.trim();
-    if (sending === '') return false;
+    if (sending === '' || (!edited && sending === opened.trim())) return false;
     let found: Duplicate[];
     try {
       // The cached answer when the typing had settled; asked now when not, and
@@ -97,7 +116,12 @@ export function useDuplicateWarning(
     setHeldFor(null);
   };
 
-  return { shown, blocking: heldFor === typed && shown.length > 0, check, dismiss };
+  return {
+    shown: untouched ? [] : shown,
+    blocking: !untouched && heldFor === typed && shown.length > 0,
+    check,
+    dismiss,
+  };
 }
 
 /** "Cat's Claw (Uncaria tomentosa)": the label alone names five plants. */
@@ -114,7 +138,12 @@ const joinerAt = (index: number, count: number) => {
 const covenHref = ({ id }: Duplicate) => `/ingredients/${id}`;
 
 /** The name field, with the duplicate warning beneath it. */
-export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps): ReactElement {
+export function NameField({
+  warning,
+  hrefOf = covenHref,
+  holds = true,
+  ref,
+}: NameFieldProps): ReactElement {
   const { shown, blocking } = warning;
   const warningId = useId();
 
@@ -127,12 +156,13 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
   };
 
   return (
-    <TextField
+    <TextField<IngredientFormValues>
       name="name"
       label="Name"
       autoComplete="off"
       required
       hint="What this coven calls it. It can differ from the formal name."
+      placeholder="Add a name"
       describedBy={shown.length > 0 ? warningId : undefined}
       invalid={blocking}
       after={
@@ -142,28 +172,36 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
           {shown.length > 0 && (
             <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
               {/* Plain anchors rather than <Link>: typed routes refuse a page
-                  not built yet, and /ingredients/[id] is M8.19's. */}
+                  not built yet, and /ingredients/[id] is M8.19's. Each in a
+                  new tab, so the form and its unsaved changes stay where they
+                  are (the owner's call at MB.115's review). */}
               <p id={warningId}>
                 Did you mean{' '}
                 {shown.map((match, index) => (
                   <Fragment key={match.id}>
                     {joinerAt(index, shown.length)}
-                    <a href={hrefOf(match)}>{titleOf(match)}</a>
+                    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+                      {titleOf(match)}
+                      <span className="visually-hidden"> (opens in a new tab)</span>
+                    </a>
                   </Fragment>
                 ))}
                 ?
               </p>
               {/* Described by the warning: a save that stops here moves the
-                  focus to it, and the focus should say why. */}
-              <button
-                ref={ref}
-                type="button"
-                className="btn"
-                aria-describedby={warningId}
-                onClick={dismiss}
-              >
-                Create Anyway
-              </button>
+                  focus to it, and the focus should say why. None on an
+                  edit, whose save the warning never holds. */}
+              {holds && (
+                <button
+                  ref={ref}
+                  type="button"
+                  className="btn btn--quiet btn--small"
+                  aria-describedby={warningId}
+                  onClick={dismiss}
+                >
+                  Create Anyway
+                </button>
+              )}
             </div>
           )}
         </output>

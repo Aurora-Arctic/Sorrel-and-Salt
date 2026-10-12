@@ -1,7 +1,16 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import UserList from '@/components/UserList';
+import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import type { FilterFormSubject } from '../../support/types';
+
+const router = { refresh: vi.fn(), push: vi.fn() };
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
@@ -24,6 +33,7 @@ const ADA = {
   createdAt: new Date('2026-03-04T05:06:07Z'),
   providers: ['discord', 'google'],
   emailVerified: true,
+  primaryAdmin: false,
 } as const;
 
 const BO = {
@@ -35,6 +45,7 @@ const BO = {
   createdAt: new Date('2026-05-06T07:08:09Z'),
   providers: [],
   emailVerified: false,
+  primaryAdmin: false,
 } as const;
 
 const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
@@ -52,110 +63,62 @@ function cellsOf(name: string): string[] {
 }
 
 describe('UserList', () => {
-  it('heads a column for each fact an admin judges a user by', () => {
+  it('shows a row per user, in the order given, with its address, its coven-creation flag and its signup date', () => {
     render(<UserList {...props()} />);
 
-    const headers = screen.getAllByRole('columnheader').map((header) => header.textContent);
-    expect(headers).toEqual([
-      'Name',
-      'Email',
-      'Role',
-      'Can create a coven',
-      'Signed up',
-      'Sign-in methods',
-      'Email verified',
-    ]);
+    const [, ada, bo] = screen.getAllByRole('row');
+    for (const [row, user, date] of [
+      [ada, ADA, '2026-03-04'],
+      [bo, BO, '2026-05-06'],
+    ] as const) {
+      expect(row).toHaveTextContent(user.name);
+      expect(row).toHaveTextContent(user.email);
+      expect(row).toHaveTextContent(date);
+    }
+    // The mark's word is the flag's one rendering: an admin holds it, Bo does not.
+    expect(within(within(ada).getAllByRole('cell')[3]).getByText('Yes')).toBeInTheDocument();
+    expect(within(within(bo).getAllByRole('cell')[3]).getByText('No')).toBeInTheDocument();
   });
 
-  it('shows a row per user, in the order given', () => {
-    render(<UserList {...props()} />);
+  // MB.200: each row opens the privilege ledger narrowed to its user, an
+  // admin's included, from an icon before the name.
+  describe('the history link', () => {
+    it('leads every name, to the ledger searched for that user’s address', () => {
+      render(<UserList {...props()} />);
 
-    expect(cellsOf('Ada Fixturewort')).toEqual([
-      'Ada Fixturewort',
-      'ada@users.test',
-      'Admin',
-      'Yes',
-      '2026-03-04',
-      'Discord, Google',
-      'Yes',
-    ]);
-    expect(cellsOf('Bo Fixturewort')).toEqual([
-      'Bo Fixturewort',
-      'bo@users.test',
-      'User',
-      'No',
-      '2026-05-06',
-      'None',
-      'No',
-    ]);
-  });
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', {
+          name: `Privilege changes for ${user.name}`,
+        });
+        expect(link).toHaveAttribute(
+          'href',
+          `/admin/privilege-changes?query=${encodeURIComponent(user.email)}`,
+        );
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
 
-  it('dates the signup with a machine-readable time', () => {
-    render(<UserList {...props()} />);
+    // Every address is held lower-cased; the link does not rely on that.
+    it('searches for the address lower-cased', () => {
+      render(<UserList {...props({ users: [{ ...ADA, email: 'Ada@Users.Test' }] })} />);
 
-    const time = within(screen.getByRole('row', { name: /Ada/ })).getByText('2026-03-04');
-    expect(time.tagName).toBe('TIME');
-    expect(time).toHaveAttribute('dateTime', '2026-03-04T05:06:07.000Z');
+      expect(
+        screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
+      ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+    });
   });
 
   it('names a provider outside the roster by its id rather than dropping it', () => {
     render(<UserList {...props({ users: [{ ...BO, providers: ['github'] }] })} />);
 
-    expect(cellsOf('Bo Fixturewort')[5]).toBe('github');
+    expect(cellsOf('Bo Fixturewort')[4]).toBe('github');
   });
 
-  it('says so when no user matches', () => {
+  it('draws no table when no user matches', () => {
     render(<UserList {...props({ users: [], query: 'nobody' })} />);
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    expect(screen.getByText('No users match.')).toBeInTheDocument();
-  });
-
-  it('filters by a GET search to the page itself, keeping what was asked', () => {
-    render(<UserList {...props({ query: 'fixturewort', awaitingApproval: true })} />);
-
-    // The <search> landmark around it is the e2e spec's to find: jsdom's role
-    // table predates the element, and a browser's does not. The action and
-    // method are what a submit before hydration uses.
-    const search = screen.getByRole('form', { name: 'Filter users' });
-    expect(search).toHaveAttribute('action', '/admin/users');
-    expect(search).toHaveAttribute('method', 'get');
-    expect(within(search).getByLabelText('Name or email')).toHaveValue('fixturewort');
-    expect(within(search).getByLabelText('Name or email')).toHaveAttribute('name', 'query');
-    expect(within(search).getByLabelText('Awaiting approval only')).toBeChecked();
-    expect(within(search).getByLabelText('Awaiting approval only')).toHaveAttribute(
-      'name',
-      'awaiting',
-    );
-  });
-
-  it('links the pages either side, and disables an end that has none', () => {
-    const { rerender } = render(<UserList {...props()} />);
-    expect(screen.queryByRole('navigation', { name: 'Pages' })).not.toBeInTheDocument();
-
-    rerender(<UserList {...props({ nextHref: '/admin/users?after=next' })} />);
-    let pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(within(pages).getByRole('link', { name: 'Prev' })).not.toHaveAttribute('href');
-    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
-      'href',
-      '/admin/users?after=next',
-    );
-
-    rerender(<UserList {...props({ previousHref: '/admin/users?before=previous' })} />);
-    pages = screen.getByRole('navigation', { name: 'Pages' });
-    expect(within(pages).getByRole('link', { name: 'Prev' })).toHaveAttribute(
-      'href',
-      '/admin/users?before=previous',
-    );
-    expect(within(pages).getByRole('link', { name: 'Next' })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    expect(within(pages).getByRole('link', { name: 'Next' })).not.toHaveAttribute('href');
   });
 });
 
@@ -180,20 +143,58 @@ describe('UserList impersonation', () => {
 
     expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toBeInTheDocument();
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
-    expect(within(bo).getByRole('button', { name: 'Impersonate Bo Fixturewort' })).toBeEnabled();
+    const impersonate = within(bo).getByRole('button', { name: 'Impersonate Bo Fixturewort' });
+    expect(impersonate).toBeEnabled();
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
-    expect(within(ada).queryByRole('button')).not.toBeInTheDocument();
+    expect(within(ada).queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 
-  it('impersonates the row’s user and opens the site as them', async () => {
+  const asking = () => screen.getByRole('dialog', { name: 'Impersonate User' });
+  const openFor = (name: string) =>
+    fireEvent.click(screen.getByRole('button', { name: `Impersonate ${name}` }));
+
+  // MB.115, on the owner's call: the row's button asks first, and the modal's
+  // confirm is what calls the endpoint.
+  it('asks before impersonating, in a modal, and Cancel closes it with nothing sent', () => {
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    openFor(BO.name);
+
+    expect(asking()).toHaveTextContent(BO.name);
+    expect(within(asking()).getByRole('button', { name: 'Impersonate' })).toHaveFocus();
+    expect(impersonateUserMock).not.toHaveBeenCalled();
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' })).toHaveFocus();
+    expect(impersonateUserMock).not.toHaveBeenCalled();
+  });
+
+  it('impersonates the row’s user once confirmed, and opens the site as them', async () => {
     impersonateUserMock.mockResolvedValue({ data: {}, error: null });
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<UserList {...props({ canImpersonate: true })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
 
     await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/'));
     expect(impersonateUserMock).toHaveBeenCalledWith({ userId: BO.id });
+  });
+
+  it('keeps the confirm busy while pending, and sends once', async () => {
+    // Never answers, so the request stays in flight.
+    impersonateUserMock.mockReturnValue(new Promise(() => {}));
+    render(<UserList {...props({ canImpersonate: true })} />);
+
+    openFor(BO.name);
+    const confirm = within(asking()).getByRole('button', { name: 'Impersonate' });
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(confirm).toHaveAttribute('aria-busy', 'true'));
+    expect(confirm).toBeDisabled();
+    fireEvent.click(confirm);
+    expect(impersonateUserMock).toHaveBeenCalledTimes(1);
   });
 
   it('says so in the row when the endpoint refuses, and stays on the page', async () => {
@@ -204,73 +205,755 @@ describe('UserList impersonation', () => {
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
     render(<UserList {...props({ canImpersonate: true })} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
+    openFor(BO.name);
+    fireEvent.click(within(asking()).getByRole('button', { name: 'Impersonate' }));
 
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
-    expect(await within(bo).findByRole('alert')).toHaveTextContent(
-      'Bo Fixturewort could not be impersonated.',
-    );
+    expect(await within(bo).findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(assignMock).not.toHaveBeenCalled();
   });
 });
 
-// MB.53, on the owner's word: Filter is offered only when there is a new
-// filter to apply, and the address it opens carries a bare `awaiting`.
+// MB.115: the search applies from its magnifier or Enter, a role or Needs
+// Approval the moment it changes, each softly from the first page, with a
+// bare `awaiting`.
 describe('UserList filter', () => {
   afterEach(() => {
-    assignMock.mockReset();
-    vi.unstubAllGlobals();
+    router.push.mockReset();
   });
 
-  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+  const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
 
-  it('is disabled while the form matches the filter shown', () => {
-    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+  // Needs Approval is a native checkbox valued empty, so a native submit sends
+  // `awaiting=`, and All Roles `role=`: each read by the page as the filter shown.
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Users',
+    path: '/admin/users',
+    searchLabel: 'Name or Email',
+    push: router.push,
+    none: { list: <UserList {...props()} />, sends: 'query=&role=' },
+    shown: {
+      list: (
+        <UserList
+          {...props({
+            query: 'fixturewort',
+            role: 'admin',
+            awaitingApproval: true,
+            previousHref: '/admin/users?query=fixturewort&awaiting&role=admin&before=x',
+          })}
+        />
+      ),
+      sends: 'query=fixturewort&role=admin&awaiting=',
+    },
+    alone: [
+      { list: <UserList {...props({ query: 'bo' })} />, sends: 'query=bo&role=' },
+      { list: <UserList {...props({ role: 'user' })} />, sends: 'query=&role=user' },
+      {
+        list: <UserList {...props({ awaitingApproval: true })} />,
+        sends: 'query=&role=&awaiting=',
+      },
+    ],
+    searched: '/admin/users?query=Two+words&awaiting&role=admin',
+  };
 
-    expect(filterButton()).toBeDisabled();
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  // The owner's call (MB.115): a select-only box once hydrated, as every
+  // closed set in the row is, over the native select the server draws.
+  it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
+    const { container, hydrate } = drawnOnServer(
+      <Navigating push={router.push}>
+        <UserList {...props({ role: 'admin' })} />
+      </Navigating>,
+    );
+
+    const role = within(container).getByRole('combobox', { name: 'Role' });
+    expect(role).toHaveValue('admin');
+    expect(role).toHaveAttribute('name', 'role');
+    expect(
+      within(role)
+        .getAllByRole('option')
+        .map((option) => option.getAttribute('value')),
+    ).toEqual(['', 'admin', 'user']);
+
+    await hydrate();
+    fireEvent.click(within(container).getByRole('combobox', { name: 'Role' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: 'User' }));
+    });
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/admin/users?role=user');
   });
 
-  it('enables once the query differs, and disables again when it is put back', () => {
-    render(<UserList {...props({ query: 'bo' })} />);
-    const box = screen.getByLabelText('Name or email');
+  it('carries the search text typed so far when a role changes', async () => {
+    inFlight(<UserList {...props()} />);
 
-    fireEvent.change(box, { target: { value: 'bob' } });
-    expect(filterButton()).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' bo ' } });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Role' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: 'User' }));
+    });
 
-    fireEvent.change(box, { target: { value: 'bo ' } });
-    expect(filterButton()).toBeDisabled();
+    expect(router.push).toHaveBeenCalledWith('/admin/users?query=bo&role=user');
   });
 
-  it('enables once the checkbox differs, and disables again when it is put back', () => {
+  it('applies Needs Approval as a bare flag the moment it is switched, and off again', async () => {
+    inFlight(<UserList {...props()} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/users?awaiting');
+  });
+
+  it('turns Needs Approval off to the list without the flag', async () => {
+    inFlight(<UserList {...props({ awaitingApproval: true })} />);
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/users');
+  });
+
+  // A soft navigation keeps the page's own code running, so the list is the
+  // tabs' skeleton, its one status, and the row is off until the page arrives.
+  it('puts a status in place of the list and turns the row off until the page arrives', async () => {
+    let arrive: () => void = () => undefined;
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
+    render(
+      <Navigating push={router.push} arrives={arrives}>
+        <UserList {...props()} />
+      </Navigating>,
+    );
+    const row = screen.getByRole('form', { name: 'Filter Users' });
+    const controls = () => [
+      screen.getByLabelText('Name or Email'),
+      screen.getByLabelText('Role'),
+      screen.getByRole('switch', { name: 'Needs Approval' }),
+      screen.getByRole('button', { name: 'Search' }),
+    ];
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'ada' } });
+    // Typing reads nothing: the list stays and the row is live.
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(row).not.toHaveAttribute('aria-busy');
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/users?query=ada');
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(row).toHaveAttribute('aria-busy', 'true');
+    for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
+    // A press while the page is on its way goes nowhere.
+    fireEvent.submit(row);
+    expect(router.push).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      arrive();
+    });
+
+    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(row).not.toHaveAttribute('aria-busy');
+  });
+});
+
+// M5.8: a user who may not yet create a coven is approved from their row, and
+// one who may is revoked, each behind a confirmation naming them; an admin's
+// row offers neither. The service is the guard; these put the control where an
+// admin looks, and show what the mutation answers.
+describe('UserList approval', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const boRow = () => screen.getByRole('row', { name: /Bo Fixturewort/ });
+
+  it('offers Approve on the row of a user awaiting approval, naming them, and nothing on an admin', () => {
     render(<UserList {...props()} />);
-    const awaiting = screen.getByLabelText('Awaiting approval only');
 
-    fireEvent.click(awaiting);
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.click(awaiting);
-    expect(filterButton()).toBeDisabled();
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    expect(within(boRow()).queryByRole('button', { name: /Revoke/ })).not.toBeInTheDocument();
+    const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
+    expect(
+      within(ada).queryByRole('button', { name: /Approve|Revoke approval/ }),
+    ).not.toBeInTheDocument();
   });
 
-  it('opens the filtered page from the first, with a bare awaiting', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props({ previousHref: '/admin/users?before=x' })} />);
+  it('offers Revoke on the row of a user who may create a coven, and no Approve', () => {
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
 
-    fireEvent.change(screen.getByLabelText('Name or email'), { target: { value: ' Fixture B ' } });
-    fireEvent.click(screen.getByLabelText('Awaiting approval only'));
-    fireEvent.click(filterButton());
-
-    expect(assignMock).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting');
+    const revoke = within(boRow()).getByRole('button', {
+      name: 'Revoke approval for Bo Fixturewort',
+    });
+    expect(revoke).toBeEnabled();
+    expect(within(boRow()).queryByRole('button', { name: /Approve/ })).not.toBeInTheDocument();
   });
 
-  it('opens the unfiltered list when the filter is cleared', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+  const dialog = (title: string) => screen.getByRole('dialog', { name: title });
 
-    fireEvent.change(screen.getByLabelText('Name or email'), { target: { value: '' } });
-    fireEvent.click(screen.getByLabelText('Awaiting approval only'));
-    fireEvent.click(filterButton());
+  it('asks before approving, in a modal, and Cancel closes it with nothing sent', () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/users');
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+
+    const asking = dialog('Approve Coven Creation');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
+    expect(within(asking).getByRole('button', { name: 'Approve' })).toHaveFocus();
+    fireEvent.click(within(asking).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toHaveFocus();
+    expect(calls).toEqual([]);
+  });
+
+  // MB.205: an unverified address is said in the confirmation, read with its
+  // Approve, since the focus lands there; a warning, not a refusal.
+
+  it('warns before approving a user whose email is unverified, and still approves', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+    // The precondition: Bo's address is unverified, as the row's mark says,
+    // the mark's word being the flag's one rendering.
+    expect(within(boRow()).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+
+    const approve = within(dialog('Approve Coven Creation')).getByRole('button', {
+      name: 'Approve',
+    });
+    expect(approve).toHaveFocus();
+    expect(approve).toHaveAccessibleDescription(/\S/);
+    fireEvent.click(approve);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('gives no warning before revoking, even from a user whose email is unverified', () => {
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+
+    expect(
+      within(dialog('Revoke Coven Creation')).getByRole('button', { name: 'Revoke' }),
+    ).not.toHaveAccessibleDescription();
+  });
+
+  // The owner's call, beside MB.59's: each confirmation takes the same
+  // optional reason, sent trimmed, or not at all when blank.
+  it('approves with a reason, and revokes with one', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    const { rerender } = render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    const approving = dialog('Approve Coven Creation');
+    const reason = within(approving).getByRole('textbox', { name: 'Reason' });
+    expect(reason).toHaveAccessibleDescription(/\S/);
+    fireEvent.change(reason, { target: { value: '  Runs the Tuesday circle ' } });
+    fireEvent.click(within(approving).getByRole('button', { name: 'Approve' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+
+    rerender(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+    const revoking = dialog('Revoke Coven Creation');
+    fireEvent.change(within(revoking).getByRole('textbox', { name: 'Reason' }), {
+      target: { value: '   ' },
+    });
+    fireEvent.click(within(revoking).getByRole('button', { name: 'Revoke' }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(2));
+
+    expect(calls).toEqual([{ userId: BO.id, note: 'Runs the Tuesday circle' }, { userId: BO.id }]);
+  });
+
+  it('approves the row’s user from the modal, busy until the list is read again', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    const busy = within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' });
+    fireEvent.click(busy);
+
+    expect(busy).toBeDisabled();
+    expect(busy).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('says why in the row when the service refuses, and offers Approve again', async () => {
+    mockGraphQLError('GrantWorkspaceCreation', {
+      code: 'FORBIDDEN',
+      message: 'Bo Fixturewort may already create a coven',
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    fireEvent.click(
+      within(dialog('Approve Coven Creation')).getByRole('button', { name: 'Approve' }),
+    );
+
+    expect(await within(boRow()).findByRole('alert')).toBeVisible();
+    expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('revokes from a modal naming the user, busy until the list is read again', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    render(<UserList {...props({ users: [{ ...BO, canCreateWorkspace: true }] })} />);
+
+    fireEvent.click(
+      within(boRow()).getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }),
+    );
+
+    const asking = dialog('Revoke Coven Creation');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
+    const confirm = within(asking).getByRole('button', { name: 'Revoke' });
+    expect(confirm).toHaveFocus();
+    fireEvent.click(confirm);
+
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+});
+
+// MB.59: the role cell's Grant or Revoke, each asking first in a modal naming
+// the user, with an optional reason; the primary admin's Revoke in view but
+// unusable, saying why. The service is the guard, and refuses the same.
+describe('UserList admin role', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
+  const dialog = (title: string) => screen.getByRole('dialog', { name: title });
+
+  it('offers Grant on a user’s row and Revoke on an admin’s, each naming the user', () => {
+    render(<UserList {...props()} />);
+
+    const grant = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Grant admin to Bo Fixturewort',
+    });
+    expect(grant).toBeEnabled();
+    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+    expect(revoke).toBeEnabled();
+    expect(revoke).not.toHaveAttribute('aria-disabled');
+    // Nobody here is the primary admin.
+    expect(screen.queryByRole('button', { name: 'Primary Admin' })).not.toBeInTheDocument();
+  });
+
+  it('grants from a modal naming the user, sending the reason, busy until the list is read again', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
+
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+    );
+
+    const asking = dialog('Grant Admin');
+    expect(asking).toHaveTextContent('Bo Fixturewort');
+    const confirm = within(asking).getByRole('button', { name: 'Grant' });
+    expect(confirm).toHaveFocus();
+    expect(confirm).not.toHaveAccessibleDescription();
+    const reason = within(asking).getByRole('textbox', { name: 'Reason' });
+    expect(reason).toHaveAccessibleDescription(/\S/);
+    fireEvent.change(reason, { target: { value: '  Curates the planets  ' } });
+    fireEvent.click(confirm);
+
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the planets' }]);
+  });
+
+  it('sends no reason when none is given, and Cancel closes the modal with nothing sent', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props()} />);
+    const open = within(row('Ada Fixturewort')).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+
+    fireEvent.click(open);
+    fireEvent.click(within(dialog('Revoke Admin')).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(open).toHaveFocus();
+    expect(calls).toEqual([]);
+
+    fireEvent.click(open);
+    const asking = dialog('Revoke Admin');
+    expect(asking).toHaveTextContent('Ada Fixturewort');
+    fireEvent.click(within(asking).getByRole('button', { name: 'Revoke' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: ADA.id, role: 'user' }]);
+  });
+
+  // MB.205's warning, in Grant's words: a grant vouches as an approval does.
+  it('warns before granting to a user whose email is unverified, and still grants', async () => {
+    mockGraphQLMutation('SetUserRole', () => ({
+      setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
+    }));
+    render(<UserList {...props()} />);
+    expect(within(row('Bo Fixturewort')).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
+
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+    );
+
+    const confirm = within(dialog('Grant Admin')).getByRole('button', { name: 'Grant' });
+    expect(confirm).toHaveAccessibleDescription(/\S/);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+  });
+
+  it('says why in the row when the service refuses, and offers Revoke again', async () => {
+    mockGraphQLError('SetUserRole', {
+      code: 'FORBIDDEN',
+      message:
+        'Ada Fixturewort is the last admin, and the site needs one. Make someone else an admin first.',
+    });
+    render(<UserList {...props()} />);
+
+    fireEvent.click(
+      within(row('Ada Fixturewort')).getByRole('button', {
+        name: 'Revoke admin from Ada Fixturewort',
+      }),
+    );
+    fireEvent.click(within(dialog('Revoke Admin')).getByRole('button', { name: 'Revoke' }));
+
+    expect(await within(row('Ada Fixturewort')).findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, described by the reason', () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }, BO] })} />);
+    const primary = row('Ada Fixturewort');
+
+    expect(within(primary).getByRole('button', { name: 'Primary Admin' })).toBeInTheDocument();
+
+    const revoke = within(primary).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+    // In view and reachable, not `disabled`, and described by the reason.
+    expect(revoke).toBeVisible();
+    expect(revoke).toBeEnabled();
+    expect(revoke).toHaveAttribute('aria-disabled', 'true');
+    expect(revoke).toHaveAccessibleDescription(/\S/);
+    expect(within(primary).queryByRole('alert')).not.toBeInTheDocument();
+    // Only the primary admin's row is marked.
+    expect(
+      within(row('Bo Fixturewort')).queryByRole('button', { name: 'Primary Admin' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('states the reason when the primary admin’s Revoke is tried, opening nothing and sending nothing', () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }] })} />);
+    const primary = row('Ada Fixturewort');
+    const revoke = within(primary).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+
+    fireEvent.click(revoke);
+
+    // The tip opens, as an alert.
+    expect(within(primary).getByRole('alert')).toBeVisible();
+    expect(within(primary).getByRole('alert')).toHaveAttribute('aria-hidden', 'false');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    // A second try says it again, as a fresh alert.
+    fireEvent.click(revoke);
+    expect(within(primary).getByRole('alert')).toBeVisible();
+    expect(calls).toEqual([]);
+  });
+});
+
+// MB.63: the primary admin's switch on admin changes, its state in words; to
+// any other admin the control is in view but unusable, saying why.
+describe('UserList admin changes switch', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  // The paused notice is a plain paragraph before the switch, the state's one
+  // rendering; while changes are on, the switch stands alone.
+  // MB.115, on the owner's call, reversing MB.63's: Pause asks first.
+  const confirming = () => screen.getByRole('dialog', { name: 'Pause Admin Changes' });
+
+  it('lets the primary admin pause once confirmed, stating that changes are on, busy until the page is read again', async () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    // No sentence while changes are on, on the owner's call: only the button.
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause.previousElementSibling).toBeNull();
+    expect(pause).not.toHaveAttribute('aria-disabled');
+    fireEvent.click(pause);
+    expect(calls).toBe(0);
+    const confirm = within(confirming()).getByRole('button', { name: 'Pause Admin Changes' });
+    fireEvent.click(confirm);
+
+    expect(confirm).toBeDisabled();
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('sends nothing when the pause is cancelled', () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+    fireEvent.click(within(confirming()).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toHaveFocus();
+    expect(calls).toBe(0);
+  });
+
+  it('lets the primary admin resume, stating that changes are paused', async () => {
+    let calls = 0;
+    mockGraphQLMutation('ResumeAdminRoleChanges', () => {
+      calls += 1;
+      return { resumeAdminRoleChanges: false };
+    });
+    render(<PauseControl paused={true} canToggle={true} />);
+
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    expect(resume.previousElementSibling).toHaveTextContent(/\S/);
+    fireEvent.click(resume);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toBe(1);
+  });
+
+  it('says why beside the switch when the service refuses, and offers it again', async () => {
+    mockGraphQLError('PauseAdminRoleChanges', {
+      code: 'FORBIDDEN',
+      message: 'Only the primary admin may pause or resume admin changes',
+    });
+    render(<PauseControl paused={false} canToggle={true} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pause Admin Changes' }));
+    fireEvent.click(within(confirming()).getByRole('button', { name: 'Pause Admin Changes' }));
+
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it('shows another admin the state and the switch, aria-disabled, stating why when tried and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('PauseAdminRoleChanges', () => {
+      calls += 1;
+      return { pauseAdminRoleChanges: true };
+    });
+    render(<PauseControl paused={false} canToggle={false} />);
+
+    const pause = screen.getByRole('button', { name: 'Pause Admin Changes' });
+    expect(pause).toBeEnabled();
+    expect(pause).toHaveAttribute('aria-disabled', 'true');
+    expect(pause).toHaveAccessibleDescription(/\S/);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(pause);
+
+    expect(screen.getByRole('alert')).toBeVisible();
+    expect(calls).toBe(0);
+  });
+
+  // One sentence on the page, on the owner's call: the notice; the switch's
+  // own reason is in its tip.
+  it('shows another admin the paused notice and a locked Resume whose reason is a tip', () => {
+    render(<PauseControl paused canToggle={false} />);
+
+    const resume = screen.getByRole('button', { name: 'Resume Admin Changes' });
+    // The locked control wraps the button with its tip; the notice stands before it.
+    expect(resume.parentElement?.previousElementSibling).toHaveTextContent(/\S/);
+    expect(resume).toHaveAttribute('aria-disabled', 'true');
+    expect(resume).toHaveAccessibleDescription(/\S/);
+    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
+  });
+});
+
+// MB.63: while admin changes are paused, an admin the pause binds sees every
+// Grant and Revoke in view but unusable, saying why; the primary admin, whom
+// the pause exempts, keeps them. The service refuses the same.
+describe('UserList admin role while admin changes are paused', () => {
+  afterEach(() => {
+    router.refresh.mockReset();
+  });
+
+  const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
+
+  it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('SetUserRole', () => {
+      calls += 1;
+      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
+    });
+    render(<UserList {...props({ adminChanges: { paused: true, canToggle: false } })} />);
+
+    const grant = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Grant admin to Bo Fixturewort',
+    });
+    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
+      name: 'Revoke admin from Ada Fixturewort',
+    });
+    for (const button of [grant, revoke]) {
+      expect(button).toBeEnabled();
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription(/\S/);
+    }
+
+    fireEvent.click(grant);
+
+    expect(within(row('Bo Fixturewort')).getByRole('alert')).toBeVisible();
+    fireEvent.click(revoke);
+    expect(within(row('Ada Fixturewort')).getByRole('alert')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  // Amended on the owner's call: coven creation's Approve and Revoke pause too.
+  it('locks Approve and Revoke of coven creation for another admin, opening and sending nothing', () => {
+    let calls = 0;
+    mockGraphQLMutation('GrantWorkspaceCreation', () => {
+      calls += 1;
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    render(
+      <UserList
+        {...props({
+          users: [BO, { ...BO, id: 'u-cy', name: 'Cy Fixturewort', canCreateWorkspace: true }],
+          adminChanges: { paused: true, canToggle: false },
+        })}
+      />,
+    );
+
+    const approve = within(row('Bo Fixturewort')).getByRole('button', {
+      name: 'Approve Bo Fixturewort',
+    });
+    const revoke = within(row('Cy Fixturewort')).getByRole('button', {
+      name: 'Revoke approval for Cy Fixturewort',
+    });
+    for (const button of [approve, revoke]) {
+      expect(button).toHaveAttribute('aria-disabled', 'true');
+      expect(button).toHaveAccessibleDescription(/\S/);
+    }
+
+    fireEvent.click(approve);
+
+    expect(within(row('Bo Fixturewort')).getAllByRole('alert')[0]).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(calls).toBe(0);
+  });
+
+  it('leaves the primary admin’s Approve usable while paused', () => {
+    render(
+      <UserList {...props({ users: [BO], adminChanges: { paused: true, canToggle: true } })} />,
+    );
+
+    fireEvent.click(
+      within(row('Bo Fixturewort')).getByRole('button', { name: 'Approve Bo Fixturewort' }),
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Approve Coven Creation' })).toBeInTheDocument();
+  });
+
+  it('locks nothing while changes are on', () => {
+    render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
+
+    for (const name of ['Grant admin to Bo Fixturewort', 'Revoke admin from Ada Fixturewort']) {
+      expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-disabled');
+    }
+  });
+
+  // The primary admin's own reason holds whether or not changes are paused:
+  // which of the two reasons won is told by which of the two strings it reads.
+  it('keeps the primary admin’s Revoke on its own reason while paused', () => {
+    render(
+      <UserList
+        {...props({
+          users: [{ ...ADA, primaryAdmin: true }, BO],
+          adminChanges: { paused: true, canToggle: false },
+        })}
+      />,
+    );
+
+    expect(
+      within(row('Ada Fixturewort')).getByRole('button', {
+        name: 'Revoke admin from Ada Fixturewort',
+      }),
+    ).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);
   });
 });

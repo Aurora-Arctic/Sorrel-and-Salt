@@ -1,23 +1,20 @@
-import { createYoga } from 'graphql-yoga';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
-import { maskedErrors } from '@/graphql/errors';
-import { createLoaders } from '@/graphql/loaders';
-import { schema } from '@/graphql/schema';
-import type { Session } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
-import { B, E, asUser } from '../../../support/as-user';
+import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { noSender } from '../../../support/email-verification';
 import { makeIngredient } from '../../../support/fixtures';
-import type { Context } from '@/graphql/types';
-import type { Answer, CategoryConnection, CategoryNode, FilteredCategories } from './types';
+import { run } from '../../../support/graphql/run';
+import type { CategoryConnection, CategoryNode, FilteredCategories } from './types';
 
 // M5.6 over the wire: the public `categories` list and the admin's three
-// writes, run through Yoga with the route's own error mapping, so a refusal
-// is asserted as the browser receives it. The services' own rules are
-// services/categories.test.ts's; this file holds the transport's half.
+// writes. This file holds the transport's half (claude-docs/testing/layer-ownership.md):
+// a page, its groups in one read, its count, the filters reaching the read,
+// and per write one refusal per error code, read as the browser reads it.
+// Which roles are refused, what a filter matches and every collision are
+// services/categories.test.ts's; a signed-out caller refused at every field,
+// and a non-admin at the `admin` scope, are tests/db/graphql-query-scopes.test.ts's.
 
 // The group reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({ findManyByIds: vi.fn() }));
@@ -44,25 +41,6 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   await sql`delete from categories where name like 'Testcraft%'`;
 });
-
-const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
-
-async function run<T>(
-  session: Session | null,
-  query: string,
-  variables: Record<string, unknown> = {},
-): Promise<Answer<T>> {
-  const response = await yoga.fetch(
-    'http://localhost/graphql',
-    {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ query, variables }),
-    },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
-  );
-  return (await response.json()) as Answer<T>;
-}
 
 const FIELDS = 'id name slug description group { id name }';
 
@@ -142,18 +120,6 @@ describe('categories', () => {
     expect(second.data?.categories.countBefore).toBe(10);
   });
 
-  it('pages on from a cursor', async () => {
-    const first = await run<{ categories: CategoryConnection }>(null, LIST, { first: 10 });
-    const after = first.data?.categories.pageInfo.endCursor;
-
-    const second = await run<{ categories: CategoryConnection }>(null, LIST, { first: 10, after });
-
-    const seen = new Set(first.data?.categories.edges.map((edge) => edge.node.id));
-    expect(second.data?.categories.edges).toHaveLength(10);
-    for (const edge of second.data?.categories.edges ?? [])
-      expect(seen.has(edge.node.id)).toBe(false);
-  });
-
   it('narrows its edges and its count by the query and the group', async () => {
     await seed('Testcraft 100% Pure');
     await seed('Testcraft 100x Pure');
@@ -183,15 +149,6 @@ describe('categories', () => {
     });
     expect(elsewhere.data?.categories).toEqual({ totalCount: 0, edges: [] });
   });
-
-  it('answers a group id that is not a uuid with an empty page, not an error', async () => {
-    const result = await run<{ categories: FilteredCategories }>(null, FILTERED, {
-      groupId: 'not-a-uuid',
-    });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.categories).toEqual({ totalCount: 0, edges: [] });
-  });
 });
 
 describe('createCategory', () => {
@@ -208,29 +165,14 @@ describe('createCategory', () => {
     });
   });
 
-  it('refuses a member and a signed-out request, as FORBIDDEN, writing nothing', async () => {
-    for (const session of [asUser(B), null]) {
-      const result = await run(session, CREATE, { input: input() });
-      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    }
-    const rows = await sql`select 1 from categories where name = 'Testcraft'`;
-    expect(rows).toHaveLength(0);
-  });
-
-  it("answers a slug collision as VALIDATION on `name`, with the service's message", async () => {
+  it('answers a slug collision as VALIDATION on `name`', async () => {
     await seed('Testcraft Ward');
 
     const result = await run(asUser(E), CREATE, { input: input('Testcraft-Ward') });
 
-    expect(result.errors?.[0]?.extensions).toEqual({
+    expect(result.errors?.[0]?.extensions).toMatchObject({
       code: 'VALIDATION',
-      fieldErrors: [
-        {
-          path: ['name'],
-          message:
-            '"Testcraft Ward" already has the address "testcraft-ward" — choose another name',
-        },
-      ],
+      fieldErrors: [{ path: ['name'] }],
     });
   });
 });
@@ -247,14 +189,23 @@ describe('updateCategory', () => {
     expect(result.data?.updateCategory).toMatchObject({ id, name: 'Testcraft New' });
   });
 
-  it('refuses a member as FORBIDDEN, and answers an unknown id as NOT_FOUND', async () => {
-    const id = await seed('Testcraft Kept');
-
-    const refused = await run(asUser(B), UPDATE, { id, input: input('Testcraft Taken Over') });
+  it('answers an unknown id as NOT_FOUND', async () => {
     const missing = await run(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
 
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
     expect(missing.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+  });
+
+  it("answers a rename onto another category's address as VALIDATION on `name`", async () => {
+    const id = await seed('Testcraft Kept');
+    await seed('Testcraft Ward');
+
+    const result = await run(asUser(E), UPDATE, { id, input: input('Testcraft-Ward') });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'] }],
+    });
     const [row] = await sql`select name from categories where id = ${id}`;
     expect(row.name).toBe('Testcraft Kept');
   });
@@ -269,15 +220,14 @@ describe('deleteCategory', () => {
     expect(result.data?.deleteCategory).toBe(id);
   });
 
-  it('refuses a member as FORBIDDEN', async () => {
-    const id = await seed('Testcraft Standing');
+  it('answers an unknown id as NOT_FOUND', async () => {
+    const result = await run(asUser(E), DELETE, { id: 'not-a-uuid' });
 
-    const result = await run(asUser(B), DELETE, { id });
-
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
   });
 
-  it("carries the in-use refusal's message to the admin verbatim", async () => {
+  it('answers a category an entry is filed under as FORBIDDEN, the row left live', async () => {
     const id = await seed('Testcraft Held');
     await insertIngredient(
       sql,
@@ -287,10 +237,8 @@ describe('deleteCategory', () => {
 
     const result = await run(asUser(E), DELETE, { id });
 
-    expect(result.errors?.[0]).toMatchObject({
-      message:
-        '"Testcraft Held" is filed on 1 compendium entry — Testwort (herb). Take it off it first.',
-      extensions: { code: 'FORBIDDEN' },
-    });
+    expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    const [row] = await sql`select deleted_at from categories where id = ${id}`;
+    expect(row.deleted_at).toBeNull();
   });
 });

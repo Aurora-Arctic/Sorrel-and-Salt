@@ -27,8 +27,10 @@ holding it (["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)).
 The second, decided by MB.138 and built by MB.140, is the ingredient a
 substitute links: `findSubstitutesIncludingSoftDeleted` reads it past its
 tombstone so that the substitute shows its last name, and nothing else past
-one (DESIGN.md §5, `ingredient_substitutes`). The substitute's own tombstone
-filters, the parent is live by `existsIn` and in a tier the proofs read, and
+one (DESIGN.md §5, `ingredient_substitutes`), for an ingredient's own rows or,
+with `of: 'variant'`, a variant's (MB.218). The substitute's own tombstone
+filters, the parent — the ingredient, or the variant and its ingredient — is
+live by `existsIn` and in a tier the proofs read, and
 the link must point at the compendium or the parent's own coven, so a row
 written past the service's tier rule reads as nothing.
 
@@ -39,7 +41,7 @@ none matched — a typed name here. The joined table takes no filter from
 `selectFrom`, which is the point of this one finder and why the option
 carries the caller's `on` and `where` alone. The linked ingredient is the
 alias `linked`, since the parent's correlated subquery reads `ingredients`
-itself. `findReferencesOfIngredients` (MB.153) is the option's other user,
+itself. `findReferencesOf` (MB.153, MB.208) is the option's other user,
 and no hatch: its `on` holds the reference to `deleted_at IS NULL`, and its
 `where` takes only a row that joined one, so it reads as an inner join with
 every tombstone filtered ([`references.md`](references.md)).
@@ -74,23 +76,16 @@ so it landed as the mechanism above plus a guard — and since MB.33 the sweep i
 divided between two of them, by what each can make impossible.
 
 `tests/guards/soft-delete-finder-guard.test.ts` covers the inside of the
-repository. It reads every file in `src/db/repository/` as text and asserts:
-the folder builds exactly two `.select(`/`db.query.` calls, both in
-`select.ts`, one inside `selectFrom` and one inside `existsIn`, and
-`existsIn`'s body calls `notSoftDeleted(`, so the subquery's filter is checked
-the way `selectFrom`'s callers are; the index does not re-export either
-builder or the predicates, so no caller can reach an unfiltered read; the index's re-exports
-are pinned to the test's `EXPORTED_FUNCTIONS` list, so a further
-export — a new escape hatch, or a finder that reaches the database some other
-way — turns the test red rather than merely going unreviewed; and every
-exported finder other than the escape hatches either calls `notSoftDeleted(...)`
-directly or delegates to one that does. The hatches are a pinned list, each
-named `…IncludingSoftDeleted`, and two last tests hold each decision's
-hatches to skipping one filter. The spell hatches skip the ingredient's alone:
-the spell's `readableSpells`, the layer's `existsIn` and the proof's tier stay
-in the body. The substitute hatch skips the linked ingredient's alone: the
-substitute's own `notSoftDeleted`, the parent's `existsIn` and tier, and the
-link's tier against its parent's stay, and nothing filters the `linked` alias.
+repository, read as text, in two cases (MB.224): every finder the index
+re-exports, other than the escape hatches, either calls `notSoftDeleted(...)`
+directly or delegates to one that does; and the hatches are a pinned list,
+each named `…IncludingSoftDeleted`, so a new one is a decision in the diff.
+The finders are read off the index itself, so a new finder is checked without
+being listed. What each hatch still filters — the spell hatches skip the
+ingredient's tombstone alone, the substitute hatch the linked ingredient's
+alone — is its service's READS table's to prove
+([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
+layer").
 
 A query built _outside_ the repository is the linter's job, not this test's —
 see ["Where queries may be built"](query-building.md). It was this test's until MB.33, by
@@ -108,20 +103,26 @@ adopts the mechanism in that finder's own PR rather than a retrofit pass.
 carry `WHERE deleted_at IS NULL`. Without it, a plain `UNIQUE` constraint
 still matches a soft-deleted row's value, so deleting a record permanently
 reserves its name/slug/whatever the index covers — the exact opposite of
-"deleted records stay recoverable but invisible." `users_email_unique`
+"deleted records stay recoverable but invisible." An index whose only
+predicate is the tombstone is built by `liveUnique` in
+`src/db/schema-parts.ts` (MB.207), which writes the predicate itself, so a
+table cannot forget it or spell it differently; `users_email_unique`
 (`src/modules/identity/schema/users.ts`) is the worked example:
 
 ```ts
-uniqueIndex('users_email_unique')
-  .on(table.email)
-  .where(sql`${table.deletedAt} is null`);
+liveUnique('users_email_unique', table, table.email);
+// uniqueIndex('users_email_unique').on(table.email).where(sql`${table.deletedAt} is null`)
 ```
 
-`tests/db/repository/finders.test.ts` proves the convention rather than merely stating it: a
-second scratch table (`repository_probe_charms`) carries a unique index built
-exactly this way, and the tests assert a live duplicate name is still
-rejected, while soft-deleting the original row and reinserting the same name
-succeeds — the row that comes back is a new id, and `findMany` sees only it.
+An index with a predicate of its own beside the tombstone — a tier, a
+nullable link — is still written out, `and ${table.deletedAt} is null` last;
+the seed key's is `seedKeyUnique`, beside `liveUnique`, for the vocabularies
+and `references`.
+
+`tests/db/partial-unique-indexes.test.ts` proves the convention rather than
+merely stating it, on every partial unique index the catalogue holds: a
+second live row is still rejected, while soft-deleting the first frees the
+slot.
 
 **`users.email` is also held to lower case** (`users_email_lower_case`,
 migration 0019, MB.60). The unique index is on the raw column, so without it

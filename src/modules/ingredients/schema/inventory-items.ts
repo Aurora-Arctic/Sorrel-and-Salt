@@ -1,23 +1,17 @@
 import { sql } from 'drizzle-orm';
-import {
-  check,
-  date,
-  numeric,
-  pgEnum,
-  pgTable,
-  text,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { check, date, foreignKey, numeric, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { QUANTITY_PRECISION, QUANTITY_SCALE } from './quantities';
 import { UNITS, UNITS_BY_DIMENSION, UNIT_DIMENSIONS } from './units';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredients } from './ingredients';
+import { ingredientVariants } from './ingredient-variants';
 import { workspaces } from '../../coven/schema/workspaces';
+import { idColumn, liveUnique } from '../../../db/schema-parts';
 
 // Both enums are stocked from `./units.ts`, so a unit added there reaches
 // the database, the converter and the form in one edit; nothing in this file
-// may spell a unit out (inventory-items-schema.test.ts checks the source text).
+// may spell a unit out (inventory-items-schema.test.ts holds the database's enums
+// equal to the module's lists, and the CHECK to every unit's dimension).
 export const inventoryUnit = pgEnum('inventory_unit', UNITS);
 
 export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
@@ -43,15 +37,16 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 export const inventoryItems = pgTable(
   'inventory_items',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id),
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
+    // The form the jar holds (MB.217): Rosemary herb and Rosemary oil are two
+    // rows. NOT NULL from the start, since no stock row exists anywhere yet.
+    variantId: uuid('variant_id').notNull(),
     // Precision and scale from ./quantities.ts, which the Zod ceiling reads too.
     // Nullable because `0` already means out of stock, and "we have this,
     // unweighed" must stay sayable.
@@ -77,10 +72,20 @@ export const inventoryItems = pgTable(
   },
   (table) => [
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
-    // What "already added" means. Partial per CLAUDE.md rule 4: throwing a jar
-    // out is recoverable, so it must not reserve the ingredient.
-    uniqueIndex('inventory_items_workspace_id_ingredient_id_unique')
-      .on(table.workspaceId, table.ingredientId)
-      .where(sql`${table.deletedAt} is null`),
+    // What "already added" means, per form since MB.217. Partial per CLAUDE.md
+    // rule 4: throwing a jar out is recoverable, so it must not reserve the form.
+    liveUnique(
+      'inventory_items_workspace_id_variant_id_unique',
+      table,
+      table.workspaceId,
+      table.variantId,
+    ),
+    // The variant and the ingredient beside it, as a pair, so no row holds
+    // another ingredient's form (MB.217).
+    foreignKey({
+      name: 'inventory_items_variant_fk',
+      columns: [table.variantId, table.ingredientId],
+      foreignColumns: [ingredientVariants.id, ingredientVariants.ingredientId],
+    }),
   ],
 );

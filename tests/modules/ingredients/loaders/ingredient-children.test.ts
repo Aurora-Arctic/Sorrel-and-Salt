@@ -6,12 +6,22 @@ import { Forbidden } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
   type IngredientKey,
+  type VariantKey,
   categoriesByIngredient,
+  categoriesByVariant,
   folkNamesByIngredient,
+  referencesByVariant,
   substitutesByIngredient,
+  substitutesByVariant,
+  variantsByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
+import {
+  insertIngredient,
+  insertSubstituteLink,
+  insertVariant,
+} from '../../../support/db/insert-ingredient';
+import { insertReference, insertVariantReferenceLink } from '../../../support/db/insert-reference';
 import { makeIngredient } from '../../../support/fixtures';
 import type { Written } from './types';
 
@@ -20,8 +30,10 @@ import type { Written } from './types';
 // lookup is `assertMembership`'s one query; the rest are the reads themselves.
 const repository = vi.hoisted(() => ({
   findManyOfIngredients: vi.fn(),
+  findManyOfVariants: vi.fn(),
   findManyByIds: vi.fn(),
   findSubstitutesIncludingSoftDeleted: vi.fn(),
+  findReferencesOf: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -106,18 +118,72 @@ async function addFifty(): Promise<Written[]> {
 }
 
 const loadersFor = (session: Session | null) =>
-  buildLoaders({ categoriesByIngredient, folkNamesByIngredient, substitutesByIngredient }, session);
-
-const categoryNames = async (session: Session | null, ref: IngredientKey) =>
-  (await loadersFor(session).categoriesByIngredient.load(ref)).map((category) => category.name);
-
-const folkNames = (session: Session | null, ref: IngredientKey) =>
-  loadersFor(session).folkNamesByIngredient.load(ref);
-
-const substituteNames = async (session: Session | null, ref: IngredientKey) =>
-  (await loadersFor(session).substitutesByIngredient.load(ref)).map(
-    (substitute) => substitute.name,
+  buildLoaders(
+    {
+      categoriesByIngredient,
+      folkNamesByIngredient,
+      substitutesByIngredient,
+      variantsByIngredient,
+      categoriesByVariant,
+      substitutesByVariant,
+      referencesByVariant,
+    },
+    session,
   );
+
+type Loaders = ReturnType<typeof loadersFor>;
+
+/** The second form each ingredient a test gave one has, by the ingredient's id. */
+const variantOf = new Map<string, string>();
+
+/**
+ * The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how
+ * a variant's loaders are asked (MB.218), so a key that lies about its
+ * ingredient's tier lies about the variant's too.
+ */
+const variantKey = (ref: IngredientKey): VariantKey => ({
+  id: variantOf.get(ref.id) ?? '',
+  ingredientId: ref.id,
+  workspaceId: ref.workspaceId,
+});
+
+/**
+ * Gives `ref`'s ingredient a second form, Fixture Gum, which adds the
+ * category Protection, the typed substitute Testbane and a compendium book.
+ */
+async function addVariant({ ref }: Written): Promise<void> {
+  const id = await insertVariant(
+    sql,
+    ref.id,
+    { form: 'Fixture Gum', categories: ['Protection'], substitutes: ['Testbane'] },
+    A.id,
+  );
+  const book = await insertReference(sql, { title: 'Fixture Gums' }, E.id);
+  await insertVariantReferenceLink(sql, id, book, A.id);
+  variantOf.set(ref.id, id);
+}
+
+const categoryNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.categoriesByIngredient.load(ref)).map((category) => category.name);
+
+const folkNames = (loaders: Loaders, ref: IngredientKey) => loaders.folkNamesByIngredient.load(ref);
+
+const substituteNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.substitutesByIngredient.load(ref)).map((substitute) => substitute.name);
+
+/** The forms each ingredient comes in, as `Ingredient.variants` lists them. */
+const variantForms = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.variantsByIngredient.load(ref)).map((variant) => variant.form);
+
+/** What the second form of `ref`'s ingredient adds, through that form's own loaders. */
+const variantCategoryNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.categoriesByVariant.load(variantKey(ref))).map((category) => category.name);
+
+const variantSubstituteNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.substitutesByVariant.load(variantKey(ref))).map((substitute) => substitute.name);
+
+const variantCitations = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.referencesByVariant.load(variantKey(ref))).map(({ reference }) => reference.title);
 
 describe('the categoriesByIngredient loader', () => {
   it('answers fifty ingredients across two tiers with one role lookup and two reads', async () => {
@@ -131,8 +197,10 @@ describe('the categoriesByIngredient loader', () => {
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
@@ -161,8 +229,10 @@ describe('the categoriesByIngredient loader', () => {
     expect(answers).toHaveLength(25);
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 1,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 0,
     });
   });
@@ -178,8 +248,10 @@ describe('the folkNamesByIngredient loader', () => {
     expect(answers).toEqual(written.map(({ folkNames: names }) => names));
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
+      findManyOfVariants: 0,
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
@@ -202,7 +274,7 @@ describe('the folkNamesByIngredient loader', () => {
       where name = 'Testbane'
     `;
 
-    expect(await folkNames(asUser(B), ref)).toEqual(['Mock Root']);
+    expect(await folkNames(loadersFor(asUser(B)), ref)).toEqual(['Mock Root']);
   });
 });
 
@@ -227,81 +299,167 @@ describe('the substitutesByIngredient loader', () => {
     );
     expect(countOf()).toEqual({
       findManyOfIngredients: 0,
+      findManyOfVariants: 0,
       findManyByIds: 0,
       findSubstitutesIncludingSoftDeleted: 1,
+      findReferencesOf: 0,
       findWorkspaceRole: 1,
     });
   });
 });
 
-// The loaders answer through the same two layers; each case runs against
-// each, since a check forgotten in one would pass every test of the others.
-describe.each([
-  ['categoriesByIngredient', categoryNames, ['Protection']],
-  ['folkNamesByIngredient', folkNames, ['Testbane']],
-  ['substitutesByIngredient', substituteNames, ['Testbane']],
-] as const)('who %s answers', (name, read, children) => {
+describe('the variantsByIngredient loader', () => {
+  it('answers fifty ingredients across two tiers with one role lookup and one read', async () => {
+    const written = await addFifty();
+    // A second form on every other one, written after the fixture's own
+    // `Testform` and sorting before it, so each answer shows the sort by form.
+    for (let i = 1; i < written.length; i += 2) {
+      await insertVariant(sql, written[i].ref.id, { form: 'Fixture Gum' }, A.id);
+    }
+    const { variantsByIngredient: loader } = loadersFor(asUser(B));
+
+    const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
+
+    expect(answers.map((variants) => variants.map((variant) => variant.form))).toEqual(
+      written.map((_, i) => (i % 2 === 1 ? ['Fixture Gum', 'Testform'] : ['Testform'])),
+    );
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 1,
+      findManyOfVariants: 0,
+      findManyByIds: 0,
+      findSubstitutesIncludingSoftDeleted: 0,
+      findReferencesOf: 0,
+      findWorkspaceRole: 1,
+    });
+  });
+});
+
+describe("a variant's child loaders", () => {
+  it('answer fifty variants across two tiers with one read each and one role lookup each', async () => {
+    const written = await addFifty();
+    for (const one of written) await addVariant(one);
+    const loaders = loadersFor(asUser(B));
+
+    const categories = await Promise.all(
+      written.map(({ ref }) => variantCategoryNames(loaders, ref)),
+    );
+    const substitutes = await Promise.all(
+      written.map(({ ref }) => variantSubstituteNames(loaders, ref)),
+    );
+    const citations = await Promise.all(written.map(({ ref }) => variantCitations(loaders, ref)));
+
+    // Each form's own, never its ingredient's: the ingredients are filed
+    // under other categories too, and type their folk names as substitutes.
+    expect(categories).toEqual(written.map(() => ['Protection']));
+    expect(substitutes).toEqual(written.map(() => ['Testbane']));
+    expect(citations).toEqual(written.map(() => ['Fixture Gums']));
+    expect(countOf()).toEqual({
+      findManyOfIngredients: 0,
+      findManyOfVariants: 1,
+      findManyByIds: 1,
+      findSubstitutesIncludingSoftDeleted: 1,
+      findReferencesOf: 1,
+      findWorkspaceRole: 3,
+    });
+  });
+});
+
+// The loaders share one check, `admit`, and each has a read of its own,
+// so every case runs through each in one matrix: a check or a scope forgotten
+// in one loader shows up as that loader's row differing from the others'.
+describe('who the ingredient-children loaders answer', () => {
+  const READS = {
+    categoriesByIngredient: categoryNames,
+    folkNamesByIngredient: folkNames,
+    substitutesByIngredient: substituteNames,
+    variantsByIngredient: variantForms,
+    categoriesByVariant: variantCategoryNames,
+    substitutesByVariant: variantSubstituteNames,
+    referencesByVariant: variantCitations,
+  };
+  const CHILDREN = {
+    categoriesByIngredient: ['Protection'],
+    folkNamesByIngredient: ['Testbane'],
+    substitutesByIngredient: ['Testbane'],
+    // The fixture's own form, a variant since MB.216, and the one added.
+    variantsByIngredient: ['Fixture Gum', 'Testform'],
+    categoriesByVariant: ['Protection'],
+    substitutesByVariant: ['Testbane'],
+    referencesByVariant: ['Fixture Gums'],
+  };
+  type Loader = keyof typeof READS;
+  const LOADERS = Object.keys(READS) as Loader[];
+
   let local: Written;
   let compendium: Written;
 
   beforeEach(async () => {
     local = await addIngredient('Fixturewort', WORKSPACE_W_ID, ['Testbane'], ['Protection']);
     compendium = await addIngredient('Mockleaf', null, ['Testbane'], ['Protection']);
+    await addVariant(local);
+    await addVariant(compendium);
   });
 
-  it("answers a member of the ingredient's coven, viewers included", async () => {
-    expect(await read(asUser(B), local.ref)).toEqual(children);
-    expect(await read(asUser(C), local.ref)).toEqual(children);
-  });
+  /** What one read answers, a refusal as `'Forbidden'` so the matrix compares. */
+  const outcome = (read: (typeof READS)[Loader], session: Session | null, ref: IngredientKey) =>
+    read(loadersFor(session), ref).then(
+      (names) => names,
+      (error: unknown) => (error instanceof Forbidden ? 'Forbidden' : error),
+    );
 
-  it('answers anyone for a compendium entry, signed out included', async () => {
-    expect(await read(null, compendium.ref)).toEqual(children);
-    expect(await read(asUser(D), compendium.ref)).toEqual(children);
-  });
+  it('answers members and the compendium, and refuses or empties every other read', async () => {
+    // The member's own read is the precondition for every refusal below: the
+    // row exists and has children, read through this same key.
+    const cases: [string, Session | null, IngredientKey, 'children' | 'Forbidden' | 'none'][] = [
+      ['a member', asUser(B), local.ref, 'children'],
+      ['a viewer', asUser(C), local.ref, 'children'],
+      ['signed out, the compendium', null, compendium.ref, 'children'],
+      ['another coven, the compendium', asUser(D), compendium.ref, 'children'],
+      ['another coven, by direct id', asUser(D), local.ref, 'Forbidden'],
+      ['a site admin, who reaches no coven', asUser(E), local.ref, 'Forbidden'],
+      ['signed out', null, local.ref, 'Forbidden'],
+      // The key names the tier, so a caller could lie about it: the check then
+      // passes, and only the read's own scope stands between D and W's rows.
+      ['a key claiming the compendium', asUser(D), { id: local.ref.id, workspaceId: null }, 'none'],
+      [
+        "a key claiming the caller's own coven",
+        asUser(D),
+        { id: local.ref.id, workspaceId: WORKSPACE_X_ID },
+        'none',
+      ],
+    ];
 
-  it('refuses a workspace entry to someone outside the coven, by direct id', async () => {
-    // Why it could have answered: the row exists, has children, and a member
-    // reads them through this same key.
-    expect(await read(asUser(B), local.ref)).toEqual(children);
+    const answered: Record<string, unknown> = {};
+    const expected: Record<string, unknown> = {};
+    for (const loader of LOADERS) {
+      for (const [who, session, ref, answer] of cases) {
+        answered[`${loader}: ${who}`] = await outcome(READS[loader], session, ref);
+        expected[`${loader}: ${who}`] =
+          answer === 'children' ? CHILDREN[loader] : answer === 'none' ? [] : answer;
+      }
+    }
 
-    await expect(read(asUser(D), local.ref)).rejects.toBeInstanceOf(Forbidden);
-  });
-
-  it('refuses a workspace entry to a site admin, who reaches no coven', async () => {
-    expect(await read(asUser(B), local.ref)).toEqual(children);
-
-    await expect(read(asUser(E), local.ref)).rejects.toBeInstanceOf(Forbidden);
-  });
-
-  it('refuses a workspace entry to a signed-out request', async () => {
-    await expect(read(null, local.ref)).rejects.toBeInstanceOf(Forbidden);
+    expect(answered).toEqual(expected);
   });
 
   it('refuses one key without refusing the rest of its batch', async () => {
-    const loader = loadersFor(asUser(D))[name];
-    const load = (ref: IngredientKey) => loader.load(ref);
+    for (const loader of LOADERS) {
+      // One request's loaders, so the two keys are one batch.
+      const loaders = loadersFor(asUser(D));
+      const load = (ref: IngredientKey) => READS[loader](loaders, ref);
 
-    const [refused, answered] = await Promise.allSettled([load(local.ref), load(compendium.ref)]);
+      const [refused, answered] = await Promise.allSettled([load(local.ref), load(compendium.ref)]);
 
-    expect(refused).toMatchObject({ status: 'rejected', reason: expect.any(Forbidden) });
-    expect(answered).toMatchObject({ status: 'fulfilled' });
-  });
-
-  // The key names the tier, so a caller could lie about it. The check then
-  // passes — the compendium needs none, and D really is a member of X — and
-  // only the read's own scope stands between D and W's rows.
-  it.each([
-    ['the compendium', null],
-    ["the caller's own coven", WORKSPACE_X_ID],
-  ])('answers nothing for a workspace entry whose key claims %s', async (_claim, workspaceId) => {
-    expect(await read(asUser(B), local.ref)).toEqual(children);
-
-    expect(await read(asUser(D), { id: local.ref.id, workspaceId })).toEqual([]);
+      expect(refused, loader).toMatchObject({ status: 'rejected', reason: expect.any(Forbidden) });
+      expect(answered, loader).toMatchObject({ status: 'fulfilled' });
+    }
   });
 
   it('answers nothing for a soft-deleted ingredient', async () => {
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${local.ref.id}`;
 
-    expect(await read(asUser(B), local.ref)).toEqual([]);
+    for (const loader of LOADERS) {
+      expect(await READS[loader](loadersFor(asUser(B)), local.ref), loader).toEqual([]);
+    }
   });
 });

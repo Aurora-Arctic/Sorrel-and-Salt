@@ -1,64 +1,35 @@
 @use '../../scss/variables' as *;
 
-// The page-level frame, like `.email-page`: no AppShell exists yet to center
-// a page. A column, so the list and the way to the email page stack.
-.account-page {
-  // Or the viewport-high frame plus its own padding overflows by the padding
-  // and the page scrolls by 4rem with nothing to scroll to.
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  // Less the top inset, or a page a full screen high scrolls by it.
-  min-height: calc(100dvh - #{$top-inset});
-  padding: 2rem 1rem;
-  max-width: 32rem;
-  margin-inline: auto;
-}
-
-.account-page__nav {
-  margin: 0;
-  width: 100%;
-  max-width: 28rem;
-}
-
+// The list inside the account page's Sign-In Methods section, whose frame,
+// heading and intro are the page's own primitives (`.page-frame__section`,
+// `.header`). Its alert or removal notice, then the rows.
 .sign-in-methods {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
-  width: 100%;
-  max-width: 28rem;
-}
-
-.sign-in-methods__heading {
-  margin: 0;
-}
-
-.sign-in-methods__intro {
-  margin: 0;
-  color: $text-muted;
+  gap: space(3);
 }
 
 .sign-in-methods__list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin: 0.5rem 0 0;
+  gap: space(3);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-// Label left, action right; the note wraps onto its own line.
+// Mark, label, then the action at the end; the note, the reason and a
+// failure each wrap onto a line of their own beneath.
 .sign-in-methods__item {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.75rem;
+  gap: space(2) space(3);
+  margin: 0;
 }
 
-// No `_typography.scss` bullet: the rows are controls, not prose.
+// No `_typography.scss` ◆ marker. Not `.link-row`, which clears it too: that
+// is a wrapping row of links, and this is a column of rows.
 .sign-in-methods__item::before {
   content: none;
 }
@@ -68,10 +39,37 @@
   font-weight: 500;
 }
 
-.sign-in-methods__note {
+// The action stays on the row's line, never wrapping under the label: it is
+// one word, and the label gives way first.
+.sign-in-methods__item > .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+// An unavailable provider's mark fades with its greyed Add, by the same
+// 0.55 a disabled `.btn` takes, so the row reads as off as a whole; its note
+// says so in words.
+.sign-in-methods__item--unavailable .provider-mark {
+  opacity: 0.55;
+}
+
+// The unavailable note and the only-method reason: `.meta` lines, on the
+// right beneath where the control is or would be.
+.sign-in-methods__line {
   flex-basis: 100%;
-  margin: 0;
-  font-size: 0.8rem;
-  color: $text-muted;
   text-align: right;
+}
+
+.sign-in-methods__error {
+  flex-basis: 100%;
+}
+
+// A stale session's way to a fresh one, above the rows: the line saying why
+// no row offers Remove, then Sign In Again at its own width, and a failure
+// beneath.
+.sign-in-methods__fresh {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(2);
 }

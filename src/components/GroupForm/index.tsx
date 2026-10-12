@@ -2,19 +2,35 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-import { ClientError } from 'graphql-request';
 import { type ReactElement, useId, useRef, useState } from 'react';
-import { Controller, type Resolver, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import { graphqlRequest } from '../../lib/graphql-client';
+import { HEX_COLOR } from '../../lib/contrast';
+import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
+import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
-import type { GroupColorColumn, ValidationIssue } from '../../lib/types';
+import { capitalise, plural } from '../../lib/text';
+import type { GroupColorColumn } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import { KINDS as VALUE_LIST_KINDS } from '../GroupedValueList/kinds';
+import { KINDS as GROUP_LIST_KINDS } from '../GroupList/kinds';
+import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
+import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
+import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
+import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import type { DeleteStep, GroupFormProps, GroupKind, GroupValues } from './types';
-import './index.scss';
+import type {
+  DeleteStep,
+  GroupColorField,
+  GroupDeleteVariables,
+  GroupFormKind,
+  GroupFormProps,
+  GroupKind,
+  GroupKindSpec,
+  GroupValues,
+} from './types';
 
 // The admin's form for a group (M5.6b), one for both group vocabularies so
 // MB.132's traditions can take it too: a name and a description, and for a
@@ -73,71 +89,116 @@ const DeleteIngredientFormGroupDocument = graphql(`
   }
 `);
 
-const GENERIC_ERROR = "That didn't work. Please try again.";
+const CreateDeityTraditionDocument = graphql(`
+  mutation CreateDeityTradition($input: DeityTraditionInput!) {
+    createDeityTradition(input: $input) {
+      id
+      slug
+    }
+  }
+`);
+
+const UpdateDeityTraditionDocument = graphql(`
+  mutation UpdateDeityTradition($id: ID!, $input: DeityTraditionInput!) {
+    updateDeityTradition(id: $id, input: $input) {
+      id
+      slug
+    }
+  }
+`);
+
+const DeleteDeityTraditionDocument = graphql(`
+  mutation DeleteDeityTradition($id: ID!, $moveTo: ID) {
+    deleteDeityTradition(id: $id, moveTo: $moveTo)
+  }
+`);
 
 const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
 type FieldName = (typeof FIELDS)[number];
 
 const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '' };
 
-/** What differs between the two vocabularies: the rows a group holds, and what a move does to them. */
-const KINDS: Record<
-  GroupKind,
-  { one: string; many: string; moved: string; resolver: Resolver<GroupValues> }
-> = {
-  category: {
-    one: 'category',
-    many: 'categories',
-    moved: 'Each keeps its name, its address and every entry filed under it.',
+/**
+ * A kind as the form uses it, from its declaration, as GroupedValueForm's
+ * `defineKind` builds its own: the input type stays inside, so `KINDS` holds
+ * kinds whose inputs differ without a cast at each request.
+ */
+function defineKind<Input extends object>({
+  schema,
+  create,
+  update,
+  remove,
+  ...copy
+}: GroupKindSpec<Input>): GroupFormKind {
+  const send = saveRequest(create, update);
+  return {
+    ...copy,
     // The schema's output is the input the mutation takes; its type is the values'.
-    resolver: zodResolver(CategoryGroupInput) as unknown as Resolver<GroupValues>,
-  },
-  form: {
-    one: 'form',
-    many: 'forms',
-    moved:
-      'Each keeps its name, and its address follows its new group; every ingredient that picked one keeps it.',
-    // Drops the two empty colours, which a form group's input does not take.
-    resolver: zodResolver(IngredientFormGroupInput) as unknown as Resolver<GroupValues>,
-  },
-};
+    resolver: zodResolver(schema) as unknown as Resolver<GroupValues>,
+    save: (values, id) => send(values as unknown as Input, id),
+    remove: async (variables) => {
+      await graphqlRequest(remove, variables);
+    },
+  };
+}
 
-const WHOLE = /^#[0-9a-f]{6}$/i;
+/**
+ * What differs between the vocabularies: what a group is called, the rows it
+ * holds, what a move does to them, and the requests that write it.
+ */
+const KINDS: Record<GroupKind, GroupFormKind> = {
+  category: defineKind({
+    // A category's address is its name alone, so a move changes none.
+    moved: 'Each category keeps its name, its address and the entries filed under it.',
+    describe: 'What the categories in this group share',
+    schema: CategoryGroupInput,
+    create: CreateCategoryGroupDocument,
+    update: UpdateCategoryGroupDocument,
+    remove: DeleteCategoryGroupDocument,
+  }),
+  form: defineKind({
+    // A form's address carries its group's name, so a move re-addresses it.
+    moved: "Each form keeps its name and takes its new group's address.",
+    // The question a form group answers: what kind of thing is it (DESIGN.md §5).
+    describe: 'What kind of thing the forms in this group are',
+    // Drops the two empty colours, which a form group's input does not take.
+    schema: IngredientFormGroupInput,
+    create: CreateIngredientFormGroupDocument,
+    update: UpdateIngredientFormGroupDocument,
+    remove: DeleteIngredientFormGroupDocument,
+  }),
+  // A deity's tradition (MB.132): a form group's shape, under its own name.
+  tradition: defineKind({
+    // A deity's address carries its tradition's name, as a form's does its group's.
+    moved: "Each deity keeps its name and takes its new tradition's address.",
+    // A tradition is a people or a religion, never a region (DESIGN.md §5).
+    describe: 'The people or religion whose deities it holds',
+    schema: DeityTraditionInput,
+    create: CreateDeityTraditionDocument,
+    update: UpdateDeityTraditionDocument,
+    remove: DeleteDeityTraditionDocument,
+  }),
+};
 
 const PARTNER: Record<GroupColorColumn, GroupColorColumn> = {
   colorDark: 'colorLight',
   colorLight: 'colorDark',
 };
 
-const COLORS: { column: GroupColorColumn; label: string }[] = [
-  { column: 'colorDark', label: 'Dark Theme Colour' },
-  { column: 'colorLight', label: 'Light Theme Colour' },
+const COLORS: GroupColorField[] = [
+  {
+    column: 'colorDark',
+    label: 'Dark Theme Colour',
+    hint: "The colour its categories' chips wear in the dark theme, written as # and six hex digits. It must read at 4.5:1 on the dark card, and the light theme's colour is filled from it until you change that one.",
+  },
+  {
+    column: 'colorLight',
+    label: 'Light Theme Colour',
+    hint: "The colour its categories' chips wear in the light theme, written as # and six hex digits. It must read at 4.5:1 on the light page, and the dark theme's colour is filled from it until you change that one.",
+  },
 ];
 
-/** A failed request as issues pathed to the input: a VALIDATION error's field errors, or one sentence. */
-function issuesOf(error: unknown): ValidationIssue[] {
-  if (!(error instanceof ClientError)) return [{ path: [], message: GENERIC_ERROR }];
-  const [first] = error.response.errors ?? [];
-  const extensions = first?.extensions as
-    { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
-  if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
-    return extensions.fieldErrors;
-  }
-  return [{ path: [], message: first?.message || GENERIC_ERROR }];
-}
-
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
-
-/**
- * The asterisk beside a required field's label, for the eye: hidden from the
- * field's name, so a screen reader hears the label and the control's
- * `aria-required` rather than "star", as CategoryForm's is.
- */
-const Required = (): ReactElement => (
-  <span className="group-form__required" aria-hidden="true">
-    *
-  </span>
-);
 
 const GroupForm = ({
   kind,
@@ -147,17 +208,13 @@ const GroupForm = ({
   onDone,
 }: GroupFormProps): ReactElement => {
   const id = useId();
-  const ids = (field: string) => ({ control: `${id}-${field}`, error: `${id}-${field}-error` });
-  const { one, many, moved, resolver } = KINDS[kind];
-  const {
-    register,
-    control,
-    handleSubmit,
-    setError,
-    setValue,
-    getValues,
-    formState: { errors, isSubmitting, isDirty },
-  } = useForm<GroupValues>({
+  const spec = KINDS[kind];
+  // What the group and the rows it holds are called is the lists' (MB.115).
+  const { noun, holds } = GROUP_LIST_KINDS[kind];
+  const { noun: one, plural: many } = VALUE_LIST_KINDS[holds];
+  const title = capitalise(noun);
+  const { moved, resolver } = spec;
+  const methods = useForm<GroupValues>({
     defaultValues: group
       ? {
           name: group.name,
@@ -168,6 +225,14 @@ const GroupForm = ({
       : EMPTY,
     resolver,
   });
+  const {
+    control,
+    handleSubmit,
+    setError,
+    setValue,
+    getValues,
+    formState: { errors, isSubmitting, isDirty },
+  } = methods;
   const typedName = useWatch({ control, name: 'name' });
   // Each colour field's partner, which its Match button sets it from.
   const typedColors = useWatch({ control, name: ['colorDark', 'colorLight'] });
@@ -177,7 +242,7 @@ const GroupForm = ({
   // "The pair").
   const filled = useRef<Partial<Record<GroupColorColumn, string>>>({});
   const fillPartner = (column: GroupColorColumn, value: string): void => {
-    if (!WHOLE.test(value)) return;
+    if (!HEX_COLOR.test(value)) return;
     const partner = PARTNER[column];
     const current = getValues(partner);
     if (current !== '' && current !== filled.current[partner]) return;
@@ -186,32 +251,25 @@ const GroupForm = ({
     setValue(partner, paired, { shouldDirty: true });
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
+  // Cancel, and every other way out of the modal, asks first while the form
+  // has changes (MB.115, the owner's call); a save or a delete does not.
+  const discard = useDiscardGuard(isDirty);
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
   const [alert, setAlert] = useState<string>();
 
   const save = useMutation({
-    mutationFn: async (input: GroupValues): Promise<void> => {
-      if (kind === 'category') {
-        if (group) await graphqlRequest(UpdateCategoryGroupDocument, { id: group.id, input });
-        else await graphqlRequest(CreateCategoryGroupDocument, { input });
-      } else if (group) {
-        await graphqlRequest(UpdateIngredientFormGroupDocument, { id: group.id, input });
-      } else {
-        await graphqlRequest(CreateIngredientFormGroupDocument, { input });
-      }
-    },
+    mutationFn: (input: GroupValues): Promise<void> => spec.save(input, group?.id),
   });
 
   const remove = useMutation({
     mutationFn: async (target: string | undefined): Promise<void> => {
       if (!group) return;
       // No `moveTo` at all for a group holding nothing, rather than a null.
-      const variables: { id: string; moveTo?: string } = target
+      const variables: GroupDeleteVariables = target
         ? { id: group.id, moveTo: target }
         : { id: group.id };
-      if (kind === 'category') await graphqlRequest(DeleteCategoryGroupDocument, variables);
-      else await graphqlRequest(DeleteIngredientFormGroupDocument, variables);
+      await spec.remove(variables);
     },
   });
 
@@ -222,13 +280,9 @@ const GroupForm = ({
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      const unplaced: string[] = [];
-      for (const { path, message } of issuesOf(error)) {
-        const [field, ...rest] = path;
-        if (rest.length === 0 && isField(field)) setError(field, { type: 'server', message });
-        else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) =>
+        rest.length === 0 && isField(field) ? field : undefined,
+      );
     }
   };
 
@@ -241,7 +295,7 @@ const GroupForm = ({
     } catch (error) {
       // A refused move goes back to the choice, beside the picker that made
       // it; anything else is a refusal naming its remedy (DESIGN.md §7).
-      const issues = issuesOf(error);
+      const issues = readGraphqlIssues(error);
       const onMove = issues.find(({ path }) => path.length === 1 && path[0] === 'moveTo');
       if (onMove && memberCount > 0) {
         setMoveError(onMove.message);
@@ -253,86 +307,65 @@ const GroupForm = ({
     }
   };
 
-  const fieldAria = (field: FieldName) => ({
-    'aria-invalid': errors[field] ? true : undefined,
-    'aria-describedby': errors[field] ? ids(field).error : undefined,
-  });
-  const fieldError = (field: FieldName) =>
-    errors[field]?.message && (
-      <p id={ids(field).error} className="field__error">
-        {errors[field]?.message}
-      </p>
-    );
   const others = groups.filter((each) => each.id !== group?.id);
-  const rows = `${memberCount} ${memberCount === 1 ? one : many}`;
+  const rowNoun = plural(memberCount, one, many);
+  const rows = `${memberCount} ${rowNoun}`;
   const rootError = errors.root?.message ?? alert;
 
-  const deleteButton = (label: string, target: string | undefined) => (
-    <button
-      type="button"
-      className="btn btn--destructive"
-      disabled={remove.isPending}
-      aria-busy={remove.isPending || undefined}
-      onClick={() => void confirmDelete(target)}
-    >
-      {remove.isPending && <span className="spinner" aria-hidden="true" />}
-      {remove.isPending ? 'Deleting' : label}
-    </button>
-  );
+  // The choosing step's safe answer, which takes the focus as it is asked;
+  // the confirming step's are ConfirmQuestion's own.
+  const keepItRef = useRef<HTMLButtonElement>(null);
+  const keepGoing = () => {
+    setMoveError(undefined);
+    setStep({ at: 'idle' });
+  };
   const keepIt = (
-    <button
-      type="button"
-      className="btn btn--quiet"
-      onClick={() => {
-        setMoveError(undefined);
-        setStep({ at: 'idle' });
-      }}
-    >
+    <button ref={keepItRef} type="button" className="btn btn--quiet" onClick={keepGoing}>
       Keep It
     </button>
   );
 
+  // Each step a question over the form (MB.115, the owner's call), keyed by
+  // the step, so each takes the focus on its own safe answer as it comes.
   const choosing = (): ReactElement => {
     if (others.length === 0) {
       return (
-        <div className="group-form__confirm">
-          <p>
-            &quot;{group?.name}&quot; holds {rows}, and there is no other group to move them to. Add
-            another group first.
-          </p>
+        <ConfirmOverlay
+          key="nowhere"
+          question={
+            <>
+              &quot;{group?.name}&quot; holds {rows}, and there&apos;s no other {noun} to move them
+              to. Add another {noun} first, then delete this one.
+            </>
+          }
+          safe={keepItRef}
+        >
           <div className="modal__actions">{keepIt}</div>
-        </div>
+        </ConfirmOverlay>
       );
     }
-    const label = `Move its ${rows} to`;
-    const moveIds = ids('moveTo');
+    // A label, so title case (the MB.115 sign-off): "Move Its 3 Categories To".
+    const label = `Move Its ${memberCount} ${capitalise(rowNoun)} To`;
+    const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
+    // Named by the picker's label, the question this step asks.
     return (
-      <div className="group-form__confirm">
-        <div className="field">
-          <label className="field__label" id={`${id}-move-label`} htmlFor={moveIds.control}>
-            {label}
-          </label>
+      <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={keepItRef}>
+        <FieldShell label={label} {...move}>
           <ComboboxSelect
-            id={moveIds.control}
+            id={move.controlId}
             label={label}
-            labelId={`${id}-move-label`}
+            labelId={move.labelId}
             value={moveTo}
             onChange={(value) => {
               setMoveTo(value);
               setMoveError(undefined);
             }}
             choices={others.map((each) => ({ value: each.id, label: each.name }))}
-            placeholder="Choose a group"
+            placeholder={`Choose a ${noun}`}
             required
-            aria-invalid={moveError ? true : undefined}
-            aria-describedby={moveError ? moveIds.error : undefined}
+            {...aria}
           />
-          {moveError && (
-            <p id={moveIds.error} className="field__error">
-              {moveError}
-            </p>
-          )}
-        </div>
+        </FieldShell>
         <div className="modal__actions">
           <button
             type="button"
@@ -344,160 +377,142 @@ const GroupForm = ({
           </button>
           {keepIt}
         </div>
-      </div>
+      </ConfirmOverlay>
     );
   };
 
   const confirming = (target: string | undefined): ReactElement => {
     const destination = others.find((each) => each.id === target);
+    // A refusal is confirmDelete's own to place, back at the choice or in
+    // the alert, so neither question is told it.
     if (!destination) {
       return (
-        <div className="group-form__confirm">
-          <p>
-            Delete &quot;{group?.name}&quot;? No {one} is filed under it.
-          </p>
-          <div className="modal__actions">
-            {deleteButton('Delete', undefined)}
-            {keepIt}
-          </div>
-        </div>
+        <ConfirmQuestion
+          key="confirming"
+          question={
+            <>
+              Delete &quot;{group?.name}&quot;? No {many} are filed under it.
+            </>
+          }
+          busy={remove.isPending}
+          onConfirm={() => confirmDelete(undefined)}
+          onKeep={keepGoing}
+        />
       );
     }
     return (
-      <div className="group-form__confirm">
-        <p>
-          Move {rows} to &quot;{destination.name}&quot; and delete &quot;{group?.name}&quot;?{' '}
-          {moved}
-        </p>
-        <div className="modal__actions">
-          {deleteButton('Move and Delete', destination.id)}
-          <button
-            type="button"
-            className="btn btn--quiet"
-            onClick={() => setStep({ at: 'choosing' })}
-          >
-            Back
-          </button>
-        </div>
-      </div>
+      <ConfirmQuestion
+        key="moving"
+        question={
+          <>
+            Move {rows} to &quot;{destination.name}&quot; and delete &quot;{group?.name}&quot;?{' '}
+            {moved}
+          </>
+        }
+        confirmLabel="Move and Delete"
+        keepLabel="Back"
+        busy={remove.isPending}
+        onConfirm={() => confirmDelete(destination.id)}
+        onKeep={() => setStep({ at: 'choosing' })}
+      />
     );
   };
 
-  const actions = (): ReactElement => {
+  // The question over the form, if one is asked: the unsaved changes'
+  // first, as they are what a way out would lose, then the delete's step.
+  const question = (): ReactElement | null => {
+    if (discard.asking) return <DiscardQuestion guard={discard} />;
     if (step.at === 'choosing') return choosing();
     if (step.at === 'confirming') return confirming(step.moveTo);
-    return (
-      <div className="modal__actions group-form__actions">
-        {/* Offered only when there is something to save, and busy, saying
-            so, from the press to the answer — the owner's rule for every form. */}
-        <button
-          type="submit"
-          className="btn btn--solid"
-          disabled={!isDirty || isSubmitting}
-          aria-busy={isSubmitting || undefined}
-        >
-          {isSubmitting && <span className="spinner" aria-hidden="true" />}
-          {isSubmitting ? 'Saving Group' : 'Save Group'}
-        </button>
-        <button type="button" className="btn btn--quiet" onClick={onDone}>
-          Cancel
-        </button>
-        {group && (
-          <button
-            type="button"
-            className="btn btn--destructive group-form__delete"
-            onClick={() => {
-              setAlert(undefined);
-              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-            }}
-          >
-            Delete Group
-          </button>
-        )}
-      </div>
-    );
+    return null;
   };
 
   return (
-    <form className="form group-form" onSubmit={handleSubmit((input) => send(input))} noValidate>
-      {rootError && (
-        <p className="notice notice--error" role="alert">
-          {rootError}
-        </p>
-      )}
-      <div className="field">
-        <label className="field__label" htmlFor={ids('name').control}>
-          Name
-          <Required />
-        </label>
-        <input
-          id={ids('name').control}
-          className="input"
-          // Off: Chrome takes a field named "name" for a person's and offers the user's own.
+    <FormProvider {...methods}>
+      <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
+        {rootError && <Notice kind="error">{rootError}</Notice>}
+        <TextField<GroupValues>
+          name="name"
+          label="Name"
+          placeholder="Add a name"
           autoComplete="off"
-          aria-required
-          {...fieldAria('name')}
-          {...register('name')}
+          required
         />
-        {fieldError('name')}
-      </div>
-      <div className="field">
-        <label className="field__label" htmlFor={ids('description').control}>
-          Description
-          <Required />
-        </label>
-        <textarea
-          id={ids('description').control}
-          className="textarea"
-          rows={3}
-          aria-required
-          {...fieldAria('description')}
-          {...register('description')}
+        <TextField<GroupValues>
+          name="description"
+          label="Description"
+          placeholder={spec.describe}
+          multiline
+          required
         />
-        {fieldError('description')}
-      </div>
-      {kind === 'category' && (
-        <>
-          {COLORS.map(({ column, label }) => (
-            <div className="field" key={column}>
-              <label className="field__label" htmlFor={ids(column).control}>
-                {label}
-                <Required />
-              </label>
-              <Controller
-                control={control}
-                name={column}
-                render={({ field }) => (
-                  <ChipColorField
-                    id={ids(column).control}
-                    label={label}
-                    column={column}
-                    value={field.value}
-                    onChange={(value) => {
-                      field.onChange(value);
-                      fillPartner(column, value);
-                    }}
-                    onBlur={field.onBlur}
-                    sample={typedName.trim() || 'Sample'}
-                    partner={typed[PARTNER[column]]}
-                    others={groups.flatMap((each) => {
-                      const hex = each[column];
-                      return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
-                    })}
-                    inputRef={field.ref}
-                    error={errors[column]?.message}
-                    errorId={ids(column).error}
-                    aria-required
-                    {...fieldAria(column)}
-                  />
-                )}
-              />
-            </div>
-          ))}
-        </>
-      )}
-      {actions()}
-    </form>
+        {kind === 'category' &&
+          COLORS.map(({ column, label, hint }) => {
+            const { aria, ...shell } = fieldDescription({
+              id: `${id}-${column}`,
+              hint,
+              error: errors[column]?.message,
+            });
+            // The shell draws the label and its mark, naming the hex box by
+            // `controlId`, but not the error: ChipColorField places that
+            // itself, between its ratio and its near-colour warning, so the
+            // shell's own would show it twice.
+            return (
+              <FieldShell
+                key={column}
+                label={label}
+                hint={hint}
+                required
+                {...shell}
+                error={undefined}
+              >
+                <Controller
+                  control={control}
+                  name={column}
+                  render={({ field }) => (
+                    <ChipColorField
+                      id={shell.controlId}
+                      label={label}
+                      column={column}
+                      placeholder="Add hex"
+                      value={field.value}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        fillPartner(column, value);
+                      }}
+                      onBlur={field.onBlur}
+                      sample={typedName.trim() || 'Sample'}
+                      partner={typed[PARTNER[column]]}
+                      others={groups.flatMap((each) => {
+                        const hex = each[column];
+                        return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
+                      })}
+                      inputRef={field.ref}
+                      error={shell.error}
+                      errorId={shell.errorId}
+                      aria-required
+                      {...aria}
+                    />
+                  )}
+                />
+              </FieldShell>
+            );
+          })}
+        <FormActions
+          noun={title}
+          dirty={isDirty}
+          submitting={isSubmitting}
+          onCancel={() => discard.request(onDone)}
+          onDelete={
+            group &&
+            (() => {
+              setAlert(undefined);
+              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+            })
+          }
+        />
+        {question()}
+      </form>
+    </FormProvider>
   );
 };
 

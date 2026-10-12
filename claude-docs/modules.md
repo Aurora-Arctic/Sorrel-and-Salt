@@ -3,8 +3,8 @@
 `src/` is a modular monolith (MB.86). Five domain modules under `src/modules/`
 own every table and every service; the database layer, the GraphQL host, `lib`
 and the presentation tree are infrastructure that composes them. A module has a
-public surface, an allowed set of modules it may import, and two mechanisms —
-lint and a guard test — that make a boundary crossing fail in the diff that
+public surface, an allowed set of modules it may import, and two lint
+mechanisms — a path glob and a plugin rule — that make a boundary crossing fail in the diff that
 adds it. The record behind the shape, and what a later extraction would
 replace, is
 [`design-decisions/mb.86-modular-monolith.md`](design-decisions/mb.86-modular-monolith.md).
@@ -46,17 +46,20 @@ nothing.
 What stays outside a module, and why:
 
 - **`src/db/`** — `connection.ts`, `repository/`, `audit.ts`, `bootstrap.ts`,
-  `migrations/`, `seed/`. The repository is the one query author for every
-  module (CLAUDE.md rules 2 and 4), so it is shared rather than owned. The
-  seed is the one legitimately cross-domain composer and reaches tables
-  through the modules' schema files.
+  `vocabularies.ts`, `migrations/`, `seed/`. The repository is the one query
+  author for every module (CLAUDE.md rules 2 and 4), so it is shared rather
+  than owned. The seed is the one legitimately cross-domain composer and
+  reaches tables through the modules' schema files. `vocabularies.ts` lists
+  the curated vocabularies by shape, two-tier and flat, for both of them to
+  read (MB.208): tables and types, no client.
 - **`src/graphql/`** — the builder, the context, pagination, armor, Altair,
   `loaders/define-loader.ts`, `schema/audit.ts` (the cross-cutting
   `AuditInfo`), a `types.ts` beside each of the three, the printed SDL, and the two composition points:
   `schema/index.ts` and `loaders/index.ts`.
 - **`src/lib/`** — the host and the pure functions: `auth.ts` (Better Auth
   composition), the session helpers, `mail.ts`, `errors.ts`, `slugify.ts`
-  (pinned there by `tests/guards/slug-rule.test.ts`), `pagination.ts`.
+  (pinned there by a `no-restricted-imports` path in `.oxlintrc.json`),
+  `pagination.ts`.
 - **`src/app/`, `src/components/`, `src/emails/`, `src/scss/`, `src/proxy.ts`**
   — presentation. A module never imports any of them.
 
@@ -65,13 +68,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                         |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `admin_role_changes`, `admin_role_change_pauses`, `admin_invitations`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                | `admin-role.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                         |
-| `coven`       | `workspaces`, `workspace_members`, `workspace_invitations`                                                                                                                                                            | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                 |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `held-entries.ts`, `suggestions.ts` |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                     |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                  |
+| Module        | Tables                                                                                                                                                                                                                | Services today                                                                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                                                              |
+| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                                                           |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -91,6 +94,17 @@ is added from `coven`, and the compendium-tier rows belong to the tier seam's
 extraction unit
 ([`design-decisions/mb.151-references.md`](design-decisions/mb.151-references.md)).
 
+**`invitations` is `coven`'s, both tiers** (MB.201). A row with a null
+workspace and role is a site-tier invitation, which grants admin. The table
+sits with the workspace it mostly names because its foreign key needs
+`workspaces`, and `coven` imports `identity`, never the reverse. The admin
+tier reaches it as admin curation reaches `ingredients`: `identity`'s
+site-tier service calls the repository's named writes and finders under the
+`SiteAdmin` proof, and imports nothing of `coven`'s
+([`design-decisions/mb.201-two-tier-invitations.md`](design-decisions/mb.201-two-tier-invitations.md)).
+The two tables it replaced, `workspace_invitations` and `admin_invitations`,
+were undeclared by MB.202 and dropped by MB.203.
+
 ## The public surface
 
 A module offers three things to the rest of the tree, and nothing else:
@@ -109,12 +123,52 @@ A module offers three things to the rest of the tree, and nothing else:
   form before a request is sent and by the service again after, so a client
   component must be able to import it — which the index cannot offer once it
   re-exports a `server-only` service. A validation file imports `zod` and
-  dependency-free files such as `schema/units.ts`, nothing else, and
-  `tests/guards/client-safe-validation.test.ts` fails one that reaches further
+  dependency-free files such as `schema/units.ts`, nothing else, and a
+  `.oxlintrc.json` override fails a runtime import of `server-only`,
+  `postgres`, `drizzle-orm`, `src/db` or a service from one
   ([`validation.md`](validation.md)).
 
 `services/`, `graphql/`, `loaders/` and `types.ts` are internal. A deep import
 of any of them from outside the module is a boundary violation, whatever the importer.
+
+## Shared steps inside a module
+
+A step several services of one module repeat lives once in a service file
+the index does not re-export, and each service calls it between its own
+checks (MB.210, on the owner's call for shared steps over a descriptor
+factory): every exported service keeps its function, its JSDoc, and its own
+`assertSiteAdmin(` and `expireCompendium()`, so a reader sees the
+check and the expiry in the service they guard.
+
+- **`vocabulary/services/curated-writes.ts`** — a curated write's steps,
+  each taking the table's `CuratedVocabulary` descriptor (`types.ts`):
+  `refuseSlugCollision`, `liveRow` for an id that may name nothing,
+  `parseUnderLiveParent` for a row filed under a group, and a group's
+  `moveTarget`, `updateGroup` and `deleteGroup`, built on
+  `group-moves.ts` and a `CuratedGroup` whose `members` are the `MovedRows`
+  it moves — their column, their slug rule, and the walk that reads them.
+- **`vocabulary/services/curated-lists.ts`** — `readableFilter` and
+  `cachedFilteredList`, the list and count of a vocabulary filtered by a
+  group. Each service still spells its own two cache keys, which
+  [`db/compendium-cache.md`](db/compendium-cache.md) lists.
+- **`vocabulary/services/held-entries.ts`** — `refuseWhileHeld`, a delete
+  refused while live compendium entries hold the row; `describeEntry`, the
+  one way a refusal names an entry, its label unquoted; and
+  `redirectRefusal`, a write ending other entries' redirects. The index
+  re-exports the last two for the compendium's service.
+- **`identity/services/admin-changes.ts`** — `liveUser`,
+  `adminDeclaration`, and `isSiteAdmin` and `refuseBatch` for a batch
+  answered slot by slot; `admin-role-pause.ts`'s `assertAdminChangesOpen`
+  is the site-role check and the pause in one call.
+
+What no module owns is in `src/lib/`: `allPages` in `pagination.ts`, every
+walk over a finder's pages; `plural`, `joinAnd` and `addressTaken` in
+`text.ts`, the English a refusal is phrased in; `inIdOrder` in
+`in-id-order.ts`, a batch answered in its ids' order. `coven` exports
+`readersOf` for every read of the compendium and, optionally, one coven. A
+service writing its own slug-collision refusal, move target, `describeEntry`
+or page walk is a review finding: MB.224 retired the guard that pinned the
+call sites, since it tested where code lives, not what it does.
 
 ## The boundary
 
@@ -124,9 +178,10 @@ Three import conventions, each chosen for a reason the alternative lacks:
   alias. This is the first use of the `@/` alias inside `src/`; the alias is
   what lets one lint glob name every cross-module import.
 - **The drizzle-kit-reachable graph uses relative paths.** A schema file
-  reaches another schema file, `schema/units.ts` or `src/db/audit.ts` by a
-  relative path — `../../identity/schema/users` — because drizzle-kit loads
-  the schema glob with its own loader, which may not honour tsconfig paths.
+  reaches another schema file, `schema/units.ts`, `src/db/audit.ts` or
+  `src/db/table-marks.ts` by a relative path — `../../identity/schema/users`
+  — because drizzle-kit loads the schema glob with its own loader, which may
+  not honour tsconfig paths.
 - **Intra-module imports are relative.** A service reaches its own schema as
   `../schema/spells`, never through its own index, which would be a cycle.
 
@@ -141,7 +196,7 @@ The dependency graph is fixed and acyclic:
 | `grimoire`    | `identity`, `coven`, `vocabulary`, `ingredients` |
 
 Every edge is a foreign key or a service call that already crosses in that
-direction. A new edge is a design change: add it to `ALLOWED` in the guard in
+direction. A new edge is a design change: add it to `ALLOWED` in `lint/sorrel-lint.js` in
 the same PR and say why in the PR body.
 
 **A module never imports presentation** — `src/app`, `src/components`,
@@ -150,8 +205,9 @@ modules.
 
 ### Enforcement
 
-Two layers, in the shape every boundary here takes — the lint gives fast
-feedback and the guard gives precision:
+Two lint layers, a path glob for the alias and a plugin rule for the
+relative spellings a glob cannot judge (MB.224, which retired the guard that
+scanned the import graph on every test run):
 
 - **Lint.** `.oxlintrc.json` carries one `no-restricted-imports` pattern group
   banning `@/modules/*/services`, `@/modules/*/services/**`,
@@ -161,21 +217,20 @@ feedback and the guard gives precision:
   ([`db/query-building.md`](db/query-building.md), "Where queries may be
   built"). The bare `@/modules/<name>` index import matches none of the
   patterns, so no negation is needed. The lint sees only the alias spelling.
-- **Guard.** `tests/guards/module-boundaries.test.ts` scans every file under
-  `src/` — the git index plus untracked files, as `slug-rule.test.ts` does —
-  and resolves both alias and relative specifiers to a path. It asserts: an
-  import resolving into another module lands on its `index.ts`, a
-  `schema/*.ts` file or a `validation/*.ts` file; the module-to-module edges
-  are a subset of `ALLOWED`; no module imports presentation; the set of
-  directories under `src/modules/` is exactly the roster; and the `TIER_SEAM`
-  pin over the repository (below).
-  It is what catches the relative spelling the lint cannot.
+- **Plugin rule.** `sorrel/module-boundaries` in `lint/sorrel-lint.js`
+  resolves every alias and relative specifier in a file under `src/` to a
+  path, and fails an import into another module that lands on anything but its
+  `index.ts`, a `schema/*.ts` file or a `validation/*.ts` file; a
+  module-to-module edge its `ALLOWED` map does not name; a module importing
+  presentation; and an import into `src/db/repository/` other than its index.
+  `import/no-cycle` fails a cycle between files anywhere, the repository
+  included since MB.231.
   A type-only import counts exactly like a runtime one: `import type` is
   erased at compile time but couples to the file all the same, and the index
   exports the type too.
 
-The two M3.9 guards that named `src/services` — `lint-access-boundary.test.ts`
-and `server-only-services.test.ts` — point at `src/modules/*/services`. The
+Lint's `sorrel/service-server-only` holds every file under
+`src/modules/*/services` to its `import 'server-only'`. The
 `.oxlintrc.json` override that bans a service from reading a request
 (`next/headers`, `lib/auth`, `lib/request-session`) matches
 `src/modules/*/services/**/*.ts`; the database-layer override that permits a
@@ -183,54 +238,68 @@ runtime `drizzle-orm` import covers `src/modules/*/schema/**/*.ts`. A module's
 `graphql/` and `loaders/` sit above its services rather than beside them, so
 the access-boundary override that bans `src/db` from resolvers and pages
 covers `src/modules/*/graphql/**/*.ts` and `src/modules/*/loaders/**/*.ts`
-too, and `lint-access-boundary.test.ts` probes both.
+too.
 
 ## The tier seam
 
 The compendium's future extraction unit is the compendium tier of
 `ingredients` plus `vocabulary`. What would make that extraction a rewrite is
 an uncounted set of reads that cross from a workspace's rows into the
-compendium's. So the set is counted: **`TIER_SEAM` in
-`tests/guards/module-boundaries.test.ts` must name every top-level function in
+compendium's. So the set is counted, here: **this section names every top-level function in
 `src/db/repository/` whose SQL reads the compendium tier**, exported or not —
 anything calling `inCompendium(…)`, the predicate's one spelling since MB.100,
-or writing `workspace_id is null` or `isNull(workspaceId)` out by hand, and
-anything that reads both tiers in one statement. The guard cuts each file at
-every top-level `function` and `const`, so a predicate is named by the
-declaration it is written in, and a private helper is listed under its own
-name rather than credited to whichever export happens to sit above it. It
-fails an unlisted function, and it fails a listed one that no longer exists or
-no longer reads the tier.
+or one of the builders that read both tiers through it — `inTiers`,
+`readableInTiers`, `readableIngredientParent` and `findPageInTiers` with its
+count, each the one spelling of its read since MB.206 — or writing
+`workspace_id is null` or `isNull(workspaceId)` out by hand, and anything
+that reads both tiers in one statement. A predicate is named by the
+declaration it is written in, and a private helper under its own name rather
+than credited to whichever export happens to sit above it. Review holds the
+list since MB.224 retired the guard that pinned it.
 
-It holds the predicate, seventeen functions and the writer today: `inCompendium` in
-`predicates.ts`, which is `workspace_id IS NULL` itself; `findSimilarIngredients`
+It holds the predicate, the five builders over it, twenty functions and the
+writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
+NULL` itself; `inTiers` and `readableInTiers` beside it,
+`readableIngredientParent` in `ingredient-parent.ts`, and `findPageInTiers`
+and `findPageCountInTiers` in `finders.ts`
+(MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
 M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
 (M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
-ingredient's folk names and category links; `findCompendiumPage` (M8.5), the
+ingredient's folk names and category links; `findManyOfVariants` (MB.218), the
+rows one form of an ingredient owns; `findCompendiumPage` (M8.5), the
 public list, and `findCompendiumCount` (MB.105), its count;
 `findOneIngredient` (M8.5), one row in the compendium or a proof's coven;
 `findIngredientSuggestions` (MB.138), the substitute picker's search;
 `findCompendiumEntryByIdentity` (M5.2), the entry a colliding compendium
-write names; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
+write names; `findCompendiumFormRenameClashes` (MB.220), the entries a
+curated form's rename would give two forms of one name; `findCompendiumEntryBySlug` and `findCompendiumSlugRedirect`
 (MB.82), the entry at an address and the one a retired address redirects to;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
-ingredient's substitutes and the ingredients they link, deleted or not;
-`findReferencesOfIngredients` (MB.153), an ingredient's references, each
+ingredient's or a variant's substitutes and the ingredients they link, deleted or not;
+`findReferencesOf` (MB.153, MB.208), a sourced row's references, each
 where its readers may look; `findManyReferences` (MB.153), what a row
 written under the proofs may cite; `findReferenceSuggestions` (MB.153), the
 reference picker's search; `citesNothing` (MB.153), the admin's to-do
-filter, an entry citing no compendium reference; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
+filter, a sourced row citing no compendium reference, and `cites` (MB.218),
+its converse; and `writerFor` (M5.2), the private builder of `withAudit`'s writer, whose
 compendium-tier methods update and soft-delete a row only under
 `workspace_id IS NULL`, clear the tier's lapsed slug retirements, and carry a
-curated form's rename onto the entries picking it (`carryFormRename`, M5.6a). The
-list, its count, the identity lookup, the two address finders and the writer
-touch the compendium tier alone, as does `citesNothing`; each of the rest
+curated form's rename onto the compendium variants picking it (`carryFormRename`, M5.6a, MB.220). The
+list, its count, the identity lookup, the rename's clash check, the two address finders and the writer
+touch the compendium tier alone, as do `citesNothing` and `cites`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later
 task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
-`TIER_SEAM` in its own PR, with a one-line reason beside it.
+this list in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
+
+One entry is not the compendium's: `onSiteTier` (MB.202), `invitations`'
+site tier, `workspace_id IS NULL` spelled for that table alone so that no
+invitation read calls `inCompendium`. It is listed because it spells the
+tier's predicate, and the extraction task leaves it behind.
+
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gains MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers, which MB.218 adds to the list above in its own PR ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Where types live
 
@@ -251,8 +320,8 @@ it tidies:
 - **A branded proof**, `Membership` and `SiteAdmin`. Its `unique symbol` stays
   unexported beside the one function that mints it (CLAUDE.md rule 5).
 - **`Executor` and `Transaction`** in the repository, both `typeof db`. Only
-  the files whose exemptions `lint-db-client-boundary.test.ts` pins may import
-  the client, and a types file would be one more.
+  the six files whose exemptions `lint-db-client-boundary.test.ts` pins may
+  import the client, and a types file would be one more.
 
 A type declared inside a function, a `describe` or a `declare global` block
 belongs to that code and stays with it. So `src/graphql/pagination.ts` keeps
@@ -266,10 +335,10 @@ file, `import type` included, carries that file's own imports along:
   `import 'server-only'`. It is internal like `services/`: the index names its
   public types in one `export type { … } from './types'` line, which keeps a
   module-internal type such as `IngredientFields` off the surface, and the lint
-  group and the guard above ban a deep import of it.
+  group and the plugin rule above ban a deep import of it.
 - **A validation file's helper types** are in `validation/types.ts`, not the
-  module's `types.ts`. `client-safe-validation.test.ts` follows type imports
-  too, and the module's file reaches its tables.
+  module's `types.ts`, which reaches its tables: a validation file loads in the
+  browser.
 - **`src/lib/types.ts` imports nothing.** `lib/validation.ts` reaches it
   through `errors.ts`, which puts it inside that same client-safe walk. The
   session types read the `users` table and Better Auth, so they are in
@@ -293,13 +362,10 @@ file, `import type` included, carries that file's own imports along:
   `import type { … } from './types.ts'`. Node's own type stripping runs those
   scripts, and it needs the extension and erases only a type-only import.
 
-`tests/guards/types-in-type-files.test.ts` enforces this over `src/`, `scripts/`
-and `tests/` (MB.109). It reads every column-0 `type` and `interface` in a file
-that is not type-only, and fails any that is not one of the three kinds above.
-It recognises the first two from the declaration itself: a `typeof` naming a
-value the same file declares, or a key naming a `declare const …: unique symbol`
-in the same file. The third is a pinned list, so a new exception is a change to
-the guard rather than a quiet addition.
+This is a convention, held by review over `src/`, `scripts/` and `tests/`:
+MB.224 retired the guard MB.109 added, since where a type is declared is no
+behaviour a user depends on, and `tsc` and lint catch a type that went
+missing in a move.
 
 ## Tests
 
@@ -336,10 +402,9 @@ is that the host reaches each through the module's index.
 
 ## Adding a module
 
-Five things, in one PR, or the guard fails:
+Five things, in one PR:
 
-1. Add the name to the roster in `tests/guards/module-boundaries.test.ts` and
-   its edges to `ALLOWED` — only edges that a foreign key or a service call
+1. Add the name and its edges to `ALLOWED` in `lint/sorrel-lint.js` — only edges that a foreign key or a service call
    needs, and never one that makes the graph cyclic.
 2. Create `src/modules/<name>/index.ts`, even if it exports nothing yet, and
    `schema/` when the first table lands.

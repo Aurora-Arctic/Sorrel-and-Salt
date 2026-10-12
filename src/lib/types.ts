@@ -49,6 +49,12 @@ export interface PageCount {
   countBefore: number | null;
 }
 
+/** Where a page stands among them all, for a pager's "Page X of Y". */
+export interface PagePosition {
+  page: number;
+  pages: number;
+}
+
 export interface Page<T, Edge extends object = {}> {
   edges: ({ cursor: string; node: T } & Edge)[];
   pageInfo: {
@@ -66,6 +72,25 @@ export interface SocialProvider {
   label: string;
 }
 
+/** What registering a provider with Better Auth takes beyond its credentials. */
+export interface ProviderProfile {
+  /** The profile field naming the provider account; the first one present, where profiles come in more than one shape. */
+  accountId: readonly [string, ...string[]];
+  /** Whether a sign-in takes the provider's word that the address is verified. */
+  vouches: boolean;
+  /** The provider's own options, read when Better Auth is configured. */
+  extra?: () => { tenantId: string };
+}
+
+/**
+ * A profile for every id, none optional: a provider added to `ProviderId`
+ * without one fails to compile, where a switch without a default would let it
+ * build and never register.
+ */
+export type ProviderProfiles<Id extends string = ProviderId> = {
+  readonly [P in Id]: ProviderProfile;
+};
+
 /** One of a user's provider accounts: the row id `/unlink-account` takes, and its provider. */
 export interface LinkedAccount {
   id: string;
@@ -77,6 +102,18 @@ export interface ValidationIssue {
   /** In the shape of the operation's input — `['folkNames', 2]`; empty for no one field. */
   path: (string | number)[];
   message: string;
+}
+
+/**
+ * What a failed GraphQL request leaves a form to say, as `readGraphqlFailure`
+ * reads it (src/lib/graphql-failure.ts): under one of the form's own fields,
+ * or in its alert region. Never both.
+ */
+export interface Failure {
+  /** A VALIDATION issue about one of the fields the form named, with that field's name. */
+  field?: { name: string; message: string };
+  /** Everything else, as one readable sentence. */
+  alert?: string;
 }
 
 export type Message = { to: string; subject: string; text: string; html: string };
@@ -143,8 +180,34 @@ export interface CitationFields {
   note?: string | null;
 }
 
+/**
+ * What `renderShortCitation` reads: the four fields a Chicago short form is
+ * made of, so a surface holding a source's citation need carry no more.
+ */
+export type ShortCitationFields = Pick<CitationFields, 'kind' | 'title' | 'authors' | 'container'>;
+
 /** One run of a rendered citation, set in italic or roman. */
 export interface CitationPart {
   text: string;
   italic: boolean;
 }
+
+/**
+ * A list address's query, for `listHref`: a string is a pair, `true` a bare
+ * flag (`new`, `awaiting`), and `undefined`, `false` or `''` is left out.
+ */
+export type ListHrefParams = Readonly<Record<string, string | boolean | undefined>>;
+
+/**
+ * The modal a list page has open over it, by its address: `'new'` for the
+ * add form, `{ edit }` for the row whose slug or id it edits, none for no
+ * modal (src/lib/list-href.ts).
+ */
+export type ListDialog = 'new' | { edit: string };
+
+/**
+ * A `ListDialog` as the address writes it: `new` a bare flag, `edit` the
+ * row's slug or id. A type alias rather than an interface, so it passes as
+ * `ListHrefParams` on its own: an interface carries no index signature.
+ */
+export type ListDialogParams = { new: boolean; edit: string | undefined };

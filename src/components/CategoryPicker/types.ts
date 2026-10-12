@@ -29,6 +29,8 @@ export interface CategoryPickerProps {
   hint?: string;
   /** The box's name, "Category": what a pick adds. */
   entry: string;
+  /** A short action shown, muted, while the box is empty: "Add a category". */
+  placeholder?: string;
   /** Every category on offer, in any order: the picker groups and sorts them. */
   categories: readonly PickerCategory[];
   /** The categories are still being read: the box says it is looking. */
@@ -48,4 +50,16 @@ export interface CategoryPickerProps {
   error?: ReactNode;
   /** Said beneath the box: the categories could not be read. */
   status?: string;
+  /**
+   * A control at the right end of the legend, acting on the picks: a
+   * variant's Copy From Ingredient. Handed the picker's announcer, so what
+   * it did is said where an add or a removal is.
+   */
+  action?: LegendAction;
 }
+
+/** Says `message` through a group's own live region. */
+export type Announce = (message: string) => void;
+
+/** A control drawn in a group's legend, handed the group's announcer. */
+export type LegendAction = (announce: Announce) => ReactNode;

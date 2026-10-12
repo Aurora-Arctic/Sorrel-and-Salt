@@ -1,6 +1,7 @@
 import type postgres from 'postgres';
+import { toColumns } from '../fixtures/columns';
 import { ingredientColumns } from '../fixtures/ingredient';
-import type { IngredientFixture } from '../fixtures/types';
+import type { IngredientFixture, VariantFixture } from '../fixtures/types';
 
 // The one way a test seeds an ingredient it is not testing the writing of.
 // Through the raw client rather than `withAudit`: setup must not depend on the
@@ -10,7 +11,8 @@ import type { IngredientFixture } from '../fixtures/types';
 // the seed does — the author's stamps and the GUC, inside one transaction.
 
 /**
- * Writes `fixture`'s row, its folk names, its typed substitutes, its typed
+ * Writes `fixture`'s row, a variant row for each of its forms with what
+ * that form owns (MB.222: the row itself carries no form), its folk names, its typed substitutes, its typed
  * deities at their positions and its category links, stamped by
  * `author`, and returns the ingredient's id. Categories are named as §6 does
  * and resolved through the seeded `categories`; a name with no live row is a
@@ -31,6 +33,8 @@ export async function insertIngredient(
       insert into ingredients ${tx({ ...ingredientColumns(fixture), ...stamps })}
       returning id`;
     const id = row.id as string;
+
+    for (const variant of fixture.variants) await writeVariant(tx, id, variant, author);
 
     if (fixture.folkNames.length > 0) {
       const folkNames = fixture.folkNames.map((name) => ({ ingredient_id: id, name, ...stamps }));
@@ -79,20 +83,83 @@ export async function insertIngredient(
 }
 
 /**
+ * Writes one more variant of `ingredientId` — a form and what it adds
+ * (MB.215), with the category pairs and typed substitutes it owns (MB.217) —
+ * stamped by `author`, and returns its id. Raw, as `insertIngredient` is; the
+ * fixture's own forms are already variants, so this is another form beside
+ * them. Categories are resolved by name as `insertIngredient` resolves them.
+ */
+export async function insertVariant(
+  sql: postgres.Sql,
+  ingredientId: string,
+  variant: VariantFixture,
+  author: string,
+): Promise<string> {
+  return sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    return writeVariant(tx, ingredientId, variant, author);
+  });
+}
+
+/** One variant and the children it owns, inside the caller's transaction. */
+async function writeVariant(
+  tx: postgres.TransactionSql,
+  ingredientId: string,
+  variant: VariantFixture,
+  author: string,
+): Promise<string> {
+  const { categories = [], substitutes = [], ...row } = variant;
+  const owner = { ingredient_id: ingredientId, created_by: author, updated_by: author };
+  const [written] = await tx`
+    insert into ingredient_variants ${tx({ ...toColumns(row), ...owner })}
+    returning id`;
+  const id = written.id as string;
+
+  if (substitutes.length > 0) {
+    const rows = substitutes.map((name) => ({ ...owner, variant_id: id, name }));
+    await tx`insert into ingredient_substitutes ${tx(rows)}`;
+  }
+
+  if (categories.length > 0) {
+    const found = await tx`
+      select id, name from categories
+      where name in ${tx(categories)} and deleted_at is null`;
+    if (found.length !== categories.length) {
+      throw new Error(
+        `"${variant.form}" names a category that is not live: ${categories.join(', ')}.`,
+      );
+    }
+    const pairs = found.map((category) => ({
+      ...owner,
+      variant_id: id,
+      category_id: category.id,
+    }));
+    await tx`insert into ingredient_categories ${tx(pairs)}`;
+  }
+
+  return id;
+}
+
+/**
  * Links `substituteId` as a substitute of `ingredientId`, stamped by `author`,
  * and returns the row's id. Raw, as `insertIngredient` is, so the tier rule the
  * service holds is not: a test can write the row the service would refuse.
+ * `forms` names the form of `ingredientId` the row stands in for, and the
+ * form of `substituteId` it names (MB.217); each absent is none.
  */
 export async function insertSubstituteLink(
   sql: postgres.Sql,
   ingredientId: string,
   substituteId: string,
   author: string,
+  forms: { variantId?: string; substituteVariantId?: string } = {},
 ): Promise<string> {
   const [row] = await sql`
     insert into ingredient_substitutes ${sql({
       ingredient_id: ingredientId,
+      variant_id: forms.variantId ?? null,
       substitute_id: substituteId,
+      substitute_variant_id: forms.substituteVariantId ?? null,
       created_by: author,
       updated_by: author,
     })}

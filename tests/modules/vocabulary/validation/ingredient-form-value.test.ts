@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
 
+// What the schema adds over curatedValueInput, whose name, description and
+// dropped slug are tests/lib/validation.test.ts's: the group.
+
 const GROUP_ID = '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21';
 
 const VALID = { name: 'Fixture Shard', description: 'Invented.', groupId: GROUP_ID };
@@ -12,49 +15,8 @@ function failedPaths(input: unknown) {
 }
 
 describe('IngredientFormValueInput', () => {
-  it('takes a name, a description and a group, trimmed', () => {
-    expect(
-      IngredientFormValueInput.parse({
-        name: ' Fixture Shard ',
-        description: ' Invented. ',
-        groupId: GROUP_ID,
-      }),
-    ).toEqual(VALID);
-  });
-
-  // The slug is derived from the name and the group (src/lib/slugify.ts),
-  // never written beside them, so a slug in the input is dropped.
-  it('drops a slug rather than taking one', () => {
-    const parsed = IngredientFormValueInput.parse({ ...VALID, slug: 'something-else' });
-
-    expect(parsed).not.toHaveProperty('slug');
-  });
-
-  // The admin's confirmation that a rename may end another entry's redirect (MB.82).
-  it('takes `endRedirect` when given, and only as a boolean', () => {
-    expect(IngredientFormValueInput.parse({ ...VALID, endRedirect: true })).toEqual({
-      ...VALID,
-      endRedirect: true,
-    });
-    expect(IngredientFormValueInput.parse(VALID)).not.toHaveProperty('endRedirect');
-    expect(failedPaths({ ...VALID, endRedirect: 'yes' })).toEqual([['endRedirect']]);
-  });
-
-  it.each([
-    ['name', 'Give the form a name'],
-    ['description', 'Describe the form'],
-  ])('requires a non-blank %s', (field, message) => {
-    for (const value of ['  ', undefined]) {
-      const result = IngredientFormValueInput.safeParse({ ...VALID, [field]: value });
-      expect(result.error?.issues).toEqual([expect.objectContaining({ path: [field], message })]);
-    }
-  });
-
-  it('requires the group as an id', () => {
-    expect(failedPaths({ name: 'Fixture Shard', description: 'Invented.' })).toEqual([['groupId']]);
-    const result = IngredientFormValueInput.safeParse({ ...VALID, groupId: 'substance' });
-    expect(result.error?.issues).toEqual([
-      expect.objectContaining({ path: ['groupId'], message: 'Choose a group' }),
-    ]);
+  it('requires the group as an id, at the group', () => {
+    expect(failedPaths({ ...VALID, groupId: undefined })).toEqual([['groupId']]);
+    expect(failedPaths({ ...VALID, groupId: 'substance' })).toEqual([['groupId']]);
   });
 });

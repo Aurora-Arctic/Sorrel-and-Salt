@@ -18,14 +18,12 @@ would need no edit at any call site; nothing passes it today.
     once left every deleted file on disk in every job, and why removing the
     layer beat cleaning up after it, is MB.42's and
     [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).
-  - **`tests/guards/image-source-layer.test.ts` is what keeps it that way.**
-    It parses every `COPY`/`ADD` in both Dockerfiles and checks each source
-    against a per-file allowlist — the two manifests, plus
-    `Docker/playwright-entrypoint.sh` for `Dockerfile.e2e`'s `headed` stage. An
-    allowlist rather than a `.` denylist: `COPY src src` is as much a source
-    layer as `COPY . .`, and a new COPY is a decision, not a convenience. The
-    guard runs in CI's `vitest` job, so a source layer re-added tomorrow fails
-    in the diff that adds it rather than on the next PR that deletes a file.
+  - **Review is what keeps it that way.** Each Dockerfile copies an allowlist
+    — the two manifests, plus `Docker/playwright-entrypoint.sh` for
+    `Dockerfile.e2e`'s `headed` stage — and `COPY src src` is as much a
+    source layer as `COPY . .`, so a new COPY is a decision, not a
+    convenience. MB.224 retired the guard that parsed them: a test of the
+    Dockerfile proves no behaviour a user depends on.
     A Dockerfile change also runs on its own PR, because `pr-gate.yml` builds
     the image under a tag hashed from `Dockerfile.node` and
     `package-lock.json`; an edit to this action does not, because every caller
@@ -54,8 +52,11 @@ would need no edit at any call site; nothing passes it today.
     `ghcr.io/<repo>/<path>:buildcache` with `mode=max`, one tag per image
     beside its hash tags, so a build on one PR warms the next PR's and every
     branch reads the same copy. `mode=max` caches the stages before the
-    target too, which is how `testing` and `e2e` reuse `development`'s
-    `npm ci` layer. A hash tag is hex, so it can never collide with
+    target too, which is how `testing` reuses `development`'s `npm ci`
+    layer. The e2e image never shares that layer: `Docker/Dockerfile.e2e` is
+    a separate file on a Debian base, and its `e2e` target is that file's
+    first stage, so the cache holds only the e2e image's own layers, its
+    `npm ci` among them. A hash tag is hex, so it can never collide with
     `buildcache`.
   - **Why not the Actions cache.** A `type=gha` entry written by a
     `pull_request` run can be restored only by re-runs of that PR, so each

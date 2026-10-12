@@ -30,7 +30,7 @@ the argument, and why there is no order column, is §14's.
 a form group is a foreign-key violation rather than an empty chip section
 (§5, §14).
 
-**Both `groupId`s are foreign keys, and `ingredients.form` is not — that is
+**Both `groupId`s are foreign keys, and a variant's `form` is not — that is
 a rule, not an inconsistency**: a member writes `form`, and only admins write
 either side of a group link (§5, §14).
 
@@ -67,23 +67,36 @@ idempotency keys read, and none of them carries a group alongside it. Display
 names carry no constraint: two groups may each want a "Protection", and the
 slug is what tells them apart.
 
+**One builder declares a vocabulary's shared columns and indexes** (MB.207).
+`src/db/schema-parts.ts`'s `vocabularyColumns()` is `id`, `name`, `slug`,
+`description` and `seedKey`, and `vocabularyIndexes(prefix, table, options)`
+is `<prefix>_seed_key_unique`, `<prefix>_slug_unique`,
+`<prefix>_description_not_blank` and, with `trigram`, `<prefix>_trgm`, the
+names the migrations created. All eight vocabulary tables — these four, the
+two astrology tables and the two deity tables — spread the one and return the
+other, adding only their own columns: a group's colour pair, an item's key
+to its group. `db:generate` writing no migration is what proved the builder
+reproduces the DDL. Drizzle's column order in the source changed with it, and
+nothing reads that order: the database's is the migrations', where
+`seed_key` is already the last column (migration 0045).
+
 **On `ingredient_forms` that last sentence has a consequence the other three
 do not have, and it is deliberate.** A category is referenced by **id**, so
 two categories sharing a display name are only two similar chips.
-`ingredients.form` stores the **string**, so two live forms both called "Root"
+A variant's `form` stores the **string**, so two live forms both called "Root"
 — one an _animal_ part, one a _substance_ — are indistinguishable to
 everything downstream: whichever the member picks, the same `Root` lands on
-the row, and the second curated entry can never be attributed to anything.
+the variant, and the second curated entry can never be attributed to anything.
 M4.2a's acceptance criteria originally asked for a partial unique index on
 `name` here, which would have refused the second row outright. It was dropped
 in favour of MB.35's slug-only rule for two reasons: a unique index on `name`
 is case-sensitive, so it would still admit "Root" beside "root" — two
-identical strings once `canonicalKey` lowercases `form` — and _wax_ is
+identical strings once `ingredient_variants_form_unique` lowercases `form` — and _wax_ is
 legitimately both a part of the bee and a preparation of it, which the index
 would force an admin to rename their way out of. **The disambiguation moved to
 the autofill instead**, as §5 specifies: M4.7a returns each curated
 suggestion's group and M5.10a renders it, and MB.165 keeps a pick, as
-`ingredients.form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
+a variant's `form_id` beside the text. The schema test asserts the same-named pair is _accepted_, so
 the gap stays a recorded decision. A form's slug names its group,
 `formSlug(name, group)`, so the pair can be written through the admin's page
 and not only by a test (M5.6a). Adding the index later is the reversible
@@ -100,17 +113,20 @@ the reversible direction: dropping a `NOT NULL` later is a widening, where
 adding one is destructive DDL needing a PR acknowledgement (rule 10, and the
 [destructive-DDL check](expand-contract.md)).
 
-**The two form tables go one step further than NOT NULL on `description`**, in
-`ingredient_form_groups_description_not_blank` and
-`ingredient_forms_description_not_blank`: §5 asks for a description that is
-required _and non-empty_, and `NOT NULL` alone accepts `''` and `'   '` — a
-curated value that curates nothing, when the column exists so that a curated
-value explains itself (§5). It is a CHECK rather
+**Every vocabulary table goes one step further than NOT NULL on
+`description`**, in `<prefix>_description_not_blank`: §5 asks for a
+description that is required _and non-empty_, and `NOT NULL` alone accepts
+`''` and `'   '` — a curated value that curates nothing, when the column
+exists so that a curated value explains itself (§5). It is a CHECK rather
 than input validation, unlike M5.6b's contrast floor, because "say
-something" needs no ratio in its error message. The two category tables carry
-no counterpart: §5 asks for non-empty only on the form vocabulary, so M4.2
-shipped NOT NULL alone and this is a difference in the specification, not a
-gap in M4.2.
+something" needs no ratio in its error message. The two category tables
+shipped without it, since §5 first asked for non-empty only on the form
+vocabulary, while their admin inputs refused a blank from the start; MB.214
+added `categories_description_not_blank` and
+`category_groups_description_not_blank` in migration
+`0060_category-description-checks`, so the database holds all eight to one
+rule however a row reaches them, and `vocabularyIndexes` builds the CHECK
+unconditionally.
 
 ## Category writes (M5.6)
 
@@ -148,8 +164,9 @@ admin's alone, each opening on `assertSiteAdmin` before it reads the input.
 - **`deleteCategory` soft-deletes, and is refused while a live compendium
   entry is filed under the category.** The refusal is `Forbidden`, naming the
   first three entries by name, each told apart from a namesake by its formal
-  name and form, then how many more: `"Protection" is filed on 5 compendium
-entries — Bay Laurel (Laurus nobilis, Leaf), … and 2 more. Take it off them
+  name (`describeEntry`; no form since MB.222, as an entry may have several),
+  then how many more: `"Protection" is filed on 5 compendium
+entries — Bay Laurel (Laurus nobilis), … and 2 more. Take it off them
 first.` The entries are read through the compendium's own category filter,
   `findCompendiumPage` and `findCompendiumCount`, so "filed under" means what
   the compendium's list means by it. A deleted entry's link does not hold
@@ -168,7 +185,8 @@ first.` The entries are read through the compendium's own category filter,
 
 The owner chose the delete rule over two others, and
 [`design-decisions/m5.6-admin-categories.md`](../design-decisions/m5.6-admin-categories.md)
-records them. Revalidating the `compendium` tag after each write is M8.7's.
+records them. Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 ## Form writes (M5.6a)
 
@@ -193,40 +211,41 @@ keep it one after the write.
   It follows a rename and a regrouping, and keeps `seedKey` as it was
   (MB.171). The group is checked live first, as a category's is, and a slug
   collision is `VALIDATION` on `name`, naming the form at the address.
-- **A delete is refused while a live compendium entry picks the form**, by
-  `form_id`: `Forbidden`, naming the first three entries and how many more,
-  through the compendium's own filter on the pick (`IngredientFilter.formId`)
-  and the shared `heldBy` the category delete now uses too. A same-named form
-  no entry picked deletes. A coven's pick never blocks it.
-- **A rename carries the new name onto every live compendium entry picking
-  the form, in the same transaction**, through `write.carryFormRename`: each
-  entry's `form` text, so its `canonical_key`, and its slug,
-  `ingredientSlug(name, newForm, canonicalName)`, the old slug retired to
-  redirect for 180 days as `updateCompendiumEntry` retires one, and the
-  tier's lapsed retirements cleared in the same write. A case-only rename
-  rewrites the text and moves no slug. A change of group alone rewrites no
-  entry, which holds the form's name, not its group.
+- **A delete is refused while a live compendium entry picks the form** on
+  any of its forms, by a live variant's `form_id` (MB.220): `Forbidden`,
+  naming the first three entries and how many more, through the compendium's
+  own filter on the pick (`IngredientFilter.formId`, an `EXISTS` over the
+  variants) and the shared `refuseWhileHeld` every vocabulary delete uses. A
+  same-named form no entry picked deletes. A coven's pick, a dropped variant's
+  and a deleted entry's never block it.
+- **A rename carries the new name onto every live compendium variant picking
+  the form, in the same transaction** (MB.220), through `write.carryFormRename`,
+  one statement over `ingredient_variants`: each variant's `form` text, and
+  nothing else. No slug moves and no retirement is written, since a form is no
+  part of an entry's identity or address since MB.215. The ingredient row has
+  no form of its own since MB.222, so nothing else is rewritten. A change of group alone rewrites no
+  variant, which holds the form's name, not its group.
 - **The rename is refused rather than half-carried.** Before the write it
-  refuses, on `name` and naming both entries, a rewrite that would give an
-  entry another live entry's identity or address. A collision an index finds
+  refuses, on `name`, a rename that would give an entry two forms of one
+  name — the variant renamed beside another already spelt as the new name,
+  which `ingredient_variants_form_unique` would refuse — naming each such
+  entry, read by `findCompendiumFormRenameClashes`. A change of case clashes
+  with nothing, the variant renamed being excepted. A clash the index finds
   inside the transaction, from a race, is read again and named the same way.
-  A rewrite onto an address another entry's redirect runs from is refused on
-  `endRedirect`, naming each entry and when its window closes, until the
-  admin confirms (MB.82).
-- **A coven's ingredient is never written.** One that picked the form keeps
-  its `form_id`, its text and its slug through a rename, and through a delete
-  reads its form as no pick, its text moving into that coven's in-use values.
-  An admin writes nothing of a coven's (M6.6). A pick whose row was renamed
-  since is the member's to settle, on M8.17's modal.
-- **The entries are read before the transaction**, as the category delete's
-  are. An entry picking the form in the instant between keeps the old
-  spelling through a rename, or holds a deleted form through a delete. The
-  writer matches `form_id` again, so an entry that picked another form since
-  is not rewritten.
+- **A coven's ingredient is never written.** One whose variant picked the
+  form keeps its `form_id` and its text through a rename, and through a
+  delete reads its form as no pick, its text moving into that coven's in-use
+  values. An admin writes nothing of a coven's (M6.6). A pick whose row was
+  renamed since is the member's to settle, on M8.17's modal.
+- **The clash check reads before the transaction**, as the category delete's
+  does; the carry itself matches `form_id` in its one statement, so a variant
+  picking the form in the instant between is renamed with the rest, and one
+  that picked another form since is not.
 
 The owner's calls on the slug, the redirect and the stale pick are
 [`design-decisions/m5.6a-admin-forms.md`](../design-decisions/m5.6a-admin-forms.md).
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
 ## Group writes (M5.6b)
 
@@ -282,8 +301,9 @@ to`. The form group's say "form" and "forms". A moved form that would take
   collision an index finds inside the transaction, from a race, is read again
   and named the same way.
 - **The rows are moved one at a time** through the writer's `updateById`,
-  not a new writer method: `tests/db/repository/write.test.ts` caps the
-  writer at twenty-two methods, and a group holds a handful of rows.
+  not a new writer method: each of the writer's methods is a decision argued
+  for in its own PR, and a group holds a handful of rows. A deity tradition's
+  delete moves its deities the same way (MB.132).
 - **The rows are read before the transaction**, through the vocabularies' own
   page readers, so "live" means what their lists mean. One added under the
   group in the instant between is left under the deleted group, which every
@@ -292,4 +312,5 @@ to`. The form group's say "form" and "forms". A moved form that would take
 
 The owner's calls on the delete are
 [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md).
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).

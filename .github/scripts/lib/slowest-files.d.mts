@@ -1,4 +1,4 @@
-// Hand-written beside the script, as scripts/doc-citations.d.mts is: `allowJs` is off.
+// Hand-written beside the script, because `allowJs` is off.
 
 export const BUDGET_MS: number;
 

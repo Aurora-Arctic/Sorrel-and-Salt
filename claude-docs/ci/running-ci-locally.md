@@ -23,10 +23,11 @@ workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
   empty under `-W`. `act-check` needs none passed: `checks.yml` resolves an
   empty flag to true precisely so a local run cannot quietly skip the work it
   was asked to do.
-- **`CHECK=build` and `CHECK=audit` are expected to fail locally**, and neither
-  is in `act-test`. The build leg wants `actions/cache@v6` pre-cached the way
-  `act-cache-checkout` pre-caches `checkout-to-app`; the audit leg wants a real
-  PR to comment on.
+- **`CHECK=build` and `CHECK=audit` are left out of `act-test`.** The audit
+  leg is expected to fail locally: it wants a real PR to comment on. The build
+  leg failed because it wanted `actions/cache@v6` pre-cached the way
+  `act-cache-checkout` pre-caches `checkout-to-app`; MB.235 removed that step,
+  and nobody has run the leg under `act` since.
 - **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
   outcome rather than a gap.** Its
   `destructive-ddl-files` input comes from `pr-gate.yml`'s `changes` job, which
@@ -36,10 +37,8 @@ workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
   The leg reads no `github.event.pull_request.body` (MB.48 retired its
   `pr-body` input), which is what makes the scan provable locally at all:
   `npm run check:destructive-ddl -- --all` reads every acknowledgement from
-  the repository itself and is green. What proves the leg's own
-  gating is `tests/guards/destructive-ddl-check.test.ts` (the rules, the
-  file-list resolution, the branch diff and the per-file sidecar correlation,
-  each asserted to fail with its guard removed) and
+  the repository itself and is green. What proves the leg's rules is
+  `tests/guards/destructive-ddl-check.test.ts` (what counts as destructive) and
   `npm run check:destructive-ddl -- --self-test` (the sidecar gating, against
   the fixtures under `scripts/__fixtures__/destructive-ddl/`).
 - **`act-vitest` / `act-playwright` still do not exist**, even though

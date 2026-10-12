@@ -1,4 +1,4 @@
-import type { ExecutionResult } from 'graphql';
+import type { Answer } from '../../../support/graphql/types';
 
 export interface CommonNameConnection {
   edges: { cursor: string; node: Record<string, unknown> }[];
@@ -10,7 +10,6 @@ export interface CompendiumNode {
   name: string;
   canonicalName: string | null;
   nomenclature: string;
-  form: string | null;
   isGlobal: boolean;
   folkNames: string[];
   categories: { name: string; group: { name: string; colorDark: string } }[];
@@ -34,7 +33,7 @@ export interface DuplicateConnection {
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 
-export type Result = ExecutionResult<{ possibleDuplicates: DuplicateConnection }>;
+export type Result = Answer<{ possibleDuplicates: DuplicateConnection }>;
 
 export interface IngredientNode {
   id: string;
@@ -46,15 +45,21 @@ export interface IngredientNode {
   categories: { name: string }[];
 }
 
-export interface WireError {
-  message: string;
-  path?: (string | number)[];
-  extensions?: { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] };
-}
-
-export interface Answer<T> {
-  data?: T | null;
-  errors?: WireError[];
+/** One `IngredientVariant` as ingredient.test.ts selects it (MB.218). */
+export interface IngredientVariantNode {
+  id: string;
+  form: string;
+  formChoice: { id: string } | null;
+  description: string | null;
+  safetyNotes: string | null;
+  elements: string[] | null;
+  planets: string[] | null;
+  zodiacSigns: string[] | null;
+  colors: string[] | null;
+  categories: { name: string }[];
+  substitutes: (SubstituteNode & { variant: { id: string; form: string } | null })[];
+  references: { reference: { title: string }; locator: string | null }[];
+  audit: { createdBy: string; updatedBy: string };
 }
 
 /** One `IngredientDeity`, its curated deity selected by id and tradition (MB.167). */

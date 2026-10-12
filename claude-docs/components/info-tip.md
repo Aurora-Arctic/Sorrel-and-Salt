@@ -34,7 +34,25 @@ It follows WCAG 1.4.13, content on hover or focus:
   cancels that.
 - **It closes on Escape, blur, or the pointer leaving both.** Escape is heard
   on the document, since a tip opened by hover has no focus to listen from,
-  and it closes the tip without moving the focus.
+  and it closes the tip without moving the focus. It is marked handled
+  (`preventDefault`) while a tip is open, so the Escape that closes a tip
+  closes nothing else: inside a modal the `<dialog>` would otherwise take
+  it as a close request too, shutting the modal or asking a changed form to
+  discard (MB.115). With the tip shut, Escape is left alone.
+
+**`useTip`** (`use-tip.ts`) holds that behaviour, the open state, the
+handlers and the Escape listener, so another tip beside a control behaves the
+same without being an ⓘ: `UserList`'s history link, the primary admin's
+crown and its locked Revoke use it too ([`user-list.md`](user-list.md),
+MB.200, MB.59), as does [`IconTip`](icon-tip.md), the Edit pencils' tooltip, and Combobox's entry and qualifier tooltips
+([`combobox.md`](combobox.md)). It takes an optional `canOpen`, asked each
+time the tip would open rather than watched, for a tip that has nothing to
+show at some moments: a Combobox entry whose text fits, a qualifier with no
+detail. Left out, the tip always opens. MB.115 made Combobox's copy of the
+hook, which differed only by `canOpen`, this one. A caller may close a tip
+for reasons of its own through `hide`: Combobox's qualifier closes its tip
+at the first printable key and when its list opens, so it never sits over
+what is being typed.
 
 **The text is in the page while closed**, faded out and `aria-hidden` rather
 than unmounted, so the field that lists the id still reads it as part of its
@@ -47,7 +65,8 @@ it is open.
 The tip is placed against its **nearest positioned ancestor**, not against the
 button, from that ancestor's left edge, **above** it: beneath the label it would
 cover the field, and what is typed in it. It is as
-wide as its text, up to 18rem and never more than the viewport less 2rem. In
+wide as its text, up to `$tip-width` (18rem) and never more than the
+viewport less 2rem. In
 `IngredientForm` that ancestor is the field's label row, which starts at the
 column's edge, so an open tip lies above the label, over the end of the field
 before, and never runs off a phone the way a bubble hung off an icon at the
@@ -58,8 +77,10 @@ control that precedes it in the page.
 ## Styling
 
 Tokens only. The button is the muted ink, the body ink on hover and focus,
-with the focus ring, and a 24px target, WCAG 2.2's minimum, around a 1rem
-glyph that sits beside a label without raising its line much.
+with the focus ring, and a 24px target, WCAG 2.2's minimum, the `$icon-size`
+token, around a `$glyph-size` (1rem) glyph that sits beside a label without
+raising its line much. Both tokens, and `$tip-width`, are shared with
+Combobox's marks and the user list's (MB.115).
 
 The tip is drawn as the low-stock badge is: the `low-stock` palette's tinted
 ground, edge and ink, the `sharp` radius, `caption` size at weight 500. That
@@ -78,15 +99,15 @@ tip's position and width stay its own.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InfoTip/index.stories.tsx):
-`BesideALabel`, in a positioned column a form's width. Hover, focus or tap the
-ⓘ to open it.
+`BesideALabel`, beside a label in a `.field__label-row`, the positioned row a
+form's field gives it, in a column a form's width; and `PhoneDark` and
+`PhoneLight`, the same at 375px. Hover, focus or tap the ⓘ to open it.
 
 ## Testing
 
 `tests/components/InfoTip/index.test.tsx`, in the `dom` project, with fake
-timers for the close delay: closed at first with its text still describing the
-button and a field; opened by hover and closed a moment after the pointer
-leaves; kept open while the pointer is on the tip; opened by focus and closed
-by blur; shut while the field it describes has focus, which still reads its
-text; opened by a tap that a second tap does not
-shut; closed by Escape from anywhere.
+timers for the close delay: closed at first, and shut while the field it
+describes has focus, its text still describing the button and the field;
+opened by hover, kept open while the pointer is on the tip, and closed a
+moment after it leaves; opened by focus and closed by blur; opened by a tap
+that a second tap does not shut; closed by Escape from anywhere.

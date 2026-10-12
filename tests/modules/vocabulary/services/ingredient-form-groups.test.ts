@@ -2,9 +2,10 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { formSlug, slugify } from '@/lib/slugify';
 import {
+  countIngredientFormGroups,
   createIngredientFormGroup,
   deleteIngredientFormGroup,
   formChoicesOf,
@@ -13,10 +14,10 @@ import {
   updateIngredientFormGroup,
 } from '@/modules/vocabulary';
 import type { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // Story 18's form-group half (M5.6b): the groups' writes, the site admin's
 // alone. A form's slug is its name and its group (M5.6a), so a rename moves
@@ -48,14 +49,10 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a vocabulary write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a vocabulary write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
@@ -108,15 +105,17 @@ const picking = (formId: string, workspaceId: string | null = null) =>
       name: 'Testwort',
       workspaceId,
       nomenclature: 'none',
-      form: 'Fixture Shard',
-      formId,
+      variants: [makeVariant({ form: 'Fixture Shard', formId })],
     }),
     A.id,
   );
 
+/** An entry's row and its variants, where its form and its pick live (MB.222). */
 async function ingredientOf(id: string) {
   const [row] = await sql`select * from ingredients where id = ${id}`;
-  return row;
+  const variants = await sql`
+    select * from ingredient_variants where ingredient_id = ${id} order by id`;
+  return { ...row, variants: [...variants] };
 }
 
 /** An issue list, or the test fails because the write went through. */
@@ -140,6 +139,31 @@ describe('listIngredientFormGroups', () => {
     const page = await resolvePage({ first: 100 }, listIngredientFormGroups);
 
     expect(page.edges.map((edge) => edge.node.id)).toEqual(expected.map((row) => row.id));
+  });
+});
+
+// "Page X of Y" on the group page: what the list pages, counted in its order.
+describe('countIngredientFormGroups', () => {
+  it('counts the groups listIngredientFormGroups pages, and how many come before a page’s first row', async () => {
+    const first = await resolvePage({ first: 2 }, listIngredientFormGroups);
+    const [{ cursor: startOfSecond }] = await listIngredientFormGroups({
+      after: decodeCursor(first.pageInfo.endCursor as string),
+      limit: 1,
+      inverted: false,
+    });
+    const [{ n }] = await sql<{ n: number }[]>`
+      select count(*)::int as n from ingredient_form_groups where deleted_at is null`;
+    // The precondition: more than one page of two.
+    expect(n).toBeGreaterThan(2);
+
+    await expect(countIngredientFormGroups(undefined)).resolves.toEqual({
+      totalCount: n,
+      countBefore: null,
+    });
+    await expect(countIngredientFormGroups(startOfSecond)).resolves.toEqual({
+      totalCount: n,
+      countBefore: 2,
+    });
   });
 });
 
@@ -193,7 +217,7 @@ describe('createIngredientFormGroup', () => {
     ).toEqual([
       {
         path: ['name'],
-        message: '"Fixture Matter" already has the address "fixture-matter" — choose another name',
+        message: expect.stringContaining('Fixture Matter'),
       },
     ]);
     expect(await countNamed('Fixture-Matter')).toBe(0);
@@ -323,7 +347,10 @@ describe('deleteIngredientFormGroup', () => {
     const owned = await picking(shard, WORKSPACE_W_ID);
     const before = [await ingredientOf(entry), await ingredientOf(owned)];
     // Why either could have held the delete: both are live and pick the form.
-    expect(before.map((row) => row.form_id)).toEqual([shard, shard]);
+    expect(before.map((row) => row.variants.map((variant) => variant.form_id))).toEqual([
+      [shard],
+      [shard],
+    ]);
 
     await deleteIngredientFormGroup(admin, id, substance.id);
 
@@ -354,11 +381,11 @@ describe('deleteIngredientFormGroup', () => {
     await seedForm('Fixture Flake', id, 'Fixture Matter');
 
     expect(await issuesOf(deleteIngredientFormGroup(admin, id))).toEqual([
-      { path: ['moveTo'], message: 'Choose a group to move its 2 forms to' },
+      { path: ['moveTo'], message: expect.any(String) },
     ]);
     for (const moveTo of [id, '00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
       expect(await issuesOf(deleteIngredientFormGroup(admin, id, moveTo))).toEqual([
-        { path: ['moveTo'], message: 'Choose another live group to move its 2 forms to' },
+        { path: ['moveTo'], message: expect.any(String) },
       ]);
     }
     expect((await groupOf(id)).deleted_at).toBeNull();

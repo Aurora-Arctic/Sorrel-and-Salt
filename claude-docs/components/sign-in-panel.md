@@ -1,7 +1,7 @@
 # SignInPanel
 
-`src/components/SignInPanel/` — the `/sign-in` page's OAuth buttons, error
-state and unavailable-provider treatment. Server component `src/app/sign-in/page.tsx`
+`src/components/SignInPanel/` — the `/sign-in` page's heading, OAuth buttons,
+error state and unavailable-provider treatment, on a card ground. Server component `src/app/sign-in/page.tsx`
 reads `?next=`/`?error=` and the environment, and hands the results down as
 props; this component does the rendering and the click.
 
@@ -39,24 +39,46 @@ is how the callback tells it from an explicit `/coven`, a `callbackURL` of
 
 Each button carries `.btn` (`src/scss/_primitives.scss`) for its **shape** —
 padding, radius, shadow, icon-and-label layout, focus ring, transition — the
-one primitive every button in the app now shares. **Colour is never `.btn`'s
-here.** Each provider brings its own published colour and mark instead — a
-white/black-adaptive ground with the multicolour "G" for Google, Discord's
-`#5865F2` blurple, Facebook's `#1877F2` blue, Microsoft's four-colour square
-mark (`icons.tsx`) — because a "Continue with X" button is recognized by its
-brand's own convention, and re-skinning it in the app's palette would make it
-harder to recognize, not more on-brand. That is the one place in the app that
-intentionally sets colours as hex literals instead of `$accent`/`$secondary`
-tokens. Every colour rule is written `.sign-in-panel__button--<id>.btn`
-rather than the single class alone: `.btn` and this component's own
-stylesheet are two separate compiled CSS files, and nothing guarantees which
-one a bundler emits first, so a same-specificity single-class rule could lose
-a property `.btn` also sets (its `border` shorthand touches `border-color`,
-which every provider overrides) depending on load order neither file
-controls. The extra class is what makes the color win regardless. The same
-compound rule puts the edge back to 1px from `.btn`'s 1.6px: Google's and
-Microsoft's guidelines draw their buttons with a 1px stroke, and the other
-two take it too so the roster stays one height.
+one primitive every button in the app shares. **Colour is never `.btn`'s
+here.** Each provider brings its own published colour and mark instead: a
+white button with the multicolour "G" for Google, Discord's blurple with its
+white mark, Facebook's blue with a white "f", and a white button with
+Microsoft's four-colour square. A "Continue with X" button is recognised by
+its brand's own look, and re-skinning it in the app's palette would make it
+harder to recognise, not more on-brand.
+
+**The colours come from one map**, `$brand-palettes` in
+`src/scss/_variables.scss`, read through `brand-color($brand, $part)`
+([`styling.md`](../styling.md), "Brand colours", which also has every
+measured contrast). Each brand has a `fill` (the button's ground), an `ink`
+(its label), a `hover` (the ground under the pointer or keyboard focus) and,
+for the two white buttons, an `edge`: the outline that keeps a white button
+visible on the light page, at 3:1 or more against it (WCAG 1.4.11, the
+contrast a control's outline needs). An SVG's own fills inside a mark are
+artwork, and stay in `icons.tsx`. Before MB.116 the hexes were written into
+this stylesheet and copied into the admin user list's, and Google's edge,
+`#dadce0`, measured 1.13:1 on the light page.
+
+The stylesheet writes one rule per brand from the map, in a Sass `@each`
+loop, through the `brand-button($brand)` mixin. Each rule is
+`.sign-in-panel__button--<id>.btn` rather than the single class alone: `.btn`
+and this component's own stylesheet are two separate compiled CSS files, and
+nothing guarantees which one a bundler emits first, so a same-specificity
+single-class rule could lose a property `.btn` also sets (its `border`
+shorthand touches `border-color`, which every provider overrides) depending on
+load order neither file controls. The extra class is what makes the colour
+win regardless. For the same reason each hover rule restates the brand's
+`ink`, since `.btn` changes its text colour on hover. The same compound rule
+puts the edge back to 1px from `.btn`'s 1.6px: Google's and Microsoft's
+guidelines draw their buttons with a 1px stroke, and the other two take it
+too so the roster stays one height.
+
+**The marks are `PROVIDER_MARKS`** (`icons.tsx`), one entry per provider id,
+which this panel and the shared `ProviderMark` circle both read
+([`provider-mark.md`](provider-mark.md)). The panel passes `chip`, so
+Facebook's mark is the white "f" on its blue chip, which `icons.scss` colours
+from the map; `icons.tsx` imports that stylesheet itself, so the mark brings
+its chip wherever it is shown.
 
 The icons are a close hand recreation of each provider's own published mark
 (Google's identity branding guidelines; Discord's and Facebook's own
@@ -78,7 +100,10 @@ a genuine bug caught in review before this shipped, not a hypothetical.
 
 A provider whose credentials are unset in this environment (`configured` from
 `configuredProviders()`) still renders — every roster provider always has a
-button — but greyed and described by a note through `aria-describedby`.
+button — but greyed and described by a note through `aria-describedby`. The
+note is the shared `ProviderUnavailableNote`
+([`provider-mark.md`](provider-mark.md), "The unavailable note"), which the
+account page's sign-in methods also show.
 
 **The greying is `.btn[aria-disabled='true']`, a universal primitive**
 (`src/scss/_primitives.scss`), not a sign-in-only style: any disabled button
@@ -103,15 +128,18 @@ rather than relying on the DOM attribute to stop it.
 ## Last used
 
 The button for the provider this browser last signed in with carries a "Last
-used" badge hanging off its top-left corner. Its accessible name is an
+Used" badge hanging off its top-left corner. Its accessible name is an
 `aria-label`, "Continue with Discord, last used": the name built from the
-button's text would run the label into the badge ("Discord Last used"), and the
-comma gives a screen reader a pause without displaying anything. Only the marked
+button's text would run the label into the badge ("Discord Last Used"), and the
+comma gives a screen reader a pause without displaying anything. The badge's
+word is title case, as a label is; inside the sentence of the name it is lower
+case. Only the marked
 button carries one. The provider comes from the
 `better-auth.last_used_login_method` cookie, which Better Auth's `lastLoginMethod` plugin sets on a callback that
 signs the browser in (`auth/plugins.md`, "The last-used provider"). It exists so that
-MB.71's `account_not_linked` sentence, "sign in that way", has an answer the
-server could not give without revealing that the address has an account. No
+MB.71's `account_not_linked` sentence, "use the sign-in method you used
+before", has an answer the server could not give without revealing that the
+address has an account. No
 cookie, or a value naming no roster provider, marks nothing. An unavailable
 provider is still marked, because that is still what the browser used last.
 
@@ -138,34 +166,73 @@ A pre-redirect failure always shows `GENERIC_SIGN_IN_ERROR`
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
 
-The alert is a `role="alert"` element that does not exist in the DOM absent a
-message, rather than an empty live region — matching how a screen reader
-announces role="alert" content only on it actually appearing.
+The message is the shared `Notice` as an error ([`notice.md`](notice.md)):
+the `.notice--error` look every other page's error wears, with its warning
+triangle, and `role="alert"`. It does not exist in the DOM absent a message,
+rather than sitting there as an empty live region, since a screen reader
+announces an alert only when it appears.
 
 ## Styling
+
+The page's `main` is the page frame, `.page-frame.page-frame--narrow`
+([`styling.md`](../styling.md), "The page frame"), which centres the panel
+and holds it clear of the top inset. The panel itself is a `.panel`, the card
+ground (`_primitives.scss`), so the one thing on the page sits on a surface
+of its own, as the owner chose in MB.116. It fills the frame's narrow column
+(`$narrow-column`, 28rem) and pads itself a step more than the `.panel`
+default at the sides and below, `space(6)`, keeping the default `space(5)`
+above, since the card is the one thing on the page and the owner asked for
+it bigger there at the sign-off. The rule is
+`.sign-in-panel.panel`, compounded so it outranks the app's `body .panel`
+([`styling.md`](../styling.md), "The page frame"). The
+buttons sit `space(4)` apart, the room the last-used badge needs and no more. The panel is `border-box`, so the padding
+stays inside the column.
+
+Its children stretch to the column. The head is a `.header`, centred: the
+`h1` and a `.lede` saying what the buttons are for, "Sign in, or create your
+account, with one of these.", since the first sign-in is also how an account
+is made. The buttons are one `max-content` grid column, centred, so every
+button is as wide as the widest label. Gaps are `space(4)` between the head,
+the notice and the buttons, and `space(1)` between a button and its
+unavailable note.
 
 The last-used badge is `.badge--last-used`, the solid accent palette
 (`styling.md`, "Badge palettes"), so it looks like the ingredient card's Toxic
 and Low stock badges. `.sign-in-panel__last-used` only places it: taken out of
 the flow, its top 1.125rem above the button's top edge and 1.25rem out past
-its left edge, so the marked button stays the size of the rest. The button is
-`position: relative` to hold it. It casts `$shadow-floating`, the shadow
-`.btn` itself casts, which lifts it off the brand fill it overlaps. The badge
-sets its own colours, so the brand fills and their hover states never reach its
-label. The provider column's gap is 2rem, with 1rem above it, leaving room for a
-badge that sits mostly above its button, the first one's included. Tokens and mixins beyond the per-brand button fills:
-`theme-transition()`, `focus-ring()`, `reduced-motion`, `$shadow-floating`
-(the badge), `$text-muted` (the unavailable state), `$secondary` and
-`$surface-card` (the error banner).
+its left edge, so the marked button stays the size of the rest. Those two
+offsets are the badge's geometry against the button's edge, so they are off
+the spacing scale. The button is `position: relative` to hold it. It casts
+`$shadow-floating`, the shadow `.btn` itself casts, which lifts it off the
+brand fill it overlaps. The badge sets its own colours, so the brand fills and
+their hover states never reach its label. The button column's gap is
+`space(6)`, with `space(4)` above it, leaving room for a badge that sits
+mostly above its button, the first one's included.
+
+Microsoft's button is white in both themes, with the `#808080` edge that
+clears 3:1 on the light page (`styling.md`, "Brand colours"), the owner's call
+in MB.116 over Microsoft's own dark button.
+
+Tokens and functions beyond the brand map: `space()`, `$shadow-floating`
+(the badge); the card, the error, the unavailable note and the greyed button
+are the primitives' (`.panel`, `.notice--error`, `.meta`,
+`.btn[aria-disabled='true']`).
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignInPanel/index.stories.tsx) —
-`Default` (every provider configured), `LastUsed` (Discord marked),
-`WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
-one pair in `.env.local`, the rest greyed out). The mark is read from the
-workshop's own cookie, which outlives the story that wrote it, so every story
-sets or clears it before rendering. Render-only, no test ids, no snapshots.
+every story inside the page's own `main.page-frame.page-frame--narrow`, so the
+workshop shows what the page shows:
+
+- `Default` (every provider configured), `LastUsed` (Discord marked),
+  `WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
+  one pair in `.env.local`, the rest greyed out);
+- `PhoneDark` and `PhoneLight`, at 375px with the error and the mark both
+  showing, the badge nearest the screen's edge.
+
+The mark is read from the workshop's own cookie, which outlives the story that
+wrote it, so every story sets or clears it before rendering. Render-only, no
+test ids, no snapshots.
 
 ## Testing
 
@@ -175,7 +242,7 @@ assigning `window.location.href`, which jsdom cannot follow
 (`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
 client). The rest of the module is the real one, so the last-used read is the
 client plugin's own, against jsdom's `document.cookie`. Covers: every roster
-provider renders as a native `<button>` by accessible name; a click calls
+provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
 explicit `/coven`;
@@ -195,10 +262,10 @@ CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in
 for the other:
 
-| Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                |
-| ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the `.sign-in-panel__note` text, Facebook's transparent chip), the error state, and the last-used badge, waited for since it arrives after hydration |
-| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme               |
+| Spec                                             | Server state                                | Covers                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/e2e/sign-in.spec.ts`                      | No provider configured (8001 and up)        | Every button `aria-disabled` and still reached by Tab; axe over the greyed page (the unavailable note's text, Facebook's transparent chip) and the error state; no sideways scroll at 375px. The last-used badge is the configured spec's and `tests/components/SignInPanel/index.test.tsx`'s     |
+| `tests/e2e/sign-in-configured-providers.spec.ts` | All four configured, placeholder ids (8100) | Every button available with no note; axe over the brand colours at rest, then once per button while hovered — after asserting its background actually changed; and the last-used badge on a live button, once per theme, with no sideways scroll at 375px, where the badge hangs nearest the edge |
 
 **The configured scan exists because the greyed one could not see the brand
 colours**: an unavailable button drops its brand class, so a CI with no

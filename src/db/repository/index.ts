@@ -19,6 +19,7 @@ export {
   findOneByIdInWorkspace,
   findOneInWorkspace,
   findPage,
+  findPageCount,
   findPageInWorkspace,
 } from './finders';
 export {
@@ -35,22 +36,25 @@ export {
   findDeitiesOfIngredients,
   findIngredientSuggestions,
   findManyOfIngredients,
+  findManyOfVariants,
   findOneIngredient,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
+  findWorkspaceIngredientByIdentity,
 } from './ingredients';
-export {
-  findManyReferences,
-  findReferenceSuggestions,
-  findReferencesOfIngredients,
-} from './references';
+export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
   findAstrologyValues,
   findCategoryCount,
   findCategoryPage,
+  findCompendiumFormRenameClashes,
   findCuratedRowsByIds,
   findCuratedRowsByName,
+  findDeityCount,
+  findDeityPage,
+  findGroupCount,
+  findGroupPage,
   findIngredientFormValueCount,
   findIngredientFormValues,
   findVocabularySuggestions,
@@ -58,13 +62,24 @@ export {
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
-export { findProvidersOfUsers, findUserByEmail, findUserPage } from './users';
-export { findAdminInvitationByToken } from './admin-invitations';
+export {
+  findPrivilegeChangeCount,
+  findPrivilegeChangePage,
+  findProvidersOfUsers,
+  findUserByEmail,
+  findUserCount,
+  findUserPage,
+} from './users';
+export {
+  findInvitationByToken,
+  findPendingInvitationsInWorkspace,
+  findPendingSiteInvitationCount,
+  findPendingSiteInvitationPage,
+} from './invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
+export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
-  AdminInvitationRow,
-  AdminInvitationValues,
   AstrologyList,
   AstrologyValueFilter,
   AstrologyVocabulary,
@@ -74,21 +89,29 @@ export type {
   Claimant,
   CommonNameSuggestion,
   CompendiumScore,
+  DeityFilter,
   DeitySuggestion,
-  FormRenameEntry,
   FormSuggestion,
+  GroupFilter,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
   IngredientRow,
+  InvitableRole,
+  InvitationRow,
   JoinedRow,
   LinkedProvider,
+  PrivilegeChangeFilter,
   ReferenceLinkRow,
   ReferenceRow,
   SimilarityScore,
+  SiteInvitationFilter,
+  SiteInvitationRow,
+  SiteInvitationValues,
   SlugRedirect,
   SortPart,
   SuggestingVocabulary,
   UserFilter,
   VocabularySuggestion,
+  WorkspaceInvitationValues,
 } from './types';

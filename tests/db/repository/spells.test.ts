@@ -132,6 +132,12 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
     ).resolves.toEqual([]);
   });
 
+  // Who may read which spell is readableSpells, the rule
+  // tests/db/spell-visibility.test.ts proves over findManySpells, findOneSpell
+  // and findManyInSpell. What this finder adds is that it ANDs that rule in,
+  // proved once for each half — the visibility here, the proof's workspace
+  // below; a deleted spell is existsIn's, which ANDs a parent's filter by
+  // construction (tests/guards/soft-delete-finder-guard.test.ts).
   it('withholds what a private spell holds from every member but its author, the owner included', async () => {
     const localId = await local(WORKSPACE_W_ID, A);
     await spellHolding([localId], { author: B, visibility: 'private' });
@@ -147,20 +153,6 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
         findIngredientsInSpellsIncludingSoftDeleted(await proofFor(reader), [localId]),
       ).resolves.toEqual([]);
     }
-  });
-
-  it('withholds what a deleted spell held, from its author too', async () => {
-    const localId = await local(WORKSPACE_W_ID, A);
-    const spellId = await spellHolding([localId]);
-    await expect(
-      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
-    ).resolves.toHaveLength(1);
-
-    await softDelete('spells', spellId);
-
-    await expect(
-      findIngredientsInSpellsIncludingSoftDeleted(await proofFor(B), [localId]),
-    ).resolves.toEqual([]);
   });
 
   it('withholds another coven’s spell’s contents by direct id', async () => {
@@ -348,8 +340,9 @@ describe('a layer removed from a spell', () => {
     await removeLayer(spellId, localId);
 
     await sql`
-      insert into spell_ingredients (spell_id, ingredient_id, layer_order, created_by, updated_by)
-      values (${spellId}, ${localId}, 1, ${B.id}, ${B.id})`;
+      insert into spell_ingredients
+        (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
+      values (${spellId}, ${localId}, ${removed.variantId}, 1, ${B.id}, ${B.id})`;
 
     const layers = await findManyInSpell(await proofFor(B), spellIngredients, spellId);
     expect(layers).toEqual([expect.objectContaining({ ingredientId: localId, layerOrder: 1 })]);

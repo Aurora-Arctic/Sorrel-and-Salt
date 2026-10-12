@@ -2,7 +2,8 @@
 
 - **`BETTER_AUTH_SECRET` is required, but only at `NODE_ENV=production`** —
   `next dev` and Vitest (`NODE_ENV=test`) never need it set. This is
-  `src/lib/auth.ts`'s own `authSecret()` check, called before `betterAuth()`
+  `src/lib/auth.ts`'s own check, `requiredInProduction('BETTER_AUTH_SECRET')`
+  (`src/lib/env.ts`), called before `betterAuth()`
   — **not** Better Auth's built-in equivalent (`validateSecret`, which is
   documented to throw under the same condition). That internal check runs
   inside an async context builder whose rejection gets swallowed somewhere
@@ -28,7 +29,8 @@ build`), `.github/workflows/playwright.yml` and `Docker/docker-compose.yaml`'s
   convention as the `sorrel`/`sorrel` Postgres credentials already there).
   Production and staging get a real value via M0.27's secrets matrix
   (`claude-docs/secrets.md`).
-- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms** (MB.60): unset at
+- **`ADMIN_BOOTSTRAP_EMAIL` is required on the same terms** (MB.60), by the
+  same `requiredInProduction`, which `src/lib/primary-admin.ts` calls: unset at
   `NODE_ENV=production`, importing `src/lib/auth.ts` throws
   `ADMIN_BOOTSTRAP_EMAIL is not set`, so a deploy fails its build rather than
   running with no primary admin. The three places above that build set the

@@ -5,39 +5,27 @@ import {
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
 } from '../schema/ingredient-enums';
-import { RowId } from '../../../lib/validation';
+import { RowId, optionalText, requiredText } from '../../../lib/validation';
 import { formatLocator } from './reference-format';
 import type {
   DeityEntry,
   DeityFields,
+  LinkOrName,
+  LinkOrNameFields,
+  LinkOrNameMessages,
   Lists,
   Parsed,
   ReferenceLinkEntry,
   ReferenceLinkFields,
   SubstituteEntry,
   SubstituteFields,
+  VariantFields,
 } from './types';
 
 // One ingredient as IngredientForm submits it and the service parses it: the
 // resolver runs these before a request is sent, and the service runs them
 // again because the browser is not the only caller. Two variants, one per
 // tier — see claude-docs/validation.md, "The two ingredient variants".
-
-/** Required text: trimmed, and blank is refused — as missing, not as a value. */
-const requiredText = (message: string) =>
-  z.string({ error: message }).trim().min(1, { error: message });
-
-/**
- * Optional text: trimmed, and a blank is an absence rather than an error —
- * '' is what a form sends for a field nobody touched, so it becomes null,
- * which the CHECKs on `canonical_name` and `form` accept. No format regex —
- * §5's formal names defeat one.
- */
-const optionalText = z
-  .string()
-  .trim()
-  .nullish()
-  .transform((value) => (value === '' ? null : value));
 
 /**
  * Blank entries are kept through the cross-field rules — an issue's index
@@ -46,9 +34,12 @@ const optionalText = z
  */
 const textList = z.array(z.string().trim()).nullish();
 
+/** The entries of a list that are not blank, in order. */
+const nonBlank = <T extends string>(list: T[]) => list.filter((entry) => entry !== '');
+
 function withoutBlanks<T extends string>(list: T[] | null | undefined) {
   if (list == null) return list;
-  const entries = list.filter((entry) => entry !== '');
+  const entries = nonBlank(list);
   return entries.length > 0 ? entries : null;
 }
 
@@ -67,7 +58,7 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
  * a repeat is refused at the repeat rather than dropped, since the form never
  * offers a chosen element twice, so one arriving is a caller to correct.
  */
-const elementList = z
+const elementArray = z
   .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
   .superRefine((elements, ctx) => {
     elements.forEach((element, index) => {
@@ -78,24 +69,30 @@ const elementList = z
         message: `${element[0]?.toUpperCase()}${element.slice(1)} is already chosen`,
       });
     });
-  })
-  .nullish();
+  });
+const elementList = elementArray.nullish();
 
 /**
  * A substitute links an ingredient or names one (DESIGN.md §5,
  * `ingredient_substitutes`): either half trimmed, and blank as absent, so
- * `substituteRules` decides between them. A blank entry is refused rather
+ * `linkOrNameRules` decides between them. A blank entry is refused rather
  * than dropped, so a service's refusal, made after the parse, still counts
  * the entries the caller sent.
  */
-const substitute = z.object({ ingredientId: optionalText, name: optionalText });
+const substitute = z.object({
+  ingredientId: optionalText(),
+  // The linked ingredient's form it names (MB.215): whether it is a form of
+  // that ingredient reads the database, so it is the service's.
+  substituteVariantId: optionalText(),
+  name: optionalText(),
+});
 
 /**
  * A deity links the curated one picked or names one (DESIGN.md §5,
  * `ingredient_deities`), as a substitute does, and is refused rather than
  * dropped when blank for the same reason: its index is its position.
  */
-const deity = z.object({ deityId: optionalText, name: optionalText });
+const deity = z.object({ deityId: optionalText(), name: optionalText() });
 
 /**
  * A reference the ingredient cites (DESIGN.md §7): an existing reference's id,
@@ -107,13 +104,47 @@ const deity = z.object({ deityId: optionalText, name: optionalText });
  */
 const referenceLink = z.object({
   referenceId: z.string({ error: 'Choose a source' }).trim(),
-  locator: optionalText.transform((value) => (value == null ? value : formatLocator(value))),
+  locator: optionalText(formatLocator),
 });
 
+/** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[],
+): LinkOrName<IdKey>[];
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[] | null | undefined,
+): LinkOrName<IdKey>[] | undefined;
+function asLinkOrName<IdKey extends string>(
+  idKey: IdKey,
+  entries: LinkOrNameFields<IdKey>[] | null | undefined,
+): LinkOrName<IdKey>[] | undefined {
+  // A computed key widens to a string index, so the shape is asserted back.
+  return entries?.map((entry) => {
+    const id = entry[idKey];
+    return (
+      id ? { [idKey]: id, name: null } : { [idKey]: null, name: entry.name ?? '' }
+    ) as LinkOrName<IdKey>;
+  });
+}
+
+/** Each substitute as the one half it carries, with the form a link names. */
+function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
+  return asLinkOrName('ingredientId', entries).map((entry, index) => ({
+    ...entry,
+    substituteVariantId: entry.ingredientId ? (entries[index].substituteVariantId ?? null) : null,
+  }));
+}
+
+/** Each reference as its id and locator, once `referenceRules` has held it to an id. */
+function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
+  return entries.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
+}
+
 /**
- * Each substitute and deity as the one half it carries, once
- * `substituteRules` and `deityRules` have held it to one, and each reference
- * as its id and locator, once `referenceRules` has held it to an id.
+ * Each substitute and deity as the one half it carries, and each reference as
+ * its id and locator, once `referenceRules` has held it to an id.
  */
 function asEntries<
   T extends {
@@ -130,42 +161,88 @@ function asEntries<
 } {
   return {
     ...value,
-    substitutes: value.substitutes?.map(({ ingredientId, name }): SubstituteEntry =>
-      ingredientId ? { ingredientId, name: null } : { ingredientId: null, name: name ?? '' },
-    ),
-    deities: value.deities?.map(({ deityId, name }): DeityEntry =>
-      deityId ? { deityId, name: null } : { deityId: null, name: name ?? '' },
-    ),
-    references: value.references?.map(({ referenceId, locator }): ReferenceLinkEntry => ({
-      referenceId,
-      locator: locator ?? null,
-    })),
+    substitutes: value.substitutes ? asSubstitutes(value.substitutes) : undefined,
+    deities: asLinkOrName('deityId', value.deities),
+    references: value.references ? asReferences(value.references) : undefined,
   };
 }
 
+/**
+ * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`;
+ * MB.215): its text, never blank, and its pick, its own description, safety
+ * note and lists, and its own substitutes, references and categories, each
+ * held to the ingredient's own rules and pathed beneath the variant. `id`
+ * names a form the ingredient already holds, so a save keeps that row across
+ * a respelling; whether it is this ingredient's is the service's to read.
+ * Every field but `id` is sent, `""` or `[]` for none, as the input type
+ * declares it: an entry replaces the row it names, so a field left out would
+ * be a silent clear (MB.159). The parse keeps `""` and `[]` as sent, blank
+ * list entries dropped after the rules, so what it gives back is still an
+ * input the type takes; `resolvePicks` reads each as none.
+ */
+const variant = z
+  .object({
+    id: optionalText(),
+    form: requiredText('Name the form'),
+    formId: z.string().trim(),
+    description: z.string().trim(),
+    safetyNotes: z.string().trim(),
+    elements: elementArray,
+    planets: z.array(z.string().trim()),
+    zodiacSigns: z.array(z.string().trim()),
+    colors: z.array(z.string().trim()),
+    categoryIds: z.array(z.string().trim()),
+    substitutes: z.array(substitute),
+    references: z.array(referenceLink),
+  })
+  .superRefine((value, ctx) => {
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    for (const key of ['id', 'formId'] as const) {
+      const id = value[key];
+      if (id && !RowId.safeParse(id).success) {
+        ctx.addIssue({ code: 'custom', path: [key], message: 'No such form' });
+      }
+    }
+    for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
+      refuseRepeats(field, value[field], ctx);
+    }
+    substituteRules(value.substitutes, ctx);
+    formLinkRules(value.substitutes, ctx);
+    referenceRules(value.references, ctx);
+    categoryRules(value.categoryIds, ctx);
+  })
+  .transform((value) => ({
+    ...value,
+    planets: nonBlank(value.planets),
+    zodiacSigns: nonBlank(value.zodiacSigns),
+    colors: nonBlank(value.colors),
+    substitutes: asSubstitutes(value.substitutes),
+    references: asReferences(value.references),
+  }));
+
 const fields = {
   name: requiredText('Give the ingredient a name'),
-  canonicalName: optionalText,
-  form: optionalText,
-  // The curated form picked, beside its text (MB.165): whether it names one,
-  // and the text that row's name, are the service's to read.
-  formId: optionalText,
-  description: optionalText,
+  // No format regex: §5's formal names defeat one.
+  canonicalName: optionalText(),
+  description: optionalText(),
   elements: elementList,
-  // Lists of free text like `form`'s one value (MB.134): the vocabularies
+  // Lists of free text like a variant's form (MB.134): the vocabularies
   // suggest, and nothing here refuses — the compendium service holds its tier
   // to them against the database (MB.162), and a coven's stay free text.
   planets: textList,
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
-  safetyNotes: optionalText,
+  safetyNotes: optionalText(),
   substitutes: z.array(substitute).nullish(),
   references: z.array(referenceLink).nullish(),
   folkNames: textList,
   // The categories it is filed under (MB.125): whether each names a live
   // category is the service's to read, and a repeat is written once there.
   categoryIds: z.array(z.string().trim()).nullish(),
+  // Its forms (MB.215), the only place a form is written since MB.222.
+  // Absent is none, as every child list's absence is.
+  variants: z.array(variant).nullish(),
 };
 
 const nomenclature = z.enum(NOMENCLATURE_KINDS, {
@@ -178,8 +255,7 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
 /**
  * The rules across fields: the database's kind↔name CHECK — `none` takes no
  * formal name, a named kind needs one, `unknown` takes either — a folk name
- * that is neither the name nor another folk name, a picked form with its
- * text, and each list entry once.
+ * that is neither the name nor another folk name, and each list entry once.
  */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
@@ -199,23 +275,19 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
-  // Case-folded to match the lower(name) unique index on folk names.
-  const seen = new Set<string>();
-  let nameRepeated = false;
-  (value.folkNames ?? []).forEach((folkName, index) => {
-    if (folkName === '') return;
-    const key = folkName.toLowerCase();
-    if (key === value.name.toLowerCase()) nameRepeated = true;
-    else if (seen.has(key)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['folkNames', index],
-        message: 'This folk name is already listed',
-      });
-    }
-    seen.add(key);
-  });
-  if (nameRepeated) {
+  // Case-folded to match the lower(name) unique index on folk names. A folk
+  // name that is the name is refused once, at the name, rather than as a repeat.
+  const folkNames = value.folkNames ?? [];
+  const nameKey = value.name.toLowerCase();
+  for (const index of repeatsOf(folkNames)) {
+    if (folkNames[index].toLowerCase() === nameKey) continue;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['folkNames', index],
+      message: 'This folk name is already listed',
+    });
+  }
+  if (folkNames.some((folkName) => folkName !== '' && folkName.toLowerCase() === nameKey)) {
     ctx.addIssue({
       code: 'custom',
       path: ['name'],
@@ -223,7 +295,6 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
-  formRules(value, ctx);
   for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
     refuseRepeats(field, value[field] ?? [], ctx);
   }
@@ -231,97 +302,154 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   deityRules(value.deities ?? [], ctx);
   referenceRules(value.references ?? [], ctx);
   categoryRules(value.categoryIds ?? [], ctx);
+  variantRules(value.variants ?? [], ctx);
 }
 
 /**
- * A picked form is an id, and stands beside its text, as
- * `ingredients_form_id_has_form` holds it; whether the text is that row's name
- * is read against the database by the service (MB.167).
+ * The forms across the list (MB.215): each folded form once, as
+ * `ingredient_variants_form_unique` holds it, and each id once, since two
+ * entries keeping one row would each rewrite it. Refused at the repeat; each
+ * variant's own rules ran in its schema.
  */
-function formRules({ form, formId }: Parsed, ctx: z.RefinementCtx) {
-  if (formId == null) return;
-  // Not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(formId).success) {
-    ctx.addIssue({ code: 'custom', path: ['formId'], message: 'No such form to pick' });
-  } else if (form == null) {
-    ctx.addIssue({ code: 'custom', path: ['form'], message: 'Name the form you picked' });
+function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
+  for (const index of repeatsOf(entries.map((entry) => entry.form))) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['variants', index, 'form'],
+      message: 'This form is already listed',
+    });
   }
+  const ids = new Set<string>();
+  entries.forEach(({ id }, index) => {
+    if (id == null) return;
+    if (ids.has(id)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['variants', index, 'id'],
+        message: 'This form is already listed',
+      });
+    }
+    ids.add(id);
+  });
+}
+
+/**
+ * Where each entry repeats an earlier one but for case, the fold the
+ * lower(name) unique indexes make: its position in the list as sent, blanks
+ * skipped but counted, so a refusal lands at the row the form sent it in.
+ */
+function repeatsOf(entries: readonly string[]): number[] {
+  const seen = new Set<string>();
+  return entries.flatMap((entry, index) => {
+    if (entry === '') return [];
+    const key = entry.toLowerCase();
+    if (seen.has(key)) return [index];
+    seen.add(key);
+    return [];
+  });
 }
 
 /**
  * Each entry of an ordered list once, folded as folk names are: a repeat but
- * for case and spacing is refused at the repeat, at the row the form sent it
- * in, blanks counted (MB.167).
+ * for case and spacing is refused at the repeat (MB.167).
  */
 function refuseRepeats(field: string, entries: readonly string[], ctx: z.RefinementCtx) {
-  const seen = new Set<string>();
-  entries.forEach((entry, index) => {
-    if (entry === '') return;
-    const key = entry.toLowerCase();
-    if (seen.has(key)) {
-      ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
+  for (const index of repeatsOf(entries)) {
+    ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
+  }
+}
+
+/**
+ * Each entry of `field` is exactly one of a link, by `idKey`, and a name,
+ * and listed once: the same row linked twice, or the same name typed twice in
+ * any case — each table's two partial unique indexes' keys — is refused at
+ * the repeat. Two links to rows sharing a name are two rows, and a name equal
+ * to a linked row's is text beside a link, so neither is a repeat. A link is
+ * compared as sent, as the index compares it.
+ */
+function linkOrNameRules<IdKey extends string>(
+  field: string,
+  idKey: IdKey,
+  messages: LinkOrNameMessages,
+) {
+  return (entries: readonly LinkOrNameFields<IdKey>[], ctx: z.RefinementCtx) => {
+    const refuse = (index: number, message: string) =>
+      ctx.addIssue({ code: 'custom', path: [field, index], message });
+    // Only an entry with no link is a name, so the rest count as blanks.
+    const namesRepeated = new Set(
+      repeatsOf(entries.map((entry) => (entry[idKey] ? '' : (entry.name ?? '')))),
+    );
+    const links = new Set<string>();
+
+    entries.forEach((entry, index) => {
+      const link = entry[idKey];
+      if (link && entry.name) {
+        refuse(index, messages.both);
+      } else if (link) {
+        // Not a uuid names nothing, and would be a driver error at the comparison.
+        if (!RowId.safeParse(link).success) refuse(index, messages.noSuchLink);
+        else if (links.has(link)) refuse(index, messages.linkRepeated);
+        links.add(link);
+      } else if (entry.name) {
+        if (namesRepeated.has(index)) refuse(index, messages.nameRepeated);
+      } else {
+        refuse(index, messages.neither);
+      }
+    });
+  };
+}
+
+/** A deity picked from the curated list, or typed (MB.165). */
+const deityRules = linkOrNameRules('deities', 'deityId', {
+  both: 'A deity is picked or typed, not both',
+  neither: 'Name the deity, or pick one',
+  noSuchLink: 'No such deity to pick',
+  linkRepeated: 'This deity is already listed',
+  nameRepeated: 'This deity is already listed',
+});
+
+/** A substitute linking an ingredient, or naming one that is not entered. */
+const substituteLinkRules = linkOrNameRules('substitutes', 'ingredientId', {
+  both: 'A substitute links an ingredient or names one, not both',
+  neither: 'Name the substitute, or choose an ingredient',
+  noSuchLink: 'No such ingredient to link',
+  linkRepeated: 'This ingredient is already listed',
+  nameRepeated: 'This substitute is already listed',
+});
+
+/**
+ * Each substitute a link or a name, and a form it names an id beside a link,
+ * as `ingredient_substitutes_substitute_variant_has_link` holds it (MB.215).
+ */
+function substituteRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
+  substituteLinkRules(entries, ctx);
+  entries.forEach(({ ingredientId, substituteVariantId }, index) => {
+    if (!substituteVariantId) return;
+    const path = ['substitutes', index, 'substituteVariantId'];
+    // Not a uuid names nothing, and would be a driver error at the comparison.
+    if (!RowId.safeParse(substituteVariantId).success) {
+      ctx.addIssue({ code: 'custom', path, message: 'No such form to pick' });
+    } else if (!ingredientId) {
+      ctx.addIssue({ code: 'custom', path, message: 'Choose the ingredient this is a form of' });
     }
-    seen.add(key);
   });
 }
 
 /**
- * Each deity is exactly one of a link and a name, and listed once: the same
- * deity linked twice, or the same name typed twice in any case — the two
- * partial unique indexes' keys — is refused at the repeat. Links to two
- * deities sharing a name are two deities, and a typed name equal to a linked
- * one's is text beside a link, so neither is a repeat (MB.165).
+ * A variant's substitute that links an ingredient names one of its forms
+ * (MB.115, the owner's call): a form stands in for a form, so a link to the
+ * whole ingredient is refused, pathed to its form as a wrong form is. A name
+ * stays a name. The ingredient's own list may still link the whole
+ * ingredient, so this is the variant schema's alone.
  */
-function deityRules(entries: DeityFields[], ctx: z.RefinementCtx) {
-  const refuse = (index: number, message: string) =>
-    ctx.addIssue({ code: 'custom', path: ['deities', index], message });
-  const links = new Set<string>();
-  const names = new Set<string>();
-
-  entries.forEach(({ deityId, name }, index) => {
-    if (deityId && name) {
-      refuse(index, 'A deity is picked or typed, not both');
-    } else if (deityId) {
-      if (!RowId.safeParse(deityId).success) refuse(index, 'No such deity to pick');
-      else if (links.has(deityId)) refuse(index, 'This deity is already listed');
-      links.add(deityId);
-    } else if (name) {
-      const key = name.toLowerCase();
-      if (names.has(key)) refuse(index, 'This deity is already listed');
-      names.add(key);
-    } else {
-      refuse(index, 'Name the deity, or pick one');
-    }
-  });
-}
-
-/**
- * Each substitute is exactly one of a link and a name, and listed once: the
- * same ingredient twice, or the same name in any case — the two partial
- * unique indexes' keys — is refused at the repeat. A name equal to a linked
- * ingredient's label is not a repeat, since one is text and the other a link.
- */
-function substituteRules(entries: SubstituteFields[], ctx: z.RefinementCtx) {
-  const refuse = (index: number, message: string) =>
-    ctx.addIssue({ code: 'custom', path: ['substitutes', index], message });
-  const links = new Set<string>();
-  const names = new Set<string>();
-
-  entries.forEach(({ ingredientId, name }, index) => {
-    if (ingredientId && name) {
-      refuse(index, 'A substitute links an ingredient or names one, not both');
-    } else if (ingredientId) {
-      // Not a uuid names nothing, and would be a driver error at the comparison.
-      if (!RowId.safeParse(ingredientId).success) refuse(index, 'No such ingredient to link');
-      else if (links.has(ingredientId)) refuse(index, 'This ingredient is already listed');
-      links.add(ingredientId);
-    } else if (name) {
-      const key = name.toLowerCase();
-      if (names.has(key)) refuse(index, 'This substitute is already listed');
-      names.add(key);
-    } else {
-      refuse(index, 'Name the substitute, or choose an ingredient');
-    }
+function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
+  entries.forEach(({ ingredientId, substituteVariantId }, index) => {
+    if (!ingredientId || substituteVariantId) return;
+    ctx.addIssue({
+      code: 'custom',
+      path: ['substitutes', index, 'substituteVariantId'],
+      message: 'Link one of its forms: remove this, and pick the form from the list',
+    });
   });
 }
 

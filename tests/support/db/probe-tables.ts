@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach } from 'vitest';
 import postgres from 'postgres';
-import { sql as dsql } from 'drizzle-orm';
-import { pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { namedWrites } from '@/db/table-marks';
 import { auditColumns, auditStampColumns } from '@/modules/identity/schema/users';
 
 // The repository's own tests run against scratch tables rather than real ones:
@@ -19,24 +19,11 @@ export const herbs = pgTable('repository_probe_herbs', {
   actingUser: text('acting_user'),
   // The same for `app.impersonated_by` (MB.53).
   impersonatingAdmin: text('impersonating_admin'),
+  // And for `app.privilege_route` and `app.privilege_note` (MB.195).
+  privilegeRoute: text('privilege_route'),
+  privilegeNote: text('privilege_note'),
   ...auditColumns,
 });
-
-// Built `WHERE deleted_at IS NULL`: a plain unique index would fail the reuse
-// test below for a reason unrelated to the repository.
-export const charms = pgTable(
-  'repository_probe_charms',
-  {
-    id: uuid('id').defaultRandom().primaryKey(),
-    name: text('name').notNull(),
-    ...auditColumns,
-  },
-  (table) => [
-    uniqueIndex('repository_probe_charms_name_unique')
-      .on(table.name)
-      .where(dsql`${table.deletedAt} is null`),
-  ],
-);
 
 // The join-table shape: four stamps, a composite key, no delete columns (MB.34).
 export const pairs = pgTable(
@@ -68,6 +55,27 @@ export const tinctures = pgTable('repository_probe_tinctures', {
   ...auditColumns,
 });
 
+// The two marked shapes (MB.198): `herbs` and `tinctures` again, each
+// written only through named calls, so every generic writer method refuses
+// it. Declared and never created: what they test is the type, and a refusal
+// they exist to show is a compile error rather than a statement.
+export const switches = namedWrites(
+  pgTable('repository_probe_switches', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    ...auditColumns,
+  }),
+);
+
+export const tiers = namedWrites(
+  pgTable('repository_probe_tiers', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id'),
+    name: text('name').notNull(),
+    ...auditColumns,
+  }),
+);
+
 /** Acting users with no `users` row: the probe tables carry no FK to one. */
 export const session = { userId: '11111111-1111-1111-1111-111111111111' };
 export const impostor = { userId: '99999999-9999-9999-9999-999999999999' };
@@ -93,18 +101,8 @@ export function useProbeTables() {
         name text not null,
         acting_user text default current_setting('app.current_user_id', true),
         impersonating_admin text default current_setting('app.impersonated_by', true),
-        created_at timestamp not null default now(),
-        created_by uuid not null,
-        updated_at timestamp not null default now(),
-        updated_by uuid not null,
-        deleted_at timestamp,
-        deleted_by uuid
-      )
-    `;
-    await sql`
-      create table repository_probe_charms (
-        id uuid primary key default gen_random_uuid(),
-        name text not null,
+        privilege_route text default current_setting('app.privilege_route', true),
+        privilege_note text default current_setting('app.privilege_note', true),
         created_at timestamp not null default now(),
         created_by uuid not null,
         updated_at timestamp not null default now(),
@@ -150,16 +148,10 @@ export function useProbeTables() {
         deleted_by uuid
       )
     `;
-    await sql`
-      create unique index repository_probe_charms_name_unique
-        on repository_probe_charms (name)
-        where deleted_at is null
-    `;
   });
 
   afterAll(async () => {
     await sql`drop table if exists repository_probe_herbs`;
-    await sql`drop table if exists repository_probe_charms`;
     await sql`drop table if exists repository_probe_pairs`;
     await sql`drop table if exists repository_probe_jars`;
     await sql`drop table if exists repository_probe_tinctures`;
@@ -168,7 +160,6 @@ export function useProbeTables() {
 
   beforeEach(async () => {
     await sql`truncate repository_probe_herbs`;
-    await sql`truncate repository_probe_charms`;
     await sql`truncate repository_probe_pairs`;
     await sql`truncate repository_probe_jars`;
     await sql`truncate repository_probe_tinctures`;

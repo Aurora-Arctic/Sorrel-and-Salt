@@ -9,33 +9,33 @@ import {
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
-import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
+import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
+import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { ingredientSlug } from '../../../lib/slugify';
+import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { inUtc } from '../../../lib/utc';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
 import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
-  addCategories,
-  addFolkNames,
-  addReferenceLinks,
-  addSubstitutes,
-  columnsOf,
   heldDeities,
-  replaceCategories,
-  replaceDeities,
-  replaceFolkNames,
-  replaceReferenceLinks,
-  replaceSubstitutes,
+  ingredientColumns,
   resolvePicks,
+  softDeleteIngredient,
+  splitChildren,
+  writeChildren,
 } from './ingredient-rows';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { readersOf } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
-import { type CuratedField, curatedSpellings, foldVocabularyValue } from '@/modules/vocabulary';
+import {
+  type CuratedField,
+  curatedSpellings,
+  describeEntry,
+  foldVocabularyValue,
+  redirectRefusal,
+} from '@/modules/vocabulary';
 import type {
   Cursor,
   PageCount,
@@ -49,9 +49,8 @@ import type {
   DeityRecord,
   IngredientFields,
   IngredientRow,
-  PickedDeity,
+  PickedLists,
 } from '../types';
-import type { DeityEntry } from '../validation/types';
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db/compendium-read.md, "The compendium read");
@@ -59,6 +58,11 @@ import type { DeityEntry } from '../validation/types';
 // (claude-docs/db/compendium-writes.md, "Compendium writes"); and its addresses, which follow an
 // entry's name and redirect from the old one for a window
 // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
+
+// The list and its count, held in the data cache under the `compendium` tag
+// and keyed by the parsed filter (claude-docs/db/compendium-cache.md).
+const cachedPage = cachedCompendiumRead('compendium-page', findCompendiumPage);
+const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount);
 
 /**
  * One page of the compendium under `filter`, best match first on a search,
@@ -74,7 +78,7 @@ export async function listCompendium(
   filter: CompendiumFilterInput,
   page: PageRequest,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  return findCompendiumPage(parseInput(CompendiumFilter, filter), page);
+  return cachedPage(parseInput(CompendiumFilter, filter), page);
 }
 
 /**
@@ -88,7 +92,7 @@ export async function countCompendium(
   filter: CompendiumFilterInput,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findCompendiumCount(parseInput(CompendiumFilter, filter), start);
+  return cachedCount(parseInput(CompendiumFilter, filter), start);
 }
 
 /**
@@ -106,11 +110,7 @@ export async function getIngredient(
   id: string,
   workspaceId?: string | null,
 ): Promise<IngredientRow> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    if (!session) throw new Forbidden();
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
 
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
@@ -120,10 +120,10 @@ export async function getIngredient(
 
 /**
  * Creates a compendium entry, with its folk names, substitutes, deities,
- * references and categories, in one transaction. Its form and deities are picked from their
- * curated vocabularies and its planets and signs named from theirs, each
- * written in its curated row's spelling. The slug is set here from the label,
- * the form and the formal name, and the compendium's lapsed retirements are
+ * references, categories and forms, in one transaction. Its forms and deities are picked from their
+ * curated vocabularies and its planets and signs, and its forms', named from theirs, each
+ * written in its curated row's spelling. The slug is set here from the label
+ * and the formal name, and the compendium's lapsed retirements are
  * cleared in the same write.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
@@ -140,38 +140,35 @@ export async function createCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    CompendiumIngredientInput,
-    input,
-  );
-  const curated = await inCuratedValues(input, parsed, deities ?? [], []);
+  const {
+    fields: parsed,
+    lists,
+    picked,
+  } = splitChildren(parseInput(CompendiumIngredientInput, input));
+  const curated = await inCuratedValues(input, parsed, picked, []);
   const { fields } = curated;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
+  const { slug } = columns;
   const at = new Date();
   await refuseEndingARedirect(slug, at, input.endRedirect);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.insertInCompendium(admin, ingredients, {
-      ...columnsOf(fields),
-      slug,
-    });
-    await addFolkNames(write, row.id, folkNames ?? []);
-    await addSubstitutes(write, [], row.id, substitutes ?? []);
-    await replaceDeities(write, row.id, curated.deities, []);
-    await addReferenceLinks(write, [], row.id, references ?? []);
-    await addCategories(write, row.id, fields.categoryIds ?? []);
+    const [row] = await write.insertInCompendium(admin, ingredients, columns);
+    await writeChildren(write, [], row.id, { ...lists, ...curated.children }, 'add');
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, undefined));
+  expireCompendium();
+  return written;
 }
 
 /**
  * Replaces a compendium entry with `input` — the whole entry as the form
  * submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities, references and categories with the input's, in one
- * transaction.
- * The slug follows the label, the form and the formal name; when it moves, the
+ * substitutes, deities, references, categories and forms with the input's, in
+ * one transaction, a form kept by its id or else its text folded (MB.219).
+ * The slug follows the label and the formal name; when it moves, the
  * old one is retired as this admin's, and redirects to the entry for 180 days.
  * The curated fields are held as `createCompendiumEntry` holds them.
  *
@@ -194,29 +191,28 @@ export async function updateCompendiumEntry(
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
   const admin = assertSiteAdmin(session);
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    CompendiumIngredientInput,
-    input,
-  );
+  const {
+    fields: parsed,
+    lists,
+    picked,
+  } = splitChildren(parseInput(CompendiumIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
   const held = await heldDeities([], id);
-  const curated = await inCuratedValues(input, parsed, deities ?? [], held);
+  const curated = await inCuratedValues(input, parsed, picked, held);
   const { fields } = curated;
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
+  const { slug } = columns;
   const at = new Date();
   const moves = slug !== current.slug;
   if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, {
-      ...columnsOf(fields),
-      slug,
-    });
+    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, columns);
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
       await write.insertInCompendium(admin, retiredIngredientSlugs, {
@@ -225,13 +221,17 @@ export async function updateCompendiumEntry(
         retiredAt: at,
       });
     }
-    await replaceFolkNames(write, [], id, folkNames ?? []);
-    await replaceSubstitutes(write, [], id, substitutes ?? []);
-    await replaceDeities(write, id, curated.deities, held);
-    await replaceReferenceLinks(write, [], id, references ?? []);
-    await replaceCategories(write, [], id, fields.categoryIds ?? []);
+    await writeChildren(
+      write,
+      [],
+      id,
+      { ...lists, ...curated.children, heldDeities: held },
+      'replace',
+    );
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
+  expireCompendium();
+  return written;
 }
 
 /**
@@ -256,18 +256,22 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
 }
 
 /** What each field named by spelling is called in a refusal. */
-const NOUN_OF: Record<CuratedField, string> = { planets: 'planet', zodiacSigns: 'zodiac sign' };
+const NOUN_OF: Record<CuratedField, string> = {
+  planets: 'celestial body',
+  zodiacSigns: 'zodiac sign',
+};
 
 const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
 
 /**
- * `fields` and `deities` holding curated values alone, as a compendium entry
- * does where a coven's ingredient keeps what was typed (MB.162; DESIGN.md
- * §5): its form and each deity a pick of a curated row (MB.167), and its
- * planets and signs each in the spelling of the live curated row it folds to.
- * A list's refusal is placed at the entry `input` sent, blanks counted, since
- * parsing drops blank planets and signs and the form numbers its rows by what
- * it sent. Read before the write rather than inside it, so an admin retiring a
+ * `fields` and the checked lists holding curated values alone, as a
+ * compendium entry does where a coven's ingredient keeps what was typed
+ * (MB.162; DESIGN.md §5): each form and each deity a pick of a curated row
+ * (MB.167), and the planets and signs of the entry and of each of its forms
+ * (MB.219) each in the spelling of the live curated row it folds to. A list's
+ * refusal is placed at the entry `input` sent, blanks counted, since parsing
+ * drops blank planets and signs and the form numbers its rows by what it
+ * sent. Read before the write rather than inside it, so an admin retiring a
  * row while another saves an entry naming it can leave that entry holding it.
  *
  * @throws {ValidationError} beside each value not picked or no live curated
@@ -277,43 +281,74 @@ const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedFiel
 async function inCuratedValues(
   input: CompendiumWrite,
   parsed: IngredientFields,
-  deities: readonly DeityEntry[],
+  picked: PickedLists,
   held: readonly DeityRecord[],
-): Promise<{ fields: IngredientFields; deities: PickedDeity[] }> {
+): Promise<{
+  fields: IngredientFields;
+  children: Awaited<ReturnType<typeof resolvePicks>>['children'];
+}> {
+  const variants = picked.variants ?? [];
+  const valuesOf = (field: CuratedField) => [
+    ...(parsed[field] ?? []),
+    ...variants.flatMap((variant) => variant[field]),
+  ];
   const [picks, planets, zodiacSigns] = await Promise.all([
-    resolvePicks('compendium', parsed, deities, held),
-    curatedSpellings('planets', parsed.planets ?? []),
-    curatedSpellings('zodiacSigns', parsed.zodiacSigns ?? []),
+    resolvePicks('compendium', parsed, picked, held),
+    curatedSpellings('planets', valuesOf('planets')),
+    curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
   const spellingsOf = { planets, zodiacSigns };
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
+  // The entry's own lists, then each form's, as `input` sent them.
+  const sent = [
+    { at: [], lists: input },
+    ...(input.variants ?? []).map((lists, index) => ({ at: ['variants', index], lists })),
+  ];
   const spelled: ValidationIssue[] = [];
-  for (const field of SPELLED_FIELDS) {
-    (input[field] ?? []).forEach((value, index) => {
-      if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
-      spelled.push({
-        path: [field, index],
-        message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+  for (const { at, lists } of sent) {
+    for (const field of SPELLED_FIELDS) {
+      (lists[field] ?? []).forEach((value, index) => {
+        if (value.trim() === '' || spellingOf(field, value) !== undefined) return;
+        spelled.push({
+          path: [...at, field, index],
+          message: `No curated ${NOUN_OF[field]} is called "${value.trim()}" — add it to the ${NOUN_OF[field]} list first`,
+        });
       });
-    });
+    }
   }
   const issues = [...picks.issues, ...spelled].sort(
     (a, b) => FIELD_ORDER.indexOf(String(a.path[0])) - FIELD_ORDER.indexOf(String(b.path[0])),
   );
   if (issues.length > 0) throw new ValidationError(issues);
 
-  const spell = (field: CuratedField) =>
-    picks.fields[field]?.map((value) => spellingOf(field, value) ?? value);
+  // Each list in its rows' spellings: every value has one, or it was refused above.
+  const spell = <T extends Partial<Record<CuratedField, string[] | null>>>(lists: T): T => {
+    const spelt = { ...lists };
+    for (const field of SPELLED_FIELDS) {
+      spelt[field] = lists[field]?.map(
+        (value) => spellingOf(field, value) ?? value,
+      ) as T[CuratedField];
+    }
+    return spelt;
+  };
   return {
-    fields: { ...picks.fields, planets: spell('planets'), zodiacSigns: spell('zodiacSigns') },
-    deities: picks.deities,
+    fields: spell(picks.fields),
+    children: { ...picks.children, variants: picks.children.variants.map(spell) },
   };
 }
 
 /** The curated fields in the order the form shows them, which is the order refusals are listed in. */
-const FIELD_ORDER = ['form', 'formId', 'planets', 'zodiacSigns', 'deities', 'categoryIds'];
+const FIELD_ORDER = [
+  'form',
+  'formId',
+  'planets',
+  'zodiacSigns',
+  'deities',
+  'categoryIds',
+  'variants',
+];
 
 /**
  * Refuses a write whose slug another entry's redirect runs from, unless the
@@ -329,14 +364,8 @@ async function refuseEndingARedirect(
   excluding?: string,
 ): Promise<void> {
   if (confirmed === true) return;
-  const redirect = await findCompendiumSlugRedirect(slug, at, excluding);
-  if (!redirect) return;
-  throw new ValidationError([
-    {
-      path: ['endRedirect'],
-      message: `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)} — confirm to end that redirect`,
-    },
-  ]);
+  const refused = await redirectRefusal([{ slug, entryId: excluding }], at);
+  if (refused) throw refused;
 }
 
 /**
@@ -350,57 +379,62 @@ async function refuseEndingARedirect(
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
   const admin = assertSiteAdmin(session);
-  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIdInCompendium(admin, ingredients, id);
-    if (!row) throw new NotFound('No such compendium entry');
-  });
+  await softDeleteIngredient(session, id, 'No such compendium entry', (write) =>
+    write.softDeleteByIdInCompendium(admin, ingredients, id),
+  );
+  expireCompendium();
 }
 
 /**
  * A write that broke one of the compendium's unique indexes, as a
  * `ValidationError` on the field that caused it; any other error unchanged.
- * An identity collision names the entry holding the identity, read after the
- * write rolled back: a label with no formal name keys as another entry's
- * formal name (DESIGN.md §5), so the input alone would not say which entry
- * that is. That collision is reported on `name`, the field the admin filled
- * in. A slug collision names the entry holding the address, as the slug the
- * two fold to is not always one the admin can see in either input.
+ * An identity collision — a second entry under a formal name the compendium
+ * holds, an oil beside the herb (MB.215) — is reported on `canonicalName`, or
+ * on `name` for an entry with none, naming the entry holding it, read after
+ * the write rolled back, and pointing at adding the form to that entry: a
+ * label with no formal name keys as another entry's formal name (DESIGN.md
+ * §5), so the input alone would not say which entry that is. A slug
+ * collision names the entry holding the address, as the slug the two fold to
+ * is not always one the admin can see in either input — unless another entry
+ * holds the identity too, which is the collision to report: Postgres names
+ * the first index it finds broken, and the address index is older than the
+ * identity one, so the oil written under the herb's label meets the address
+ * first. `id` is the entry an update writes, never its own collision.
  */
 async function refuseCollision(
   error: unknown,
   fields: IngredientFields,
   slug: string,
+  id: string | undefined,
 ): Promise<never> {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
   };
+  const identity = (holder: IngredientRow | undefined) =>
+    refuse(
+      fields.canonicalName == null ? 'name' : 'canonicalName',
+      holder
+        ? `Already in the compendium as ${describeEntry(holder)} — add this form to it instead`
+        : 'Already in the compendium',
+    );
 
   switch (violatedUniqueIndex(error)) {
-    case 'ingredients_compendium_identity_unique': {
-      const holder = await findCompendiumEntryByIdentity(fields);
-      refuse(
-        fields.canonicalName == null ? 'name' : 'canonicalName',
-        holder
-          ? `Already in the compendium as ${describeEntry(holder)}`
-          : 'Already in the compendium',
-      );
+    case 'ingredients_compendium_identity_key_unique':
+      identity(await findCompendiumEntryByIdentity(fields));
       break;
-    }
     case 'ingredients_compendium_slug_unique': {
+      const twin = await findCompendiumEntryByIdentity(fields);
+      if (twin && twin.id !== id) identity(twin);
       const holder = await findCompendiumEntryBySlug(slug);
       refuse(
         'name',
-        `${holder ? describeEntry(holder) : 'Another compendium entry'} already has the address "${slug}" — change the name, form or formal name`,
+        addressTaken(
+          holder ? describeEntry(holder) : 'Another compendium entry',
+          slug,
+          'change the name or formal name',
+        ),
       );
     }
   }
   throw error;
-}
-
-/** An entry as a person tells it apart: its label, then its formal name and form. */
-function describeEntry(entry: IngredientRow): string {
-  const identity = [entry.canonicalName, entry.form].filter(Boolean).join(', ');
-  return identity ? `"${entry.name}" (${identity})` : `"${entry.name}"`;
 }

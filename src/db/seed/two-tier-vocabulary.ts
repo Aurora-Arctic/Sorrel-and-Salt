@@ -1,13 +1,20 @@
+import { and, eq, isNull } from 'drizzle-orm';
+import type { PgInsertValue } from 'drizzle-orm/pg-core';
+import { applyAudit } from '../audit';
+import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { insertMissing, presentKeys, requireFrom } from './idempotent';
 import { slugify } from '../../lib/slugify';
-import type { GroupTable, ItemTable, SeedTransaction, TwoTierVocabulary } from './types';
+import type { GroupTable, ItemTable, TwoTierPair } from '../vocabularies';
+import type { InsertStamps, SeedTransaction, TwoTierItemRow, TwoTierVocabulary } from './types';
 
 // The shape §5's forms, §6's categories and MB.127's deities share: a group
 // table and an item table filed under it, each row keyed by the slug of its
-// name it was seeded under (MB.172), a slug nobody writes down. The literals
-// stay with their own vocabulary, which also names the item's group, its key
-// column — `tradition` and `traditionId` for a deity — and, for a form, a
-// slug carrying the group (M5.6a); only the two inserts are one.
+// name it was seeded under (MB.172), a slug nobody writes down. The tables
+// and the item's key to its group — `traditionId` for a deity — are the
+// vocabulary's `TWO_TIER` entry; the literals stay with their own
+// vocabulary, which names an item's group — `tradition` for a deity — and,
+// for a form, a slug carrying the group (M5.6a), as a deity's carries its
+// tradition (MB.132). The two inserts, and that slug's backfill, are one.
 
 /**
  * Groups first — `group_id` is a NOT NULL foreign key — then items, each
@@ -22,20 +29,13 @@ import type { GroupTable, ItemTable, SeedTransaction, TwoTierVocabulary } from '
 export async function seedTwoTierVocabulary<
   G extends { name: string; description: string },
   I extends { name: string; description: string },
-  T extends ItemTable,
 >(
   tx: SeedTransaction,
-  {
-    groupTable,
-    itemTable,
-    groups,
-    items,
-    groupOf,
-    toItemRow,
-    itemNoun,
-    slugOf = (item) => slugify(item.name),
-  }: TwoTierVocabulary<G, I, T>,
+  { vocabulary, groups, items, groupOf, itemNoun, slugOf }: TwoTierVocabulary<G, I>,
 ): Promise<void> {
+  const { items: itemTable, groups: groupTable } = vocabulary;
+  const slugUnder = slugOf ?? ((name: string) => slugify(name));
+
   await insertMissing(tx, groupTable, groups, {
     existing: (tx) => presentKeys(tx, groupTable),
     keyOf: (group) => slugify(group.name),
@@ -50,7 +50,7 @@ export async function seedTwoTierVocabulary<
       () =>
         `${itemNoun} "${item.name}" names group "${groupOf(item)}", which is not in the database.`,
     );
-  const slugFor = (item: I) => slugOf(item, groupFor(item).name);
+  const slugFor = (item: I) => slugUnder(item.name, groupFor(item).name);
 
   // One read for both checks: the keys `insertMissing` matches, and the live
   // slugs, which an item whose slug is not its key is matched against here.
@@ -63,7 +63,8 @@ export async function seedTwoTierVocabulary<
       existing: async () => present,
       keyOf: (item) => slugify(item.name),
       toRow: (item) =>
-        toItemRow(
+        itemRow(
+          vocabulary,
           {
             name: item.name,
             slug: slugFor(item),
@@ -74,6 +75,21 @@ export async function seedTwoTierVocabulary<
         ),
     },
   );
+
+  if (slugOf) await reslugItems(tx, vocabulary, slugOf);
+}
+
+/**
+ * An item's row, its group's id under the key `TWO_TIER` names. The cast is
+ * the computed key's: TypeScript widens `{ [key]: id }` to a string index,
+ * where each entry's key is its own table's column.
+ */
+function itemRow(
+  { key }: TwoTierPair,
+  row: TwoTierItemRow,
+  groupId: string,
+): Omit<PgInsertValue<ItemTable>, InsertStamps> {
+  return { ...row, [key]: groupId } as Omit<PgInsertValue<ItemTable>, InsertStamps>;
 }
 
 /**
@@ -102,4 +118,42 @@ async function groupsByItemKey(
   for (const row of rows) if (row.seedKey !== null) groups.set(row.seedKey, row);
 
   return groups;
+}
+
+/**
+ * The backfill a slug carrying its group needs, run by `seedTwoTierVocabulary`
+ * on every seed of a vocabulary whose slug does — the forms (M5.6a) and the
+ * deities (MB.132), each given a `slugOf`:
+ * each live item's slug re-derived by `slugOf` from its name and its group's
+ * name, and written where it differs, so a reseed with nothing to change
+ * writes nothing. A database seeded before holds `slugify(name)`; a rewrite
+ * in SQL would be a second slug rule, so the seed is the backfill, as it was
+ * for ingredient slugs (claude-docs/db/ingredient-slugs.md). A soft-deleted
+ * item keeps its slug: the index reserves none.
+ */
+async function reslugItems(
+  tx: SeedTransaction,
+  { items: itemTable, groups: groupTable, column }: TwoTierPair,
+  slugOf: (name: string, groupName: string) => string,
+): Promise<void> {
+  // The cast `selectFrom` makes: `.from()` is typed against one table, not the union.
+  const items = await tx
+    .select({
+      id: itemTable.id,
+      name: itemTable.name,
+      slug: itemTable.slug,
+      groupName: groupTable.name,
+    })
+    .from(itemTable as never)
+    .innerJoin(groupTable, eq(groupTable.id, column))
+    .where(isNull(itemTable.deletedAt));
+
+  for (const { id, name, slug, groupName } of items) {
+    const derived = slugOf(name, groupName);
+    if (derived === slug) continue;
+    await tx
+      .update(itemTable)
+      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION) as never)
+      .where(and(eq(itemTable.id, id), isNull(itemTable.deletedAt)));
+  }
 }

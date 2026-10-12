@@ -1,4 +1,4 @@
-import { safeReturnPath } from './sign-in';
+import { messageLookup, safeReturnPath } from './sign-in';
 
 // Pure helpers for /account/email?error=, the page a followed verification
 // link lands on. Every sentence is ours: a code is what Better Auth's
@@ -9,8 +9,8 @@ import { safeReturnPath } from './sign-in';
 // email-verification.mjs, `redirectOnError`) plus the two src/lib/auth.ts
 // adds on that endpoint.
 const ERROR_MESSAGES: Record<string, string> = {
-  SIGN_IN_TO_VERIFY: 'Open the link from a browser signed in to this account, then try it again.',
-  EMAIL_TAKEN: "That address can't be used yet. Try again in a while, or choose another.",
+  SIGN_IN_TO_VERIFY: 'Open the link from a browser signed in to this account, then open it again.',
+  EMAIL_TAKEN: "That email address can't be used yet. Try again in a while, or choose another.",
   TOKEN_EXPIRED: 'That link has expired. Send a new one below.',
   INVALID_TOKEN: "That link didn't work. Send a new one below.",
   INVALID_USER:
@@ -71,7 +71,4 @@ export function isEmailPage(path: string | undefined): boolean {
 }
 
 /** One readable sentence for a `/verify-email` `?error=` code; `undefined` for none. */
-export function verifyErrorMessage(code: string | string[] | undefined): string | undefined {
-  if (typeof code !== 'string' || code.length === 0) return undefined;
-  return ERROR_MESSAGES[code] ?? GENERIC_VERIFY_ERROR;
-}
+export const verifyErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_VERIFY_ERROR);

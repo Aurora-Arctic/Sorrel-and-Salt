@@ -6,8 +6,13 @@ import { encodeCursor, resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import { type FormSuggestion, suggestForms } from '@/modules/vocabulary';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeVariant,
+} from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
 // DESIGN.md §5 and §9: the `form` field's autofill offers the curated
@@ -33,14 +38,20 @@ beforeEach(async () => {
 });
 
 /**
- * A row of this file's: the form stated, since that is what the file is
- * about, and no formal name, and so `none`, unless one is stated.
+ * A row of this file's: its one form stated, as its one variant, since that
+ * is what the file is about, and no formal name, and so `none`, unless one is
+ * stated.
  */
-function addIngredient(
-  entry: Overrides<IngredientFixture> & Pick<IngredientFixture, 'form'>,
-): Promise<string> {
+function addIngredient({
+  form,
+  ...entry
+}: Overrides<IngredientFixture> & { form: string }): Promise<string> {
   const nomenclature = entry.canonicalName ? 'botanical' : 'none';
-  return insertIngredient(sql, makeIngredient({ nomenclature, ...entry }), A.id);
+  return insertIngredient(
+    sql,
+    makeIngredient({ nomenclature, ...entry, variants: [makeVariant({ form })] }),
+    A.id,
+  );
 }
 
 /** A second live form sharing a seeded one's display name, in another group. */
@@ -209,18 +220,31 @@ describe('suggestForms', () => {
     it('offers a curated value nobody claims, with no claimants', async () => {
       expect(find(await all(asUser(B), 'ointment'), 'Ointment').claimants).toEqual([]);
     });
+  });
 
-    it('drops a soft-deleted ingredient from the claimants', async () => {
+  // MB.220: an entry's forms are its variants, so a form is in use, and
+  // claimed, while any live variant holds it, and not once it is dropped.
+  describe('an entry with several forms', () => {
+    it('offers and attributes each live form, and not a dropped one', async () => {
       const id = await addIngredient({
         name: 'Testwort',
         workspaceId: WORKSPACE_W_ID,
-        form: 'root',
+        form: 'tuber',
       });
-      expect(find(await all(asUser(B), 'root'), 'Root').claimants).toHaveLength(1);
+      await insertVariant(sql, id, { form: 'rhizome' }, A.id);
+      await insertVariant(sql, id, { form: 'Root' }, A.id);
+      const dropped = await insertVariant(sql, id, { form: 'caudex' }, A.id);
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
 
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
+      const suggestions = await all(asUser(B), '');
 
-      expect(find(await all(asUser(B), 'root'), 'Root').claimants).toEqual([]);
+      const claimant = [{ name: 'Testwort', canonicalName: null }];
+      expect(suggestions.filter((s) => !s.curated)).toEqual([
+        expect.objectContaining({ value: 'rhizome', claimants: claimant }),
+        expect.objectContaining({ value: 'tuber', claimants: claimant }),
+      ]);
+      expect(find(suggestions, 'Root').claimants).toEqual(claimant);
     });
   });
 
@@ -283,7 +307,8 @@ describe('suggestForms', () => {
     it('never offers a form in use only in another workspace', async () => {
       // Why it could have come back: X holds it, and X's own member is offered it.
       const [held] = await sql`
-        select form from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
+        select v.form from ingredient_variants v join ingredients i on i.id = v.ingredient_id
+        where i.workspace_id = ${WORKSPACE_X_ID} and v.deleted_at is null`;
       expect(held.form).toBe('caudex');
       expect(valuesOf(await all(asUser(D), 'caudex', WORKSPACE_X_ID))).toEqual(['caudex']);
 

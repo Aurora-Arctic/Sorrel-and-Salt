@@ -1,0 +1,96 @@
+import 'server-only';
+import { withAudit } from '../../../db/repository';
+import type { AuditWriter } from '../../../db/repository';
+import { Forbidden, NotFound } from '../../../lib/errors';
+import { PRIMARY_ADMIN_REFUSAL } from '../../../lib/primary-admin';
+import type { Session, UserRole } from '../../../lib/session';
+import { users } from '../schema/users';
+import { adminDeclaration, liveUser } from './admin-changes';
+import { assertAdminChangesOpen } from './admin-role-pause';
+import { isPrimaryAdmin } from './primary-admin';
+import type { SiteAdmin } from './site-admin';
+import type { UserRow } from '../types';
+
+// MB.59: an admin makes a user an admin, or stops one being one, from
+// `/admin/users`. Each change is declared `via: 'admin'` and the trigger on
+// `users` records it in the privilege ledger (MB.195); the service writes no
+// ledger row. Why each rule is what it is:
+// claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
+// "Granting" and "Revoking"; the shape is claude-docs/auth/admin-users.md,
+// "Granting and revoking admin".
+
+const REFUSAL = 'Only a site admin may change who is an admin';
+
+/**
+ * The grant every route to admin but the bootstrap shares, inside the
+ * caller's transaction: the creation flag too, since the users CHECK refuses
+ * an admin without it (MB.177). An admin's grant and an accepted admin
+ * invitation (MB.70) both write it; the route is the caller's declaration.
+ */
+export function writeAdminGrant(write: AuditWriter, userId: string): Promise<UserRow[]> {
+  return write.updateById(users, userId, { role: 'admin', canCreateWorkspace: true });
+}
+
+/**
+ * The role write an admin's grant and revoke share, inside the caller's
+ * transaction: a grant is `writeAdminGrant`, and a revoke leaves the flag,
+ * the grant having been a vouching too. A revoke first locks the live admins and counts
+ * them, so two revokes at once cannot leave none.
+ */
+async function writeRole(
+  write: AuditWriter,
+  admin: SiteAdmin,
+  user: UserRow,
+  role: UserRole,
+): Promise<UserRow> {
+  if (role === 'user') {
+    const admins = await write.lockLiveAdmins(admin);
+    // Read again under the lock: a revoke that committed while this one
+    // waited has already taken its row out.
+    const target = admins.find((row) => row.id === user.id);
+    if (!target) throw new Forbidden(`${user.name} is not an admin, so there is nothing to revoke`);
+    if (isPrimaryAdmin(target)) throw new Forbidden(PRIMARY_ADMIN_REFUSAL);
+    if (admins.length === 1) {
+      throw new Forbidden(
+        `${user.name} is the last admin, and the site needs one. Make someone else an admin first.`,
+      );
+    }
+  }
+  const [written] =
+    role === 'admin'
+      ? await writeAdminGrant(write, user.id)
+      : await write.updateById(users, user.id, { role });
+  // Soft-deleted between the read and the write: the update matches no row,
+  // so the trigger never fires and nothing is recorded.
+  if (!written) throw new NotFound('No such user');
+  return written;
+}
+
+/**
+ * Makes a live user an admin, or stops an admin being one, stamped as the
+ * acting admin and recorded by the trigger with `note`, the confirmation's
+ * optional reason, a blank one as none. Answers the row as written.
+ *
+ * @throws {Forbidden} the session's role is not `admin`; the user already
+ * holds the role asked for, since the change would record nothing; the
+ * revoke's target is the primary admin, for every caller, the primary admin
+ * included; the revoke would leave no live admin; or the primary admin has
+ * paused admin changes and the caller is another admin (MB.63).
+ * @throws {NotFound} no live user has this id.
+ */
+export async function setUserRole(
+  session: Session,
+  userId: string,
+  role: UserRole,
+  note?: string,
+): Promise<UserRow> {
+  const admin = await assertAdminChangesOpen(session, REFUSAL);
+  const user = await liveUser(userId);
+  if (role === 'admin' && user.role === 'admin') {
+    throw new Forbidden(`${user.name} is already an admin`);
+  }
+  if (role === 'user' && user.role !== 'admin') {
+    throw new Forbidden(`${user.name} is not an admin, so there is nothing to revoke`);
+  }
+  return withAudit(session, (write) => writeRole(write, admin, user, role), adminDeclaration(note));
+}

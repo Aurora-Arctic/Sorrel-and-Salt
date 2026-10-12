@@ -1,14 +1,20 @@
-import type { PgInsertValue } from 'drizzle-orm/pg-core';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { spells } from '../../modules/grimoire/schema/spells';
+import type {
+  referenceLinks,
+  SOURCED,
+  SourcedKey,
+} from '../../modules/ingredients/schema/reference-links';
 import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
-import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
 import type { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
 import type { CitationFields } from '../../lib/types';
+import type { StampField } from '../types';
+import type { FlatTable, ItemTable, TwoTierPair } from '../vocabularies';
 import type {
   ingredientFormGroups,
   ingredientForms,
@@ -24,7 +30,7 @@ export type SeedDatabase = PostgresJsDatabase<Record<string, unknown>>;
 export type SeedTransaction = Parameters<Parameters<SeedDatabase['transaction']>[0]>[0];
 
 /** The stamps `applyAudit('insert', …)` supplies, so a caller's row is typed without them. */
-export type InsertStamps = 'createdAt' | 'createdBy' | 'updatedAt' | 'updatedBy';
+export type InsertStamps = StampField;
 
 /** Typed against the insert model, so a column renamed in users.ts fails here. */
 export type SeedUser = Pick<typeof users.$inferInsert, 'id' | 'name' | 'email' | 'role'>;
@@ -48,22 +54,30 @@ export type SeedMembership = Pick<
 >;
 
 /**
- * One compendium entry plus its folk names, deities and categories, named
- * rather than keyed. Its form and each deity are picked by that name from the
- * curated rows (MB.167), so each must name exactly one.
+ * One form of a seeded entry and what that form adds (MB.222): its own
+ * description and safety note. A compendium form is picked by name from the
+ * curated rows (MB.167), so it must name exactly one; a coven's is typed.
+ */
+export type SeedVariant = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
+  Partial<Pick<typeof ingredientVariants.$inferInsert, 'description' | 'safetyNotes'>>;
+
+/**
+ * One compendium entry plus its forms, folk names, deities and categories,
+ * named rather than keyed. Each deity is picked by that name from the curated
+ * rows (MB.167), so each must name exactly one.
  */
 export type SeedIngredient = Pick<
   typeof ingredients.$inferInsert,
   | 'name'
   | 'canonicalName'
   | 'nomenclature'
-  | 'form'
   | 'description'
   | 'elements'
   | 'planets'
   | 'zodiacSigns'
   | 'safetyNotes'
 > & {
+  variants: SeedVariant[];
   folkNames?: string[];
   deities?: string[];
   categories: string[];
@@ -71,17 +85,17 @@ export type SeedIngredient = Pick<
 
 // `demo`: W's own ingredients and the spells layered from both tiers.
 
-/** W's own ingredients — the workspace tier, `workspace_id` set rather than null. */
+/** W's own ingredients — the workspace tier, `workspace_id` set rather than null — and their forms. */
 export type SeedWorkspaceIngredient = Pick<
   typeof ingredients.$inferInsert,
-  'name' | 'canonicalName' | 'nomenclature' | 'form' | 'description' | 'elements'
->;
+  'name' | 'canonicalName' | 'nomenclature' | 'description' | 'elements'
+> & { variants: SeedVariant[] };
 
 /** What a layer points at: an ingredient in either tier, or a custom row carrying its own name and form. */
 export type SeedLayerIngredient =
   | {
       tier: 'compendium' | 'workspace';
-      entry: { name: string; canonicalName?: string | null; form?: string | null };
+      entry: { name: string; canonicalName?: string | null };
     }
   | { tier: 'custom'; name: string; form: string };
 
@@ -107,90 +121,71 @@ export type SeedSpell = Pick<
   layers: SeedLayer[];
 };
 
-// The reference vocabularies: each shape's tables, then the rows filed in them.
-
-/** The group tables are typed as a union rather than a generic: the columns the seed writes are common to all three, so the row type survives. */
-export type GroupTable =
-  typeof categoryGroups | typeof ingredientFormGroups | typeof deityTraditions;
-/** A generic over this union, not the union itself: `deities` names its key `traditionId`, the others `groupId`. */
-export type ItemTable = typeof categories | typeof ingredientForms | typeof deities;
+// The reference vocabularies: the shape the two-tier ones share, then the
+// rows filed in each. Their tables are listed once, in src/db/vocabularies.ts.
 
 /** What every item row carries before its foreign key to its group. */
-export interface TwoTierItemRow {
-  name: string;
-  slug: string;
-  seedKey: string;
-  description: string;
-}
+export type TwoTierItemRow = Pick<
+  ItemTable['$inferInsert'],
+  'name' | 'slug' | 'seedKey' | 'description'
+>;
 
 export interface TwoTierVocabulary<
   G extends { name: string; description: string },
   I extends { name: string; description: string },
-  T extends ItemTable,
 > {
-  groupTable: GroupTable;
-  itemTable: T;
+  /** The item and group tables, and the item's key to its group: an entry of `TWO_TIER`. */
+  vocabulary: TwoTierPair;
   groups: readonly G[];
   items: readonly I[];
   /** The `name` of the group an item is filed under: `category.group`, `deity.tradition`. */
   groupOf: (item: I) => string;
-  /** The item's row with its group's id under the table's own key: `{ ...row, groupId }`. */
-  toItemRow: (row: TwoTierItemRow, groupId: string) => Omit<PgInsertValue<T>, InsertStamps>;
   /** Capitalised, for the error naming an item whose group is missing: `Category`, `Form`, `Deity`. */
   itemNoun: string;
   /**
-   * The item's slug, given the name of the group it is filed under now:
-   * `slugify(item.name)` when absent. A form's carries its group (M5.6a),
-   * so two forms of one name under two groups hold two addresses.
+   * An item's slug, given its name and the name of the group it is filed
+   * under now: `slugify(name)` when absent. A form's carries its group
+   * (M5.6a), and a deity's its tradition (MB.132), so two items of one name
+   * under two groups hold two addresses. Given, every live item's slug is
+   * brought to it on each run too.
    */
-  slugOf?: (item: I, groupName: string) => string;
+  slugOf?: (name: string, groupName: string) => string;
 }
 
-export interface SeedCategoryGroup {
-  name: string;
-  colorDark: string;
-  colorLight: string;
-  description: string;
-}
+// Each literal's row typed against its table's insert model, so a column
+// renamed in the schema fails here rather than at the seed's insert.
 
-export interface SeedCategory {
-  name: string;
+export type SeedCategoryGroup = Pick<
+  typeof categoryGroups.$inferInsert,
+  'name' | 'colorDark' | 'colorLight' | 'description'
+>;
+
+export type SeedCategory = Pick<typeof categories.$inferInsert, 'name' | 'description'> & {
   /** The `name` of the group in CATEGORY_GROUPS this belongs to. */
   group: string;
-  description: string;
-}
+};
 
-export interface SeedIngredientFormGroup {
-  name: string;
-  description: string;
-}
+export type SeedIngredientFormGroup = Pick<
+  typeof ingredientFormGroups.$inferInsert,
+  'name' | 'description'
+>;
 
-export interface SeedIngredientForm {
-  name: string;
+export type SeedIngredientForm = Pick<
+  typeof ingredientForms.$inferInsert,
+  'name' | 'description'
+> & {
   /** The `name` of the group in FORM_GROUPS this belongs to. */
   group: string;
-  description: string;
-}
+};
 
-export interface SeedDeityTradition {
-  name: string;
-  description: string;
-}
+export type SeedDeityTradition = Pick<typeof deityTraditions.$inferInsert, 'name' | 'description'>;
 
-export interface SeedDeity {
-  name: string;
+export type SeedDeity = Pick<typeof deities.$inferInsert, 'name' | 'description'> & {
   /** The `name` of the tradition in DEITY_TRADITIONS this is filed under. */
   tradition: string;
-  description: string;
-}
+};
 
-/** Typed as a union rather than a generic: the columns are identical, so the row type survives. */
-export type FlatTable = typeof planets | typeof zodiacSigns;
-
-export interface SeedAstrologyValue {
-  name: string;
-  description: string;
-}
+export type SeedAstrologyValue = Pick<FlatTable['$inferInsert'], 'name' | 'description'>;
 
 /** A link from a seeded source to a deity, with where in the work it points. */
 export interface SeedSourceDeity {
@@ -211,21 +206,108 @@ export interface SeedSource {
   zodiacSigns?: string[];
 }
 
-/** A `reference_links` row the sources seed wants, before its stamps. */
-export interface SeedSourceLink {
-  referenceId: string;
-  deityId?: string;
-  deityTraditionId?: string;
-  planetId?: string;
-  zodiacSignId?: string;
-  locator: string | null;
+/** A `reference_links` row the sources seed wants, before its stamps: a curated row's link. */
+export type SeedSourceLink = Pick<
+  typeof referenceLinks.$inferInsert,
+  'referenceId' | 'deityId' | 'deityTraditionId' | 'planetId' | 'zodiacSignId' | 'locator'
+>;
+
+/** A table a seeded source links, found by the `seed_key` its own seed gave each row: a vocabulary, never an ingredient or its form. */
+export type SourceTargetTable = (typeof SOURCED)[Exclude<
+  SourcedKey,
+  'ingredientId' | 'ingredientVariantId'
+>]['table'];
+
+// The compendium seed (MB.242): the production compendium's entries, sharded,
+// each field traced to a source its citations name.
+
+/** A compendium entry's fields a citation may support, by the literal's own names. */
+export type CompendiumEntryField =
+  | 'name'
+  | 'canonicalName'
+  | 'nomenclature'
+  | 'description'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'safetyNotes'
+  | 'folkNames'
+  | 'deities'
+  | 'categories'
+  | 'substitutes';
+
+/** A form's fields a citation may support. Deities and folk names are the entry's alone (MB.215). */
+export type CompendiumVariantField =
+  | 'form'
+  | 'description'
+  | 'safetyNotes'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'categories'
+  | 'substitutes';
+
+/**
+ * One citation: a source by its handle — a shared work in `WORKS` or one of
+ * the shard's own `sources` — where in it, and which fields it backs.
+ */
+export interface SeedCitation<Field extends string> {
+  source: string;
+  /** `p. 112`, `under "Mugwort"`: required of a book or a chapter. */
+  locator?: string;
+  supports: readonly Field[];
 }
 
-/** A link's identity, as the seed wants it or as `reference_links` holds it. */
-export type SeedSourceLinkKey = Pick<SeedSourceLink, 'referenceId'> & {
-  [column in 'deityId' | 'deityTraditionId' | 'planetId' | 'zodiacSignId']?: string | null;
+/**
+ * What may stand in: an entry the seed writes, by its identity — the formal
+ * name lower-cased, or the label without one — and optionally one of its
+ * forms; or a name typed for an entry a later shard writes.
+ */
+export type SeedSubstitute = { identity: string; form?: string } | { name: string };
+
+/** One form of a compendium entry, and what that form adds to it (MB.215). */
+export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
+  Partial<
+    Pick<
+      typeof ingredientVariants.$inferInsert,
+      'description' | 'safetyNotes' | 'elements' | 'planets' | 'zodiacSigns' | 'colors'
+    >
+  > & {
+    categories?: string[];
+    substitutes?: SeedSubstitute[];
+    references: SeedCitation<CompendiumVariantField>[];
+  };
+
+/**
+ * One compendium entry, every curated value named as its seed literal names
+ * it: forms, categories and deities picked by the key their seed gave them,
+ * planets and signs stored in their row's current spelling.
+ */
+export type SeedCompendiumEntry = Pick<
+  typeof ingredients.$inferInsert,
+  | 'name'
+  | 'canonicalName'
+  | 'nomenclature'
+  | 'description'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'safetyNotes'
+> & {
+  folkNames?: string[];
+  deities?: string[];
+  categories?: string[];
+  substitutes?: SeedSubstitute[];
+  references: SeedCitation<CompendiumEntryField>[];
+  variants: SeedCompendiumVariant[];
 };
 
-/** A table a seeded source links, found by the `seed_key` its own seed gave each row. */
-export type SourceTargetTable =
-  typeof deityTraditions | typeof deities | typeof planets | typeof zodiacSigns;
+/** One shard: its entries and the per-entry pages they cite, by handle. */
+export interface SeedCompendiumShard {
+  name: string;
+  sources: Record<string, CitationFields>;
+  entries: SeedCompendiumEntry[];
+}

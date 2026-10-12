@@ -86,6 +86,28 @@ export async function assertMembership(
   return { workspaceId, userId: session.userId, role } as Membership;
 }
 
+/**
+ * The proofs a read spanning the compendium and, optionally, one coven runs
+ * under, as a two-tier finder takes them: none without `workspaceId`, so the
+ * compendium alone, else that coven's, checked for `permission`. How every
+ * "the compendium, or this coven too" read — an entry, a suggestion, a
+ * duplicate warning — names its scope, so none can widen it by forgetting the
+ * check.
+ *
+ * @throws {Forbidden} a coven is named and the caller is signed out, or
+ * `assertMembership` refuses them.
+ */
+export async function readersOf(
+  session: Session | null,
+  workspaceId: string | null | undefined,
+  permission: WorkspacePermission,
+): Promise<Membership[]> {
+  if (workspaceId == null) return [];
+  // A signed-out caller is refused as a stranger is: whether the coven exists is private.
+  if (!session) throw new Forbidden();
+  return [await assertMembership(session, workspaceId, permission)];
+}
+
 /** `{ spell: ['create'] }` as `spell: create` — for the log line, never for a test to match on. */
 function describe(permission: WorkspacePermission): string {
   return Object.entries(permission)

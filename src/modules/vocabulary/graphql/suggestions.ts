@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { Forbidden } from '../../../lib/errors';
+import { suggestionConnection } from '../../../graphql/context-helpers';
 import {
   type Claimant,
   type DeitySuggestion,
@@ -27,20 +27,7 @@ export const CorrespondenceSuggestionRef = builder
 const FIELDS = { planetSuggestions: suggestPlanets, zodiacSuggestions: suggestZodiacSigns };
 
 for (const [name, suggest] of Object.entries(FIELDS)) {
-  builder.queryField(name, (t) =>
-    t.pagedConnection({
-      type: CorrespondenceSuggestionRef,
-      args: {
-        // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
-        workspaceId: t.arg.id({ required: false }),
-        query: t.arg.string({ required: false }),
-      },
-      resolve: (_root, { workspaceId, query }, page, { session }) => {
-        if (!session) throw new Forbidden();
-        return suggest(session, workspaceId, query ?? '', page);
-      },
-    }),
-  );
+  suggestionConnection(name, CorrespondenceSuggestionRef, suggest);
 }
 
 /** An in-scope ingredient already holding a suggested value, by label and formal name. */
@@ -65,20 +52,7 @@ const FormSuggestionRef = builder.objectRef<FormSuggestion>('FormSuggestion').im
   }),
 });
 
-builder.queryField('formSuggestions', (t) =>
-  t.pagedConnection({
-    type: FormSuggestionRef,
-    args: {
-      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
-      workspaceId: t.arg.id({ required: false }),
-      query: t.arg.string({ required: false }),
-    },
-    resolve: (_root, { workspaceId, query }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return suggestForms(session, workspaceId, query ?? '', page);
-    },
-  }),
-);
+suggestionConnection('formSuggestions', FormSuggestionRef, suggestForms);
 
 // A form's shape without the claimants: the tradition tells two same-named
 // deities apart as a group does two forms, but a deity is no part of an
@@ -96,17 +70,4 @@ const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion')
   }),
 });
 
-builder.queryField('deitySuggestions', (t) =>
-  t.pagedConnection({
-    type: DeitySuggestionRef,
-    args: {
-      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
-      workspaceId: t.arg.id({ required: false }),
-      query: t.arg.string({ required: false }),
-    },
-    resolve: (_root, { workspaceId, query }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return suggestDeities(session, workspaceId, query ?? '', page);
-    },
-  }),
-);
+suggestionConnection('deitySuggestions', DeitySuggestionRef, suggestDeities);

@@ -16,7 +16,7 @@ import { makeIngredient } from '../../../support/fixtures';
 // the repository, wrapped so the test counts calls without changing what they
 // answer; a role lookup is `assertMembership`'s one query.
 const repository = vi.hoisted(() => ({
-  findReferencesOfIngredients: vi.fn(),
+  findReferencesOf: vi.fn(),
   findWorkspaceRole: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
@@ -57,7 +57,7 @@ async function addCiting(name: string, workspaceId: string | null, titles: strin
   );
   for (const title of titles) {
     const reference = await insertReference(sql, { title }, E.id);
-    await insertReferenceLink(sql, id, reference, A.id, `s.v. ${name}`);
+    await insertReferenceLink(sql, id, reference, A.id, `under "${name}"`);
   }
   return { id, workspaceId };
 }
@@ -85,7 +85,7 @@ describe('the referencesByIngredient loader', () => {
         `Zeta ${String(i).padStart(2, '0')}`,
       ]),
     );
-    expect(countOf()).toEqual({ findReferencesOfIngredients: 1, findWorkspaceRole: 1 });
+    expect(countOf()).toEqual({ findReferencesOf: 1, findWorkspaceRole: 1 });
   });
 
   it('answers [] for an ingredient citing nothing', async () => {
@@ -96,7 +96,7 @@ describe('the referencesByIngredient loader', () => {
 });
 
 describe('who referencesByIngredient answers', () => {
-  const CITED = [['Fixture Herbal', 's.v. Fixturewort']];
+  const CITED = [['Fixture Herbal', 'under "Fixturewort"']];
   let local: IngredientKey;
   let compendium: IngredientKey;
 
@@ -111,7 +111,7 @@ describe('who referencesByIngredient answers', () => {
   });
 
   it('answers anyone for a compendium entry, signed out included', async () => {
-    expect(await read(null, compendium)).toEqual([['Fixture Herbal', 's.v. Mockleaf']]);
+    expect(await read(null, compendium)).toEqual([['Fixture Herbal', 'under "Mockleaf"']]);
   });
 
   it('refuses a workspace entry to someone outside the coven, by direct id', async () => {

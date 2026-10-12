@@ -14,8 +14,10 @@ nothing else. The ingredient column each table suggests for is paired in the
 repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
 the `zodiac_signs` list, and a fifth vocabulary does not compile until it
 names its column. `planets` and `zodiac_signs` are paired with the lists of
-the same names, `ingredient_forms` with the single `form` (M4.7a), and
-`deities` with the rows of `ingredient_deities` (MB.167).
+the same names, `ingredient_forms` with the live rows of
+`ingredient_variants` and their `form` (M4.7a; MB.220, so each of an entry's
+forms is in use and claims, not only the one its row mirrors), and `deities`
+with the live rows of `ingredient_deities` and their `name` (MB.167).
 
 One page is one statement: a `UNION ALL` of three tiers, sorted, bounded and
 cut by cursor as a whole.
@@ -89,7 +91,7 @@ suggestion has neither, and a deity's has the first alone, below:
 
 - **Its group.** `ingredient_forms` is unique on the slug alone, so two live
   rows may share a display name ("Wax", animal and substance), and
-  `ingredients.form` stores the string. The group is the only thing that tells
+  a variant's `form` stores the string. The group is the only thing that tells
   them apart, so tiers 0 and 1 join `ingredient_form_groups` and return its
   name, and the tie-break is `lower(group name) || ' ' || id`, so a
   same-named pair reads in group order. **A form is curated only while its
@@ -116,8 +118,8 @@ suggestion has neither, and a deity's has the first alone, below:
 its group, and for the same reason: `deities` is unique on the slug alone,
 and a reader choosing among 216 chooses by tradition, "Hecate (Greek)"
 ([`deity-vocabulary.md`](deity-vocabulary.md)). The finder treats the two
-alike: `groupingOf` names each two-tier vocabulary's group table and the key
-filing a row under it, and tiers 0 and 1 join through it, so **a deity is
+alike: `groupingOf` finds each two-tier vocabulary's group table and the key
+filing a row under it in `TWO_TIER` (`src/db/vocabularies.ts`, MB.208), and tiers 0 and 1 join through it, so **a deity is
 curated only while its tradition is live too**, both `deleted_at`s filtered
 in all three tiers, and a dead tradition's name is never returned. **It
 carries no claimants.** A form's claimants show which entries already share
@@ -169,13 +171,13 @@ the way:
 **No planner assertion for the vocabularies.** At nineteen, thirteen,
 seventy-eight and 216 rows `planets_trgm`, `zodiac_signs_trgm`,
 `ingredient_forms_trgm` and `deities_trgm` are never chosen over a
-sequential scan, so
-`suggestions-query.test.ts` asserts what the service sends instead: both
-thresholds set in the transaction before the match, `%` and `<%` where a
-`similarity()` comparison could have been, the scope and soft-delete
-predicates, and the fold. It captures the statements as
-`duplicates-plan.test.ts` does. `suggestions.test.ts`,
+sequential scan, and nothing asserts the SQL text either: since MB.227 a
+statement is read only as the precondition of a plan test. The thresholds,
+the scope, the soft-delete filter and the fold are proved by what the
+services answer — `suggestions.test.ts`,
 `form-suggestions.test.ts`, `deity-suggestions.test.ts` and
 `common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
-possible.
+possible; a soft-deleted ingredient's dropping out of each is the `READS`
+tables' in `workspace-ingredients.test.ts` and `compendium-entries.test.ts`
+(MB.187).

@@ -1,10 +1,10 @@
-import { and, or, sql } from 'drizzle-orm';
+import { and, sql } from 'drizzle-orm';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { notSoftDeleted, readableInTiers, trigramMatch } from './predicates';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type { CommonNameSuggestion } from './types';
 
@@ -26,15 +26,8 @@ export async function findCommonNameSuggestions(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<CommonNameSuggestion>[]> {
-  const matches = (text: AnyPgColumn) =>
-    query ? sql`(${text} % ${query} or ${query} <% ${text})` : undefined;
-  const inScope = and(
-    or(
-      inCompendium(ingredients),
-      ...memberships.map((membership) => scopedTo(membership, ingredients)),
-    ),
-    notSoftDeleted(ingredients),
-  );
+  const matches = (text: AnyPgColumn) => (query ? trigramMatch(text, query) : undefined);
+  const inScope = readableInTiers(memberships, ingredients);
   const claim = (spelling: AnyPgColumn) => sql`
     select btrim(${spelling}) as spelling, ${ingredients.id} as id,
       ${ingredients.name} as name, ${ingredients.canonicalName} as canonical_name`;

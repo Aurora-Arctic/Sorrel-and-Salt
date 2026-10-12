@@ -14,13 +14,17 @@ rather than _correspondence_, which in §5 names every property an ingredient
 carries — element and deities too — not these two; the migration keeps the
 name it shipped under, since its tag is in the journal.
 
+**People read the `planets` vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table, columns, GraphQL and code names keep `planets` until MB.253 and MB.254, and this doc's `planets` always means those names (`design-decisions/mb.251-celestial-bodies.md`).
+
 - **`planets`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
   The only foreign keys are the audit stamps, and `ingredients.planets` and
-  `.zodiac_signs` point none at either table — `astrology-schema.test.ts`
-  asserts both from the schema and by scanning the shipped SQL per statement.
+  `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
+  holds `ingredients`' own keys to its workspace, and
+  `tests/db/schema-drift.test.ts` holds the migrated database to the schema
+  files (MB.226).
 
 **They are `form`'s pattern, and the two lists stay free text.** A member
 writes planets and zodiac signs, so by MB.35's rule each entry is text over a
@@ -55,11 +59,10 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 - **One tier.** Nothing groups a body or a sign, so the seed needs a flat
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
-- **The DESIGN.md table sits outside `forms.test.ts`'s slice.** That test
-  reads every table line between ``**`ingredient_forms`**`` and
-  ``**`ingredient_form_groups`**`` as a form, so §5's planet and zodiac
-  table is placed after the `ingredients.form` paragraph and before
-  `categories`, and MB.93's test slices its own anchors.
+- **The DESIGN.md table sits outside the forms table's run.** §5's planet and
+  zodiac table is placed after the forms paragraphs and before
+  `categories`, where a test once parsing the forms' lines would not read it
+  as one; no test parses §5 since MB.225.
 - **`standard` seeds no uncurated planet.** Its compendium's planet values are
   all curated names in title case, which match case-insensitively. MB.94
   decided against one: its tests write their own against an emptied
@@ -74,8 +77,8 @@ current workspace only, and since MB.162 every one of those is the
 workspace's. The admin's read (MB.95) is the compendium tier only — the live
 entries holding a value, which refuse its delete and take its rename
 (MB.162) — since an admin reaches no workspace's ingredients (M6.6); its finder
-joins `TIER_SEAM` in `tests/guards/module-boundaries.test.ts`, as the
-autofill's does. A value is uncurated when `lower(btrim(value))` matches no
+reads across the tier seam ([`modules.md`](../modules.md), "The tier seam"),
+as the autofill's does. A value is uncurated when `lower(btrim(value))` matches no
 live row's `lower(name)`.
 
 **The member's autofill** has a file of its own: [`member-autofill.md`](member-autofill.md).
@@ -84,7 +87,7 @@ live row's `lower(name)`.
 
 `src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
 ([`categories.md`](categories.md), "Form writes") without the group, for
-`/admin/planets` and `/admin/zodiac-signs`. One code path for both, keyed by
+`/admin/celestial-bodies` (it was `/admin/planets` until MB.251) and `/admin/zodiac-signs`. One code path for both, keyed by
 the ingredient list each curates (`CuratedField`, `'planets' | 'zodiacSigns'`).
 A compendium entry's planets and signs are curated spellings (MB.162), and
 these writes keep them so after the write.
@@ -102,7 +105,7 @@ these writes keep them so after the write.
 - **A delete is refused while a live compendium entry's list holds the
   value**: `Forbidden`, naming the first three entries and how many more,
   through the compendium's own filter (`IngredientFilter.planet` or
-  `zodiacSign`) and the shared `heldBy`. A coven's ingredient never blocks
+  `zodiacSign`) and the shared `refuseWhileHeld`. A coven's ingredient never blocks
   it; its value moves into that coven's in-use bucket.
 - **A rename carries the new name onto every live compendium entry holding
   the old, in the same transaction**, through `write.carryAstrologyRename`:
@@ -121,4 +124,5 @@ these writes keep them so after the write.
   an entry saved with the value in the instant between keeps a retired
   spelling.
 
-Revalidating the `compendium` tag after each write is M8.7's.
+Each write expires the `compendium` tag once it has committed (M8.7;
+([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).

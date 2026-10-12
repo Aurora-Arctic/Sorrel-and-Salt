@@ -9,8 +9,7 @@ name: Migrate
 # mid-migration; it reports separately so a failed seed is not read as a
 # failed migration. `environment` and `git-branch` come from deploy.yml's
 # resolved target, and the two workflows must resolve DATABASE_URL
-# identically — tests/guards/vercel-pull-git-branch.test.ts and
-# tests/guards/ci-secret-environments.test.ts hold them to it. Production
+# identically, or one database is migrated and another served. Production
 # alone snapshots before migrating; preview databases are disposable.
 on:
   workflow_call:
@@ -35,7 +34,8 @@ on:
         description: >-
           Seed the reference vocabularies after migrating — DESIGN.md §6's
           categories, §5's ingredient forms, planets and zodiac signs, and
-          the deity traditions and deities.
+          the deity traditions and deities, the sources they cite, and the
+          compendium's entries.
           deploy.yml passes true only when the push changed a seed's own
           files — every seed is additive and idempotent, so running them
           again would be harmless, but "harmless" is not a reason to write
@@ -86,7 +86,7 @@ jobs:
 
       # Two pulls, one per target: `--git-branch` resolves the branch-scoped
       # DATABASE_URL on preview and production rejects the flag. Two steps so
-      # tests/guards/vercel-pull-git-branch.test.ts reads the condition as data.
+      # each arm's condition names the target its command is legal on.
       - name: Pull Vercel environment (preview)
         if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'preview'
         run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
@@ -156,8 +156,8 @@ jobs:
           echo "Resolved DATABASE_URL from $source"
 
       # `drizzle-kit migrate` swallows the driver error and exits 1, so connect
-      # first for a cause. Reads the RESOLVED value, whichever source won
-      # (tests/guards/database-probe.test.ts). Fatal here, advisory in deploy.yml.
+      # first for a cause. Reads the RESOLVED value, whichever source won,
+      # since that is what migrates. Fatal here, advisory in deploy.yml.
       - name: Probe the database
         if: steps.guard.outputs.enabled == 'true'
         env:
@@ -252,6 +252,7 @@ jobs:
           npm run db:seed:astrology 2>&1 | tee -a seed.log
           npm run db:seed:deities 2>&1 | tee -a seed.log
           npm run db:seed:sources 2>&1 | tee -a seed.log
+          npm run db:seed:compendium 2>&1 | tee -a seed.log
 
       - name: Write seed job summary
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
@@ -260,4 +261,4 @@ jobs:
           check-name: Seed reference data (${{ inputs.environment }})
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
-          summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet, zodiac and deity vocabularies and their sources seeded' || 'Seed failed' }}
+          summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet, zodiac and deity vocabularies, their sources and the compendium seeded' || 'Seed failed' }}

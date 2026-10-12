@@ -8,9 +8,6 @@
 // The arc a facet sweeps; component geometry, not a shared token.
 $theme-toggle-icon-arc: 130deg;
 
-// Backdrop radius, and the button's own width/height.
-$theme-toggle-corner-radius: 3.9rem;
-
 .theme-toggle {
   position: fixed;
   // Beneath anything in the page's flow above it: the impersonation banner
@@ -22,13 +19,13 @@ $theme-toggle-corner-radius: 3.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: $theme-toggle-corner-radius;
-  height: $theme-toggle-corner-radius;
+  width: $toggle-corner;
+  height: $toggle-corner;
   // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
   border: none;
   // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
-  clip-path: circle($theme-toggle-corner-radius at 100% 0%);
+  clip-path: circle($toggle-corner at 100% 0%);
   // The parked facet sits past the window's right edge. The clip hides it but
   // still lets it count as overflow, which Chrome's device emulator pans to;
   // the button's own box, which holds the visible quarter, contains it.
@@ -118,7 +115,7 @@ $theme-toggle-corner-radius: 3.9rem;
   }
 }
 
-@media (prefers-color-scheme: light) {
+@include color-scheme-light {
   html:not([data-theme='dark']) {
     @include theme-toggle-light-facets;
   }

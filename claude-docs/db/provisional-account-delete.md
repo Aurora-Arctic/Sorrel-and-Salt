@@ -7,8 +7,14 @@ holds at least one `accounts` row, and has an `updated_at` older than
 `now()` minus the lifetime or a `created_at` older than `now()` minus the
 cap. `accounts` and `sessions` follow by their
 `ON DELETE CASCADE`. Both cutoffs are the database's clock, as the columns are. The `EXISTS` over `accounts` is `existsIn`'s, so the delete builds no read
-of its own; `soft-delete-finder-guard.test.ts`'s pinned export list names this
-function.
+of its own.
+
+It skips a row holding any `user_privilege_changes` row (MB.204), as
+`not(existsIn(...))`, the negation `citesNothing` uses. Such an account is
+one an admin has vouched for, and the ledger references it with a plain
+foreign key, so deleting it would fail the whole statement, and every sweep
+after it, over one account. The rows are not deleted with it either:
+`forbid_rewrite` refuses that, and the ledger is the history.
 
 It is hard for a reason outside this layer: Better Auth reads `users` by
 address with no `deleted_at` filter, so a tombstone would keep refusing the

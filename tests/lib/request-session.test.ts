@@ -11,7 +11,10 @@ const listUserAccountsMock = vi.fn();
 let requestHeaders = new Headers();
 
 vi.mock('@/lib/auth', () => ({
-  auth: { api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock } },
+  auth: {
+    api: { getSession: getSessionMock, listUserAccounts: listUserAccountsMock },
+    $context: Promise.resolve({ sessionConfig: { freshAge: 24 * 60 * 60 } }),
+  },
 }));
 vi.mock('next/headers', () => ({ headers: async () => requestHeaders }));
 // Next's own redirect and forbidden throw framework errors the router catches;
@@ -25,14 +28,21 @@ vi.mock('next/navigation', () => ({
   },
 }));
 
-const { getSession, linkedAccounts, requireAdminSession, requireSession, sessionFromHeaders } =
-  await import('@/lib/request-session');
+const {
+  getSession,
+  linkedAccounts,
+  requireAdminSession,
+  requireSession,
+  sessionFromHeaders,
+  sessionIsFresh,
+} = await import('@/lib/request-session');
+const { auth } = await import('@/lib/auth');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
-function betterAuthSession(role: unknown, emailVerified = true) {
+function betterAuthSession(role: unknown, emailVerified = true, createdAt = new Date()) {
   return {
-    session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date() },
+    session: { id: 's', token: 't', userId: USER_ID, expiresAt: new Date(), createdAt },
     user: { id: USER_ID, email: 'fixture@example.test', name: 'Fixture', role, emailVerified },
   };
 }
@@ -55,17 +65,17 @@ describe('getSession', () => {
     await expect(getSession()).resolves.toBeNull();
   });
 
-  it.each(['user', 'admin'] as const)('maps a %s to the service-level session', async (role) => {
-    getSessionMock.mockResolvedValue(betterAuthSession(role));
+  it('maps a session to the service-level one', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('admin'));
     // Exactly these two fields: the service session carries nothing else.
-    await expect(getSession()).resolves.toEqual({ userId: USER_ID, role });
+    await expect(getSession()).resolves.toEqual({ userId: USER_ID, role: 'admin' });
   });
 
   // `role` reaches here as Better Auth's plain string. A value outside the
   // column's enum is a bug somewhere upstream, and quietly reading it as
-  // 'user' would hide it.
-  it.each([undefined, null, 'owner', 'ADMIN'])('refuses a role of %s', async (role) => {
-    getSessionMock.mockResolvedValue(betterAuthSession(role));
+  // 'user' would hide it; which values are roles is tests/lib/session-role.test.ts's.
+  it('refuses a role the column does not hold', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('owner'));
     await expect(getSession()).rejects.toThrow(/role/);
   });
 });
@@ -223,5 +233,36 @@ describe('linkedAccounts', () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
 
     await expect(linkedAccounts()).resolves.toEqual([{ id: 'a-1', providerId: 'google' }]);
+  });
+});
+
+// The account page withholds Remove on a session older than Better Auth's
+// freshness window, which /unlink-account would refuse anyway (MB.116): the
+// same check, made before the button is offered.
+describe('sessionIsFresh', () => {
+  const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+  it('is true for a session younger than the freshness window', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    await expect(sessionIsFresh()).resolves.toBe(true);
+  });
+
+  it('is false for a session older than it, and with no session at all', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true, TWO_DAYS_AGO));
+    await expect(sessionIsFresh()).resolves.toBe(false);
+    getSessionMock.mockResolvedValue(null);
+    await expect(sessionIsFresh()).resolves.toBe(false);
+  });
+
+  it('is always true when the window is turned off, as Better Auth reads 0', async () => {
+    const config = (await auth.$context).sessionConfig;
+    const window = config.freshAge;
+    config.freshAge = 0;
+    try {
+      getSessionMock.mockResolvedValue(betterAuthSession('user', true, TWO_DAYS_AGO));
+      await expect(sessionIsFresh()).resolves.toBe(true);
+    } finally {
+      config.freshAge = window;
+    }
   });
 });

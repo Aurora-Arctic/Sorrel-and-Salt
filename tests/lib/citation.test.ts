@@ -125,7 +125,7 @@ describe('renderCitation, per kind, against the seed doc', () => {
         url: 'https://en.wikipedia.org/wiki/Guanyin',
       }),
     ).toBe(
-      'Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.',
+      'Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.',
     );
   });
 
@@ -141,7 +141,7 @@ describe('renderCitation, per kind, against the seed doc', () => {
         url: 'https://www.vle.lt/straipsnis/perkunas/',
       }),
     ).toBe(
-      '_Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.',
+      '_Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.',
     );
   });
 
@@ -256,7 +256,7 @@ describe('renderCitation, field by field', () => {
         edition: '3rd ed.',
         published: '2001',
       }),
-    ).toBe('_Encyclopaedia Fixturalis_, 3rd ed., s.v. "Testwort." 2001.');
+    ).toBe('_Encyclopaedia Fixturalis_, 3rd ed., under "Testwort." 2001.');
   });
 
   it('renders an article with a volume and no date or issue', () => {
@@ -335,16 +335,16 @@ describe('renderCitation, italic marks', () => {
 
   it('leaves an underscore inside a word as text', () => {
     expect(render({ kind: 'entry', title: 'Snake_case_word', container: 'Fixture_Wiki' })).toBe(
-      'Fixture_Wiki, s.v. "Snake_case_word."',
+      'Fixture_Wiki, under "Snake_case_word."',
     );
   });
 
   it('leaves an unclosed or empty mark as text', () => {
     expect(citationText({ kind: 'entry', title: 'Testwort', container: '_Fixture Wiki' })).toBe(
-      '_Fixture Wiki, s.v. "Testwort."',
+      '_Fixture Wiki, under "Testwort."',
     );
     expect(citationText({ kind: 'entry', title: 'Testwort', container: 'A __ B' })).toBe(
-      'A __ B, s.v. "Testwort."',
+      'A __ B, under "Testwort."',
     );
   });
 
@@ -354,7 +354,7 @@ describe('renderCitation, italic marks', () => {
     ).toEqual([
       { text: '(', italic: false },
       { text: 'Fixturalis', italic: true },
-      { text: '), s.v. "Testwort."', italic: false },
+      { text: '), under "Testwort."', italic: false },
     ]);
   });
 
@@ -371,21 +371,6 @@ describe('renderCitation, italic marks', () => {
     expect(citationText({ kind: 'book', title: 'T', publisher: '_Fixture Press_' })).toBe(
       'T. _Fixture Press_.',
     );
-  });
-
-  it('merges neighbouring runs of one style', () => {
-    const parts = renderCitation({
-      kind: 'book',
-      authors: 'Testwort, Fixtura',
-      title: 'Fixtures',
-      place: 'Testford',
-    });
-
-    expect(parts).toEqual([
-      { text: 'Testwort, Fixtura. ', italic: false },
-      { text: 'Fixtures', italic: true },
-      { text: '. Testford.', italic: false },
-    ]);
   });
 });
 
@@ -434,5 +419,9 @@ describe('byCitation', () => {
       'Mockleaf.',
       '"Zest."',
     ]);
+  });
+  // The marks the reference formatter pairs (QUOTE_PAIRS), guillemets included.
+  it('ignores a leading guillemet, as the formatter takes one off a title', () => {
+    expect(sorted(['«Zest.»', 'Mockleaf.'])).toEqual(['Mockleaf.', '«Zest.»']);
   });
 });

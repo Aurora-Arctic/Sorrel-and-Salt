@@ -47,11 +47,23 @@ The `db:*` scripts (generate, migrate, seed, drop, reset, studio), `probe-databa
 
 ## Invitations (M7.1)
 
-`workspace_invitations`: the invited address, the role, the hashed token, four lifecycle columns rather than a `status` enum, and the constraint that keeps `owner` out of it. [`db/invitations.md`](db/invitations.md)
+`invitations`, one table in two tiers since MB.201: a workspace and a role, or neither for the site tier, which grants admin; the hashed token, four lifecycle columns rather than a `status` enum, and the constraint that keeps `owner` out of it. [`db/invitations.md`](db/invitations.md)
+
+### Admin invitations (MB.69), now the site tier
+
+In [`db/invitations.md`](db/invitations.md#admin-invitations-mb69-now-the-site-tier).
+
+### Written and read by tier (MB.202)
+
+In [`db/invitations.md`](db/invitations.md#written-and-read-by-tier-mb202).
+
+### Policy, in two services
+
+In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is formal name plus form in the generated `canonical_key`, unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is the formal name alone in the generated `identity_key` (MB.220; the form and `canonical_key` until then), unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
@@ -141,6 +153,10 @@ In [`db/updated-at.md`](db/updated-at.md#a-table-added-later-does-not-get-the-tr
 
 `withAudit(session, fn)` is the one exported write path: `fn` gets a narrow `AuditWriter`, and `app.current_user_id` is published for each transaction. [`db/write-path.md`](db/write-path.md)
 
+### Table marks
+
+In [`db/write-path.md`](db/write-path.md#table-marks-mb198).
+
 ### `app.current_user_id`, published per transaction (M1.19)
 
 In [`db/write-path.md`](db/write-path.md#appcurrent_user_id-published-per-transaction-m119).
@@ -205,6 +221,10 @@ The four services that create, update, delete and read a coven's own ingredients
 
 The compendium's reads take no session: one keyset page under an optional filter with its accent-folded word-similarity search, the count that numbers those pages, one entry by id, and the curated form values. [`db/compendium-read.md`](db/compendium-read.md)
 
+## The compendium cache (M8.6)
+
+The compendium's list and count and the curated vocabularies' are held in Next's data cache under the one `compendium` tag, through one wrapper in `src/lib/`, keyed by their arguments and stored as superjson; every compendium-tier admin write expires the tag with `{ expire: 0 }`, held to it by a guard over the `ingredients` and `vocabulary` services; Vitest aliases the cache to a pass-through, and only one e2e server keeps it. [`db/compendium-cache.md`](db/compendium-cache.md)
+
 ## Compendium writes (M5.2)
 
 The three services that create, update and delete a compendium entry, each behind `assertSiteAdmin` before its input is parsed, and the collision error naming the entry that holds the identity, read by `findCompendiumEntryByIdentity`. [`db/compendium-writes.md`](db/compendium-writes.md)
@@ -248,6 +268,10 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 ## The deity vocabulary seed (list MB.127; seed MB.129)
 
 Thirty-five traditions and 216 deities, the owner's starting list, with their descriptions, what was left out and why, and the sources the list came from; MB.129 seeds and parses it. [`db/deity-vocabulary-seed.md`](db/deity-vocabulary-seed.md)
+
+## The compendium seed (MB.240 to MB.249)
+
+The compendium's 614 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
 
 ## The standard scenario (M1.22)
 

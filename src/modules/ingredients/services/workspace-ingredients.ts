@@ -1,27 +1,26 @@
 import 'server-only';
-import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
+import {
+  findOneByIdInWorkspace,
+  findWorkspaceIngredientByIdentity,
+  withAudit,
+} from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { ingredientSlug } from '../../../lib/slugify';
+import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
-  addCategories,
-  addFolkNames,
-  addReferenceLinks,
-  addSubstitutes,
-  columnsOf,
   heldDeities,
-  replaceCategories,
-  replaceDeities,
-  replaceFolkNames,
-  replaceReferenceLinks,
-  replaceSubstitutes,
+  ingredientColumns,
   resolvePicks,
+  softDeleteIngredient,
+  splitChildren,
+  writeChildren,
 } from './ingredient-rows';
-import { assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership } from '@/modules/coven';
+import { describeEntry } from '@/modules/vocabulary';
 import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
 
 // Story 15: a coven's own ingredients. Every read and write is under the
@@ -31,8 +30,8 @@ import type { IngredientFields, IngredientRow, IngredientValues } from '../types
 
 /**
  * Creates an ingredient in this coven, with its folk names, substitutes,
- * deities, references and categories, in one transaction. The slug is set here from the
- * label, the form and the formal name.
+ * deities, references, categories and forms, in one transaction. The slug is set here from the
+ * label and the formal name.
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
@@ -46,37 +45,28 @@ export async function createWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    LocalIngredientInput,
-    input,
-  );
-  const picks = await resolvePicks('coven', parsed, deities ?? [], []);
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
+  const picks = await resolvePicks('coven', parsed, picked, []);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.insertInWorkspace(membership, ingredients, {
-      ...columnsOf(fields),
-      slug,
-    });
-    await addFolkNames(write, row.id, folkNames ?? []);
-    await addSubstitutes(write, [membership], row.id, substitutes ?? []);
-    await replaceDeities(write, row.id, picks.deities, []);
-    await addReferenceLinks(write, [membership], row.id, references ?? []);
-    await addCategories(write, row.id, fields.categoryIds ?? []);
+    const [row] = await write.insertInWorkspace(membership, ingredients, columns);
+    await writeChildren(write, [membership], row.id, { ...lists, ...picks.children }, 'add');
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, undefined));
 }
 
 /**
  * Replaces an ingredient of this coven with `input` — the whole ingredient as
  * the form submits it, so a field left out is cleared — and its folk names,
- * substitutes, deities, references and categories with the input's, in one
- * transaction. A folk name, substitute, deity, reference or category still
- * listed keeps its row; one dropped is soft-deleted, and a category's
- * hard-deleted (MB.34). The slug follows the label, the form and the formal
+ * substitutes, deities, references, categories and forms with the input's, in
+ * one transaction. A folk name, substitute, deity, reference, category or
+ * form still listed keeps its row; one dropped is soft-deleted, and a
+ * category's hard-deleted (MB.34). A form is matched by its id, else by its
+ * text folded, and keeps its own children when dropped (MB.219). The slug follows the label and the formal
  * name, and nothing redirects from the old one: no route reads a coven
  * ingredient's slug.
  *
@@ -95,32 +85,28 @@ export async function updateWorkspaceIngredient(
   input: IngredientValues,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
-  const { folkNames, substitutes, deities, references, ...parsed } = parseInput(
-    LocalIngredientInput,
-    input,
-  );
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const held = await heldDeities([membership], id);
-  const picks = await resolvePicks('coven', parsed, deities ?? [], held);
+  const picks = await resolvePicks('coven', parsed, picked, held);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
 
-  const slug = ingredientSlug(fields.name, fields.form, fields.canonicalName);
+  const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
-      ...columnsOf(fields),
-      slug,
-    });
+    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
     if (!row) throw new NotFound('No such ingredient in this coven');
-    await replaceFolkNames(write, [membership], id, folkNames ?? []);
-    await replaceSubstitutes(write, [membership], id, substitutes ?? []);
-    await replaceDeities(write, id, picks.deities, held);
-    await replaceReferenceLinks(write, [membership], id, references ?? []);
-    await replaceCategories(write, [membership], id, fields.categoryIds ?? []);
+    await writeChildren(
+      write,
+      [membership],
+      id,
+      { ...lists, ...picks.children, heldDeities: held },
+      'replace',
+    );
     return row;
-  }).catch((error: unknown) => refuseCollision(error, fields, slug));
+  }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
 
 /**
@@ -139,13 +125,9 @@ export async function deleteWorkspaceIngredient(
   id: string,
 ): Promise<void> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['delete'] });
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
-  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
-
-  await withAudit(session, async (write) => {
-    const [row] = await write.softDeleteByIdInWorkspace(membership, ingredients, id);
-    if (!row) throw new NotFound('No such ingredient in this coven');
-  });
+  await softDeleteIngredient(session, id, 'No such ingredient in this coven', (write) =>
+    write.softDeleteByIdInWorkspace(membership, ingredients, id),
+  );
 }
 
 /**
@@ -169,33 +151,54 @@ export async function getWorkspaceIngredient(
 
 /**
  * A write that broke one of the coven's unique indexes, as a `ValidationError`
- * on the field that caused it; any other error unchanged. The label is the
- * identity of an entry with no formal name, so its identity collision is
- * reported on `name`. `slug` is the one this write set.
+ * on the field that caused it; any other error unchanged. An identity
+ * collision — a second ingredient under a formal name the coven holds
+ * (MB.215) — is reported on `canonicalName`, or on `name` for one with none,
+ * whose label is its identity, naming the ingredient holding it, read after
+ * the write rolled back, and pointing at adding the form to it — whichever
+ * index Postgres names: the label and address indexes are older than the
+ * identity one, so the oil written under the herb's label meets them first.
+ * `slug` is the one this write set, `id` the ingredient an update writes,
+ * never its own collision.
  */
-function refuseCollision(error: unknown, fields: IngredientFields, slug: string): never {
+async function refuseCollision(
+  error: unknown,
+  membership: Membership,
+  fields: IngredientFields,
+  slug: string,
+  id: string | undefined,
+): Promise<never> {
   const refuse = (path: string, message: string) => {
     throw new ValidationError([{ path: [path], message }]);
   };
-  const { name, canonicalName, form } = fields;
-
-  switch (violatedUniqueIndex(error)) {
-    case 'ingredients_workspace_label_unique':
-      refuse('name', `This coven already has an ingredient called "${name}"`);
-      break;
-    case 'ingredients_workspace_identity_unique':
-      if (canonicalName == null) {
-        refuse('name', `This coven already has an ingredient called "${name}"`);
-      }
+  const { name, canonicalName } = fields;
+  const index = violatedUniqueIndex(error);
+  if (
+    index === 'ingredients_workspace_identity_key_unique' ||
+    index === 'ingredients_workspace_label_unique' ||
+    index === 'ingredients_workspace_slug_unique'
+  ) {
+    const holder = await findWorkspaceIngredientByIdentity(membership, fields);
+    if (holder && holder.id !== id) {
       refuse(
-        'canonicalName',
-        `This coven already has an ingredient that is ${[canonicalName, form].filter(Boolean).join(', ')}`,
+        canonicalName == null ? 'name' : 'canonicalName',
+        `This coven already has ${describeEntry(holder)} — add this form to it instead`,
       );
-      break;
+    }
+  }
+
+  switch (index) {
+    case 'ingredients_workspace_label_unique':
+      return refuse('name', `This coven already has an ingredient called "${name}"`);
+    case 'ingredients_workspace_identity_key_unique':
+      return refuse(
+        canonicalName == null ? 'name' : 'canonicalName',
+        `This coven already has an ingredient that is ${canonicalName ?? name}`,
+      );
     case 'ingredients_workspace_slug_unique':
-      refuse(
+      return refuse(
         'name',
-        `Another ingredient in this coven already has the address "${slug}" — change the name, form or formal name`,
+        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
       );
   }
   throw error;

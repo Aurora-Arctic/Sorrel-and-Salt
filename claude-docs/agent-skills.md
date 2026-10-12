@@ -61,6 +61,7 @@ summary of task tracking. It stays within 20 KB. The long forms are
 | `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.ladle/`, `tests/components/`   | Component layout, stories and docs, Sass, the measure, design-review scope, button case    |
 | `testing`       | `tests/`, the Vitest and Playwright configs                                                | The Testing section in full, the harness, fixtures, the coverage `jq` line                 |
 | `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`   | Board layout, the status table, the lookup rule, PR bodies, comments, minting              |
+| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s  | Plain language for readers of every experience level: who reads, how, where precision wins |
 
 **How one loads.** Claude Code reads a rule file's `paths:` frontmatter, a list
 of globs from the repo root, and adds the file to the session once the **Read
@@ -77,11 +78,11 @@ A rule file is the long form of lines in `CLAUDE.md`, never a rule of its own:
 a rule every task must know belongs in `CLAUDE.md`, and a rule file only
 restates it at length.
 
-**What holds it.** `tests/guards/claude-rules.test.ts` fails a rule file with
-no `paths:` (it would load on every turn, `CLAUDE.md`'s cost under another
-name), a glob that matches no file (a rule that can never load), a `CLAUDE.md`
-over 20 KB or naming a rule file it omits, and a renumbered or gutted
-architecture rule: code cites them by number (`CLAUDE.md rule 4`), so each rule
-keeps the phrases its citations rely on. `tests/guards/doc-citation.test.ts`
-reads `CLAUDE.md` and every markdown file under `.claude/`, so a rule file's
-citation into `claude-docs/` has to resolve.
+**What holds it.** Review, since MB.224: code used only by agents is never
+tested ([`testing/layer-ownership.md`](testing/layer-ownership.md), "What a test
+may assert"). A rule file carries `paths:` (without, it would load on every
+turn, `CLAUDE.md`'s cost under another name) and a glob that matches a file (or
+it can never load); `CLAUDE.md` stays under 20 KB and names every rule file; an
+architecture rule is never renumbered or gutted, since code cites them by
+number (`CLAUDE.md rule 4`); and a rule file's citation into `claude-docs/`
+resolves.

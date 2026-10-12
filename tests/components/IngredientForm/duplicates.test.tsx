@@ -1,0 +1,314 @@
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NameField, useDuplicateWarning } from '@/components/IngredientForm/duplicates';
+import type { IngredientFormValues } from '@/components/IngredientForm/types';
+import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { DEBOUNCE_MS } from '@/lib/debounce';
+import { renderWithClient } from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
+import { mockGraphQLError } from '../../support/msw/graphql';
+import { WORKSPACE_ID, offerDuplicates } from '../../support/msw/ingredient-lookups';
+import type { DuplicateNode } from './types';
+
+// Story 16's warning on its own (MB.181): `useDuplicateWarning` and the
+// `NameField` that draws it, in a form whose save asks the warning's `check`
+// before it sends, as the form's does. What only the whole form does with it
+// — the focus on Create Anyway, Save busy while it checks, an error elsewhere
+// first — is index.test.tsx's (claude-docs/components/ingredient-form.md,
+// "Testing").
+
+const TOMENTOSA: DuplicateNode = {
+  id: 'claw-1',
+  name: "Cat's Claw",
+  canonicalName: 'Uncaria tomentosa',
+  slug: 'cats-claw-uncaria-tomentosa',
+};
+const FELIS: DuplicateNode = {
+  id: 'claw-2',
+  name: "Cat's Claw",
+  canonicalName: 'Felis catus',
+  slug: 'cats-claw-felis-catus',
+};
+const MOCKLEAF: DuplicateNode = {
+  id: 'mock-1',
+  name: 'Mockleaf',
+  canonicalName: null,
+  slug: 'mockleaf',
+};
+
+/**
+ * The name field and its warning; a save that the warning does not hold calls
+ * `sent` with the name. `opened` is an edited entry's name, as the form opens with it.
+ */
+function renderName(opened?: string) {
+  const sent = vi.fn();
+  const Harness = () => {
+    const methods = useForm<IngredientFormValues>({
+      defaultValues: { ...EMPTY_VALUES, name: opened ?? '' },
+    });
+    const warning = useDuplicateWarning(
+      WORKSPACE_ID,
+      useWatch({ control: methods.control, name: 'name' }),
+      undefined,
+      opened,
+    );
+    return (
+      <FormProvider {...methods}>
+        <form
+          onSubmit={methods.handleSubmit(async ({ name }) => {
+            if (!(await warning.check(name))) sent(name);
+          })}
+        >
+          {/* No ref: moving the focus to Create Anyway is the form's. */}
+          <NameField warning={warning} ref={null} />
+          <button type="submit">Save Ingredient</button>
+        </form>
+      </FormProvider>
+    );
+  };
+  renderWithClient(<Harness />);
+  return sent;
+}
+
+const name = () => screen.getByRole('textbox', { name: 'Name' });
+/** Types into the Name box, the one field here. */
+const type = (value: string) => typeIn(name(), value);
+const save = () => press('Save Ingredient');
+const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
+/** Lets a save that may have started reach its end. */
+const settleSave = () => act(() => vi.advanceTimersByTimeAsync(0));
+
+beforeEach(() => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
+const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+
+describe('NameField, with useDuplicateWarning', () => {
+  it('asks once the name settles, with the whole name trimmed, about this coven', async () => {
+    renderName();
+    const calls = offerDuplicates([]);
+
+    type('C');
+    type('Cats Claw ');
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
+    expect(calls).toHaveLength(0);
+
+    settle();
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Cats Claw', first: 3 });
+  });
+
+  it('asks nothing for a blank name, and drops the warning the last name had', async () => {
+    renderName();
+    const calls = offerDuplicates([TOMENTOSA]);
+    type('Cats Claw');
+    settle();
+    await within(warning()).findByRole('link');
+
+    type('   ');
+    settle();
+
+    expect(warning()).toBeEmptyDOMElement();
+    await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+    expect(calls).toHaveLength(1);
+  });
+
+  // MB.115, the owner's call: an edit that leaves the name alone asks nothing.
+  it('asks nothing about the name an edit opened with, and lets its save through', async () => {
+    // Answered before the form renders: an edit that asked on opening would ask at once.
+    const calls = offerDuplicates([TOMENTOSA]);
+    const sent = renderName("Cat's Claw");
+
+    settle();
+    save();
+    await settleSave();
+
+    expect(calls).toHaveLength(0);
+    expect(warning()).toBeEmptyDOMElement();
+    expect(sent).toHaveBeenCalledWith("Cat's Claw");
+  });
+
+  it('warns once an edit changes the name', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName('Mockleaf');
+
+    type('Cats Claw');
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+  });
+
+  it('warns at the opened name again once the name has been typed in', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName("Cat's Claw");
+
+    type("Cat's Cla");
+    type("Cat's Claw");
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+  });
+
+  // Each in a new tab, so the form and what is typed in it stay where they are.
+  it('names each near match by its label and formal name, linked to the entry in a new tab', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
+
+    type('Cats Claw');
+    settle();
+
+    const tomentosa = await within(warning()).findByRole('link', {
+      name: /^Cat's Claw \(Uncaria tomentosa\)/,
+    });
+    expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
+    expect(tomentosa).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: /^Cat's Claw \(Felis catus\)/ })).toHaveAttribute(
+      'href',
+      '/ingredients/claw-2',
+    );
+    expect(screen.getByRole('link', { name: /^Mockleaf/ })).toHaveAttribute(
+      'href',
+      '/ingredients/mock-1',
+    );
+    // Read with the field, as its hint is, and not an error until a save meets it.
+    expect(name().getAttribute('aria-describedby')).toContain(warning().id);
+    expect(name()).not.toBeInvalid();
+  });
+
+  it('warns of nothing when nothing is close, and lets the save through', async () => {
+    const sent = renderName();
+    const calls = offerDuplicates([]);
+
+    type('Fixture Nothingalike');
+    settle();
+    await waitFor(() => expect(calls).toHaveLength(1));
+
+    expect(warning()).toBeEmptyDOMElement();
+    expect(createAnyway()).not.toBeInTheDocument();
+    save();
+    await waitFor(() => expect(sent).toHaveBeenCalledWith('Fixture Nothingalike'));
+  });
+
+  it('holds a save while a match shows, as an error on the name, read with Create Anyway', async () => {
+    const sent = renderName();
+    offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    save();
+
+    await waitFor(() => expect(name()).toBeInvalid());
+    expect(name().getAttribute('aria-describedby')).toContain(warning().id);
+    // The warning is read with the button, so the focus the form moves there says why.
+    expect(createAnyway()).toHaveAccessibleDescription(
+      expect.stringContaining("Cat's Claw (Uncaria tomentosa)"),
+    );
+    expect(sent).not.toHaveBeenCalled();
+
+    // Again, and it holds again.
+    save();
+    await settleSave();
+    expect(sent).not.toHaveBeenCalled();
+  });
+
+  it('checks a name saved before its typing settles, and holds on what it finds', async () => {
+    const sent = renderName();
+    const calls = offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw ");
+    save();
+
+    // No wait for the debounce: the save asks about the name it is sending.
+    await waitFor(() => expect(name()).toBeInvalid());
+    expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
+    expect(within(warning()).getByRole('link')).toHaveAccessibleName(
+      /^Cat's Claw \(Uncaria tomentosa\)/,
+    );
+    expect(sent).not.toHaveBeenCalled();
+  });
+
+  it('lifts the hold when the name changes, a new match only warning', async () => {
+    const sent = renderName();
+    offerDuplicates([TOMENTOSA]);
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    save();
+    await waitFor(() => expect(name()).toBeInvalid());
+
+    offerDuplicates([TOMENTOSA, FELIS]);
+    type("Cat's Claws");
+    settle();
+    await within(warning()).findByRole('link', {
+      name: /^Cat's Claw \(Felis catus\)/,
+    });
+
+    expect(name()).not.toBeInvalid();
+    expect(sent).not.toHaveBeenCalled();
+  });
+
+  it('goes on Create Anyway, handing the focus back to the name, and the next save goes', async () => {
+    const sent = renderName();
+    offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    save();
+    await waitFor(() => expect(name()).toBeInvalid());
+    fireEvent.click(createAnyway() as HTMLElement);
+
+    expect(warning()).toBeEmptyDOMElement();
+    expect(name()).toHaveFocus();
+    expect(name()).not.toBeInvalid();
+    save();
+    await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
+  });
+
+  it('stays gone for the matches set aside, and returns for a new one', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA]);
+
+    type("Cat's Claw");
+    settle();
+    await within(warning()).findByRole('link');
+    fireEvent.click(createAnyway() as HTMLElement);
+
+    // A longer name finding the same entry: already answered.
+    const again = offerDuplicates([TOMENTOSA]);
+    type("Cat's Claws");
+    settle();
+    await waitFor(() => expect(again).toHaveLength(1));
+    expect(warning()).toBeEmptyDOMElement();
+
+    // One it has not been asked about.
+    offerDuplicates([TOMENTOSA, FELIS]);
+    type("Cat's Clawe");
+    settle();
+    const felis = await within(warning()).findByRole('link', {
+      name: /^Cat's Claw \(Felis catus\)/,
+    });
+    expect(felis).toBeInTheDocument();
+    expect(within(warning()).queryByRole('link', { name: /tomentosa/ })).not.toBeInTheDocument();
+  });
+
+  it('shows nothing, and lets the save through, when the lookup fails', async () => {
+    const sent = renderName();
+    mockGraphQLError('PossibleDuplicates', { code: 'FORBIDDEN' });
+
+    type("Cat's Claw");
+    settle();
+    save();
+
+    await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
+    expect(warning()).toBeEmptyDOMElement();
+  });
+});

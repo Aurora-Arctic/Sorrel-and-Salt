@@ -78,16 +78,6 @@ describe('suggestIngredients', () => {
       expect(await namesFor(B, 'crone')).toEqual([]);
     });
 
-    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
-    it('does not return a soft-deleted ingredient', async () => {
-      const id = await addIngredient({ name: 'Mugwort', workspaceId: WORKSPACE_W_ID });
-      expect(await namesFor(B, 'mugwort')).toEqual(['Mugwort']);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${id}`;
-
-      expect(await namesFor(B, 'mugwort')).toEqual([]);
-    });
-
     it('ranks the closest match first, not alphabetically', async () => {
       await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });

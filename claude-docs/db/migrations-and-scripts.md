@@ -101,9 +101,7 @@
   `drizzle-kit generate` wrote the three `ADD COLUMN`s for `planets`,
   `zodiac_signs` and `colors`, and the fill was added by hand, one `UPDATE`
   per list copying its single column as a one-entry array where one is set.
-  The template is migrated before it is seeded, so its lists start empty and
-  `ingredient-lists.test.ts` re-runs the migration's own `UPDATE`s against the
-  seeded rows. See
+  See
   ["The ingredient identity model"](identity-model.md).
 - **`0031_refill-ingredient-lists.sql`** (MB.136) is the fifth hand-written
   one, via `generate --custom`, and fills the lists again from the singles
@@ -111,9 +109,7 @@
   had to be `--custom`: a plain `generate` diffs the schema, which no longer
   declares the singles, and would have emitted MB.137's drop, while
   `--custom` copies the last snapshot whole, so the singles stay in it.
-  Data only, so no sidecar. The seed writes lists since MB.136, so
-  `ingredient-lists.test.ts` puts the seeded rows back as a deployed database
-  held them before re-running either fill. See
+  Data only, so no sidecar. See
   ["The ingredient identity model"](identity-model.md).
 - **`0032_ingredient-substitutes.sql`** (MB.139) and **`0033_deities.sql`**
   (MB.128) add tables while drops are pending, so both are `generate --custom`
@@ -126,17 +122,14 @@
   the way 0032 was, because MB.137's and MB.141's drops are still pending.
   Its `ADD COLUMN` for `elements` came from the scratch `generate`. The fill
   was added by hand, as 0030's was: one `UPDATE` copying `element` as a
-  one-entry array where one is set. `element-list.test.ts` re-runs that
-  `UPDATE` against the seeded rows. See
+  one-entry array where one is set. See
   ["The ingredient identity model"](identity-model.md).
 - **`0035_refill-element-list.sql`** (MB.159) is 0031 again for MB.157's
   list: `generate --custom`, so `element`, which MB.159 stops declaring,
   stays in the copied snapshot until MB.160 drops it. One
   `UPDATE` rederives `elements` from `element` for every row that
   disagrees, for anything the live deploy wrote after 0034. Data only, so no
-  sidecar. The seed writes lists since MB.159, so `element-list.test.ts`
-  put the seeded rows back as a deployed database held them before
-  re-running either fill, until 0037 dropped the column both read. See
+  sidecar. See
   ["The ingredient identity model"](identity-model.md).
 - **`0036_drop-ingredient-singles.sql`** (MB.137) is the contract of MB.134's
   lists: `drizzle-kit generate` wrote the three `DROP COLUMN`s for `planet`,
@@ -148,8 +141,7 @@
   `DROP COLUMN "element"`, with its `.ack.md` sidecar, and no last fill.
   It is `generate --custom`, because a plain `generate` would also emit
   MB.141's pending drop; its snapshot is 0036's with `element` deleted and
-  nothing else changed. `element-list.test.ts` asserts the column gone, the
-  type kept, and the drop as the file's only statement. See
+  nothing else changed. See
   ["The ingredient identity model"](identity-model.md).
 - **`0038_unknown-carries-formal-name.sql`** (MB.161) replaces
   `ingredients_nomenclature_declares_canonical_name` under the same name,
@@ -165,16 +157,15 @@
   landed, it emitted the `DROP COLUMN "substitutes"` alone. Before the drop
   it copies across, as names, any list entry the table holds no row for, live
   or removed, in any case. Its sidecar acknowledges the drop and says why it
-  is safe on production: v0.5.0 shipped MB.140 first.
-  `ingredient-substitutes-schema.test.ts` adds the column back in its clone
-  to re-run both fills. See ["Expand/contract"](expand-contract.md).
-- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of
-  `admin_role_changes` and its enum, with three statements added by hand: the
-  table's `set_updated_at` trigger; the demotion of the seed's bootstrap user,
-  which a database seeded before MB.58 holds as an admin and the seed never
-  rewrites; and the backfill, one `bootstrap` row for every live admin,
-  stamped as that admin. Both data statements re-run in
-  `admin-role-changes-schema.test.ts`. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
+  is safe on production: v0.5.0 shipped MB.140 first. See ["Expand/contract"](expand-contract.md).
+- **`0043_admin-role-changes.sql`** (MB.58) is a plain `generate` of MB.58's
+  admin ledger and its enum, with three statements added by hand: the table's
+  `set_updated_at` trigger; the demotion of the seed's bootstrap user, which a
+  database seeded before MB.58 holds as an admin and the seed never rewrites;
+  and the backfill, one `bootstrap` row for every live admin, stamped as that
+  admin. The ledger is superseded by `user_privilege_changes` (`0055`) and
+  dropped by `0058`, and its schema test, which re-ran both data statements,
+  went with its schema in MB.196. See [M2.9's record](../design-decisions/m2.9-granting-admin.md),
   "What the audit trail records".
 - **`0044_admin-role-change-pauses.sql`** (MB.62) creates
   `admin_role_change_pauses`, its pair CHECK and its one-open index, with the
@@ -188,7 +179,8 @@
   its partial unique index on `token_hash`, with the `set_updated_at` trigger
   added by hand (["Admin invitations"](invitations.md)). Made while MB.168's
   drop was still pending, it leaves that drop out and keeps the column in
-  `0046_snapshot.json`, as 0044 does.
+  `0046_snapshot.json`, as 0044 does. `0057` copies the table into
+  `invitations`, and `0059` drops it.
 - **`0048_drop-deities-list.sql`** (MB.168) is the contract of MB.167's
   switch, a plain `generate` as 0039 was: it emitted the
   `DROP COLUMN "deities"` alone. Before the drop it copies across, as
@@ -197,8 +189,43 @@
   the list's order. Its sidecar acknowledges the drop, and says why production
   is not its gate: production is not live, the owner's call, so the release
   carrying MB.167 carries this too, and v0.5.0's reads fail only for that
-  rollout. `ingredient-deities-schema.test.ts` adds the column back in its
-  clone to re-run both fills. See ["Expand/contract"](expand-contract.md).
+  rollout. See ["Expand/contract"](expand-contract.md).
+- **`0055_user-privilege-changes.sql`** (MB.194) is a plain `generate` of
+  `user_privilege_changes` and its three enums, with four statements added by
+  hand: the table's `set_updated_at` trigger; `forbid_rewrite()`, one function
+  for every append-only ledger, and its `BEFORE UPDATE OR DELETE` trigger on
+  this one, whose refusals `user-privilege-changes-schema.test.ts` asserts; and the
+  copy of the two one-privilege ledgers it replaced, with their ids and stamps. See
+  [MB.194's record](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
+- **`0056_privilege-changes-record-themselves.sql`** (MB.195) is a
+  `generate --custom`: `record_privilege_change()` and its two triggers on
+  `users`, one after insert and one after an update of `role` or
+  `can_create_workspace`, since an insert trigger's `WHEN` may not name `OLD`.
+  [`write-path.md`](write-path.md) documents the route and note they read.
+- **`0058_drop-old-privilege-ledgers.sql`** (MB.197) is the contract of
+  MB.196's switch: it drops `admin_role_changes` and
+  `workspace_creation_changes` and their two enums, after running `0055`'s
+  copy once more with `ON CONFLICT ("id") DO NOTHING`, for any row the deploy
+  before MB.196 wrote after it. Made while MB.203's drop of the two old
+  invitation tables was pending, it is a drop made while another is pending:
+  the invitation drops `generate` also emitted are left out, and those tables
+  kept in `0058_snapshot.json`. Its sidecar acknowledges the four drops and
+  says why production is not its gate: production is not live, the owner's
+  call. See
+  ["Expand/contract"](expand-contract.md).
+- **`0059_drop-old-invitation-tables.sql`** (MB.203) is the contract of
+  MB.202's switch, a plain `generate` once nothing else was pending: it
+  drops `workspace_invitations` and `admin_invitations`, and no enum, since
+  `workspace_members` and `invitations` hold `workspace_role`. Before the
+  drops it runs `0057`'s copy once more with `ON CONFLICT ("id") DO NOTHING`,
+  for any row the deploy before MB.202 wrote after it. Its sidecar
+  acknowledges both drops and says why production is not its gate:
+  production is not live, the owner's call. See ["Expand/contract"](expand-contract.md).
+- **A fill is tested until it ships, and no longer** (MB.226). While a
+  migration is a branch's, a test may restore what it reads and re-run its
+  own SQL, read off disk; once it is in `src/db/migrations/meta/_journal.json`
+  the SQL never changes, so the test goes and the resulting tables' shape
+  tests stay (["What a test may assert"](../testing/layer-ownership.md)).
 - **Migration files are committed**, not generated at deploy/build time —
   `src/db/migrations/**` is real source, reviewed like any other change.
 - **`npm run db:seed`** runs `scripts/db-seed.ts`, which calls

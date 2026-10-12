@@ -1,10 +1,14 @@
-import { eq, ilike, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
-import type { SoftDeletable, WorkspaceScoped } from './types';
+import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
 
 // The `where` predicates the finders and the writer share: a proof's workspace,
-// the compendium tier, the soft-delete filter, and the admin lists' text match.
+// the compendium tier and the two read together, the soft-delete filter, and
+// the text matches — the admin lists' fragment, the fold, and the trigram and
+// accent-folded word matches. Nothing here builds a query: `select.ts` imports
+// this file, so `readableIngredientParent`, built on its `existsIn`, lives in
+// `ingredient-parent.ts`.
 
 /**
  * The proof's own predicate. Built here rather than by the caller: a
@@ -29,12 +33,53 @@ export function inCompendium<TTable extends PgTable & WorkspaceScoped>(table: TT
 }
 
 /**
+ * The tiers `memberships` may read: the compendium's rows, or those of a coven
+ * one of them proves. No proofs is the compendium alone, which is how a
+ * signed-out request and an admin's compendium form read. The tier and nothing
+ * else: `readableInTiers` adds the row's own tombstone filter, and
+ * `readableIngredientParent` in `ingredient-parent.ts` reads it through
+ * `existsIn`, which adds the parent's, so neither statement reads it twice.
+ * Unfiltered by itself only in the spell hatch, whose ingredient may be
+ * deleted (M5.3).
+ */
+export function inTiers<TTable extends PgTable & WorkspaceScoped>(
+  memberships: readonly Membership[],
+  table: TTable,
+): SQL | undefined {
+  return or(inCompendium(table), ...memberships.map((membership) => scopedTo(membership, table)));
+}
+
+/**
+ * Live, and in a tier `memberships` may read: a two-tier table's read scope,
+ * one spelling for every finder reading the compendium and the proofs' covens
+ * together (claude-docs/modules.md, "The tier seam").
+ */
+export function readableInTiers<TTable extends PgTable & WorkspaceScoped>(
+  memberships: readonly Membership[],
+  table: TTable,
+): SQL | undefined {
+  return and(inTiers(memberships, table), notSoftDeleted(table));
+}
+
+/**
  * `deleted_at IS NULL`, or `undefined` for a table without the column. Decided
  * by the table's shape, so there is no flag a caller could pass to skip it.
  */
 export function notSoftDeleted<TTable extends PgTable>(table: TTable): SQL | undefined {
   const deletedAt = (table as Partial<SoftDeletable>).deletedAt;
   return deletedAt ? isNull(deletedAt) : undefined;
+}
+
+/**
+ * An ingredient's own rows, `variant_id IS NULL`, on a table where one form
+ * of it can own rows too, or `undefined` for a table with no variant column
+ * (MB.218). The union rule as a predicate (DESIGN.md §5): an ingredient's
+ * lists are its own rows and a form's are its additions, and nothing reads
+ * the two as one. Decided by the table's shape, as `notSoftDeleted` is.
+ */
+export function ownedByIngredient<TTable extends PgTable>(table: TTable): SQL | undefined {
+  const variantId = (table as Partial<VariantScoped>).variantId;
+  return variantId ? isNull(variantId) : undefined;
 }
 
 /**
@@ -56,5 +101,62 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
  */
 export function listFolds(list: AnyPgColumn): SQL {
   const entry = sql.identifier('entry');
-  return sql`(select lower(btrim(${entry})) from unnest(${list}) as ${entry})`;
+  return sql`(select ${fold(entry)} from unnest(${list}) as ${entry})`;
+}
+
+/**
+ * `value` trimmed and lower-cased: the fold a suggestion, a list entry and a
+ * form are compared under (MB.162), and `ingredient_variants_form_unique`'s own.
+ * Raw, since neither function has a builder.
+ */
+export function fold(value: SQLWrapper | string): SQL {
+  return sql`lower(btrim(${value}))`;
+}
+
+/**
+ * `text` is trigram-similar to `query` as a whole (`%`), or holds a run of
+ * words like it (`<%`): how an autofill matches a name or a written value, so
+ * it finds a near spelling and completes a typed prefix. Raw, since neither
+ * operator has a builder; parenthesised, so it ANDs as one arm. The thresholds
+ * are the read's (claude-docs/db/member-autofill.md, "The member's autofill").
+ */
+export function trigramMatch(text: SQLWrapper, query: string): SQL {
+  return sql`(${text} % ${query} or ${query} <% ${text})`;
+}
+
+/**
+ * Where a search's `position` puts a field holding the query nowhere, so a
+ * fuzzy hit follows every verbatim one at its score: the largest `integer`,
+ * past any character a text can hold, since a Postgres text holds at most
+ * 1 GB. A number rather than null: a null part in a keyset's row value makes
+ * its cursor comparison null, and the row falls out of every page.
+ */
+const NOWHERE = 2147483647;
+
+/**
+ * A search for `query` — trimmed, never blank — by word similarity: `matches`
+ * holds where it is word-similar (`<%`) to a text and `similarity` scores it,
+ * each side folded through `unaccent_immutable`, so the expression indexes of
+ * migration 0027 answer the match. `contains` holds where the text holds the
+ * query verbatim, folded the same way and lower-cased, since `<%` ignores
+ * case: `word_similarity` scores against whole words, so a caller ranks a
+ * fragment inside a longer word — `wood` in Sandalwood — as a full hit with
+ * it. `position` is the character that verbatim match starts at, or
+ * `NOWHERE`: what orders hits of equal score, so Wood Ash leads Sandalwood.
+ * `strpos` rather than `ilike`: it reads the query as plain text, where a
+ * pattern would need its `%`, `_` and `\` escaped as `containsText`
+ * escapes them. The compendium search and the reference picker's
+ * (claude-docs/db/compendium-read.md, "The compendium read").
+ */
+export function foldedWordMatch(query: string): WordMatch {
+  const folded = sql`unaccent_immutable(${query})`;
+  const at = (text: AnyPgColumn) =>
+    sql<number>`strpos(lower(unaccent_immutable(${text})), lower(${folded}))`;
+  return {
+    matches: (text) => sql`${folded} <% unaccent_immutable(${text})`,
+    similarity: (text) => sql<number>`word_similarity(${folded}, unaccent_immutable(${text}))`,
+    contains: (text) => gt(at(text), 0),
+    // `nullif` and `coalesce` have no builder.
+    position: (text) => sql<number>`coalesce(nullif(${at(text)}, 0), ${sql.raw(String(NOWHERE))})`,
+  };
 }

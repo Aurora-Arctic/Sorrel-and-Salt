@@ -15,18 +15,15 @@ export function slugify(name: string): string {
 }
 
 /**
- * An ingredient's slug: the label, the form, then the formal name where one is
- * declared, so two entries sharing a label and a form are told apart by the
- * name that is their identity rather than by which was added first
- * (`Cat's Claw` / `bark` / `Uncaria tomentosa` → `cats-claw-bark-uncaria-tomentosa`;
- * no formal name, `graveyard-dirt-earth`).
+ * An ingredient's slug: the label, then the formal name where one is
+ * declared, so two entries sharing a label are told apart by the name that is
+ * their identity rather than by which was added first (`Cat's Claw` /
+ * `Uncaria tomentosa` → `cats-claw-uncaria-tomentosa`; no formal name,
+ * `graveyard-dirt`). A form is no part of an entry's address (MB.215): an
+ * entry's forms are its variants.
  */
-export function ingredientSlug(
-  name: string,
-  form: string | null | undefined,
-  canonicalName: string | null | undefined,
-): string {
-  return slugify([name, form, canonicalName].filter(Boolean).join(' '));
+export function ingredientSlug(name: string, canonicalName: string | null | undefined): string {
+  return slugify([name, canonicalName].filter(Boolean).join(' '));
 }
 
 /**
@@ -37,4 +34,14 @@ export function ingredientSlug(
  */
 export function formSlug(name: string, groupName: string): string {
   return slugify(`${name} ${groupName}`);
+}
+
+/**
+ * A curated deity's slug: its name, then its tradition's (MB.132), as a form's
+ * is its name and its group's, so two live deities sharing a name under two
+ * traditions hold two addresses — Hecate under Greek is `hecate-greek`, under
+ * Roman `hecate-roman`. It follows a change to either.
+ */
+export function deitySlug(name: string, traditionName: string): string {
+  return slugify(`${name} ${traditionName}`);
 }

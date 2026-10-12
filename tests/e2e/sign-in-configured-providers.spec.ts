@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 
 // Runs only in the `chromium-configured-providers` project, against a server
 // whose four providers carry placeholder credentials — the brand-coloured
@@ -28,23 +28,15 @@ test.afterEach(() => {
 // The precondition every scan below rests on: without it, a server that
 // silently fell back to the greyed state would pass them all, which is the
 // exact gap this project exists to close.
-test('every provider renders available, not greyed', async ({ page }) => {
-  await page.goto('/sign-in');
-  for (const name of PROVIDER_NAMES) {
-    await expect(page.getByRole('button', { name: `Continue with ${name}` })).not.toHaveAttribute(
-      'aria-disabled',
-    );
-  }
-  await expect(page.getByText('Not available right now.')).toHaveCount(0);
-});
-
-test('sign-in page with every provider configured has no accessibility violations', async ({
+test('every provider renders available, not greyed, with no accessibility violations', async ({
   page,
 }) => {
   await page.goto('/sign-in');
-  await expect(page.getByRole('button', { name: 'Continue with Google' })).not.toHaveAttribute(
-    'aria-disabled',
-  );
+  for (const name of PROVIDER_NAMES) {
+    const button = page.getByRole('button', { name: `Continue with ${name}` });
+    await expect(button).toBeVisible();
+    await expect(button).not.toHaveAttribute('aria-disabled');
+  }
   await assertNoAccessibilityViolations(page);
 });
 
@@ -81,5 +73,8 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await expect(button).toBeVisible();
     await expect(button).not.toHaveAttribute('aria-disabled');
     await assertNoAccessibilityViolations(page);
+    // At a phone's width the badge, hanging past its button's left edge, is
+    // what could push the page sideways.
+    await assertNoSidewaysScroll(page);
   });
 }

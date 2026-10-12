@@ -24,7 +24,8 @@ from `@react-email/components` (which re-exports `@react-email/render` at the
 version it pins, so there is one copy): once to HTML and once with
 `{ plainText: true }` to the text part, by `renderParts` in
 `src/emails/parts/layout.tsx`. Each template module exports the
-component and a function returning a finished `Message`, so a caller never
+component and a function returning a finished `Message`, built by
+`defineMessage(subject, Template)` from the same file, so a caller never
 renders anything itself:
 
 ```ts
@@ -44,15 +45,19 @@ await send(await verifyEmailMessage({ to, url, providers }));
   written out beneath it, for a client that hides buttons; the text part has
   the link once and says "open the link below", with no button to click and
   nothing to copy twice. `Action` does this for every template; a sentence
-  that names the button branches on `part` itself. Headings keep their
+  that names the button takes its words from `actionVerb(part)`, "click the
+  button below" or "open the link below". Every mail closes on `IgnoreNote`,
+  "…, you can ignore this email.", in the template's own words for who did
+  not ask for it. Headings keep their
   case in the text part, which the converter would otherwise capitalise.
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
-  a sibling `<name>.stories.tsx`, which `tests/guards/workshop-guards.test.ts`
-  requires. The frame every mail shares is `src/emails/parts/layout.tsx`
-  (`EmailLayout`, `Paragraph`, `Action`). Their types are in `parts/types.ts`, and the
-  templates' in `src/emails/types.ts`. Not in `src/components/`: a mail is
-  not a page component. Tests mirror the path: `theme.test.ts` in the `unit`
-  project, `verify-email.test.tsx` in `dom`, since it is a `.tsx` (MB.97).
+  a sibling `<name>.stories.tsx`. The frame every mail shares is `src/emails/parts/layout.tsx`
+  (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in `parts/types.ts`, and the
+  templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the link, the origin and the part. Not in `src/components/`: a mail is
+  not a page component. Tests mirror the path, in `dom` since each is a
+  `.tsx` (MB.97), and assert what a mail carries — its recipient, its link,
+  the providers it names — never its wording or its look, which the stories
+  show (MB.229).
 - **Plain words.** A mail is read by anyone who signed in, often on a phone:
   short sentences, everyday vocabulary, and one thing to do.
 
@@ -79,11 +84,12 @@ does it, so each piece has an email-safe stand-in.
   carries `ss-body` and its own light rule for the surround, which is
   readable whichever way it goes. `tests/emails/verify-email.test.tsx` pins
   the shape.
-- **The palette is copied, and checked.** A client reads neither Sass nor
-  custom properties, so `src/emails/theme.ts` carries each theme's hexes by
-  hand. `tests/emails/theme.test.ts` compiles the site's `theme-dark` and
-  `theme-light` mixins and fails when a value there disagrees, so a palette
-  change either reaches the mail or fails CI.
+- **The palette is copied.** A client reads neither Sass nor custom
+  properties, so `src/emails/theme.ts` carries each theme's hexes by hand,
+  and a palette change edits it in the same PR. No test compares the two: a
+  mail's colours are presentation, which the stories show
+  ([`testing/layer-ownership.md`](testing/layer-ownership.md), "What a test
+  may assert").
 - **Type.** Headings are Cormorant Unicase 700 and body Lexend, as on the site,
   from `@font-face` rules that list **our own copy first and Google's second**:
   a client asks Google only when our file fails to load. The files are the
@@ -97,11 +103,9 @@ does it, so each piece has an email-safe stand-in.
   blend and opacity from `theme.ts`, and writes an opaque PNG per corner per
   theme into `public/email/images/` at twice the display size in
   `src/emails/ornaments.ts`. Re-run `node scripts/email-ornaments.ts` after changing a
-  photograph or the palette; `tests/guards/email-ornaments.test.ts` compares
-  the committed pixels with what the script produces and fails until you do.
-  It allows each channel a step or two of rounding, because libvips takes a
-  different SIMD path on x64 than on arm64 and the two round a few pixels
-  apart, so an image built on either architecture passes on the other.
+  photograph or the palette, and commit what it writes. Two architectures'
+  output differs by a step or two of rounding per channel, because libvips
+  takes a different SIMD path on x64 than on arm64.
   Node runs that script with its own type stripping, so whatever `theme.ts` or
   `ornaments.ts` takes from `./types` must come in by `import type`, which it
   erases.
@@ -146,12 +150,13 @@ render shows the previous fix's failure, not this one's result.
 
 ## What is sent
 
-| Template                                           | Sent by                                                                             | Carries                                                                                                                                                       |
-| -------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                             |
-| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail` | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up |
+| Template                                           | Sent by                                                                               | Carries                                                                                                                                                                                   |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                      | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it                                                         |
+| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail`   | The same link with a change token, to the _new_ address: its first sentence says an existing account asked for this address, since the reader did not sign up                             |
+| `src/emails/admin-invitation.tsx`                  | `src/lib/invitation-mail.ts`'s `siteInvitation`, from `createAdminInvitation` (MB.70) | The `/invite/[token]` link, the only place its token exists, to the invited address: who invited it, that the link lasts seven days, and to sign in with an account that uses the address |
 
 The verification flow itself is
 [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"
-and "The email page". M7.3's invitation and MB.70's admin invitation add their
-templates here.
+and "The email page". M7.3's invitation adds its template here; MB.70's admin invitation is
+[`auth/admin-users.md`](auth/admin-users.md), "Inviting an admin".

@@ -1,6 +1,7 @@
 @use 'sass:color';
 @use 'sass:list';
 @use 'sass:map';
+@use 'sass:meta';
 
 // The raw palette and the `var(--token)` aliases over it. Emits no CSS: every
 // component `@use`s this file. See claude-docs/styling.md, "The palette".
@@ -156,6 +157,69 @@ $badge-edge-weight: (
 }
 
 // ---------------------------------------------------------------------------
+// Third-party brand colours
+// ---------------------------------------------------------------------------
+// Each sign-in provider's own published button colours, which are theirs
+// rather than ours: `fill` the ground, `ink` the label, `edge` the outline
+// a white button needs on our page, `hover` the ground under the pointer.
+// A compile-time map rather than custom properties, since the hues do not
+// follow the theme and nothing reads them at runtime; a part that ever does
+// differ by theme is written `(dark: …, light: …)`, and brand-color() turns
+// it into `light-dark()`, which Lightning CSS lowers to the browser
+// baseline. Google's edge is its current light-button grey, the first that
+// clears 3:1 on parchment, and Microsoft keeps its white button in both
+// themes, its edge #808080, which clears 3:1 on parchment (the owner's call,
+// MB.116).
+// claude-docs/styling.md, "Brand colours".
+$brand-palettes: (
+  'google': (
+    fill: #ffffff,
+    ink: #1f1f1f,
+    edge: #747775,
+    hover: #e8eaed,
+  ),
+  'discord': (
+    fill: #5865f2,
+    ink: #ffffff,
+    hover: #4752c4,
+  ),
+  'facebook': (
+    fill: #0866ff,
+    ink: #ffffff,
+    hover: #0653d4,
+  ),
+  'microsoft': (
+    fill: #ffffff,
+    ink: #000000,
+    edge: #808080,
+    hover: #e0e0e0,
+  ),
+);
+
+// A function rather than map.get() at each call site, so a mistyped brand or
+// part fails at compile time instead of emitting no declaration.
+@function brand-color($brand, $part) {
+  $parts: map.get($brand-palettes, $brand);
+
+  @if $parts == null {
+    @error 'Unknown brand "#{$brand}". The brands are: #{map.keys($brand-palettes)}.';
+  }
+
+  @if not map.has-key($parts, $part) {
+    @error 'Brand "#{$brand}" has no part "#{$part}". Its parts are: #{map.keys($parts)}.';
+  }
+
+  $value: map.get($parts, $part);
+
+  @if meta.type-of($value) == map {
+    // light-dark() takes the light value first, as chip() passes it.
+    @return light-dark(map.get($value, light), map.get($value, dark));
+  }
+
+  @return $value;
+}
+
+// ---------------------------------------------------------------------------
 // Token aliases — what components consume
 // ---------------------------------------------------------------------------
 // Sass variables over var() calls, so a component keeps `color: $text-primary;`
@@ -191,6 +255,20 @@ $text-on-color: var(--surface-page);
 // 4.68:1 on the light field, 6.71:1 on the dark — since WCAG 1.4.3 covers a
 // placeholder as it does any text.
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
+
+// A quiet fill: the muted ink 18% into the card. A chip's wash, the skeleton's
+// bars and the open nav summary each wrote this mix; the chip's text holds
+// 4.5:1 on it (tests/scss/tokens.test.ts).
+$fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
+
+// A hairline: the muted ink 45% into whatever is behind, so one line reads on
+// the page and on a card alike. The ingredient form's section rules and the
+// tab strip's shade each wrote this mix.
+$hairline: color-mix(in srgb, $text-muted 45%, transparent);
+
+// How much of a control remains when it is busy or cannot be used: the
+// switch, the pending tab panel and the busy list frame each wrote 0.55.
+$opacity-disabled: 0.55;
 
 // A function rather than variables: a typo fails at compile time where
 // `var(--badge-saftey-fill)` fails silently in the browser.
@@ -255,14 +333,112 @@ $top-inset: var(--top-inset, 0px);
 $theme-transition-duration: 400ms;
 $theme-transition-easing: ease-in-out;
 
-// The only width-based breakpoint; everything else keys off media preferences.
-$breakpoint-desktop: 1024px;
+// How long a tip bubble takes to fade in and out: 500ms, the owner's pace
+// (claude-docs/components/info-tip.md, "Styling").
+$tip-fade: 500ms;
+
+// The forms' column: the sign-in panel, the account page's sections, the
+// email form and the invitation. One number where each page restated 28rem;
+// narrower than the measure, since a form's line is a field, not prose.
+$narrow-column: 28rem;
+
+// The pager's width below which Prev, "Page X of Y" and Next close up to stay
+// on one line (the owner's call at MB.115's review): at full spacing the
+// three need about 22rem, more than a 375px phone leaves.
+$pager-tight-width: 23rem;
 
 // The height every one-line control shares, so a field, a select or
 // suggesting box and a button stand level in a row: 44.5px, the owner's call
 // (MB.154), what a button measured at its own padding, and over WCAG 2.5.5's
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
+
+// The admin area's column (MB.115): wider than the measure, for the tables
+// the admin pages hold, whose prose still stops at it. 80rem, the owner's
+// call at the design review: the user list's seven columns need about 77rem
+// before they stop scrolling in their frame, and the privilege ledger has
+// seven too. It was `.admin-layout`'s own 64rem in `AdminNav/index.scss`.
+$wide-column: 80rem;
+
+// A dialog's content column, and the wide one for a form with nested panels,
+// such as the ingredient form (M5.5). Each was a raw width in
+// `Modal/index.scss`; the modal adds its padding and caps both at the window.
+$dialog-column: 32rem;
+$dialog-column-wide: 48rem;
+
+// A small control's square box: WCAG 2.2's 24px minimum target, around a
+// `$glyph-size` mark. InfoTip's ⓘ, Combobox's clear and chip-remove buttons
+// and the user list's icon boxes each wrote 1.5rem.
+$icon-size: 1.5rem;
+
+// The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's glyphs, the
+// user list's marks. Each wrote 1rem.
+$glyph-size: 1rem;
+
+// The larger icon control outside a form (MB.115, the owner's call): a list
+// row's Edit pencil, a 2rem square around a 1.25rem mark, so a column of
+// them reads at a glance. A form keeps `$icon-size`, where its pencils sit
+// beside its fields' text.
+$icon-size-large: 2rem;
+$glyph-size-large: 1.25rem;
+
+// A tip's widest line, written as `min($tip-width, calc(100vw - space(6)))`
+// so a tip never runs off a phone. InfoTip, Combobox's qualifier tip and the
+// user list's locked-control tip each wrote 18rem.
+$tip-width: 18rem;
+
+// A filter's type-ahead field, the curated lists' Group and Tradition
+// (MB.115): one width for the native select the server draws and the
+// type-ahead that replaces it once hydrated, so the swap moves nothing. 14rem
+// on the owner's call: most names fit, and the longest seeded one, "Anglo-
+// Saxon & Continental Germanic" (18rem as the box draws it), runs on inside
+// the box; its option in the list is drawn whole.
+$filter-choice-width: 14rem;
+
+// Where a filter's search box starts before it grows into the row's spare
+// room (MB.115): wide enough for its placeholder and a name or an email typed
+// in, so on a row with a select or two beside it the search keeps the line's
+// lead rather than shrinking to their width, and the choices wrap beneath it
+// sooner than the search gives way.
+$filter-search-basis: 16rem;
+
+// The dialog's close button: a 2rem × in a 2.5rem square, the owner's call
+// during M5.5, well past WCAG 2.2's 24px minimum. It was raw in
+// `Modal/index.scss`.
+$close-target: 2.5rem;
+
+// The width of its own frame under which a `.data-table--stack` table turns
+// each row into a card (MB.115): a container width, not the screen's, so a
+// table in a narrow column stacks too. claude-docs/styling.md, "Tables at
+// phone width".
+$table-stack-width: 40rem;
+
+// The heavy rule, for a line that must read by its weight as well as its
+// colour: the impersonation banner's foot, the owner's call in MB.53, where it
+// was the banner's own `$impersonation-banner-rule`; and the underline of
+// `.link-row`'s current-page link, which no hue tells apart (MB.115).
+$rule-heavy: 3px;
+
+// The medium rule, a step heavier than a 1px edge and lighter than $rule-heavy:
+// the bar down a quoted row's side in IngredientForm and the divider between
+// ChipColorField's channels and its hex, each of which wrote its own 2px
+// until MB.115.
+$rule-medium: 2px;
+
+// The corner the theme toggle sits in: its backdrop's radius and the button's
+// own size, and the space the impersonation banner keeps clear of it. Each
+// component held its own 3.9rem and kept them equal by hand until MB.115.
+$toggle-corner: 3.9rem;
+
+// The switch's track (MB.115): `$icon-size` high, since a `$glyph-size` thumb
+// rides in it, and this wide, so the thumb travels a little over its own
+// width (the width less the height, 1.25rem) and its side reads at a glance.
+$switch-width: 2.75rem;
+
+// How long a control takes to answer a press with a movement of its own: the
+// switch's thumb sliding (MB.115). Short, so the new state shows before the
+// finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
+$motion-short: 150ms;
 
 // ---------------------------------------------------------------------------
 // Spacing and radius
@@ -288,6 +464,11 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// The admin table's inline cell padding (MB.115): a step of space, written
+// once so the filter row above a table insets its fields by the same amount
+// and each label stands flush with the column heading beneath it.
+$table-cell-inset: space(3);
 
 $radii: (
   // A badge: square enough not to read as a chip.

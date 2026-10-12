@@ -24,23 +24,56 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 
 ## The app
 
-| npm (`make`)                                           | Purpose                                                                                                                                                                                                        |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                                         |
-| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                                            |
-| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                                     |
-| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint                                                                                                                                                                                                         |
-| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                                  |
-| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                                 |
-| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                                      |
-| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since `tests/guards/codegen-staleness.test.ts` fails CI on stale files |
+| npm (`make`)                                           | Purpose                                                                                                                                                                                        |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                         |
+| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                            |
+| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                     |
+| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint, then `lint:css`; `lint:fix` is Oxlint's alone                                                                                                                                          |
+| `npm run lint:css`                                     | Stylelint over `src/**/*.scss` and `.ladle/**/*.scss`, configured below the table                                                                                                              |
+| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                  |
+| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                 |
+| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                      |
+| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since CI's `checks / codegen` leg fails on stale files |
+
+**Stylelint** (`.stylelintrc.json`, MB.116) carries one binding rule,
+"only `_variables.scss` may name a raw hue" ([`styling.md`](styling.md),
+"Binding rules"): `color-no-hex` and `color-named: "never"`, cleared for
+`src/scss/_variables.scss` alone. A group colour is a hex on its
+`category_groups` row, set inline from data, so the linter never sees it; a
+hex in a comment is not a colour to it either. It extends
+`stylelint-config-standard-scss`, adjusted where that set fights Prettier or
+the repo's Sass:
+
+- **Configured rather than off**: `selector-class-pattern` takes the repo's
+  BEM names (`block__element--modifier`, each part kebab-case) where the
+  default allows kebab-case only; `scss/at-function-pattern` allows the
+  leading `_` Sass gives a private function (`_assert-theme`);
+  `value-keyword-case` leaves `currentColor` and the font stacks' family
+  names as written; `number-max-precision` is 5, for `$control-height`'s
+  `2.78125rem`, which is exactly 44.5px.
+- **Off, because Prettier owns blank lines and line breaks**:
+  `at-rule-empty-line-before`, `declaration-empty-line-before`,
+  `custom-property-empty-line-before`, `scss/dollar-variable-empty-line-before`
+  and `scss/double-slash-comment-empty-line-before` (a comment sits directly
+  on what it explains, an `@include` directly after a declaration),
+  `scss/operator-no-newline-after` (Prettier breaks a long `@error` string
+  after its `+`), and `scss/comment-no-empty` (a bare `//` is a paragraph
+  break inside a comment).
+- **Off, because the repo writes the other form on purpose**:
+  `color-hex-length` (a brand hex is copied six digits long, as the provider
+  publishes it), `color-function-notation`, `color-function-alias-notation`
+  and `alpha-value-notation` (the two shadows are Sass's `rgba()` with an
+  alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
+  says what they mean), and `media-feature-range-notation` (both notations
+  sit inside the browser baseline; the repo writes `max-width:`).
 
 ## Tests
 
 | npm (`make`)                                       | Purpose                                                                                                                                                                                                                                              |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run test:coverage`                            | `vitest run --coverage` — the `unit` (node), `dom` (jsdom), `db` (node/Postgres) and `rsc` projects, 80% threshold                                                                                                                                   |
-| `npm run test:stories` (`make test-stories`)       | The acceptance suite only (`tests/acceptance/`, on `vitest.stories.config.mts`), printed as a checklist of the 51 v1 stories from DESIGN.md §10 — passing, failing, skipped or _no test yet_ (M1.28). No coverage: a story never moves the threshold |
+| `npm run test:coverage`                            | `vitest run --coverage` — the `unit` (node), `dom` (jsdom), `db` and `db-mocking` (node/Postgres) and `rsc` projects, 80% threshold                                                                                                                  |
+| `npm run test:stories` (`make test-stories`)       | The acceptance suite only (`tests/acceptance/`, on `vitest.stories.config.mts`), printed as a checklist of the 52 v1 stories from DESIGN.md §10 — passing, failing, skipped or _no test yet_ (M1.28). No coverage: a story never moves the threshold |
 | `npm run test:debug` (`make test-debug`)           | Vitest under `--inspect-brk` on **9230**, one worker, halted until a debugger attaches                                                                                                                                                               |
 | `npm run test:ui` (`make test-ui`)                 | The Vitest UI on its default port                                                                                                                                                                                                                    |
 | `npm run e2e`                                      | Playwright against the production build, one database and one server per worker (`E2E_WORKERS`)                                                                                                                                                      |
@@ -55,9 +88,10 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 | `npm run db:seed` / `db:drop` / `db:reset` (`make db-*`)       | `db:seed` seeds the scenario `SEED_SCENARIO` names, via `tsx` — `minimal` (M1.21), `standard` (M1.22) or `demo` (M1.23), defaulting to `minimal` and refusing an unrecognised name rather than falling back; `db:reset` is drop, migrate, seed (M1.24) |
 | `npm run db:seed:categories`                                   | Seeds §6's eight category groups and 63 categories (M4.3) — reference data, not a scenario; `migrate.yml` runs it on staging and production                                                                                                            |
 | `npm run db:seed:forms`                                        | Seeds §5's six ingredient form groups and 78 forms (M4.3a) — reference data too, run by `migrate.yml` in the same step as the categories                                                                                                               |
-| `npm run db:seed:astrology`                                    | Seeds §5's planet and zodiac vocabularies, nineteen bodies and thirteen signs (MB.93) — reference data, run by `migrate.yml` in the same step as the other two                                                                                         |
+| `npm run db:seed:astrology`                                    | Seeds §5's celestial body (`planets`) and zodiac vocabularies, nineteen bodies and thirteen signs (MB.93) — reference data, run by `migrate.yml` in the same step as the other two                                                                     |
 | `npm run db:seed:deities`                                      | Seeds the deity vocabulary, thirty-five traditions and 216 deities from `claude-docs/db/deity-vocabulary-seed.md` (MB.129) — reference data, run by `migrate.yml` in the same step as the other three                                                  |
 | `npm run db:seed:sources`                                      | Seeds the sources the deity and astrology seed docs record as compendium `references`, linked to the rows they support (MB.156) — reference data, run by `migrate.yml` after the vocabularies it links                                                 |
+| `npm run db:seed:compendium`                                   | Seeds the compendium's researched entries, their forms and the sources they cite, each entry written once and never again (MB.242; claude-docs/db/compendium-seed/README.md) — reference data, run by `migrate.yml` after the vocabularies and sources |
 | `npm run db:studio` (`make db-studio`)                         | Drizzle Studio on **4983**, browsing the local database via `drizzle.config.ts`; the UI is `https://local.drizzle.studio`                                                                                                                              |
 | `make db-psql`                                                 | `psql` against the compose Postgres service (host only)                                                                                                                                                                                                |
 | `npm run check:destructive-ddl` (`make check-destructive-ddl`) | Scans migrations new on this branch against its Gitflow base; `-- --base <ref>` picks another, `-- --all` audits every committed migration ([`db/expand-contract.md`](db/expand-contract.md), "Expand/contract and the destructive-DDL check")         |
@@ -65,9 +99,10 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 
 ## The workshop
 
-| npm (`make`)                                                               | Purpose                                                                                                                               |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero |
+| npm (`make`)                                                               | Purpose                                                                                                                                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run workshop` / `workshop:build` (`make workshop` / `workshop-build`) | Ladle component workshop on **61000**; `:build` is the static export, wrapped so a story that fails to bundle actually exits non-zero                             |
+| `node scripts/review-screenshots.mjs`                                      | A design review's screenshots: each listed page at 375 and 412 wide, both themes, through the remote browser ([`workshop.md`](workshop.md), "Review screenshots") |
 
 ## The local stack (host only)
 

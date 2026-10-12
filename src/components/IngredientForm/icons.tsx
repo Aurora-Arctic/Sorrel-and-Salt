@@ -1,0 +1,32 @@
+import type { ReactElement } from 'react';
+
+// The form's row icons, a reference row's and a variant's edit and remove
+// (MB.115), and a reference's Edit Source: drawn at the glyph size in the
+// button's own ink, and hidden from assistive technology, since the button
+// around each is what names it. The pencil is every Edit control's, the
+// admin lists' too, so it lives with the tip they share.
+
+export { PencilIcon as EditIcon } from '../IconTip';
+
+/**
+ * A page with a pencil at its corner: change the source itself, for every
+ * entry citing it. Not the row's own pencil, which opens the row for its
+ * Locator, so the two in one row do not look the same.
+ */
+export function SourceEditIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M7 14H3.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h5l3 3v2.5M8.5 2v3h3M13 9.5l1.5 1.5-4 4H9v-1.5z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.25"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A cross: take this row out. The type-ahead's clear, which is drawn the same. */
+export { ClearIcon as RemoveIcon } from '../Combobox/icons';

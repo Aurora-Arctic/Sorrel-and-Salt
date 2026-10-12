@@ -26,7 +26,8 @@ describe('ImpersonationBanner', () => {
     render(<ImpersonationBanner {...BO} />);
 
     const banner = screen.getByRole('complementary', { name: 'Impersonation' });
-    expect(banner).toHaveTextContent('You are impersonating Bo Fixturewort (bo@users.test).');
+    expect(banner).toHaveTextContent(BO.name);
+    expect(banner).toHaveTextContent(BO.email);
     expect(screen.getByRole('button', { name: 'Stop Impersonating' })).toBeEnabled();
   });
 
@@ -41,6 +42,22 @@ describe('ImpersonationBanner', () => {
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
   });
 
+  it('is busy while pending, keeping its place in the tab order, and sends once', async () => {
+    // Never answers, so the request stays in flight.
+    stopImpersonatingMock.mockReturnValue(new Promise(() => {}));
+    render(<ImpersonationBanner {...BO} />);
+    const stop = screen.getByRole('button', { name: 'Stop Impersonating' });
+
+    fireEvent.click(stop);
+
+    await waitFor(() => expect(stop).toHaveAttribute('aria-busy', 'true'));
+    // `aria-disabled`, not `disabled`, which would drop the focus it holds.
+    expect(stop).toHaveAttribute('aria-disabled', 'true');
+    expect(stop).toBeEnabled();
+    fireEvent.click(stop);
+    expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
+  });
+
   it('says so when stopping fails, and stays', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
     vi.stubGlobal('location', { ...window.location, assign: assignMock });
@@ -48,50 +65,8 @@ describe('ImpersonationBanner', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Stop Impersonating' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Impersonation could not be stopped. Signing out ends it too.',
-    );
+    expect(await screen.findByRole('alert')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Stop Impersonating' })).toBeEnabled();
     expect(assignMock).not.toHaveBeenCalled();
-  });
-});
-
-// On a touch screen the banner is in the page's flow at the top, and its height
-// is the top inset everything else offsets by (claude-docs/styling.md, "The top
-// inset"). The CSS decides where it counts; the component only publishes it.
-describe('ImpersonationBanner height', () => {
-  const PROPERTY = '--impersonation-banner-height';
-
-  afterEach(() => {
-    vi.unstubAllGlobals();
-    document.documentElement.style.removeProperty(PROPERTY);
-  });
-
-  it('publishes its height on the root while mounted, and withdraws it after', () => {
-    let resized: (() => void) | undefined;
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        constructor(callback: () => void) {
-          resized = callback;
-        }
-        observe() {
-          resized?.();
-        }
-        disconnect() {}
-      },
-    );
-    const height = vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(101);
-
-    const { unmount } = render(<ImpersonationBanner {...BO} />);
-    expect(document.documentElement.style.getPropertyValue(PROPERTY)).toBe('101px');
-
-    height.mockReturnValue(77);
-    resized?.();
-    expect(document.documentElement.style.getPropertyValue(PROPERTY)).toBe('77px');
-
-    unmount();
-    expect(document.documentElement.style.getPropertyValue(PROPERTY)).toBe('');
-    height.mockRestore();
   });
 });

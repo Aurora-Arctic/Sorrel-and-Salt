@@ -140,8 +140,7 @@ Two alternatives were not taken:
   module's `graphql/` files for a development-only benefit.
 
 A CLI `--server-fast-refresh` overrides the config, so no `dev` script passes
-it. `tests/guards/dev-server-fast-refresh.test.ts` fails if the setting is
-removed.
+it.
 
 ## Test debugging
 
@@ -245,8 +244,8 @@ headed session at a time, and what you get is a containerised Chromium
 streamed over noVNC into a host tab — slightly laggy, and not your own
 profile or extensions. A native host recorder was rejected for needing a
 host Node install and a separate Chromium download, recording against
-whatever version that resolves to rather than the one `PLAYWRIGHT_VERSION`
-pins. **Worth revisiting if Playwright ever adds recording to UI mode**: UI
+whatever version that resolves to rather than the one the lockfile's
+`@playwright/test` pins. **Worth revisiting if Playwright ever adds recording to UI mode**: UI
 mode needs no display because its "Pick locator" works against the trace
 viewer's DOM snapshot, and as of 1.63 it has no recorder at all — a release
 that added one would genuinely retire this display.

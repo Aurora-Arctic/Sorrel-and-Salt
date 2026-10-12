@@ -1,17 +1,271 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use 'layers' as *;
 
-// Layout only, until the admin area's design review (MB.115). The table and
-// the pager are primitives (`.data-table`, `.pager`).
+// The user list's own rules: its cells' alignment, the marks and logos with
+// their tips, the history link, the role and creation cells, the sticky
+// Impersonate column and how it gives way when the table stacks into cards,
+// and the pause beside the page's heading. The column, filter, table and pager
+// are primitives (`.list-frame`, `.filter-row`, `.data-table` with
+// `--stack`, `.pager`). Above the stacking width the seven columns keep
+// their order, restyled on the owner's call at MB.115's sign-off: rows a
+// step taller, the read-only facts muted at the caption size, every control
+// at the end of its cell.
 
-.user-list {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+// Every cell centred on its row rather than on the text's baseline, which
+// the primitive uses: these rows mix text with logo circles, marks and
+// buttons, whose boxes put their baselines at different heights, so on the
+// baseline a row's contents sat unevenly (the owner's review).
+.user-list .data-table td {
+  vertical-align: middle;
 }
 
-.user-list__search {
+// No cell wraps, heading or body, since the table scrolls inside its frame
+// (the owner's call, during MB.59): a row stays one line however narrow the
+// screen, and its rows are a step taller (`.data-table--nowrap` and
+// `--roomy`, through DataTable). Separate borders, not the primitive's collapsed ones, so each rule
+// belongs to its own cell: a collapsed rule belongs to the table's grid, and
+// the headings' muted hairline was drawn across the sticky Impersonate
+// heading's red one as the columns scrolled beneath it.
+.user-list .data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+// A yes-or-no column's mark: green for yes, red for no, the colours the
+// accent and the error notices already carry.
+.user-list__mark {
+  display: inline-flex;
+
+  // In `em`, not `$glyph-size`: a quarter larger than the text it stands
+  // beside, the address or the heading's question, so it reads at a glance
+  // and follows the text's size rather than a fixed one.
+  svg {
+    width: 1.25em;
+    height: 1.25em;
+  }
+}
+
+.user-list__mark--yes {
+  color: $accent;
+}
+
+.user-list__mark--no {
+  color: $secondary;
+}
+
+// A mark or a logo that says what it is in a tip bubble on hover, the form
+// tips' look, centred above it. The bubble takes no pointer, so it never
+// blocks the row it overlaps.
+.user-list__hint {
+  position: relative;
+}
+
+.user-list__tip {
+  @include tip-above(center, $tip-layer, false);
+
+  pointer-events: none;
+}
+
+.user-list__hint:hover .user-list__tip {
+  @include tip-bubble-open;
+}
+
+// The linked providers' marks in a row, each on its brand's circle, the
+// `.provider-mark` primitive (claude-docs/styling.md, "Link rows and provider
+// marks").
+.user-list__providers {
+  display: inline-flex;
+  gap: space(1);
+  vertical-align: middle;
+
+  // Flex, so the circle sizes the hint that holds it and its tip, rather than
+  // a line box around it adding the text's descender space below.
+  > .user-list__hint {
+    display: inline-flex;
+  }
+}
+
+// The history link, then the name, side by side.
+.user-list__name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// The history link's tip is placed against this.
+.user-list__history {
+  @include tip-anchor;
+}
+
+// An `$icon-size` box, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
+// is. Its hit area reaches `$control-height`, WCAG 2.5.5's 44px, through a
+// pseudo-element, so the row is no taller for it. Compounded with
+// `.user-list`: the typography's `body a` colours would outrank a lone
+// class in the app, though not in the workshop.
+.user-list .user-list__history-link {
+  @include icon-button($icon-size, $glyph-size, radius('pill'));
+
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: $control-height;
+    height: $control-height;
+    translate: -50% -50%;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Above the icon from its left edge, rather than centred as the marks' tips
+// are: the icon starts the row's first cell, and a centred tip would run past
+// the table's scrolling frame, which clips it.
+.user-list__history-tip {
+  @include tip-above(start, $tip-layer, false);
+}
+
+// Email and its verified mark, side by side.
+.user-list__email {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+}
+
+// The table above the stacking width (MB.115, the owner's call): each row a
+// step taller than the primitive's, since a row holds buttons as well as
+// text, and the facts no control changes, Sign-In Methods and Signed Up,
+// muted at the caption size, so the eye goes to what can be acted on. Scoped
+// to this width because a card already leads each fact with its muted label.
+@container data-table (width > #{$table-stack-width}) {
+  .user-list .user-list__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
+// The Impersonate column, heading and cells: a red rule down its left, a
+// faded red tint and red text, since it is the one control in the table that
+// acts as someone else (kept at MB.115, on the owner's call after the sign-off).
+//
+// It stays at the table's right edge while the other columns scroll beneath
+// it (the owner's call), so its ground is opaque: the tint mixed into the
+// band it sits on, the page or a banded row's card, rather than laid over
+// transparent. Still needed with the admin column at 80rem:
+// the frame stops scrolling only from about 77rem of table, so any window
+// narrower than that, above the stacking width, scrolls it still.
+.user-list__impersonate {
+  position: sticky;
+  right: 0;
+  z-index: $sticky-column-layer;
+  // A hairline, as the headings' rule is: the red marks it, not the weight.
+  border-left: 1px solid $secondary;
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+  color: $secondary;
+}
+
+.user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
+  // 5% rather than the page's 6%: the dark card is lighter, and at 6% the wax
+  // label falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+  background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+}
+
+// Its heading's hairline red too, where every other column's is the muted
+// ink; scoped past the primitive's own `thead th` rule.
+.user-list .data-table thead th.user-list__impersonate {
+  border-bottom-color: $secondary;
+}
+
+// Stacked into cards at phone width (`.data-table--stack`, under the same
+// named container query as the primitive): a card is no scrolling row, so the
+// one-line rule gives way and an address or a reason wraps within the card.
+// The Impersonate cell gives up its sticky place, which would sit over the
+// card's other cells, and stands at the card's top right, beside the name
+// (the owner's call, MB.115), on the card's own ground rather than a tint
+// mixed for a band. Placed by the grid, not moved in the markup, so the
+// table's columns and the keyboard order stay as the desktop has them.
+// claude-docs/styling.md, "Tables at phone width".
+@container data-table (max-width: #{$table-stack-width}) {
+  .user-list .data-table--stack {
+    // The grid itself is the primitive's, from the cell's
+    // `data-table__card-action`: the name and Impersonate share the first
+    // line and every other cell spans beneath. An admin's card, with no
+    // Impersonate, leaves the second track empty, so it takes no width.
+    > tbody > tr > .user-list__impersonate {
+      position: static;
+      border-left: 0;
+      background-color: transparent;
+    }
+
+    .user-list__impersonate:empty {
+      display: none;
+    }
+
+    // Two classes past the banded row's rule above, so the card's ground wins.
+    tbody tr:nth-child(even) .user-list__impersonate {
+      background-color: transparent;
+    }
+  }
+}
+
+// The creation cell: the Yes or No on the left, the control that changes it
+// on the right, centred on one line, as the role cell holds its own (the
+// owner's call).
+.user-list__creation {
   display: flex;
-  flex-wrap: wrap;
-  align-items: end;
-  gap: space(3) space(5);
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+// The role cell: the role and the primary admin's crown on the left, the
+// control that changes it on the right, centred on one line (the owner's
+// call).
+.user-list__role {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+.user-list__role-name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// The crown and its tip, the tip placed against this wrapper.
+.user-list__primary {
+  @include tip-anchor;
+}
+
+// `$icon-size`: WCAG 2.2's 24px minimum target around a `$glyph-size`
+// glyph, as InfoTip's button. The muted ink, so it reads as a fact about the
+// row, not a control.
+.user-list__primary-mark {
+  @include icon-button($icon-size, $glyph-size, radius('pill'), help);
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The pause on admin changes, beside the page's heading as its `.page-header`
+// child: the warning while paused and the button on one line (MB.63). At a
+// phone's width the page header spans them across the line, a line each.
+.user-list__pause {
+  display: flex;
+  align-items: center;
+  gap: space(3);
+
+  // Compounded with `.notice`, whose primitive is `body .notice` in the app,
+  // as `.notice.user-list__warning` is: a lone class loses to it there.
+  .notice.user-list__pause-state {
+    margin: 0;
+  }
 }

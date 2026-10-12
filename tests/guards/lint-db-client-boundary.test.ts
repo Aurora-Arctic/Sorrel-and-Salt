@@ -1,273 +1,59 @@
-import { execFileSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, inject, it } from 'vitest';
+import {
+  CLIENT_EXEMPT,
+  clientProbe,
+  dbClientBoundary,
+  drizzleProbe,
+} from '../support/lint-probes/db-client-boundary';
 import { REPO_ROOT } from '../support/paths';
-import type { Diagnostic } from './types';
 
-// Both `no-restricted-imports` boundaries in `.oxlintrc.json` actually fire:
-// only `src/db/repository/` may import the database client (CLAUDE.md rule
-// 2), and only the database layer may import `drizzle-orm` at runtime (rule 4)
-// — claude-docs/db/query-building.md, "Where queries may be built".
-//
-// Two oxlint 1.82 facts shape the config: a rule set to `"off"` inside an
-// `overrides` block is ignored, so the database layer's exemption is a
-// narrower copy of the rule; and an `overrides` block *replaces* the top-level
-// rule config rather than merging with it, so that copy must restate the
-// client ban — the regression that invites is asserted below.
-//
-// Probes are written to throwaway `__lint-probe__` directories inside the
-// repo, since both rules are path-scoped and a file in `tmpdir` matches no
-// `overrides` block; not committed, since oxlint skips anything matched by
-// `ignorePatterns` even when passed explicitly (`--no-ignore` does not override it).
+// Both `no-restricted-imports` boundaries in `.oxlintrc.json` fire — only
+// `src/db/repository/` may import the database client (CLAUDE.md rule 2), and
+// only the database layer may import `drizzle-orm` at runtime (rule 4) — and
+// the client's exemptions are pinned (claude-docs/db/query-building.md,
+// "Where queries may be built"). The probes are written and linted once by
+// the unit project's setup (MB.184); this file reads its diagnostics off that run.
 
 const RULE = 'eslint(no-restricted-imports)';
-const oxlint = join(REPO_ROOT, 'node_modules/.bin/oxlint');
-const config = join(REPO_ROOT, '.oxlintrc.json');
 
-/** Untracked, gitignored, and removed in `afterAll`. */
-const PROBE = '__lint-probe__';
-
-/**
- * Everywhere the query-builder ban applies. `tests/db` is exempt below; the
- * rest of `tests/` is application code as far as rule 4 is concerned, and a
- * probe in each proves the exemption has not widened to the whole suite.
- */
-const RESTRICTED = [
-  'src/modules/coven/services',
-  'src/graphql',
-  'src/app',
-  'src/components',
-  'src/lib',
-  'tests/e2e',
-  'tests/lib',
-  'tests/support',
-  'tests/guards',
-];
-
-/**
- * The database layer, which builds queries for a living, a module's schema
- * files, which build tables with the same package — and the tests of both.
- */
-const EXEMPT = [
-  'src/db',
-  'src/modules/identity/schema',
-  'scripts',
-  'tests/db',
-  'tests/db/seed',
-  'tests/support/db',
-];
-
-/**
- * Files whose import of the client is exempted by a disable comment: the
- * repository's three that run a query — its transaction, its select and its
- * one users delete — and three outside it that need a client, not a writer.
- */
-const CLIENT_EXEMPT = [
-  'src/db/repository/write.ts',
-  'src/db/repository/select.ts',
-  'src/db/repository/provisional-users.ts',
-  'src/lib/auth.ts',
-  'scripts/db-seed.ts',
-  'tests/db/test-database-isolation.test.ts',
-];
-
-/** Probe files, keyed by the repo-relative path each is written to. */
-const probes = new Map<string, string>();
-
-/** Register a probe and return its path, for use as a lookup key. */
-function probe(directory: string, name: string, source: string): string {
-  const file = `${directory}/${PROBE}/${name}.ts`;
-  probes.set(file, source);
-  return file;
-}
-
-// Rule 1 — every shape an importer can reach connection.ts by. The `@/` alias
-// is the one that matters: the ban is a set of path globs, and `@/db/connection`
-// is not the relative shape any of the other five describe.
-const CLIENT_SPECIFIERS = [
-  './connection',
-  '../connection',
-  '../../db/connection',
-  '../../../../db/connection',
-  '../src/db/connection.ts',
-  '@/db/connection',
-];
-const clientProbes = CLIENT_SPECIFIERS.map((specifier) =>
-  probe(
-    'src/modules/coven/services',
-    `client-${specifier.replace(/\W/g, '')}`,
-    `import { db } from '${specifier}';\nexport const smuggled = db;\n`,
-  ),
-);
-const clientTypeProbe = probe(
-  'src/modules/coven/services',
-  'client-type',
-  "import type { db } from '../db/connection';\nexport type D = typeof db;\n",
-);
-const siblingModuleProbe = probe(
-  'src/modules/coven/services',
-  'sibling-module',
-  "import { withAudit } from '../../../../db/repository';\nexport const w = withAudit;\n",
-);
-
-// Rule 2 — a runtime import of the query builder from each restricted
-// location, the same import as a type, and the subpath form.
-const runtimeProbes = Object.fromEntries(
-  RESTRICTED.map((directory) => [
-    directory,
-    probe(directory, 'runtime', "import { eq } from 'drizzle-orm';\nexport const e = eq;\n"),
-  ]),
-);
-const typeOnlyProbes = Object.fromEntries(
-  RESTRICTED.map((directory) => [
-    directory,
-    probe(
-      directory,
-      'type-only',
-      "import type { SQL } from 'drizzle-orm';\nexport type S = SQL | undefined;\n",
-    ),
-  ]),
-);
-const subpathProbe = probe(
-  'src/graphql',
-  'subpath',
-  "import { pgTable } from 'drizzle-orm/pg-core';\nexport const t = pgTable;\n",
-);
-
-// The exempt tier: the database layer builds queries, and still may not reach
-// the client outside the repository.
-const exemptRuntimeProbes = Object.fromEntries(
-  EXEMPT.map((directory) => [
-    directory,
-    probe(directory, 'runtime', "import { eq } from 'drizzle-orm';\nexport const e = eq;\n"),
-  ]),
-);
-const exemptClientProbe = probe(
-  'src/db',
-  'client',
-  "import { db } from '../../db/connection';\nexport const smuggled = db;\n",
-);
-
-let diagnostics: Diagnostic[];
-
-/** How many `no-restricted-imports` diagnostics one file drew. */
 const restricted = (file: string) =>
-  diagnostics.filter((d) => d.code === RULE && d.filename === file).length;
+  inject('lintDiagnostics').filter((d) => d.code === RULE && d.filename === file).length;
 
-beforeAll(() => {
-  for (const [file, source] of probes) {
-    mkdirSync(join(REPO_ROOT, file, '..'), { recursive: true });
-    writeFileSync(join(REPO_ROOT, file), source);
-  }
-
-  // One spawn for every case: oxlint costs ~200ms of process start, and
-  // diagnostics carry their filename, so the cases partition one result.
-  let stdout: string;
-  try {
-    // oxlint exits non-zero when it reports errors; the diagnostics are still
-    // on the thrown error's stdout.
-    stdout = execFileSync(
-      oxlint,
-      ['-c', config, '--format', 'json', ...probes.keys(), ...CLIENT_EXEMPT, 'drizzle.config.ts'],
-      { cwd: REPO_ROOT, encoding: 'utf8' },
+describe('CLAUDE.md rules 2 and 4 — the database import boundaries', () => {
+  it('bans importing the client outside the repository', () => {
+    // Precondition: the shared run was pointed at the probe.
+    expect(inject('lintedFiles')).toEqual(
+      expect.arrayContaining([...dbClientBoundary.probes.keys()]),
     );
-  } catch (error) {
-    stdout = (error as { stdout?: string }).stdout ?? '';
-  }
-  diagnostics = (JSON.parse(stdout) as { diagnostics: Diagnostic[] }).diagnostics;
-});
-
-afterAll(() => {
-  for (const directory of [...RESTRICTED, ...EXEMPT]) {
-    rmSync(join(REPO_ROOT, directory, PROBE), { recursive: true, force: true });
-  }
-});
-
-describe('CLAUDE.md rule 2 — the db client import boundary', () => {
-  it.each(CLIENT_SPECIFIERS.map((specifier, index) => [specifier, clientProbes[index]]))(
-    'bans importing the client as %s',
-    (_specifier, file) => {
-      expect(restricted(file)).toBe(1);
-    },
-  );
-
-  it('bans a type-only import of the client just as firmly', () => {
-    expect(restricted(clientTypeProbe)).toBe(1);
+    expect(restricted(clientProbe)).toBe(1);
   });
 
-  it('leaves imports of other modules in src/db alone', () => {
-    expect(restricted(siblingModuleProbe)).toBe(0);
+  it('bans a runtime drizzle-orm import above the database layer', () => {
+    expect(inject('lintedFiles')).toContain(drizzleProbe);
+    expect(restricted(drizzleProbe)).toBe(1);
   });
-
-  // The `overrides` copy replaces the top-level rule (see above): drop the
-  // client group from it and every file under src/db could import the client
-  // while every other assertion here stayed green.
-  it('still bans the client inside the database layer, which is exempt only from the query-builder ban', () => {
-    expect(restricted(exemptClientProbe)).toBe(1);
-  });
-
-  // The six exceptions (see above).
-  it.each(CLIENT_EXEMPT)(
-    'exempts %s, which cannot reach the database through withAudit',
-    (file) => {
-      expect(restricted(file)).toBe(0);
-    },
-  );
 
   // The exemptions are disable comments rather than config (oxlint ignores
   // "off" inside `overrides`), which makes a seventh cheap to add by hand — so
-  // the set is pinned and a new one is argued for in the diff.
-  //
-  // The scan below correlates a directive with the import line right after
-  // it, rather than asking only "does this file contain the string
-  // anywhere" — `.oxlintrc.json` gained a second `no-restricted-imports`
-  // pattern at M2.6 (social-providers-config.ts, a different boundary
-  // entirely), and a file can legitimately carry a disable comment for that
-  // one without being an exemption from *this* one.
-  it('has exactly six files carrying the exemption, and no others', () => {
-    // `-c safe.directory=*`: CI's vitest job runs as root over a checkout
-    // owned by uid 1000, which git refuses as "dubious ownership". `git
-    // ls-files` rather than a walk: tracked files are what "no others" means.
-    const tracked = execFileSync('git', ['-c', 'safe.directory=*', 'ls-files', '*.ts', '*.tsx'], {
-      cwd: REPO_ROOT,
-      encoding: 'utf8',
-    })
-      .split('\n')
-      .filter(Boolean);
+  // the set is pinned and a new one is argued for in the diff. A directive
+  // counts only when the line after it imports the client: a file may carry
+  // one for another `no-restricted-imports` pattern. Untracked files count,
+  // so a seventh is caught in the diff that adds it.
+  it('has exactly six files carrying the client exemption, and no others', () => {
+    const files = inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
+    // Precondition: an empty listing has no seventh in it either.
+    expect(files).toEqual(expect.arrayContaining(CLIENT_EXEMPT));
 
     const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;
     const clientImport =
       /(?:from\s+['"]|import\(\s*['"])(?:\.\.?\/connection|.*\/db\/connection)(?:\.ts)?['"]/;
-    const exempt = tracked.filter((file) => {
+    const exempt = files.filter((file) => {
       const lines = readFileSync(join(REPO_ROOT, file), 'utf8').split('\n');
       return lines.some((line, i) => directive.test(line) && clientImport.test(lines[i + 1] ?? ''));
     });
 
     expect(exempt.sort()).toEqual([...CLIENT_EXEMPT].sort());
-  });
-});
-
-describe('CLAUDE.md rule 4 — the query-builder import boundary', () => {
-  it.each(RESTRICTED)('bans a runtime drizzle-orm import from %s', (directory) => {
-    expect(restricted(runtimeProbes[directory])).toBe(1);
-  });
-
-  // DESIGN.md §7: the GraphQL layer imports drizzle-orm for types only. A type
-  // import is erased at compile time and can build nothing.
-  it.each(RESTRICTED)('allows a type-only drizzle-orm import from %s', (directory) => {
-    expect(restricted(typeOnlyProbes[directory])).toBe(0);
-  });
-
-  it('bans a subpath import too, so drizzle-orm/pg-core is no way around it', () => {
-    expect(restricted(subpathProbe)).toBe(1);
-  });
-
-  it.each(EXEMPT)('leaves %s free to build queries', (directory) => {
-    expect(restricted(exemptRuntimeProbes[directory])).toBe(0);
-  });
-
-  it('leaves drizzle.config.ts alone', () => {
-    expect(restricted('drizzle.config.ts')).toBe(0);
   });
 });

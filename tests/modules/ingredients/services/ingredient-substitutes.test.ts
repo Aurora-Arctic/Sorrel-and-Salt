@@ -149,15 +149,17 @@ describe('a save carrying substitutes', () => {
   });
 });
 
+// One repeat proves the service parses its input before the index can
+// answer; the link repeated and the name repeated are each the validation
+// test's (tests/modules/ingredients/validation/ingredient.test.ts).
 describe('a repeated substitute', () => {
-  it.each([
-    ['link', (id: string) => [link(id), typed('Zest Root'), link(id)]],
-    ['name, in another case', () => [typed('Zest Root'), typed('Mock Root'), typed('zest ROOT')]],
-  ])('is a field error pathed to the repeated %s, never the index’s 23505', async (_kind, list) => {
-    const mockleaf = await seed(entry({ name: 'Mockleaf' }));
-
+  it('is a field error pathed to the repeated name, in another case, never the index’s 23505', async () => {
     const issues = await refusal(
-      createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Testwort', list(mockleaf))),
+      createWorkspaceIngredient(
+        asUser(B),
+        WORKSPACE_W_ID,
+        input('Testwort', [typed('Zest Root'), typed('Mock Root'), typed('zest ROOT')]),
+      ),
     );
 
     expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 2] })]);

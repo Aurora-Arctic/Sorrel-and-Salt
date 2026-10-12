@@ -1,0 +1,210 @@
+import type { HTMLInputTypeAttribute, ReactNode } from 'react';
+import type { FieldPath, FieldValues } from 'react-hook-form';
+
+/** What every field shares: what it is called, and what it is told about it. */
+export interface FieldProps {
+  label: string;
+  /** What the field is for, behind an info tip beside the label. */
+  hint?: string;
+  /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
+  note?: string;
+  /** Marked required beside its label, and to assistive technology. */
+  required?: boolean;
+}
+
+export interface FieldErrorProps {
+  id: string;
+  message?: string;
+}
+
+/** What `fieldDescription` is told: the field's base id, and what describes it. */
+export interface FieldDescriptionInput {
+  /** The base the field's ids grow from: a `useId()`. */
+  id: string;
+  hint?: string;
+  note?: string;
+  /** Another element read with the field: IngredientForm's duplicate warning. */
+  describedBy?: string;
+  /** The field's own error, from whichever side found it. */
+  error?: string;
+  /** Marked invalid by something other than its own error. */
+  invalid?: boolean;
+}
+
+/** The ids `FieldShell` places, the error it shows, and what the control carries. */
+export interface FieldDescription {
+  controlId: string;
+  labelId: string;
+  hintId: string;
+  noteId: string;
+  errorId: string;
+  error?: string;
+  /** Spread onto the control. */
+  aria: {
+    'aria-invalid': true | undefined;
+    'aria-describedby': string | undefined;
+  };
+}
+
+export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'aria'> {
+  /** The control, carrying `controlId`, the description's `aria` and `aria-required`. */
+  children: ReactNode;
+  /** Beneath the error: what a field adds of its own. */
+  after?: ReactNode;
+  /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
+  action?: ReactNode;
+  /** A class beside `field` on the block: a filter's type-ahead, `filter-row__choice`. */
+  className?: string;
+}
+
+/**
+ * A text field in a react-hook-form form: the ingredient form, its reference
+ * panel's (MB.154), or an admin form. Its name is one of that form's paths.
+ */
+export interface TextFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
+  name: FieldPath<V>;
+  /** A short action shown, muted, while the field is empty: "Add a name". What the field is for is its `hint`. */
+  placeholder?: string;
+  /** A textarea, for prose. */
+  multiline?: boolean;
+  /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
+  rows?: number;
+  /** The input's type, for a single line: a reference's days are `date`s. */
+  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
+  /** Shut, for a field the rest of the form has ruled out; its note says why. */
+  disabled?: boolean;
+  /** Fields whose errors this one's value decides as well, revalidated when it changes. */
+  deps?: FieldPath<V>[];
+  /** Another element read with the field while it shows: the name's duplicate warning. */
+  describedBy?: string;
+  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
+  invalid?: boolean;
+  /** Drawn beneath the field, after its error: the name's duplicate warning. */
+  after?: ReactNode;
+  /** At the right end of the label row: a variant's Copy From Ingredient. */
+  action?: ReactNode;
+  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
+  format?: (text: string) => string;
+  /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's. */
+  autoComplete?: 'off';
+}
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+/** A closed set in a react-hook-form form, whose value is one of its options. */
+export interface SelectFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
+  name: FieldPath<V>;
+  /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
+  placeholder?: string;
+  options: readonly SelectOption[];
+  /**
+   * Chosen by typing, the list narrowing to the options whose label holds the
+   * text, rather than picked from the select-only box: a set long enough to
+   * want a search, the deities' traditions.
+   */
+  typeahead?: boolean;
+  deps?: FieldPath<V>[];
+  /** Runs on a new choice, before the field and its `deps` revalidate. */
+  onChange?: (value: string) => void;
+}
+
+/**
+ * An on-or-off choice in a plain-state form: a list filter's No Refs or
+ * Needs Approval. Held by the caller through `checked`, or left to the
+ * native checkbox from `defaultChecked`, as a filter that applies on the
+ * change leaves it. Not a react-hook-form field, since no such form has one
+ * yet.
+ */
+export interface SwitchFieldProps {
+  /** The name beside the switch, and its accessible name. */
+  label: string;
+  /** The parameter it submits under while on. */
+  name: string;
+  /** What it submits while on: `1`, or empty for a bare flag. */
+  value: string;
+  /** On or off, held by the caller; leave it out for `defaultChecked`. */
+  checked?: boolean;
+  /** On or off as first drawn, the checkbox holding it after: a filter switch, which applies on its change. */
+  defaultChecked?: boolean;
+  onChange: (checked: boolean) => void;
+  /** Shut: dashed, faded, its name dimmed. */
+  disabled?: boolean;
+}
+
+/** A form's row of actions: Save, any further saves, Cancel and Delete. */
+export interface FormActionsProps {
+  /** What is saved, in title case: "Save Group", "Saving Group", "Delete Group". */
+  noun: string;
+  /** The form holds something to save; Save is off until it does. */
+  dirty: boolean;
+  /** A save is in flight; Save is off meanwhile. */
+  submitting: boolean;
+  /** Save shows itself busy; `submitting` unless the form has several saves and this one was not pressed. */
+  busy?: boolean;
+  /** Save's `value`, which tells a form with several saves which was pressed. */
+  saveValue?: string;
+  /** Save's description, a note above the row about what saving will do. */
+  saveDescribedBy?: string;
+  /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
+  onSave?: () => void;
+  /** Cancel, drawn when given: the form's way out, through its discard guard. */
+  onCancel?: () => void;
+  /** Cancel waits while a save is in flight, so a write is never left half-done. */
+  holdCancel?: boolean;
+  /** Delete, drawn when given: asks the form's question. */
+  onDelete?: () => void;
+  /** Further saves, between Save and Cancel. */
+  children?: ReactNode;
+}
+
+/** An admin change's optional Reason, held by the caller in plain state. */
+export interface ReasonFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  /** Where the reason is kept, behind the info tip; by default, with the change in the ledger. */
+  hint?: string;
+  /** The wrapper's class, which holds the field's room above and below. */
+  className?: string;
+}
+
+/**
+ * A list filter's search box (MB.115): its text held by the caller, and a
+ * submit of its own, a magnifier named Search, at the box's end.
+ */
+export interface SearchFieldProps {
+  /** The base the field's ids grow from, as `fieldDescription` takes it; its own `useId()` when left out. */
+  id?: string;
+  /** The name above the box, and its accessible name: "Name or Email". */
+  label: string;
+  /** The parameter the text submits under: `query`. */
+  name: string;
+  /** A short action shown, muted, while the box is empty: "Search names". */
+  placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+/**
+ * A list filter's closed set (MB.115): a native select, or with `typeahead`
+ * a type-ahead once hydrated, whose blank choice is no filter.
+ */
+export interface FilterSelectFieldProps {
+  /** The name above the box, and its accessible name: "Role". */
+  label: string;
+  /** The parameter the choice submits under: `role`. */
+  name: string;
+  /** The blank first choice, no filter, and a type-ahead's placeholder: "All Roles". */
+  all: string;
+  /** Each choice, its value what the page reads and its label what the box shows. */
+  options: readonly SelectOption[];
+  /** The value the page shows, the blank for none; the field holds its own after. */
+  defaultValue: string;
+  /** Applies a new value: a select's on its change, a type-ahead's once a choice other than the one shown settles. */
+  onChange: (value: string) => void;
+  /** Typed into once hydrated, its list narrowing to the choices holding the text. */
+  typeahead?: boolean;
+}

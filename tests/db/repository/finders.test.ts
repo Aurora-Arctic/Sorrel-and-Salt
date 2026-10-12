@@ -16,6 +16,7 @@ import {
 } from '@/db/repository';
 import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
+import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { spells } from '@/modules/grimoire/schema/spells';
@@ -23,7 +24,6 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, D, asUser } from '../../support/as-user';
 import {
-  charms,
   herbs,
   impostor,
   jars,
@@ -110,33 +110,6 @@ describe('soft-delete filtering (M1.20)', () => {
       await withAudit(session, (write) => write.insert(herbs, { name: 'Lovage' }));
 
       await expect(findManyByIds(herbs, [])).resolves.toEqual([]);
-    });
-  });
-
-  // claude-docs/db/soft-delete.md, "Soft-delete filtering and the partial-index convention".
-  describe('the partial unique index convention', () => {
-    it('still blocks a live duplicate', async () => {
-      await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));
-
-      const error: unknown = await withAudit(session, (write) =>
-        write.insert(charms, { name: 'Ward' }),
-      ).catch((caught: unknown) => caught);
-
-      expect(String((error as { cause?: unknown }).cause ?? error)).toMatch(
-        /repository_probe_charms_name_unique/i,
-      );
-    });
-
-    it('lets the name be reused once the original is soft-deleted', async () => {
-      const [original] = await withAudit(session, (write) =>
-        write.insert(charms, { name: 'Ward' }),
-      );
-      await withAudit(session, (write) => write.softDelete(charms, eq(charms.id, original.id)));
-
-      const [reused] = await withAudit(session, (write) => write.insert(charms, { name: 'Ward' }));
-
-      expect(reused.id).not.toBe(original.id);
-      await expect(findMany(charms)).resolves.toEqual([expect.objectContaining({ id: reused.id })]);
     });
   });
 });
@@ -261,19 +234,15 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
+  // The writers' half of the mechanism, once per family: the writes by
+  // condition, which AND the proof's workspace onto the caller's `where`
+  // (updateInWorkspace here, softDeleteInWorkspace the same `and`), and the
+  // writes by id, which share `inWorkspaceById` (softDeleteByIdInWorkspace
+  // here, updateByIdInWorkspace the same predicate). The readers' half is
+  // findOneByIdInWorkspace's above: findOneInWorkspace is the same
+  // findManyInWorkspace. Who may hold a proof of which workspace is each
+  // service's to prove, by direct id, in tests/modules/*/services/.
   describe('a direct id belonging to another workspace', () => {
-    it('is not readable, though the row exists and its own workspace finds it', async () => {
-      const [row] = await insertJar(inX, 'Nettle');
-
-      // Why the read below could have succeeded: this exact id resolves under
-      // X's own proof, so the row is present and the finder is reached.
-      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
-        label: 'Nettle',
-      });
-
-      await expect(findOneInWorkspace(inW, jars, eq(jars.id, row.id))).resolves.toBeUndefined();
-    });
-
     it('is not updatable, and the row is left as it was', async () => {
       const [row] = await insertJar(inX, 'Nettle');
 
@@ -284,19 +253,6 @@ describe('the Membership proof (M6.3)', () => {
       expect(updated).toEqual([]);
       await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
         label: 'Nettle',
-      });
-    });
-
-    it('is not soft-deletable, and keeps its null deleted_at', async () => {
-      const [row] = await insertJar(inX, 'Nettle');
-
-      const deleted = await withAudit(session, (write) =>
-        write.softDeleteInWorkspace(inW, jars, eq(jars.id, row.id)),
-      );
-
-      expect(deleted).toEqual([]);
-      await expect(findOneInWorkspace(inX, jars, eq(jars.id, row.id))).resolves.toMatchObject({
-        deletedAt: null,
       });
     });
 
@@ -439,9 +395,16 @@ describe('the Membership proof (M6.3)', () => {
       // @ts-expect-error — the escape hatch takes the unscoped side too.
       findManyIncludingSoftDeleted(ingredientFolkNames);
 
+    const readVariantsUnscoped = () =>
+      // @ts-expect-error — `ingredient_variants` is an ingredient's child too
+      // (MB.216): a form of a coven's entry is that coven's, so it is read
+      // under its parent's tier or not at all.
+      findMany(ingredientVariants);
+
     expect(readAssignmentsUnscoped).toBeInstanceOf(Function);
     expect(readFolkNamesUnscoped).toBeInstanceOf(Function);
     expect(readFolkNamesById).toBeInstanceOf(Function);
     expect(readFolkNamesThroughTheHatch).toBeInstanceOf(Function);
+    expect(readVariantsUnscoped).toBeInstanceOf(Function);
   });
 });

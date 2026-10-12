@@ -7,7 +7,7 @@ import {
   findVocabularySuggestions,
 } from '../../../db/repository';
 import type { Session } from '../../../lib/session';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { readersOf } from '@/modules/coven';
 import { planets, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
@@ -16,21 +16,11 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
 export type { Claimant, DeitySuggestion, FormSuggestion, VocabularySuggestion };
 
 /**
- * The proofs a lookup reads under: the coven's, or none for the compendium
- * alone, as `getIngredient` builds them. Asks only `ingredient: ['read']`:
- * the curated rows are global, and every in-use value is one a reader of
- * this workspace could already list.
+ * What a lookup asks of a named coven: only `ingredient: ['read']`, since the
+ * curated rows are global, and every in-use value is one a reader of this
+ * workspace could already list.
  */
-async function readerOf(
-  session: Session,
-  workspaceId: string | null | undefined,
-): Promise<Membership[]> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
-  return memberships;
-}
+const READ = { ingredient: ['read'] } as const;
 
 async function suggest(
   vocabulary: typeof planets | typeof zodiacSigns,
@@ -40,7 +30,7 @@ async function suggest(
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
   return findVocabularySuggestions(
-    await readerOf(session, workspaceId),
+    await readersOf(session, workspaceId, READ),
     vocabulary,
     query.trim(),
     page,
@@ -97,7 +87,7 @@ export async function suggestForms(
   page: PageRequest,
 ): Promise<PageEntry<FormSuggestion>[]> {
   return findVocabularySuggestions(
-    await readerOf(session, workspaceId),
+    await readersOf(session, workspaceId, READ),
     ingredientForms,
     query.trim(),
     page,
@@ -120,7 +110,7 @@ export async function suggestDeities(
   page: PageRequest,
 ): Promise<PageEntry<DeitySuggestion>[]> {
   return findVocabularySuggestions(
-    await readerOf(session, workspaceId),
+    await readersOf(session, workspaceId, READ),
     deities,
     query.trim(),
     page,

@@ -5,7 +5,8 @@ import type {
   ObjectFieldsShape,
   ObjectRef,
 } from '@pothos/core';
-import type { EmailVerificationSender } from '@/modules/identity';
+import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
+import type { EmailVerificationSender, InvitationSender } from '@/modules/identity';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -17,6 +18,8 @@ export interface Context {
   loaders: Loaders;
   /** Bound to this request's host and cookie: the email page's mail goes out through it. */
   emailVerification: EmailVerificationSender;
+  /** Bound to this request's host: an admin invitation's link goes out through it. */
+  invitations: InvitationSender;
 }
 
 export interface SchemaTypes {
@@ -69,6 +72,11 @@ export interface PagedConnectionOptions<
   /** The field's own arguments, beside the four the connection adds. */
   args?: Args;
   /**
+   * The field's scope (M5.7), checked before `resolve` is asked: the second
+   * check in front of a service that refuses again.
+   */
+  authScopes?: FieldAuthScopes<Types, ParentShape, InputShapeFromFields<Args>>;
+  /**
    * One page from a keyset finder. It receives a decoded, clamped
    * `PageRequest` and never the client's `first`/`after`, so it cannot skip
    * the maximum or read a cursor as an offset.
@@ -99,3 +107,17 @@ export interface PagedConnectionOptions<
 export interface Counted {
   count: () => Promise<PageCount>;
 }
+
+/** The builder's own types, as Pothos extends `SchemaTypes`: what a ref is typed under. */
+export type BuilderTypes = PothosSchemaTypes.ExtendDefaultTypes<SchemaTypes>;
+
+/** An argument object with each null made absent: what `definedArgs` answers. */
+export type Defined<T> = { [Name in keyof T]: Exclude<T[Name], null> };
+
+/** A picker's search, as `suggestionConnection` calls it: the caller's, a coven or none, a query. */
+export type Suggest<Node> = (
+  session: Session,
+  workspaceId: string | null | undefined,
+  query: string,
+  page: PageRequest,
+) => Promise<PageEntry<Node>[]>;

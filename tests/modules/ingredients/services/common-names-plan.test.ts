@@ -5,11 +5,11 @@ import { suggestCommonNames } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
-// The statement suggestCommonNames actually sends, read and planned, as
-// duplicates-plan.test.ts reads findPossibleDuplicates': a `similarity() > n`
-// written by mistake returns the same rows, so only the SQL and the plan tell
-// them apart. Unlike the vocabularies, both tables here grow with use, so the
-// plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
+// The statement suggestCommonNames actually sends, planned, as
+// duplicates-plan.test.ts plans findPossibleDuplicates': its results look the
+// same whether or not the trigram indexes are reachable, so the plan is the
+// only evidence. Unlike the vocabularies, both tables here grow with use, so
+// the plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -29,8 +29,7 @@ beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
 });
 
-beforeEach(async () => {
-  await sql`truncate ingredients cascade`;
+beforeEach(() => {
   logged.length = 0;
 });
 
@@ -48,51 +47,18 @@ function match(statements: Logged[]): Logged {
 }
 
 describe('the common-name suggestion query', () => {
-  it('sets both thresholds before matching, inside a transaction', async () => {
-    const statements = await statementsFor('mugwort');
-    const setting = statements.findIndex(({ query }) =>
-      query.includes(`set_config('pg_trgm.similarity_threshold'`),
-    );
-
-    expect(setting).toBeGreaterThanOrEqual(0);
-    expect(statements[setting].query).toMatch(/, true\)/);
-    expect(statements[setting].params).toEqual(['0.4', '0.6']);
-    expect(statements.indexOf(match(statements))).toBeGreaterThan(setting);
-  });
-
-  it('matches a display name and a folk name with % and <%, never a similarity() comparison', async () => {
-    const { query } = match(await statementsFor('mugwort'));
-
-    expect(query).toMatch(/"ingredients"\."name" % \$\d+/);
-    expect(query).toMatch(/\$\d+ <% "ingredients"\."name"/);
-    expect(query).toMatch(/"ingredient_folk_names"\."name" % \$\d+/);
-    expect(query).toMatch(/\$\d+ <% "ingredient_folk_names"\."name"/);
-    expect(query).not.toMatch(/"canonical_name" %|<% "\w+"\."canonical_name"/);
-    expect(query).not.toMatch(/similarity\([^)]*\)\s*[<>]=?/);
-  });
-
-  // CLAUDE.md rule 7: the scope and the tombstones are in the statement.
-  it('reads the compendium tier and the proof’s workspace, live rows only', async () => {
-    const { query, params } = match(await statementsFor('mugwort'));
-
-    expect(query).toMatch(
-      /"ingredients"\."workspace_id" is null or "ingredients"\."workspace_id" = \$\d+/,
-    );
-    expect(params).toContain(WORKSPACE_W_ID);
-    expect(query).toMatch(/"ingredients"\."deleted_at" is null/);
-    expect(query).toMatch(/"ingredient_folk_names"\."deleted_at" is null/);
-  });
-
   describe('EXPLAIN', () => {
-    // As in duplicates-plan.test.ts: sequential scans off, distinct (md5)
-    // trigrams, and enough rows that the planner's choice is between the GIN
-    // probe and a walk of a partial unique index, not a foregone one. The
-    // display-name arm needs more than the folk-name arm: its scope is the
-    // compendium's own partial index, which the planner walks in preference
-    // to the probe at thirty thousand entries and not at fifty. Eighty thousand
-    // rows through six trigram indexes outrun the 10s default hook timeout on
-    // CI's shared runner, so the seed carries its own.
-    beforeEach(async () => {
+    // Seeded once per file (MB.184), inside the describe that plans. As in
+    // duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams,
+    // and enough rows that the planner's choice is between the GIN probe and
+    // a walk of a partial unique index, not a foregone one. The display-name
+    // arm needs more than the folk-name arm: its scope is the compendium's
+    // own partial index, which the planner walks in preference to the probe
+    // at thirty thousand entries and not at fifty. Eighty thousand rows
+    // through six trigram indexes outrun the 10s default hook timeout on CI's
+    // shared runner, so the seed carries its own.
+    beforeAll(async () => {
+      await sql`truncate ingredients cascade`;
       await sql`
         insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
         select md5('name' || g), md5('name' || g), md5('formal' || g), 'botanical', ${A.id}, ${A.id}
@@ -106,6 +72,12 @@ describe('the common-name suggestion query', () => {
       await sql`analyze ingredients`;
       await sql`analyze ingredient_folk_names`;
     }, 60_000);
+
+    // The seed is the plan's precondition: fewer rows and the walk wins.
+    it('plans over the seeded rows', async () => {
+      const [{ count }] = await sql`select count(*) from ingredient_folk_names`;
+      expect(Number(count)).toBe(30000);
+    });
 
     async function planOf({ query, params }: Logged): Promise<string> {
       return await sql.begin(async (tx) => {

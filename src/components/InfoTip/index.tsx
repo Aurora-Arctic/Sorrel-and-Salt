@@ -1,48 +1,20 @@
 'use client';
 
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import type { InfoTipProps } from './types';
+import { useTip } from './use-tip';
 import './index.scss';
 
 // A field's hint behind an ⓘ beside its label, rather than a line beneath it.
 // It opens on hover, on a tap, and on the ⓘ's focus — never on the field's,
 // which cluttered the form for little value (MB.133) — stays open while the
-// pointer is on it, and closes on Escape (WCAG 1.4.13).
+// pointer is on it, and closes on Escape (WCAG 1.4.13), through `useTip`.
 // The text stays in the page while closed, faded out and `aria-hidden` rather
 // than unmounted, so the field it describes still reads it
 // (claude-docs/components/info-tip.md).
 
-// Long enough to cross from the button onto the tip.
-const CLOSE_DELAY_MS = 150;
-
 const InfoTip = ({ id, label, children }: InfoTipProps): ReactElement => {
-  const [open, setOpen] = useState(false);
-  const closing = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const show = useCallback(() => {
-    clearTimeout(closing.current);
-    setOpen(true);
-  }, []);
-  const hide = useCallback(() => {
-    clearTimeout(closing.current);
-    setOpen(false);
-  }, []);
-  const hideSoon = () => {
-    clearTimeout(closing.current);
-    closing.current = setTimeout(() => setOpen(false), CLOSE_DELAY_MS);
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    // On the document: a tip opened by hover has no focus to listen from.
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') hide();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open, hide]);
-
-  useEffect(() => () => clearTimeout(closing.current), []);
+  const { open, show, hide, hideSoon } = useTip();
 
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the

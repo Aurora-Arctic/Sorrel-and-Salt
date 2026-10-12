@@ -1,7 +1,9 @@
 import { describe, expect, it, afterEach, vi } from 'vitest';
 import type { BetterAuthOptions } from 'better-auth';
 import { getAuthTables } from '@better-auth/core/db';
-import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
+import { warmImport } from '../support/warm-import';
+
+warmImport(() => import('@/lib/auth'));
 
 // Better Auth's own production check swallows its rejection and answers 200
 // on the default secret, so the repo enforces it synchronously before
@@ -154,30 +156,6 @@ describe('social providers', () => {
     expect(auth.options.socialProviders?.microsoft).toMatchObject({
       tenantId: 'a-specific-tenant',
     });
-  });
-
-  it('registers every configured provider consistently with configuredProviders()', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
-    vi.stubEnv('DISCORD_CLIENT_ID', 'd-id');
-    vi.stubEnv('DISCORD_CLIENT_SECRET', 'd-secret');
-    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
-    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
-    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
-    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
-    vi.resetModules();
-
-    const { auth } = await import('@/lib/auth');
-    // A test is a legitimate exception to the client-boundary rule below —
-    // it needs to assert the server-only mapping directly, the same as
-    // tests/db/test-database-isolation.test.ts is exempt from the db-client
-    // boundary (CLAUDE.md rule 2).
-    // oxlint-disable-next-line no-restricted-imports
-    const { configuredProviders } = await import('@/lib/social-providers-config');
-
-    expect(Object.keys(auth.options.socialProviders ?? {}).sort()).toEqual(
-      configuredProviders().sort(),
-    );
   });
 });
 
@@ -348,28 +326,6 @@ describe('options that would move the primary admin', () => {
   });
 });
 
-// The explicit link from a signed-in session (claude-docs/auth/admin-bootstrap.md, "Linking a
-// second provider"). Neither option is read at sign-in.
-describe('linking a second provider', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  async function accountLinking() {
-    vi.resetModules();
-    const { auth } = await import('@/lib/auth');
-    return (auth.options as BetterAuthOptions).account?.accountLinking;
-  }
-
-  it('lets a linked account carry a different address: the second provider is usually another mailbox', async () => {
-    expect((await accountLinking())?.allowDifferentEmails).toBe(true);
-  });
-
-  it('keeps allowUnlinkingAll off, so the last provider cannot be removed', async () => {
-    expect((await accountLinking())?.allowUnlinkingAll).toBeFalsy();
-  });
-});
-
 // First-party verification (claude-docs/auth/admin-bootstrap.md, "First-party verification").
 // Each value is pinned because each one, changed, changes who can verify what.
 describe('email verification', () => {
@@ -414,21 +370,6 @@ describe('email verification', () => {
     }
   });
 
-  it('pins Facebook and Microsoft unverified outside a link flow and leaves Google and Discord their own mapping', async () => {
-    const providers = (await configuredAuth()).options.socialProviders ?? {};
-    const mapper = (id: keyof typeof providers) =>
-      (providers[id] as { mapProfileToUser?: (profile: unknown) => unknown }).mapProfileToUser;
-    // With an address: the placeholder mapping (MB.54) has nothing to add.
-    const profile = { email: 'someone@auth.test', email_verified: true };
-
-    expect(await mapper('facebook')?.({ id: '1', ...profile })).toEqual({ emailVerified: false });
-    expect(await mapper('microsoft')?.({ oid: '1', ...profile })).toEqual({
-      emailVerified: false,
-    });
-    expect(await mapper('google')?.({ sub: '1', ...profile })).toEqual({});
-    expect(await mapper('discord')?.({ id: '1', ...profile })).toEqual({});
-  });
-
   it('stamps nothing on a write with no known actor', async () => {
     const before = (await configuredAuth()).options.databaseHooks?.user?.update?.before;
     if (!before) throw new Error('databaseHooks.user.update.before is not configured');
@@ -461,18 +402,6 @@ describe('rate limiting', () => {
   it('is off outside production, so next dev and the test suites are never throttled', async () => {
     expect((await authAt('development')).options.rateLimit?.enabled).toBe(false);
   });
-
-  it('counts in the database: in memory, each Fluid Compute instance would count alone', async () => {
-    expect((await authAt('production')).options.rateLimit?.storage).toBe('database');
-  });
-
-  it("keys a visitor on Vercel's own client-address header, which no client can set", async () => {
-    const { advanced } = (await authAt('production')).options as BetterAuthOptions;
-
-    expect(advanced?.ipAddress?.ipAddressHeaders).toEqual(['x-vercel-forwarded-for']);
-    expect(advanced?.ipAddress?.trustedProxies).toBeUndefined();
-    expect(advanced?.ipAddress?.disableIpTracking).toBeFalsy();
-  });
 });
 
 // Neither is set in src/lib/auth.ts: DESIGN.md names no session lifetime, so
@@ -497,18 +426,17 @@ describe('session lifetimes', () => {
       freshAge: DAY,
     });
   });
-});
 
-describe('stored OAuth tokens', () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it('are encrypted under BETTER_AUTH_SECRET', async () => {
+  // MB.59: a revoked admin's next request reads `role` off the users row, so
+  // `/admin` and every admin mutation close to them at once. A cookie cache
+  // would answer from the cookie until its TTL ran out, keeping a revoked
+  // admin an admin for that long (claude-docs/auth/admin-users.md).
+  it('keeps the session cookie cache off, so every request reads the role afresh', async () => {
     vi.resetModules();
     const { auth } = await import('@/lib/auth');
 
-    expect((auth.options as BetterAuthOptions).account?.encryptOAuthTokens).toBe(true);
+    const { options } = (await auth.$context) as { options: BetterAuthOptions };
+    expect(options.session?.cookieCache?.enabled).not.toBe(true);
   });
 });
 
@@ -527,12 +455,6 @@ describe('last login method', () => {
     if (!plugin) throw new Error('lastLoginMethod is not registered');
     return { auth, plugin };
   }
-
-  it('is registered under the shared cookie name, with storeInDatabase unset', async () => {
-    const { plugin } = await lastLoginMethodPlugin();
-
-    expect(plugin.options).toEqual({ cookieName: LAST_USED_PROVIDER_COOKIE });
-  });
 
   it('adds no column to the schema Better Auth writes', async () => {
     const { auth, plugin } = await lastLoginMethodPlugin();

@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { Forbidden } from '../../../lib/errors';
+import { sessionOf } from '../../../graphql/context-helpers';
 import { findPossibleDuplicates } from '../services/duplicates';
 import { IngredientRef } from './ingredient';
 
@@ -15,10 +15,8 @@ builder.queryField('possibleDuplicates', (t) =>
       workspaceId: t.arg.id({ required: false }),
       name: t.arg.string({ required: true }),
     },
-    resolve: (_query, { workspaceId, name }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return findPossibleDuplicates(session, workspaceId, name, page);
-    },
+    resolve: (_query, { workspaceId, name }, page, context) =>
+      findPossibleDuplicates(sessionOf(context), workspaceId, name, page),
     edgeFields: (t) => ({
       score: t.float({
         description:

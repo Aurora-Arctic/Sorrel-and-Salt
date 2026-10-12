@@ -5,35 +5,46 @@ import {
   eq,
   getTableName,
   inArray,
+  isNull,
   ne,
   notInArray,
   or,
   sql,
 } from 'drizzle-orm';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import { categories, categoryGroups } from '../../modules/vocabulary/schema/categories';
-import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
-import {
-  ingredientFormGroups,
-  ingredientForms,
-} from '../../modules/vocabulary/schema/ingredient-forms';
+import { categories } from '../../modules/vocabulary/schema/categories';
+import { deities } from '../../modules/vocabulary/schema/deities';
+import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
+import { TWO_TIER, type GroupTable, type PickedTable, type TwoTierPair } from '../vocabularies';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import { containsText, inCompendium, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, pageBounds, selectFrom } from './select';
+import { findPage, findPageCount } from './finders';
+import {
+  containsText,
+  fold,
+  inCompendium,
+  notSoftDeleted,
+  readableInTiers,
+  trigramMatch,
+} from './predicates';
+import { existsIn, selectFrom } from './select';
 import { claimantList, readSuggestionPage } from './suggestion-page';
 import type {
   AstrologyValueFilter,
   AstrologyVocabulary,
   CategoryFilter,
+  DeityFilter,
   DeitySuggestion,
   FormSuggestion,
+  GroupFilter,
   IngredientFormValueFilter,
+  IngredientRow,
   InUseSource,
-  KeyOrder,
+  ListedVocabulary,
+  ListOrder,
   SuggestingVocabulary,
   VocabularySuggestion,
 } from './types';
@@ -50,11 +61,11 @@ export function findIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof ingredientForms.$inferSelect>[]> {
-  const keyset = { ...FORM_ORDER, request: page };
-  return selectFrom(
+  return findPage(
     ingredientForms,
-    and(notSoftDeleted(ingredientForms), ...formArms(filter), pageBounds(keyset)),
-    keyset,
+    [ingredientForms.name],
+    page,
+    vocabularyArms(ingredientForms, filter),
   );
 }
 
@@ -68,27 +79,13 @@ export function findIngredientFormValueCount(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return selectFrom(ingredientForms, and(notSoftDeleted(ingredientForms), ...formArms(filter)), {
-    count: FORM_ORDER,
+  return findPageCount(
+    ingredientForms,
+    [ingredientForms.name],
     start,
-  });
+    vocabularyArms(ingredientForms, filter),
+  );
 }
-
-/**
- * What a form page and its count both read beside the row's own filter: its
- * group live, and the filter's arms, each `undefined` when its part is
- * absent, as `categoryArms` reads a category's.
- */
-function formArms({ query, groupId }: IngredientFormValueFilter): (SQL | undefined)[] {
-  return [
-    inLiveGroup(ingredientForms),
-    query ? containsText(ingredientForms.name, query) : undefined,
-    groupId ? eq(ingredientForms.groupId, groupId) : undefined,
-  ];
-}
-
-/** The form vocabulary's key: by name, then id. A page and its count share it. */
-const FORM_ORDER = { sort: [ingredientForms.name], id: ingredientForms.id };
 
 /**
  * One page of a curated astrology vocabulary under `filter` in `(name, id)`
@@ -101,12 +98,7 @@ export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
   filter: AstrologyValueFilter,
   page: PageRequest,
 ): Promise<PageEntry<TVocabulary['$inferSelect']>[]> {
-  const keyset = { ...astrologyOrder(vocabulary), request: page };
-  return selectFrom(
-    vocabulary,
-    and(notSoftDeleted(vocabulary), astrologyArm(vocabulary, filter), pageBounds(keyset)),
-    keyset,
-  );
+  return findPage(vocabulary, [vocabulary.name], page, vocabularyArms(vocabulary, filter));
 }
 
 /**
@@ -119,23 +111,7 @@ export function findAstrologyValueCount(
   filter: AstrologyValueFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return selectFrom(vocabulary, and(notSoftDeleted(vocabulary), astrologyArm(vocabulary, filter)), {
-    count: astrologyOrder(vocabulary),
-    start,
-  });
-}
-
-/** The name fragment an astrology list is narrowed by, `undefined` when there is none. */
-function astrologyArm(
-  vocabulary: AstrologyVocabulary,
-  { query }: AstrologyValueFilter,
-): SQL | undefined {
-  return query ? containsText(vocabulary.name, query) : undefined;
-}
-
-/** An astrology vocabulary's key: by name, then id. A page and its count share it. */
-function astrologyOrder(vocabulary: AstrologyVocabulary) {
-  return { sort: [vocabulary.name], id: vocabulary.id };
+  return findPageCount(vocabulary, [vocabulary.name], start, vocabularyArms(vocabulary, filter));
 }
 
 /**
@@ -148,12 +124,7 @@ export function findCategoryPage(
   filter: CategoryFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof categories.$inferSelect>[]> {
-  const keyset = { ...CATEGORY_ORDER, request: page };
-  return selectFrom(
-    categories,
-    and(notSoftDeleted(categories), ...categoryArms(filter), pageBounds(keyset)),
-    keyset,
-  );
+  return findPage(categories, CATEGORY_ORDER, page, vocabularyArms(categories, filter));
 }
 
 /**
@@ -166,42 +137,107 @@ export function findCategoryCount(
   filter: CategoryFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return selectFrom(categories, and(notSoftDeleted(categories), ...categoryArms(filter)), {
-    count: CATEGORY_ORDER,
-    start,
-  });
+  return findPageCount(categories, CATEGORY_ORDER, start, vocabularyArms(categories, filter));
 }
 
-/** The groups, joined for their name alone: the row's own filter already holds the group live. */
-const grouped = sql.identifier('grouped');
-
 /**
- * The category vocabulary's key: by its group's name, then its own, then id,
- * the owner's call during MB.126, so a page reads as the picker lists it and
- * two groups' namesakes sit apart. A page and its count share it, with the
- * join that reads the group's name.
+ * One page of the deity vocabulary under `filter`, by its tradition's name,
+ * then its own, then id, for the admin's deities page (MB.132): the live
+ * deities whose tradition is live too, read as `findCategoryPage` reads the
+ * categories, so a page lists each deity under its tradition. Public
+ * reference data, so no proof.
  */
-const CATEGORY_ORDER: KeyOrder = {
-  sort: [{ expression: sql`${grouped}.name`, type: 'text' }, categories.name],
-  id: categories.id,
-  join: {
-    source: sql`(select ${categoryGroups.id}, ${categoryGroups.name} from ${categoryGroups}) as ${grouped}`,
-    on: eq(sql`${grouped}.id`, categories.groupId),
-  },
-};
-
-/**
- * What a category page and its count both read beside the row's own filter:
- * its group live, by the builder's correlated `EXISTS`, and the filter's
- * arms, each `undefined` when its part is absent.
- */
-function categoryArms({ query, groupId }: CategoryFilter): (SQL | undefined)[] {
-  return [
-    existsIn(categoryGroups, eq(categoryGroups.id, categories.groupId)),
-    query ? containsText(categories.name, query) : undefined,
-    groupId ? eq(categories.groupId, groupId) : undefined,
-  ];
+export function findDeityPage(
+  filter: DeityFilter,
+  page: PageRequest,
+): Promise<PageEntry<typeof deities.$inferSelect>[]> {
+  return findPage(deities, DEITY_ORDER, page, deityArms(filter));
 }
+
+/**
+ * How many deities `findDeityPage` pages under `filter`, and how many come
+ * before `start` in its order: "Page X of Y", as `findCategoryCount` counts
+ * the categories, over the page's own filter and key.
+ */
+export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): Promise<PageCount> {
+  return findPageCount(deities, DEITY_ORDER, start, deityArms(filter));
+}
+
+/**
+ * One page of a group vocabulary — the category groups, the form groups or
+ * the deity traditions — alphabetical by name (MB.35), narrowed by a name
+ * fragment as the values' lists are (MB.115): what a group's admin page
+ * lists. Public reference data, so no proof.
+ */
+export function findGroupPage<TTable extends GroupTable>(
+  table: TTable,
+  filter: GroupFilter,
+  page: PageRequest,
+): Promise<PageEntry<TTable['$inferSelect']>[]> {
+  return findPage(table, [table.name], page, groupArms(table, filter));
+}
+
+/**
+ * How many groups `findGroupPage` pages under `filter`, and how many come
+ * before `start` in its order: "Page X of Y" on the group's admin page.
+ */
+export function findGroupCount(
+  table: GroupTable,
+  filter: GroupFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(table, [table.name], start, groupArms(table, filter));
+}
+
+/** A group filter's one arm, a name fragment; none with no query. */
+function groupArms(table: GroupTable, { query }: GroupFilter): SQL | undefined {
+  return query ? containsText(table.name, query) : undefined;
+}
+
+/**
+ * What a vocabulary's admin page and its count both read beside the row's own
+ * filter: its group or tradition live, by the builder's correlated `EXISTS`,
+ * and the filter's arms — a name fragment, and the group a row is filed
+ * under — each absent when its part is. A flat vocabulary has no group.
+ */
+function vocabularyArms(
+  vocabulary: ListedVocabulary,
+  { query, groupId }: { query?: string; groupId?: string },
+): SQL | undefined {
+  const grouping = groupingOf(vocabulary);
+  return and(
+    inLiveGroup(vocabulary),
+    query ? containsText(vocabulary.name, query) : undefined,
+    grouping && groupId ? eq(grouping.column, groupId) : undefined,
+  );
+}
+
+/** A deity filter's arms: its tradition is the group it is filed under. */
+function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
+  return vocabularyArms(deities, { query, groupId: traditionId });
+}
+
+/**
+ * The key of a vocabulary filed under groups: by its group's name, then its
+ * own, then id, the owner's call during MB.126, so a page reads as the picker
+ * lists it and two groups' namesakes sit apart. A page and its count share
+ * it, with the join that reads the group's name — for its name alone, since
+ * the row's own filter already holds the group live.
+ */
+function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
+  const grouped = sql.identifier('grouped');
+  return {
+    sort: [{ expression: sql`${grouped}.name`, type: 'text' }, items.name],
+    join: {
+      source: sql`(select ${groups.id}, ${groups.name} from ${groups}) as ${grouped}`,
+      on: eq(sql`${grouped}.id`, column),
+    },
+  };
+}
+
+/** The categories by group, then name; the deities by tradition, then name. */
+const CATEGORY_ORDER = groupedOrder(TWO_TIER.categories);
+const DEITY_ORDER = groupedOrder(TWO_TIER.deities);
 
 /**
  * The live rows of `vocabulary` whose lower-cased name is one of `folds` —
@@ -217,11 +253,7 @@ export function findCuratedRowsByName(
 ): Promise<Pick<typeof ingredientForms.$inferSelect, 'id' | 'name'>[]> {
   return selectFrom(
     vocabulary,
-    and(
-      notSoftDeleted(vocabulary),
-      inLiveGroup(vocabulary),
-      inArray(sql`lower(${vocabulary.name})`, [...folds]),
-    ),
+    and(curated(vocabulary), inArray(sql`lower(${vocabulary.name})`, [...folds])),
   );
 }
 
@@ -232,15 +264,21 @@ export function findCuratedRowsByName(
  * pick whose row or group is retired reads as no pick (MB.167). Global
  * reference data, so no proof.
  */
-export function findCuratedRowsByIds<TVocabulary extends typeof ingredientForms | typeof deities>(
+export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   vocabulary: TVocabulary,
   ids: readonly string[],
 ): Promise<TVocabulary['$inferSelect'][]> {
   if (ids.length === 0) return Promise.resolve([]);
-  return selectFrom(
-    vocabulary,
-    and(notSoftDeleted(vocabulary), inLiveGroup(vocabulary), inArray(vocabulary.id, [...ids])),
-  );
+  return selectFrom(vocabulary, and(curated(vocabulary), inArray(vocabulary.id, [...ids])));
+}
+
+/**
+ * A curated row: live, and filed under a live group or tradition where its
+ * vocabulary files rows — what a member's pick, the compendium's spellings
+ * and an ingredient's deity link are each held to (MB.162, MB.167).
+ */
+export function curated(vocabulary: SuggestingVocabulary): SQL | undefined {
+  return and(notSoftDeleted(vocabulary), inLiveGroup(vocabulary));
 }
 
 /**
@@ -249,9 +287,44 @@ export function findCuratedRowsByIds<TVocabulary extends typeof ingredientForms 
  * `EXISTS`. None for a flat vocabulary. Every reader of a curated row ANDs it
  * beside the row's own filter.
  */
-export function inLiveGroup(vocabulary: SuggestingVocabulary): SQL | undefined {
+export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
   const grouping = groupingOf(vocabulary);
-  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.key));
+  return grouping && existsIn(grouping.groups, eq(grouping.groups.id, grouping.column));
+}
+
+/**
+ * The live compendium entries a curated form's rename to `name` would give
+ * two forms of one name (MB.220): each holds a live variant that picked
+ * `formId`, which the rename rewrites, and another live variant whose form
+ * already folds to `name`, under the fold `ingredient_variants_form_unique`
+ * holds. What the rename is refused on, naming them, before its write and
+ * again after the index refuses one. A coven's entry is never rewritten, so
+ * never named. Unordered; the pick is read through
+ * `ingredient_variants_form_id_idx`.
+ */
+export function findCompendiumFormRenameClashes(
+  formId: string,
+  name: string,
+): Promise<IngredientRow[]> {
+  const ofEntry = eq(ingredientVariants.ingredientId, ingredients.id);
+  return selectFrom(
+    ingredients,
+    and(
+      inCompendium(ingredients),
+      notSoftDeleted(ingredients),
+      existsIn(ingredientVariants, and(ofEntry, eq(ingredientVariants.formId, formId))),
+      // Another variant: two of one entry cannot both pick the form, since a
+      // pick's text folds to the form's name and the index holds the fold.
+      existsIn(
+        ingredientVariants,
+        and(
+          ofEntry,
+          or(isNull(ingredientVariants.formId), ne(ingredientVariants.formId, formId)),
+          eq(fold(ingredientVariants.form), fold(name)),
+        ),
+      ),
+    ),
+  );
 }
 
 /**
@@ -259,34 +332,34 @@ export function inLiveGroup(vocabulary: SuggestingVocabulary): SQL | undefined {
  * vocabulary added to `SuggestingVocabulary` fails to compile until it names
  * its column, and a caller passes a table alone, so it cannot pair one with
  * the other's column. A list is read entry by entry (MB.136); the deities are
- * their own table's rows (MB.167).
+ * their own table's rows (MB.167), and the forms an entry's variants (MB.220),
+ * so a form is in use while any live variant holds it, not only the one the
+ * ingredient row mirrors.
  */
 const IN_USE = {
   planets: { list: ingredients.planets },
   zodiac_signs: { list: ingredients.zodiacSigns },
-  ingredient_forms: { column: ingredients.form },
-  deities: { child: ingredientDeities },
+  ingredient_forms: { child: ingredientVariants, value: ingredientVariants.form },
+  deities: { child: ingredientDeities, value: ingredientDeities.name },
 } satisfies Record<SuggestingVocabulary['_']['name'], InUseSource>;
 
 const ENTRY = sql.identifier('entry');
 
 /**
- * The rows an in-use scan reads, and the value each holds: the ingredients
- * themselves for a column; one row per entry for a list, unnested before
- * anything trims or folds it — so an entry counts as a column's value would,
- * and a value held by several lists, or twice by one, is grouped as one; or a
- * child table's live rows beside their ingredient, for the deities.
+ * The rows an in-use scan reads, and the value each holds: one row per entry
+ * for a list, unnested before anything trims or folds it — so a value held by
+ * several lists, or twice by one, is grouped as one; or a child table's live
+ * rows beside their ingredient, for the deities and the forms.
  */
 function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper } {
-  if ('column' in source) return { rows: ingredients, value: source.column };
   if ('child' in source) {
-    const { child } = source;
+    const { child, value } = source;
     return {
       rows: sql`${ingredients} inner join ${child} on ${and(
         eq(child.ingredientId, ingredients.id),
         notSoftDeleted(child),
       )}`,
-      value: child.name,
+      value,
     };
   }
   return {
@@ -296,18 +369,11 @@ function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper }
 }
 
 /**
- * The table a two-tier vocabulary's rows are filed under, and the key that
- * files them: a form under its group, a deity under its tradition. A flat
- * vocabulary has none.
+ * The pair `vocabulary` is the items of in `TWO_TIER` — the table its rows are
+ * filed under, and the column that files them — or none for a flat vocabulary.
  */
-function groupingOf(
-  vocabulary: SuggestingVocabulary,
-): { groups: typeof ingredientFormGroups | typeof deityTraditions; key: AnyPgColumn } | undefined {
-  if (vocabulary === ingredientForms) {
-    return { groups: ingredientFormGroups, key: ingredientForms.groupId };
-  }
-  if (vocabulary === deities) return { groups: deityTraditions, key: deities.traditionId };
-  return undefined;
+function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
+  return Object.values(TWO_TIER).find((pair) => pair.items === vocabulary);
 }
 
 /**
@@ -352,23 +418,16 @@ export async function findVocabularySuggestions(
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion | FormSuggestion | DeitySuggestion>[]> {
   const { rows: inUseFrom, value: inUse } = inUseRows(IN_USE[getTableName(vocabulary)]);
-  const matches = (text: SQLWrapper) => sql`(${text} % ${query} or ${query} <% ${text})`;
-  const byName = matches(vocabulary.name);
-  const fold = sql`lower(btrim(${inUse}))`;
-  const inScope = and(
-    or(
-      inCompendium(ingredients),
-      ...memberships.map((membership) => scopedTo(membership, ingredients)),
-    ),
-    notSoftDeleted(ingredients),
-    ne(sql`btrim(${inUse})`, ''),
-  );
+  const byName = trigramMatch(vocabulary.name, query);
+  const inUseFold = fold(inUse);
+  const inScope = and(readableInTiers(memberships, ingredients), ne(sql`btrim(${inUse})`, ''));
 
   const grouping = groupingOf(vocabulary);
-  // Only a form names its claimants: a form is half an ingredient's identity.
+  // Only a form names its claimants: the entries already holding it, one of
+  // which a member adding a form may mean to add it to instead (MB.215).
   const claimed = vocabulary === ingredientForms;
   const curatedRows = grouping
-    ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.key}`
+    ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.column}`
     : vocabulary;
   const live = and(notSoftDeleted(vocabulary), grouping && notSoftDeleted(grouping.groups));
   // Two same-named rows tie on the fold, so the group orders the pair.
@@ -378,7 +437,7 @@ export async function findVocabularySuggestions(
 
   // Tier literals are written into the text: a bound 0 and 1 would type the
   // `case` as text, and the union would refuse to stack it on the integer 2.
-  const curated = sql`
+  const curatedTier = sql`
     select ${query ? sql`case when ${byName} then 0 else 1 end` : sql`0`} as tier,
       ${vocabulary.id}::text as id, ${vocabulary.name} as value,
       ${vocabulary.description} as description,
@@ -391,23 +450,26 @@ export async function findVocabularySuggestions(
   // by the order it is given, so the choice is stable.
   const uncurated = sql`
     select 2 as tier, null as id, mode() within group (order by btrim(${inUse})) as value,
-      null as description, null as group_name, ${fold} as fold, ${fold} as tiebreak
+      null as description, null as group_name, ${inUseFold} as fold, ${inUseFold} as tiebreak
     from ${inUseFrom}
     where ${and(
       inScope,
-      query ? matches(inUse) : undefined,
-      notInArray(fold, sql`(select lower(${vocabulary.name}) from ${curatedRows} where ${live})`),
+      query ? trigramMatch(inUse, query) : undefined,
+      notInArray(
+        inUseFold,
+        sql`(select lower(${vocabulary.name}) from ${curatedRows} where ${live})`,
+      ),
     )}
-    group by ${fold}`;
+    group by ${inUseFold}`;
 
-  const suggestions = sql`(${curated} union all ${uncurated}) as ${sql.identifier('suggestion')}`;
+  const suggestions = sql`(${curatedTier} union all ${uncurated}) as ${sql.identifier('suggestion')}`;
   // Every in-scope claim, not only the matching ones: a form found by its
   // description is claimed under its name.
   const source = claimed
     ? sql`${suggestions} left join (
-        select ${fold} as claimed,
+        select ${inUseFold} as claimed,
           ${claimantList(ingredients.name, ingredients.canonicalName, ingredients.id)} as claimants
-        from ${inUseFrom} where ${inScope} group by ${fold}
+        from ${inUseFrom} where ${inScope} group by ${inUseFold}
       ) as ${sql.identifier('claim')} on ${sql.identifier('claimed')} = ${sql.identifier('suggestion')}.${sql.identifier('fold')}`
     : suggestions;
 

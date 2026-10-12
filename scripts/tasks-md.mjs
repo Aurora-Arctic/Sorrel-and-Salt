@@ -11,8 +11,7 @@ import { fileURLToPath } from 'node:url';
  * The breakdown's files, repo-relative and in reading order: TASKS.md, whose
  * table names the waves, then the milestone sections. Declared rather than
  * listed from the directory because the order is what a range is expanded
- * by; tests/guards/tasks-md-sequence.test.ts fails a file in
- * claude-docs/tasks/ this list leaves out.
+ * by, so a new file in claude-docs/tasks/ is added here.
  */
 export const TASKS_FILES = [
   'claude-docs/TASKS.md',

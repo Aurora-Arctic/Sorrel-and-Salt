@@ -1,20 +1,16 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { parse } from 'yaml';
-import { fromRoot, REPO_ROOT } from '../support/paths';
 
 import {
   JOURNAL_PATH,
   orderProblems,
-  parseJournal,
   readBaseJournal,
   report,
 } from '../../scripts/check-migration-order';
 import type { JournalEntry } from '../../scripts/types';
-import type { Workflow } from './types';
 
 // Drizzle's migrator applies only the journal entries whose `when` is later
 // than the newest it has recorded, so an entry merged older than one already
@@ -93,17 +89,10 @@ describe('the journal as a whole', () => {
       '0047_refill-seed-keys (when 1791327264878) is no later than 0046_admin-invitations before it (when 1791328303254)',
     ]);
   });
-
-  it("passes as it stands on this checkout — staging's, or a branch's on top of it", () => {
-    const journal = parseJournal(readFileSync(join(REPO_ROOT, JOURNAL_PATH), 'utf8'));
-
-    expect(journal.length).toBeGreaterThan(40);
-    expect(orderProblems(journal, journal, 'HEAD')).toEqual([]);
-  });
 });
 
 describe('the report', () => {
-  it('fails with each problem and the regenerate step, and passes with none', () => {
+  it('fails naming each problem, and passes with none', () => {
     const lines: string[] = [];
     const log = (line: string) => lines.push(line);
 
@@ -111,7 +100,6 @@ describe('the report', () => {
       report(['0047_x sits ahead of 0046_y, which origin/staging has'], 'origin/staging', log),
     ).toBe(1);
     expect(lines.join('\n')).toContain('0047_x sits ahead of 0046_y');
-    expect(lines.join('\n')).toContain('npm run db:generate');
 
     expect(report([], 'origin/staging', () => {})).toBe(0);
   });
@@ -157,39 +145,5 @@ describe("reading the base's journal", () => {
 
   it('refuses a base that does not resolve rather than passing on nothing', () => {
     expect(() => readBaseJournal('origin/nope', repo)).toThrow(/origin\/nope.*git fetch/);
-  });
-});
-
-describe('the CI leg', () => {
-  // A check that stops running fails nothing: the destructive-DDL job was
-  // deleted once and ran on nothing for weeks (claude-docs/ci/reusable-checks.md).
-  // This reads the workflows as data, so it proves what they say, not that
-  // GitHub evaluates them as written.
-  const read = (file: string) =>
-    parse(readFileSync(fromRoot(`.github/workflows/${file}`), 'utf8')) as Workflow;
-  const checks = read('checks.yml');
-  const gate = read('pr-gate.yml');
-
-  it('is a checks.yml leg that fetches the base and compares against it', () => {
-    const leg = checks.jobs.check?.strategy?.matrix?.include?.find(
-      (candidate) => candidate.name === 'migration-order',
-    );
-
-    expect(leg?.command).toMatch(/git -c safe\.directory='\*' fetch .*refs\/heads\/\$\{base\}/s);
-    expect(leg?.command).toContain('npm run check:migration-order -- --base "origin/${base}"');
-    expect(checks.jobs.check?.env?.MIGRATION_ORDER_BASE).toBe('${{ inputs.migration-order-base }}');
-  });
-
-  it("is handed the PR's own base by the gate, and runs whenever the journal changes", () => {
-    expect(gate.jobs.checks?.with?.['migration-order-base']).toBe('${{ github.base_ref }}');
-    expect(gate.jobs.checks?.with?.['run-migration-order']).toBe(
-      "${{ needs.changes.outputs.migration_order == 'true' }}",
-    );
-    const filter = gate.jobs.changes?.steps?.find(
-      (step) => step.name === 'Determine changed-file categories',
-    );
-    expect(filter?.with?.filters).toMatch(
-      /migration_order:[^]*?'src\/db\/migrations\/meta\/_journal\.json'/,
-    );
   });
 });

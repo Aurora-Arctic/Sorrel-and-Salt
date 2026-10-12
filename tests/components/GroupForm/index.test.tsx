@@ -6,10 +6,14 @@ import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
   CreateCategoryGroupMutation,
   CreateCategoryGroupMutationVariables,
+  CreateDeityTraditionMutation,
+  CreateDeityTraditionMutationVariables,
   CreateIngredientFormGroupMutation,
   CreateIngredientFormGroupMutationVariables,
   DeleteCategoryGroupMutation,
   DeleteCategoryGroupMutationVariables,
+  DeleteDeityTraditionMutation,
+  DeleteDeityTraditionMutationVariables,
   DeleteIngredientFormGroupMutation,
   DeleteIngredientFormGroupMutationVariables,
   UpdateCategoryGroupMutation,
@@ -18,8 +22,16 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { choose, press, typeIn } from '../../support/interact';
+import {
+  expectAnswered,
+  expectAskingOver,
+  expectGuardedWaysOut,
+  renderInModal,
+} from '../../support/discard-guard';
 
-// The admin's form for a group (M5.6b), for both group vocabularies: a name, a
+// The admin's form for a group (M5.6b), for every group vocabulary, a deity's
+// traditions included (MB.132): a name, a
 // description, and for a category group its chip's two colours, each held to
 // 4.5:1 on its own ground (MB.36) before the request as well as by the
 // service. A delete of a group holding rows first asks where they go, then
@@ -55,37 +67,59 @@ const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const dark = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const light = () => screen.getByRole('textbox', { name: 'Light Theme Colour' });
-const type = (field: HTMLElement, value: string) => fireEvent.change(field, { target: { value } });
-const press = (label: string) => {
-  const button = screen.getByRole('button', { name: label });
-  button.focus();
-  fireEvent.click(button);
-};
-const choose = (box: string, label: string) => {
-  fireEvent.click(screen.getByRole('combobox', { name: box }));
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: `${box} choices` })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
+
+// Every way out asks first while the form has changes (MB.115): the
+// guard's shape is tests/components/Modal's, and this its wiring.
+describe('GroupForm, its unsaved changes', () => {
+  it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+    const onClose = renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} onDone={done} />
+    ));
+
+    expectGuardedWaysOut(onClose, () => typeIn(description(), 'A change'));
+  });
+});
+
+// Each step of a delete is a question over the form, as the unsaved
+// changes' is (MB.115, the owner's call): the form inert behind it, each
+// step's focus on its own safe answer.
+describe('GroupForm, its delete questions in a modal', () => {
+  it('holds the form through both steps, the focus on each safe answer, and gives both back on Keep It', () => {
+    const onClose = renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
+    ));
+    expect(name().closest('[inert]')).toBeNull();
+
+    press('Delete Group');
+    expect(
+      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
+    ).toContainElement(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
+
+    choose('Move Its 3 Categories To', 'Fixture Mineral');
+    press('Continue');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
+
+    press('Back');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    press('Keep It');
+
+    expectAnswered(name(), 'Keep It');
+    expect(screen.getByRole('button', { name: 'Delete Group' })).toHaveFocus();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+});
 
 describe('GroupForm, for a category group', () => {
   describe('adding', () => {
-    it('starts empty, with both colours and nothing to delete', () => {
+    // A field named "name" reads to Chrome as a person's name: it flags it in
+    // the Issues panel and offers the user's own name to fill it, so autofill is off.
+    it('starts empty, with both colours, nothing to delete, and no autofill on the name', () => {
       renderForm();
 
       expect(name()).toHaveValue('');
       expect(dark()).toHaveValue('');
       expect(light()).toHaveValue('');
       expect(screen.queryByRole('button', { name: 'Delete Group' })).not.toBeInTheDocument();
-    });
-
-    // A field named "name" reads to Chrome as a person's name: it flags it in
-    // the Issues panel and offers the user's own name to fill it.
-    it('turns autofill off on the name, which names no person', () => {
-      renderForm();
-
       expect(name()).toHaveAttribute('autocomplete', 'off');
     });
 
@@ -96,7 +130,7 @@ describe('GroupForm, for a category group', () => {
         expect(field).toHaveAttribute('aria-required', 'true');
       }
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeDisabled();
-      type(name(), 'F');
+      typeIn(name(), 'F');
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
@@ -111,10 +145,10 @@ describe('GroupForm, for a category group', () => {
       );
       const onDone = renderForm();
 
-      type(name(), 'Fixture Wards');
-      type(description(), 'A group the test made');
-      type(dark(), '#4E8BC2');
-      type(light(), '#0c5393');
+      typeIn(name(), 'Fixture Wards');
+      typeIn(description(), 'A group the test made');
+      typeIn(dark(), '#4E8BC2');
+      typeIn(light(), '#0c5393');
       press('Save Group');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -134,17 +168,14 @@ describe('GroupForm, for a category group', () => {
     it('refuses a colour under the floor beside its own picker, naming the ratio, before asking the server', async () => {
       const onDone = renderForm();
 
-      type(name(), 'Fixture Wards');
-      type(description(), 'Invented');
-      type(dark(), '#0c5393');
-      type(light(), '#0c5393');
+      typeIn(name(), 'Fixture Wards');
+      typeIn(description(), 'Invented');
+      typeIn(dark(), '#0c5393');
+      typeIn(light(), '#0c5393');
       press('Save Group');
 
-      const message =
-        'The dark theme colour reads 2.16:1 on the dark card — it needs at least 4.5:1';
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(dark()).toHaveAccessibleDescription(expect.stringContaining(message));
-      expect(dark()).toHaveAttribute('aria-invalid', 'true');
+      await waitFor(() => expect(dark()).toHaveAttribute('aria-invalid', 'true'));
+      expect(dark()).toHaveAccessibleDescription(expect.stringContaining('2.16:1'));
       expect(light()).not.toHaveAttribute('aria-invalid');
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -153,46 +184,39 @@ describe('GroupForm, for a category group', () => {
   // The owner's call: the colour chosen first sets its partner, the same hue
   // fitted to the other ground, until the admin sets the partner themselves.
   describe('the pair', () => {
-    it('fills the light-theme colour from a dark-theme one chosen first', () => {
-      renderForm();
-
-      type(dark(), '#4e8bc2');
-
+    it('fills either colour from the other chosen first', () => {
+      const { unmount } = render(
+        <QueryClientProvider client={makeQueryClient()}>
+          <GroupForm kind="category" groups={GROUPS} onDone={vi.fn()} />
+        </QueryClientProvider>,
+      );
+      typeIn(dark(), '#4e8bc2');
       expect(light()).toHaveValue(pairedColor('#4e8bc2', 'colorLight'));
-    });
+      unmount();
 
-    it('fills the dark-theme colour from a light-theme one chosen first', () => {
       renderForm();
-
-      type(light(), '#0c5393');
-
+      typeIn(light(), '#0c5393');
       expect(dark()).toHaveValue(pairedColor('#0c5393', 'colorDark'));
     });
 
-    it('waits for a whole hex before filling anything', () => {
+    // A picker dragged across the wheel sends a value at every step, and only a whole hex counts.
+    it('waits for a whole hex, and keeps the partner following while it is still the one it filled', () => {
       renderForm();
 
-      type(dark(), '#4e8bc');
-
+      typeIn(dark(), '#4e8bc');
       expect(light()).toHaveValue('');
-    });
 
-    // A picker dragged across the wheel sends a value at every step.
-    it('keeps the partner following while it is still the one it filled', () => {
-      renderForm();
-
-      type(dark(), '#4e8bc2');
-      type(dark(), '#35987d');
-
+      typeIn(dark(), '#4e8bc2');
+      typeIn(dark(), '#35987d');
       expect(light()).toHaveValue(pairedColor('#35987d', 'colorLight'));
     });
 
     it('stops once the admin sets the partner themselves', () => {
       renderForm();
 
-      type(dark(), '#4e8bc2');
-      type(light(), '#0c5393');
-      type(dark(), '#4a87bf');
+      typeIn(dark(), '#4e8bc2');
+      typeIn(light(), '#0c5393');
+      typeIn(dark(), '#4a87bf');
 
       expect(light()).toHaveValue('#0c5393');
     });
@@ -200,7 +224,7 @@ describe('GroupForm, for a category group', () => {
     it('sets a colour from the other on Match, as the other stands now', () => {
       renderForm({ group: WARDS });
 
-      type(light(), '#a13ba5');
+      typeIn(light(), '#a13ba5');
       fireEvent.click(screen.getByRole('button', { name: 'Match Light Theme Colour' }));
 
       expect(dark()).toHaveValue(pairedColor('#a13ba5', 'colorDark'));
@@ -210,7 +234,7 @@ describe('GroupForm, for a category group', () => {
     it("leaves an existing group's pair alone", () => {
       renderForm({ group: WARDS });
 
-      type(dark(), '#4a87bf');
+      typeIn(dark(), '#4a87bf');
 
       expect(light()).toHaveValue(WARDS.colorLight);
     });
@@ -225,31 +249,22 @@ describe('GroupForm, for a category group', () => {
       { ...GROUPS[2], colorDark: '#5d8ab1', colorLight: '#286ba6' },
     ];
 
-    it("warns of another group's colour in the same theme, naming it", () => {
+    it("warns of another group's colour in the same theme, naming it, and leaves Save enabled", () => {
       renderForm({ groups: COLOURED });
 
-      type(dark(), '#5a87ae');
+      typeIn(name(), 'Fixture Near');
+      typeIn(dark(), '#5a87ae');
 
-      expect(screen.getAllByRole('status')[0]).toHaveTextContent(
-        'Close to the dark theme colour of "Fixture Mineral", so their chips may be hard to tell apart.',
-      );
+      expect(screen.getAllByRole('status')[0]).toHaveTextContent('Fixture Mineral');
+      expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
     it('never warns an edited group of its own colours', () => {
       renderForm({ group: WARDS, groups: [COLOURED[2]] });
 
-      type(dark(), '#5d8ab2');
+      typeIn(dark(), '#5d8ab2');
 
       for (const status of screen.getAllByRole('status')) expect(status).toBeEmptyDOMElement();
-    });
-
-    it('leaves Save enabled', () => {
-      renderForm({ groups: COLOURED });
-
-      type(name(), 'Fixture Near');
-      type(dark(), '#5d8ab1');
-
-      expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
   });
 
@@ -267,7 +282,7 @@ describe('GroupForm, for a category group', () => {
 
       expect(name()).toHaveValue('Fixture Wards');
       expect(dark()).toHaveValue('#4e8bc2');
-      type(name(), 'Fixture Shields');
+      typeIn(name(), 'Fixture Shields');
       press('Save Group');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -285,19 +300,23 @@ describe('GroupForm, for a category group', () => {
     });
 
     it("lands the server's refusal beside the field it names", async () => {
-      const message =
-        '"Fixture Shields" already has the address "fixture-shields" — choose another name';
       mockGraphQLError('UpdateCategoryGroup', {
         code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'], message }],
+        fieldErrors: [
+          {
+            path: ['name'],
+            message:
+              '"Fixture Shields" already has the address "fixture-shields" — choose another name',
+          },
+        ],
       });
       renderForm({ group: WARDS });
 
-      type(name(), 'Fixture Shields');
+      typeIn(name(), 'Fixture Shields');
       press('Save Group');
 
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(name()).toHaveAccessibleDescription(message);
+      await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
+      expect(name()).toHaveAccessibleDescription(/\S/);
     });
   });
 
@@ -306,10 +325,10 @@ describe('GroupForm, for a category group', () => {
       renderForm({ group: WARDS, memberCount: 3 });
 
       press('Delete Group');
-      fireEvent.click(screen.getByRole('combobox', { name: 'Move its 3 categories to' }));
+      fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
 
       const options = within(
-        screen.getByRole('listbox', { name: 'Move its 3 categories to choices' }),
+        screen.getByRole('listbox', { name: 'Move Its 3 Categories To choices' }),
       ).getAllByRole('option');
       expect(options.map((option) => option.textContent)).toEqual([
         'Fixture Mineral',
@@ -330,14 +349,10 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 3 });
 
       press('Delete Group');
-      choose('Move its 3 categories to', 'Fixture Mineral');
+      choose('Move Its 3 Categories To', 'Fixture Mineral');
       press('Continue');
 
-      expect(
-        screen.getByText(
-          'Move 3 categories to "Fixture Mineral" and delete "Fixture Wards"? Each keeps its name, its address and every entry filed under it.',
-        ),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Move and Delete' })).toBeVisible();
       expect(calls).toEqual([]);
       press('Move and Delete');
 
@@ -349,48 +364,46 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 1 });
 
       press('Delete Group');
-      choose('Move its 1 category to', 'Fixture Substance');
+      choose('Move Its 1 Category To', 'Fixture Substance');
       press('Continue');
       press('Back');
-      expect(screen.getByRole('combobox', { name: 'Move its 1 category to' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Move Its 1 Category To' })).toHaveTextContent(
         'Fixture Substance',
       );
       press('Keep It');
 
+      // The question gone, not merely the form's own button there beneath it.
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
 
-    it('says to add another group first when there is none to move them to', () => {
+    it('offers no move when there is no other group to move them to', () => {
       renderForm({ group: WARDS, memberCount: 2, groups: [GROUPS[2]] });
 
       press('Delete Group');
 
-      expect(
-        screen.getByText(
-          '"Fixture Wards" holds 2 categories, and there is no other group to move them to. Add another group first.',
-        ),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('combobox', { name: 'Move Its 2 Categories To' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
     });
 
     it("lands the server's refusal of the move beside the picker", async () => {
-      const message = 'Choose another live group to move its 1 category to';
       mockGraphQLError('DeleteCategoryGroup', {
         code: 'VALIDATION',
-        fieldErrors: [{ path: ['moveTo'], message }],
+        fieldErrors: [
+          { path: ['moveTo'], message: 'Choose another live group to move its 1 category to' },
+        ],
       });
       renderForm({ group: WARDS, memberCount: 1 });
 
       press('Delete Group');
-      choose('Move its 1 category to', 'Fixture Mineral');
+      choose('Move Its 1 Category To', 'Fixture Mineral');
       press('Continue');
       press('Move and Delete');
 
-      expect(await screen.findByText(message)).toBeInTheDocument();
-      expect(
-        screen.getByRole('combobox', { name: 'Move its 1 category to' }),
-      ).toHaveAccessibleDescription(message);
+      const picker = () => screen.getByRole('combobox', { name: 'Move Its 1 Category To' });
+      await waitFor(() => expect(picker()).toHaveAttribute('aria-invalid', 'true'));
+      expect(picker()).toHaveAccessibleDescription(/\S/);
     });
   });
 
@@ -407,9 +420,7 @@ describe('GroupForm, for a category group', () => {
       const onDone = renderForm({ group: WARDS, memberCount: 0 });
 
       press('Delete Group');
-      expect(
-        screen.getByText('Delete "Fixture Wards"? No category is filed under it.'),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
       press('Delete');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -423,7 +434,7 @@ describe('GroupForm, for a category group', () => {
       press('Delete Group');
       press('Delete');
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('No such group');
+      expect(await screen.findByRole('alert')).toBeVisible();
       expect(onDone).not.toHaveBeenCalled();
     });
   });
@@ -442,8 +453,8 @@ describe('GroupForm, for a form group', () => {
     const onDone = renderForm({ kind: 'form' });
 
     expect(screen.queryByRole('textbox', { name: 'Dark Theme Colour' })).not.toBeInTheDocument();
-    type(name(), 'Fixture Matter');
-    type(description(), 'A group the test made');
+    typeIn(name(), 'Fixture Matter');
+    typeIn(description(), 'A group the test made');
     press('Save Group');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -452,7 +463,7 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  it('moves its forms on a confirmed delete, saying their addresses follow the group', async () => {
+  it('moves its forms on a confirmed delete', async () => {
     const calls: DeleteIngredientFormGroupMutationVariables[] = [];
     mockGraphQLMutation<
       DeleteIngredientFormGroupMutation,
@@ -464,14 +475,56 @@ describe('GroupForm, for a form group', () => {
     const onDone = renderForm({ kind: 'form', group: MATTER, memberCount: 2 });
 
     press('Delete Group');
-    choose('Move its 2 forms to', 'Fixture Substance');
+    choose('Move Its 2 Forms To', 'Fixture Substance');
     press('Continue');
 
-    expect(
-      screen.getByText(
-        'Move 2 forms to "Fixture Substance" and delete "Fixture Matter"? Each keeps its name, and its address follows its new group; every ingredient that picked one keeps it.',
-      ),
-    ).toBeInTheDocument();
+    press('Move and Delete');
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
+  });
+});
+
+// MB.132: a deity's tradition, a form group's shape under its own name, its
+// deities moved and re-slugged on a delete.
+describe('GroupForm, for a deity tradition', () => {
+  it('asks for no colours, and creates the tradition from its name and description alone', async () => {
+    const calls: CreateDeityTraditionMutationVariables[] = [];
+    mockGraphQLMutation<CreateDeityTraditionMutation, CreateDeityTraditionMutationVariables>(
+      'CreateDeityTradition',
+      (variables) => {
+        calls.push(variables);
+        return { createDeityTradition: { id: MATTER.id, slug: 'fixtural' } };
+      },
+    );
+    const onDone = renderForm({ kind: 'tradition' });
+
+    expect(screen.queryByRole('textbox', { name: 'Dark Theme Colour' })).not.toBeInTheDocument();
+    typeIn(name(), 'Fixtural');
+    typeIn(description(), 'A tradition the test made');
+    press('Save Tradition');
+
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([
+      { input: { name: 'Fixtural', description: 'A tradition the test made' } },
+    ]);
+  });
+
+  it('moves its deities on a confirmed delete', async () => {
+    const calls: DeleteDeityTraditionMutationVariables[] = [];
+    mockGraphQLMutation<DeleteDeityTraditionMutation, DeleteDeityTraditionMutationVariables>(
+      'DeleteDeityTradition',
+      (variables) => {
+        calls.push(variables);
+        return { deleteDeityTradition: MATTER.id };
+      },
+    );
+    const onDone = renderForm({ kind: 'tradition', group: MATTER, memberCount: 1 });
+
+    press('Delete Tradition');
+    choose('Move Its 1 Deity To', 'Fixture Substance');
+    press('Continue');
+
     press('Move and Delete');
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));

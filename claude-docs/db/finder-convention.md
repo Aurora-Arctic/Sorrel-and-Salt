@@ -10,7 +10,14 @@ The repository splits on the table's own shape, the way it already splits
 | carries `visibility` (`spells` alone)                                  | `findManySpells` / `findOneSpell`, proof first                                                                       | the workspace-scoped writes above                                                                                                    |
 | carries `spell_id` (the two spell join tables)                         | `findManyInSpell`, proof first                                                                                       | `insert`, `update`; a layer `updateById`, `softDelete`, `softDeleteByIds`; a category link `delete`                                  |
 | carries `ingredient_id` and no `workspace_id` (folk names, categories) | `findManyOfIngredients`, proofs first; `findManyOfSpellIngredientsIncludingSoftDeleted`, proof first                 | `insert`, `update`, `softDelete` / `softDeleteByIds` / `delete`                                                                      |
+| marked `namedWrites` (the pause ledger, `invitations`)                 | its named finders, and those its shape admits: the mark governs writes only                                          | its own named writes only; every generic write above and below refuses it (MB.198)                                                   |
 | none of those                                                          | `findMany` / `findOne` / `findOneById` / `findManyByIds` / `findManyIncludingSoftDeleted`                            | `insert`, `update`, `updateById`, `softDelete`, `softDeleteByIds`, `delete`                                                          |
+
+A marked table is decided by its schema file rather than by a column: the
+mark is how a table says it takes only the calls named for it
+(["Table marks"](write-path.md#table-marks-mb198)), and it holds
+whatever the table's columns are, so a marked table with a `workspace_id`
+is off the scoped writes as well.
 
 `{ workspaceId: AnyPgColumn }` and `{ workspaceId?: never }` are the two
 constraints, so each finder admits exactly one of the two sets and a table
@@ -44,10 +51,13 @@ The reads of it so far are `findSimilarIngredients` (see
 (see ["Ingredient children"](ingredient-children.md)), and
 `findIngredientsInSpellsIncludingSoftDeleted` through a spell holding it (see
 ["What a spell holds"](spell-visibility.md#what-a-spell-holds-m53)), each naming
-both tiers as explicitly as this paragraph asks, and each listed on
+both tiers as explicitly as this paragraph asks — through `readableInTiers`, or
+`readableIngredientParent` for a child's parent, or `inTiers` for the spell
+hatch's unfiltered one (MB.206) — and each listed on
 [the tier seam](../modules.md#the-tier-seam). The plain compendium read is
 `findCompendiumPage` (M8.5), with its count `findCompendiumCount` (MB.105),
-each ANDing `inCompendium` as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
+each paging through `findPageInTiers` under no proofs, which reads the
+compendium alone as explicitly as the scoped finders AND their proof, and `findOneIngredient` reads one row in the
 compendium or a proof's coven (["The compendium read"](compendium-read.md)), and
 `findCompendiumEntryByIdentity` (M5.2) reads the entry holding an identity
 (["Compendium writes"](compendium-writes.md)); the local-beats-compendium

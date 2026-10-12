@@ -1,4 +1,4 @@
-import { MIN_CHIP_CONTRAST, chipContrast } from './contrast';
+import { MIN_CHIP_CONTRAST, channels, chipContrast } from './contrast';
 import type { AreaSpace, GroupColorColumn } from './types';
 
 // A category group's two colours as one family (M5.6b, the owner's call): the
@@ -27,7 +27,11 @@ const SEED_SATURATION: Record<GroupColorColumn, number> = { colorDark: 0.4, colo
  */
 const ACHROMATIC_CHROMA = 0.05;
 
-const channels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+/** A channel, 0 to 1, as its two hex digits. */
+const hexByte = (value: number) =>
+  Math.round(value * 255)
+    .toString(16)
+    .padStart(2, '0');
 
 /** A `#rrggbb` hex as `[hue in degrees, saturation 0–1, lightness 0–1]`; a grey's hue is 0. */
 export function toHsl(hex: string): [number, number, number] {
@@ -48,10 +52,7 @@ export function fromHsl(hue: number, saturation: number, lightness: number): str
   const a = saturation * Math.min(lightness, 1 - lightness);
   const channel = (n: number) => {
     const k = (n + hue / 30) % 12;
-    const value = lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return Math.round(value * 255)
-      .toString(16)
-      .padStart(2, '0');
+    return hexByte(lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)));
   };
   return `#${channel(0)}${channel(8)}${channel(4)}`;
 }
@@ -101,10 +102,7 @@ function areaColor(space: AreaSpace, hue: number, x: number, y: number): string 
   const v = y / 100;
   const f = (n: number) => {
     const k = (n + hue / 60) % 6;
-    const value = v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
-    return Math.round(value * 255)
-      .toString(16)
-      .padStart(2, '0');
+    return hexByte(v - v * s * Math.max(0, Math.min(k, 4 - k, 1)));
   };
   return `#${f(5)}${f(3)}${f(1)}`;
 }

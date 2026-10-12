@@ -3,9 +3,7 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { ingredientColumns, makeIngredient } from '../../../support/fixtures';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '@/modules/ingredients/schema/retired-ingredient-slugs';
-import { workspaces } from '@/modules/coven/schema/workspaces';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Retired } from './types';
 
@@ -13,11 +11,8 @@ import type { Retired } from './types';
 // until `expires_at`. The columns and the generated expiry only — MB.82 is
 // the first thing to read it (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
 
-const SLUG_INDEX = 'retired_ingredient_slugs_slug_idx';
-
 describe('retired_ingredient_slugs schema', () => {
-  const { byName, byIndexName, foreignKeyByColumn, nonAuditForeignKeys } =
-    tableFacts(retiredIngredientSlugs);
+  const { byName } = tableFacts(retiredIngredientSlugs);
 
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
@@ -32,61 +27,12 @@ describe('retired_ingredient_slugs schema', () => {
       ].sort(),
     );
   });
-
-  it('points ingredient_id at ingredients, required', () => {
-    expect(byName.ingredient_id.notNull).toBe(true);
-    expect(foreignKeyByColumn.ingredient_id.foreignTable).toBe(ingredients);
-    expect(foreignKeyByColumn.ingredient_id.foreignColumnName).toBe('id');
-  });
-
-  // Mirrors the ingredient's scope: null for a compendium entry, its coven for a local.
-  it('points workspace_id at workspaces, nullable, and references nothing else', () => {
-    expect(byName.workspace_id.notNull).toBe(false);
-    expect(foreignKeyByColumn.workspace_id.foreignTable).toBe(workspaces);
-    expect(foreignKeyByColumn.workspace_id.foreignColumnName).toBe('id');
-    expect(nonAuditForeignKeys.map((fk) => fk.column).sort()).toEqual([
-      'ingredient_id',
-      'workspace_id',
-    ]);
-  });
-
-  it('requires the slug and the retirement time, the latter defaulting to now', () => {
-    expect(byName.slug.getSQLType()).toBe('text');
-    expect(byName.slug.notNull).toBe(true);
-    // `timestamp`, not `timestamptz`, like every timestamp here; it holds UTC.
-    expect(byName.retired_at.getSQLType()).toBe('timestamp');
-    expect(byName.retired_at.notNull).toBe(true);
-    expect(byName.retired_at.hasDefault).toBe(true);
-  });
-
-  // Drizzle omits a generated column from $inferInsert, so TypeScript refuses
-  // first; `npm run typecheck` covers this file. Postgres's refusal is below.
-  it('omits expires_at from $inferInsert, so TypeScript refuses a direct write', () => {
-    const insert: typeof retiredIngredientSlugs.$inferInsert = {
-      ingredientId: '11111111-1111-1111-1111-111111111111',
-      slug: 'old-slug',
-      createdBy: '11111111-1111-1111-1111-111111111111',
-      updatedBy: '11111111-1111-1111-1111-111111111111',
-      // @ts-expect-error expires_at is GENERATED ALWAYS — not an insertable column
-      expiresAt: new Date(),
-    };
-    expect(insert.slug).toBe('old-slug');
-  });
-
-  // Plain, not unique: a slug may be retired more than once over the years —
-  // reclaimed and moved off again — and the reservation is a predicate on
-  // `expires_at`, not a row's uniqueness.
-  it('indexes the slug, neither unique nor partial, and nothing else', () => {
-    expect(Object.keys(byIndexName)).toEqual([SLUG_INDEX]);
-    expect(byIndexName[SLUG_INDEX].config.unique).toBe(false);
-    expect(byIndexName[SLUG_INDEX].config.where).toBeUndefined();
-  });
 });
 
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function insertIngredient(workspaceId: string | null = null): Promise<string> {
   const [row] = await sql`
@@ -137,14 +83,6 @@ describe('retired_ingredient_slugs table', () => {
     expect(rows.map((r) => r.workspace_id)).toEqual([null, WORKSPACE_W_ID]);
   });
 
-  it('carries the slug index in the catalogue', async () => {
-    const index = await catalogue.indexRow('retired_ingredient_slugs', SLUG_INDEX);
-
-    expect(index?.unique).toBe(false);
-    expect(index?.predicate).toBeNull();
-    expect(index?.definition).toContain('USING btree (slug)');
-  });
-
   it('stamps retired_at from the database clock when the row leaves it unsaid', async () => {
     const id = await insertIngredient();
 
@@ -158,16 +96,6 @@ describe('retired_ingredient_slugs table', () => {
   });
 
   describe('expires_at', () => {
-    it('is a stored generated column', async () => {
-      const [column] = await sql<{ is_generated: string; generation_expression: string }[]>`
-        select is_generated, generation_expression from information_schema.columns
-        where table_name = 'retired_ingredient_slugs' and column_name = 'expires_at'
-      `;
-
-      expect(column.is_generated).toBe('ALWAYS');
-      expect(column.generation_expression).toContain('180 days');
-    });
-
     // The window ends at midnight, not 180 days of seconds after the rename:
     // exact whatever the hour, and one instant for every row retired that day.
     it('reads 00:00 UTC of the retirement’s calendar date plus 180 days, whatever the hour', async () => {

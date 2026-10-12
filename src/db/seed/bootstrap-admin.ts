@@ -22,10 +22,18 @@ export const BOOTSTRAP_ADMIN: SeedUser = {
 /** The bootstrap user acts for every seed, including its own insert. */
 export const BOOTSTRAP_SESSION: AuditSession = { userId: BOOTSTRAP_USER_ID };
 
-/** Idempotent by fixed id: a re-run adds nothing and overwrites nothing. */
-export async function insertBootstrapAdmin(tx: SeedTransaction): Promise<void> {
+/**
+ * A seeded user, created by the bootstrap user — the bootstrap user itself
+ * included. Idempotent by fixed id: a re-run adds nothing and overwrites
+ * nothing.
+ */
+export async function insertSeedUser(tx: SeedTransaction, user: SeedUser): Promise<void> {
   await tx
     .insert(users)
-    .values(applyAudit('insert', BOOTSTRAP_ADMIN, BOOTSTRAP_SESSION))
+    .values(applyAudit('insert', user, BOOTSTRAP_SESSION))
     .onConflictDoNothing({ target: users.id });
+}
+
+export async function insertBootstrapAdmin(tx: SeedTransaction): Promise<void> {
+  await insertSeedUser(tx, BOOTSTRAP_ADMIN);
 }

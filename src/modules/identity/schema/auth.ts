@@ -1,6 +1,6 @@
-import { sql } from 'drizzle-orm';
 import { bigint, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './users';
+import { idColumn } from '../../../db/schema-parts';
 
 // Better Auth's own adapter tables, generated with `usePlural: true` and
 // `generateId: 'uuid'` (src/lib/auth.ts); `users` lives in ./users.ts.
@@ -11,9 +11,7 @@ import { users } from './users';
 export const sessions = pgTable(
   'sessions',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     expiresAt: timestamp('expires_at').notNull(),
     token: text('token').notNull().unique(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -37,9 +35,7 @@ export const sessions = pgTable(
 export const accounts = pgTable(
   'accounts',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     accountId: text('account_id').notNull(),
     providerId: text('provider_id').notNull(),
     userId: uuid('user_id')
@@ -63,9 +59,7 @@ export const accounts = pgTable(
 export const verifications = pgTable(
   'verifications',
   {
-    id: uuid('id')
-      .default(sql`pg_catalog.gen_random_uuid()`)
-      .primaryKey(),
+    id: idColumn(),
     identifier: text('identifier').notNull(),
     value: text('value').notNull(),
     expiresAt: timestamp('expires_at').notNull(),
@@ -82,9 +76,7 @@ export const verifications = pgTable(
 // `updated_at` either. `last_request` is epoch milliseconds, which outgrows an
 // integer; `mode: 'number'` hands Better Auth the number it compares.
 export const rateLimits = pgTable('rate_limits', {
-  id: uuid('id')
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
+  id: idColumn(),
   key: text('key').notNull().unique(),
   count: integer('count').notNull(),
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),

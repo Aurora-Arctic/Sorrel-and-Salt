@@ -1,14 +1,25 @@
 import 'server-only';
-import type { IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import type {
+  IngredientFormValues,
+  ReferenceListEntry,
+  SubstituteForm,
+  SubstituteListEntry,
+} from '@/components/IngredientForm/types';
+import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { citationText } from '@/lib/citation';
 import {
+  type CitedReference,
   type IngredientRow,
+  type SubstituteRow,
   categoriesOf,
+  categoriesOfVariants,
   deitiesOf,
   folkNamesOf,
   referencesOf,
+  referencesOfVariants,
   substitutesOf,
+  substitutesOfVariants,
+  variantsOf,
 } from '@/modules/ingredients';
 import { deityTraditionsOf, formChoicesOf, formGroupsOf } from '@/modules/vocabulary';
 
@@ -28,21 +39,92 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 const nameOf = (group: { name: string } | Error | undefined): string | null =>
   group === undefined || group instanceof Error ? null : group.name;
 
+/**
+ * A substitute as a list entry: its label, and the ingredient and the form of
+ * it a link names, with the forms that ingredient comes in, which its second
+ * picker offers (MB.215).
+ */
+const substituteEntry =
+  (formsOf: ReadonlyMap<string, SubstituteForm[]>) =>
+  ({ name, ingredient, variantId }: SubstituteRow): SubstituteListEntry =>
+    ingredient
+      ? {
+          value: name,
+          link: {
+            id: ingredient.id,
+            canonicalName: ingredient.canonicalName,
+            forms: (formsOf.get(ingredient.id) ?? []).map((variant) => variant.form),
+            description: ingredient.description,
+            isGlobal: ingredient.workspaceId === null,
+            variants: formsOf.get(ingredient.id),
+          },
+          ...(variantId ? { variantId } : {}),
+        }
+      : { value: name };
+
+/**
+ * A reference as its row: the citation, the source it links with the fields
+ * its short form is made of, and its locator.
+ */
+const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEntry => ({
+  value: citationText(reference),
+  link: {
+    id: reference.id,
+    isGlobal: reference.workspaceId === null,
+    kind: reference.kind,
+    title: reference.title,
+    authors: reference.authors,
+    container: reference.container,
+  },
+  locator: locator ?? '',
+});
+
+const entries = (values: readonly string[] | null) => (values ?? []).map((value) => ({ value }));
+
 export async function entryValues(entry: IngredientRow): Promise<IngredientFormValues> {
   const refs = [{ id: entry.id, workspaceId: null }];
-  const [folkNames, categories, substitutes, deities, references, [form]] = await Promise.all([
+  const [folkNames, categories, substitutes, deities, references, variants] = await Promise.all([
     folkNamesOf(null, refs).then(only),
     categoriesOf(null, refs).then(only),
     substitutesOf(null, refs).then(only),
     deitiesOf(null, refs).then(only),
     referencesOf(null, refs).then(only),
-    formChoicesOf(entry.formId ? [entry.formId] : []),
+    variantsOf(null, refs).then(only),
   ]);
+  // Each form's own children, a batch over the forms (MB.218).
+  const variantRefs = variants.map(({ id, ingredientId }) => ({
+    id,
+    ingredientId,
+    workspaceId: null,
+  }));
   const picked = deities.flatMap(({ deity }) => deity ?? []);
-  const [traditions, [formGroup]] = await Promise.all([
-    deityTraditionsOf(picked.map((deity) => deity.traditionId)),
-    form ? formGroupsOf([form.groupId]) : Promise.resolve([]),
+  const [traditions, forms, variantCategories, variantSubstitutes, variantReferences] =
+    await Promise.all([
+      deityTraditionsOf(picked.map((deity) => deity.traditionId)),
+      formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
+      categoriesOfVariants(null, variantRefs),
+      substitutesOfVariants(null, variantRefs),
+      referencesOfVariants(null, variantRefs),
+    ]);
+  const live = forms.flatMap((form) => form ?? []);
+  // The forms of every ingredient a substitute links, the entry's and its forms'.
+  const linked = [
+    ...substitutes,
+    ...variantSubstitutes.flatMap((answer) => only([answer])),
+  ].flatMap(({ ingredient }) => ingredient ?? []);
+  const [groups, linkedForms] = await Promise.all([
+    formGroupsOf(live.map((form) => form.groupId)),
+    variantsOf(null, linked),
   ]);
+  // Its group only ranks a lookup's rows, so a link read here carries none.
+  const formsOfLinked = new Map(
+    linked.map(({ id }, i) => [
+      id,
+      only([linkedForms[i]]).map((row) => ({ id: row.id, form: row.form, group: null })),
+    ]),
+  );
+  const toSubstitute = substituteEntry(formsOfLinked);
+  const formOf = new Map(live.map((form, i) => [form.id, { form, group: nameOf(groups[i]) }]));
   const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
 
   return {
@@ -50,18 +132,39 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
     name: entry.name,
     nomenclature: entry.nomenclature,
     canonicalName: entry.canonicalName ?? '',
-    form: entry.form ?? '',
-    // A pick whose form or group has since been retired reads as its text,
-    // as `Ingredient.formChoice` does.
-    formLink: form
-      ? { id: form.id, name: form.name, group: nameOf(formGroup), description: form.description }
-      : null,
+    variants: variants.map((variant, i) => {
+      // A pick whose form has since been retired reads as its text, and one
+      // whose group has, without its group, as `IngredientVariant.formChoice` does.
+      const choice = variant.formId ? formOf.get(variant.formId) : undefined;
+      return {
+        ...EMPTY_VARIANT,
+        variantId: variant.id,
+        form: variant.form,
+        formLink: choice
+          ? {
+              id: choice.form.id,
+              name: choice.form.name,
+              group: choice.group,
+              description: choice.form.description,
+            }
+          : null,
+        description: variant.description ?? '',
+        safetyNotes: variant.safetyNotes ?? '',
+        elements: variant.elements ?? [],
+        planets: entries(variant.planets),
+        zodiacSigns: entries(variant.zodiacSigns),
+        colors: entries(variant.colors),
+        categoryIds: only([variantCategories[i]]).map((category) => category.id),
+        substitutes: only([variantSubstitutes[i]]).map(toSubstitute),
+        references: only([variantReferences[i]]).map(referenceEntry),
+      };
+    }),
     folkNames: folkNames.map((value) => ({ value })),
     description: entry.description ?? '',
     elements: entry.elements ?? [],
-    planets: (entry.planets ?? []).map((value) => ({ value })),
-    zodiacSigns: (entry.zodiacSigns ?? []).map((value) => ({ value })),
-    colors: (entry.colors ?? []).map((value) => ({ value })),
+    planets: entries(entry.planets),
+    zodiacSigns: entries(entry.zodiacSigns),
+    colors: entries(entry.colors),
     deities: deities.map(({ name, deity }) =>
       deity
         ? {
@@ -74,26 +177,9 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
           }
         : { value: name },
     ),
-    substitutes: substitutes.map(({ name, ingredient }) =>
-      ingredient
-        ? {
-            value: name,
-            link: {
-              id: ingredient.id,
-              canonicalName: ingredient.canonicalName,
-              form: ingredient.form,
-              description: ingredient.description,
-              isGlobal: ingredient.workspaceId === null,
-            },
-          }
-        : { value: name },
-    ),
+    substitutes: substitutes.map(toSubstitute),
     safetyNotes: entry.safetyNotes ?? '',
-    references: references.map(({ reference, locator }) => ({
-      value: citationText(reference),
-      link: { id: reference.id, isGlobal: reference.workspaceId === null },
-      locator: locator ?? '',
-    })),
+    references: references.map(referenceEntry),
     categoryIds: categories.map((category) => category.id),
   };
 }

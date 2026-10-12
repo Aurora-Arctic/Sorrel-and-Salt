@@ -1,0 +1,69 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The control and its tip together: the tip's anchor, and the box the
+// pointer may cross onto the tip within. Middle-aligned, so a mark taller
+// than its row's text sits level with it rather than on its baseline.
+.icon-tip {
+  @include tip-anchor;
+
+  vertical-align: middle;
+}
+
+// A short word, to the left of its control and level with it: every Edit
+// stands at the end of its line, a list row's, a phone card's top right, a
+// form row's, so to its left is room the line already has. Not above, as
+// InfoTip's is: a table frame scrolls sideways, which clips it top and
+// bottom too, and a tip above the first row or card was cut off. One layer
+// up, over the text it covers. Mounted only while open, so it fades in from
+// its starting style and goes at once.
+// claude-docs/components/icon-tip.md, "Placement".
+.icon-tip__bubble {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  z-index: 1;
+  width: max-content;
+  margin-right: space(1);
+  translate: 0 -50%;
+
+  @include tip-bubble;
+  @include tip-bubble-open;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(2px);
+  }
+}
+
+// In a table row, centred above the control, the owner's call at MB.115's
+// review: level with it, the tip covered the row's own text. Above the first row is the header row, inside the
+// frame, so the frame's sideways scroll clips nothing. Not on a phone card:
+// above the first card's top-right Edit is only the card's padding, and the
+// frame would cut it off, so a card keeps the tip to the left.
+.data-table .icon-tip__bubble {
+  inset: auto auto 100% 50%;
+  margin: 0 0 space(1);
+  translate: -50% 0;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+@container data-table (max-width: #{$table-stack-width}) {
+  .data-table--stack .icon-tip__bubble {
+    inset: 50% 100% auto auto;
+    margin: 0 space(1) 0 0;
+    translate: 0 -50%;
+  }
+}
+
+// A list row's Edit link, outside a form: the larger pencil (`$icon-size-large`
+// around `$glyph-size-large`), in the green every Edit control wears. The
+// link's own focus ring, the accent's, from the typography.
+.icon-tip__edit {
+  @include icon-button($icon-size-large, $glyph-size-large);
+  @include icon-button-edit;
+}

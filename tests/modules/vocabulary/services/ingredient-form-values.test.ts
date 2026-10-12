@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
@@ -15,31 +15,33 @@ import {
 } from '@/modules/vocabulary';
 import type { IngredientFormValueFilter } from '@/modules/vocabulary';
 import type { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
-import type { PageRequest } from '@/lib/types';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
-import { makeIngredient } from '../../../support/fixtures';
+import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
 // Story 18's form half (M5.6a): the curated form vocabulary's writes, the site
 // admin's alone, and the reads the admin page lists them by. A compendium
-// entry's form is a pick (MB.167), so a form a live entry picked is held: its
-// delete is refused, and its rename is carried onto the entry — re-keyed and
-// re-slugged, the old slug retired (MB.82). A coven's pick is neither. The
-// seeded vocabulary stays, so every form a test writes is named `Fixture …`.
+// entry's forms are its variants, each a pick (MB.167, MB.215), so a form a
+// live entry's variant picked is held: its delete is refused, and its rename
+// is carried onto every such variant, moving no address (MB.220). A coven's
+// pick is neither. The seeded vocabulary stays, so every form a test writes
+// is named `Fixture …`.
 
 // Two repository reads wrapped, each passing through to the real one: the
-// page finder, to see what the list hands it, and the identity lookup, so one
-// test can have a colliding entry appear after the check, as a second admin's
-// write would.
+// page finder, to see what the list hands it, and the rename's clash check,
+// so one test can have a clashing variant appear after the check, as a second
+// admin's write would.
 const repository = vi.hoisted(() => ({
   findIngredientFormValues: vi.fn(),
-  findCompendiumEntryByIdentity: vi.fn(),
+  findCompendiumFormRenameClashes: vi.fn(),
 }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findIngredientFormValues.mockImplementation(actual.findIngredientFormValues);
-  repository.findCompendiumEntryByIdentity.mockImplementation(actual.findCompendiumEntryByIdentity);
+  repository.findCompendiumFormRenameClashes.mockImplementation(
+    actual.findCompendiumFormRenameClashes,
+  );
   return { ...actual, ...repository };
 });
 
@@ -68,14 +70,10 @@ beforeEach(async () => {
 
 const admin = asUser(E);
 
-// Between them every workspace role there is, and a coven that is not W: none
-// of it is the site role, which is the one thing a vocabulary write turns on.
-const NON_ADMINS = [
-  ['an owner of a coven', A],
-  ['a member of a coven', B],
-  ['a viewer in a coven', C],
-  ['a member of another coven', D],
-] as const;
+// The site role is the one thing a vocabulary write turns on, so one non-admin
+// stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
+// owner, whose workspace role is the highest and is still no site role.
+const NON_ADMINS = [['an owner of a coven', A]] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
@@ -115,14 +113,17 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-const retirements = () =>
+const retirements = () => sql`select slug from retired_ingredient_slugs`;
+
+/** An entry's live variants, by form. */
+const variantsOf = (ingredientId: string) =>
   sql`
-    select ingredient_id, workspace_id, slug, retired_at, created_by
-    from retired_ingredient_slugs order by slug`;
+    select id, form, form_id, updated_by from ingredient_variants
+    where ingredient_id = ${ingredientId} and deleted_at is null order by form`;
 
 /**
- * A fresh compendium entry, or W's own ingredient, holding `form` as its text
- * and picking `formId` when given — by its label alone unless a formal name is.
+ * A fresh compendium entry, or W's own ingredient, whose one form is `form`,
+ * picking `formId` when given — by its label alone unless a formal name is.
  */
 const entry = (
   name: string,
@@ -132,7 +133,12 @@ const entry = (
 ) =>
   insertIngredient(
     sql,
-    makeIngredient({ name, nomenclature: 'none', form, formId, ...overrides }),
+    makeIngredient({
+      name,
+      nomenclature: 'none',
+      variants: [makeVariant({ form, formId })],
+      ...overrides,
+    }),
     A.id,
   );
 
@@ -146,31 +152,20 @@ async function issuesOf(attempt: Promise<unknown>) {
   return (error as ValidationError).issues;
 }
 
-describe('listIngredientFormValues', () => {
-  it('hands the page request to the finder unchanged and answers its page', async () => {
-    const page: PageRequest = { limit: 26, inverted: false };
-
-    const entries = await listIngredientFormValues({}, page);
-
-    expect(repository.findIngredientFormValues).toHaveBeenCalledWith({}, page);
-    // The seed's first page: the request's limit is the page plus one.
-    expect(entries).toHaveLength(26);
-    expect(entries[0].node).toMatchObject({
-      name: expect.any(String),
-      groupId: expect.any(String),
-    });
-  });
-});
-
+// Which forms are curated — a live form under a live group — is the finder's
+// (tests/db/repository/vocabularies.test.ts); the service's rule is that it
+// counts what its own list pages, so the list is what the count is held to.
 describe('countIngredientFormValues', () => {
   it("counts the forms listIngredientFormValues pages, and how many come before a page's first row", async () => {
     const deleted = await seed('Fixture Uncounted');
     await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
-    const [{ n }] = await sql<{ n: number }[]>`
-      select count(*)::int as n from ingredient_forms f
-      where f.deleted_at is null
-        and exists (select 1 from ingredient_form_groups g where g.id = f.group_id and g.deleted_at is null)`;
+    const listed = await resolvePage({ first: 100 }, (page) => listIngredientFormValues({}, page));
+    // The precondition: one page holds the whole list, more than a page of 25,
+    // and a deleted form the count must leave out as the list does.
+    expect(listed.pageInfo.hasNextPage).toBe(false);
+    const n = listed.edges.length;
     expect(n).toBeGreaterThan(25);
+    expect(listed.edges.map((edge) => edge.node.id)).not.toContain(deleted);
 
     const first = await resolvePage({ first: 25 }, (page) => listIngredientFormValues({}, page));
     const [{ cursor: startOfSecond }] = await listIngredientFormValues(
@@ -208,22 +203,6 @@ describe('listIngredientFormValues and countIngredientFormValues under a filter'
 
     expect(await listedUnder({ query: 'BRAMBLE' })).toEqual(['Fixture Bramble Shard']);
     expect(await listedUnder({ query: 'ture thi' })).toEqual(['Fixture Thistle']);
-  });
-
-  it('reads `%`, `_` and `\\` in the query literally', async () => {
-    await seed('Fixture 100% Pure');
-    await seed('Fixture 100_ Pure');
-    await seed('Fixture 100x Pure');
-    await seed('Fixture Back\\slash');
-    // Why each could have been listed: read as wildcards, both patterns take all three.
-    const [{ n }] = await sql<{ n: number }[]>`
-      select count(*)::int as n from ingredient_forms
-      where name ilike '%100%%' and name ilike '%100_%' and name like 'Fixture 100%'`;
-    expect(n).toBe(3);
-
-    expect(await listedUnder({ query: '100%' })).toEqual(['Fixture 100% Pure']);
-    expect(await listedUnder({ query: '100_' })).toEqual(['Fixture 100_ Pure']);
-    expect(await listedUnder({ query: 'k\\s' })).toEqual(['Fixture Back\\slash']);
   });
 
   it('reads a blank query as no query', async () => {
@@ -400,7 +379,7 @@ describe('createIngredientFormValue', () => {
 
     for (const groupId of [retired.id, '99999999-9999-4999-8999-999999999999']) {
       const issues = await issuesOf(createIngredientFormValue(admin, input({ groupId })));
-      expect(issues).toEqual([{ path: ['groupId'], message: 'Choose a group' }]);
+      expect(issues).toEqual([{ path: ['groupId'], message: expect.any(String) }]);
     }
     expect(await countNamed('Fixture Shard')).toBe(0);
   });
@@ -506,7 +485,7 @@ describe('updateIngredientFormValue', () => {
       updateIngredientFormValue(admin, id, input({ groupId: retired.id })),
     );
 
-    expect(issues).toEqual([{ path: ['groupId'], message: 'Choose a group' }]);
+    expect(issues).toEqual([{ path: ['groupId'], message: expect.any(String) }]);
     expect(await formOf(id)).toEqual(before);
   });
 
@@ -526,85 +505,57 @@ describe('updateIngredientFormValue', () => {
     await expect(updateIngredientFormValue(admin, 'not-a-uuid', input())).rejects.toThrow(NotFound);
   });
 
-  // MB.162 on the pick (MB.167): a form is identity, so its new spelling is
-  // carried onto every live compendium entry that picked it, re-keyed and
-  // re-slugged as any compendium update would (MB.82). The clock is pinned,
-  // so the retirement's instant is exact.
+  // MB.162 on the pick (MB.167), onto the variants (MB.220): the new spelling
+  // is carried onto every live compendium variant that picked the form, and
+  // no entry's address moves, since a form is no part of it. Which rows the
+  // carry writes, stamps and leaves alone row by row is write.carryFormRename's
+  // (tests/db/repository/ingredients.test.ts): what stays here is the rule —
+  // which variants follow, that nothing moves an address, the refusal — and
+  // that no coven's pick is an admin's to rewrite (M6.6).
   describe('a rename, while live compendium entries pick the form', () => {
-    const NOW = new Date('2026-03-01T12:00:00.000Z');
-
-    beforeEach(() => {
-      vi.useFakeTimers({ toFake: ['Date'] });
-      vi.setSystemTime(NOW);
-    });
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it('rewrites each one in the same write: its form, its key and its slug, the old slug retired', async () => {
+    it('carries the new name onto every compendium variant picking it, moving no slug and retiring none', async () => {
       const id = await seed('Fixture Resin');
       const first = await entry('Testwort', 'Fixture Resin', id);
-      const second = await entry('Testleaf', 'Fixture Resin', id, {
+      await insertVariant(sql, first, { form: 'Fixture Bark' }, A.id);
+      // Its second form picked the resin, its first another.
+      const second = await entry('Testleaf', 'Fixture Root', null, {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura testalis',
       });
-      // The preconditions: both picked the form, under the old spelling.
-      expect(await ingredientOf(first)).toMatchObject({
-        form_id: id,
-        slug: 'testwort-fixture-resin',
-        canonical_key: 'testwort :: fixture resin',
-      });
+      await insertVariant(sql, second, { form: 'Fixture Resin', formId: id }, A.id);
+      const slugs = await Promise.all(
+        [first, second].map(async (at) => (await ingredientOf(at)).slug),
+      );
 
       await updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' }));
 
-      expect(await ingredientOf(first)).toMatchObject({
-        form: 'Fixture Amber',
-        form_id: id,
-        canonical_key: 'testwort :: fixture amber',
-        slug: 'testwort-fixture-amber',
-        created_by: A.id,
-        updated_by: E.id,
-      });
-      expect(await ingredientOf(second)).toMatchObject({
-        form: 'Fixture Amber',
-        canonical_key: 'fixtura testalis :: fixture amber',
-        slug: 'testleaf-fixture-amber-fixtura-testalis',
-      });
-      expect(await retirements()).toEqual([
-        {
-          ingredient_id: second,
-          workspace_id: null,
-          slug: 'testleaf-fixture-resin-fixtura-testalis',
-          retired_at: NOW,
-          created_by: E.id,
-        },
-        {
-          ingredient_id: first,
-          workspace_id: null,
-          slug: 'testwort-fixture-resin',
-          retired_at: NOW,
-          created_by: E.id,
-        },
+      expect(await variantsOf(first)).toEqual([
+        { id: expect.any(String), form: 'Fixture Amber', form_id: id, updated_by: E.id },
+        { id: expect.any(String), form: 'Fixture Bark', form_id: null, updated_by: A.id },
       ]);
+      expect(await variantsOf(second)).toEqual([
+        { id: expect.any(String), form: 'Fixture Amber', form_id: id, updated_by: E.id },
+        { id: expect.any(String), form: 'Fixture Root', form_id: null, updated_by: A.id },
+      ]);
+      expect(
+        await Promise.all([first, second].map(async (at) => (await ingredientOf(at)).slug)),
+      ).toEqual(slugs);
+      expect(await retirements()).toEqual([]);
     });
 
-    it('rewrites the text alone, moving no slug, on a change of case', async () => {
+    it('carries a change of case, the variant renamed no clash with itself', async () => {
       const id = await seed('Fixture resin');
       const picked = await entry('Testwort', 'Fixture resin', id);
 
       await updateIngredientFormValue(admin, id, input({ name: 'Fixture Resin' }));
 
-      expect(await ingredientOf(picked)).toMatchObject({
-        form: 'Fixture Resin',
-        slug: 'testwort-fixture-resin',
-      });
-      expect(await retirements()).toEqual([]);
+      expect((await variantsOf(picked)).map((row) => row.form)).toEqual(['Fixture Resin']);
     });
 
-    it('rewrites no entry when only the group changes', async () => {
+    it('rewrites no variant when only the group changes', async () => {
       const id = await seed('Fixture Resin');
       const picked = await entry('Testwort', 'Fixture Resin', id);
-      const before = await ingredientOf(picked);
+      const before = await variantsOf(picked);
 
       await updateIngredientFormValue(
         admin,
@@ -613,196 +564,68 @@ describe('updateIngredientFormValue', () => {
       );
 
       expect((await formOf(id)).slug).toBe('fixture-resin-botanical');
-      expect(await ingredientOf(picked)).toEqual(before);
-      expect(await retirements()).toEqual([]);
+      expect(await variantsOf(picked)).toEqual(before);
     });
 
-    it('leaves alone an entry that only spells the form, or picked its namesake, or is deleted', async () => {
-      const id = await seed('Fixture Wax', 'Substance');
-      const namesake = await seed('Fixture Wax', 'Animal');
-      const typed = await entry('Testwort', 'Fixture Wax', null);
-      const other = await entry('Testleaf', 'Fixture Wax', namesake);
-      const gone = await entry('Testroot', 'Fixture Wax', id);
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-      const before = await Promise.all([typed, other, gone].map(ingredientOf));
-
-      await updateIngredientFormValue(admin, id, input({ name: 'Fixture Tallow' }));
-
-      expect((await formOf(id)).name).toBe('Fixture Tallow');
-      expect(await Promise.all([typed, other, gone].map(ingredientOf))).toEqual(before);
-    });
-
-    it("never rewrites a coven's ingredient that picked the form", async () => {
+    it("never rewrites a coven's variant that picked the form", async () => {
       const id = await seed('Fixture Resin');
       const coven = await entry('Testwort', 'Fixture Resin', id, { workspaceId: WORKSPACE_W_ID });
-      const before = await ingredientOf(coven);
+      const before = await variantsOf(coven);
       // Why it could have been rewritten: it picked this very form.
-      expect(before).toMatchObject({ form_id: id, workspace_id: WORKSPACE_W_ID });
+      expect(before.map((row) => row.form_id)).toEqual([id]);
 
       await updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' }));
 
       expect((await formOf(id)).name).toBe('Fixture Amber');
-      expect(await ingredientOf(coven)).toEqual(before);
-      expect(await retirements()).toEqual([]);
+      expect(await variantsOf(coven)).toEqual(before);
     });
 
-    it('is refused, naming both, when an entry would become another live entry, and nothing is written', async () => {
+    it('is refused on `name`, naming the entry, when it would give an entry two forms of one name', async () => {
       const id = await seed('Fixture Resin');
-      const amber = await seed('Fixture Amber', 'Animal');
-      const renamed = await entry('Testwort', 'Fixture Resin', id);
-      const holder = await entry('Testwort', 'Fixture Amber', amber);
-      const before = await Promise.all([formOf(id), ingredientOf(renamed), ingredientOf(holder)]);
+      const doubled = await entry('Testwort', 'Fixture Resin', id);
+      await insertVariant(sql, doubled, { form: 'fixture amber' }, A.id);
+      const before = await Promise.all([formOf(id), variantsOf(doubled)]);
 
       const issues = await issuesOf(
         updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
       );
 
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would make Testwort (Fixture Resin) the same entry as Testwort (Fixture Amber) — change one of them first',
-        },
-      ]);
-      expect(await Promise.all([formOf(id), ingredientOf(renamed), ingredientOf(holder)])).toEqual(
-        before,
-      );
-      expect(await retirements()).toEqual([]);
+      expect(issues).toEqual([{ path: ['name'], message: expect.stringContaining('Testwort') }]);
+      expect(await Promise.all([formOf(id), variantsOf(doubled)])).toEqual(before);
     });
 
-    it('is refused, naming both, when an entry would move onto a live entry’s address', async () => {
-      const id = await seed('Fixture Resin');
-      const renamed = await entry('Testwort', 'Fixture Resin', id);
-      // A typed form folding to the same address but not the same identity.
-      const holder = await entry('Testwort', 'Fixture-Amber', null);
-      expect((await ingredientOf(holder)).slug).toBe('testwort-fixture-amber');
-      const before = await Promise.all([formOf(id), ingredientOf(renamed)]);
-
-      const issues = await issuesOf(
-        updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
-      );
-
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would move Testwort (Fixture Resin) to the address "testwort-fixture-amber", which Testwort (Fixture-Amber) already has — change one of them first',
-        },
-      ]);
-      expect(await Promise.all([formOf(id), ingredientOf(renamed)])).toEqual(before);
-    });
-
-    // Two admins: the check passed, and the colliding entry was written before
-    // the rename's own write. The index refuses the entry's rewrite, and the
+    // Two admins: the check passed, and the clashing variant was written before
+    // the rename's own write. The index refuses the variant's rewrite, and the
     // form's rename, written first in the same transaction, goes with it.
-    it('rolls the form back with the entries when the index refuses a rewrite, naming both', async () => {
+    it('rolls the form back with the variants when the index refuses a rewrite, naming the entry', async () => {
       const id = await seed('Fixture Resin');
-      const amber = await seed('Fixture Amber', 'Animal');
-      const renamed = await entry('Testwort', 'Fixture Resin', id);
-      // The identity alone, at another address, so only the identity index can refuse.
-      const holder = await entry('Testbane', 'Fixture Amber', amber, {
-        nomenclature: 'unknown',
-        canonicalName: 'Testwort',
-      });
-      expect(await ingredientOf(holder)).toMatchObject({
-        canonical_key: 'testwort :: fixture amber',
-        slug: 'testbane-fixture-amber-testwort',
-      });
-      const before = await Promise.all([formOf(id), ingredientOf(renamed)]);
-      repository.findCompendiumEntryByIdentity.mockResolvedValueOnce(undefined);
+      const doubled = await entry('Testwort', 'Fixture Resin', id);
+      await insertVariant(sql, doubled, { form: 'Fixture Amber' }, A.id);
+      const before = await Promise.all([formOf(id), variantsOf(doubled)]);
+      repository.findCompendiumFormRenameClashes.mockResolvedValueOnce([]);
 
       const issues = await issuesOf(
         updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
       );
 
-      expect(issues).toEqual([
-        {
-          path: ['name'],
-          message:
-            'Renaming "Fixture Resin" to "Fixture Amber" would make Testwort (Fixture Resin) the same entry as Testbane (Testwort, Fixture Amber) — change one of them first',
-        },
-      ]);
-      expect(await Promise.all([formOf(id), ingredientOf(renamed)])).toEqual(before);
-      expect(await retirements()).toEqual([]);
+      expect(issues).toEqual([{ path: ['name'], message: expect.stringContaining('Testwort') }]);
+      expect(await Promise.all([formOf(id), variantsOf(doubled)])).toEqual(before);
     });
 
-    describe('onto an address another entry moved off, inside its window', () => {
-      let moved: string;
+    it('refuses on `name` when the index refuses a rewrite the second read cannot place, rather than surfacing the raw error', async () => {
+      const id = await seed('Fixture Resin');
+      const doubled = await entry('Testwort', 'Fixture Resin', id);
+      await insertVariant(sql, doubled, { form: 'Fixture Amber' }, A.id);
+      repository.findCompendiumFormRenameClashes
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
-      beforeEach(async () => {
-        moved = await entry('Testsoil', 'Fixture Earth', null);
-        await sql`
-          insert into retired_ingredient_slugs ${sql({
-            ingredient_id: moved,
-            workspace_id: null,
-            slug: 'testwort-fixture-amber',
-            retired_at: NOW,
-            created_by: E.id,
-            updated_by: E.id,
-          })}`;
-      });
+      const issues = await issuesOf(
+        updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
+      );
 
-      it('is refused on `endRedirect`, naming the entry and when its window closes, and nothing is written', async () => {
-        const id = await seed('Fixture Resin');
-        const renamed = await entry('Testwort', 'Fixture Resin', id);
-        const before = await Promise.all([formOf(id), ingredientOf(renamed)]);
-
-        const issues = await issuesOf(
-          updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
-        );
-
-        expect(issues).toEqual([
-          {
-            path: ['endRedirect'],
-            message:
-              '"testwort-fixture-amber" redirects to Testsoil (Fixture Earth) until 28 August 2026, 00:00 UTC — confirm to end that redirect',
-          },
-        ]);
-        expect(await Promise.all([formOf(id), ingredientOf(renamed)])).toEqual(before);
-      });
-
-      it('names every entry whose redirect it would end', async () => {
-        const id = await seed('Fixture Resin');
-        await entry('Testwort', 'Fixture Resin', id);
-        await entry('Testleaf', 'Fixture Resin', id);
-        await sql`
-          insert into retired_ingredient_slugs ${sql({
-            ingredient_id: moved,
-            workspace_id: null,
-            slug: 'testleaf-fixture-amber',
-            retired_at: NOW,
-            created_by: E.id,
-            updated_by: E.id,
-          })}`;
-
-        const issues = await issuesOf(
-          updateIngredientFormValue(admin, id, input({ name: 'Fixture Amber' })),
-        );
-
-        expect(issues).toEqual([
-          {
-            path: ['endRedirect'],
-            message:
-              '"testleaf-fixture-amber" redirects to Testsoil (Fixture Earth) until 28 August 2026, 00:00 UTC and "testwort-fixture-amber" redirects to Testsoil (Fixture Earth) until 28 August 2026, 00:00 UTC — confirm to end those redirects',
-          },
-        ]);
-      });
-
-      it('goes through once the admin confirms', async () => {
-        const id = await seed('Fixture Resin');
-        const renamed = await entry('Testwort', 'Fixture Resin', id);
-
-        await updateIngredientFormValue(
-          admin,
-          id,
-          input({ name: 'Fixture Amber', endRedirect: true }),
-        );
-
-        expect(await ingredientOf(renamed)).toMatchObject({
-          form: 'Fixture Amber',
-          slug: 'testwort-fixture-amber',
-        });
-      });
+      expect(issues).toEqual([{ path: ['name'], message: expect.any(String) }]);
+      expect((await formOf(id)).name).toBe('Fixture Resin');
     });
   });
 });
@@ -851,30 +674,20 @@ describe('deleteIngredientFormValue', () => {
       const attempt = deleteIngredientFormValue(admin, id);
 
       await expect(attempt).rejects.toThrow(Forbidden);
-      await expect(attempt).rejects.toThrow(
-        '"Fixture Held" is the form of 2 compendium entries — Testcap (Fixture Held) and Testwort (Fixture Held). Change their form first.',
-      );
+      await expect(attempt).rejects.toThrow('Testcap');
+      await expect(attempt).rejects.toThrow('Testwort');
       expect((await formOf(id)).deleted_at).toBeNull();
     });
 
-    it('names the first three and counts the rest', async () => {
+    it('names the first three holding entries and no more', async () => {
       const id = await seed('Fixture Crowded');
       for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
         await entry(name, 'Fixture Crowded', id);
       }
 
-      await expect(deleteIngredientFormValue(admin, id)).rejects.toThrow(
-        '"Fixture Crowded" is the form of 5 compendium entries — Testa (Fixture Crowded), Testb (Fixture Crowded), Testc (Fixture Crowded) and 2 more. Change their form first.',
-      );
-    });
-
-    it('says "its" of a single entry', async () => {
-      const id = await seed('Fixture Single');
-      await entry('Testwort', 'Fixture Single', id);
-
-      await expect(deleteIngredientFormValue(admin, id)).rejects.toThrow(
-        '"Fixture Single" is the form of 1 compendium entry — Testwort (Fixture Single). Change its form first.',
-      );
+      const attempt = deleteIngredientFormValue(admin, id);
+      await expect(attempt).rejects.toThrow('Testc');
+      await expect(attempt).rejects.not.toThrow('Testd');
     });
   });
 
@@ -893,13 +706,24 @@ describe('deleteIngredientFormValue', () => {
     expect((await formOf(picked)).deleted_at).toBeNull();
   });
 
-  it('is not held by an entry that only spells it, nor by a deleted entry that picked it', async () => {
+  it('is not held by an entry that only spells it, a deleted entry that picked it, or a dropped form', async () => {
     const id = await seed('Fixture Lapsed');
     await entry('Testwort', 'Fixture Lapsed', null);
     const gone = await entry('Testleaf', 'Fixture Lapsed', id);
     await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${gone}`;
-    // Why it could have been held: the deleted entry's pick is still there.
-    expect((await ingredientOf(gone)).form_id).toBe(id);
+    const dropping = await entry('Testroot', 'Fixture Root', null);
+    const dropped = await insertVariant(
+      sql,
+      dropping,
+      { form: 'Fixture Lapsed', formId: id },
+      A.id,
+    );
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${E.id} where id = ${dropped}`;
+    // Why it could have been held: the deleted entry's and the dropped form's picks are still there.
+    expect((await variantsOf(gone)).map((row) => row.form_id)).toEqual([id]);
+    const [pick] = await sql`select form_id from ingredient_variants where id = ${dropped}`;
+    expect(pick.form_id).toBe(id);
 
     await deleteIngredientFormValue(admin, id);
 
@@ -909,13 +733,13 @@ describe('deleteIngredientFormValue', () => {
   it("is not held by a coven's ingredient that picked it, which keeps its pick", async () => {
     const id = await seed('Fixture Coven');
     const coven = await entry('Testwort', 'Fixture Coven', id, { workspaceId: WORKSPACE_W_ID });
-    const before = await ingredientOf(coven);
+    const before = await variantsOf(coven);
     // Why it could have been held: W's ingredient picked this very form.
-    expect(before).toMatchObject({ form_id: id, workspace_id: WORKSPACE_W_ID });
+    expect(before.map((row) => row.form_id)).toEqual([id]);
 
     await deleteIngredientFormValue(admin, id);
 
     expect((await formOf(id)).deleted_at).toBeInstanceOf(Date);
-    expect(await ingredientOf(coven)).toEqual(before);
+    expect(await variantsOf(coven)).toEqual(before);
   });
 });

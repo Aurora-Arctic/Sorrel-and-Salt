@@ -1,0 +1,16 @@
+@use '../../scss/variables' as *;
+
+// The page around it is `.page-frame--narrow` (src/app/invite/[token]/page.tsx),
+// which centres it and caps it at the forms' column, so the panel sets no
+// width of its own: a heading, a sentence or two and one button.
+.invitation-acceptance {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.invitation-acceptance__heading,
+.invitation-acceptance__text,
+.invitation-acceptance__actions {
+  margin: 0;
+}

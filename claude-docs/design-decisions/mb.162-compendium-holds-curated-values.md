@@ -67,8 +67,11 @@ form group or deity tradition with such a row under it, since a form under a
 deleted group, or a deity under a deleted tradition, is no longer curated.
 Amended by M5.6b for form groups: deleting one first moves its forms to
 another live group the admin picks, so they stay curated and the delete is
-not refused for the compendium; deity traditions are unchanged
-([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)).
+not refused for the compendium
+([`m5.6b-admin-groups.md`](m5.6b-admin-groups.md)). Amended by MB.132 for
+deity traditions the same way: deleting one first moves its deities to
+another live tradition the admin picks
+([`mb.132-admin-deities.md`](mb.132-admin-deities.md)).
 Weighed:
 
 - _Strip the value from those entries in the same write._ The rule holds, but

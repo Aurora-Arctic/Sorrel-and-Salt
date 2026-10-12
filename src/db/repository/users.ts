@@ -1,13 +1,14 @@
-import { and, eq, inArray, ne, or, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
 import { accounts } from '../../modules/identity/schema/auth';
+import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
 import type { SiteAdmin } from '@/modules/identity';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
-import type { PageEntry, PageRequest } from '../../lib/types';
-import { findMany } from './finders';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
+import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
-import { pageBounds, selectFrom } from './select';
-import type { LinkedProvider, UserFilter } from './types';
+import { existsIn, selectFrom } from './select';
+import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
 
 /**
  * The live row holding this address, or `undefined`. Compared lower-cased,
@@ -24,6 +25,14 @@ export async function findUserByEmail(
   return row;
 }
 
+/** The user list's order, by name and then id. */
+const USER_ORDER: readonly SortPart[] = [users.name];
+
+/** The users the list holds under `filter`: all but the bootstrap user, narrowed by its arms. */
+function listedUsers(filter: UserFilter): SQL | undefined {
+  return and(ne(users.id, BOOTSTRAP_USER_ID), ...userArms(filter));
+}
+
 /**
  * One page of the live users under `filter`, by name and then id: the admin
  * user list (MB.52). It takes the `SiteAdmin` proof, so no caller that has not
@@ -37,17 +46,20 @@ export function findUserPage(
   filter: UserFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof users.$inferSelect>[]> {
-  const keyset = { sort: [users.name], id: users.id, request: page };
-  return selectFrom(
-    users,
-    and(
-      notSoftDeleted(users),
-      ne(users.id, BOOTSTRAP_USER_ID),
-      ...userArms(filter),
-      pageBounds(keyset),
-    ),
-    keyset,
-  );
+  return findPage(users, USER_ORDER, page, listedUsers(filter));
+}
+
+/**
+ * How many users `findUserPage` pages under `filter`, and how many come
+ * before `start`, a page's first row, none on an empty page: the user list's
+ * "Page X of Y" (MB.115).
+ */
+export function findUserCount(
+  _admin: SiteAdmin,
+  filter: UserFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(users, USER_ORDER, start, listedUsers(filter));
 }
 
 /**
@@ -70,10 +82,74 @@ export async function findProvidersOfUsers(
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
 }
 
-/** The filter's arms, each `undefined` when its part is absent. */
-function userArms({ query, awaitingApproval }: UserFilter): (SQL | undefined)[] {
+/**
+ * The ledger's order, newest first: a page's key is ascending, so a
+ * descending part is written negated (`types.ts`, `SortPart`), and as
+ * `numeric`, which keeps the microseconds a `Date` would drop from a cursor.
+ * Rows of one instant, a role grant and the flag it sets, follow by id.
+ */
+const LEDGER_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${userPrivilegeChanges.createdAt})`, type: 'numeric' },
+];
+
+/**
+ * One page of the privilege ledger under `filter`, newest first (MB.199):
+ * `/admin/privilege-changes`. Under the `SiteAdmin` proof, as the user list
+ * is, since who holds which privilege is an admin's business alone.
+ */
+export function findPrivilegeChangePage(
+  _admin: SiteAdmin,
+  filter: PrivilegeChangeFilter,
+  page: PageRequest,
+): Promise<PageEntry<typeof userPrivilegeChanges.$inferSelect>[]> {
+  return findPage(userPrivilegeChanges, LEDGER_ORDER, page, and(...privilegeChangeArms(filter)));
+}
+
+/**
+ * How many rows `findPrivilegeChangePage` pages under `filter`, and how
+ * many come before `start`, a page's first row, none on an empty page: the
+ * ledger page's "Page X of Y" (MB.200).
+ */
+export function findPrivilegeChangeCount(
+  _admin: SiteAdmin,
+  filter: PrivilegeChangeFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(
+    userPrivilegeChanges,
+    LEDGER_ORDER,
+    start,
+    and(...privilegeChangeArms(filter)),
+  );
+}
+
+/** The ledger filter's arms, each `undefined` when its part is absent. */
+function privilegeChangeArms({
+  userId,
+  privilege,
+  query,
+}: PrivilegeChangeFilter): (SQL | undefined)[] {
   return [
-    query ? or(containsText(users.name, query), containsText(users.email, query)) : undefined,
-    awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
+    userId ? eq(userPrivilegeChanges.userId, userId) : undefined,
+    privilege ? eq(userPrivilegeChanges.privilege, privilege) : undefined,
+    // The subject's live row, matched as the user list matches one, in SQL:
+    // a semi-join, so a row is never fetched to be filtered out.
+    query
+      ? existsIn(users, and(eq(users.id, userPrivilegeChanges.userId), nameOrEmailHolds(query)))
+      : undefined,
   ];
+}
+
+/** The filter's arms, each `undefined` when its part is absent. */
+function userArms({ query, awaitingApproval, role }: UserFilter): (SQL | undefined)[] {
+  return [
+    query ? nameOrEmailHolds(query) : undefined,
+    awaitingApproval ? eq(users.canCreateWorkspace, false) : undefined,
+    role ? eq(users.role, role) : undefined,
+  ];
+}
+
+/** A user's name or address holds `query`: the user list's match, and the ledger's by subject. */
+function nameOrEmailHolds(query: string): SQL | undefined {
+  return or(containsText(users.name, query), containsText(users.email, query));
 }

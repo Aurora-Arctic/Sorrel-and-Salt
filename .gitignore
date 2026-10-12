@@ -41,6 +41,11 @@ docker-data
 *.dump
 *.sql.gz
 
+# The owner's reference books for the compendium seed (MB.240), most still in
+# copyright: read locally from /app/.library/, never committed to this public
+# repo. tests/guards/no-tracked-books.test.ts refuses a .pdf or .epub anywhere.
+.library/
+
 # act (local CI runs)
 .actrc.local
 .secrets

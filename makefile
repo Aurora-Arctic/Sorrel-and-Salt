@@ -44,7 +44,7 @@ build:
 start:
 	npm run start
 
-## Oxlint
+## Oxlint, then Stylelint over the Sass
 lint:
 	npm run lint
 

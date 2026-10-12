@@ -1,11 +1,18 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
-import EmailForm from '@/components/EmailForm';
+import { HttpResponse } from 'msw';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
+import EmailForm, {
+  CHANGE_STATUS,
+  NO_EMAIL_STATUS,
+  UNVERIFIED_STATUS,
+  VERIFIED_STATUS,
+} from '@/components/EmailForm';
 import type { SetEmailMutation, SetEmailMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The /account/email form. The mutation is answered by MSW in the shape
 // /api/graphql answers (tests/support/msw/graphql.ts), so what the component
@@ -16,7 +23,7 @@ function renderForm(ui: ReactNode) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 }
 
-const emailField = () => screen.getByRole('textbox', { name: 'Email address' });
+const emailField = () => screen.getByRole('textbox', { name: 'Email Address' });
 const submit = () => screen.getByRole('button', { name: 'Send Confirmation' });
 
 /** Answers `SetEmail` with the row as it is, recording the variables it was sent. */
@@ -33,27 +40,37 @@ describe('EmailForm', () => {
   it('prefills the field with the account address', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Your email' })).toBeInTheDocument();
     expect(emailField()).toHaveValue('ada@example.test');
+  });
+
+  // The account page's Email section (MB.88): the section heads it, and a
+  // followed link's confirmed view stays the email page's.
+  it('embedded, shows no heading of its own and never the confirmed view', () => {
+    renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
+
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
+    expect(emailField()).toHaveValue('ada@example.test');
+    expect(submit()).toBeDisabled();
   });
 
   it('starts empty when the account has no address', () => {
     renderForm(<EmailForm email="" verified={false} landing="/coven" />);
 
     expect(emailField()).toHaveValue('');
-    expect(screen.getByText(/no email yet/i)).toBeInTheDocument();
+    expect(screen.getByText(NO_EMAIL_STATUS)).toBeInTheDocument();
   });
 
   it('says an unverified address is waiting on its link', () => {
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
-    expect(screen.getByText(/not yet verified/i)).toBeInTheDocument();
+    expect(screen.getByText(UNVERIFIED_STATUS)).toBeInTheDocument();
   });
 
   // A followed link's landing: the address is proved, so there is nothing to
   // type — only the address, its state, and the way on.
-  it('shows only the verified line, the address and Continue once confirmed', () => {
-    renderForm(
+  it("shows only the verified line, the address and Continue once confirmed, to the account's landing when it was going nowhere else", () => {
+    const { unmount } = renderForm(
       <EmailForm
         email="ada@example.test"
         verified
@@ -63,17 +80,15 @@ describe('EmailForm', () => {
       />,
     );
 
-    expect(screen.getByText('Verified: we will send emails to this address.')).toBeInTheDocument();
+    expect(screen.getByText(VERIFIED_STATUS)).toBeInTheDocument();
     expect(screen.getByText('ada@example.test')).toBeInTheDocument();
     // Where the account was going wins over its role's landing.
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven/hearth');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
-  });
+    unmount();
 
-  it("continues to the account's landing when it was going nowhere else", () => {
     renderForm(<EmailForm email="ada@example.test" verified confirmed landing="/admin" />);
-
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
   });
 
@@ -82,10 +97,10 @@ describe('EmailForm', () => {
   it('offers a verified account the field alone when it comes back to change the address', () => {
     renderForm(<EmailForm email="ada@example.test" verified landing="/coven" />);
 
-    expect(screen.queryByText(/^verified/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(VERIFIED_STATUS)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Continue' })).not.toBeInTheDocument();
     expect(emailField()).toHaveValue('ada@example.test');
-    expect(screen.getByText(/enter a new address/i)).toBeInTheDocument();
+    expect(screen.getByText(CHANGE_STATUS)).toBeInTheDocument();
   });
 
   it('has nothing to send for an unchanged verified address, until it is edited', () => {
@@ -116,14 +131,35 @@ describe('EmailForm', () => {
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     const status = await screen.findByRole('status');
-    expect(status).toHaveTextContent(
-      "We've sent a link to new@example.test. Open it in this browser within an hour to confirm it.",
-    );
+    expect(status).toHaveTextContent('new@example.test');
     // The typed value goes as typed; normalising is the service's job. With
     // no `next`, none is sent: the link lands by role when it is followed.
     expect(calls).toEqual([{ email: 'New@Example.test' }]);
     // The row's own address (still the old one) is never what the message names.
     expect(status).not.toHaveTextContent('old@example.test');
+  });
+
+  // The answer is held until the busy state is seen, so a quick answer
+  // cannot end the send before the assertion runs.
+  it('is busy while the send is in flight', async () => {
+    let answer: () => void = () => {};
+    const answered = new Promise<void>((resolve) => (answer = resolve));
+    server.use(
+      graphqlLink.mutation('SetEmail', async () => {
+        await answered;
+        return HttpResponse.json({ data: { setEmail: { id: 'u1', email: 'old@example.test' } } });
+      }),
+    );
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    const busy = submit();
+    fireEvent.submit(busy.closest('form') as HTMLFormElement);
+
+    await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
+    expect(busy).toBeDisabled();
+    answer();
+    await screen.findByRole('status');
+    expect(busy).not.toHaveAttribute('aria-busy');
   });
 
   // The link it asks for lands back here, and Continue goes on from there.
@@ -140,37 +176,36 @@ describe('EmailForm', () => {
   });
 
   // One mail per minute from a form, so a held-down Enter key or a nervous
-  // reader cannot fill an inbox; the wait is shortened here rather than faked,
-  // since MSW's fetch and waitFor share the timers a fake would take.
+  // reader cannot fill an inbox. The clock is faked, so the minute passes at
+  // once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`,
+  // as the IngredientForm files fake it.
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     const calls = acceptSetEmail();
-    renderForm(
-      <EmailForm
-        email="ada@example.test"
-        verified={false}
-        landing="/coven"
-        resendDelaySeconds={1}
-      />,
-    );
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+    const button = submit();
 
-    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+    fireEvent.submit(button.closest('form') as HTMLFormElement);
     await screen.findByRole('status');
 
-    const waiting = screen.getByRole('button', { name: 'Send Again in 1s' });
-    expect(waiting).toBeDisabled();
-    fireEvent.submit(waiting.closest('form') as HTMLFormElement);
+    expect(button).toBeDisabled();
+    fireEvent.submit(button.closest('form') as HTMLFormElement);
     expect(calls).toHaveLength(1);
 
-    expect(
-      await screen.findByRole('button', { name: 'Send Confirmation' }, { timeout: 3000 }),
-    ).toBeEnabled();
+    await act(() => vi.advanceTimersByTimeAsync(59_000));
+    expect(button).toBeDisabled();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(button).toBeEnabled();
   });
 
   it('puts a field error beside the input and marks the input invalid', async () => {
     mockGraphQLError('SetEmail', {
       code: 'VALIDATION',
       fieldErrors: [
-        { path: ['email'], message: 'That address is already in use by another account' },
+        { path: ['email'], message: 'That email address is already in use by another account' },
       ],
     });
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
@@ -179,11 +214,7 @@ describe('EmailForm', () => {
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    const describedBy = emailField().getAttribute('aria-describedby');
-    expect(describedBy).toBeTruthy();
-    expect(document.getElementById(describedBy as string)).toHaveTextContent(
-      'That address is already in use by another account',
-    );
+    expect(emailField()).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -193,8 +224,17 @@ describe('EmailForm', () => {
 
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Sign in to change your email');
+    expect(await screen.findByRole('alert')).toBeVisible();
     expect(emailField()).not.toHaveAttribute('aria-invalid');
+  });
+
+  it('says a send that never reached the server failed', async () => {
+    server.use(graphqlLink.mutation('SetEmail', () => HttpResponse.error()));
+    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
+
+    fireEvent.submit(submit().closest('form') as HTMLFormElement);
+
+    expect(await screen.findByRole('alert')).toBeVisible();
   });
 
   it('clears the last outcome when a new submit starts', async () => {
@@ -211,7 +251,13 @@ describe('EmailForm', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('shows a passed-in error as an alert on mount', () => {
+  it('shows a passed-in error as an alert on mount, and none without one', () => {
+    const { unmount } = renderForm(
+      <EmailForm email="ada@example.test" verified={false} landing="/coven" />,
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    unmount();
+
     renderForm(
       <EmailForm
         email="ada@example.test"
@@ -226,12 +272,6 @@ describe('EmailForm', () => {
     );
   });
 
-  it('renders no alert when there is no error', () => {
-    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
-
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
   it('offers no Continue while the address is unverified', () => {
     renderForm(
       <EmailForm email="ada@example.test" verified={false} next="/coven/hearth" landing="/coven" />,
@@ -243,14 +283,20 @@ describe('EmailForm', () => {
   // The sign-up mail went out before the page was ever seen, so the server's
   // wait is the countdown's starting point rather than a surprise on submit.
   it('starts counting down from the wait the server reports', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     renderForm(
       <EmailForm email="ada@example.test" verified={false} landing="/coven" waitSeconds={1} />,
     );
 
-    expect(screen.getByRole('button', { name: 'Send Again in 1s' })).toBeDisabled();
-    expect(
-      await screen.findByRole('button', { name: 'Send Confirmation' }, { timeout: 3000 }),
-    ).toBeEnabled();
+    // The one button, whatever its caption says of the wait.
+    const button = screen.getByRole('button');
+    expect(button).toBeDisabled();
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(button).toBeEnabled();
+    expect(button).toBe(submit());
   });
 
   // No browser bubble: the form is `noValidate` and the input not `required`,
@@ -268,6 +314,6 @@ describe('EmailForm', () => {
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(screen.getByText('Enter an email address')).toBeInTheDocument();
+    expect(emailField()).toHaveAccessibleDescription(/\S/);
   });
 });

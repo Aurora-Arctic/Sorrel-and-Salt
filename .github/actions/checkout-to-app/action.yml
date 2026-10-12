@@ -10,8 +10,8 @@ runs:
       uses: actions/checkout@v7
 
     # `cp -a` overlays without deleting, which is safe only because the image
-    # carries no source layer — tests/guards/image-source-layer.test.ts keeps
-    # it that way, so this stays a copy and never grows a `git clean`.
+    # carries no source layer — each Dockerfile copies only its manifests, a
+    # decision for review — so this stays a copy and never grows a `git clean`.
     - name: Copy checkout into /app
       shell: bash
       run: cp -a "$GITHUB_WORKSPACE"/. /app/

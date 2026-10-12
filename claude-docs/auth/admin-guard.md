@@ -60,14 +60,28 @@
   whose service asserts the role itself, and a page that reads anything
   private — `/admin/users` (MB.52) — carries its own service-level assertion
   ([`admin-users.md`](admin-users.md), "The user list").
+- **A tabbed page's own layout runs no guard** (MB.115). Each tabbed page is
+  a route group, `src/app/admin/(people)/` and the like, whose `layout.tsx`
+  draws the heading and the tabs and reads nothing
+  ([`components/tabbed-page.md`](../components/tabbed-page.md)). A layout
+  does not re-run on a tab press, so a guard there would add nothing to
+  `src/app/admin/layout.tsx`'s and each tab page's. The tabbed pages add no
+  `loading.tsx` and no other `<Suspense>` boundary: a tab's loading state
+  is the tab row's own, shown only while a pressed tab is on its way. So
+  nothing streams ahead of the guard on a direct request, and a refusal any
+  tab's page throws keeps its 403 with no boundary to turn it into a 200
+  (above); a tab's page refusing during a tab press is a client-side
+  navigation, which has no status to keep. `tests/e2e/admin.spec.ts`
+  asserts the 403 at `/admin/users`, a tab.
 - **No way around `/api/graphql`.** Admin writes are GraphQL mutations like
-  every other (CLAUDE.md rule 1): `tests/guards/no-server-actions.test.ts`
-  refuses a server action and `tests/guards/route-handlers.test.ts` a route
-  handler beyond the GraphQL endpoint and `/api/auth/*`.
+  every other (CLAUDE.md rule 1): lint's `sorrel/no-use-server` refuses a
+  server action and `sorrel/route-allowlist` a route handler beyond the
+  GraphQL endpoint and `/api/auth/*` (`lint/sorrel-lint.js`).
 - **Tests.** `tests/lib/request-session.test.ts` covers the three answers and
-  the unverified admin; `tests/app/pre-paint-scripts.test.tsx` that a
-  browser-rendered page gets no script and no warning;
+  the unverified admin; `tests/app/pre-paint-scripts.test.tsx` that the
+  server HTML carries both scripts and hydrates without a warning;
   `tests/app/admin/layout.test.tsx` proves the layout
   and the index page each await the guard before rendering;
-  `tests/e2e/admin.spec.ts` asserts the redirect, the 403 with no admin markup
-  anywhere in the document, and the layout, against the built server.
+  `tests/e2e/admin.spec.ts` asserts the 403 with no admin markup anywhere in
+  the document, and the layout, against the built server; the signed-out
+  redirect is `tests/e2e/route-protection.spec.ts`'s.

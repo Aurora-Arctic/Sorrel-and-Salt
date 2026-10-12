@@ -22,18 +22,24 @@ nullable precisely so it does not have to be one.
 **Four things in it are fixtures rather than decoration:**
 
 - **W's own ingredients**, the workspace tier of §5's one table: `Garden
-Rosemary`, `Hearth Ash`, `House Chamomile` and `Fresh Ginger`. A grimoire
+Rosemary`, `Hearth Ash`, `House Chamomile` and `Ginger`. A grimoire
   that only ever reached the compendium would exercise half of §5, and the
   jars mix the two the way a real one does.
-- **Fresh Ginger carries the uncurated form**, `rhizome` — §5's example of a
-  value a member writes before an admin curates it, and the second bucket of
-  M4.7a's suggestion list. Since MB.162 the compendium holds only curated
-  values, so it lives on a coven's entry; the compendium's Ginger is `Root`, a
-  different identity, so both rows stand.
+- **W's Ginger carries the uncurated form**, one variant typed `rhizome`
+  with no pick — §5's example of a value a member writes before an admin
+  curates it, and the second bucket of M4.7a's suggestion list. Since MB.162
+  the compendium holds only curated values, so it lives on a coven's entry.
+  The variant carries its own description, "Knobbed rhizome bought fresh at
+  the market, sliced and dried on the rack.", and the entry its own, "The
+  coven’s own ginger, kept for warming jars." W's Ginger is _Zingiber
+  officinale_, the identity of the compendium's Ginger (form `Root`) in the
+  other tier, which the identity indexes permit, so W's entry shadows it under
+  M8.3 as Garden Rosemary shadows Rosemary.
 - **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
-  same form, different tier, which the two partial unique indexes permit. That
-  pair is exactly what M8.3's local-beats-compendium resolution collapses, and
-  it can only be resolved where both rows exist.
+  different tier, which the two partial unique indexes permit, whatever forms
+  either holds (Garden Rosemary's one `herb`, the compendium's `Herb` and
+  `Oil`). That pair is exactly what M8.3's local-beats-compendium resolution
+  collapses, and it can only be resolved where both rows exist.
 - **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
   `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
   same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in
@@ -45,13 +51,41 @@ Layer order is the position in the `layers` array, never a number written
 beside it: one list, so the stack and its depths cannot disagree, and each jar
 is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
 
+**MB.215: W's ingredients take variants, and Fresh Ginger becomes Ginger.** MB.216 writes a variant beside each of W's ingredients' forms (Hearth Ash's `ash`, House Chamomile's `flower`), so every linked layer in the two jars can name one, and MB.217's migration fills each layer's `variant_id` from its ingredient's one variant. Identity on the formal name alone changes two of the fixtures above. Fresh Ginger and the compendium's Ginger are now one identity, _Zingiber officinale_, in two tiers, which the identity indexes permit, so W's entry shadows the compendium's under M8.3 as Garden Rosemary does; MB.222 renamed it Ginger, with an uncurated `rhizome` variant, so it stays the coven's example of a form no admin has curated. Garden Rosemary shadows the compendium's Rosemary on the formal name, whatever forms either holds. MB.222 corrected this section ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+
+**W's entries have their variants too (MB.216, MB.222).** Each of W's
+literals lists its forms as `variants`, as the compendium's do
+([standard-scenario.md](standard-scenario.md)). After W's entries,
+`insertMissingVariants` from `standard.ts` writes them, typed rather than
+picked, lower-case as the literals spell them (Hearth Ash is `ash`, House
+Chamomile `flower`, Garden Rosemary `herb`, Ginger `rhizome`), so every
+linked layer's ingredient has a variant a layer can name now that MB.217
+gives layers one. A linked layer lays its ingredient's first live variant in
+form order, read back after the variants are written; every ingredient a jar
+names has exactly one.
+
+A layer finds its ingredient by tier and identity (`ingredientIdByIdentity`),
+because two tiers share an identity twice over — Garden Rosemary and
+Rosemary, W's Ginger and the compendium's — so a layer naming the
+compendium's Rosemary would find the compendium's row, not Garden Rosemary.
+No jar lays it today.
+
 ### A jar's stack is seeded whole or not at all
 
 Idempotency is `standard`'s — insert what is missing, keyed on identity,
 ignoring `deleted_at` — for the spells (fixed id), W's ingredients
-(`identityOf`, within the workspace tier) and the assigned categories (the
-pair). **`spell_ingredients` is the exception: the unit keyed on is the spell,
+(`identityOf`, the identity, over W's rows, deleted or not) and the assigned categories (the
+pair). A database seeded when Ginger was "Fresh Ginger" finds it present under
+the same formal name, so it keeps its old label. **`spell_ingredients` is the exception: the unit keyed on is the spell,
 not the layer.**
+
+The `standard` rows it writes through `seedStandardContent(tx)` keep their
+deletions too: `demo` passes `restoreDeletedDeityPicks: false`, so the one
+row a reseed of `standard` puts back, a compendium deity pick an admin
+deleted, stays deleted here, since a person explores this scenario
+(claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
+pick back; demo does not"). A developer scenario, so no test holds it
+(MB.225).
 
 Every other seeded row stands on its own, so "insert what is missing" is well
 defined per row. A layer does not — its identity is a depth in a sequence, and
@@ -60,7 +94,8 @@ edited and the arithmetic is against you both ways: a layer pulled out of the
 middle leaves the ones below it renumbered, so the depth the seed wants is
 occupied by a different ingredient (the layer index) and the ingredient it
 wants is already at another depth
-(`spell_ingredients_spell_id_ingredient_id_unique`). Either collision fails the
+(`spell_ingredients_spell_id_variant_id_unique` since MB.217, on the
+ingredient's variant). Either collision fails the
 whole scenario rather than the row.
 
 So a jar that already has layers is left exactly as it is — removed ones
@@ -68,6 +103,5 @@ included, since a tombstone is a layer the jar has had, and a jar a member
 emptied has been edited rather than left unstocked. What that gives up is a
 demo jar healing itself after someone empties it, which `make db-reset` (M1.24)
 does properly anyway; what it buys is that a reseed over an edited grimoire is
-a no-op rather than an error. `demo.test.ts` asserts it for the edited jar, the
-emptied one and the reordered one, and the first and last were checked to fail
-without the rule.
+a no-op rather than an error. A developer scenario, so no test holds it
+(MB.225).

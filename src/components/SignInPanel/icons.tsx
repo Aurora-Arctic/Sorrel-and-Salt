@@ -1,12 +1,17 @@
 import type { ReactElement } from 'react';
+import type { ProviderId } from '../../lib/types';
+import type { ProviderArt } from '../ProviderMark/types';
+import './icons.scss';
 
 // Each provider's own brand mark, sourced from that provider's own published
 // assets rather than approximated from memory —
 // claude-docs/components/sign-in-panel.md, "Provider branding" names where
 // each one came from: Google's identity branding guidelines, Discord's and
 // Facebook's own brand-resource downloads, Microsoft's identity platform
-// guidelines. Colours are hex literals, not $accent/$secondary tokens, for
-// the same reason: they are the provider's, not ours.
+// guidelines. The fills inside each SVG are part of the artwork, so they stay
+// here as the provider drew them; the grounds the marks sit on — a button's
+// fill, Facebook's chip, the list's circle — are the provider's colours too,
+// and come from `$brand-palettes` (_variables.scss) rather than our tokens.
 
 // Google's "G" logo, as published for "Sign in with Google" buttons
 // (Google's identity branding guidelines). No chip: the mark is multicolour
@@ -69,6 +74,25 @@ export function FacebookIcon(): ReactElement {
   );
 }
 
+// The same Meta asset filled Facebook's own blue, with no chip, for a list
+// rather than a button (/admin/users' Sign-In Methods, MB.63): Facebook's
+// standard blue circle with a white "f", on the owner's call, where
+// FacebookIcon's white fill needs the blue chip behind it. The path's "f" is
+// a hole, so a white disc sits behind it, inset (r 245 against the path's
+// 250) so no white fringe antialiases around the blue edge.
+export function FacebookMark(): ReactElement {
+  return (
+    <svg viewBox="0 0 500 499" width="24" height="24" aria-hidden="true">
+      <circle cx="250" cy="250" r="245" fill="#ffffff" />
+      <path
+        fill="#0866ff"
+        fillRule="nonzero"
+        d="M500,250c0,-138.071 -111.929,-250 -250,-250c-138.071,0 -250,111.929 -250,250c0,117.245 80.715,215.622 189.606,242.638l0,-166.242l-51.552,0l0,-76.396l51.552,0l0,-32.919c0,-85.092 38.508,-124.532 122.048,-124.532c15.838,0 43.167,3.105 54.347,6.211l0,69.254c-5.901,-0.621 -16.149,-0.932 -28.882,-0.932c-40.993,0 -56.832,15.528 -56.832,55.9l0,27.018l81.659,0l-14.028,76.396l-67.631,0l0,171.773c123.786,-14.951 219.713,-120.351 219.713,-248.169"
+      />
+    </svg>
+  );
+}
+
 // Microsoft's four-colour square mark, as published for "Sign in with
 // Microsoft" buttons (Microsoft identity platform branding guidelines). No
 // chip: it sits directly on the button's own white ground.
@@ -82,3 +106,15 @@ export function MicrosoftIcon(): ReactElement {
     </svg>
   );
 }
+
+// Every provider's mark by id, the one table SignInPanel's buttons and the
+// ProviderMark circle both read, so a provider added to `ProviderId` fails
+// to compile until it has one. Facebook's two forms are a prop rather than
+// two entries, since every caller wants "Facebook's mark" and only the
+// ground it sits on differs.
+export const PROVIDER_MARKS: Record<ProviderId, ProviderArt> = {
+  google: GoogleIcon,
+  discord: DiscordIcon,
+  facebook: ({ chip = false }) => (chip ? <FacebookIcon /> : <FacebookMark />),
+  microsoft: MicrosoftIcon,
+};

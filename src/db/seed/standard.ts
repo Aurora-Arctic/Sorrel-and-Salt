@@ -1,26 +1,35 @@
-import { eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, max, ne } from 'drizzle-orm';
+import { applyAudit } from '../audit';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
-import { adminRoleChanges } from '../../modules/identity/schema/admin-role-changes';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
+import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
-import { applyAudit } from '../audit';
 import { ingredientSlug, slugify } from '../../lib/slugify';
 import { categoryIdByName, seedCategoryVocabulary } from './categories';
 import { seedAstrologyVocabularies } from './astrology';
 import { seedDeityVocabulary } from './deities';
 import { seedVocabularySources } from './sources';
 import { seedFormVocabulary } from './forms';
-import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import {
+  beginSeedTransaction,
+  declaringBootstrapPrivileges,
+  insertMissingBy,
+  insertMissingReturningIds,
+  requireFrom,
+} from './idempotent';
+import type { PickedTable } from '../vocabularies';
 import type {
   FixtureUser,
   SeedDatabase,
   SeedIngredient,
+  SeedVariant,
   SeedMembership,
   SeedTransaction,
   SeedWorkspace,
@@ -102,10 +111,11 @@ const MEMBERSHIPS: SeedMembership[] = [
 
 /**
  * Every entry declares a `nomenclature`. The awkward ones are the point: five
- * "Cat's Claw" rows told apart only by `canonicalKey`, two mineral varieties,
+ * "Cat's Claw" rows told apart only by their formal names, two mineral varieties,
  * three `none` and one `unknown`, two entries worked with more than one
- * element, and comfrey beside foxglove, one carrying a safety note that
- * matters. Every form, planet, zodiac sign and deity names a curated row in
+ * element, comfrey beside foxglove, one carrying a safety note that matters,
+ * and Rosemary in two forms, its oil adding a description and a safety note
+ * of its own. Every form, planet, zodiac sign and deity names a curated row in
  * that row's own spelling (MB.162); the uncurated `rhizome` is a coven's, in
  * demo.ts.
  */
@@ -114,7 +124,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Mugwort',
     canonicalName: 'Artemisia vulgaris',
     nomenclature: 'botanical',
-    form: 'Herb',
+    variants: [{ form: 'Herb' }],
     description: 'Silver-backed leaves cut with the flowering stem, dried for smoke and tea.',
     elements: ['air', 'earth'],
     planets: ['Moon'],
@@ -126,7 +136,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Wormwood',
     canonicalName: 'Artemisia absinthium',
     nomenclature: 'botanical',
-    form: 'Herb',
+    variants: [{ form: 'Herb' }],
     description: 'Bitter grey-green herb, the other Artemisia — and not interchangeable.',
     elements: ['fire'],
     planets: ['Mars'],
@@ -138,7 +148,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Bay Laurel',
     canonicalName: 'Laurus nobilis',
     nomenclature: 'botanical',
-    form: 'Leaf',
+    variants: [{ form: 'Leaf' }],
     description: 'Whole leaves, written on and burned for a wish.',
     elements: ['fire'],
     planets: ['Sun'],
@@ -151,7 +161,17 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Rosemary',
     canonicalName: 'Salvia rosmarinus',
     nomenclature: 'botanical',
-    form: 'Herb',
+    // The one entry with two forms (MB.222): the oil adds its own description
+    // and a safety note the herb does not need.
+    variants: [
+      { form: 'Herb' },
+      {
+        form: 'Oil',
+        description: 'Sprigs steeped in olive oil for a month, then strained, for anointing.',
+        safetyNotes:
+          'Dry the sprigs first: a fresh herb in oil can grow botulism. Keep it cool, and never eat it.',
+      },
+    ],
     description: 'Needled sprigs. Renamed out of Rosmarinus in 2017, which is why the label moves.',
     elements: ['fire'],
     planets: ['Sun'],
@@ -162,7 +182,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Lavender',
     canonicalName: 'Lavandula angustifolia',
     nomenclature: 'botanical',
-    form: 'Flower',
+    variants: [{ form: 'Flower' }],
     description: 'Buds stripped from the stem.',
     elements: ['air'],
     planets: ['Mercury'],
@@ -176,7 +196,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Hidcote Lavender',
     canonicalName: "Lavandula angustifolia 'Hidcote'",
     nomenclature: 'botanical',
-    form: 'Flower',
+    variants: [{ form: 'Flower' }],
     description: 'A dark-flowered cultivar, kept separate from the species it belongs to.',
     elements: ['air'],
     planets: ['Mercury'],
@@ -186,7 +206,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Comfrey',
     canonicalName: 'Symphytum officinale',
     nomenclature: 'botanical',
-    form: 'Leaf',
+    variants: [{ form: 'Leaf' }],
     description: 'Broad hairy leaves, dried flat.',
     elements: ['water'],
     planets: ['Saturn'],
@@ -199,7 +219,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Foxglove',
     canonicalName: 'Digitalis purpurea',
     nomenclature: 'botanical',
-    form: 'Leaf',
+    variants: [{ form: 'Leaf' }],
     description: 'The other broad hairy leaf, and the reason the compendium demands a formal name.',
     elements: ['water'],
     planets: ['Venus'],
@@ -211,7 +231,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Uncaria tomentosa',
     nomenclature: 'botanical',
-    form: 'Bark',
+    variants: [{ form: 'Bark' }],
     description: 'Inner bark of the Amazonian vine.',
     elements: ['earth'],
     categories: ['Healing', 'Strength'],
@@ -221,7 +241,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Uncaria guianensis',
     nomenclature: 'botanical',
-    form: 'Bark',
+    variants: [{ form: 'Bark' }],
     description: 'The other Uncaria sold under the same name, and not the same plant.',
     elements: ['earth'],
     categories: ['Healing'],
@@ -231,7 +251,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Senegalia greggii',
     nomenclature: 'botanical',
-    form: 'Thorn',
+    variants: [{ form: 'Thorn' }],
     description: 'Hooked thorns off the desert acacia. Renamed out of Acacia, like two of its kin.',
     elements: ['earth'],
     categories: ['Binding', 'Protection'],
@@ -241,7 +261,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Dolichandra unguis-cati',
     nomenclature: 'botanical',
-    form: 'Leaf',
+    variants: [{ form: 'Leaf' }],
     description: 'A climbing vine whose tendrils hook like claws.',
     elements: ['earth'],
     categories: ['Binding'],
@@ -251,7 +271,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: "Cat's Claw",
     canonicalName: 'Felis catus',
     nomenclature: 'zoological',
-    form: 'Claw',
+    variants: [{ form: 'Claw' }],
     description: 'A claw, shed or clipped, kept from a household cat.',
     elements: ['spirit'],
     categories: ['Familiar Work', 'Protection'],
@@ -260,7 +280,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Beeswax',
     canonicalName: 'Apis mellifera',
     nomenclature: 'zoological',
-    form: 'Wax',
+    variants: [{ form: 'Wax' }],
     description: 'Comb rendered and strained, still smelling of the hive.',
     elements: ['earth'],
     planets: ['Venus'],
@@ -270,7 +290,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Reishi',
     canonicalName: 'Ganoderma lingzhi',
     nomenclature: 'fungal',
-    form: 'Mushroom',
+    variants: [{ form: 'Mushroom' }],
     description: 'Lacquered shelf fungus, sliced and dried.',
     elements: ['earth'],
     categories: ['Longevity', 'Wisdom'],
@@ -280,7 +300,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Fly Agaric',
     canonicalName: 'Amanita muscaria',
     nomenclature: 'fungal',
-    form: 'Mushroom',
+    variants: [{ form: 'Mushroom' }],
     description: 'Red cap, white flecks. Kept as a curio rather than a preparation.',
     elements: ['air'],
     safetyNotes: 'Ibotenic acid and muscimol. Not a food, and not a tea.',
@@ -291,7 +311,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Amethyst',
     canonicalName: 'Quartz var. amethyst',
     nomenclature: 'mineral',
-    form: 'Crystal',
+    variants: [{ form: 'Crystal' }],
     description: 'Purple quartz, a variety rather than a species of its own.',
     elements: ['water'],
     categories: ['Intuition', 'Sleep', 'Clarity'],
@@ -300,7 +320,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Selenite',
     canonicalName: 'Gypsum var. selenite',
     nomenclature: 'mineral',
-    form: 'Crystal',
+    variants: [{ form: 'Crystal' }],
     description: 'Clear bladed gypsum. Dissolves in water, so it is never charged in it.',
     elements: ['spirit'],
     categories: ['Cleansing', 'Purification'],
@@ -311,7 +331,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Lapis Lazuli',
     canonicalName: 'Lapis lazuli',
     nomenclature: 'mineral',
-    form: 'Stone',
+    variants: [{ form: 'Stone' }],
     description: 'Lazurite-bearing rock flecked with pyrite.',
     elements: ['air'],
     categories: ['Truth', 'Wisdom'],
@@ -320,7 +340,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Sea Salt',
     canonicalName: 'Sodium chloride',
     nomenclature: 'chemical',
-    form: 'Salt',
+    variants: [{ form: 'Salt' }],
     description: 'Coarse grey salt, evaporated rather than mined.',
     elements: ['water', 'earth'],
     categories: ['Cleansing', 'Warding'],
@@ -329,7 +349,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Saltpetre',
     canonicalName: 'Potassium nitrate',
     nomenclature: 'chemical',
-    form: 'Powder',
+    variants: [{ form: 'Powder' }],
     description: 'White crystalline powder, ground fine.',
     elements: ['fire'],
     safetyNotes: 'An oxidiser. Kept away from anything that burns.',
@@ -339,7 +359,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // `none` is a positive claim: no naming system names this thing.
     name: 'Graveyard Dirt',
     nomenclature: 'none',
-    form: 'Earth',
+    variants: [{ form: 'Earth' }],
     description: 'Dirt taken from a grave, paid for at the gate.',
     elements: ['earth'],
     categories: ['Ancestor Work', 'Spirit Work'],
@@ -347,7 +367,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
     name: 'Moon Water',
     nomenclature: 'none',
-    form: 'Water',
+    variants: [{ form: 'Water' }],
     description: 'Water left out under a full moon.',
     elements: ['water'],
     categories: ['Psychic Work', 'Divination'],
@@ -356,7 +376,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // A preparation rather than a substance, which is why no system names it.
     name: 'Black Salt',
     nomenclature: 'none',
-    form: 'Salt',
+    variants: [{ form: 'Salt' }],
     description: 'Salt blackened with ash, scraped soot or ground charcoal.',
     elements: ['earth'],
     categories: ['Banishing', 'Warding'],
@@ -366,7 +386,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     // looked it up — the curation to-do row.
     name: "Devil's Shoestring",
     nomenclature: 'unknown',
-    form: 'Root',
+    variants: [{ form: 'Root' }],
     description: 'Wiry root cut into lengths, tied and carried.',
     elements: ['earth'],
     categories: ['Protection', 'Gambling'],
@@ -378,7 +398,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Ginger',
     canonicalName: 'Zingiber officinale',
     nomenclature: 'botanical',
-    form: 'Root',
+    variants: [{ form: 'Root' }],
     description: 'Knobbed root, sliced and dried.',
     elements: ['fire'],
     planets: ['Mars'],
@@ -395,8 +415,17 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
  * writes its grimoire alongside these rows, so a half-applied scenario cannot
  * be a grimoire referencing rows that are not there. Assumes the GUC is
  * published and the bootstrap user exists.
+ *
+ * `restoreDeletedDeityPicks` is `standard`'s reset of its fixtures: on, a
+ * compendium deity pick an admin deleted comes back on the next run. `demo`
+ * turns it off, since a person explores it and a deletion there is theirs —
+ * claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
+ * pick back; demo does not".
  */
-export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
+export async function seedStandardContent(
+  tx: SeedTransaction,
+  { restoreDeletedDeityPicks = true }: { restoreDeletedDeityPicks?: boolean } = {},
+): Promise<void> {
   // Reference data first: an ingredient is filed under a category by foreign
   // key. Inside this transaction so a scenario is never half-applied.
   await seedFormVocabulary(tx);
@@ -406,13 +435,21 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
   await seedVocabularySources(tx);
 
   await insertMissingUsers(tx);
-  await insertMissingAdminBootstrap(tx);
   await insertMissingWorkspaces(tx);
   await insertMissingMemberships(tx);
 
   const ingredientIds = await insertMissingIngredients(tx);
+  await reslugIngredients(tx, [...ingredientIds.values()]);
+  await insertMissingVariants(
+    tx,
+    COMPENDIUM_INGREDIENTS.map((entry) => ({
+      ingredientId: ingredientIdFor(entry, ingredientIds),
+      variants: entry.variants,
+    })),
+    await pickedIdByName(tx, ingredientForms),
+  );
   await insertMissingFolkNames(tx, ingredientIds);
-  await insertMissingDeities(tx, ingredientIds);
+  await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
 }
 
@@ -424,7 +461,7 @@ export async function seedStandardContent(tx: SeedTransaction): Promise<void> {
  */
 async function pickedIdByName(
   tx: SeedTransaction,
-  table: typeof ingredientForms | typeof deities,
+  table: PickedTable,
 ): Promise<Map<string, string>> {
   const rows = await tx
     .select({ id: table.id, name: table.name })
@@ -441,6 +478,9 @@ async function pickedIdByName(
   return ids;
 }
 
+/** A name as the unique indexes on `lower(name)` compare it. */
+const lowerCase = (name: string) => name.toLowerCase();
+
 function pickOf(ids: Map<string, string>, name: string, what: string): string {
   return requireFrom(
     ids,
@@ -453,142 +493,202 @@ function pickOf(ids: Map<string, string>, name: string, what: string): string {
 // ignoring `deleted_at` so a soft-deleted entry is not quietly restored, and
 // updates nothing already present.
 
+// The cast holds its privileges from its first insert, so the trigger on
+// `users` records them, by the seed's route, `bootstrap` (MB.195). A–D's
+// creation grants are stamped as the seed's own user, which inserts them. E
+// is inserted alone and as itself, so its two grants are stamped as E, as a
+// primary admin's promotion is stamped as that admin; its `users` row is
+// still the seed's, as every seeded row is.
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
-  const wanted = Object.values(FIXTURE_USERS);
+  const { E, ...cast } = FIXTURE_USERS;
 
-  await insertMissing(tx, users, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: users.id })
-          .from(users)
-          .where(
-            inArray(
-              users.id,
-              wanted.map((user) => user.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (user) => user.id,
-    toRow: (user) => user,
-  });
+  await declaringBootstrapPrivileges(tx, BOOTSTRAP_SESSION.userId, () =>
+    insertMissingFixtureUsers(tx, Object.values(cast)),
+  );
+  await declaringBootstrapPrivileges(tx, E.id, () => insertMissingFixtureUsers(tx, [E]));
 }
 
-// Fixture E's ledger row, as MB.58's migration writes one for every admin a
-// database already holds: one `bootstrap` row, stamped as E. Not
-// `insertMissing`, which stamps as the bootstrap user.
-async function insertMissingAdminBootstrap(tx: SeedTransaction): Promise<void> {
-  const admin = FIXTURE_USERS.E.id;
-  const [present] = await tx
-    .select({ id: adminRoleChanges.id })
-    .from(adminRoleChanges)
-    .where(eq(adminRoleChanges.userId, admin))
-    .limit(1);
-  if (present) return;
-
-  await tx
-    .insert(adminRoleChanges)
-    .values(
-      applyAudit('insert', { userId: admin, change: 'bootstrap' as const }, { userId: admin }),
-    );
+async function insertMissingFixtureUsers(
+  tx: SeedTransaction,
+  wanted: readonly FixtureUser[],
+): Promise<void> {
+  await insertMissingBy(tx, users, wanted, { columns: ['id'], toRow: (user) => user });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, workspaces, FIXTURE_WORKSPACES, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: workspaces.id })
-          .from(workspaces)
-          .where(
-            inArray(
-              workspaces.id,
-              FIXTURE_WORKSPACES.map((workspace) => workspace.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (workspace) => workspace.id,
+  await insertMissingBy(tx, workspaces, FIXTURE_WORKSPACES, {
+    columns: ['id'],
     toRow: (workspace) => ({ ...workspace, slug: slugify(workspace.name) }),
   });
 }
 
 async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, workspaceMembers, MEMBERSHIPS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ workspaceId: workspaceMembers.workspaceId, userId: workspaceMembers.userId })
-          .from(workspaceMembers)
-      ).map((row) => `${row.workspaceId}|${row.userId}`),
-    keyOf: (membership) => `${membership.workspaceId}|${membership.userId}`,
+  await insertMissingBy(tx, workspaceMembers, MEMBERSHIPS, {
+    columns: ['workspaceId', 'userId'],
     toRow: (membership) => membership,
   });
 }
 
 /**
- * Keys on the three columns `canonical_key` reads rather than recomputing the
- * expression in TypeScript. The form alone is folded as the key folds it: a
- * database seeded before MB.162 spelt the compendium's forms lower-case, and
- * keyed on the spelling a reseed would insert each entry beside itself and fail
- * on the canonical-key index. It says nothing about the tier, so a caller
- * builds its map from one tier's rows.
+ * An entry's identity as the seed keys it: its formal name, or its label
+ * without one, lower-cased (MB.222) — what `identity_key` holds, which the
+ * identity indexes keep once per tier. Keyed on that rather than the label, so
+ * an entry an admin or a member relabelled is still the one the seed wrote,
+ * and is not inserted again beside itself, which the index would refuse. A
+ * row's key is the generated column itself; a literal's is folded here, where
+ * JavaScript's lower-casing agrees with Postgres's on the seed's ASCII names.
+ * It says nothing about the tier, so a caller builds its map from one tier's
+ * rows.
  */
-export function identityOf(entry: {
-  name: string;
-  canonicalName?: string | null;
-  form?: string | null;
-}): string {
-  return `${entry.name}|${entry.canonicalName ?? ''}|${entry.form?.trim().toLowerCase() ?? ''}`;
+export function identityOf(entry: { name: string; canonicalName?: string | null }): string {
+  return (entry.canonicalName ?? entry.name).toLowerCase();
 }
 
 /**
- * Inserts what is missing and returns every seeded entry's id, by identity.
- * Not `insertMissing`: the one caller that needs the inserted rows back, and
- * `.returning()` for one caller is not worth a second helper.
+ * Each row's id by its `identity_key`, a live row over a deleted one holding
+ * the same key, so what the seed writes beside an entry lands on the live one.
+ */
+function idsByIdentity(
+  rows: readonly { id: string; identityKey: string; deletedAt: Date | null }[],
+): Map<string, string> {
+  const ordered = [...rows].sort(
+    (a, b) => Number(a.deletedAt === null) - Number(b.deletedAt === null),
+  );
+  return new Map(ordered.map((row) => [row.identityKey, row.id]));
+}
+
+/**
+ * Inserts what is missing and returns every seeded entry's id, by identity,
+ * over the compendium tier's rows, deleted or not.
  */
 async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string, string>> {
   const existing = await tx
     .select({
       id: ingredients.id,
-      name: ingredients.name,
-      canonicalName: ingredients.canonicalName,
-      form: ingredients.form,
+      identityKey: ingredients.identityKey,
+      deletedAt: ingredients.deletedAt,
     })
     .from(ingredients)
     .where(isNull(ingredients.workspaceId));
 
-  const ids = new Map(existing.map((row) => [identityOf(row), row.id]));
-  const missing = COMPENDIUM_INGREDIENTS.filter((entry) => !ids.has(identityOf(entry)));
+  return insertMissingReturningIds(
+    tx,
+    ingredients,
+    COMPENDIUM_INGREDIENTS,
+    idsByIdentity(existing),
+    {
+      keyOf: identityOf,
+      keyOfRow: (row) => row.identityKey,
+      toRow: ({
+        variants: _variants,
+        folkNames: _folkNames,
+        categories: _categories,
+        deities: _deities,
+        ...entry
+      }) => ({
+        ...entry,
+        slug: ingredientSlug(entry.name, entry.canonicalName),
+      }),
+    },
+  );
+}
 
-  if (missing.length > 0) {
-    const formIds = await pickedIdByName(tx, ingredientForms);
-    const inserted = await tx
-      .insert(ingredients)
-      .values(
-        missing.map(
-          ({ folkNames: _folkNames, categories: _categories, deities: _deities, ...entry }) =>
-            applyAudit(
-              'insert',
-              {
-                ...entry,
-                formId: entry.form ? pickOf(formIds, entry.form, 'form') : null,
-                slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
-              },
-              BOOTSTRAP_SESSION,
-            ),
+/**
+ * The backfill a slug without its form needs (MB.220), run on every seed over
+ * the seed's own entries, `ingredientIds`: each live entry's slug re-derived
+ * from its label and formal name and written where it differs, so a reseed
+ * with nothing to change writes nothing. A compendium entry's old slug is
+ * retired, to redirect for 180 days as an admin's save retires one (MB.82); a
+ * coven's retires nothing, since no route reads it. A rewrite in SQL would be
+ * a second slug rule (0025's precedent), so the seed is the backfill for its
+ * own rows, and every other row moves at its next save. A slug another live
+ * row of the tier already holds is left as it is, so a reseed never fails on
+ * a row an admin wrote.
+ */
+export async function reslugIngredients(
+  tx: SeedTransaction,
+  ingredientIds: readonly string[],
+): Promise<void> {
+  if (ingredientIds.length === 0) return;
+  const rows = await tx
+    .select({
+      id: ingredients.id,
+      workspaceId: ingredients.workspaceId,
+      name: ingredients.name,
+      canonicalName: ingredients.canonicalName,
+      slug: ingredients.slug,
+    })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, ingredientIds), isNull(ingredients.deletedAt)));
+
+  for (const { id, workspaceId, name, canonicalName, slug } of rows) {
+    const derived = ingredientSlug(name, canonicalName);
+    if (derived === slug) continue;
+    const [holder] = await tx
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(
+        and(
+          workspaceId === null
+            ? isNull(ingredients.workspaceId)
+            : eq(ingredients.workspaceId, workspaceId),
+          eq(ingredients.slug, derived),
+          ne(ingredients.id, id),
+          isNull(ingredients.deletedAt),
         ),
-      )
-      .returning({
-        id: ingredients.id,
-        name: ingredients.name,
-        canonicalName: ingredients.canonicalName,
-        form: ingredients.form,
-      });
+      );
+    if (holder) continue;
 
-    for (const row of inserted) ids.set(identityOf(row), row.id);
+    await tx
+      .update(ingredients)
+      .set(applyAudit('update', { slug: derived }, BOOTSTRAP_SESSION) as never)
+      .where(eq(ingredients.id, id));
+    if (workspaceId === null) {
+      await tx
+        .insert(retiredIngredientSlugs)
+        .values(
+          applyAudit(
+            'insert',
+            { ingredientId: id, workspaceId: null, slug },
+            BOOTSTRAP_SESSION,
+          ) as never,
+        );
+    }
   }
+}
 
-  return ids;
+/**
+ * Each entry's forms as its variants (MB.222), `entries` naming the entry's
+ * id beside the forms its literal lists, so every seeded layer can name one.
+ * `formIds` picks each form by name from the curated rows, as an admin's
+ * compendium form is a pick (MB.162); without it a form is typed, as a
+ * coven's may be. Keyed as the variant's unique index keys it, the entry and
+ * the folded form; a variant an admin removed counts as present, so it is not
+ * restored, and one already there is not rewritten.
+ */
+export async function insertMissingVariants(
+  tx: SeedTransaction,
+  entries: readonly { ingredientId: string; variants: readonly SeedVariant[] }[],
+  formIds?: Map<string, string>,
+): Promise<void> {
+  if (entries.length === 0) return;
+  const wanted = entries.flatMap(({ ingredientId, variants }) =>
+    variants.map((variant) => ({
+      ...variant,
+      ingredientId,
+      formId: formIds ? pickOf(formIds, variant.form, 'form') : null,
+    })),
+  );
+
+  await insertMissingBy(tx, ingredientVariants, wanted, {
+    columns: ['ingredientId', 'form'],
+    fold: { form: (form) => form.trim().toLowerCase() },
+    where: inArray(
+      ingredientVariants.ingredientId,
+      entries.map((entry) => entry.ingredientId),
+    ),
+    toRow: (variant) => ({ ...variant, form: variant.form.trim() }),
+  });
 }
 
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
@@ -611,53 +711,68 @@ async function insertMissingFolkNames(
   );
 
   // Case-folded because the unique index is on `lower(name)`.
-  await insertMissing(tx, ingredientFolkNames, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({
-            ingredientId: ingredientFolkNames.ingredientId,
-            name: ingredientFolkNames.name,
-          })
-          .from(ingredientFolkNames)
-      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-    keyOf: (folkName) => `${folkName.ingredientId}|${folkName.name.toLowerCase()}`,
+  await insertMissingBy(tx, ingredientFolkNames, wanted, {
+    columns: ['ingredientId', 'name'],
+    fold: { name: lowerCase },
     toRow: (folkName) => folkName,
   });
 }
 
 /**
- * Each entry's deities, picked in the literal's order, counted from 0 as the
- * list keeps the order entered. Keyed on the case-folded name the row holds
- * rather than the pick, over the live rows: a database that ran MB.166's fill
- * already holds these deities as typed names at these positions, and a pick
- * beside each would take a position its typed twin holds.
+ * Each entry's deities, picked in the literal's order. Keyed on the case-folded
+ * name the row holds rather than the pick, over the live rows: a database that
+ * ran MB.166's fill already holds these deities as typed names at these
+ * positions, and a pick beside each would take a position its typed twin
+ * holds. Over every row instead when `restoreDeleted` is off, so a deleted
+ * pick counts as present.
+ *
+ * A missing pick goes after every live pick of its entry, in the literal's
+ * order, rather than at its literal index (MB.192): the service renumbers the
+ * picks it keeps, so a pick removed from anywhere but the end leaves its index
+ * held by the pick below it. On an entry with no live pick that is the literal
+ * index, and no live row moves, so a second run moves nothing —
+ * claude-docs/db/standard-scenario.md.
  */
 async function insertMissingDeities(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
+  restoreDeleted: boolean,
 ): Promise<void> {
   const deityIds = await pickedIdByName(tx, deities);
   const wanted = COMPENDIUM_INGREDIENTS.flatMap((entry) =>
-    (entry.deities ?? []).map((name, position) => ({
+    (entry.deities ?? []).map((name) => ({
       ingredientId: ingredientIdFor(entry, ingredientIds),
       deityId: pickOf(deityIds, name, 'deity'),
       name,
-      position,
     })),
   );
+  const nextPosition = await nextDeityPositions(tx);
+  const placed = (ingredientId: string) => {
+    const position = nextPosition.get(ingredientId) ?? 0;
+    nextPosition.set(ingredientId, position + 1);
+    return position;
+  };
 
-  await insertMissing(tx, ingredientDeities, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ ingredientId: ingredientDeities.ingredientId, name: ingredientDeities.name })
-          .from(ingredientDeities)
-          .where(isNull(ingredientDeities.deletedAt))
-      ).map((row) => `${row.ingredientId}|${row.name.toLowerCase()}`),
-    keyOf: (deity) => `${deity.ingredientId}|${deity.name.toLowerCase()}`,
-    toRow: (deity) => deity,
+  await insertMissingBy(tx, ingredientDeities, wanted, {
+    columns: ['ingredientId', 'name'],
+    fold: { name: lowerCase },
+    where: restoreDeleted ? isNull(ingredientDeities.deletedAt) : undefined,
+    // Called once per missing pick, in the literal's order.
+    toRow: (deity) => ({ ...deity, position: placed(deity.ingredientId) }),
   });
+}
+
+/** One past each ingredient's highest live deity position: the end of its list. */
+async function nextDeityPositions(tx: SeedTransaction): Promise<Map<string, number>> {
+  const rows = await tx
+    .select({
+      ingredientId: ingredientDeities.ingredientId,
+      position: max(ingredientDeities.position),
+    })
+    .from(ingredientDeities)
+    .where(isNull(ingredientDeities.deletedAt))
+    .groupBy(ingredientDeities.ingredientId);
+  return new Map(rows.map((row) => [row.ingredientId, (row.position ?? -1) + 1]));
 }
 
 async function insertMissingCategoryAssignments(
@@ -678,17 +793,8 @@ async function insertMissingCategoryAssignments(
 
   // Hard-deleted (MB.34): the four-column stamp set, so `applyAudit` stamps
   // fewer columns.
-  await insertMissing(tx, ingredientCategories, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({
-            ingredientId: ingredientCategories.ingredientId,
-            categoryId: ingredientCategories.categoryId,
-          })
-          .from(ingredientCategories)
-      ).map((row) => `${row.ingredientId}|${row.categoryId}`),
-    keyOf: (assignment) => `${assignment.ingredientId}|${assignment.categoryId}`,
+  await insertMissingBy(tx, ingredientCategories, wanted, {
+    columns: ['ingredientId', 'categoryId'],
     toRow: (assignment) => assignment,
   });
 }

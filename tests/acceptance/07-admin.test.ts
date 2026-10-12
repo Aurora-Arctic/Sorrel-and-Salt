@@ -2,27 +2,32 @@ import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import { formSlug, slugify } from '@/lib/slugify';
+import { deitySlug, formSlug, slugify } from '@/lib/slugify';
 import {
   createCompendiumEntry,
   deleteCompendiumEntry,
   updateCompendiumEntry,
 } from '@/modules/ingredients';
-import type { CompendiumIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import {
   createAstrologyValue,
   createCategory,
   createCategoryGroup,
+  createDeity,
+  createDeityTradition,
   createIngredientFormGroup,
   createIngredientFormValue,
   deleteAstrologyValue,
   deleteCategoryGroup,
+  deleteDeity,
+  deleteDeityTradition,
   deleteIngredientFormGroup,
   deleteCategory,
   deleteIngredientFormValue,
   updateAstrologyValue,
   updateCategory,
   updateCategoryGroup,
+  updateDeity,
+  updateDeityTradition,
   updateIngredientFormGroup,
   updateIngredientFormValue,
 } from '@/modules/vocabulary';
@@ -32,12 +37,18 @@ import { A, B, C, E, asUser } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
 import { curatedFormId } from '../support/db/curated-ids';
 import { insertIngredient } from '../support/db/insert-ingredient';
-import { type IngredientFixture, makeIngredient } from '../support/fixtures';
+import {
+  type IngredientFixture,
+  makeIngredient,
+  makeVariant,
+  variantInput,
+} from '../support/fixtures';
 import type { Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2), the category
-// vocabulary's (M5.6), the form vocabulary's (M5.6a), the planets' and the
-// signs' (MB.95), and the two group vocabularies' (M5.6b).
+// vocabulary's (M5.6), the form vocabulary's (M5.6a), the celestial bodies' and the
+// signs' (MB.95), the two group vocabularies' (M5.6b), and the deities' and
+// their traditions' (MB.132).
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -46,16 +57,29 @@ useTestDatabase((client) => {
 
 /**
  * The fixture as the shared Zod input: everything but the tier and the
- * category names, its form picked from the curated row it names, as the
- * admin's form picks one (MB.167).
+ * category names, each form picked from the curated row it names, as the
+ * admin's form picks one (MB.167) — so a fixture here states curated forms.
  */
-async function inputOf(fixture: IngredientFixture): Promise<CompendiumIngredientInput> {
-  const { workspaceId: _tier, categories: _categories, substitutes, deities, ...input } = fixture;
+async function inputOf(
+  fixture: IngredientFixture,
+): Promise<Parameters<typeof createCompendiumEntry>[1]> {
+  const {
+    workspaceId: _tier,
+    categories: _categories,
+    substitutes,
+    deities,
+    variants,
+    ...input
+  } = fixture;
   return {
     ...input,
-    formId: input.form == null ? null : await curatedFormId(sql, input.form),
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
+    variants: await Promise.all(
+      variants.map(async (variant) =>
+        variantInput(variant, { formId: await curatedFormId(sql, variant.form) }),
+      ),
+    ),
   };
 }
 
@@ -98,7 +122,7 @@ async function membershipRole(userId: string): Promise<string | undefined> {
 
 describe('Story 17: Be prevented from editing compendium entries.', () => {
   it('refuses an update and a delete from the owner, a member and a viewer of a coven alike, and the entry stays as it was', async () => {
-    const fixture = makeIngredient();
+    const fixture = makeIngredient({ variants: [makeVariant({ form: 'Herb' })] });
     const id = await insertIngredient(sql, fixture, E.id);
     const before = await entryRow(id);
 
@@ -137,7 +161,11 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     // Why each write could have been refused: E's row, not only the session, says admin.
     expect(await siteRole(E.id)).toBe('admin');
 
-    const fixture = makeIngredient({ name: 'Testcap', nomenclature: 'fungal' });
+    const fixture = makeIngredient({
+      name: 'Testcap',
+      nomenclature: 'fungal',
+      variants: [makeVariant({ form: 'Mushroom' })],
+    });
     const entry = await createCompendiumEntry(admin, await inputOf(fixture));
     expect(await entryRow(entry.id)).toMatchObject({
       name: 'Testcap',
@@ -233,7 +261,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
   });
 
   it.each([
-    ['a planet', 'planets', 'planets'],
+    ['a celestial body', 'planets', 'planets'],
     ['a zodiac sign', 'zodiacSigns', 'zodiac_signs'],
   ] as const)(
     'lets the site admin add, edit and soft-delete %s, every write stamped as the admin and the deleted row kept',
@@ -337,5 +365,73 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
     const [matterRow] =
       await sql`select deleted_by from ingredient_form_groups where id = ${matter.id}`;
     expect(matterRow.deleted_by).toBe(E.id);
+  });
+
+  it('lets the site admin add, edit and soft-delete a deity and a tradition, moving what it holds, every write stamped as the admin and the deleted rows kept', async () => {
+    const admin = asUser(E);
+    expect(await siteRole(E.id)).toBe('admin');
+    const [greek] = await sql<{ id: string }[]>`
+      select id from deity_traditions where name = 'Greek' and deleted_at is null`;
+    const deityRow = async (id: string) => {
+      const [row] = await sql<({ name: string; slug: string; tradition_id: string } & Stamps)[]>`
+        select name, slug, tradition_id, created_by, updated_by, updated_at, deleted_at, deleted_by
+        from deities where id = ${id}
+      `;
+      return row;
+    };
+
+    // A tradition, renamed, and a deity under it, renamed onto the entry that picked it.
+    const folk = await createDeityTradition(admin, {
+      name: 'Fixture Folk',
+      description: 'A tradition this test made',
+    });
+    await updateDeityTradition(admin, folk.id, {
+      name: 'Fixture Lore',
+      description: 'Renamed',
+    });
+    const deity = await createDeity(admin, {
+      name: 'Fixture Testra',
+      description: 'A god this test made',
+      traditionId: folk.id,
+    });
+    expect(await deityRow(deity.id)).toMatchObject({
+      slug: deitySlug('Fixture Testra', 'Fixture Lore'),
+      tradition_id: folk.id,
+      created_by: E.id,
+      deleted_at: null,
+    });
+    const entry = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Testwort', nomenclature: 'none' }),
+      A.id,
+    );
+    const [link] = await sql<{ id: string }[]>`
+      insert into ingredient_deities (ingredient_id, deity_id, name, position, created_by, updated_by)
+      values (${entry}, ${deity.id}, 'Fixture Testra', 0, ${A.id}, ${A.id})
+      returning id`;
+    await updateDeity(admin, deity.id, {
+      name: 'Fixture Mockra',
+      description: 'Renamed',
+      traditionId: folk.id,
+    });
+    const [renamed] =
+      await sql`select name, updated_by from ingredient_deities where id = ${link.id}`;
+    expect(renamed).toEqual({ name: 'Fixture Mockra', updated_by: E.id });
+
+    // The tradition goes, its deity moved off it; the deity is held by the entry until freed.
+    await deleteDeityTradition(admin, folk.id, greek.id);
+    expect(await deityRow(deity.id)).toMatchObject({
+      tradition_id: greek.id,
+      slug: deitySlug('Fixture Mockra', 'Greek'),
+      updated_by: E.id,
+    });
+    await expect(deleteDeity(admin, deity.id)).rejects.toThrow(Forbidden);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${entry}`;
+    await deleteDeity(admin, deity.id);
+    const deleted = await deityRow(deity.id);
+    expect(deleted).toMatchObject({ deleted_by: E.id });
+    expect(deleted.deleted_at).not.toBeNull();
+    const [folkRow] = await sql`select deleted_by from deity_traditions where id = ${folk.id}`;
+    expect(folkRow.deleted_by).toBe(E.id);
   });
 });

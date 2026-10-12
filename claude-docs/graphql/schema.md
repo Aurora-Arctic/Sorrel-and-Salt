@@ -51,6 +51,35 @@ stays under `src/graphql/schema/` ([`modules.md`](../modules.md)).
   `/api/auth/ok`: it answers without a session or the database, which is what
   the route's tests and the e2e spec probe the endpoint with.
 
+### Resolver helpers
+
+A resolver holds only what the transport adds to the service it calls, and
+the transport's share is written once, in `src/graphql/context-helpers.ts`
+(MB.212). None of it decides who may: that is the service's (CLAUDE.md
+rule 1).
+
+- **`sessionOf(context)`** is the session, non-null, or `Forbidden` for a
+  signed-out caller: the refusal a field scope gives, so the transport maps
+  one shape. It narrows the type for a service that takes a `Session`; a
+  scoped field has refused a null session already, and the service checks
+  again. `.oxlintrc.json` holds a module's resolvers and loaders to it: oxlint
+  has no `no-restricted-syntax` to refuse `if (!session) throw new
+Forbidden()` itself, so its `src/modules/*/graphql/**` and
+  `src/modules/*/loaders/**` override refuses a runtime import of
+  `Forbidden`, which the statement cannot be written without and which
+  neither directory has another use for.
+- **`definedArgs(args)`** makes each null absent: GraphQL sends null for an
+  optional argument or input field, and a service's filter or input takes
+  `undefined`. A list passes the fields it names, `definedArgs({ query,
+groupId })`, never a connection's whole `args`, which also carry `first`
+  and the cursors. A lone scalar keeps its `?? undefined` in place.
+- **`suggestionConnection(name, type, suggest)`** registers a picker's
+  suggestion field — `planetSuggestions`, `zodiacSuggestions`,
+  `formSuggestions`, `deitySuggestions`, `commonNameSuggestions` and
+  `referenceSuggestions` — as one connection taking an optional
+  `workspaceId` and `query`, an absent `query` sent as a blank one.
+  `ingredientSuggestions`, whose `workspaceId` is required, is written out.
+
 ### `me`, `User` and the first module types
 
 `me: User!` is the signed-in user, read through `getMe(session)` in the
@@ -82,13 +111,25 @@ reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
 the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
 bounded by its parent, like every nested list (DESIGN.md §7).
 
-`users(query: String, awaitingApproval: Boolean)` is the admin user list
+`users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
 its scope and no second path. `query` matches a substring of the name or the
-email, and `awaitingApproval` narrows to `canCreateWorkspace = false`. Its
+email, `awaitingApproval` narrows to `canCreateWorkspace = false`, and `role`
+to one site role. Its
 service, `listUsers`, refuses anyone but a site admin, and the query carries
 no scope of its own: it is a read, which M5.7's mutation sweep does not reach
 ([`auth/admin-users.md`](../auth/admin-users.md), "The user list").
+
+`privilegeChanges(userId: ID, privilege: UserPrivilege, query: String)` is
+the privilege ledger (MB.199; `query`, part of the subject's name or email,
+MB.200's), a paged connection of `PrivilegeChange`, newest first: `id`,
+`privilege`, `change` (`PrivilegeChangeKind`), `via` (`PrivilegeRoute`), the
+nullable `note`, `audit`, and `subject` and `actor` as the ordinary `User`,
+nullable where no live account holds the id. The two share the
+`usersByIdForAdmin` loader, so a page reads its users once. The query carries
+the `admin` scope, the first paged connection to, and its service,
+`listPrivilegeChanges`, refuses anyone but a site admin again
+([`auth/admin-users.md`](../auth/admin-users.md), "The privilege ledger").
 
 `setEmail(email: String!, next: String): User!` is the schema's first
 mutation (MB.54), registered by `identity` on the `Mutation` root that
@@ -100,6 +141,40 @@ changes only once the mailed link is followed
 ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The email page") — and a refusal, an address held by
 another verified account or a second mail inside the minute included, is a
 `VALIDATION` error on the `email` field.
+
+`setName(name: String!): User!` is the account page's Name section (MB.88):
+signed-in only, by scope, and `setName` in the identity module renames the
+session's own row, trimmed, through `withAudit`. A blank or over-long name
+is a `VALIDATION` error on `name`, and a provisional account is
+`FORBIDDEN` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
+account page").
+
+`grantWorkspaceCreation(userId: ID!): User!` and
+`revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
+undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's
+ledger, and answers the row. Each carries the `admin` scope, and its service
+refuses anyone but a site admin again, as it refuses a change that changes
+nothing and an admin's flag, as `FORBIDDEN` with a message naming the user ([`auth/admin-users.md`](../auth/admin-users.md), "Approving workspace
+creation").
+
+Their GraphQL files hold the transport's half (MB.180, MB.186;
+["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
+says what that half is), and a signed-out caller at `me`, `users`,
+`setEmail`, `setName`, the two creation writes and `privilegeChanges` is `tests/db/graphql-query-scopes.test.ts`'s.
+`tests/modules/identity/graphql/me.test.ts` holds the caller's own row and
+`memberships` through the request's loader. `users.test.ts` holds the default
+page and the filters reaching `listUsers`, the nodes being `me`'s
+`User`, and `providers`' `admin` scope refused on a user's own row; who is
+refused the list is `services/user-list.test.ts`'s. `user-private-fields.test.ts`
+holds the four private fields' `self`-or-`admin` scope, below.
+`set-email.test.ts` holds `next` reaching the sender, and one `VALIDATION`;
+every refusal's rule is `services/email.test.ts`'s.
+`workspace-creation.test.ts` holds, per write, an admin's answer and one
+refusal per error code the service gives an admin; who is refused, and the
+`admin` scope, are `services/workspace-creation.test.ts`'s and the sweep's.
+`privilege-changes.test.ts` holds every field, the filters reaching the
+service, one user read per page, and one non-admin's `FORBIDDEN`; the order and
+who the service refuses are `services/privilege-changes.test.ts`'s.
 
 ### `planetSuggestions` and `zodiacSuggestions`
 
@@ -125,12 +200,11 @@ type CorrespondenceSuggestion {
   ([`db/member-autofill.md`](../db/member-autofill.md), "The member's autofill").
 - **`query` is optional.** Blank or absent, the field lists the whole
   vocabulary and every in-use value, still a page at a time.
-- **Two refusals, one type.** Signed out, the resolver refuses with
+- **Two refusals, one type.** Signed out, the resolver's `sessionOf` refuses with
   `Forbidden` before the service is reached. Signed in, `assertMembership`
   refuses a workspace the caller does not belong to with the same
-  `Forbidden`, a site admin included. The field carries no scope, because
-  `pagedConnection` takes none and the resolver's null check is the same
-  early refusal.
+  `Forbidden`, a site admin included. The field carries no scope, because the
+  resolver's null check is the same early refusal.
 - **A null `workspaceId` reads the compendium alone** (M5.5): the curated
   rows, then the values in use in the compendium, under no proof, so no
   membership is asked and any signed-in caller is answered. It is the admin's
@@ -139,6 +213,13 @@ type CorrespondenceSuggestion {
   The form, not the field, keeps a compendium entry to the curated rows
   (MB.162; [`components/ingredient-form.md`](../components/ingredient-form.md),
   "On the compendium").
+
+`tests/modules/vocabulary/graphql/suggestions.test.ts` holds the transport's
+half (MB.186): the nodes, a page by cursor, `zodiacSuggestions` reading its
+own vocabulary, and the compendium-only mode reaching its service. The buckets,
+an absent `query`, the thresholds and who is refused under a coven are
+`services/suggestions.test.ts`'s; a signed-out caller, under a coven or none, is `tests/db/graphql-query-scopes.test.ts`'s, and a `workspaceId` naming no
+coven `tests/db/graphql-workspace-ids.test.ts`'s.
 
 ### `formSuggestions` and `commonNameSuggestions`
 
@@ -184,7 +265,7 @@ type SuggestionClaimant {
 
 - **`group` is how two same-named forms are told apart.** `ingredient_forms`
   is unique on the slug alone, so "Wax" may be both an _animal_ part and a
-  _substance_, and `ingredients.form` stores the string. The pair comes back as
+  _substance_, and a variant's `form` stores the string. The pair comes back as
   two suggestions, in group order, and a client renders "Wax (Substance)".
 - **`id` is what a pick sends** (MB.167): the curated row's, as `formId`, or
   as a deity entry's `deityId`; null for a value only in use, which is sent
@@ -202,6 +283,13 @@ type SuggestionClaimant {
   signed out, from `assertMembership` when signed in elsewhere, a site admin
   included. So is a null `workspaceId`, which reads the compendium alone
   (M5.5), its claimants included.
+
+`tests/modules/vocabulary/graphql/form-suggestions.test.ts` holds what
+`suggestions.test.ts` holds for the two above, with each curated row's `id`
+and `group` and every suggestion's `claimants`; the rules are
+`services/form-suggestions.test.ts`'s. `commonNameSuggestions`' file,
+`ingredients/graphql/common-names.test.ts`, is described with the compendium's
+reads, below.
 
 ### `deitySuggestions`
 
@@ -230,6 +318,10 @@ type DeitySuggestion {
   (MB.167), is one value in use, folded and counted once, from the compendium
   and the named workspace only.
 - The refusals, and a null `workspaceId`, are `planetSuggestions`'.
+
+`tests/modules/vocabulary/graphql/deity-suggestions.test.ts` holds what
+`suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
+the rules are `services/deity-suggestions.test.ts`'s.
 
 ### `possibleDuplicates`
 
@@ -294,10 +386,10 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   substitute may link only the compendium, so the admin form reads
   `compendium(query)`, which already holds nothing else.
 - **It matches as `compendium` does**, by word similarity at 0.5 against the
-  label, the formal name and the live folk names, accents folded, so a typed
-  prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
+  label, the formal name, the live folk names and the live variants' forms and
+  descriptions, accents folded, so a typed prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
-  first, with no score on the edge, since a picker ranks rather than reports.
+  first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both tiers by name, so an opened box lists something.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
@@ -324,7 +416,7 @@ type QueryCompendiumConnection {
 type QueryCompendiumConnectionEdge {
   cursor: String!
   node: Ingredient!
-  score: Float # the search's word similarity, 0 to 1; null without a search
+  score: Float # the search's weighted rank, 0 to 1; null without a search
 }
 ```
 
@@ -332,9 +424,10 @@ type QueryCompendiumConnectionEdge {
   `form` are the service's, filtered in SQL
   ([`db/compendium-read.md`](../db/compendium-read.md), "The compendium
   read"): the query at least 0.5 word-similar (`<%`) to the label, the formal
-  name or a live folk name, case- and accent-folded, so a prefix and a
+  name, a live folk name, or a live variant's form or description (MB.218),
+  case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
-  adds a mode); the form under `canonical_key`'s fold. The browser never holds more than a page (rule
+  adds a mode); and an entry holding a live variant of the form, trimmed and lower-cased on both sides, so an entry with two forms is found under either, once (MB.222). The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
   that task's argument to add, and matches an entry whose `elements` holds
@@ -347,9 +440,13 @@ type QueryCompendiumConnectionEdge {
   `withoutReferences: false`, is no filter, and `totalCount` counts under
   the same filter.
 - **A search is ranked, best match first.** It pages
-  `(score DESC, name, id)`, and each edge carries `score`: the row's word
-  similarity to the query, the best of the label, the formal name and its folk
-  names. Without a search the list pages `(name, id)` and `score` is null. A
+  `(score DESC, name, id)`, and each edge carries `score`, its rank: the
+  query's word similarity to each field it matched — the label, the formal
+  name, a folk name, a variant's form or description — times that field's
+  weight, the best kept. The weights run from 1 for the label down to 0.2 for
+  a description, so a word in an entry's own name outranks the same word in
+  another entry's prose; the five and why are
+  [`db/compendium-read.md`](../db/compendium-read.md)'s. Without a search the list pages `(name, id)` and `score` is null. A
   query shorter than two characters is no search — one letter would filter and
   rank by noise — so it lists every entry, unranked. The score lives on the
   edge rather than on `Ingredient` because it describes the match, not the
@@ -370,15 +467,16 @@ type QueryCompendiumConnectionEdge {
   `Forbidden` — and without it the read is the compendium alone. A malformed
   id is a miss, not a driver error.
 - **`Ingredient` is declared over the row** (`typeof ingredients.$inferSelect`)
-  and never exposes `canonicalKey` or `workspaceId`. `folkNames`,
+  and never exposes `identityKey` or `workspaceId`. `folkNames`,
   `categories`, `substitutes`, `deities` and `references` go through the five
   ingredient loaders, `folkNamesByIngredient`, `categoriesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient` and
-  `referencesByIngredient`, keyed by the row itself; `Category.group`,
+  `referencesByIngredient`, keyed by the row itself, and `variants` through
+  `variantsByIngredient` (MB.218); `Category.group`,
   `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
-  `deityTraditionsById`; and `formChoice` through `ingredientFormsById`
-  (MB.167; ["Loaders"](loaders.md)).
+  `deityTraditionsById`; and a variant's `formChoice` through
+  `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
   MB.140): `name` is what it shows — the linked ingredient's label, its last
   once deleted, or the typed text — and `ingredient` is the one to follow,
@@ -387,7 +485,17 @@ type QueryCompendiumConnectionEdge {
   `name`. A page of ingredients reads its substitutes in one statement, the
   linked ingredients joined in, through the hatch
   ([`db/soft-delete.md`](../db/soft-delete.md)). It carries no `audit`, as
-  `folkNames` carries none.
+  `folkNames` carries none. `variant` (MB.218) is the linked ingredient's form
+  the link names, null without one and wherever `ingredient` is null: it is
+  found among the linked ingredient's variants through `variantsByIngredient`,
+  so a form is read beneath its ingredient and never by its id alone.
+- **`IngredientVariant` is one form of an ingredient** (DESIGN.md §7, MB.215;
+  built by MB.218): its own fields, `formChoice` (below), and `categories`, `substitutes` and `references`, that form's
+  own additions through `categoriesByVariant`, `substitutesByVariant` and
+  `referencesByVariant`, keyed by the variant row, which carries its
+  ingredient's tier. An ingredient's own lists are its rows with no variant, so
+  nothing appears in both and nothing is merged: a client shows a form's beside
+  its ingredient's (the union rule).
 - **`IngredientDeity` is a pick or a typed name** (DESIGN.md §7, MB.167),
   read as `Substitute` is: `name` is as saved — a pick's curated spelling, or
   the typed text — and `deity` the curated `Deity` picked, null on typed text
@@ -395,9 +503,11 @@ type QueryCompendiumConnectionEdge {
   non-null, `[]` with none, and in the order entered. `Deity` carries its
   `tradition`, which tells two "Hecate"s apart, and is registered by
   `vocabulary` in `graphql/deities.ts` with `DeityTradition`.
-  `Ingredient.formChoice` is the curated `IngredientFormValue` that
-  `formId` records, null when the form was typed and once the form or its
-  group is retired, so the text stands alone.
+  `IngredientVariant.formChoice` is the curated `IngredientFormValue` that
+  the variant's `formId` records, null when the form was typed and once the
+  form or its group is retired, so the text stands alone. `Ingredient` has no
+  `form` or `formChoice` since MB.222: a client reads an entry's forms
+  through `variants`.
 - **`ReferenceLink` is a reference and the link's locator** (DESIGN.md §7,
   MB.151; built by MB.153). `Ingredient.references` is non-null, `[]` with
   none, and filed alphabetically by citation, less a leading quotation mark
@@ -408,17 +518,45 @@ type QueryCompendiumConnectionEdge {
   ([`db/references.md`](../db/references.md)). The `Reference` type is
   ["References"](#references-reference-createreference-updatereference-and-referencesuggestions)'s.
 - **`IngredientFormValue`, not `IngredientForm`**: one row is one permitted
-  value of `ingredients.form`, and `IngredientForm` is the entry-form component
+  value of a variant's `form`, and `IngredientForm` is the entry-form component
   (DESIGN.md §7). Only forms whose group is live are listed, as
   `formSuggestions` counts curated, and the group is what tells two "Wax"
   values apart.
 - **The three refuse nothing a scope would, and a sweep holds the line.**
   `tests/db/graphql-query-scopes.test.ts` names every `Query` field with the
   outcome a null session gets, fails on a field it does not name, and runs
-  each. A query added later has to say which side it is on.
+  each. A query added later has to say which side it is on. Since MB.185 it
+  does the same for every `Mutation` field, all of which refuse, and for
+  every query taking a `workspaceId` it runs a null one too, so the
+  compendium-only mode is no way round the session; `ingredientSuggestions`,
+  whose `workspaceId` is `ID!`, is classified as refused by the SDL before
+  any resolver runs. Each table must equal the schema's field list, and none
+  may be empty, so no resolver file holds a signed-out test of its own. Since
+  M5.7 every `Mutation` field is also named as an admin write or one any
+  session may reach, and each admin write is run signed in as A, a coven's
+  owner who holds no site role, with E admitted and the service's own refusal
+  as the preconditions in the same case
+  (["Auth scopes: the second check"](#auth-scopes-the-second-check) says how it tells
+  the scope from the service).
 - **Cost.** A page of 100 with `categories { group { … } }` prices above
   `MAX_COST`, since a bare list multiplies its selection by 10, and is refused;
   the chip-decorated list pages at 25 or 50 (["Protections"](protections.md)).
+
+The read fields' GraphQL files hold their half the same way (MB.180, MB.185;
+["The workspace ingredient mutations"](#the-workspace-ingredient-mutations)
+below says what that half is). `compendium.test.ts` holds the filters reaching
+the read together, the edge's `score`, the page numbers, one read per page for
+each loader, and one `VALIDATION`; what each filter matches is
+`tests/db/repository/ingredients.test.ts`'s. `ingredient.test.ts` holds the
+coven forwarded, one `NOT_FOUND` and one `FORBIDDEN`. `duplicates.test.ts`,
+`common-names.test.ts` and `ingredient-suggestions.test.ts` hold the nodes,
+the edge's `score` where there is one, a page by cursor, and the
+compendium-only mode reaching its service with a null workspace, with
+`ingredient-suggestions.test.ts`'s one `FORBIDDEN`; the
+thresholds, the scope, what the compendium-only mode answers and who is
+refused are their services' tests' (MB.187).
+
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -441,8 +579,13 @@ signatures DESIGN.md §7's sketch gives them.
   "What the check asks"), and an ingredient
   id that is not one answers `NOT_FOUND`: the same answers a real id the
   caller cannot reach gets, never a masked driver error.
-- **`IngredientInput` is the create's.** Only `name` is required, so story
-  29's one-field stub is `{ name }`. With no formal name, a `nomenclature`
+- **The four ingredient input types spread one field set**,
+  `ingredientInputFields(t, { tier, whole })` in `graphql/ingredient-input.ts`
+  (MB.211): `whole` makes every field non-null, and the compendium tier
+  requires `nomenclature` on a create too. The field descriptions vary with
+  the two switches, so the SDL is the one the four declared by hand.
+- **`IngredientInput` is the create's.** Only `name` and `variants` are
+  required, so story 29's one-field stub is `{ name, variants: [] }` (MB.222). With no formal name, a `nomenclature`
   left out or sent as `null` becomes `none`.
 - **`IngredientUpdateInput` is the whole ingredient, and replaces the row.**
   Every field is non-null, so leaving one out is a schema error rather than a
@@ -483,11 +626,11 @@ signatures DESIGN.md §7's sketch gives them.
   ingredient, a name as written, and a list that changes nothing writes
   nothing.
 - **A form's pick is `formId`, a deity an `IngredientDeityInput`** (MB.167).
-  `formId` sits beside `form`, nullable on the create and non-null on the
-  update, where `""` clears it. It must name a curated form — live, under a
-  live group — and `form` must fold to that form's name, which is written in
-  its spelling; anything else is a `VALIDATION` field error at `['formId']`
-  or `['form']`, never a 23503. A deity entry is `{ deityId }` or `{ name }`,
+  `formId` sits beside `form` on each `IngredientVariantInput`, non-null,
+  where `""` means the form was typed. It must name a curated form — live,
+  under a live group — and `form` must fold to that form's name, which is
+  written in its spelling; anything else is a `VALIDATION` field error at
+  `['variants', i, 'formId']` or `['variants', i, 'form']`, never a 23503. A deity entry is `{ deityId }` or `{ name }`,
   exactly one, as a substitute's is; a deity picked anew must be curated, and
   one the ingredient already holds is kept once retired, sent back by id or
   by name. The list replaces the live rows in the order sent
@@ -506,8 +649,10 @@ signatures DESIGN.md §7's sketch gives them.
   `categories` come through the loaders, after the write has committed. A
   client reconciles its cache from the answer without a refetch.
   `updateIngredient` first clears the entry from `categoriesByIngredient`,
-  `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`
-  and `referencesByIngredient`. Root mutation fields run in turn within one
+  `folkNamesByIngredient`, `substitutesByIngredient`, `deitiesByIngredient`,
+  `referencesByIngredient` and `variantsByIngredient`, and empties the three
+  variant child loaders, through `clearIngredientChildren`, which
+  clears every loader `loaders/ingredient-children.ts` defines (MB.211). Root mutation fields run in turn within one
   request, so an earlier field may already have loaded the categories, folk
   names, substitutes, deities or references this write replaced.
 - **A delete answers the deleted id, not the entity** — the schema's first
@@ -525,15 +670,37 @@ signatures DESIGN.md §7's sketch gives them.
   Either way `data` is null, and the transaction wrote nothing, folk names,
   substitutes and deities included.
 
-`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` runs the three
-mutations through Yoga with the route's `maskedErrors`, so each refusal is
-asserted as the browser receives it.
-
-Since MB.180 the GraphQL file holds the transport's half alone — one refusal per
-error code per field, with its precondition, beside what only the transport can
-show — and the service test owns the rule; MB.185 and MB.186 bring each file and
-the sentences below to that shape
+A GraphQL test file holds the transport's half alone (MB.180): one refusal per
+error code per field, with the precondition that would have let it succeed, beside
+what only the transport can show — the SDL's own refusals, an `authScopes` gate,
+the loaders cleared after a write, one read per page, the edge fields, and a mode
+no service test reaches. Which roles are refused at which rows, and every Zod
+rule, are the service and validation tests' alone
 ([`design-decisions/mb.180-graphql-transport-half.md`](../design-decisions/mb.180-graphql-transport-half.md)).
+Every GraphQL test file runs through `tests/support/graphql/run.ts`, Yoga with
+the route's `maskedErrors`, and reads a refusal as `extensions.code`, never as
+the thrown type — the ingredients files since MB.185, the vocabulary, identity
+and coven files since MB.186. A test that watches a loader or shares one across
+operations, or records what a sender was asked to mail, hands `run` its own.
+
+**`variants` on all four inputs** (MB.219): `[IngredientVariantInput!]!`, each
+a whole form whose every field but `id` is non-null, `""` or `[]` clearing
+one, as MB.159 holds every row-replacing input. The list itself is
+required on all four, the two creates included, since MB.222 removed the
+inputs' top-level `form` and `formId`, which an input without it used to
+read as its one form: a create with no form, such as story 29's one-field
+stub, sends `variants: []`. `SubstituteInput` gains `substituteVariantId`, one
+form of the linked ingredient. A form's refusal is `VALIDATION` pathed to it,
+`['variants', 1, 'form']`. Both update mutations clear `variantsByIngredient`
+with the other child loaders, so a second update in one request answers its
+own forms.
+
+`tests/modules/ingredients/graphql/workspace-ingredients.test.ts` holds the three
+mutations' half: the input that names a tier, or leaves a field out, refused
+before any resolver runs; the answer equal to a fresh read; the child
+loaders cleared between two updates in one request; and per mutation one
+`VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
+and the delete, one `NOT_FOUND`.
 
 ### The compendium mutations
 
@@ -555,8 +722,8 @@ curated values.
   one (DESIGN.md §5). Leaving it out is a schema error before any resolver
   runs.
 - **`CompendiumIngredientUpdateInput` is the whole entry**, every field
-  non-null, `""` or `[]` clearing one and `formId: ""` for no pick, as
-  `IngredientUpdateInput` is (MB.159). `categoryIds` is among them, so an
+  non-null, `""` or `[]` clearing one and a variant's `formId: ""` for no
+  pick, as `IngredientUpdateInput` is (MB.159). `categoryIds` is among them, so an
   update that left it out cannot silently unfile the entry. The update clears
   the entry from the five child loaders first, as `updateIngredient` does.
 - **`endRedirect` answers MB.82's question.** A write taking an address
@@ -570,10 +737,14 @@ curated values.
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
 
-`tests/modules/ingredients/graphql/compendium-entries.test.ts` runs the
-three through Yoga with the route's `maskedErrors`.
+`tests/modules/ingredients/graphql/compendium-entries.test.ts` holds the three
+writes' half: the input left short refused before any resolver runs, the
+loaders cleared between two updates, `endRedirect` reaching the update's
+service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
+for the create. A non-admin at the `admin` scope is the sweep's; who the
+service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
 
-### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
+### References: `Reference`, `reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
 A source, kept once and linked from every row it supports (DESIGN.md §5,
 "References"; MB.151, built by MB.153), registered by `ingredients` over
@@ -582,7 +753,9 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 - **`Reference` is declared over the row** and never exposes `workspaceId`;
   the tier is `isGlobal`, as on `Ingredient`. Its fields are §5's, its
   `kind` the enum `ReferenceKind` with the database's values, `web_page`
-  included, and its two days `LocalDate`s. `citation` is the one renderer's
+  included, and its two days `LocalDate`s. The type's text fields and the
+  input's are built from `REFERENCE_TEXT_FIELDS` (MB.209, MB.212), the one
+  list of them, so a field added to `CitationFields` reaches the wire too. `citation` is the one renderer's
   output joined plain, `renderCitation` in `src/lib/citation.ts`, so a chip,
   a sort and a screen reader read one string; a surface that shows italics
   calls the renderer for its parts.
@@ -597,12 +770,22 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   under `assertSiteAdmin`; a coven's is written under
   `assertMembership(…, { ingredient: ['create'] })` or `['update']`, which
   owners and members hold and viewers, site admins and non-members do not.
-  Both carry `signedIn`. A member citing a compendium reference cannot edit
+  The scope follows the same argument: a null one carries `admin`, a coven's
+  `signedIn` (M5.7). A member citing a compendium reference cannot edit
   it: under their coven the id names nothing there, `NOT_FOUND`, and without
   one the admin check is `FORBIDDEN`. `updateReference` reaches every row
   citing it, so it clears `referencesByIngredient` whole. There is no
-  `deleteReference` in v1. Revalidating the `compendium` tag on a
-  compendium-tier write is M8.7's, with every other admin mutation.
+  `deleteReference` in v1. A compendium-tier write
+  expires the `compendium` tag, as every admin write does (M8.7).
+- **`reference(id, workspaceId)` reads one source whole**, for the
+  ingredient form's edit panel to open on (MB.115): a null `workspaceId`
+  the compendium's alone, a coven's its own or the compendium's, never
+  another coven's — `getReference`, under `ingredient: ['read']`, the
+  picker's tiers and permission, so it answers nothing the picker does not
+  already offer. Another coven's id is `NOT_FOUND`, as an id naming nothing
+  is; a coven the caller is not in is `FORBIDDEN`. It carries no scope and
+  refuses a signed-out caller through `sessionOf`, as the suggestion
+  fields do, whatever the tier. One row, so no connection.
 - **`referenceSuggestions` is the picker's search**, which MB.154's field
   reads: the compendium's references and the named coven's, never another's,
   matched at the compendium search's 0.5 word similarity against `authors`,
@@ -613,8 +796,44 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   alone, asking no membership, which is all a compendium entry may cite
   (M5.5; `planetSuggestions`' bullet says why it stays signed-in).
 
-`tests/modules/ingredients/graphql/references.test.ts` runs the writes, the
-search, `Ingredient.references` and the to-do filter through Yoga.
+`tests/modules/ingredients/graphql/references.test.ts` holds their half: the
+tier the `workspaceId` argument names, `referencesByIngredient` cleared by a
+write, `Ingredient.references` read signed out, `withoutReferences` reaching
+the read, the search's compendium-only mode, and one refusal per error code at
+each field — `VALIDATION` on both writes, `NOT_FOUND` on the update and on
+`reference`, which also reads a source whole; a member
+at the compendium tier's `admin` scope is the sweep's. The tier rule, the order and who else is refused are
+`services/references.test.ts`'s and `services/ingredient-references.test.ts`'s.
+
+### Curated vocabularies: one factory for the seven
+
+Every admin-curated vocabulary — categories and their groups, forms and
+their groups, deities and their traditions, planets and signs — is the same
+type, input and three writes, so `vocabulary/graphql/curated.ts`'s
+`curatedVocabularyWrites` registers them, on the precedent of the loop the
+astrology file held over its two (MB.212). Given an unimplemented
+`objectRef`, it implements the type as `id`, `name`, `slug` and
+`description`; registers `<Type>Input` with `name` and `description`,
+both required, and no slug, which follows the name; and registers
+`create<Type>`, `update<Type>` and `delete<Type>`, each under the `admin`
+scope, the delete answering the id. It answers the implemented ref. What a
+vocabulary adds is told to it:
+
+- **`parent`**, for a value filed under another — a category's `group`, a
+  form's `group`, a deity's `tradition`: the field, read through its loader,
+  and the id column, which is also the input's required `ID`.
+- **`fields` and `input`**, the type's and the input's own: a category
+  group's two colours.
+- **`services`**, the three exported writes, each calling `assertSiteAdmin`
+  itself; the input reaches them through `definedArgs`.
+- **`moveTo`**, present for a group whose delete moves its rows first: the
+  delete takes an optional `moveTo`, and the list names the loaders the move
+  leaves stale. **`clears`** names those an update or a delete leaves stale.
+- **`descriptions`**, the update's and the delete's, passed through, so the
+  SDL is what each file declared by hand; the create carries none.
+
+Each vocabulary's list query stays in its own file, since the filters
+differ. The SDL snapshot is the proof the factory moved nothing.
 
 ### Categories: `categories`, `createCategory`, `updateCategory` and `deleteCategory`
 
@@ -649,10 +868,15 @@ sketch, as the chips read them (MB.36).
   While a live compendium entry is filed under the category it is
   `FORBIDDEN`, and the message names the entries and how many more, verbatim
   to the admin. Both writes clear `categoriesByIngredient`, which an earlier
-  root field may have filled. Revalidating the `compendium` tag is M8.7's.
+  root field may have filled. Each write expires the `compendium` tag (M8.7).
 
-`tests/modules/vocabulary/graphql/categories.test.ts` runs the list and the
-writes through Yoga.
+`tests/modules/vocabulary/graphql/categories.test.ts` holds their half (MB.186):
+a page with its groups in one read, the count, the two filters reaching the
+read and the count, and per write one refusal per error code the service gives
+an admin — `VALIDATION` on the create and the update, `NOT_FOUND` on the
+update and the delete, and the delete's in-use `FORBIDDEN`. A non-admin at the
+`admin` scope is the sweep's; who the service refuses, what a filter matches, a
+malformed `groupId` and every collision are `services/categories.test.ts`'s.
 
 ### Forms: `ingredientFormGroups` and the three form writes
 
@@ -669,23 +893,23 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
   **`ingredientFormGroups`** is public too, the live groups by name, a form's
   group picked from them; six are seeded, so it carries no count.
 - **One input, `IngredientFormValueInput`, for both writes**: `name`,
-  `description` and `groupId`, required, and `endRedirect`, the admin's
-  answer to a rename that would end another entry's redirect (MB.82). No
-  slug: a form's is its name and its group, `formSlug`, and follows either.
+  `description` and `groupId`, required. No `endRedirect` since MB.220: a
+  rename moves no compendium entry's address. No slug: a form's is its name
+  and its group, `formSlug`, and follows either.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
   service. A slug collision is `VALIDATION` on `name`, naming the form holding
   the address; a retired or unknown group is `VALIDATION` on `groupId`; a
-  rename that would make a compendium entry another's identity or address is
-  `VALIDATION` on `name`, naming both; one that would end a redirect is
-  `VALIDATION` on `endRedirect`; an unknown, deleted or malformed id is
-  `NOT_FOUND`.
+  rename that would give a compendium entry two forms of one name is
+  `VALIDATION` on `name`, naming the entry (MB.220); an unknown, deleted or
+  malformed id is `NOT_FOUND`.
 - **`deleteIngredientFormValue` answers the deleted id**, and is `FORBIDDEN`
   while a live compendium entry picked the form, naming the entries and how
   many more. Update and delete clear `ingredientFormsById`, which an earlier
   root field may have filled reading a `formChoice`.
 
-`tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` runs the
-list, the groups and the writes through Yoga.
+`tests/modules/vocabulary/graphql/ingredient-form-values.test.ts` holds their
+half as `categories.test.ts` does, with the groups' page, `ingredientFormsById`
+cleared by an update; the rules are `services/ingredient-form-values.test.ts`'s.
 
 ### Planets and signs: `planets`, `zodiacSigns` and the six writes
 
@@ -711,8 +935,11 @@ from one table of names, so the two cannot drift.
   entries and how many more. No loader holds a planet or a sign, so neither
   write clears one.
 
-`tests/modules/vocabulary/graphql/astrology.test.ts` runs both lists and the
-six writes through Yoga.
+`tests/modules/vocabulary/graphql/astrology.test.ts` holds both lists' half — a
+page counted, and `query` reaching the read and the count — and the six
+writes' as `categories.test.ts` does, a held value's `FORBIDDEN` included. A
+rename carried onto the entries, and every other rule, are
+`services/astrology.test.ts`'s.
 
 ### Groups: the category-group and form-group writes
 
@@ -746,11 +973,61 @@ the browser.
 - **The writes clear the loaders an earlier root field may have filled**:
   `categoryGroupsById` on a category group's update and delete, and
   `categoriesByIngredient` on its delete; `ingredientFormGroupsById` and
-  `ingredientFormsById` on a form group's update and delete. Revalidating the
-  `compendium` tag is M8.7's.
+  `ingredientFormsById` on a form group's update and delete. Each write expires
+  the `compendium` tag (M8.7).
 
 `tests/modules/vocabulary/graphql/category-groups.test.ts` and
-`ingredient-form-groups.test.ts` run the writes through Yoga.
+`ingredient-form-groups.test.ts` hold the writes' half: the loaders cleared by
+an update, `moveTo` reaching the delete, and per write one refusal per error
+code — `VALIDATION` (a colour, a collision or `moveTo`), and `NOT_FOUND` on the
+update and the delete. A non-admin at the `admin` scope is the sweep's; who the
+service refuses, each colour and every collision are
+`services/category-groups.test.ts`'s and `services/ingredient-form-groups.test.ts`'s.
+
+### Deities: `deities`, `deityTraditions` and the six writes
+
+The deity vocabulary's reads and writes (MB.132), registered by `vocabulary`
+over `services/deities.ts` and `services/deity-traditions.ts`
+([`db/deity-vocabulary.md`](../db/deity-vocabulary.md), "The admin's
+writes"), the forms' and form groups' shape together. `Deity` and
+`DeityTradition` are MB.167's types, built for an ingredient's pick; the
+admin's input takes the name `DeityInput`, which MB.167 left free by naming
+the pick's `IngredientDeityInput`.
+
+- **`deities` and `deityTraditions` are public** (MB.80). `deities` counts
+  its pages for the admin page's "Page X of Y" and lists each deity under its
+  tradition, by the tradition's name and then its own; `query` and
+  `traditionId` narrow it as `categories`' two arguments do, a
+  `traditionId` that is not a uuid an empty page. `deityTraditions` is the
+  live traditions by name and carries no count.
+- **`DeityInput`** is `name`, `description` and `traditionId`, required;
+  **`DeityTraditionInput`** is `name` and `description`. No slug, which
+  follows the name, and a deity's its tradition too; no `endRedirect`, since a
+  deity moves no entry's address.
+- **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
+  service. A slug collision is `VALIDATION` on `name`; a retired or unknown
+  tradition is `VALIDATION` on `traditionId`; an unknown, deleted or
+  malformed id is `NOT_FOUND`. A deity's rename carries onto every live
+  compendium entry's link to it.
+- **`deleteDeity` answers the deleted id**, and is `FORBIDDEN` while a live
+  compendium entry picked the deity, naming the entries and how many more.
+  **`deleteDeityTradition` takes an optional `moveTo`** and answers the
+  deleted id: its live deities move to the tradition `moveTo` names first,
+  each re-slugged there, and one with live deities and no other live
+  tradition named, or a move onto another deity's address, is `VALIDATION` on
+  `moveTo`. A tradition's rename re-slugs its deities, and one that would
+  collide is `VALIDATION` on `name`. It is never `FORBIDDEN` for a
+  compendium entry's pick.
+- **The writes clear the loaders an earlier root field may have filled**:
+  `deitiesByIngredient` on every deity and tradition write but a create, and
+  `deityTraditionsById` on a tradition's update and delete.
+  Each write expires the `compendium` tag (M8.7).
+
+`tests/modules/vocabulary/graphql/deities.test.ts` holds their half: a
+filtered page and its count, the loaders cleared by an update, `moveTo`
+reaching the delete, and per write one refusal per error code. Every other
+role and rule is `services/deities.test.ts`'s and
+`services/deity-traditions.test.ts`'s.
 
 ### Auth scopes: the second check
 
@@ -767,15 +1044,34 @@ A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; M5.7 puts `admin` on every admin mutation, and M5.6's three
-category writes and M5.5's three compendium writes carry it from the first. `ok` and the
+either does; every admin mutation carries `admin`, each from the task that
+built it, M5.8's two creation writes included, and `createReference` and
+`updateReference` carry it when their `workspaceId` is null, the compendium's
+tier, and `signedIn` otherwise. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'
 test hands `me` another user's row, standing in for a service that chose the
-wrong one, which is the bug the scope is behind. A
+wrong one, which is the bug the scope is behind, and reads each refusal as
+`extensions.code` through the shared harness. A
 scope refusal throws `Forbidden` from `src/lib/errors.ts`, the same type a
 service throws, so the transport maps one refusal shape whichever check said
 no (MB.43).
+
+**The sweep proves the two checks apart (M5.7).**
+`tests/db/graphql-query-scopes.test.ts` names every `Mutation` field as an
+admin write, with what it governs, or one any session may reach, so a write
+added later says which it is. It runs each admin write signed in as A — a
+coven's owner, the highest workspace role and still no site role — with E
+admitted past the scope and the service's own refusal as the preconditions in
+the same case. The code cannot tell the checks
+apart, since both answer `FORBIDDEN`, but the message can: the scope's
+refusal is `Forbidden`'s default message, and `assertSiteAdmin` says "Only a
+site admin may do this". So a non-admin hearing the default was refused by
+the scope before the service ran, and the field fails the sweep the moment
+its `admin` scope goes. What the service refuses, and to whom, stays its own
+test's (MB.180). What an admin governs is a closed type, `Governed`, beside
+the sweep, so an admin write outside it is a visible change. The admin's
+reach into no coven is M6.6's (`tests/db/workspace-isolation.test.ts`).
 
 ### The SDL snapshot
 

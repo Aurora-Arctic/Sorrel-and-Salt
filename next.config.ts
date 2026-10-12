@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   // altair-static reads its dist/index.html from disk by `__dirname`, which a
   // bundled copy no longer has; it is loaded only under `next dev`.
   serverExternalPackages: ['altair-static'],
+  // Off for the e2e slot servers, whose databases are reseeded under them
+  // between spec files: a data cache held across a reseed would answer what
+  // the last spec wrote. The compendium-cache server keeps it
+  // (claude-docs/db/compendium-cache.md, "In tests").
+  ...(process.env.NEXT_DATA_CACHE === 'off' && { cacheMaxMemorySize: 0 }),
   experimental: {
     // Server Fast Refresh re-runs an edited module and its importers but not
     // the GraphQL builder they register on, so an edited GraphQL module adds

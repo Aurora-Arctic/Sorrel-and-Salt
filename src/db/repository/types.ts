@@ -1,20 +1,22 @@
-import type { SQL } from 'drizzle-orm';
-import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
-import type { adminInvitations } from '../../modules/identity/schema/admin-invitations';
+import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
+import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
+import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { invitations } from '../../modules/coven/schema/invitations';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
-import type { auditColumns } from '../../modules/identity/schema/users';
+import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
+import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
+import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import type { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
-import type { deities } from '../../modules/vocabulary/schema/deities';
-import type { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
+import type { AuditSession, Generic } from '../types';
+import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
 
 // The repository's types: the table shapes a finder or writer admits, the
 // options `selectFrom` reads, the writer `withAudit` hands out, and the
@@ -59,26 +61,20 @@ export type NotSpellScoped = { spellId?: never };
 export type IngredientScoped = { ingredientId: AnyPgColumn };
 export type NotIngredientScoped = { ingredientId?: never };
 
-// And for the admin ledger (MB.58): `admin_role_changes` is append-only by
-// the repository rather than by grant, since `sorrel` owns its tables and a
-// REVOKE would not bind it. Its `change` column marks it, as `visibility`
-// marks `spells`, and `NotAppendOnly` takes it off every update and delete
-// below, leaving it the insert and the finders.
-export type NotAppendOnly = { change?: never };
+// And for the rows one form of an ingredient owns beside it (MB.217):
+// `ingredient_categories` and `ingredient_substitutes` carry a `variant_id`
+// too, null on the ingredient's own rows. `findManyOfVariants` reads a form's
+// under its ingredient's tier, reached through the variant, and
+// `findManyOfIngredients` reads the ingredient's own, `variant_id IS NULL`
+// (the union rule, MB.215).
+export type VariantScoped = { variantId: AnyPgColumn };
 
-// And for the pause ledger (MB.62): `admin_role_change_pauses` is opened and
-// ended by the writer's two named calls alone, so a pause cannot be inserted
-// already ended, reopened or deleted, and its ended pair comes from the
-// session. Its `ended_at` column marks it, and `NotPauseLedger` takes it off
-// the generic insert, every update and every delete below.
-export type NotPauseLedger = { endedAt?: never };
-
-// And for the admin invitation (MB.69): `admin_invitations` is what will
-// authorise a grant, so a row is made only by the writer's named insert under
-// the `SiteAdmin` proof, and is stamped accepted or revoked only by its two
-// named writes. Its `token_hash` marks it; `workspace_invitations` carries
-// one too, and is already off every method below as `WorkspaceScoped`.
-export type NotInvitation = { tokenHash?: never };
+// And for a table written only through its own named calls: the schema file
+// marks it `namedWrites` (MB.198), and every generic method below, unscoped,
+// workspace-scoped and compendium-tier, takes `Generic` and so refuses it.
+// The mark is the table's own statement, where the markers it replaced keyed
+// a refusal on a column one table happened to carry
+// (claude-docs/db/write-path.md, "Table marks").
 
 /** A table with a surrogate key, which is every one but the two hard-deleted join tables. */
 export type Identified = { id: AnyPgColumn };
@@ -138,6 +134,15 @@ export interface Keyset<Carried extends object = {}> extends KeyOrder {
 }
 
 /**
+ * A list's key as a page finder takes it, which keys on the table's own `id`:
+ * the sort, with what reading it joins, carries and is read under.
+ */
+export type ListOrder<Carried extends object = {}> = Omit<Keyset<Carried>, 'id' | 'request'>;
+
+/** What `findPage` and its kin order by: a sort alone, or a `ListOrder`. */
+export type PageOrder<Carried extends object = {}> = readonly SortPart[] | ListOrder<Carried>;
+
+/**
  * How `selectFrom` counts a keyset list rather than paging it: every row the
  * `where` holds, and how many come before `start` in `count`'s order. The
  * `where` is a page's without its bounds, and the read takes the key's join
@@ -147,6 +152,23 @@ export interface KeysetCount {
   count: KeyOrder;
   /** A page's first row. None on an empty page, whose `countBefore` is null. */
   start: Cursor | undefined;
+}
+
+/** A search's accent-folded word match, as `foldedWordMatch` builds it for one query. */
+export interface WordMatch {
+  /** The query is word-similar (`<%`) to `text`. */
+  matches: (text: AnyPgColumn) => SQL;
+  /** How word-similar, for a best-match order. */
+  similarity: (text: AnyPgColumn) => SQL<number>;
+  /** `text` holds the query verbatim, case and accents aside: a full hit, wherever it falls in a word. */
+  contains: (text: AnyPgColumn) => SQL;
+  /**
+   * The character `text` holds the query verbatim from, folded as `contains`
+   * reads it, or the largest `integer` where it holds none: what orders
+   * hits of equal score, earliest first, a fuzzy hit last. Never null, since
+   * a keyset part may not be.
+   */
+  position: (text: AnyPgColumn) => SQL<number>;
 }
 
 /**
@@ -173,6 +195,18 @@ export interface LeftJoin<TJoined extends PgTable> {
   on: SQL;
 }
 
+/**
+ * How `selectFrom` reads rows a write in the same transaction is about to
+ * decide on: in the writer's transaction, locked `for update` until it ends,
+ * and in `lockOrder`, so two writers locking the same rows take them in one
+ * order rather than deadlocking. A row another transaction changes while this
+ * one waits is read as it committed, so a row that no longer matches drops out.
+ */
+export interface Locked {
+  lockIn: WriterTransaction;
+  lockOrder: AnyPgColumn;
+}
+
 /** A row read under a `LeftJoin`, and the row joined to it. */
 export interface JoinedRow<TRow, TJoined> {
   row: TRow;
@@ -190,15 +224,41 @@ export interface Derived<TRow extends Record<string, unknown>> {
   fields: { [K in keyof TRow]: SQL<TRow[K]> };
 }
 
+/**
+ * `withAudit`'s transaction, spelled from Drizzle's types rather than as
+ * `typeof db`: the client is importable only where its exemption is pinned,
+ * and a file holding named writes needs the transaction, not the client.
+ */
+export type WriterTransaction = PgTransaction<
+  PostgresJsQueryResultHKT,
+  Record<string, never>,
+  ExtractTablesWithRelations<Record<string, never>>
+>;
+
+/**
+ * What a marked table's named writes are built from (MB.198): the
+ * transaction, the session, and the writer's own stamped insert and update,
+ * which skip a soft-deleted row as every write does. `writerFor` hands it to
+ * the repository file holding a table's finders, and spreads the writes that
+ * file returns into the writer. The insert and the update return what the
+ * named write's signature says, as the writer's own cast does.
+ */
+export interface WriterContext {
+  tx: WriterTransaction;
+  session: AuditSession;
+  insert(table: PgTable, values: object): Promise<never>;
+  update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
+}
+
 /** What `withAudit` hands its callback: every write, stamped from the session. */
 export interface AuditWriter {
   /** Insert one row, stamping created_* and updated_* from the session. */
-  insert<TTable extends PgTable & Unscoped & NotPauseLedger & NotInvitation>(
+  insert<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Writable<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
   /** Insert one row into the workspace the proof names, filling `workspace_id` from it. */
-  insertInWorkspace<TTable extends PgTable & WorkspaceScoped>(
+  insertInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     values: WritableInWorkspace<TTable>,
@@ -207,7 +267,7 @@ export interface AuditWriter {
    * Update matching rows, stamping updated_* only — created_* is never touched.
    * A soft-deleted row never matches, here or in any update below.
    */
-  update<TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation>(
+  update<TTable extends PgTable & Unscoped & Generic>(
     table: TTable,
     values: Partial<Writable<TTable>>,
     where: SQL,
@@ -217,15 +277,13 @@ export interface AuditWriter {
    * A service cannot build the `where` above: MB.33 bars it from importing
    * `drizzle-orm` at runtime.
    */
-  updateById<
-    TTable extends PgTable & Unscoped & NotAppendOnly & NotPauseLedger & NotInvitation & Identified,
-  >(
+  updateById<TTable extends PgTable & Unscoped & Generic & Identified>(
     table: TTable,
     id: string,
     values: Partial<Writable<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, with `workspace_id = membership.workspaceId` ANDed onto the `where`. */
-  updateInWorkspace<TTable extends PgTable & WorkspaceScoped>(
+  updateInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     values: Partial<WritableInWorkspace<TTable>>,
@@ -237,7 +295,7 @@ export interface AuditWriter {
    * `drizzle-orm` at runtime — so the predicate every entity update needs is
    * built by the writer instead.
    */
-  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Identified>(
+  updateByIdInWorkspace<TTable extends PgTable & WorkspaceScoped & Generic & Identified>(
     membership: Membership,
     table: TTable,
     id: string,
@@ -248,25 +306,20 @@ export interface AuditWriter {
    * (CLAUDE.md rule 4). A row already deleted never matches, here or below, so
    * it keeps the stamps of whoever deleted it.
    */
-  softDelete<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  softDelete<TTable extends PgTable & SoftDeletable & Unscoped & Generic>(
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, scoped by the proof. */
-  softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped>(
+  softDeleteInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic>(
     membership: Membership,
     table: TTable,
     where: SQL,
   ): Promise<TTable['$inferSelect'][]>;
   /** The same, naming the one row by its own id, for `updateByIdInWorkspace`'s reason. */
-  softDeleteByIdInWorkspace<TTable extends PgTable & SoftDeletable & WorkspaceScoped & Identified>(
+  softDeleteByIdInWorkspace<
+    TTable extends PgTable & SoftDeletable & WorkspaceScoped & Generic & Identified,
+  >(
     membership: Membership,
     table: TTable,
     id: string,
@@ -276,15 +329,7 @@ export interface AuditWriter {
    * `findManyByIds`, for the reason `updateById` gives. An empty list deletes
    * nothing without a statement.
    */
-  softDeleteByIds<
-    TTable extends PgTable &
-      SoftDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation &
-      Identified,
-  >(
+  softDeleteByIds<TTable extends PgTable & SoftDeletable & Unscoped & Generic & Identified>(
     table: TTable,
     ids: readonly string[],
   ): Promise<TTable['$inferSelect'][]>;
@@ -293,7 +338,7 @@ export interface AuditWriter {
    * `workspace_id` with null — the site role's counterpart of
    * `insertInWorkspace`, under its proof.
    */
-  insertInCompendium<TTable extends PgTable & TwoTier>(
+  insertInCompendium<TTable extends PgTable & TwoTier & Generic>(
     admin: SiteAdmin,
     table: TTable,
     values: WritableInWorkspace<TTable>,
@@ -303,14 +348,16 @@ export interface AuditWriter {
    * A workspace's row, or a soft-deleted one, is not reached: nothing is
    * written and nothing returned.
    */
-  updateByIdInCompendium<TTable extends PgTable & TwoTier & Identified>(
+  updateByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
     admin: SiteAdmin,
     table: TTable,
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /** Soft-delete the one live compendium row with this id, on the same terms. */
-  softDeleteByIdInCompendium<TTable extends PgTable & TwoTier & SoftDeletable & Identified>(
+  softDeleteByIdInCompendium<
+    TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
+  >(
     admin: SiteAdmin,
     table: TTable,
     id: string,
@@ -326,22 +373,19 @@ export interface AuditWriter {
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
-   * Carry a curated form's new name onto the compendium entries picking it
-   * (M5.6a): each entry's `form` becomes `form`, re-keying it, and its slug
-   * the one the caller derived, the slug it held retired at `at` when the two
-   * differ (MB.82). An entry is reached only while it is a live compendium
-   * row whose `form_id` is `formId`, so a coven's ingredient, a deleted
-   * entry or one that has since picked another form is left alone and not
-   * returned. Named for its tables, since the vocabulary module that renames a
-   * form may not name `ingredients`.
+   * Carry a curated form's new name onto the compendium's variants picking it
+   * (M5.6a, MB.220): every live variant whose `form_id` is `formId`, of a
+   * live compendium entry, takes `form` as its text. No slug moves and no
+   * retirement is written, since a form is no part of an entry's identity or
+   * address. A coven's variant, a deleted entry's, a dropped variant and one
+   * picking another form are left alone and not returned. Named for its
+   * tables, since the vocabulary module that renames a form may not name them.
    */
   carryFormRename(
     admin: SiteAdmin,
     formId: string,
     form: string,
-    entries: readonly FormRenameEntry[],
-    at: Date,
-  ): Promise<IngredientRow[]>;
+  ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
   /**
    * Carry a planet's or a sign's new name onto the compendium's lists (MB.95):
    * in every live compendium entry whose `list` holds an entry folding to
@@ -358,6 +402,20 @@ export interface AuditWriter {
     to: string,
   ): Promise<IngredientRow[]>;
   /**
+   * Carry a curated deity's new name onto the compendium's links to it
+   * (MB.132): every live `ingredient_deities` row whose `deity_id` is
+   * `deityId` and whose ingredient is a live compendium entry takes `name`,
+   * in its place. A coven's link, a deleted entry's, a dropped link and a
+   * typed name are left alone and not returned; nothing of the entry itself
+   * moves, since a deity is no part of its identity or slug. Named for its
+   * tables, as `carryFormRename` is.
+   */
+  carryDeityRename(
+    admin: SiteAdmin,
+    deityId: string,
+    name: string,
+  ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
+  /**
    * Open a pause on admin role changes, stamped from the session (MB.62). No
    * row comes back while one is already open: the one-open index refuses a
    * second, and the call writes nothing rather than failing the transaction.
@@ -369,29 +427,48 @@ export interface AuditWriter {
    */
   resumeAdminRoleChanges(admin: SiteAdmin): Promise<(typeof adminRoleChangePauses.$inferSelect)[]>;
   /**
-   * Invite an address to become an admin, stamped from the session (MB.69).
-   * The token is hashed here and only the hash is stored. Only the columns an
-   * invitation starts with are written: it starts pending, whatever a cast
-   * smuggled into `values`.
+   * The live admins, locked `for update` until the transaction ends (MB.59):
+   * what a revoke counts before it writes, so two admins revoking each other
+   * at once cannot both leave the other the last. A read, and in the writer
+   * only because the lock must be taken in the transaction that writes.
    */
-  insertAdminInvitation(
-    admin: SiteAdmin,
-    values: AdminInvitationValues,
-  ): Promise<AdminInvitationRow[]>;
+  lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
   /**
-   * Accept the pending invitation a link's token names, as the session's
-   * user, stamping `accepted_at` now and `accepted_by` from the session.
-   * Under no role's proof, since the invitee is not yet an admin: the token
-   * is what admits, and the session's user must hold the invited address,
-   * verified. No row comes back for a token naming no pending invitation, or
-   * for a user whose live row holds another address or holds it unverified.
+   * Invite an address into the proof's workspace, with the role it names,
+   * stamped from the session (M7.2; MB.202). The workspace is the proof's,
+   * never the values'. The token is hashed here and only the hash is stored.
+   * Only the columns an invitation starts with are written: it starts
+   * pending, whatever a cast smuggled into `values`.
    */
-  acceptAdminInvitation(token: string): Promise<AdminInvitationRow[]>;
+  insertInvitation(
+    membership: Membership,
+    values: WorkspaceInvitationValues,
+  ): Promise<InvitationRow[]>;
   /**
-   * Revoke a pending invitation, stamping `revoked_at` now; `updated_by` is
-   * who revoked. No row comes back for one already accepted, revoked or expired.
+   * Invite an address to become an admin, on the site tier, where the
+   * workspace and the role are both null (MB.69; MB.202). On the same terms
+   * otherwise.
    */
-  revokeAdminInvitation(admin: SiteAdmin, id: string): Promise<AdminInvitationRow[]>;
+  insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
+  /**
+   * Accept the pending invitation a link's token names, on either tier, as
+   * the session's user, stamping `accepted_at` now and `accepted_by` from the
+   * session. Under no proof, since the invitee holds neither a membership nor
+   * the site role yet: the token is what admits, and the session's user must
+   * hold the invited address, verified. No row comes back for a token naming
+   * no pending invitation, or for a user whose live row holds another address
+   * or holds it unverified.
+   */
+  acceptInvitation(token: string): Promise<InvitationRow[]>;
+  /**
+   * Revoke a pending invitation in the proof's workspace, stamping
+   * `revoked_at` now; `updated_by` is who revoked. No row comes back for one
+   * already accepted, revoked or expired, or for an id in another workspace or
+   * on the site tier.
+   */
+  revokeInvitation(membership: Membership, id: string): Promise<InvitationRow[]>;
+  /** The same on the site tier: a workspace's invitation is not reached. */
+  revokeInvitation(admin: SiteAdmin, id: string): Promise<InvitationRow[]>;
   /**
    * Hard-delete, for the join tables that carry no `deleted_at` (MB.34). A
    * table carrying one is rejected by the type, as is one carrying
@@ -401,14 +478,7 @@ export interface AuditWriter {
    * matching nothing deletes nothing without a statement, and a match naming
    * no column is refused rather than emptying the table.
    */
-  delete<
-    TTable extends PgTable &
-      HardDeletable &
-      Unscoped &
-      NotAppendOnly &
-      NotPauseLedger &
-      NotInvitation,
-  >(
+  delete<TTable extends PgTable & HardDeletable & Unscoped & Generic>(
     table: TTable,
     match: ColumnMatch<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
@@ -416,25 +486,22 @@ export interface AuditWriter {
 
 /**
  * What `delete` names its rows by: a value per column, or a list the column
- * is in. Values rather than an `SQL` predicate, since a service may not
- * build one (MB.33), and a join table keyed on its pair needs no other
- * comparison (MB.125). The stamps are not columns to match on.
+ * is in, or `null` for a nullable column that must be null — the parent's
+ * own category pairs beside a form's (MB.217). Values rather than an `SQL`
+ * predicate, since a service may not build one (MB.33), and a join table
+ * keyed on its pair needs no other comparison (MB.125). The stamps are not
+ * columns to match on.
  */
 export type ColumnMatch<TTable extends PgTable> = {
   [K in keyof Writable<TTable>]?:
-    NonNullable<Writable<TTable>[K]> | readonly NonNullable<Writable<TTable>[K]>[];
+    | NonNullable<Writable<TTable>[K]>
+    | readonly NonNullable<Writable<TTable>[K]>[]
+    | (null extends Writable<TTable>[K] ? null : never);
 };
 
 /** What a possible duplicate carries onto its edge: its trigram similarity to the name. */
 export interface SimilarityScore {
   score: number;
-}
-
-/** One compendium entry a form's rename rewrites: the slug it moves to, and the slug it held. */
-export interface FormRenameEntry {
-  id: string;
-  slug: string;
-  previousSlug: string;
 }
 
 /** What a list of ingredients is narrowed by. Each part is optional, and absent means no filter. */
@@ -443,12 +510,12 @@ export interface IngredientFilter {
   query?: string;
   /** Every one of these, not any: an entry must carry each id listed. */
   categoryIds?: readonly string[];
-  /** The form, folded as `canonical_key` folds it. */
+  /** The form, trimmed and lower-cased on both sides. */
   form?: string;
   /**
-   * The curated form an entry picked, by `form_id` (MB.167): how a form's
-   * delete and rename find the entries holding it (M5.6a). A uuid; the caller
-   * checks one first.
+   * The curated form one of an entry's live variants picked, by its `form_id`
+   * (MB.167, MB.220): how a form's delete finds the entries holding it
+   * (M5.6a). A uuid; the caller checks one first.
    */
   formId?: string;
   /**
@@ -459,35 +526,54 @@ export interface IngredientFilter {
   planet?: string;
   /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
   zodiacSign?: string;
+  /**
+   * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
+   * (MB.167): how a deity's delete finds the entries holding it (MB.132). A
+   * uuid; the caller checks one first.
+   */
+  deityId?: string;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
 }
 
-/** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
+/**
+ * What a compendium entry carries onto its edge: on a search, its rank — the
+ * best of its matched fields' word similarity to the query, each times that
+ * field's weight (`searchMatch`). Null on a browse. The position that orders
+ * equal ranks is the key's alone, and never carried.
+ */
 export interface CompendiumScore {
   score: number | null;
 }
 
-/** An ingredient's identity as a write gives it: the three parts its `canonical_key` is built from. */
+/**
+ * An ingredient's identity as a write gives it: the two parts its
+ * `identity_key` is built from, the formal name and the label it falls back
+ * to. Never the form, which is a variant's since MB.215.
+ */
 export interface IngredientIdentity {
   name: string;
   canonicalName?: string | null;
-  form?: string | null;
 }
 
-/** A vocabulary a member's autofill suggests from. */
-export type SuggestingVocabulary =
-  typeof planets | typeof zodiacSigns | typeof ingredientForms | typeof deities;
+/** A vocabulary an admin list pages: every one, filed under a group or under none. */
+export type ListedVocabulary = FlatTable | ItemTable;
+
+/** A vocabulary a member's autofill suggests from: the flat ones, and the two an ingredient picks. */
+export type SuggestingVocabulary = FlatTable | PickedTable;
 
 /**
- * Where a vocabulary's in-use values are written: one value to a `column` of
- * `ingredients`, a `list` whose entries are each one (MB.136), or the `name`
- * of a `child` table's rows (MB.167).
+ * Where a vocabulary's in-use values are written: a `list` of `ingredients`
+ * whose entries are each one (MB.136), or a `child` table's live rows, each
+ * holding one in its `value` column — a deity link's `name` (MB.167), a
+ * variant's `form` (MB.220).
  */
 export type InUseSource =
-  { column: AnyPgColumn } | { list: AnyPgColumn } | { child: typeof ingredientDeities };
+  | { list: AnyPgColumn }
+  | { child: typeof ingredientDeities; value: typeof ingredientDeities.name }
+  | { child: typeof ingredientVariants; value: typeof ingredientVariants.form };
 
 /** A curated row, or a value written on an ingredient that matches none. */
 export interface VocabularySuggestion {
@@ -566,17 +652,37 @@ export interface SlugRedirect {
   expiresAt: Date;
 }
 
-/** An `admin_invitations` row, as a finder or a write returns it. */
-export type AdminInvitationRow = typeof adminInvitations.$inferSelect;
+/** An `invitations` row, either tier, as a finder or a write returns it. */
+export type InvitationRow = typeof invitations.$inferSelect;
 
-/** What an admin invitation starts with; the expiry defaults to seven days out. */
-export type AdminInvitationValues = Pick<
-  typeof adminInvitations.$inferInsert,
+/**
+ * A site-tier invitation, which grants admin: the workspace and the role both
+ * null, as the `invitations_tier` CHECK makes them together (MB.201).
+ */
+export type SiteInvitationRow = InvitationRow & { workspaceId: null; role: null };
+
+/** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
+export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
+
+/** What a site-tier invitation starts with; the expiry defaults to seven days out. */
+export type SiteInvitationValues = Pick<
+  typeof invitations.$inferInsert,
   'email' | 'expiresAt' | 'note'
 > & {
   /** The link's token, never stored: the writer stores its hash. */
   token: string;
 };
+
+/** What a workspace invitation starts with: the same, and the role it grants. */
+export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
+
+/** What the admin invitation list is narrowed by (MB.115). Each part is optional, and absent means no filter. */
+export interface SiteInvitationFilter {
+  /** A substring of the invited address, case-insensitive, its `%` and `_` read literally. */
+  email?: string;
+  /** Only the invitations that lapse within this many hours of the database's `now()`. */
+  expiresWithinHours?: number;
+}
 
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
 export interface UserFilter {
@@ -584,6 +690,22 @@ export interface UserFilter {
   query?: string;
   /** Only the users who may not yet create a workspace: M5.8's to-do list. */
   awaitingApproval?: boolean;
+  /** Only the users holding this site role (M5.8, on the owner's review). */
+  role?: (typeof users.$inferSelect)['role'];
+}
+
+/** What the privilege ledger is narrowed by (MB.199). Each part is optional, and absent means no filter. */
+export interface PrivilegeChangeFilter {
+  /** Only the changes to this user's privileges. */
+  userId?: string;
+  /** Only the changes to this privilege. */
+  privilege?: (typeof userPrivilegeChanges.$inferSelect)['privilege'];
+  /**
+   * Only the changes to a live user whose name or email holds this,
+   * case-insensitively, its `%` and `_` read literally, as the user list's
+   * `query` matches.
+   */
+  query?: string;
 }
 
 /** What the admin category list is narrowed by (MB.178). Each part is optional, and absent means no filter. */
@@ -598,7 +720,7 @@ export interface CategoryFilter {
 export type AstrologyList = 'planets' | 'zodiacSigns';
 
 /** One of the two astrology vocabularies, flat and alike (MB.95). */
-export type AstrologyVocabulary = typeof planets | typeof zodiacSigns;
+export type AstrologyVocabulary = FlatTable;
 
 /** What an admin astrology list is narrowed by (MB.95): a name fragment, as the forms' list is. */
 export interface AstrologyValueFilter {
@@ -612,6 +734,27 @@ export interface IngredientFormValueFilter {
   query?: string;
   /** Only the forms filed under this group. */
   groupId?: string;
+}
+
+/**
+ * What the admin deity list is narrowed by (MB.132), as `IngredientFormValueFilter`
+ * narrows the forms. Each part is optional, and absent means no filter.
+ */
+export interface DeityFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
+  /** Only the deities filed under this tradition. */
+  traditionId?: string;
+}
+
+/**
+ * What an admin group list is narrowed by (MB.115): the deity traditions
+ * today, and the category and form groups if their pages take the search too.
+ * Absent means no filter.
+ */
+export interface GroupFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
 }
 
 /** One provider account linked to a user, without the tokens its row holds. */

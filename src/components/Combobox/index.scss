@@ -14,6 +14,10 @@
 // hidden copy all take it.
 $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
+// The least width a text slot keeps in a row: a few letters' room, or beside
+// chips the placeholder's (`--combobox-room`, room.ts), never past the row.
+$room: min(100%, max(6rem, var(--combobox-room, 0px)));
+
 .combobox {
   position: relative;
   width: 100%;
@@ -64,10 +68,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   min-width: 0;
   min-height: $text-height;
   padding: 0;
-  overflow: hidden;
   line-height: $text-height;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  @include truncate;
 
   &.is-placeholder {
     color: $text-placeholder;
@@ -83,7 +86,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   min-width: 0;
 }
 
-// The text itself, unboxed: the control around it is the box.
+// The text itself, unboxed: the control around it is the box. It takes the
+// line's rest, and wraps onto a row of its own under 6rem, a few letters'
+// room, the control's own geometry rather than a step of space.
 .combobox__input {
   flex: 1 1 6rem;
   min-width: 6rem;
@@ -104,12 +109,16 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
 // The multi-select's box, in the text's place after the chips: a `div` that
 // is pressed rather than typed in, its placeholder muted as the input's is.
+// Beside chips it keeps the placeholder's room, as the text's slot does.
 .combobox__input--select {
   display: flex;
   align-items: center;
+  min-width: $room;
   cursor: pointer;
 
   .is-placeholder {
+    @include truncate;
+
     color: $text-placeholder;
   }
 }
@@ -129,9 +138,12 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // below its content, so a long text gives way inside the control.
 .combobox__text {
   display: grid;
+  // The text's own few letters' room, as `.combobox__input`'s, or beside
+  // chips the placeholder's (`--combobox-room`, room.ts), so the prompt for
+  // the next entry shows whole or wraps under the chips; never past the row.
   flex: 1 1 6rem;
   grid-template-columns: minmax(0, 1fr);
-  min-width: 6rem;
+  min-width: $room;
 
   > .combobox__input {
     grid-area: 1 / 1;
@@ -167,21 +179,26 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 }
 
 // The qualifier's detail, in InfoTip's bubble and its fade, above the control
-// from its left edge, as an entry's is: positioned on `.combobox`, so its
-// 100% is the control's width.
+// from its right edge, on the qualifier's side, and no wider than 60% of the
+// control, so the field's label at the left stays in view while it shows
+// (MB.115). Positioned on `.combobox`, so its percentages are the control's
+// width. Not beneath the box: the list opens there.
 .combobox__qualifier-tip {
-  position: absolute;
-  left: 0;
-  bottom: 100%;
-  z-index: 1;
+  @include tip-above(end, 1, false);
+
   box-sizing: border-box;
-  width: max-content;
-  max-width: 100%;
-  margin-bottom: space(1);
+  max-width: 60%;
   white-space: normal;
   overflow-wrap: anywhere;
+}
 
-  @include tip-bubble;
+// The clear and the separator with nothing to clear: hidden, but holding
+// their room, so the control is one width empty or full (MB.115, the owner's
+// call). The markup takes them out of the accessibility tree and the tab
+// order; `visibility` takes them from the eye and the pointer.
+.combobox__indicator.is-empty,
+.combobox__separator.is-empty {
+  visibility: hidden;
 }
 
 // Between the clear and the chevron, as react-select draws it.
@@ -192,39 +209,14 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   background-color: $text-muted;
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a control at the input's
-// height. It fades and takes its hover on focus as `.btn` does, so the
+// `$icon-size`: WCAG 2.2's 24px minimum target, inside a control at the
+// input's height. It fades and takes its hover on focus as `.btn` does, so the
 // keyboard sees what the pointer sees.
 .combobox__indicator {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: radius('sharp');
-  background-color: transparent;
-  color: $text-muted;
-  cursor: pointer;
-  @include theme-transition(color);
-
-  svg {
-    width: 1rem;
-    height: 1rem;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
+  @include icon-button;
 
   &:focus-visible {
     @include focus-ring;
-  }
-
-  @include reduced-motion {
-    transition: none;
   }
 }
 
@@ -233,7 +225,8 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // Downshift keeps its ref.
 // Placed by `useListPosition` (position.ts), its position, width and side
 // set inline as there is room; here, its look, and no taller than 20rem —
-// the eight seeded category groups without a scroll (M5.6, the owner's call) — or
+// the eight seeded category groups without a scroll (M5.6, the owner's call),
+// a measure of rows rather than a step of space — or
 // the room it has, `--combobox-list-room`. A row never scrolls it sideways:
 // an unbroken text — an address — breaks anywhere instead (MB.154).
 .combobox__list {
@@ -241,14 +234,10 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   display: none;
   box-sizing: border-box;
   max-height: min(20rem, var(--combobox-list-room, 20rem));
-  margin: 0;
-  padding: space(1) 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  list-style: none;
-  border: 1px solid $text-muted;
+  overflow: hidden auto;
 
-  @include modal-surface($shadow-floating);
+  @include list-reset(space(1) 0, false);
+  @include floating-panel;
 
   &.is-open {
     display: block;
@@ -280,9 +269,7 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 }
 
 .combobox__rows {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  @include list-reset(0, false);
 }
 
 // A row, highlighted in a wash of the accent: the arrow keys and the pointer
@@ -314,11 +301,13 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
     // Its left edge level with the group heading's text.
     background-position: space(3) center;
     background-repeat: no-repeat;
+    // The bar's own widths, 3px and 5px on hover: a mark's geometry, off the
+    // scale.
     background-size: 3px calc(100% - #{space(2)});
     // The text a step clear of the bar at its widest, so the hover pushes nothing.
     padding-inline-start: calc(#{space(3)} + 5px + #{space(2)});
     // Quicker than the theme's 400ms fade: it answers the pointer.
-    transition: background-size 150ms ease-out;
+    transition: background-size $motion-short ease-out;
 
     // Wider on the row the pointer or the arrow keys mark, moving nothing.
     &.is-highlighted,
@@ -360,13 +349,11 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   // rather than pushing past it: a flex item's own minimum is its content.
   min-width: 0;
   max-width: 100%;
-  margin: 0;
   // A step more room above the chips than the box's own padding, the owner's
   // call during MB.169: without it the first of several rows sat against the
   // top edge. On the list rather than the control, so one row still fits the
   // text's line and the box stays at $control-height (MB.154).
-  padding: space(1) 0;
-  list-style: none;
+  @include list-reset(space(1) 0, false);
 }
 
 .combobox__entry {
@@ -379,7 +366,7 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   margin: 0;
   padding: 0 0 0 space(2);
   border-radius: radius('sharp');
-  background-color: color-mix(in srgb, $text-muted 18%, $surface-card);
+  background-color: $fill-quiet;
   color: $text-primary;
   font-size: type-size('small');
   font-weight: 400;
@@ -435,31 +422,17 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   }
 }
 
-// 1.5rem: WCAG 2.2's 24px minimum target, inside a chip too short for 44px.
+// `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for
+// 44px.
 // Its hover is the warning's wash and ink, as react-select's remove is, faded
 // in and drawn on focus too, as `.btn`'s is.
 .combobox__entry-remove {
+  @include icon-button($icon-size, $glyph-size, 0 radius('sharp') radius('sharp') 0);
+  @include icon-button-remove;
+
   flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 0;
-  border-radius: 0 radius('sharp') radius('sharp') 0;
-  background-color: transparent;
-  color: $text-muted;
   font-size: type-size('body');
   line-height: 1;
-  cursor: pointer;
-  @include theme-transition(background-color, color);
-
-  &:hover,
-  &:focus-visible {
-    background-color: color-mix(in srgb, $secondary 20%, $surface-card);
-    color: $secondary;
-  }
 
   &:focus-visible {
     @include focus-ring;
@@ -475,10 +448,6 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
       outline-color: $text-on-color;
     }
   }
-
-  @include reduced-motion {
-    transition: none;
-  }
 }
 
 // The text and its tooltip, the hover target: it shrinks with the chip so the
@@ -493,19 +462,13 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // the chip, so the text inside it can still be cut off. `touch-action` is
 // dnd-kit's ask, so that a drag by touch moves the chip rather than the page.
 .combobox__entry-handle {
+  @include button-reset(grab);
+
   display: inline-flex;
   align-items: center;
   gap: space(1);
   min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
   border-radius: radius('sharp');
-  background-color: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-  cursor: grab;
   touch-action: none;
 
   &:focus-visible {
@@ -533,8 +496,9 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // body ink while it is held.
 .combobox__entry-grip {
   flex: none;
+  // Two columns of dots, half a glyph wide: the mark's own geometry.
   width: 0.5rem;
-  height: 1rem;
+  height: $glyph-size;
   color: $text-muted;
 
   // The chip's own inverted ink on a coloured fill; `:where` keeps the held
@@ -548,13 +512,102 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
   }
 }
 
+// A linked entry's text, a button that opens its summary (MB.115): led by a
+// link mark in the accent and underlined, so it reads as something to press
+// and is told from a typed entry, plain text with no mark, by shape rather
+// than colour. The text keeps the body ink, since the accent clears only 3:1
+// on the chip's wash, the mark's floor, and takes the accent's hover,
+// which clears 4.5:1, when pointed at (tests/scss/tokens.test.ts). Unboxed,
+// so the chip still reads as one, and it shrinks with the chip so the text
+// inside it can be cut off.
+.combobox__entry-open {
+  @include button-reset;
+
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  min-width: 0;
+  border-radius: radius('sharp');
+  @include theme-transition(color);
+
+  .combobox__entry-mark {
+    color: $accent;
+  }
+
+  .combobox__entry-text {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:hover,
+  &:hover .combobox__entry-mark {
+    color: $accent-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // On a coloured chip's fill only the inverted ink is checked.
+  :where(.is-coloured) & {
+    &,
+    .combobox__entry-mark {
+      color: inherit;
+    }
+
+    &:focus-visible {
+      outline-color: $text-on-color;
+    }
+  }
+
+  // Open, the underline thickens: the panel beneath is this chip's.
+  &[aria-expanded='true'] .combobox__entry-text {
+    text-decoration-thickness: $rule-medium;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// The link mark, a glyph ahead of the text in the button's own ink.
+.combobox__entry-mark {
+  flex: none;
+  width: $glyph-size;
+  height: $glyph-size;
+}
+
+// A linked entry's summary: the open list's floating surface and edge,
+// placed by `useListPosition` beneath the chip, or above it when there is
+// more room there, as wide as its words up to a tip's measure and scrolled
+// within the room it has. Its text wraps, unlike the chip's.
+.combobox__entry-summary {
+  z-index: 2;
+  // A `<dialog>`: the browser's own inset, margin and colours give way to
+  // the placement and the surface.
+  right: auto;
+  bottom: auto;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min($tip-width, calc(100vw - #{space(4)}));
+  max-height: min(24rem, var(--combobox-list-room, 24rem));
+  margin: 0;
+  padding: space(2) space(3);
+  overflow: hidden auto;
+  font-size: type-size('small');
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+
+  @include floating-panel;
+}
+
 // The entry's text, cut off with an ellipsis where the control ends; the
 // tooltip shows the rest (MB.133).
 .combobox__entry-text {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+  @include truncate;
 }
 
 // A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
@@ -564,18 +617,11 @@ $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 // it would run off the screen. An unbroken text breaks anywhere to stay
 // inside the measure.
 .combobox__entry-tip {
-  position: absolute;
-  bottom: 100%;
-  left: var(--entry-tip-shift, 0);
-  z-index: 1;
+  @include tip-above(var(--entry-tip-shift, 0));
+
   // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;
-  width: max-content;
-  max-width: min(18rem, calc(100vw - #{space(6)}));
-  margin-bottom: space(1);
   overflow-wrap: anywhere;
-
-  @include tip-bubble;
 }
 
 // What the chip leaves out, on its own line beneath the text (MB.164). The

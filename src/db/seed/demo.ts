@@ -1,6 +1,7 @@
-import { eq, inArray, isNull } from 'drizzle-orm';
-import { beginSeedTransaction, insertMissing, requireFrom } from './idempotent';
+import { and, eq, isNull, or } from 'drizzle-orm';
+import { beginSeedTransaction, insertMissing, insertMissingBy, requireFrom } from './idempotent';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
+import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
@@ -10,6 +11,8 @@ import {
   COMPENDIUM_INGREDIENTS,
   WORKSPACE_W_ID,
   identityOf,
+  insertMissingVariants,
+  reslugIngredients,
   seedStandardContent,
 } from './standard';
 import type {
@@ -36,7 +39,7 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
   name: 'Garden Rosemary',
   canonicalName: 'Salvia rosmarinus',
   nomenclature: 'botanical',
-  form: 'herb',
+  variants: [{ form: 'herb' }],
   description: 'Cut from the bush by the back door, dried in bunches over the stove.',
   elements: ['fire'],
 };
@@ -45,7 +48,7 @@ const GARDEN_ROSEMARY: SeedWorkspaceIngredient = {
 const HEARTH_ASH: SeedWorkspaceIngredient = {
   name: 'Hearth Ash',
   nomenclature: 'none',
-  form: 'ash',
+  variants: [{ form: 'ash' }],
   description: 'Swept cold from the grate after a Yule fire and kept in a tin.',
   elements: ['fire'],
 };
@@ -54,23 +57,30 @@ const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
   name: 'House Chamomile',
   canonicalName: 'Matricaria chamomilla',
   nomenclature: 'botanical',
-  form: 'flower',
+  variants: [{ form: 'flower' }],
   description: 'Heads picked through the summer and dried on a screen.',
   elements: ['water'],
 };
 
 /**
  * §5's uncurated form: `rhizome` is nowhere in the curated vocabulary, and a
- * coven's `form` is free text so this row can exist before it is. The
- * compendium may hold only curated forms (MB.162), so its Ginger is `Root` —
- * a different identity, which is why both rows stand.
+ * coven's form is free text so this variant can exist before it is. The
+ * compendium may hold only curated forms (MB.162), so its Ginger's form is
+ * `Root`. One identity, _Zingiber officinale_, in two tiers, which the
+ * identity indexes permit, so W's entry shadows the compendium's as Garden
+ * Rosemary does (MB.215, MB.222).
  */
-const FRESH_GINGER: SeedWorkspaceIngredient = {
-  name: 'Fresh Ginger',
+const GINGER: SeedWorkspaceIngredient = {
+  name: 'Ginger',
   canonicalName: 'Zingiber officinale',
   nomenclature: 'botanical',
-  form: 'rhizome',
-  description: 'Knobbed rhizome bought fresh at the market, sliced and dried on the rack.',
+  variants: [
+    {
+      form: 'rhizome',
+      description: 'Knobbed rhizome bought fresh at the market, sliced and dried on the rack.',
+    },
+  ],
+  description: 'The coven’s own ginger, kept for warming jars.',
   elements: ['fire'],
 };
 
@@ -79,7 +89,7 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   GARDEN_ROSEMARY,
   HEARTH_ASH,
   HOUSE_CHAMOMILE,
-  FRESH_GINGER,
+  GINGER,
 ];
 
 /**
@@ -198,13 +208,24 @@ export const DEMO_SPELLS: SeedSpell[] = [
 export async function seedDemo(db: SeedDatabase): Promise<void> {
   await beginSeedTransaction(db, async (tx) => {
     // Inside the same transaction: every spell points at rows `standard` writes.
-    await seedStandardContent(tx);
+    // A deity pick someone deleted stays deleted, as a spell does.
+    await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
 
     await insertMissingWorkspaceIngredients(tx);
+    const own = await workspaceIngredientIds(tx);
+    // W's entries' slugs and forms; the compendium's `standard` wrote already.
+    await reslugIngredients(tx, [...own.values()]);
+    await insertMissingVariants(
+      tx,
+      WORKSPACE_W_INGREDIENTS.flatMap((entry) => {
+        const ingredientId = own.get(identityOf(entry));
+        return ingredientId ? [{ ingredientId, variants: entry.variants }] : [];
+      }),
+    );
     await insertMissingSpells(tx);
 
     const ingredientIds = await ingredientIdByIdentity(tx);
-    await insertMissingLayers(tx, ingredientIds);
+    await insertMissingLayers(tx, ingredientIds, await variantIdByIngredient(tx));
     await insertMissingSpellCategories(tx, await categoryIdByName(tx));
   });
 }
@@ -213,43 +234,47 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
 // ignoring `deleted_at` so a soft-deleted spell is not restored, updating
 // nothing already present.
 
+/**
+ * W's entries, keyed by identity over W's rows, deleted or not, as the
+ * compendium's are: a database seeded when Ginger was Fresh Ginger holds it
+ * under the same formal name, so it is present, and keeps its label.
+ */
 async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
   await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
     existing: async (tx) =>
       (
         await tx
-          .select({
-            name: ingredients.name,
-            canonicalName: ingredients.canonicalName,
-            form: ingredients.form,
-          })
+          .select({ identityKey: ingredients.identityKey })
           .from(ingredients)
           .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
-      ).map(identityOf),
+      ).map((row) => row.identityKey),
     keyOf: identityOf,
-    toRow: (entry) => ({
+    toRow: ({ variants: _variants, ...entry }) => ({
       ...entry,
       workspaceId: WORKSPACE_W_ID,
-      slug: ingredientSlug(entry.name, entry.form, entry.canonicalName),
+      slug: ingredientSlug(entry.name, entry.canonicalName),
     }),
   });
 }
 
+/**
+ * The ids of W's live entries this scenario seeds, by identity: its own, and
+ * no member's, a deleted one left out, so nothing is written beside it.
+ */
+async function workspaceIngredientIds(tx: SeedTransaction): Promise<Map<string, string>> {
+  const seeded = new Set(WORKSPACE_W_INGREDIENTS.map(identityOf));
+  const rows = await tx
+    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
+    .from(ingredients)
+    .where(and(eq(ingredients.workspaceId, WORKSPACE_W_ID), isNull(ingredients.deletedAt)));
+  return new Map(
+    rows.filter((row) => seeded.has(row.identityKey)).map((row) => [row.identityKey, row.id]),
+  );
+}
+
 async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, spells, DEMO_SPELLS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ id: spells.id })
-          .from(spells)
-          .where(
-            inArray(
-              spells.id,
-              DEMO_SPELLS.map((spell) => spell.id),
-            ),
-          )
-      ).map((row) => row.id),
-    keyOf: (spell) => spell.id,
+  await insertMissingBy(tx, spells, DEMO_SPELLS, {
+    columns: ['id'],
     toRow: ({ categories: _categories, layers: _layers, ...spell }) => ({
       ...spell,
       workspaceId: WORKSPACE_W_ID,
@@ -258,30 +283,56 @@ async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
 }
 
 /**
- * Every id a layer could name, keyed by `identityOf`. Both tiers in one map is
- * safe only here: the tiers share no identity but Garden Rosemary's, whose
- * local row wins.
+ * Every live id a layer could name, keyed by its tier and `identityOf`: two
+ * tiers share an identity (Garden Rosemary and the compendium's Rosemary, W's
+ * Ginger and the compendium's), so a layer naming either finds the row of the
+ * tier it names.
  */
 async function ingredientIdByIdentity(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx
     .select({
       id: ingredients.id,
-      name: ingredients.name,
-      canonicalName: ingredients.canonicalName,
-      form: ingredients.form,
+      identityKey: ingredients.identityKey,
       workspaceId: ingredients.workspaceId,
     })
     .from(ingredients)
-    .where(isNull(ingredients.deletedAt));
+    .where(
+      and(
+        or(isNull(ingredients.workspaceId), eq(ingredients.workspaceId, WORKSPACE_W_ID)),
+        isNull(ingredients.deletedAt),
+      ),
+    );
+  return new Map(
+    rows.map((row) => [
+      tierKey(row.workspaceId === null ? 'compendium' : 'workspace', row.identityKey),
+      row.id,
+    ]),
+  );
+}
 
-  const ids = new Map<string, string>();
-  // Compendium first, so a local entry overwrites the global one it shadows.
-  for (const row of rows.filter((row) => row.workspaceId === null))
-    ids.set(identityOf(row), row.id);
-  for (const row of rows.filter((row) => row.workspaceId === WORKSPACE_W_ID))
-    ids.set(identityOf(row), row.id);
+/** A layer's lookup key: the tier it names, and the identity within it. */
+const tierKey = (tier: 'compendium' | 'workspace', identity: string) => `${tier}|${identity}`;
 
-  return ids;
+/**
+ * Each ingredient's first live variant in form order (MB.217), what a linked
+ * layer lays: every entry a jar names has exactly one, written by
+ * `insertMissingVariants`; Rosemary's two are laid by no jar.
+ */
+async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, string>> {
+  const rows = await tx
+    .select({
+      id: ingredientVariants.id,
+      ingredientId: ingredientVariants.ingredientId,
+      form: ingredientVariants.form,
+    })
+    .from(ingredientVariants)
+    .where(isNull(ingredientVariants.deletedAt));
+  const first = new Map<string, { id: string; form: string }>();
+  for (const row of rows) {
+    const held = first.get(row.ingredientId);
+    if (!held || row.form.toLowerCase() < held.form.toLowerCase()) first.set(row.ingredientId, row);
+  }
+  return new Map([...first].map(([ingredientId, row]) => [ingredientId, row.id]));
 }
 
 /**
@@ -295,21 +346,32 @@ function ingredientIdFor(
 ): string {
   return requireFrom(
     ingredientIds,
-    identityOf(ingredient.entry),
+    tierKey(ingredient.tier, identityOf(ingredient.entry)),
     () => `A demo layer names "${ingredient.entry.name}", which is not in the database.`,
   );
 }
 
-/** Exactly one of `ingredientId` and `name` is set, and `form` rides with `name`. */
+/**
+ * Exactly one of `ingredientId` and `name` is set, `variantId` rides with the
+ * first (MB.217) and `form` with the second.
+ */
 function layerIdentity(
   ingredient: SeedLayerIngredient,
   ingredientIds: Map<string, string>,
+  variantIds: Map<string, string>,
 ):
-  | { ingredientId: string; name: null; form: null }
-  | { ingredientId: null; name: string; form: string } {
-  return ingredient.tier === 'custom'
-    ? { ingredientId: null, name: ingredient.name, form: ingredient.form }
-    : { ingredientId: ingredientIdFor(ingredient, ingredientIds), name: null, form: null };
+  | { ingredientId: string; variantId: string; name: null; form: null }
+  | { ingredientId: null; variantId: null; name: string; form: string } {
+  if (ingredient.tier === 'custom') {
+    return { ingredientId: null, variantId: null, name: ingredient.name, form: ingredient.form };
+  }
+  const ingredientId = ingredientIdFor(ingredient, ingredientIds);
+  const variantId = requireFrom(
+    variantIds,
+    ingredientId,
+    () => `A demo layer names "${ingredient.entry.name}", which has no variant to lay.`,
+  );
+  return { ingredientId, variantId, name: null, form: null };
 }
 
 /**
@@ -321,6 +383,7 @@ function layerIdentity(
 async function insertMissingLayers(
   tx: SeedTransaction,
   ingredientIds: Map<string, string>,
+  variantIds: Map<string, string>,
 ): Promise<void> {
   const wanted = DEMO_SPELLS.flatMap((spell) =>
     spell.layers.map((layer, index) => ({ spellId: spell.id, layer, index })),
@@ -328,15 +391,11 @@ async function insertMissingLayers(
 
   // Keyed by the jar, not the layer, so a stocked jar keeps every layer out —
   // a removed layer's tombstone included, since the jar has been edited.
-  await insertMissing(tx, spellIngredients, wanted, {
-    existing: async (tx) =>
-      (await tx.select({ spellId: spellIngredients.spellId }).from(spellIngredients)).map(
-        (row) => row.spellId,
-      ),
-    keyOf: ({ spellId }) => spellId,
+  await insertMissingBy(tx, spellIngredients, wanted, {
+    columns: ['spellId'],
     toRow: ({ spellId, layer, index }) => ({
       spellId,
-      ...layerIdentity(layer.ingredient, ingredientIds),
+      ...layerIdentity(layer.ingredient, ingredientIds, variantIds),
       quantity: layer.quantity,
       unit: layer.unit,
       // The position in the array, one per jar from 1.
@@ -361,14 +420,8 @@ async function insertMissingSpellCategories(
     })),
   );
 
-  await insertMissing(tx, spellCategories, wanted, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ spellId: spellCategories.spellId, categoryId: spellCategories.categoryId })
-          .from(spellCategories)
-      ).map((row) => `${row.spellId}|${row.categoryId}`),
-    keyOf: (assignment) => `${assignment.spellId}|${assignment.categoryId}`,
+  await insertMissingBy(tx, spellCategories, wanted, {
+    columns: ['spellId', 'categoryId'],
     toRow: (assignment) => assignment,
   });
 }

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MIN_CHIP_CONTRAST, chipContrast, formatRatio } from '../../../lib/contrast';
+import { HEX_COLOR, MIN_CHIP_CONTRAST, chipContrast, formatRatio } from '../../../lib/contrast';
 import { MAX_HUE_DISTANCE, hueDistance, isAchromatic } from '../../../lib/group-colors';
 import type { GroupColorColumn } from '../../../lib/types';
 import { IngredientFormGroupInput } from './ingredient-form-group';
@@ -17,12 +17,10 @@ const WHERE: Record<GroupColorColumn, string> = {
   colorLight: 'The light theme colour reads {ratio}:1 on the light page',
 };
 
-const WHOLE = /^#[0-9a-f]{6}$/i;
-
 const color = (column: GroupColorColumn) =>
   z
     .string({ error: 'Choose a colour, as a hex like #4e8bc2' })
-    .regex(WHOLE, { error: 'Choose a colour, as a hex like #4e8bc2' })
+    .regex(HEX_COLOR, { error: 'Choose a colour, as a hex like #4e8bc2' })
     .transform((hex) => hex.toLowerCase())
     .superRefine((hex, context) => {
       const ratio = chipContrast(column, hex);
@@ -44,7 +42,7 @@ export const CategoryGroupInput = IngredientFormGroupInput.extend({
   // Zod runs this whether or not a colour failed its own check: a pair with a
   // colour already refused has nothing further to hear.
   const settled = (column: GroupColorColumn, hex: string) =>
-    WHOLE.test(hex) && chipContrast(column, hex) >= MIN_CHIP_CONTRAST;
+    HEX_COLOR.test(hex) && chipContrast(column, hex) >= MIN_CHIP_CONTRAST;
   if (!settled('colorDark', colorDark) || !settled('colorLight', colorLight)) return;
   const greys = [colorDark, colorLight].filter(isAchromatic).length;
   if (greys === 2) return;

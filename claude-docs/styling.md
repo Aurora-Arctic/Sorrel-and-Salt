@@ -24,6 +24,9 @@ to.
   colour; do not assume headroom.
 - **Only `_variables.scss` and the theme mixins may name a raw hue.** Needing a
   colour that is not a token means adding a token, not inlining one.
+  Stylelint carries it (`npm run lint:css`, part of `lint`): `color-no-hex` and
+  `color-named` refuse a hue anywhere but `_variables.scss`, so a theme mixin
+  takes its hues from there too ([`commands.md`](commands.md), "The app").
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
@@ -48,6 +51,28 @@ to.
   `radius()` and `type-size()`. A length off the scale is a chip's or a
   badge's inner geometry, a control's target size, or a heading's size — and
   says so in a comment.
+- **A length with a role of its own is a token**, under "Motion and layout"
+  in `_variables.scss`, so the components that share the role share the
+  number (MB.115): `$wide-column` (the admin area's column, 80rem),
+  `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
+  48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
+  target) around a `$glyph-size` mark (1rem), `$icon-size-large` around
+  `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
+  outside a form on the owner's call), `$tip-width` (a tip's widest
+  line, 18rem, capped at the window), `$close-target` (the dialog's close
+  button, 2.5rem), `$table-stack-width` (the frame width under which a table
+  stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
+  that mark something by weight as well as colour), and `$toggle-corner` (the
+  theme toggle's 3.9rem corner, which the impersonation banner keeps clear
+  of). A duration with a role of its own is one too: `$motion-short`
+  (150ms), a control answering a press with a movement of its own, as the
+  switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
+- **A mix or a level used in more than one stylesheet is a token** too:
+  `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
+  skeleton's bars, the pressed admin menu), `$hairline` (the muted ink 45%
+  into whatever is behind: the ingredient form's section rules, the tab
+  strip's shade) and `$opacity-disabled` (0.55: what is left of a control
+  that is busy or cannot be used).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
@@ -56,9 +81,17 @@ to.
   has to remember it. A component never widens a paragraph past it; running
   text that is not a `p`, such as a long list item or a description, takes
   `max-width: $measure` itself; and a narrower column, as the forms use, is a
-  component's own choice. `Welcome` and `NotAuthorized` size their whole
-  column to it. `tests/e2e/admin.spec.ts` asserts it on a layout wider than
+  component's own choice. A page with no AppShell takes its column from
+  `.page-frame`, which stops at the measure, or at the forms' narrower
+  column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
+- **Browser baseline: Next's default modern targets** — Chrome, Edge and
+  Firefox 111, Safari 16.4, "baseline widely available" as of 2025-10-01
+  (`node_modules/next/dist/shared/lib/modern-browserslist-target.js`).
+  Turbopack's Lightning CSS lowers newer syntax to them, as it does
+  `light-dark()` (below). Each review checks the CSS it adds against this
+  baseline. Playwright's projects are Chromium only, so the owner's own look at
+  the dev server in Safari and Firefox is part of every sign-off.
 
 ## The palette
 
@@ -157,9 +190,10 @@ when it is not.
 
 **The rotation is the rule; saturation and lightness are the owner's
 hand-tuning.** Each seeded pair is two hexes in `src/db/seed/category-groups.ts`,
-that file is their only source, and `tests/db/seed/categories.test.ts` holds
-both hexes of every pair within 2° of its step (every hue is in fact within
-1.04°) and to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
+that file is their only source. Both hexes of every pair sit within 2° of
+its step (every hue is in fact within 1.04°), which review holds and
+[`db/category-seed.md`](db/category-seed.md) states; `tests/db/seed/categories.test.ts`
+holds each to 4.5:1 on its own theme's page, `$soot` or `$parchment`. Every
 dark hex also clears the dark card, the harder dark surface, at 4.64:1 or
 better; the closest light hex is Mind & Spirit's, at 4.52:1 on the page. Within a group, the two
 hexes keep one hue to within 0.51°. Across groups they no longer share a
@@ -275,9 +309,7 @@ happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
 per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
-`tests/guards/chip-colour-source.test.ts` fails if either shape returns, in a
-source file or in any stylesheet's compiled CSS, and `chip()` refuses a slug at
-compile time.
+`chip()` refuses a slug at compile time.
 
 `light-dark()` is newer than Next's default browser targets (Safari 16.4), so
 Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
@@ -303,6 +335,48 @@ until the check follows it.
 Badges are square-cornered, which is what keeps a badge from reading as a chip
 now that chips are pills. Both shapes set their label to weight 500, a step over
 Lexend's 300 body weight, so a small label holds its colour at chip size.
+
+## Brand colours
+
+A sign-in provider's button wears the provider's colours, not ours:
+`$brand-palettes` in `_variables.scss` holds each brand's `fill`, `ink`
+and `hover`, and the `edge` a white button needs on our page, read through
+`brand-color($brand, $part)`. A mistyped brand or part is a compile error,
+worded as `badge-token()`'s. It is a compile-time map rather than custom
+properties because the hues do not follow the theme and nothing reads them at
+runtime; a part that ever does differ by theme is written
+`(dark: …, light: …)`, and the accessor returns `light-dark()`, which
+Lightning CSS lowers to the baseline. SignInPanel's buttons and the
+`.provider-mark` circle are its consumers; an SVG fill inside a mark is
+artwork, and stays in `icons.tsx`.
+
+Measured with `contrastRatio` (`src/lib/contrast.ts`), each edge or fill
+against the page at 3:1 (WCAG 1.4.11), each ink against its fill and its
+hover at 4.5:1. `tests/scss/tokens.test.ts` checks every pair below that is
+held to a floor, which is all but the rows marked "before MB.116" and the
+hover fills on the page, reading the colours from `$brand-palettes` and the
+theme tokens, in one assertion per theme:
+
+| Pair                                                  | Dark page `$soot`                                             | Light page `$parchment` |
+| ----------------------------------------------------- | ------------------------------------------------------------- | ----------------------- |
+| Google edge `#dadce0` (before MB.116)                 | 13.62                                                         | **1.13, fails**         |
+| Google edge `#747775` (Google's current light button) | 4.13                                                          | 3.74                    |
+| Microsoft edge `#8c8c8c` (before MB.116)              | 5.56                                                          | **2.78, fails**         |
+| Microsoft edge `#808080`                              | 4.74                                                          | 3.26                    |
+| Discord / Facebook fill on the page                   | 4.06 / 3.88                                                   | 3.80 / 3.98             |
+| Discord / Facebook hover fill on the page             | 2.91 / 2.85                                                   | 5.30 / 5.43             |
+| Inks on fills (both themes)                           | Google 16.48 · Discord 4.61 · Facebook 4.82 · Microsoft 21.00 | the same                |
+| Inks on hover fills (both themes)                     | Google 13.68 · Discord 6.42 · Facebook 6.57 · Microsoft 15.91 | the same                |
+| Focus ring `$text-primary` on the page                | 14.77                                                         | 13.41                   |
+| Muted text `$text-muted` / `--accent` on the page     | 9.67 / 7.97                                                   | 5.99 / 4.65             |
+
+**Hover is not held to 3:1.** WCAG 1.4.11 covers what identifies a control
+and its states, and a hover ground is neither: the button is already known
+by its resting fill, and keyboard focus is shown by the focus ring, which
+clears 13:1 in both themes. So Discord's and Facebook's darker hover grounds
+may sit under 3:1 on the dark page. Microsoft keeps its white face in both
+themes, with the darker `#808080` edge that clears 3:1 on the light page: the
+owner's call at MB.116's sign-off, over Microsoft's own dark button.
 
 ## Type
 
@@ -337,7 +411,9 @@ the three the scale uses (500/600/700) are requested.
   mineral and chemical names are set upright; and `.lede`, the muted sentence
   or two saying what the section is for, at body size because it is read.
   Wrapped in `.header`, they are the head of every section on the
-  Foundations page.
+  Foundations page. The `.header` gap alone spaces them: it zeroes its
+  children's margins, because flex margins never collapse and a heading's
+  bottom margin would otherwise add to the gap.
 
 ## Spacing
 
@@ -380,11 +456,13 @@ the inset, so it starts below the banner and the page does not scroll by the
 banner's height:
 
 - `ThemeToggle` and the sorrel corner of `Backdrop` take `top: $top-inset`.
-- The five pages a full screen high (`Welcome`, `NotAuthorized`,
-  `SignInPanel`, `SignInMethods` and `EmailForm`) take
-  `min-height: calc(100dvh - #{$top-inset})`.
+- Every page a full screen high sits in `.page-frame`, which takes
+  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below):
+  `/`, `/sign-in`, `/account`, `/account/email`, the not-authorized
+  page and the invitation page. A page that needs the full height takes the
+  frame rather than restating the rule.
 
-A new full-height page, or anything new fixed to the top, does the same.
+Anything new fixed to the top offsets by the inset the same way.
 
 ## Corner radius
 
@@ -403,7 +481,19 @@ thing that holds them. Buttons were 0.5rem and panels 0.25rem until MB.114.
 ## Buttons
 
 `.btn` is the shape every button shares, `SignInPanel`'s brand buttons
-included. Four variants:
+included. No tapped control shows the platform's tap highlight, the blue box
+iOS and Android Chrome draw: `body` sets `-webkit-tap-highlight-color:
+transparent` (`src/app/globals.scss`), so a control's own `:active` and focus
+styles are its only feedback, and each control that can be tapped needs one.
+A phone applies `:active` late or not at all, though: Chromium only once it
+has ruled out a scroll, Safari only where a touch listener is attached. So a
+control that must answer a tap at once spreads `pressFeedback`
+(`src/lib/press-feedback.ts`), which marks it `data-pressed` from a
+pointer's press until it lifts, leaves or turns into a scroll, and its
+stylesheet draws `:active` and `[data-pressed]` alike: the tab row's
+segments ([`components/tabbed-page.md`](components/tabbed-page.md)) and the
+admin nav's summary ([`components/admin-nav.md`](components/admin-nav.md)).
+Four variants:
 
 - **The outline (`.btn`)**, the default: the accent on an edge, filling on
   hover. The edge is 1.6px on every variant, heavier than a field's 1px, since
@@ -413,10 +503,10 @@ included. Four variants:
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
-- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Back.
+- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
   The body ink on an edge, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either.
-- **`.btn--destructive`**, what destroys something: Delete, Remove. The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
@@ -433,7 +523,11 @@ open on one side so its turn reads, slowed rather than stopped where motion is
 reduced. It sits ahead of the label, which says what is happening ("Saving
 Category"). A `.btn[aria-busy='true']` brings its left padding in a step,
 since padding sized for a word reads as a gap before a small round mark.
-IngredientForm's two saves and its reference panel use the same one.
+Every spinner button is a `BusyButton`
+([`components/busy-button.md`](components/busy-button.md)), which draws the
+`aria-busy`, the spinner and the label swap from its `busy` and
+`busyLabel` props, so no form writes the markup by hand. The one exception
+is the pager's link while its page loads, an anchor rather than a button.
 
 **Disabled is dashed and faded**, from `disabled` or `aria-disabled`: the
 edge dashes, the fill clears, and the whole button drops to 55%. Neither
@@ -458,25 +552,42 @@ are named "Prev" and "Next". `.pager__position`, "Page 2 of 3" between them,
 is muted text at the body size with `space(4)` either side, since it is not
 a control. An end with no page is disabled rather than
 hidden, so neither moves. The markup is the `Pager` component's
-([`components/pager.md`](components/pager.md)), which CategoryList,
-IngredientFormValueList, VocabularyValueList and UserList render.
+([`components/pager.md`](components/pager.md)), which GroupedValueList,
+GroupList, CompendiumList and UserList render.
 
 **`.page-header` puts a page's heading and its one primary action on one
 line**, the action at the end (the owner's call, M5.6): `/admin/categories`'
 Add Category beside its H1. The row is centred and the action brought down
 0.25rem, the owner's measure: a heading's box carries room below its letters,
 so a centred button reads high and one on the baseline low. The row wraps on
-a narrow screen rather than squeezing the heading.
+a narrow screen rather than squeezing the heading. The header is a size
+container, so it measures its own width rather than the screen's: under
+28rem of it, the forms' column, the action goes beneath the heading and loses
+the quarter-rem drop, which only lined it up beside the heading (MB.115).
+Where it then spans the line, and where it keeps its natural width, is
+[`components/page-header.md`](components/page-header.md#styling). The markup is the `PageHeader` component's
+([`components/page-header.md`](components/page-header.md)). A tabbed admin
+page draws its heading in a `PageHeader` too, the open tab's action beside
+it, so the same rule holds there
+([`components/tabbed-page.md`](components/tabbed-page.md)).
 
-**The admin tables are banded**: every even body row on `$surface-card`, the
-surface a modal wears, so a wide row stays readable across. Each cell is
-inset `space(3)` on both sides so no text meets a band's edge, and aligned on
-the baseline so a row's small button reads on its text's line. A 1px
-`$text-muted` hairline runs under the header row. The rules are the
-`.data-table` primitive, inside a `.data-table-frame` that scrolls a wide
-table sideways rather than widening the page: CategoryList and UserList each
-carried them until IngredientFormValueList made a third (M5.6a), and
-CompendiumList (M5.5) and VocabularyValueList (MB.95) are on it too.
+**The admin tables are banded at desktop width, and stack into cards on a
+phone.** Wide, every even body row sits on `$surface-card`, the surface a
+modal wears, so a wide row stays readable across. Each cell is inset
+`$table-cell-inset`, `space(3)`, on both sides so no text meets a band's edge,
+and the filter row above the table runs edge to edge with it, the owner's
+call at MB.115's review; and aligned on the
+baseline so a row's small button reads on its text's line. A heading sits on
+its cell's bottom instead, on the owner's call, so one that wraps keeps its
+last line level with its neighbours', on the 1px `$text-muted` hairline under
+the header row. These rules are the `.data-table` primitive, inside a
+`.data-table-frame`: the category list and UserList each carried them until
+the forms' list made a third (M5.6a), and CompendiumList (M5.5) and
+GroupedValueList, the category and form lists made one (MB.132) and the flat
+vocabularies' list folded in (MB.115), are on it too. Narrow, a table with the `.data-table--stack`
+modifier turns each row into a card once its frame is under
+`$table-stack-width` ("Tables at phone width", below); a table without it
+scrolls sideways inside its frame rather than widening the page.
 
 ## Form fields
 
@@ -489,6 +600,8 @@ The class layer every form is built from, in `_primitives.scss`:
 | `.field__label`, `.field__hint`, `.field__error` | The parts around the control                                                                                                                                                                                                                                                                                                             |
 | `.input`, `.textarea`, `.select`                 | The control, one box for all three                                                                                                                                                                                                                                                                                                       |
 | `.checkbox`                                      | A `<label>` wrapping its box, so the whole line is the target                                                                                                                                                                                                                                                                            |
+| `.switch`, `.switch__control`                    | An on-or-off choice as a slide toggle, a `.field` block: its label above, the toggle beneath at `$control-height`. `SwitchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                 |
+| `.search-field`, `__input`, `__submit`           | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                              |
 | `.fieldset`, `.fieldset__legend`                 | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                    |
 | `.notice`, `--error`, `--warn`, `--success`      | A sentence about the whole view rather than one field `--error` and `--warn` lead with a warning triangle, drawn by mask in the box's padding so a link in the text stays inline: in the error's red on an error, and in the error red on a warning's plain box and ink, for what needs attention but does not block (the owner's call). |
 
@@ -496,11 +609,22 @@ The class layer every form is built from, in `_primitives.scss`:
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
   the owner's call in M5.9, once a form of many fields read as a wall of
   hints. The tip's text stays in the field's `aria-describedby`, so it is read
-  with the field whether open or not, and the tip opens while the field has
-  focus, so a keyboard that skips the ⓘ still shows it. `.field__hint` remains for a line that
+  with the field whether the tip is open or not. The tip opens on hover, a
+  tap or the ⓘ's own focus, and never on the field's focus
+  ([`components/info-tip.md`](components/info-tip.md#behaviour)). `.field__hint` remains for a line that
   must stay in view, such as why a field is disabled, since a shut field that
-  does not say why reads as broken. `IngredientForm` is the first form built
-  this way; an older form adopts it at its design review.
+  does not say why reads as broken. `IngredientForm` was the first form built
+  this way, and the Reason fields of the user list's confirmations and the
+  admin invite form took it at MB.115's review; any other form adopts it at
+  its own design review.
+- **Every text, textarea, select and type-ahead field shows a placeholder**,
+  a short action, and what the field is for goes in its hint's info tip
+  ([`components/field.md`](components/field.md#contracts) holds the rule).
+  The placeholder reads in `$text-placeholder`, held at 4.5:1 on the field's
+  ground in both themes by `tests/scss/tokens.test.ts`.
+- **A field is optional unless it carries the required mark**, the asterisk
+  `.field__required`, so no label says "(Optional)"
+  ([`components/field.md`](components/field.md#contracts)).
 - **The error sits beneath its control**, nearest what was typed, and is
   drawn the same whichever side found it: the resolver before a request, or
   the server's `fieldErrors` after (DESIGN.md §7, "Errors"). The control names
@@ -531,6 +655,33 @@ The class layer every form is built from, in `_primitives.scss`:
   option instead.
 - **The checkbox is the platform's**, coloured by `accent-color`, which takes
   the token and picks its own check-mark contrast.
+- **An on-or-off filter is a switch**, the owner's call at MB.115's review
+  over a checkbox, which looked out of place among a filter row's boxes: a
+  native checkbox with `role="switch"` and `appearance: none`, drawn as a
+  rounded track, `$switch-width` by `$icon-size`, with a `$glyph-size`
+  thumb (`::before`). Native, so it submits with a GET form before
+  hydration and keeps Space and its label's click, and its checked state is
+  the switch's to a screen reader; no `aria-checked` is written, since a
+  press before hydration would leave it stale. Its label stands above it as
+  every field's does (the owner's call), and the toggle sits centred in a
+  `$control-height` row, so in a filter row it lines up with the boxes
+  beside it. Off is the field's ground with the muted 1px edge and a muted
+  thumb at the start; on fills the track with `$accent` and the thumb, in
+  the page's colour as a solid button's label is, slides to the end over
+  `$motion-short`, jumping under reduced motion. Where the thumb sits, not
+  its colour, tells on from off (WCAG 1.4.1). Hovering the toggle or its
+  label takes the edge to the body ink, or the fill to `$accent-solid-hover`
+  when on; pressing either stretches the thumb a step towards the other end,
+  marked `data-pressed` (`src/lib/press-feedback.ts`) as well as
+  `:active`; the focus ring is the shared one. Disabled is dashed and
+  unfilled, its thumb muted in either position and its label dimmed, as a
+  field is; `aria-disabled`, a filter row's while its list is on its way,
+  stops the hover and press looks and leaves the row's fade to grey it.
+  `tests/scss/tokens.test.ts` holds the edge and thumb at 3:1 (WCAG
+  1.4.11) against the page and the card in both themes, off, on and hovered
+  on: the lowest is the light theme's on track against the page and its
+  thumb on it, 4.65:1. Under forced colours the thumb is drawn in
+  `CanvasText`, and on the track in `Highlight`.
 - **Disabled is an attribute, not a class**, and looks the same on a field as
   on a button: a dashed edge and no fill. A disabled field also takes the muted
   ink and dims its `.field__label`, since a faded box alone reads as a live
@@ -538,7 +689,186 @@ The class layer every form is built from, in `_primitives.scss`:
   disabled descendant, since a select's placeholder is a disabled option. A
   component never restates it.
 
+**Cancel asks when there are changes** (MB.115, the owner's call, for every
+admin form). While a form has unsaved changes, the same flag that turns its
+Save on, Cancel, and the modal's Close button, Escape and a click outside,
+ask before throwing the changes away; a save or a delete never asks. One
+guard draws the question for every form
+([`components/modal.md`](components/modal.md#unsaved-changes)).
+
+**A form asks over itself** (MB.115, the owner's call). Every question a
+form asks before it acts, the unsaved changes' and each Delete's, is one
+card, `ConfirmOverlay`: the modal's raised surface at the floating
+elevation, `$narrow-column` wide, over a scrim of the page's ground at 75%,
+fading in over `$motion-short`. How it is placed, held and focused is
+[`components/modal.md`](components/modal.md#asking-over-the-form).
+
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
+
+The pieces around a field and a form's buttons that more than one form
+shares (MB.115), each written once in `_primitives.scss` where every admin
+form had kept its own copy. The `Field` component draws the first two around
+a control ([`components/field.md`](components/field.md)), and `FilterForm`
+draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
+
+| Class               | What it is                                                                                                                                                                                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.field__label-row` | A label and what stands beside it on its line, an `InfoTip`'s ⓘ or the required mark, a `space(1)` apart. It is the position a tip opens from, so the tip lines up with its field                                                                                                                                                           |
+| `.field__required`  | The asterisk hard against a label whose field a save asks for, in the error red. The markup hides it from a screen reader, which hears the control's `aria-required` instead of "star"                                                                                                                                                      |
+| `.form__aside`      | The button set apart at the row's far end, an edit's Delete, so it is not pressed for Save. A `margin-inline-start: auto`, which the narrow form's stacking takes back                                                                                                                                                                      |
+| `.filter-row`       | A list's filter form, a toolbar that applies as it changes: the search, its choices and switches, and Clear while a filter is shown, wrapping, and stacked on a phone. Every width, the busy fade and the type-ahead's width rule are [`components/filter-form.md`](components/filter-form.md#styling)                                      |
+| `.list-frame`       | A list page's root, a `ListFrame` ([`components/list-frame.md`](components/list-frame.md)): its filter, notice or empty state, table and pager, a `space(5)` apart, a paragraph in it with no margin of its own. Its `.list-frame__body`, the list under the filter, is spaced the same, and fades in when a new page replaces the skeleton |
+
+## The page frame
+
+`.page-frame` is the centred, full-height column of a page with no AppShell:
+Welcome, sign-in, the account pages, the not-authorized page and the
+invitation. Its children stand `space(6)` apart and stop at `$measure`;
+`.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
+column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
+and below and `space(4)` at the sides, `border-box`, so a page a screen high
+does not scroll by its own padding or the banner above it.
+
+- **The gap alone spaces the column.** `.page-frame > *` clears every
+  child's block margins, which outranks bare `section`'s from
+  `layout-base` and `.page-header`'s own, so neither stacks on the gap.
+- **The width and its cap sit inside `:where()`**, so they carry no
+  specificity. In the app the class layer compiles as `body .x` (0,1,1) and
+  would beat a component's single class; in the workshop it compiles as
+  `:where(.ladle-story-frame) .x` (0,1,0), where source order decides. Under
+  `:where()` a component's own narrower column, such as the sign-in panel's,
+  wins in both. A primitive rule a component must be able to override is
+  wrapped the same way; check it in the app, not only the workshop. The
+  other way round holds too: a component that carries a primitive class
+  and restates one of its properties compounds the two, as the sign-in
+  card's `.sign-in-panel.panel` does for its padding, since a lone
+  component class loses to `body .panel` in the app while the workshop
+  shows it winning.
+- **`.page-frame__section`** is a titled section of a framed page, a
+  `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
+  `space(4)` clear of the top when the page's own nav jumps to it.
+  **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
+
+## The admin layout
+
+`.admin-layout` is the frame every `/admin` page sits in (MB.115): the admin
+nav above, the page below, a `space(5)` apart. It is a column as wide as
+`$wide-column` (80rem), centred, with `space(6)` above and below and
+`space(4)` at the sides, `border-box`. It is wider than `.page-frame`
+because its pages hold tables, and it is neither full height nor centred
+down the window, since a list page runs as long as its rows. The width is
+the owner's call at MB.115's review: the user list's seven columns need
+about 77rem before they stop scrolling inside their frame, the privilege
+ledger has seven too, and at the old 64rem the user list's sticky Impersonate
+column sat over Signed Up on a 1280px window. Only `.admin-layout` reads the
+token, so nothing outside `/admin` widens with it. Its paragraphs
+still stop at the measure. The width and its cap sit inside `:where()`, as
+the page frame's do, so a single class can change them. It is a primitive
+rather than AdminNav's own rule because the admin layout and the admin
+components' stories use the class as their frame. Inside it a page header's
+action, and a tab's, spans the line at phone width ("Buttons", above).
+
+## Tables at phone width
+
+A table whose rows turn into cards on a narrow screen, so no column scrolls
+out of sight (MB.115). Add `data-table--stack` beside `data-table`, and every
+column's cell names its column in a `data-label` attribute:
+
+```html
+<div class="data-table-frame">
+  <table class="data-table data-table--stack" role="table" aria-label="Categories">
+    <thead role="rowgroup">
+      <tr role="row">
+        <th scope="col" role="columnheader">Name</th>
+        …
+      </tr>
+    </thead>
+    <tbody role="rowgroup">
+      <tr role="row">
+        <td role="cell" data-label="Name">Protection</td>
+        …
+        <td role="cell" data-label="" class="data-table__card-action">
+          <a class="icon-tip__edit" href="…">…</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+- **It stacks by its frame's width, not the screen's.** `.data-table-frame`
+  is a size container named `data-table`, and under `$table-stack-width`
+  (40rem) of it each row becomes a card: a grid on `$surface-card` with
+  `radius('surface')` and `space(4)` of padding, a `space(3)` gap between
+  cards and between the cells in a card (the owner's call at MB.115, a card
+  of text alone having read cramped at a table row's spacing), every cell a
+  block beneath the last. Every card is on the card
+  surface, so the bands give way. A frame measures its own width only while
+  that width does not come from the table inside it, so it sits as a block or
+  a stretched flex item, never in a row that shrinks to fit.
+- **The header row is hidden but still read.** It is clipped as
+  `.visually-hidden` is, so a screen reader still has the column names.
+  Each cell is led by its own name instead, drawn from `data-label` by a
+  `::before` in the muted ink at the caption size, `space(1)` above its value (half the `space(2)` between cells, so a label sits with its own value). A cell whose `data-label`
+  is empty, an action such as Impersonate, has no label and spans
+  the card.
+- **A row's Edit stands at its card's top right**, beside the first line
+  (MB.115, the owner's call). Its cell, label empty, also carries
+  `.data-table__card-action`: a row holding one becomes a two-track grid,
+  `minmax(0, 1fr) auto`, the first cell in the first track, the action in
+  the second on the first row, and every other cell across both beneath.
+  The grid places it, not the markup, so the columns and the keyboard order
+  stay as the desktop has them. UserList places its Impersonate the same
+  way by its own rule, written before this primitive.
+- **A stacking table writes out its roles**: `role="table"`, `rowgroup`,
+  `row`, `columnheader` and `cell`. WebKit drops a table's meaning once
+  `display` changes on its parts, so a screen reader in Safari would read the
+  cards as loose text; the explicit roles put the meaning back. They are the
+  roles the elements have already, so nothing else changes, and a jsdom test's
+  `getByRole('cell')` finds a `td` either way. Every admin list's table is
+  [`StackTable`](components/data-table.md), which spreads them from one
+  helper, `src/lib/table-roles.ts`: `tableRole('row')` for a part, and
+  `stackCell(label)` for a cell, which carries its `data-label` too.
+- **The label is written twice.** `content: attr(data-label)` and then
+  `content: attr(data-label) / ''`: the second gives the label an empty
+  alternative text, so a screen reader, which has the header, does not hear
+  the column name twice. Safari 16.4, the oldest browser supported ("Binding
+  rules"), drops the second declaration and keeps the first, so there the
+  name is read twice, which is acceptable.
+- **A sticky cell is reset in its component.** A cell made
+  `position: sticky`, as UserList's Impersonate column is, only works while
+  the frame scrolls, and in a card it would sit over its neighbours, so the
+  component sets it back to `static` under the same container query. The
+  primitive leaves `position` alone, since a cell may be `relative` to anchor
+  a tip.
+
+## Link rows and provider marks
+
+**`.link-row` is a wrapping row of links that is not a bulleted list**: a
+page's own nav, the admin nav. A `space(2)` by `space(5)` gap, and the
+list's indent, item margins and `typography-base`'s ◆ marker cleared, since
+the marker would sit against the link before and hang outside the first.
+
+**The link to the page you are on carries `aria-current="page"`**, which
+tells a screen reader, and `.link-row` draws it by shape rather than hue
+(MB.115): weight 500 and a `$rule-heavy` underline set `space(1)` below the
+letters, where every other link has the browser's hairline. A colour alone
+would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
+nav is the first to mark its current page.
+
+**A tabbed page's tab row is not a `.link-row`** but a segmented control
+of its own: one rounded track, the open tab a raised pill inside it, the
+segments scrolling within the track where they run past it rather than
+wrapping ([`components/tabbed-page.md`](components/tabbed-page.md),
+"Styling"). Its links are still a `nav` of links marked by `aria-current`.
+
+**`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
+ground**, as its sign-in button gives it one: the marks are drawn for those
+grounds. `--google`, `--discord`, `--facebook` and `--microsoft` take
+their `fill` from `brand-color()`, and a white one its brand's `edge`, which
+holds 3:1 against both pages ("Brand colours", above). The circle is
+`border-box`, so an edged one is the same size as the rest. The markup is the
+`ProviderMark` component's ([`components/provider-mark.md`](components/provider-mark.md)).
 
 ## Designing a section
 
@@ -551,11 +881,48 @@ What each section review (MB.115 to MB.124) designs to:
   not two component rules.
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
+- **A page with no AppShell sits in `.page-frame`**, or
+  `.page-frame--narrow` when its content is a form ("The page frame",
+  above). A page's own row of links is a `ul.link-row`, and each titled
+  section a `.page-frame__section` named by its `h2` through
+  `aria-labelledby`, so a screen reader lists it as a region.
 - **Forms are the field primitives.** An error is a `.field__error` beneath
   its control from either source, and a rule that belongs to no field is a
-  `.notice` above them all.
+  `Notice` above them all ([`components/notice.md`](components/notice.md)).
+  Use the component rather than writing the `.notice` markup: its `kind`
+  picks the role, and the role is what makes a message that arrives late get
+  read out.
+- **A failed request is read by `readGraphqlFailure`**
+  (`src/lib/graphql-failure.ts`). Pass it the names of the fields the form
+  draws its own errors under. It answers either one of those fields and its
+  message, or one sentence for the form's `Notice`: the server's own, or
+  `GENERIC_FAILURE` when the request got no usable answer. A form that places
+  several field errors at once, as the admin forms and `IngredientForm` do,
+  reads them with `readGraphqlIssues` beside it, which hands back every issue
+  of a refusal, or one pathless issue carrying the same sentence.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
+- **The copy has one voice.** Speak to the reader as "you", in plain words.
+  A message says what happened in one sentence and what to do in the next.
+  "Please try again." goes only where trying again can help, so a refusal
+  that will refuse again says what to change instead. The same thing keeps
+  the same name everywhere: a "sign-in method", never a "sign-in option", and
+  an email "address". Every label, button and heading is title case
+  (`.claude/rules/components.md`, "Copy").
+- **Use the shared pieces rather than their markup.** A field is `Field`'s
+  `TextField` or `SelectField`, or its `FieldShell` around a control of
+  the form's own; a button with a spinner is a `BusyButton`; a list's filter
+  is a `FilterForm`; a page's heading and its action are a `PageHeader`, and
+  a page in tabs is a `TabbedPage` with each tab's action from its route
+  group's `@action` slot;
+  and a modal opened by its page's address is a `RouteModal`
+  ([`components/modal.md`](components/modal.md)). Each is in
+  `claude-docs/components/`.
+- **Lists are the list primitives.** A list page's root is a `.list-frame`,
+  its filter form a `.filter-row`, and its table a `.data-table` in a
+  `.data-table-frame` with the `--stack` modifier, its explicit roles and a
+  `data-label` on every cell, so it turns to cards on a phone rather than
+  scrolling sideways ("Tables at phone width", above).
 - **Prose stops at the measure**; a table or a grid may be as wide as it
   needs.
 - **Both themes, and 375px.** A review signs off in the workshop in both, at
@@ -588,13 +955,40 @@ heavier than the reverse; light reverts to the browser default.
 
 ## The files
 
-- `src/scss/_variables.scss` — base colour palette, badge tokens, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+- `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
+  colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
+  width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
+  `icon-button` and `icon-button-edit` (an icon control's square box, and
+  the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
   `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
+  The shapes that repeated by hand are mixins too, one line each:
+  `color-scheme-light` and `forced-colors` (the two media queries, as
+  `reduced-motion` wraps its own); `list-reset` (a list with no margin,
+  indent or marker, its items' too); `truncate` (one line cut with an
+  ellipsis); `visually-hidden` (the clipped box a screen reader still
+  reads, which the `.visually-hidden` class includes); `button-reset` (a
+  button with its box taken away); `stack($step)` (a column a step of space
+  apart); `busy-faded` (colour out and `$opacity-disabled` left);
+  `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
+  placed against, and a bubble above it, capped to `$tip-width` and the
+  window); `tip-bubble-open` (a bubble's open state alone, for one opened
+  by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
+  turns `$text-primary` when pointed at or focused), `icon-button-edit`
+  and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
+  (a chevron that turns over while its section is open); `floating-panel`
+  (the card surface, floating shadow and muted edge a list or summary
+  floats on); `field-box` (the edge, ground and height a field and the
+  admin menu's summary share); `arrived` (the fade a list or tab's new
+  content comes in with, the one `list-frame-fade-in` keyframe); and
+  `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
+  rows; its one-line cells, wrapping again as cards), each emitted once by
+  `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
+  modifiers a table takes by class.
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at
@@ -603,12 +997,13 @@ heavier than the reverse; light reverts to the browser default.
   - `_layout.scss` → `layout-base` — bare `section` / `header` structure, plus
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
-    `.btn` and its `--solid` / `--quiet` / `--secondary` variants and
-    `--small` size, `.notice`,
+    `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
+    `--small` size, `.notice`, `.page-frame` and its parts, `.link-row`,
+    `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
-    screen reader reads and nothing draws, such as a live region's news.
+    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
+    screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines
   on `<html>` are what `$font-heading` / `$font-body` reference.

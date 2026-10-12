@@ -1,11 +1,15 @@
 import { membershipsByUser } from '@/modules/coven';
-import { providersByUser } from '@/modules/identity';
+import { providersByUser, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
+  categoriesByVariant,
   deitiesByIngredient,
   folkNamesByIngredient,
   referencesByIngredient,
+  referencesByVariant,
   substitutesByIngredient,
+  substitutesByVariant,
+  variantsByIngredient,
 } from '@/modules/ingredients';
 import {
   categoryGroupsById,
@@ -22,11 +26,16 @@ import type { Built, LoaderFactory } from './types';
 const LOADERS = {
   membershipsByUser,
   providersByUser,
+  usersByIdForAdmin,
   categoriesByIngredient,
   folkNamesByIngredient,
   substitutesByIngredient,
   deitiesByIngredient,
   referencesByIngredient,
+  variantsByIngredient,
+  categoriesByVariant,
+  substitutesByVariant,
+  referencesByVariant,
   categoryGroupsById,
   ingredientFormGroupsById,
   ingredientFormsById,

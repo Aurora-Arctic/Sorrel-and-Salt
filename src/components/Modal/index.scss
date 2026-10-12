@@ -10,24 +10,73 @@ $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
+// The page's ground at three quarters over what lies behind: the backdrop's
+// over the page, and a question's scrim over the form it asks about (MB.115).
+$modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
+
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
 // Border-box, so the primitive's padding sits inside the limits rather than
-// past them: the long form overran the screen by it. No styling past the
-// tokens before the section's design review.
+// past them: the long form overran the screen by it. A column, the header
+// over the body, which scrolls beneath it while the dialog holds still
+// (MB.115): open only, since the closed element's `display: none` is the
+// browser's.
 .modal-dialog {
+  container: modal / inline-size;
   box-sizing: border-box;
-  width: min(calc(32rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+  width: min(calc($dialog-column + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
   max-height: calc(100dvh - #{$modal-gap} * 2);
-  overflow: auto;
+  overflow: hidden;
   border: 0;
 
-  &::backdrop {
-    background-color: color-mix(in srgb, $surface-page 75%, transparent);
+  &[open] {
+    display: flex;
+    flex-direction: column;
   }
 
-  // Its own scroll ends at its edge rather than handing on to the page.
+  &::backdrop {
+    background-color: $modal-scrim;
+  }
+
+  // Holding the focus itself, when it opens with no field to give it to, it
+  // draws no ring: the whole dialog is what a ring would mark, and Tab moves
+  // on to Close, which draws its own.
+  &:focus {
+    outline: none;
+  }
+}
+
+// Under the header, out to the dialog's edges, so the body's scrollbar sits at
+// the edge as the dialog's did. One grid cell, which the body and a
+// question's scrim share: the scrim covers exactly the body in view, and the
+// cell is as tall as the taller, so a short form's dialog grows to hold a
+// question rather than scroll it. A container, so a question's row stacks
+// at the width the form's own does.
+.modal-dialog__main {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  min-height: 0;
+  margin: 0 calc(-1 * #{space(5)}) calc(-1 * #{space(5)});
+  container: modal-main / inline-size;
+}
+
+// What the contents scroll in, the dialog's padding given back inside it so
+// a focus ring at a field's edge is not cut off. Its own scroll ends at its
+// edge rather than handing on to the page. Isolated, so nothing in it lifted
+// by a z-index rises over a question's layer.
+.modal-dialog__body {
+  grid-area: 1 / 1;
+  min-height: 0;
+  padding: 0 space(5) space(5);
+  overflow: auto;
   overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+// Where a question is drawn (ConfirmOverlay): no box of its own, so the
+// question's scrim is a cell of `.modal-dialog__main`'s grid, over the body.
+.modal-dialog__layer {
+  display: contents;
 }
 
 // It fades in and out, dialog and backdrop together, the owner's call during
@@ -83,32 +132,110 @@ $modal-fade: 150ms ease-out;
 }
 
 // A long form's width (M5.5), the compendium entry's first: its list fields
-// and nested References panel are cramped in the 32rem column.
+// and nested References panel are cramped in the default `$dialog-column`.
 .modal-dialog--wide {
-  width: min(calc(48rem + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
+  width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The × centred on the title, at its larger size (M5.5).
+// The × at the head's top, at its larger size (M5.5): level with a one-line
+// title, which is its height, and with an edit's eyebrow, as the owner's
+// mock-up drew it, rather than adrift beside a name wrapped over lines
+// (MB.115). It stays at the
+// top as a long form scrolls beneath it, the owner's call at MB.115: outside
+// the body, which is what scrolls, the gap beneath it padding rather than
+// margin so it belongs to the header.
+//
+// A control the contents put in the header sits under the ×, its foot level
+// with the heading's, or on a phone on a line of its own under the heading,
+// at its start (the owner's calls at MB.115): between the title and the ×
+// it squeezed a phone's heading until a name broke mid-word. A heading
+// shorter than the two sinks to meet it.
 .modal-dialog__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(3);
-  margin-bottom: space(4);
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  gap: 0 space(3);
+  padding-bottom: space(4);
+}
+
+// The eyebrow over the title, in the `.header` primitive's column, closer
+// than its gap. It may shrink past its content, so a long name wraps rather
+// than pushing the × out, and a name with no break in it breaks anywhere
+// rather than overflow.
+.modal-dialog__heading {
+  grid-row: 1 / -1;
+  align-self: end;
+  gap: space(1);
+  min-width: 0;
+
+  @container modal (max-width: #{$narrow-column + $modal-padding}) {
+    grid-row: 1;
+    align-self: start;
+  }
 }
 
 .modal-dialog__title {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
-// A 2rem × in a 2.5rem square, the owner's call during M5.5, in the
-// proportion it began at: well past WCAG 2.2's 24px minimum target.
+// A second identifier after the name, an ingredient's formal name or a
+// deity's tradition (MB.115): quieter than the name, the body's face at its
+// size and weight in the muted ink.
+.modal-dialog__qualifier {
+  font-family: $font-body;
+  font-size: type-size('body');
+  font-weight: 400;
+  letter-spacing: normal;
+  color: $text-muted;
+}
+
+// Under the ×, a control the contents put there, its foot on the heading's.
+.modal-dialog__header-slot {
+  display: flex;
+  grid-column: 2;
+  place-self: end end;
+  white-space: nowrap;
+
+  // At the width a form stacks its own row, under the heading at its start,
+  // where the column beside the name stays the ×'s alone.
+  @container modal (max-width: #{$narrow-column + $modal-padding}) {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: space(2);
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  // Held while a question is asked, as the form is, and greyed by the same
+  // scrim, so it does not look pressable while it is not.
+  &[inert] {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: $modal-scrim;
+    }
+  }
+}
+
+// A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
+// in the proportion it began at: well past WCAG 2.2's 24px minimum target.
+// The glyph's 2rem is on no scale: it is the × drawn at the size of the
+// target it sits in, not a length of the layout. Its column is its own
+// width, so a heading that wraps cannot squeeze the round target to an oval.
 .modal-dialog__close {
   display: inline-flex;
+  place-self: start end;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: $close-target;
+  height: $close-target;
   padding: 0;
   border: 0;
   border-radius: radius('pill');
@@ -121,5 +248,120 @@ $modal-fade: 150ms ease-out;
   &:hover,
   &:focus-visible {
     color: $text-primary;
+  }
+}
+
+// A question a form asks over itself, ConfirmOverlay (MB.115, the owner's
+// call): a scrim over the body in view, the form dimmed beneath it, and the
+// question on a raised card centred in it, wherever the body is scrolled.
+// The scrim scrolls only if the card is taller than the tallest dialog,
+// centred with auto margins so its top is never cut off. Both fade in over
+// the short motion, and appear at once under reduced motion.
+.confirm-overlay {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 1;
+  display: flex;
+  padding: space(4);
+  overflow: auto;
+  background-color: $modal-scrim;
+  opacity: 1;
+  transition: opacity $motion-short ease-out;
+
+  @starting-style {
+    opacity: 0;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// The card: the dialog's own raised surface, at the floating elevation since
+// it sits on a surface itself, a narrow column wide. Positioned and isolated,
+// so its flash lies over its ground and under its words. A fieldset, so the
+// browser's edge and its least width (its content's) are taken off.
+.confirm-overlay__card {
+  @include modal-surface($shadow-floating);
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: min(100%, $narrow-column);
+  min-inline-size: 0;
+  margin: auto;
+  padding: space(5);
+  border: 0;
+}
+
+.confirm-overlay__question {
+  margin: 0;
+}
+
+// Its row stacks, full width and in order, at the width a form's own does:
+// a form stacks under 28rem of its own width, the body's padding outside it.
+@container modal-main (max-width: #{$narrow-column + $modal-padding}) {
+  .confirm-overlay__card .modal__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// Outside a modal there is no layer: the card stands in the form's flow, as
+// far from the fields as a form's buttons are, with no scrim.
+.confirm-overlay--in-place {
+  position: static;
+  display: block;
+  padding: 0;
+  overflow: visible;
+  background-color: transparent;
+
+  .confirm-overlay__card {
+    width: auto;
+    margin-block: space(2);
+  }
+}
+
+// A way out tried again while the discard question shows flashes its card,
+// the owner's call during MB.115, so the person sees why nothing closed:
+// twice, the owner's call, the secondary's tint over the card fading over two
+// of the short motion's steps each time. Under reduced motion nothing fades:
+// a solid edge shows and goes, twice, in the same time. A layer of its own,
+// remade on each try so the animation runs again
+// (claude-docs/components/modal.md, "Unsaved changes").
+$confirm-flash: $motion-short * 4;
+
+.confirm-overlay__flash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  animation: confirm-overlay-flash $confirm-flash * 0.5 ease-out 2 both;
+
+  @include reduced-motion {
+    animation: confirm-overlay-mark $confirm-flash step-end both;
+  }
+}
+
+@keyframes confirm-overlay-flash {
+  from {
+    background-color: color-mix(in srgb, $secondary 22%, transparent);
+  }
+
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes confirm-overlay-mark {
+  0%,
+  50% {
+    outline: 2px solid $secondary;
+  }
+
+  25%,
+  75%,
+  100% {
+    outline: 0 solid transparent;
   }
 }

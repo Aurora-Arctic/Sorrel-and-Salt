@@ -4,8 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// M5.5: the admin's compendium, its list narrowed to the two curation to-do
-// lists, and the wide modal the address opens over it — IngredientForm on
+// M5.5: the admin's compendium, and the modal the address opens over it — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
 // the Combobox's among them (claude-docs/components/ingredient-form.md,
 // "Testing").
@@ -73,7 +72,7 @@ test('a signed-in non-admin is refused at /admin/compendium with the 403 page', 
   const response = await page.goto('/admin/compendium?new');
 
   expect(response?.status()).toBe(403);
-  await expect(page.getByRole('heading', { level: 1, name: 'Not authorized' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
@@ -84,11 +83,11 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
 
   const response = await page.goto('/admin/compendium');
   expect(response?.status()).toBe(200);
-  await expect(page).toHaveTitle('Compendium — Admin — Sorrel & Salt');
-  await expect(page.getByRole('heading', { level: 1, name: 'Compendium' })).toBeVisible();
+  const add = page.getByRole('link', { name: 'Add Ingredient' });
+  await expect(add).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
-  await page.getByRole('link', { name: 'Add Ingredient' }).click();
+  await add.click();
   const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(adding).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/compendium\?new$/);
@@ -109,7 +108,7 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   const field = await heightOf(adding.getByRole('textbox', { name: 'Name', exact: true }));
   for (const box of [
     adding.getByRole('combobox', { name: 'Classification' }),
-    adding.getByRole('combobox', { name: 'Form' }),
+    adding.getByRole('combobox', { name: 'New Form' }),
     adding.getByRole('combobox', { name: 'Folk Name' }),
     adding.getByRole('combobox', { name: 'Reference' }),
     adding.getByRole('button', { name: 'Add Folk Name' }),
@@ -117,68 +116,90 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
     expect(await heightOf(box)).toBeCloseTo(field, 0);
   }
 
+  // Escape on a picker's open list closes the list alone, not the dialog
+  // (MB.115): the flow below goes on in the same dialog. Before anything is
+  // typed, so a leaked Escape would close it rather than ask to discard.
+  const classification = adding.getByRole('combobox', { name: 'Classification' });
+  const choices = adding.getByRole('listbox', { name: 'Classification choices' });
+  await classification.click();
+  await expect(choices.getByRole('option').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(choices.getByRole('option')).toHaveCount(0);
+  await expect(classification).toHaveAttribute('aria-expanded', 'false');
+  await expect(adding).toBeVisible();
+
   // A lookup open inside the dialog: the suggestions float in its top layer.
-  await adding.getByRole('combobox', { name: 'Planet' }).click();
-  await adding.getByRole('combobox', { name: 'Planet' }).fill('M');
-  await expect(adding.getByRole('listbox', { name: 'Planet suggestions' })).toBeVisible();
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
+  await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
-  // Left in the box, the text would hold the save: a planet here is a pick.
-  await adding.getByRole('combobox', { name: 'Planet' }).fill('');
+  // Left in the box, the text would hold the save: a celestial body here is a pick.
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('');
+
+  /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
+  const addForm = async (dialog: Locator, form: string) => {
+    const box = dialog.getByRole('combobox', { name: 'New Form' });
+    await box.click();
+    await box.fill(form);
+    await dialog
+      .getByRole('listbox', { name: 'New Form suggestions' })
+      .getByRole('option', { name: new RegExp(`^${form} \\(`) })
+      .click();
+    await expect(dialog.getByRole('group', { name: form, exact: true })).toBeVisible();
+  };
 
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Testwort');
-  await adding.getByRole('combobox', { name: 'Classification' }).click();
-  await adding
-    .getByRole('listbox', { name: 'Classification choices' })
-    .getByRole('option', { name: 'None' })
-    .click();
+  await classification.click();
+  await choices.getByRole('option', { name: 'None' }).click();
+  await addForm(adding, 'Herb');
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
 
-  // Save Ingredient opens what it saved, at its address.
-  const editing = page.getByRole('dialog', { name: 'Edit Ingredient' });
+  // Save Ingredient opens what it saved, at its address, named by its saved
+  // name (MB.115): no formal name, since it is classified None.
+  const editing = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Testwort', exact: true });
   await expect(editing).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/compendium\?edit=aaa-testwort$/);
+  // An edit opens with every section closed (MB.115); the control in the
+  // modal's header opens them all.
+  await editing.getByRole('button', { name: 'Open All' }).click();
   await expect(editing.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
     'Aaa Testwort',
   );
   await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
 
-  await editing.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
-  await editing.getByRole('button', { name: 'Save Ingredient' }).click();
-  await expect(editing.getByText('Saved Aaa Testwort.')).toBeVisible();
-  await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+  // The ingredient's own description, ahead of its forms' (MB.221).
+  await editing.getByRole('textbox', { name: 'Description' }).first().fill('Made by the e2e spec');
+  // A second form, with a safety note of its own. Added here, it opens with
+  // every section open.
+  await addForm(editing, 'Oil');
+  const oil = editing.getByRole('group', { name: 'Oil', exact: true });
+  await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
   await assertNoAccessibilityViolations(page);
+  await editing.getByRole('button', { name: 'Save Ingredient' }).click();
+  await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+  await expect(editing.getByRole('status').filter({ hasText: 'Aaa Testwort' })).toBeVisible();
 
-  await editing.getByRole('button', { name: 'Delete Ingredient' }).click();
-  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(editing).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/compendium$/);
-  await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
-});
-
-// The curation to-do lists: the entries still classified Unknown, and those
-// citing no source. A filtered page is an address, and its links keep it.
-test('an admin narrows the compendium to its to-do lists', async ({ page }) => {
-  await signInAs(page, 'filter-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium');
-  const search = page.getByRole('search');
-  const filter = search.getByRole('button', { name: 'Filter' });
-  await expect(filter).toBeDisabled();
-
-  await search.getByRole('combobox', { name: 'Classification' }).selectOption({ label: 'Unknown' });
-  await filter.click();
-  await expect(page).toHaveURL(/\/admin\/compendium\?nomenclature=unknown$/);
-  await expect(filter).toBeDisabled();
-
-  await search.getByRole('checkbox', { name: 'Without References' }).check();
-  await filter.click();
-  await expect(page).toHaveURL(/\/admin\/compendium\?nomenclature=unknown&withoutReferences=1$/);
-  await expect(page.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
-    'href',
-    '/admin/compendium?nomenclature=unknown&withoutReferences=1&new',
+  // Read back from the server: both forms, the oil's note its own.
+  await page.reload();
+  const reopened = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Testwort', exact: true });
+  // Every section closed, it opens with the focus on the dialog itself.
+  await expect(reopened).toBeFocused();
+  // Each section opens by its heading (MB.115).
+  await reopened.getByRole('button', { name: 'Variants', exact: true }).click();
+  await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
+  // A variant opens closed to its summary line (MB.115): its Edit shows its
+  // sections, each closed. Safety is the oil's own, inside its card.
+  await reopened.getByRole('button', { name: 'Edit Oil' }).click();
+  const reopenedOil = reopened.getByRole('group', { name: 'Oil', exact: true });
+  await reopenedOil.getByRole('button', { name: 'Safety', exact: true }).click();
+  await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
+    'Dilute before use.',
   );
   await assertNoAccessibilityViolations(page);
 
-  await search.getByRole('searchbox', { name: 'Name' }).fill('no such entry');
-  await filter.click();
-  await expect(page.getByText('No compendium entry matches.')).toBeVisible();
+  await reopened.getByRole('button', { name: 'Delete Ingredient' }).click();
+  await reopened.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(reopened).toHaveCount(0);
+  await expect(page).toHaveURL(/\/admin\/compendium$/);
+  await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });

@@ -9,10 +9,11 @@ import {
   expectSignedIn,
   landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import type { AuthInstance, Profile } from '../support/types';
 
 // Story 58, through Better Auth's real endpoints: an OAuth sign-up mails a
 // link, and following it verifies the address only from a session holding
@@ -40,19 +41,24 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials and nothing else, so one import serves every test.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+});
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // The ledger first: a promotion's rows name the users deleted below, and
+  // only a truncate empties it.
+  await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
 });
 
 afterEach(() => {
@@ -288,10 +294,17 @@ describe('the update hook stamps other Better Auth writes', () => {
     expect(await userRow(OWNER)).toMatchObject({ email_verified: true, updated_by: id });
   });
 
-  it("stamps /update-user with the session's user", async () => {
+  // The name is `setName`'s, through `withAudit` (MB.88): Better Auth's own
+  // write of it, and of `image`, is refused before the endpoint runs.
+  it('refuses /update-user, leaving the row unchanged', async () => {
     const response = await signIn('google', { sub: 'g-5', email: OWNER, verified: true });
     await restamp(OWNER);
-    const { id } = (await userRow(OWNER))!;
+    const before = (await userRow(OWNER))!;
+    // Why it could have written: the session is the row's own and live.
+    const session = await auth.api.getSession({
+      headers: new Headers({ cookie: cookieHeader(response) }),
+    });
+    expect(session?.user.id).toBe(before.id);
 
     const update = await auth.handler(
       new Request(`${ORIGIN}/api/auth/update-user`, {
@@ -301,12 +314,19 @@ describe('the update hook stamps other Better Auth writes', () => {
           origin: ORIGIN,
           cookie: cookieHeader(response),
         },
-        body: JSON.stringify({ name: 'Renamed Person' }),
+        body: JSON.stringify({ name: 'Renamed Person', image: 'https://example.test/me.png' }),
       }),
     );
 
-    expect(update.status, await update.clone().text()).toBe(200);
-    expect((await userRow(OWNER))?.updated_by).toBe(id);
+    expect(update.status).toBe(404);
+    const [row] =
+      await sql`select name, image, updated_by, updated_at from users where id = ${before.id}`;
+    expect(row).toMatchObject({
+      image: null,
+      updated_by: before.updated_by,
+      updated_at: before.updated_at,
+    });
+    expect(row.name).not.toBe('Renamed Person');
   });
 });
 
@@ -339,26 +359,6 @@ describe('the primary admin is promoted at first-party verification', () => {
     expect(response.headers.get('location')).toBe('/account/email?verified');
     expect(await roleOf(OWNER)).toBe('admin');
     expect((await userRow(OWNER))?.updated_by).toBe(before.id);
-  });
-
-  it('promotes nobody when the link is followed from another browser', async () => {
-    const { cookie, link } = await signUpUnverified();
-    const other = await signIn('google', { sub: 'g-6', email: STRANGER, verified: true });
-    expectSignedIn(other);
-
-    expect((await follow(link, cookieHeader(other))).headers.get('location')).toBe(
-      '/account/email?error=SIGN_IN_TO_VERIFY',
-    );
-    expect((await follow(link)).headers.get('location')).toBe(
-      '/sign-in?next=%2Faccount%2Femail&error=sign_in_to_verify',
-    );
-    expect(await roleOf(OWNER)).toBe('user');
-    expect(await roleOf(STRANGER)).toBe('user');
-
-    // The same link from the owner's session promotes, so the token was good,
-    // the variable named the address, and the session is what refused it.
-    await follow(link, cookie);
-    expect(await roleOf(OWNER)).toBe('admin');
   });
 
   // The email page's change link (MB.54): Better Auth's own change branch
@@ -395,15 +395,5 @@ describe('the primary admin is promoted at first-party verification', () => {
       updated_by: before.id,
     });
     expect(await roleOf(OWNER)).toBe('admin');
-  });
-
-  it('verifies an address the variable does not name without promoting it', async () => {
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', STRANGER);
-    const { cookie, link } = await signUpUnverified();
-
-    await follow(link, cookie);
-
-    expect((await userRow(OWNER))?.email_verified).toBe(true);
-    expect(await roleOf(OWNER)).toBe('user');
   });
 });

@@ -1,7 +1,7 @@
 import 'server-only';
 import { type CommonNameSuggestion, findCommonNameSuggestions } from '../../../db/repository';
 import type { Session } from '../../../lib/session';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { readersOf } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 
 export type { CommonNameSuggestion };
@@ -25,9 +25,6 @@ export async function suggestCommonNames(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<CommonNameSuggestion>[]> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
   return findCommonNameSuggestions(memberships, query.trim(), page);
 }

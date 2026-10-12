@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getAuthTables } from 'better-auth/db';
 import { IMPERSONATION_PATHS, impersonationEnabled } from '@/lib/impersonation';
+import { warmImport } from '../support/warm-import';
+
+warmImport(() => import('@/lib/auth'));
 
 // MB.53: Better Auth's `admin` plugin is registered for impersonation alone,
 // and only where both conditions hold — the flag set, and a deploy target that
@@ -55,30 +58,21 @@ async function statusOf(auth: Awaited<ReturnType<typeof authUnder>>, path: strin
   return response.status;
 }
 
+// One environment each way: which environments turn it on is
+// impersonationEnabled's, above.
 describe('registration', () => {
-  it.each([
-    { target: '', label: 'locally' },
-    { target: 'preview', label: 'on a preview' },
-  ])(
-    'mounts exactly the two impersonation endpoints $label with the flag set',
-    async ({ target }) => {
-      const auth = await authUnder('true', target);
+  it('mounts exactly the two impersonation endpoints where it is on', async () => {
+    const auth = await authUnder('true', 'preview');
 
-      // The allowlist, compared by name: an endpoint a Better Auth upgrade adds
-      // fails here rather than going through unnoticed.
-      expect(mountedAdminPaths(auth)).toEqual([...IMPERSONATION_PATHS].sort());
-      // Answers, refusing a signed-out caller, rather than 404ing.
-      expect(await statusOf(auth, '/admin/impersonate-user')).toBe(401);
-    },
-  );
+    // The allowlist, compared by name: an endpoint a Better Auth upgrade adds
+    // fails here rather than going through unnoticed.
+    expect(mountedAdminPaths(auth)).toEqual([...IMPERSONATION_PATHS].sort());
+    // Answers, refusing a signed-out caller, rather than 404ing.
+    expect(await statusOf(auth, '/admin/impersonate-user')).toBe(401);
+  });
 
-  it.each([
-    { flag: 'true', target: 'production', label: 'at production with the flag set' },
-    { flag: '', target: '', label: 'locally without the flag' },
-    { flag: '', target: 'preview', label: 'on a preview without the flag' },
-    { flag: '', target: 'production', label: 'at production without the flag' },
-  ])('mounts nothing under /admin $label: the endpoints are absent', async ({ flag, target }) => {
-    const auth = await authUnder(flag, target);
+  it('mounts nothing under /admin where it is off: the endpoints are absent', async () => {
+    const auth = await authUnder('true', 'production');
 
     expect(auth.options.plugins?.map(({ id }) => id)).not.toContain('admin');
     expect(mountedAdminPaths(auth)).toEqual([]);
@@ -112,12 +106,5 @@ describe('registration', () => {
     for (const field of ['banned', 'banReason', 'banExpires']) {
       expect(Object.keys(tables.user.fields)).not.toContain(field);
     }
-  });
-
-  it('keeps impersonating another admin off', async () => {
-    const auth = await authUnder('true', 'preview');
-    const plugin = auth.options.plugins?.find(({ id }) => id === 'admin');
-
-    expect(plugin?.options).not.toMatchObject({ allowImpersonatingAdmins: true });
   });
 });

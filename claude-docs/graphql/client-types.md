@@ -26,11 +26,19 @@ const OkQuery = graphql(`
   operations it finds and the schema types they reach, so a schema change that
   no document touches leaves `src/gql/` alone. Removing or renaming a field
   that a document selects fails `npm run codegen` at validation.
-- **Committed, and guarded.** `tests/guards/codegen-staleness.test.ts`
-  regenerates in memory and fails on any file under `src/gql/` that differs, is
-  missing or is left over. It runs in CI's `vitest` job; there is no workflow of
-  its own. The same file proves that a document gets typed, that an unknown field
-  fails, and that an unmapped scalar fails.
+- **A fragment names a shared selection, unmasked.** Where several documents
+  select the same fields of a type, a `fragment` written once in a `graphql()`
+  call is spread into each (the first is `ReferenceRow`, MB.115), and codegen
+  adds its definition to every document that spreads it. Fragment masking is
+  off (`presetConfig.fragmentMasking` in `codegen.ts`), so the fields are typed
+  where they are spread, read as any other field, rather than hidden behind
+  `useFragment` for a component to unmask: the project uses fragments to say a
+  selection once, not to let each component declare its own data.
+- **Committed, and guarded.** CI's `checks / codegen` leg
+  (`.github/workflows/checks.yml`) runs `npm run codegen` and fails on any file
+  under `src/gql/` that `git status` then shows changed, deleted or added
+  (MB.224, which moved it out of the `vitest` job: it tested the tooling, not
+  the app).
 - **Custom scalars map to their wire type** in `codegen.ts`: `DateTime` is a
   `string`, because graphql-scalars serialises it to ISO 8601, and so is
   `LocalDate`, a `YYYY-MM-DD` day. With

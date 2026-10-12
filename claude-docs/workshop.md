@@ -20,8 +20,17 @@ without a page routed to it.
   owner's call). `Modal` opens with `showModal()`, which puts the dialog in the
   document's top layer: in the workshop's own document that covers Ladle's
   sidebar too. In its own iframe, carrying the global provider and styles, the
-  dialog covers the story's frame and nothing else. `Modal` and `CategoryForm`
-  are the first.
+  dialog covers the story's frame and nothing else. `Modal` and the category
+  form, now `GroupedValueForm`, are the first.
+- **A page component's story renders inside the page's real frame**
+  (MB.116): the `main` its route draws, with the same classes, such as
+  `<main className="page-frame">` for `NotAuthorized` or
+  `page-frame page-frame--narrow` for a form page. A story that drew the
+  component bare would show a column the app never draws, since the frame
+  sets the width and the spacing. Each also has `PhoneDark` and
+  `PhoneLight` stories, `meta = { theme, width: 375 }` as the
+  Foundations page has, so a review sees the page at phone width in both
+  themes without touching the toolbar.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -45,20 +54,13 @@ without a page routed to it.
     the page loads and never hot-reloads. The empty string survives the `??`,
     Vite binds every interface, and the browser connects back to the page's own
     hostname. `'0.0.0.0'` would bind the same but is also sent to the browser
-    as the address to connect to. `tests/guards/workshop-guards.test.ts` pins
-    it.
+    as the address to connect to.
   - **`addons.theme.defaultState: 'dark'`** matches the app's dark-first default
     in `globals.scss` (`:root { @include theme-dark }`), so the workshop opens
     the same way a viewer who has never touched the toggle sees the app.
     M0.31 briefly set it to `'auto'` (the control's unset position, letting
     `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
-    confirmed intent, and `tests/guards/workshop-guards.test.ts` pins it.
-- **`config.d.mts`** — a hand-written declaration of the slice of `config.mjs`
-  that guard reads, for `tsc` alone: `allowJs` is off, so the
-  `@type {import('@ladle/react').UserConfig}` JSDoc in `config.mjs` reaches
-  editors and nothing else, and the test could not import the config without
-  it. Deliberately not `UserConfig` itself — see the `tsconfig` note under
-  Commands and gates. Ladle never reads it.
+    confirmed intent.
 - **`vite.config.ts`** — Sass API pinned to `modern-compiler`. Resolution is
   left at Vite/Sass defaults **because** that is what `next dev` does: relative
   `@use`, empty load paths. This file is the seam for keeping the two aligned
@@ -82,8 +84,8 @@ without a page routed to it.
   the toolbar. It also wraps the frame in the app's `Providers`
   (`src/app/providers.tsx`), so a component that uses TanStack Query
   (`EmailForm`'s `useMutation`) finds the one client the root layout mounts —
-  a story never mounts a `QueryClientProvider` of its own, which
-  `tests/guards/graphql-client.test.ts` would refuse.
+  a story never mounts a `QueryClientProvider` of its own, which would split
+  the cache.
   - **`reducedMotion` pin (MB.1).** `prefers-reduced-motion: reduce` is a real
     OS/browser setting Ladle can't expose a toolbar control for — there's
     nothing to dispatch the way the theme control dispatches `data-theme`. A
@@ -133,21 +135,53 @@ without a page routed to it.
 - **`navigation.ts`** — what `next/navigation` resolves to here, by the same
   alias: a `useRouter` whose every method goes nowhere. Next's own throws with
   no App Router mounted, and the first component to navigate on its own,
-  CategoryList's filter (MB.178), would render no story without it.
+  the category list's filter (MB.178), now `GroupedValueList`'s, would
+  render no story without it. Its `usePathname` answers `/admin/users`
+  unless a story wraps itself in `WorkshopPathname` with another address, so
+  AdminNav's stories show the current-page marker on People, and a tabbed
+  page's story can open any tab (MB.115).
+- **`admin-frame.tsx`** — the shared story wrapper for the admin area:
+  `AdminFrame` is the `.admin-layout` div alone, and `AdminTabbedFrame` is a
+  tabbed admin page as its route draws it (heading and tabs from
+  `ADMIN_PAGES`, an `action`, optionally the nav). Nine stories drew this by
+  hand before MB.115. It is the layout's markup only; the app's own layout
+  reads the session.
+- **`fixtures.ts`** — invented rows the admin stories share, so a form's story
+  and its list's story offer the same data: `GROUP_NAMES` (four names per kind
+  of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
+  picker or a filter, and two pending `INVITATIONS`.
+- **`press.ts`** — `press(name)` and `usePressOnMount(name)`, for a story that
+  opens on a state a button press reaches, such as a Delete question over its
+  form.
+- **`types.ts`** — the types the workshop's helpers share, kept apart from
+  their components as the repo keeps types: `AdminTabbedFrameProps` today.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
 - **`foundations.{tsx,scss,stories.tsx}`** — one reference page under
   `Foundations`: the raw palette and the runtime tokens, the type scale and
   `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
-  button, notices, a form built from the field primitives, the eight
+  button, notices, a form built from the field primitives (a label row with
+  its required mark and `InfoTip` among them), the switch off, on and
+  disabled either way, through `SwitchField`, the page frame
+  and its narrow form, the link row with its current-page link, the data
+  table, the pager (in a list navigation that goes nowhere, since `Pager`
+  reads its `ListFrame`'s), the filter row with a switch, the page header, the four providers' sign-in buttons in
+  each state with their brand parts printed from `$brand-palettes`, the
+  provider marks, the eight
   seeded group colour pairs as `chip()`'s two states — read from
   `src/db/seed/category-groups.ts` and set inline by `chipColors()`, as a page
   does — the badge palettes, a modal
   and an ingredient-card specimen. All of it comes from the real partials, and
   every printed value — a hex, a step's length — is generated by
   `foundations.scss` from the partial's own map rather than typed. Its
-  `PhoneDark` and `PhoneLight` stories pin a 375px width. It lives in
+  `PhoneDark` and `PhoneLight` stories pin a 375px width. The data table,
+  the filter row and the page header are each drawn twice: at the page's
+  width, and inside a 375px box (`.fd-phone`), so their container queries,
+  which measure the element's own frame rather than the window, show the
+  phone layout at any window size; the boxed table is the stacking one, and
+  the page header's box also carries `.admin-layout`, so its action spans the
+  line as on an admin page. It lives in
   `.ladle/` because the app never imports it; `foundations.scss` holds only
   reference-page chrome, nested under `.fd`.
 
@@ -170,6 +204,45 @@ without a page routed to it.
 all`: the same rules a client in that scheme applies, nothing re-styled. A
   story's `meta.theme` pin wins, as for components.
 
+## Review screenshots
+
+`scripts/review-screenshots.mjs` is a design review's camera (MB.116): it
+shoots each page a review lists at 375×812 and 412×915, in the dark and the
+light theme, full page, into the directory it is given —
+`.reports/<task>-screenshots/` by convention, gitignored with the rest of
+`.reports/`. Every later review reuses it rather than shooting by hand.
+
+```sh
+node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
+  --pages '[{ "path": "/sign-in", "name": "sign-in" }, { "path": "/", "name": "welcome" }]'
+```
+
+- **It drives the remote browser**, `chromium.connect(PLAYWRIGHT_WS_ENDPOINT)`,
+  the same `playwright-server` the e2e runner uses, since no browser is
+  installed in the devcontainer. That browser reaches this container as
+  `devcontainer`, so `--base` defaults to `http://devcontainer:8000`, the dev
+  server. A workshop page is reached the same way once a copy is served on
+  every interface:
+  `__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=devcontainer npx ladle serve --host 0.0.0.0 --port 61001`.
+- **`--pages`** is a JSON list of `{ path, name }`, inline or a file's path;
+  each page is saved as `<name>-<width>-<theme>.png`.
+- **The theme is `emulateMedia({ colorScheme })`**: a fresh context has no
+  stored theme, so the app follows `prefers-color-scheme` as a first visit
+  does. A workshop story does not: Ladle sets its configured default, dark,
+  on the document unless the URL carries `theme=`, so the script adds
+  `theme=light` or `theme=dark` to any path with a `story=` parameter. A
+  story whose `meta.theme` is fixed keeps it either way.
+- **`--storage-state <file>`** is a Playwright storage-state file carrying a
+  signed-in session's cookies, for a page behind sign-in.
+- **Both widths are touch screens** (MB.115): every browser context is
+  opened with `hasTouch` and `isMobile`, so the page's `(hover: none)`
+  query holds as it does on a phone. A desktop browser at phone width would
+  otherwise show what no phone does, such as the impersonation banner tucked
+  away until a pointer nears the top, where a touch screen keeps it in the
+  page's flow. A review's phone sign-off is a touch sign-off.
+- **Untested on purpose**: it is a tool the agents running a review use, not
+  a requirement of the app.
+
 ## Commands and gates
 
 - `npm run workshop` / `make workshop` — dev server on **61000**, with Vite HMR
@@ -178,28 +251,19 @@ all`: the same rules a client in that scheme applies, nothing re-styled. A
 - `npm run workshop:build` / `make workshop-build` — static build to the
   gitignored `.reports/workshop/`, via `scripts/build-workshop.ts`. See **The build gate**
   below for why the wrapper exists.
-- `tests/guards/workshop-guards.test.ts` (MB.38, MB.66) — the mechanical guards, as
-  ordinary Vitest tests in the `unit` project. One fails if a directory under
-  `src/components/` has an `index.tsx` but no sibling `index.stories.tsx` —
-  not an Oxlint rule, because Oxlint has no custom-rule API and this is a
-  cross-file filesystem assertion; scoped to `src/components/`, with
-  `.ladle/*.stories.tsx` deliberately out of scope; and proven on a throwaway
-  tree before it is trusted on the real one. Its twin (MB.66) fails if a
-  top-level `src/emails/<name>.tsx` has no sibling `<name>.stories.tsx`, or
-  if `config.mjs` stops globbing them. The last fails if
-  `config.mjs`'s `addons.theme.defaultState` is not `'dark'`. Both were
-  standalone scripts under `scripts/` until MB.38, written that way only
-  because Vitest had not landed yet.
+- **Every component and every email template has its story**, by review:
+  MB.224 retired the guards that held a directory under `src/components/` and
+  a top-level `src/emails/<name>.tsx` to a sibling story, and `config.mjs` to
+  globbing them and opening dark, since a test of the workshop proves no
+  behaviour a user depends on.
 - ⚠️ **`workshop:build` is not a render smoke test.** It cannot catch a story
   that throws, at render time or module-eval time — Ladle code-splits stories
   into browser-only chunks that the static build never executes. The one thing
   it genuinely catches is an unresolvable import.
 - **`tsconfig` does not reach `.ladle/` or `scripts/`.** Oxlint and the build
   are the only checks covering those files; `tsc --noEmit` will not flag them.
-- **Both gates run in CI, and neither in pre-commit.** The guards run with the
-  rest of the suite on the `vitest` job — whose path filter names
-  `.ladle/config.mjs` explicitly, since it is not under `src/**` — and
-  `workshop:build` on `checks.yml`'s `build` leg. Pre-commit is lint,
+- **The gate runs in CI, and not in pre-commit.** `workshop:build` runs on
+  `checks.yml`'s `build` leg. Pre-commit is lint,
   `format:check` and typecheck, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
 
@@ -217,9 +281,7 @@ environment. Production and hotfix previews never carry it.
   from `public/` as it would any static asset; `public/workshop` is
   gitignored. `--base` is what makes Ladle's asset URLs absolute under
   `/workshop/`; drift it from the proxy's prefix and the page ships with every
-  asset 404ing. `tests/guards/workshop-deploy.test.ts` reads the step as data
-  and pins the flags, the staging-only `if:`, and its place before
-  `vercel build`.
+  asset 404ing.
 - **How it is gated: in `src/proxy.ts`, and nowhere else can do it.** Next
   runs the proxy before it serves `public/`, and a static file has no page to
   call `requireSession()`, so the proxy's usual cookie-only check would admit

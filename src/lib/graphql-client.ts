@@ -50,6 +50,27 @@ export function graphqlRequest<TResult, TVariables extends object>(
 }
 
 /**
+ * A save that creates a row, or with its `id` updates that one, through the
+ * two documents given: the admin vocabulary forms' `if (id) update else
+ * create`, written once for every kind they declare (MB.115).
+ */
+export function saveRequest<Input extends object>(
+  create: TypedDocumentNode<unknown, { input: Input }>,
+  update: TypedDocumentNode<unknown, { id: string; input: Input }>,
+): (input: Input, id: string | undefined) => Promise<void> {
+  return async (input, id) => {
+    if (id) {
+      await graphqlRequest(update, { id, input });
+      return;
+    }
+    // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
+    // `Input` is generic; the parameter has already held the document to it.
+    const widened = create as TypedDocumentNode<unknown, { input: object }>;
+    await graphqlRequest<unknown, { input: object }>(widened, { input });
+  };
+}
+
+/**
  * Query options for `useQuery`, keyed `[operationName, variables]` — codegen
  * refuses two operations sharing a name, so the name is a unique key.
  */

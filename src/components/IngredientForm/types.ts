@@ -1,5 +1,4 @@
-import type { HTMLInputTypeAttribute, ReactNode, Ref } from 'react';
-import type { FieldPath, FieldValues } from 'react-hook-form';
+import type { ReactNode, Ref, RefObject } from 'react';
 import type { z } from 'zod';
 import type {
   CreateReferenceMutation,
@@ -16,6 +15,12 @@ import type {
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
+import type { FieldProps, SelectOption } from '../Field/types';
+import type { Announce, LegendAction } from '../CategoryPicker/types';
+import type { ShortCitationFields } from '@/lib/types';
+// The arrays the unions below are derived from, as `INGREDIENT_ELEMENTS`'s is:
+// a type import of a value, which brings nothing into the bundle.
+import type { LIST_FIELDS, SECTION_KEYS, VARIANT_LISTS, VARIANT_SECTION_KEYS } from './values';
 
 interface IngredientFormCallbacks {
   /**
@@ -30,7 +35,16 @@ interface IngredientFormCallbacks {
   onCancel?: () => void;
   /** Where a near match the duplicate warning names links, when not a coven's ingredient page. */
   duplicateHref?: (match: Duplicate) => string;
+  /**
+   * Where a linked substitute's summary links its entry, opened in a new tab;
+   * undefined for an entry with no page to open. Left out, a summary links
+   * nothing (MB.115).
+   */
+  entryHref?: EntryHref;
 }
+
+/** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */
+export type EntryHref = (ingredient: { slug: string; isGlobal: boolean }) => string | undefined;
 
 /**
  * Where the form writes. A coven's new ingredient, to the coven named; or,
@@ -67,10 +81,23 @@ export interface ListEntry {
 export interface SubstituteLink {
   id: string;
   canonicalName: string | null;
-  form: string | null;
+  /** Its live forms' text, in form order (MB.222): `[]` for none. */
+  forms: string[];
   description: string | null;
   /** A compendium entry, rather than this coven's own. */
   isGlobal: boolean;
+  /** The forms it comes in, one of which a substitute may name (MB.215). */
+  variants?: SubstituteForm[];
+}
+
+/**
+ * One form of a linked ingredient: its id, which a pick of it sends, its
+ * text, and its curated group, which ranks the substitutes' suggestions.
+ */
+export interface SubstituteForm {
+  id: string;
+  form: string;
+  group: string | null;
 }
 
 /**
@@ -80,6 +107,8 @@ export interface SubstituteLink {
  */
 export interface SubstituteListEntry extends ListEntry {
   link?: SubstituteLink;
+  /** The form of the linked ingredient picked, when the substitute is that form alone (MB.215). */
+  variantId?: string;
 }
 
 /**
@@ -98,16 +127,20 @@ export interface DeityListEntry extends ListEntry {
   link?: DeityLink;
 }
 
-/** A source a reference row links: its id, which is sent, and its tier, which the row says. */
-export interface ReferenceLink {
+/**
+ * A source a reference row links: its id, which is sent, its tier, which the
+ * row says, and the fields its short form is made of, which the row shows.
+ */
+export interface ReferenceLink extends ShortCitationFields {
   id: string;
   /** The compendium's, rather than this coven's own. */
   isGlobal: boolean;
 }
 
 /**
- * One reference (MB.154): the source's citation, which the row reads and is
- * never sent, the source it links, and the locator typed beside it, "p. 112".
+ * One reference (MB.154): the source's citation, which the row is described
+ * by and is never sent, the source it links, and the locator typed beside
+ * it, "p. 112".
  */
 export interface ReferenceListEntry extends ListEntry {
   link: ReferenceLink;
@@ -119,7 +152,7 @@ export interface ReferenceOption extends ComboboxOption {
   link: ReferenceLink;
 }
 
-/** A source saved by the panel, as `createReference` answers it. */
+/** A source saved by the panel, as `createReference` and `updateReference` answer it. */
 export type SavedReference = CreateReferenceMutation['createReference'];
 
 /** Any list's entry: typed text, or a substitute's or a deity's link beside it. */
@@ -131,6 +164,11 @@ export type AnyListEntry = ListEntry | SubstituteListEntry | DeityListEntry;
  */
 export interface ListOption extends ComboboxOption {
   link?: SubstituteLink | DeityLink;
+  /**
+   * The form of the linked ingredient a pick names: a variant's substitute
+   * rows offer each form of an ingredient on its own (MB.115).
+   */
+  variantId?: string;
 }
 
 /**
@@ -159,9 +197,6 @@ export interface IngredientFormValues {
   name: string;
   nomenclature: NomenclatureKind | '';
   canonicalName: string;
-  form: string;
-  /** The curated form picked, while the text is still its name; null for typed text. */
-  formLink: FormLink | null;
   folkNames: ListEntry[];
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
@@ -178,11 +213,59 @@ export interface IngredientFormValues {
   references: ReferenceListEntry[];
   /** The new reference panel is open: a save waits until it is saved or cancelled. */
   referencePanelOpen: boolean;
+  /** The forms it comes in, each with what it adds to the ingredient (MB.215). */
+  variants: VariantFormValues[];
   drafts: Record<DraftName, string>;
 }
 
-/** A box whose text is not yet an entry: a list's, or the references' search. */
-export type DraftName = ListFieldName | 'references';
+/**
+ * A box whose text is not yet an entry: a list's, the references' search, or
+ * the New Form box, whose text is not yet a variant.
+ */
+export type DraftName = IngredientListName | 'references' | 'variants';
+
+/**
+ * One form the ingredient comes in, as the form edits it (DESIGN.md §5,
+ * `ingredient_variants`; MB.215): its form, picked or typed, and what that
+ * form adds to the ingredient — never overrides — with its own boxes.
+ */
+export interface VariantFormValues {
+  /**
+   * The row an edit opened it from, sent back as the input's `id` so a
+   * respelt form keeps its row; absent for a form added here. Not `id`,
+   * which `useFieldArray` keys its rows by.
+   */
+  variantId?: string;
+  form: string;
+  /** The curated form picked, while the text is still its name; null for typed text. */
+  formLink: FormLink | null;
+  description: string;
+  safetyNotes: string;
+  elements: IngredientElement[];
+  planets: ListEntry[];
+  zodiacSigns: ListEntry[];
+  colors: ListEntry[];
+  substitutes: SubstituteListEntry[];
+  categoryIds: string[];
+  references: ReferenceListEntry[];
+  referencePanelOpen: boolean;
+  drafts: Record<VariantDraftName, string>;
+}
+
+/** A variant's lists that take entries in a box: its own planets, signs, colours and substitutes. */
+export type VariantListName = (typeof VARIANT_LISTS)[number];
+
+/** A variant's boxes: its lists', and its references' search. */
+export type VariantDraftName = VariantListName | 'references';
+
+/** Where a variant's fields sit in the form's values: `variants.1`. */
+export type VariantPath = `variants.${number}`;
+
+/** One save as the form sends it: the input, and whether MB.82's redirect question was answered to end it. */
+export interface IngredientSend {
+  input: IngredientFormInput;
+  endRedirect: boolean;
+}
 
 /** A save the server asked to confirm (MB.82): what it said, and the input to send again. */
 export interface RedirectQuestion {
@@ -190,64 +273,33 @@ export interface RedirectQuestion {
   input: IngredientFormInput;
 }
 
-/** What the form sends: its values in the shape the shared schema and the mutation take, unparsed. */
-export type IngredientFormInput = z.input<typeof LocalIngredientInput>;
-
-export type TextFieldName = 'name' | 'canonicalName' | 'form' | 'description' | 'safetyNotes';
-
-/** A closed set holding several values: an entry's elements. */
-export type MultiSelectFieldName = 'elements';
-
-export type ListFieldName =
-  'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
-
-/** What every field shares: what it is called, and what it is told about it. */
-interface FieldProps {
-  label: string;
-  /** What the field is for, behind an info tip beside the label. */
-  hint?: string;
-  /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
-  note?: string;
-  /** Marked required beside its label, and to assistive technology. */
-  required?: boolean;
-}
-
 /**
- * A text field, in the ingredient form or another one providing it: the
- * reference panel's (MB.154). Its name is one of that form's paths.
+ * What the form sends: its values in the shape the shared schema and the
+ * mutation take, unparsed, its forms always listed, as every input type
+ * requires them (MB.222).
  */
-export interface TextFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
-  name: FieldPath<V>;
-  /** A textarea, for prose. */
-  multiline?: boolean;
-  /** The input's type, for a single line: a reference's days are `date`s. */
-  type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url'>;
-  /** Shut, for a field the rest of the form has ruled out; its hint says why. */
-  disabled?: boolean;
-  /** Fields whose errors this one's value decides as well, revalidated when it changes. */
-  deps?: FieldPath<V>[];
-  /** Another element read with the field while it shows: the name's duplicate warning. */
-  describedBy?: string;
-  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
-  invalid?: boolean;
-  /** Drawn beneath the field, after its error: the name's duplicate warning. */
-  after?: ReactNode;
-  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
-  format?: (text: string) => string;
-  /** The browser's autofill: `off` for the name, which Chrome otherwise takes for a person's. */
-  autoComplete?: 'off';
-}
+export type IngredientFormInput = z.input<typeof LocalIngredientInput> & {
+  variants: NonNullable<z.input<typeof LocalIngredientInput>['variants']>;
+};
 
-/** A closed set, in the ingredient form or the reference panel's, whose kind is one. */
-export interface SelectFieldProps<V extends FieldValues = IngredientFormValues> extends FieldProps {
-  name: FieldPath<V>;
-  /** Shown until a choice is made, and not itself a choice. */
-  placeholder?: string;
-  options: readonly SelectOption[];
-  deps?: FieldPath<V>[];
-  /** Runs on a new choice, before the field and its `deps` revalidate. */
-  onChange?: (value: string) => void;
-}
+export type TextFieldName =
+  | 'name'
+  | 'canonicalName'
+  | 'description'
+  | 'safetyNotes'
+  | `${VariantPath}.${'form' | 'description' | 'safetyNotes'}`;
+
+/** A closed set holding several values: an entry's elements, or a variant's. */
+export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
+
+/** The ingredient's own lists that take entries in a box. */
+export type IngredientListName = (typeof LIST_FIELDS)[number];
+
+/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.planets`. */
+export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListName}`;
+
+/** A list's box, as `draftOf` names it: `drafts.planets`, or `variants.1.drafts.planets`. */
+export type DraftPath = `drafts.${DraftName}` | `${VariantPath}.drafts.${VariantDraftName}`;
 
 /** A closed set holding several values, chosen as chips on the select-only box. */
 export interface MultiSelectFieldProps extends FieldProps {
@@ -255,16 +307,15 @@ export interface MultiSelectFieldProps extends FieldProps {
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
   options: readonly SelectOption[];
-}
-
-export interface SelectOption {
-  value: string;
-  label: string;
+  /** At the right end of the label row: a variant's Copy From Ingredient. */
+  action?: ReactNode;
 }
 
 /** A text field whose box suggests as it is typed in; picking fills it. */
 export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> extends FieldProps {
   name: TextFieldName;
+  /** A short action shown, muted, while the box is empty: "Add a form". */
+  placeholder?: string;
   suggestions: Suggestions<O>;
   /** The box has been focused: the lookup may start asking. */
   onActivate: () => void;
@@ -286,6 +337,8 @@ export interface ListFieldProps {
   entry: string;
   /** What the list is for, behind an info tip beside the legend. */
   hint?: string;
+  /** A short action shown, muted, while the box is empty: "Add a body". */
+  placeholder?: string;
   /** What the box suggests; left out for a list with no source, whose box never opens. */
   suggestions?: Suggestions<ListOption>;
   /** The box has been focused: the lookup may start asking. */
@@ -298,6 +351,22 @@ export interface ListFieldProps {
    * planets, signs and deities (MB.162).
    */
   pickOnly?: boolean;
+  /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
+  action?: LegendAction;
+  /** Drawn beneath the box and its error: a variant's notice of the substitutes a copy skipped. */
+  after?: ReactNode;
+  /**
+   * The coven a linked substitute's summary reads its entry from, as the
+   * lookups do; null, the default, for the compendium alone (MB.115).
+   */
+  workspaceId?: string | null;
+}
+
+/** A linked substitute's summary: the ingredient and the form of it the entry names, and the coven asking. */
+export interface SubstituteSummaryProps {
+  link: SubstituteLink;
+  variantId?: string;
+  workspaceId: string | null;
 }
 
 /**
@@ -336,16 +405,44 @@ export interface ReferenceFieldSpec {
   name: ReferenceFieldName;
   label: string;
   hint?: string;
+  /** A short action shown while the field is empty: "Add a title". */
+  placeholder?: string;
   required?: boolean;
   type?: 'date' | 'url';
+}
+
+/** Where a reference panel tells the ingredient form whether it holds unsaved edits. */
+export interface PanelChanges {
+  report: (panel: string, changed: boolean) => void;
+}
+
+/** The edit's panel while it reads the source: the panel's props, the source to edit given. */
+export interface EditSourcePanelProps extends ReferencePanelProps {
+  editing: NonNullable<ReferencePanelProps['editing']>;
+}
+
+/** The panel's form itself: the panel's props, and the values it opens with. */
+export interface PanelFormProps extends ReferencePanelProps {
+  defaults: ReferenceFormValues;
+}
+
+/** What a copy leaves a variant's field as, and how many entries it added. */
+export interface MergedCopy {
+  next: unknown;
+  added: number;
 }
 
 export interface ReferencePanelProps {
   /** The coven the new source is written to, or null for the compendium's. */
   workspaceId: string | null;
+  /**
+   * The source to edit, opened prefilled with every field it has and saved
+   * through `updateReference` in its tier; absent, the panel writes a new one.
+   */
+  editing?: ReferenceLink | null;
   /** How many times the panel has been asked for: each takes the focus back to Kind. */
   summons: number;
-  /** Called with the source once the server has saved it. */
+  /** Called with the source once the server has saved it, new or edited. */
   onSaved: (reference: SavedReference) => void;
   onCancel: () => void;
 }
@@ -358,9 +455,44 @@ export interface LookupFieldProps {
   workspaceId: string | null;
 }
 
-/** The form field's lookup, whose text must be a curated pick on the compendium (MB.162). */
+/**
+ * A field the ingredient and each of its variants both carry: the
+ * references, or the categories. `at` is the variant's place in the values,
+ * left out for the ingredient's own.
+ */
+export interface SharedFieldProps {
+  at?: VariantPath;
+  /** A control at the right end of the legend, handed the field's announcer: a variant's Copy From Ingredient. */
+  action?: LegendAction;
+}
+
+/** A variant's Form field, whose text must be a curated pick on the compendium (MB.162). */
 export interface FormFieldProps extends LookupFieldProps {
+  at: VariantPath;
   pickOnly?: boolean;
+}
+
+/**
+ * The Variants section (MB.221): every form the ingredient comes in, and the
+ * New Form box that adds one. On the compendium a form is a pick, and so is
+ * every vocabulary box inside a variant.
+ */
+export interface VariantsFieldProps extends LookupFieldProps {
+  /** Its section's open state, which the form owns, as it does the other six's. */
+  fold: SectionFold;
+  /** Which of each variant's own sections are open, which the form owns too. */
+  folds: VariantFolds;
+}
+
+/** One variant's group: its place in the list, whether it is the one open, and how to open, close or take it out. */
+export interface VariantFieldsetProps extends LookupFieldProps {
+  index: number;
+  open: boolean;
+  /** Opens it, closing any other, or closes it. */
+  onToggle: (open: boolean) => void;
+  onRemove: (index: number) => void;
+  /** Which of its sections are open, by its place in the list. */
+  folds: VariantFolds;
 }
 
 /** What every lookup asks besides its scope: the settled text, and how many rows. */
@@ -375,10 +507,17 @@ export type UseSuggestions<O extends ComboboxOption = ListOption> = (
 
 /** A list field and the lookup its box suggests from. */
 export interface LookupListFieldProps
-  extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate'> {
+  extends LookupFieldProps, Omit<ListFieldProps, 'suggestions' | 'onActivate' | 'workspaceId'> {
   useSuggestions: UseSuggestions;
   /** An ingredient the box never offers: the compendium entry being edited, as its own substitute. */
   omit?: string;
+  /** Reorders what the lookup found, keeping each row: a variant's substitutes, its own form first. */
+  rank?: (options: ListOption[]) => ListOption[];
+}
+
+/** A substitute list's second pickers: which form of each linked ingredient it names. */
+export interface SubstituteFormsProps {
+  name: `${'' | `${VariantPath}.`}substitutes`;
 }
 
 /** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
@@ -401,6 +540,8 @@ export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: by default a coven's ingredient page; the admin's compendium page opens its own modal. */
   hrefOf?: (match: Duplicate) => string;
+  /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
+  holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
   ref: Ref<HTMLButtonElement>;
 }
@@ -414,19 +555,160 @@ export interface Claimant {
   canonicalName: string | null;
 }
 
-export interface FieldErrorProps {
-  id: string;
-  message?: string;
+/** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
+export type SectionKey = (typeof SECTION_KEYS)[number];
+
+/**
+ * A folding section's state, which the form owns so that Save can open the
+ * sections holding an error and Open All / Close All can reach every one.
+ */
+export interface SectionFold {
+  open: boolean;
+  /** It holds an error: flagged beneath its heading, open or closed. */
+  invalid: boolean;
+  onToggle: () => void;
 }
 
-export interface FieldShellProps extends FieldProps {
-  controlId: string;
-  labelId: string;
-  hintId: string;
-  noteId: string;
-  errorId: string;
-  error?: string;
+/** What `useFoldIds` is told of a fold: its block class, and whether it is open, holds an error, and shows its flag. */
+export interface FoldIdsOptions {
+  block: string;
+  open: boolean;
+  invalid: boolean;
+  /** The flag is drawn: a section's while it errs, a variant card's only while it is closed too. */
+  flagged: boolean;
+}
+
+/** What a fold names its parts by, from `useFoldIds`. */
+export interface FoldIds {
+  /** The base the other ids are made from, for a fold that names a part of its own. */
+  id: string;
+  summaryId: string;
+  flagId: string;
+  fieldsId: string;
+  className: string;
+  /** Its toggle's `aria-describedby`: the closed line, and the flag while shown; undefined for neither. */
+  describedBy: string | undefined;
+}
+
+export interface FoldFlagProps {
+  id: string;
+  className: string;
+  shown: boolean;
+}
+
+/** The closed line of one of the ingredient's sections. */
+export interface SectionSummaryProps {
+  section: SectionKey;
+}
+
+/** The closed line of a section that is one text field, its first words. */
+export interface TextSummaryProps {
+  name: 'description' | 'safetyNotes';
+}
+
+/** A variant's own sections, the ingredient's bar Variants, each folding as the ingredient's do (MB.115). */
+export type VariantSectionKey = (typeof VARIANT_SECTION_KEYS)[number];
+
+/** Each variant's open sections, by its place in the list, as `useVariantFolds` holds them. */
+export type VariantFoldList = readonly ReadonlySet<VariantSectionKey>[];
+
+/**
+ * Which of each variant's sections are open, by the variant's place in the
+ * list. The form owns it, as it owns its own sections' state, so that Save
+ * and Open All / Close All reach a variant's sections too. A variant not yet
+ * seen here, as each of an edit's is, has every section closed.
+ */
+export interface VariantFolds {
+  isOpen: (index: number, section: VariantSectionKey) => boolean;
+  toggle: (index: number, section: VariantSectionKey) => void;
+  /** A variant added first in the list, as the New Form box adds one, with every section open. */
+  added: () => void;
+  removed: (index: number) => void;
+  /** Every section of each of `count` variants opened, or closed. */
+  setAll: (open: boolean, count: number) => void;
+  /** Opens, in each variant, the sections the map names, keyed by its place. */
+  openErring: (erring: ReadonlyMap<number, ReadonlySet<VariantSectionKey>>) => void;
+}
+
+/**
+ * A section as a disclosure, its heading the toggle: one of the ingredient's
+ * own, its closed line drawn from `section`, or one of a variant's, a level
+ * beneath, handed its closed line as `summary`.
+ */
+export type CollapsibleSectionProps = CollapsibleSectionBase &
+  ({ section: SectionKey; summary?: never } | { summary: ReactNode; section?: never });
+
+interface CollapsibleSectionBase {
+  title: string;
+  fold: SectionFold;
+  /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
+  level?: 3 | 4;
+  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
+  labelled?: boolean;
+  /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
+  info?: ReactNode;
+  /** The toggle's id, for a group inside that is named by the heading. */
+  titleId?: string;
   children: ReactNode;
-  /** Beneath the error: what a field adds of its own. */
-  after?: ReactNode;
+}
+
+/** A variant's field that its Copy From Ingredient fills from the ingredient's own. */
+/** A field the form counts or names the entries of: `FIELD_NOUNS`'s keys. */
+export type NounedField = CopiedField | 'folkNames' | 'deities' | 'variants';
+
+/** What a field is called: its label, as its button names it, and one entry and several, as a count says them. */
+export interface FieldNoun {
+  label: string;
+  one: string;
+  many: string;
+}
+
+export type CopiedField =
+  | 'description'
+  | 'safetyNotes'
+  | 'elements'
+  | 'planets'
+  | 'zodiacSigns'
+  | 'colors'
+  | 'categoryIds'
+  | 'substitutes'
+  | 'references';
+
+/** A variant's Copy From Ingredient, for one of its fields. */
+export interface CopyFromIngredientProps {
+  at: VariantPath;
+  field: CopiedField;
+  /** The field's own live region, where it has one; else the button says what it did through its own. */
+  announce?: Announce;
+  /**
+   * A variant's substitutes only: told what a copy skipped, the ingredient's
+   * links in no form like the variant's, and how to say what Copy Anyway does.
+   */
+  onSkip?: (skipped: SkippedCopy) => void;
+  /** The button, which takes the focus back when the notice of what was skipped goes. */
+  buttonRef?: Ref<HTMLButtonElement>;
+}
+
+/**
+ * What a variant's substitute copy left out (MB.115, the owner's call): the
+ * ingredient's links to an ingredient in no form like the variant's, the
+ * list as the copy left it, by `listKey`, so the notice goes once the list
+ * changes otherwise, and the list's announcer.
+ */
+export interface SkippedCopy {
+  entries: SubstituteListEntry[];
+  /** The variant's form as typed when the copy ran, which the notice names. */
+  form: string;
+  listKey: string;
+  announce: Announce;
+}
+
+/** The notice beneath a variant's substitutes of what a copy skipped, with Copy Anyway. */
+export interface SkippedNoticeProps {
+  at: VariantPath;
+  skipped: SkippedCopy | null;
+  /** The notice is done with: Copy Anyway pressed, dismissed, or the list changed. */
+  onDone: () => void;
+  /** The variant's Copy From Ingredient, which takes the focus when the notice goes. */
+  copyButton: RefObject<HTMLButtonElement | null>;
 }

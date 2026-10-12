@@ -209,6 +209,13 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     flex-direction: column;
   }
 
+  // Fields side by side, as a filter row spaces them.
+  .fd-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(3) space(5);
+  }
+
   .fd-form {
     max-width: 32rem;
   }
@@ -230,6 +237,122 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     font-size: type-size('caption');
     font-weight: 500;
     color: $text-muted;
+  }
+
+  // --- page frame, link row, brands -------------------------------------------
+  .fd-frames {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    gap: space(5);
+  }
+
+  // The frame's own edge, dashed so it reads as a boundary and not a surface.
+  .fd-frame-stage {
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
+  // A fixed height in place of the window's, or each demo would fill a screen.
+  .page-frame {
+    min-height: 24rem;
+  }
+
+  // --- data table, pager, filter row, page header ------------------------------
+  .fd-tables,
+  .fd-pagers {
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+  }
+
+  // A phone's width, 375px, the narrowest a review signs off at, so a
+  // container query inside fires at any window size. The box's padding is
+  // the admin layout's gutter, so its content is about as wide as on the phone.
+  .fd-phone {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 375px;
+    padding: space(4);
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
+  // The page header's box also carries `.admin-layout`, the ancestor its
+  // full-width action keys off; it keeps the other boxes' place rather than
+  // the layout's centring, and its own padding outranks the layout's.
+  .fd-phone.admin-layout {
+    margin-inline: 0;
+  }
+
+  .fd-brands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(6);
+
+    h3 {
+      margin: 0 0 space(4);
+    }
+  }
+
+  .fd-brand-parts,
+  .fd-marks {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+    margin: space(4) 0 0;
+    padding: space(5);
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: space(2) space(3);
+      margin: 0;
+    }
+
+    li::before {
+      content: none;
+    }
+  }
+
+  .fd-marks {
+    flex-flow: row wrap;
+    gap: space(3) space(5);
+  }
+
+  .fd-brand-part {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // Every part a brand declares, in the map's order, read from the map.
+  @each $brand, $parts in $brand-palettes {
+    $printed: '';
+
+    @each $part, $value in $parts {
+      // A map cannot be interpolated, so a theme-split part is read apart
+      // theme by theme; declared first so the branches assign the outer one.
+      $shown: null;
+
+      @if meta.type-of($value) == map {
+        $shown: 'dark #{map.get($value, dark)}, light #{map.get($value, light)}';
+      } @else {
+        $shown: '#{$value}';
+      }
+
+      $separator: ' · ';
+
+      @if $printed == '' {
+        $separator: '';
+      }
+
+      $printed: '#{$printed}#{$separator}#{$part} #{$shown}';
+    }
+
+    .fd-brand-part--#{$brand}::after {
+      content: $printed;
+    }
   }
 
   // A distinct ground, so the raised surface's shadow and lift actually read.

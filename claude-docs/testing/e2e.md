@@ -8,12 +8,53 @@ defaults to 8000, `next dev`'s port, which an e2e run keeps clear of).
 and starts its own servers rather than attaching to ones left over on the
 ports.
 
+**A spec proves what only a real server and browser can** (MB.230; rule 9 of
+[`layer-ownership.md`](layer-ownership.md), "What a test may assert"):
+navigation and redirects, server render and status codes, cookies, mail,
+the data cache, the production build's config, a layout a browser measures,
+and one axe scan per page state. It never re-runs a flow a component or
+service test proves wholesale — a second filter or CRUD flow on a page
+template another spec already drives, which compendium entries hold a
+value, a dialog's states — and every admin route keeps its 403 test and one
+flow with its scan, even where a lower layer proves that flow too. It asserts state as Vitest does: a `status`,
+`alert`, `tooltip`, row or description is present, or carries the data the
+action used, and never a page title, a heading on a plain load or a
+sentence. A level-1 heading stays where it identifies the destination a
+navigation reached, or the 403 page.
+
+**`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
+it scans whatever the page holds at that instant. So the last web-first
+assertion before each scan must be one that waits for the state being
+scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
+never a negative such as `toHaveCount(0)` on something that was never there,
+which passes before the page has rendered anything. A removal of what was
+there — a dialog closing, a table emptied by a filter — does wait.
+
+**One spec per page template also checks the phone width and both themes**
+(MB.116). `assertNoSidewaysScroll(page)` (`tests/e2e/axe.ts`) sets the window
+to 375px, the narrowest width a section signs off at, and fails if the page
+is wider than the window. A theme needs naming, because a Playwright page is
+in the light theme unless a spec says otherwise, while the site's own
+default is dark: a spec that scans once has scanned the light theme only. So
+the Welcome test in `smoke.spec.ts` checks the width and scans in each theme
+in turn, `page.emulateMedia({ colorScheme })` before each scan, and the 403
+test in `admin.spec.ts` checks the width before its scan; the account page
+test in `account.spec.ts` does as the Welcome test does, and the unverified
+account's email page gets a scan and the width check; `sign-in.spec.ts` checks
+the width; `sign-in-configured-providers.spec.ts` and
+`admin/privilege-changes.spec.ts` scan in both themes too. It is one per template rather than one per page
+because the frame decides the width and the surfaces text sits on, and every
+page on a template shares them; the rest of the scans stay single, which
+keeps the run short.
+
 **Each worker slot has a server and a database of its own** (MB.112), as each
 Vitest pool slot has a database. A database each, because each spec file
 reseeds by dropping its database `WITH (FORCE)`, which would cut a sharing
-worker's connections mid-test. A server each, because the code under test
-runs in `next start`, which built its client at boot, not in the Playwright
-worker, so a database swapped in the worker would never reach the page.
+worker's connections mid-test. (That drop may also end an autovacuum worker,
+which the test role can do only through the image's `pg_signal_backend` grant,
+[`ci/database-image.md`](../ci/database-image.md).) A server each, because the
+code under test runs in `next start`, which built its client at boot, not in the
+Playwright worker, so a database swapped in the worker would never reach the page.
 [`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md)
 holds the argument, and the two alternatives turned down: a server each
 worker starts for itself, and one server picking a database per request.
@@ -28,13 +69,22 @@ worker starts for itself, and one server picking a database per request.
 - **The worker count is `E2E_WORKERS`, not `--workers`**, because the servers
   are declared up front, one per slot. `playwright.config.ts` sets `workers`
   to `E2E_SLOTS`: `E2E_WORKERS` if it is set, otherwise half the CPUs floored
-  at one — Playwright's own default, so two on CI's four-vCPU runner.
+  at one — Playwright's own default, which serves local runs.
   Anything but a whole number from 1 to `MAX_SLOTS` (99) throws, naming the
   variable. A `--workers` above the count would put a worker on a slot with
   no server, so `tests/e2e/fixtures.ts`'s worker-scoped auto fixture `slot`
   fails every test such a worker runs, with a message naming the limit and
   saying to raise `E2E_WORKERS` instead — before anything reaches for a
   server or a database that was never started.
+- **CI runs four workers on its four-vCPU runner** (MB.236):
+  `.github/workflows/playwright.yml` sets `E2E_WORKERS: 4` rather than take
+  the default's two. A test spends most of its time waiting on the browser
+  and the server, not computing in its worker, so four workers finish sooner
+  than two even though they share four cores with the servers. On two, the 56
+  tests took 55 s, each about a second on its worker in turn. Locally, on 12
+  cores, the tests' own span fell from about 49 s to about 34 s; the gate's run
+  on the real runner is the measurement the change was kept on. The two
+  extra slots cost what any further slot does (below).
 - **Slot `n` serves on `8001 + n`, from `sorrel_e2e_<n>`.** Slot 0's entry
   builds; each further slot's runs `npm run start` over that build.
   Playwright starts `webServer` entries one after another, which is what lets
@@ -51,7 +101,7 @@ reads OAuth credentials per request and its two provider states cannot share
 a process. Every slot's server runs with each provider variable set to `''` —
 blank rather than absent, because Next never lets `.env.local` override a
 variable already set, so a developer's real credentials cannot leak into it.
-The last `webServer` entry runs `npm run start` on **8100** with placeholder
+Its `webServer` entry, after the slots', runs `npm run start` on **8100** with placeholder
 credentials for all four, against `sorrel_e2e_providers`, which no spec
 reseeds. 8100 is fixed above every slot's port, and the 99-slot cap keeps it
 there, so no slot can reach that server, or attach to it under a local
@@ -67,11 +117,21 @@ bundle. Placeholder ids are useless to a real authorization endpoint, so
 nothing may click a provider button against 8100; the spec aborts and fails
 on any request to `/api/auth/sign-in/`.
 
+**The compendium-cache server is the last** (M8.6): `npm run start` on
+**8101** against `sorrel_e2e_cache`, which no spec reseeds, and the one
+server whose data cache holds. Every other sets `NEXT_DATA_CACHE=off`,
+because its database is reseeded under it and a cache would not follow. A
+third project, `chromium-compendium-cache`, runs
+`tests/e2e/compendium-cache.spec.ts` alone against it, and `chromium`
+ignores that spec too
+([`db/compendium-cache.md`](../db/compendium-cache.md), "In tests").
+
 - **`tests/e2e/database.ts`** — the same two-tier shape as the Vitest harness,
   through the same `tests/support/seeded-database.ts` (M1.27).
   `seedE2eTemplate()` builds `sorrel_e2e_template` — `sorrel_template`
   cloned, migrated and `standard`-seeded, ~1 s — and `cloneE2eDatabases()`
-  clones every slot's `sorrel_e2e_<slot>` and `sorrel_e2e_providers` from it,
+  clones every slot's `sorrel_e2e_<slot>`, `sorrel_e2e_providers` and
+  `sorrel_e2e_cache` from it,
   tens of milliseconds each. `e2eDatabaseUrl(database)` swaps
   `DATABASE_URL`'s pathname to that database, by default the calling worker's
   slot's; the config passes each server its own as `webServer.env.DATABASE_URL`,
@@ -115,17 +175,20 @@ on any request to `/api/auth/sign-in/`.
   the background of the request that caused it. The address goes in quoted:
   unquoted, Mailpit's query language splits it at a `+`. A spec that follows
   a mailed link gives its recipient a fresh address, so a retry or a parallel
-  worker cannot read another's message; `tests/e2e/mail-transport.spec.ts`
-  is the example, and sends from the runner because nothing in the app mails
-  yet. Compose and `playwright.yml` both run Mailpit; outside them the helper
-  throws on the unset URL rather than reporting that no mail arrived.
+  worker cannot read another's message; `tests/e2e/admin-invitations.spec.ts`
+  is the example. A spec asserts the recipient and the link, never the
+  subject or body: the wording is the email's own test's, and the link is
+  what the reader follows. Compose and `playwright.yml` both run Mailpit;
+  outside them the helper throws on the unset URL rather than reporting that
+  no mail arrived.
 - **A signed-in browser without a provider** (MB.71). No spec can finish a
   real OAuth round trip, so `tests/e2e/session.ts`'s `signInAs(page, email,
-providers, role)` writes what a Discord sign-in would leave into the calling
-  worker's slot database, the one its server reads: a verified user stamped as
+providers, role, { emailVerified })` writes what a Discord sign-in would leave into the calling
+  worker's slot database, the one its server reads: a user stamped as
   its own creator, holding the site role given
-  (`user` unless the spec asks for `admin`), one `accounts` row per provider
-  named, and a session. It then hands the browser the session cookie Better
+  (`user` unless the spec asks for `admin`), verified unless the spec passes
+  `emailVerified: false` (MB.205, for an admin approving an unverified
+  account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
   Auth would have set. The value is the token, a dot, and its base64
   HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
   `signCookieValue` does it. The runner and the served build share that
@@ -135,20 +198,70 @@ providers, role)` writes what a Discord sign-in would leave into the calling
   forces https. It rides as an extra request header, not in the cookie jar,
   since a browser never sends a `Secure` cookie to the plain-http
   `devcontainer:<port>` a remote browser uses. Give each call a fresh address:
-  the email index is unique.
+  the email index is unique. To switch back to a user already made,
+  `signInAgainAs(page, userId)` gives the browser a new session for it
+  (MB.63).
 - **`next.config.ts`'s `distDir`** reads `NEXT_DIST_DIR`, defaulting to
   `.next`. `webServer.env` sets it to `.next-e2e` so a concurrent `next dev`
   on 8000 (CLAUDE.md's Commands table promises both can run at once) never
   shares — and can't corrupt — the production build e2e is serving from.
+- **CI restores `.next-e2e/cache` before the build** (MB.230):
+  `playwright.yml`'s `actions/cache/restore` step, keyed `nextjs-e2e` on the
+  lockfile and the source hashes, falling back to the newest entry for the
+  same lockfile. The build
+  runs inside `npm run e2e` as slot 0's `webServer` command, so the restore
+  has to come before that step, and Turbopack's persistent cache under it is
+  what a warm build reuses. The e2e image is Debian's, whose GNU `tar`
+  `actions/cache` needs; Alpine's `testing` stage had to add it (MB.37). It
+  carries no `zstd`, so the cache is gzip, as it was on the Ubuntu image
+  before MB.237: the compression is part of a cache entry's version, so
+  adding `zstd` would miss every entry saved without it. It is CI time, not
+  test time.
+- **The cache a pull request restores is saved on `staging`** (MB.234). GitHub
+  lets a run restore caches saved on its own branch, on `main`, or on a pull
+  request's base branch, and a pull request's own run saves under its merge
+  ref, which only that pull request's later runs can read (GitHub Docs,
+  "Dependency caching reference", "Restrictions for accessing a cache"). So
+  MB.230's step, on its own, only ever saved: every run logged
+  `Cache not found for input keys`. `.github/workflows/e2e-cache.yml` fills
+  the gap. On a push to `staging` that touches what the build compiles or
+  runs under, it calls `playwright.yml` with `build-only: true`, which adds
+  `--grep-invert . --pass-with-no-tests` to `npm run e2e`. Every test title
+  matches `.`, so no spec runs, but Playwright starts its `webServer` entries
+  before it loads a spec, so slot 0 still runs `npm run build`, and an
+  `actions/cache/save` step after it saves `/app/.next-e2e/cache` from
+  `staging` under the restore step's key. Because it is the same workflow,
+  the warm build has the pull request's image, path, build directory and
+  environment, and the same key; a pull request's run then falls back to
+  that entry through the lockfile-only restore key. The proof is a pull
+  request's run logging `Cache restored from key`. It costs about 2½ free
+  GitHub-hosted minutes per qualifying push
+  ([`ci/runner-budget.md`](../ci/runner-budget.md)).
+- **A pull request's run restores and never saves** (MB.235). Restore and
+  save are two steps, `actions/cache/restore` and `actions/cache/save`,
+  rather than MB.230's single `actions/cache`, which saves at the end of
+  any job whose exact key missed. On a pull request the key's source hash
+  changes with almost every push, so that step uploaded 150–240 MB on nearly
+  every run, under the pull request's merge ref, where only a re-run of the
+  same pull request could read it. The upload came after the tests, on the
+  gate's critical path: 17s on run 38110758509. The save step runs only
+  under `build-only`, only when the build succeeded (it has no `always()`,
+  so a failed build hands nothing on), and only when the restore was not an
+  exact hit.
 - **`next.config.ts`'s `experimental.isrFlushToDisk`** is off when
   `NEXT_ISR_FLUSH_TO_DISK` is `'false'`, which every e2e server sets, so each
-  server keeps its data cache — the compendium read's `unstable_cache`
+  server keeps whatever data cache it has — the compendium read's `unstable_cache`
   (CLAUDE.md rule 6) — in its own memory. The servers share one `.next-e2e`
   build, and a cache flushed to disk there would hand one slot's compendium
   to another. It also stops runtime ISR writes and the image optimiser's disk
   cache, and it is off on Vercel anyway
   ([`design-decisions/mb.112-server-per-worker.md`](../design-decisions/mb.112-server-per-worker.md),
   "The data cache is per server too").
+- **`next.config.ts`'s `cacheMaxMemorySize`** is 0 when `NEXT_DATA_CACHE`
+  is `'off'`, which every e2e server but the compendium-cache server sets,
+  so with nothing flushed to disk either, their data cache holds nothing and
+  every `unstable_cache` read reaches the slot's database, reseeded or not
+  ([`db/compendium-cache.md`](../db/compendium-cache.md), "In tests").
 - **No Neon connection anywhere** — `e2eDatabaseUrl()`/`adminUrl()` only ever
   rewrite the pathname of the ambient `DATABASE_URL`, which points at the
   local `postgres` Docker service exactly as Vitest's does.
@@ -156,7 +269,7 @@ providers, role)` writes what a Discord sign-in would leave into the calling
   the `devcontainer` compose service alone. When it is present,
   `playwright.config.ts` passes it as `connectOptions.wsEndpoint`, and every
   `baseURL` becomes `http://devcontainer:<port>` — the slot's server's port,
-  or 8100 for the configured-providers project (`tests/e2e/slots.ts`'s
+  8100 for the configured-providers project or 8101 for the compendium-cache one (`tests/e2e/slots.ts`'s
   `browserUrl`) — since a remote browser cannot resolve the runner's
   `localhost`. It reaches those ports inside the compose network;
   `devcontainer.json` forwards 8001 alone, for opening slot 0's server from
@@ -173,10 +286,22 @@ does not reuse `build-image.yml`'s shared `testing` image for this — that
 image is Alpine/musl-based and explicitly excludes Playwright's browser/
 system deps (see `Docker/Dockerfile.node`'s header comment; Playwright's
 Chromium build has no official musl support at all). Instead
-`.github/workflows/playwright.yml` runs in a dedicated image
-(`Docker/Dockerfile.e2e`, built `FROM mcr.microsoft.com/playwright:v1.63.0-noble`
-and published by `build-e2e-image.yml`) with browsers already baked in — see
-`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in `e2e` service
-(`make docker-e2e`) builds that same image for local use, so a devcontainer
-session can run the full suite without installing browsers into its own
-Alpine-based image.
+`.github/workflows/playwright.yml` runs in a dedicated image,
+`Docker/Dockerfile.e2e`, published by `build-e2e-image.yml` — see
+`claude-docs/ci/reusable-checks.md`. `Docker/docker-compose.yaml`'s opt-in
+`e2e` service (`make docker-e2e`) builds that same image for local use, so a
+devcontainer session can run the full suite without installing browsers into
+its own Alpine-based image.
+
+**The e2e image is Debian with Chromium alone** (MB.237). It is built on
+`node:26.6.0-bookworm-slim`, the same Node as `Dockerfile.node`. After
+`npm ci`, the lockfile's own `@playwright/test` runs
+`playwright install --with-deps --only-shell chromium`, so the browser always
+matches the package. `--only-shell` takes the headless shell alone, which is what a
+headless run launches; the `headed` stage adds the full Chromium for
+`playwright-server`'s display. Until MB.237 the image was built on
+Microsoft's `mcr.microsoft.com/playwright` image, which also carries Firefox
+and WebKit and their system libraries, and pulling it was the largest fixed
+cost of every e2e job. The browsers sit in `/ms-playwright`
+(`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
+container job sets `HOME` to a directory the image never saw.

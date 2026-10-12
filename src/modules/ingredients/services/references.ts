@@ -2,16 +2,18 @@ import 'server-only';
 import {
   type CompendiumScore,
   type ReferenceRow,
+  findManyReferences,
   findReferenceSuggestions,
   withAudit,
 } from '../../../db/repository';
+import { expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { RowId, parseInput } from '../../../lib/validation';
 import { references } from '../schema/references';
 import { CompendiumFilter } from '../validation/compendium-filter';
 import { ReferenceInput } from '../validation/reference';
-import { type Membership, assertMembership } from '@/modules/coven';
+import { type Membership, assertMembership, readersOf } from '@/modules/coven';
 import { type SiteAdmin, assertSiteAdmin } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { ReferenceValues } from '../types';
@@ -64,10 +66,12 @@ export async function createReference(
   if (workspaceId == null) {
     const admin = assertSiteAdmin(session);
     const values = parseInput(ReferenceInput, input);
-    return withAudit(session, async (write) => {
+    const written = await withAudit(session, async (write) => {
       const [row] = await write.insertInCompendium(admin, references, values);
       return row;
     });
+    expireCompendium();
+    return written;
   }
 
   const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
@@ -104,7 +108,7 @@ export async function updateReference(
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such source');
 
-  return withAudit(session, async (write) => {
+  const written = await withAudit(session, async (write) => {
     const [row] =
       'admin' in proof
         ? await write.updateByIdInCompendium(proof.admin, references, id, values)
@@ -112,6 +116,34 @@ export async function updateReference(
     if (!row) throw new NotFound('No such source');
     return row;
   });
+  // A coven's reference is in no cached read.
+  if ('admin' in proof) expireCompendium();
+  return written;
+}
+
+/**
+ * One reference by id, whole, for the form that edits it: the compendium's
+ * without a coven, and with one, that coven's own or the compendium's —
+ * never another coven's, whose existence is private. The tiers are the
+ * picker's, read under the same `ingredient: ['read']`, so it returns no
+ * row the picker would not already offer.
+ *
+ * @throws {Forbidden} a coven is named and the caller may not read its
+ * ingredients.
+ * @throws {NotFound} no live reference with this id in those tiers — another
+ * coven's, a soft-deleted one, and an id that is not one included.
+ */
+export async function getReference(
+  session: Session,
+  workspaceId: string | null | undefined,
+  id: string,
+): Promise<ReferenceRow> {
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
+  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(id).success) throw new NotFound('No such source');
+  const [row] = await findManyReferences(memberships, [id]);
+  if (!row) throw new NotFound('No such source');
+  return row;
 }
 
 /**
@@ -134,10 +166,7 @@ export async function suggestReferences(
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<ReferenceRow, CompendiumScore>[]> {
-  const memberships: Membership[] = [];
-  if (workspaceId != null) {
-    memberships.push(await assertMembership(session, workspaceId, { ingredient: ['read'] }));
-  }
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
   const filter = parseInput(CompendiumFilter, { query });
   return findReferenceSuggestions(memberships, filter.query ?? '', page);
 }

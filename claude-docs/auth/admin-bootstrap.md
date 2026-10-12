@@ -56,11 +56,14 @@ created, and only when that sign-in's provider vouches for the address
   is a declared dependency at `better-auth`'s own version, so npm dedupes
   the two to one copy.
 - The hook builds an ordinary `Session` from the row it holds and calls
-  `promotePrimaryAdmin`, which writes `role: 'admin'` through `withAudit`
-  with `write.updateById(users, …)`, stamped as the user. By the callback
-  the user is authenticated, so this is no identity bootstrap (CLAUDE.md
-  rule 3). MB.59's grant and revoke will share this role write and add the
-  ledger row.
+  `promotePrimaryAdmin`, which writes `role: 'admin'` and the creation flag
+  through `withAudit` with `write.updateById(users, …)`, stamped as the user
+  and declared `{ via: 'bootstrap' }`. By the callback the user is
+  authenticated, so this is no identity bootstrap (CLAUDE.md rule 3). The
+  trigger on `users` records both grants in `user_privilege_changes`, by that
+  route and stamped as the user; the promotion writes no ledger row itself
+  (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
+  revoke make the same kind of write, declared `admin`.
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and
@@ -90,8 +93,9 @@ Microsoft- or Facebook-only owner is promoted too.
   so there is no profile to check. A second use of a link finds the row
   verified and calls no hook, so a row already verified at the bootstrap
   address is promoted at a Google or Discord sign-in, or not at all.
-- **No ledger row yet.** MB.59 adds a `bootstrap` row to the shared role
-  write once MB.58's table exists, and so to both promotions at once.
+- **The ledger records it** as the sign-in promotion's is: the trigger on
+  `users` writes both grants by the `bootstrap` route, stamped as the user
+  (MB.195).
 
 **Three Better Auth options stay off, pinned by `tests/lib/auth.test.ts`**,
 since each would let the address on an account change and carry the
@@ -124,7 +128,8 @@ this is the shape.
 
 - **Facebook and Microsoft arrive unverified**, whatever they report: their
   `mapProfileToUser` answers `emailVerified: false`, spread after the
-  provider's own mapping. Google and Discord keep theirs. The one exception
+  provider's own mapping, because their `PROFILE` entry says `vouches: false`
+  (`src/lib/social-providers-config.ts`). Google and Discord keep theirs. The one exception
   is the callback of an explicit link, where every provider vouches
   ("Linking a second provider" below); it writes nothing to the row.
 - **Offered, never required for a session.** `emailVerification.sendOnSignUp`
@@ -221,20 +226,28 @@ row's own id, and refuses another user's row (`ACCOUNT_NOT_FOUND`).
 `allowUnlinkingAll` stays off, so it refuses the last one
 (`FAILED_TO_UNLINK_LAST_ACCOUNT`) and a user is never left with no way in.
 The endpoint also wants a session younger than Better Auth's `freshAge`, a
-day (`SESSION_NOT_FRESH`); the page says to sign in again. Removal
+day (`SESSION_NOT_FRESH`). The page reads the session's age first
+(`sessionIsFresh()`, `src/lib/request-session.ts`) and, from a stale one,
+offers Sign In Again in place of every Remove, which signs out and returns
+through `/sign-in` to `/account` with a fresh session; a refusal that still
+happens, from a page left open past the day, says to sign in again
+([`components/sign-in-methods.md`](../components/sign-in-methods.md), "A
+stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
-**The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
-unverified account never reaches it, though Better Auth itself would link
-to an unverified row. The page reads `linkedAccounts()`
-(`src/lib/request-session.ts`, Better Auth's `listUserAccounts` with the
-request headers) and renders `SignInMethods`
+**The page.** The Sign-In Methods section of the account page
+(["The account page"](#the-account-page-mb88) below), which calls
+`requireSession()`, so an unverified account never reaches it, though
+Better Auth itself would link to an unverified row. The page reads
+`linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
+`listUserAccounts` with the request headers) and `sessionIsFresh()`, and
+renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
-and an unlink refusal through `unlinkErrorMessage`. The page and the email
-page link to each other; the email page offers the way only to a verified
-account.
+and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
+account page, `/account`, with `?error=` and `?provider=` when it failed, so
+the page can put the sentence in the row of the provider that failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
 ("Provisional accounts" below). At a sign-in, `unable_to_link_account`
@@ -288,7 +301,19 @@ verification window, and three hours at most. The argument is
   callback carries on. One lapsed row that another row references makes the
   whole statement fail, because every audit foreign key is `NO ACTION`.
   Nothing in v1 lets an unverified account write beyond its own row, so
-  this needs a bug or a hand edit.
+  this needs a bug or a hand edit; the one row others write about it, a
+  privilege change, the sweep steps around (next).
+- **An account an admin has vouched for is not swept** (MB.204). Approving
+  an unverified account for coven creation (M5.8) or making it an admin
+  (MB.59) writes a `user_privilege_changes` row naming it with a plain
+  foreign key, and the sweep skips any account holding one. Deleted, it
+  would fail the whole statement on that key, and so every sweep after, and
+  the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
+  and letting the rows go with the user would erase what the ledger is for.
+  Revoking the privilege adds a row rather than removing one, so the account
+  is kept until it verifies, with its sessions and provider accounts, and
+  goes on holding its address; MB.205 is to warn the admin of that before
+  they vouch.
 - **Hard delete, outside `withAudit`.** A tombstone would go on blocking
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
@@ -301,9 +326,8 @@ verification window, and three hours at most. The argument is
   vouching for its address, into a row that is an admin until MB.58
   demotes it.
 - **The refusal.** `account_not_linked` maps in `src/lib/sign-in.ts` to one
-  sentence whatever the cause: _"Sign-in didn't work. If you signed in
-  before with a different provider, sign in that way, then add this one
-  under Account."_ A squatted address and a provider that never vouches
+  sentence whatever the cause: _"We couldn't sign you in this way. Use the
+  sign-in method you used before, then add this one on your account page."_ A squatted address and a provider that never vouches
   share the code, and naming either would confirm the address is taken
   (MB.71).
 - **A change never unverifies a row.** An established account asking for a
@@ -440,9 +464,10 @@ the tests [`tests.md`](tests.md).
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
-  address, since the row's is unchanged until the link is followed. Below
-  the form, a verified account gets a link to `/account` ("Linking a second
-  provider" above).
+  address, since the row's is unchanged until the link is followed. Inside
+  the card, a verified account gets a quiet button to the account page,
+  reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
+  the same field changes the address on a visit to the account.
 - **No other page shows an unverified account anything.** `requireSession()`
   sends a session whose row is unverified to
   `/account/email?next=<its own path>` from every page but that one
@@ -453,25 +478,122 @@ the tests [`tests.md`](tests.md).
   refuse what a provisional account may not do, which is everything but
   `me` and `setEmail`.
 
-### Granting a second admin — decided, not built (M2.9)
+### The account page (MB.88)
+
+`/account` is the one account page: the name the site shows, the address it
+writes to, and the ways in, changed in one place. Stories 1 and 59; the
+component docs are [`components/name-form.md`](../components/name-form.md),
+[`components/email-form.md`](../components/email-form.md) and
+[`components/sign-in-methods.md`](../components/sign-in-methods.md).
+
+- **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
+  unverified account is sent to the email page instead, and reads `getMe`,
+  `linkedAccounts()` and `sessionIsFresh()`. Under its `<h1>` "Your
+  Account" are three sections, each a region named by its own `<h2>`, which
+  the page writes in a `.header` with the section's intro as its `.lede`:
+  Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
+  (`EmailForm`, embedded, whose own status line says what the section is
+  for) and Sign-In Methods ("You can sign in to this account with any of
+  these.", then `SignInMethods`). It carries no link to `/account/email`.
+  Between the heading and the first section, a nav labelled "On this page"
+  links to each section by its prefixed id (`#account-name`,
+  `#account-email`, `#account-sign-in-methods`). Each section stands on its
+  own `.panel`, which parts it from the next, so no rule is drawn between
+  them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
+  section a link lands on stops clear of the top inset. The frame, the
+  sections, the panels and the nav's row are primitives
+  (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
+  [`styling.md`](../styling.md), "The page frame" and "Link rows and
+  provider marks"), so the page has no stylesheet of its own. A failed link
+  lands back with `?error=` and `?provider=`: the page turns the code into
+  a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
+  the provider, when it is one on the roster, so the sentence shows in that
+  provider's row. Beside the heading, in a
+  `.page-header`, is Sign Out (`SignOutButton`,
+  [`components/sign-out-button.md`](../components/sign-out-button.md)):
+  Better Auth's own sign-out, then a full load of `/` (added in MB.63's PR,
+  on the owner's call).
+- **The email page stays, for the flows that are not a visit to the
+  account.** Every unverified sign-in lands there, it is the only page a
+  provisional account can reach, a mailed link lands on its confirmed view,
+  and a link opened from the wrong browser is explained there. Its way
+  across, offered to a verified account, is a quiet "Continue to Account"
+  button inside the form's `.panel`, the ground the account page's sections
+  stand on too.
+- **The Email section is EmailForm, not a second form.** The same field,
+  `setEmail` mutation, one-a-minute cooldown and field errors, with
+  `embedded` set: no page heading, which the section gives, and never the
+  confirmed view, which stays the email page's. A change link it asks for
+  lands on the email page's confirmed view, as any other does.
+- **The name changes through GraphQL**, as the address does (CLAUDE.md
+  rule 1): `setName(name: String!): User!`, over `setName` in
+  `src/modules/identity/services/name.ts`. It writes the session's own row
+  through `withAudit`, so it takes no id and names no other user's. It
+  trims the name, and refuses a blank or over-long one
+  (`NAME_MAX_LENGTH`, 100) as a `VALIDATION` error on `name`, which MB.43
+  maps to the field. A provisional account is `FORBIDDEN`, as it is from
+  every service but `me` and `setEmail`, and before the input is read.
+- **Better Auth's `/update-user` is disabled.** It writes `name` and `image`
+  outside `withAudit`, so `src/lib/auth.ts` lists it in `disabledPaths`,
+  and Better Auth's router answers it 404 before the endpoint or any hook
+  runs. That leaves the name one write path, the audited one.
+  `overrideUserInfoOnSignIn` is off, Better Auth's default, which no
+  provider in `socialProviders()` changes, so a later sign-in never puts the
+  provider's name back.
+- **Tests.** The service is `tests/modules/identity/services/name.test.ts`
+  (the row renamed and stamped, another user's left alone, the refusals) and
+  its mutation `tests/modules/identity/graphql/set-name.test.ts`. The refused
+  endpoint is `tests/db/email-verification.test.ts`, the page
+  `tests/app/account/page.test.tsx`, and the browser, an axe scan of all
+  three sections included, `tests/e2e/account.spec.ts`.
+
+### Granting a second admin (M2.9, MB.59)
 
 Specified in DESIGN.md §5 and argued in
-[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md);
-none of it is built yet. Until MB.58 and MB.59 land, a second admin is an
-`UPDATE` in `psql`, setting `can_create_workspace` with `role`: MB.177's CHECK
-refuses an admin without the flag. The tasks that build it:
+[`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
+An admin grants and revokes admin from a user's row on `/admin/users`
+(MB.59; [`admin-users.md`](admin-users.md), "Granting and revoking admin"),
+where the primary admin cannot be revoked and a revoke that would leave no
+admin is refused. Changing who the primary admin is, is that section's too.
 
-- **MB.58 and MB.59**: the `admin_role_changes` ledger, and granting and
-  revoking any other admin from `/admin/users`. The primary admin can be
-  neither revoked nor deleted, and a revoke that would leave zero admins is
-  refused (the record's "The primary admin" and "Revoking").
-- **MB.62 and MB.63**: the `admin_role_change_pauses` ledger through which
+A hand fix in `psql` stays possible, for a database no admin can sign in to.
+It sets `can_create_workspace` with `role`, since MB.177's CHECK refuses an
+admin without the flag, and declares itself first, since the trigger on
+`users` refuses a privilege change that names no route (MB.195):
+
+```sql
+begin;
+select set_config('app.privilege_route', 'manual', true);
+-- optional: why, kept on the ledger row as its note
+select set_config('app.privilege_note', 'Second admin while no admin can sign in', true);
+update users set role = 'admin', can_create_workspace = true, updated_by = '<your user id>'
+where id = '<their user id>';
+commit;
+```
+
+Both settings are transaction-local, so they go in the same transaction as
+the `UPDATE`; outside one, `psql` commits each statement alone and the route
+is gone before the update runs. The trigger writes a `manual` row per changed
+privilege, stamped with the row's `updated_by`, so setting it to your own id
+is what names you as the actor. The route is refused rather than defaulted so
+that no write, a hand-run one included, changes a privilege without saying how
+([`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).
+The same holds for any hand fix to either column, a revoke included, and a
+hand fix checks neither the primary admin nor the count the service does. The
+tasks that build the rest:
+
+- **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
+  MB.194, and granting and revoking any other admin from `/admin/users`. The
+  primary admin can be neither revoked nor deleted, and a revoke that would
+  leave zero admins is refused (the record's "The primary admin" and
+  "Revoking").
+- **MB.62 and MB.63** (built): the `admin_role_change_pauses` ledger through which
   the primary admin pauses granting and revoking for every other admin (the
   record's "Granting"; MB.62 built the table,
   [`mb.62-pause-ledger.md`](../design-decisions/mb.62-pause-ledger.md)).
 - **MB.69 and MB.70**: inviting an admin by email, story 62
   ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-  "The admin invitation (story 62)"; MB.69 built the table,
+  "The admin invitation (story 62)"; MB.69 built the table, now the site tier of `invitations`,
   [`db/invitations.md`](../db/invitations.md), "Admin invitations").
 - **MB.53** (built): Better Auth's `admin` plugin, with only its two
   impersonation endpoints reachable, since the rest would grant admin or
@@ -504,9 +626,10 @@ refuses an admin without the flag. The tasks that build it:
   that is not a known field (`@better-auth/core`'s `transformInput` iterates
   `schema[model].fields` and skips anything else). All five carry
   `input: false`, so no client request can set them and the hook is the
-  only path, which is what enforces M2.3's "Nothing in the OAuth flow sets
-  the flag" and "No API or UI path grants admin" rather than leaving them
-  merely unimplemented. `verificationSentAt`, `createdBy` and `updatedBy`
+  only path through Better Auth, which is what enforces M2.3's "Nothing in
+  the OAuth flow sets the flag" rather than leaving it merely unimplemented,
+  and keeps every grant of admin on the paths that record it: the promotions
+  above and MB.59's `setUserRole`. `verificationSentAt`, `createdBy` and `updatedBy`
   also carry `returned: false`, keeping the mail clock and raw audit ids
   out of session and user responses. `deletedAt`/`deletedBy` are not
   registered: nothing soft-deletes a user through Better Auth.

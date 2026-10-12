@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import { Forbidden } from '../../../lib/errors';
+import { sessionOf } from '../../../graphql/context-helpers';
 import { suggestIngredients } from '../services/ingredient-suggestions';
 import { IngredientRef } from './ingredient';
 
@@ -14,9 +14,7 @@ builder.queryField('ingredientSuggestions', (t) =>
       workspaceId: t.arg.id({ required: true }),
       query: t.arg.string({ required: false }),
     },
-    resolve: (_root, { workspaceId, query }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return suggestIngredients(session, workspaceId, query ?? '', page);
-    },
+    resolve: (_root, { workspaceId, query }, page, context) =>
+      suggestIngredients(sessionOf(context), workspaceId, query ?? '', page),
   }),
 );

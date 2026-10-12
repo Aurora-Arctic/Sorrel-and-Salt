@@ -12,9 +12,7 @@ actions that exist to de-duplicate the workflows, went with MB.32.
 reads a file's _contents_ cannot tell a stale copy from a live one, which is
 how `checkout-to-app` left deleted files on disk in every job for months
 without one failing. What closes it is not a job: the images carry no source
-layer, so a stale file has nothing to survive _as_, and
-`tests/guards/image-source-layer.test.ts` fails the diff that re-adds one. That
-is the sweep-task rule's tell — a job would make stale files _absent_, the
+layer, so a stale file has nothing to survive _as_. That is the sweep-task rule's tell — a job would make stale files _absent_, the
 image makes them _impossible_ — and "something else would have noticed" is not
 a guard. The story, including the job built first and replaced, is MB.42's
 and [`design-decisions/mb.42-no-source-layer.md`](../design-decisions/mb.42-no-source-layer.md).

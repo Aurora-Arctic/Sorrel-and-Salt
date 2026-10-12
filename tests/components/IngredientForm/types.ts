@@ -1,3 +1,4 @@
+import type { ListFieldName, LookupListFieldProps } from '@/components/IngredientForm/types';
 import type {
   CommonNameSuggestionsQuery,
   DeitySuggestionsQuery,
@@ -35,3 +36,16 @@ export type DuplicateNode = PossibleDuplicatesQuery['possibleDuplicates']['edges
 /** One row of a `ReferenceSuggestions` answer. */
 export type ReferenceNode =
   ReferenceSuggestionsQuery['referenceSuggestions']['edges'][number]['node'];
+
+/** One shape a list field takes in list-field.test.tsx, under the name of a list that has it. */
+export interface Variant {
+  variant: string;
+  name: ListFieldName;
+  legend: string;
+  entry: string;
+  ordered?: boolean;
+  pickOnly?: boolean;
+}
+
+/** A list box with a lookup, as lookups.test.tsx renders it: the field's props, the coven given apart. */
+export type LookupList = Omit<LookupListFieldProps, 'workspaceId'>;

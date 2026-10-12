@@ -3,7 +3,13 @@ import postgres from 'postgres';
 import { eq, sql as fragment } from 'drizzle-orm';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '@/modules/identity/schema/users';
-import { type SortPart, findPage, findPageInWorkspace, withAudit } from '@/db/repository';
+import {
+  type SortPart,
+  findPage,
+  findPageCount,
+  findPageInWorkspace,
+  withAudit,
+} from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { InvalidCursor } from '@/lib/errors';
 import { decodeCursor, encodeCursor, resolvePage } from '@/lib/pagination';
@@ -32,6 +38,15 @@ const jars = pgTable('pagination_probe_jars', {
 });
 
 const session = { userId: '11111111-1111-1111-1111-111111111111' };
+
+// Compile-time refusals, which tsc checks and nothing runs. A NULL sort key
+// makes the row comparison NULL, and the row vanishes from every page; and
+// `jars` carries `workspace_id`, so only the proof-taking finder reaches it.
+const PAGE_REQUEST = { limit: 1, inverted: false };
+// @ts-expect-error — `note` is nullable.
+void (() => findPage(leaves, [leaves.note], PAGE_REQUEST));
+// @ts-expect-error — the unscoped finder refuses a workspace-scoped table.
+void (() => findPage(jars, [jars.label], PAGE_REQUEST));
 
 let sql: ReturnType<typeof postgres>;
 
@@ -273,14 +288,6 @@ describe('Keyset pagination through the repository', () => {
       ),
     ).rejects.toThrow(InvalidCursor);
   });
-
-  it('sorts only on a column that cannot be null', () => {
-    const request = { limit: 1, inverted: false };
-    // A NULL sort key makes the row comparison NULL, and the row vanishes
-    // from every page.
-    // @ts-expect-error — `note` is nullable.
-    void (() => findPage(leaves, [leaves.note], request));
-  });
 });
 
 /**
@@ -292,6 +299,31 @@ const COMPUTED: SortPart[] = [
   { expression: fragment`-(length(${leaves.name})::real / 3)`, type: 'real' },
   leaves.name,
 ];
+
+// "Page X of Y" for a list read through `findPage`: the count of its own rows,
+// soft-deleted ones left out, and how many come before a page's first row in
+// its own order, ties split by id as the page splits them.
+describe('findPageCount', () => {
+  it('counts the live rows findPage pages, and how many come before a page’s first row', async () => {
+    await seedLeaves();
+    const first = await leafPage({ first: 25 });
+    const second = await leafPage({ first: 25, after: first.pageInfo.endCursor });
+    // The precondition: the second page opens between two rows sharing a name,
+    // so only the id can place its first row.
+    const [{ name: lastOfFirst }] = await sql<{ name: string }[]>`
+      select name from pagination_probe_leaves
+      where id = ${first.edges[24].node.id}`;
+    expect(second.edges[0].node.name).toBe(lastOfFirst);
+
+    await expect(findPageCount(leaves, [leaves.name], undefined)).resolves.toEqual({
+      totalCount: 60,
+      countBefore: null,
+    });
+    await expect(
+      findPageCount(leaves, [leaves.name], decodeCursor(second.pageInfo.startCursor as string)),
+    ).resolves.toEqual({ totalCount: 60, countBefore: 25 });
+  });
+});
 
 describe('Keyset pagination on a compound, computed key', () => {
   /**
@@ -393,11 +425,5 @@ describe('Keyset pagination inside a workspace', () => {
     );
 
     expect(page.edges.map((edge) => edge.node.label)).toEqual(['W jar 0', 'W jar 1', 'W jar 2']);
-  });
-
-  it('reaches a workspace-scoped table only with a proof', () => {
-    const request = { limit: 1, inverted: false };
-    // @ts-expect-error — `jars` carries `workspace_id`, so the unscoped finder refuses it.
-    void (() => findPage(jars, [jars.label], request));
   });
 });

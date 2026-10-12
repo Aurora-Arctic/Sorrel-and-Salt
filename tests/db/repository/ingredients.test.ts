@@ -4,7 +4,13 @@ import {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
+  findIngredientSuggestions,
+  findManyOfIngredients,
+  findManyOfVariants,
   findOneIngredient,
+  findReferencesOf,
+  findSubstitutesIncludingSoftDeleted,
+  findWorkspaceIngredientByIdentity,
   type CompendiumScore,
   type IngredientFilter,
   type IngredientRow,
@@ -15,9 +21,16 @@ import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
+import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-categories';
+import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { A, B, D, E, asUser } from '../../support/as-user';
-import { insertIngredient } from '../../support/db/insert-ingredient';
-import { makeIngredient } from '../../support/fixtures';
+import {
+  insertDeityLink,
+  insertIngredient,
+  insertVariant,
+} from '../../support/db/insert-ingredient';
+import { insertReference, insertVariantReferenceLink } from '../../support/db/insert-reference';
+import { makeIngredient, makeVariant } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
 
@@ -133,11 +146,14 @@ describe('findCompendiumPage', () => {
 
   describe('search', () => {
     beforeEach(async () => {
+      // No forms: the search reaches a form too (MB.218), and the fixture's
+      // default `Testform` would answer a `testoil` query below.
       await add('Fixture Mugwort', {
         nomenclature: 'botanical',
         canonicalName: 'Fixtura mugwortis',
+        variants: [],
       });
-      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'] });
+      await add('Fixture Nettle', { folkNames: ['Fixture Stingweed'], variants: [] });
     });
 
     it('matches the display name, case-insensitively', async () => {
@@ -207,6 +223,69 @@ describe('findCompendiumPage', () => {
       expect(page.edges.map((edge) => edge.node.name)).toContain('Fixture Mugwort');
       expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
     });
+
+    // The search reaches an entry's forms (MB.218): a word in a variant's form
+    // or description finds the entry, still one row however many forms match.
+    describe('through a variant', () => {
+      let mugwortId: string;
+
+      beforeEach(async () => {
+        [{ id: mugwortId }] = await sql<{ id: string }[]>`
+          select id from ingredients where name = 'Fixture Mugwort'`;
+      });
+
+      it("matches a live variant's form", async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+
+        expect(await namesOf({ query: 'testoil' })).toEqual(['Fixture Mugwort']);
+      });
+
+      it("matches a word in a variant's description", async () => {
+        await insertVariant(
+          sql,
+          mugwortId,
+          { form: 'Testoil', description: 'Pressed from the quandleberry seed' },
+          A.id,
+        );
+
+        expect(await namesOf({ query: 'quandleberry' })).toEqual(['Fixture Mugwort']);
+      });
+
+      it('answers one row, at its best score, for an entry two of whose variants match', async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        await insertVariant(
+          sql,
+          mugwortId,
+          { form: 'Resin', description: 'Testoil, thickened' },
+          A.id,
+        );
+        // The precondition: each variant matches the query on its own, by its
+        // form and by its description.
+        const [scores] = await sql`
+          select word_similarity('testoil', 'Testoil') as form,
+                 word_similarity('testoil', 'Testoil, thickened') as description`;
+        expect(scores).toEqual({ form: 1, description: 1 });
+
+        const page = await pageOf({ query: 'testoil' }, { first: 100 });
+
+        // The form's weight, 0.6, beats the description's, 0.2.
+        expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+          ['Fixture Mugwort', 0.6],
+        ]);
+      });
+
+      it('matches nothing through a soft-deleted variant', async () => {
+        const variantId = await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        // The precondition: the live variant is found.
+        expect(await namesOf({ query: 'testoil' })).toEqual(['Fixture Mugwort']);
+
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where id = ${variantId}`;
+
+        expect(await namesOf({ query: 'testoil' })).toEqual([]);
+      });
+    });
   });
 
   describe('ranking', () => {
@@ -214,22 +293,52 @@ describe('findCompendiumPage', () => {
 
     /**
      * The answer key, written independently of the finder: every live
-     * compendium row's best word similarity across the label, the formal name
-     * and its live folk names, at 0.5 or better, best first, then by name and id.
+     * compendium row's best weighted field — the label at 1, the formal name
+     * at 0.9, a live folk name at 0.8, a live variant's form at 0.6 and its
+     * description at 0.2 — counting a field only where its word similarity is
+     * 0.5 or better, best first, then by where that field holds the query,
+     * then by name and id. A field scores its word similarity, or 1 where it
+     * holds the query verbatim, case and accents folded. Its position is the
+     * character the verbatim query starts at, or 2147483647 where it holds
+     * none, so a fuzzy hit follows every verbatim one at its score; an entry
+     * takes the position of its best-scoring field, the earliest among equal
+     * ones. The weights, the containment rule and the position rule are
+     * restated here on purpose rather than imported, and each number is cast
+     * to `real` as the finder's are, so a product rounds as the finder's does.
      */
-    async function rankedOrder(query: string): Promise<{ id: string; score: number }[]> {
-      return sql<{ id: string; score: number }[]>`
-        select id, score from (
-          select i.id, i.name, greatest(
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.name)),
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.canonical_name)),
-            (select max(word_similarity(unaccent_immutable(${query}), unaccent_immutable(f.name)))
-             from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null)
-          ) as score
-          from ingredients i where i.workspace_id is null and i.deleted_at is null
-        ) scored
-        where score >= 0.5
-        order by score desc, name, id`;
+    async function rankedOrder(
+      query: string,
+    ): Promise<{ id: string; score: number; position: number }[]> {
+      const q = sql`unaccent_immutable(${query})`;
+      const ws = (text: postgres.Fragment) =>
+        sql`word_similarity(${q}, unaccent_immutable(${text}))`;
+      const at = (text: postgres.Fragment) =>
+        sql`position(lower(${q}) in lower(unaccent_immutable(${text})))`;
+      const field = (text: postgres.Fragment, weight: number) =>
+        sql`select case when ${ws(text)} >= 0.5
+                     then greatest(${ws(text)}, case when ${at(text)} > 0 then 1::real end) * ${weight}::real
+                   end as score,
+                   case when ${at(text)} > 0 then ${at(text)} else 2147483647 end as position`;
+      return sql<{ id: string; score: number; position: number }[]>`
+        select i.id, best.score, best.position
+        from ingredients i
+        cross join lateral (
+          select score, position from (
+            ${field(sql`i.name`, 1)}
+            union all ${field(sql`i.canonical_name`, 0.9)}
+            union all ${field(sql`f.name`, 0.8)}
+              from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null
+            union all ${field(sql`v.form`, 0.6)}
+              from ingredient_variants v where v.ingredient_id = i.id and v.deleted_at is null
+            union all ${field(sql`v.description`, 0.2)}
+              from ingredient_variants v where v.ingredient_id = i.id and v.deleted_at is null
+          ) fields
+          where score is not null
+          order by score desc, position
+          limit 1
+        ) best
+        where i.workspace_id is null and i.deleted_at is null
+        order by best.score desc, best.position, i.name, i.id`;
     }
 
     beforeEach(async () => {
@@ -237,19 +346,25 @@ describe('findCompendiumPage', () => {
       for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
         await add('Fixture Mugwort', { nomenclature: 'botanical', canonicalName });
       }
+      // Two longer labels holding the word whole, so the perfect-score tie is
+      // five rows, wider than a page of four.
       await add('Fixture Mugwort Leaf');
+      await add('Fixture Mugwort Root');
       await add('Fixture Mugwart');
       await add('Fixture Wormwood', { folkNames: ['Mugwort'] });
       await add('Fixture Mugroot');
       await add('Fixture Nettle');
     });
 
-    it('pages best match first, ties by name then id', async () => {
+    it('pages best match first, ties by position, then name, then id', async () => {
       const expected = await rankedOrder(QUERY);
-      // The preconditions: a tie on score across names, a tie on score and
-      // name, and a weaker match below them — else the order proves nothing.
+      // The preconditions: a tie on score and position across names — every
+      // perfect label holds the word at 9, after `Fixture ` — a tie on all
+      // three, and a weaker match below them, else the order proves nothing.
       const scores = expected.map((row) => row.score);
-      expect(scores.filter((score) => score === 1).length).toBeGreaterThanOrEqual(5);
+      const perfect = expected.filter((row) => row.score === 1);
+      expect(perfect.length).toBeGreaterThanOrEqual(5);
+      expect(new Set(perfect.map((row) => row.position))).toEqual(new Set([9]));
       expect(new Set(scores).size).toBeGreaterThan(1);
 
       const page = await pageOf({ query: QUERY }, { first: 100 });
@@ -262,8 +377,9 @@ describe('findCompendiumPage', () => {
     it('scores a folk-name match by the folk name', async () => {
       const page = await pageOf({ query: QUERY }, { first: 100 });
 
+      // The folk name is the word whole, similarity 1, at the folk name's weight.
       const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
-      expect(wormwood?.score).toBe(1);
+      expect(wormwood?.score).toBe(0.8);
     });
 
     it('walks across the ties forwards, neither losing nor repeating a row', async () => {
@@ -330,7 +446,7 @@ describe('findCompendiumPage', () => {
       expect(page.edges.every((edge) => edge.score === null)).toBe(true);
     });
 
-    // A browse is keyed by one part and a search by two, so neither's cursor
+    // A browse is keyed by one part and a search by three, so neither's cursor
     // names a position in the other.
     it("refuses a browse's cursor on a search, and a search's on a browse", async () => {
       const browse = await pageOf({}, { first: 1 });
@@ -340,6 +456,200 @@ describe('findCompendiumPage', () => {
         InvalidCursor,
       );
       await expect(pageOf({}, { after: search.pageInfo.endCursor })).rejects.toThrow(InvalidCursor);
+    });
+  });
+
+  // Each field a search matches carries a weight (claude-docs/db/compendium-read.md,
+  // "The compendium read"), so a word found in a label outranks the same word
+  // found in a folk name, a form or a description.
+  describe('weighted ranking', () => {
+    const QUERY = 'quandle';
+
+    beforeEach(async () => {
+      await add('Fixture Quandle');
+      await add('Fixture Kettlebrim', {
+        nomenclature: 'botanical',
+        canonicalName: 'Fixtura quandle',
+      });
+      await add('Fixture Wimble', { folkNames: ['Quandle'] });
+      await add('Fixture Quandly');
+      await add('Fixture Thrum', { variants: [makeVariant({ form: 'Quandle' })] });
+      await add('Fixture Sprocket', {
+        variants: [makeVariant({ description: 'Steeped with quandle' })],
+      });
+    });
+
+    it('ranks the label above the formal name, the folk name, the form and the description', async () => {
+      // The preconditions: the near-miss label matches, but neither as a whole
+      // word nor holding the query, so its rank sits between the folk name's
+      // and the form's; and the entry with the formal name does not match by
+      // its label, so it is found by the formal name alone.
+      const [similarity] = await sql<{ nearMiss: number; label: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss",
+               word_similarity(${QUERY}, 'Fixture Kettlebrim') as label`;
+      expect(similarity.nearMiss).toBeGreaterThan(0.6);
+      expect(similarity.nearMiss).toBeLessThan(0.8);
+      expect(similarity.label).toBeLessThan(0.5);
+
+      expect(await namesOf({ query: QUERY })).toEqual([
+        'Fixture Quandle',
+        'Fixture Kettlebrim',
+        'Fixture Wimble',
+        'Fixture Quandly',
+        'Fixture Thrum',
+        'Fixture Sprocket',
+      ]);
+    });
+
+    it('carries the weighted rank on each edge', async () => {
+      const [{ nearMiss }] = await sql<{ nearMiss: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss"`;
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+
+      expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+        ['Fixture Quandle', 1],
+        ['Fixture Kettlebrim', 0.9],
+        ['Fixture Wimble', 0.8],
+        ['Fixture Quandly', expect.closeTo(nearMiss, 5)],
+        ['Fixture Thrum', 0.6],
+        ['Fixture Sprocket', 0.2],
+      ]);
+    });
+
+    // `word_similarity` scores the query against whole words, so a fragment
+    // inside a longer word scores by the trigrams it shares, under the same
+    // fragment standing as a word of its own in a lighter field.
+    it('scores a field holding the query verbatim, case and accents folded, as a full hit', async () => {
+      await add('Fixture Mockleaf', { folkNames: ['Sweet Brim'] });
+      // The precondition: by word similarity alone, the label holding `brim`
+      // mid-word scores under the folk name's whole word at its weight, so
+      // without the containment rule the folk name would rank first.
+      const [{ label }] = await sql<{ label: number }[]>`
+        select word_similarity('brim', 'Fixture Kettlebrim') as label`;
+      expect(label).toBeGreaterThanOrEqual(0.5);
+      expect(label).toBeLessThan(0.8);
+
+      for (const query of ['brim', 'BRÍM']) {
+        const page = await pageOf({ query }, { first: 100 });
+
+        expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+          ['Fixture Kettlebrim', 1],
+          ['Fixture Mockleaf', 0.8],
+        ]);
+      }
+    });
+
+    it('walks the weighted order across a cursor, neither losing nor repeating a row', async () => {
+      const whole = (await pageOf({ query: QUERY }, { first: 100 })).edges.map(
+        (edge) => edge.node.id,
+      );
+      // The precondition: the walk takes more than one step.
+      expect(whole.length).toBeGreaterThan(2);
+
+      const ids: string[] = [];
+      let after: string | null = null;
+      for (;;) {
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      expect(ids).toEqual(whole);
+    });
+  });
+
+  // At equal score, the entry whose field holds the query earliest ranks
+  // first (claude-docs/db/compendium-read.md, "The compendium read"): for
+  // `wood`, Wood Ash before Sandalwood, rather than alphabetically.
+  describe('position among equals', () => {
+    const QUERY = 'brim';
+
+    beforeEach(async () => {
+      await add('Brimstone Fixture');
+      await add('Zebrim Fixture');
+      // A folk name holding the query at 1, under the label's 9: the entry
+      // ranks by the label, the field that set its score.
+      await add('Fixture Brim Tonic', { folkNames: ['Brim'] });
+      await add('Fixture Kettlebrim');
+    });
+
+    it('ranks the field holding the query earliest first, by the field that set the score', async () => {
+      // The preconditions: every label holds the query, so all four score a
+      // full hit, at positions out of alphabetical order; and the folk name
+      // holds it earlier than its own entry's label does.
+      const positions = await sql<{ name: string; position: number }[]>`
+        select name, strpos(lower(name), ${QUERY}) as position
+        from unnest(array['Brimstone Fixture', 'Zebrim Fixture', 'Fixture Brim Tonic',
+                          'Fixture Kettlebrim', 'Brim']) as name`;
+      expect(positions.map((row) => row.position)).toEqual([1, 3, 9, 15, 1]);
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+
+      expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+        ['Brimstone Fixture', 1],
+        ['Zebrim Fixture', 1],
+        ['Fixture Brim Tonic', 1],
+        ['Fixture Kettlebrim', 1],
+      ]);
+    });
+
+    it('walks the position order across a cursor, neither losing nor repeating a row', async () => {
+      const ids: string[] = [];
+      const names: string[] = [];
+      let after: string | null = null;
+      let pages = 0;
+      for (;;) {
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
+        pages += 1;
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        names.push(...page.edges.map((edge) => edge.node.name));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      // The precondition: a page boundary falls inside the tie.
+      expect(pages).toBeGreaterThan(1);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(names).toEqual([
+        'Brimstone Fixture',
+        'Zebrim Fixture',
+        'Fixture Brim Tonic',
+        'Fixture Kettlebrim',
+      ]);
+    });
+
+    it('counts the rows before a page that starts inside the tie', async () => {
+      const first = await pageOf({ query: QUERY }, { first: 2 });
+      const second = await pageOf({ query: QUERY }, { first: 2, after: first.pageInfo.endCursor });
+
+      expect(await countFor({ query: QUERY }, second)).toEqual({ totalCount: 4, countBefore: 2 });
+    });
+
+    // A fuzzy hit holds the query nowhere, so it follows every verbatim hit
+    // at its score.
+    it('ranks a fuzzy hit after a verbatim one of equal score', async () => {
+      await add('Fixture Brin');
+      await add('Fixture Thrum', { variants: [makeVariant({ form: 'Brim' })] });
+      // The preconditions: the label is word-similar to the query without
+      // holding it, at exactly the form's weight, so the two tie on score and
+      // only the position can put the form first, against the alphabet.
+      const [label] = await sql<{ similarity: number; position: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Brin') as similarity,
+               strpos(lower('Fixture Brin'), ${QUERY}) as position`;
+      expect(label).toEqual({ similarity: 0.6, position: 0 });
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+      const tied = page.edges.filter((edge) => edge.score === 0.6);
+
+      expect(tied.map((edge) => edge.node.name)).toEqual(['Fixture Thrum', 'Fixture Brin']);
     });
   });
 
@@ -373,25 +683,93 @@ describe('findCompendiumPage', () => {
     it('is no filter when empty', async () => {
       expect(await namesOf({ categoryIds: [] })).toHaveLength(3);
     });
+
+    // A form's pair names the ingredient too (MB.217), so the filter finds
+    // an entry by a category one of its forms adds; the pairs are hard-deleted
+    // and outlive a soft-deleted form, so only a live form's count.
+    it('finds an entry by a category a live form adds, and not by one only a deleted form held', async () => {
+      const live = await add('Fixture Live Form');
+      await insertVariant(sql, live, { form: 'Fixture Oil', categories: ['Cleansing'] }, A.id);
+      const dropped = await add('Fixture Dropped Form');
+      const droppedForm = await insertVariant(
+        sql,
+        dropped,
+        { form: 'Fixture Oil', categories: ['Cleansing'] },
+        A.id,
+      );
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where id = ${droppedForm}`;
+      // Why the dropped form could have counted: its pair is still there.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_categories
+        where variant_id = ${droppedForm} and category_id = ${cleansing}`;
+      expect(count).toBe(1);
+
+      expect(await namesOf({ categoryIds: [cleansing] })).toEqual([
+        'Fixture Both',
+        'Fixture Live Form',
+      ]);
+    });
   });
 
+  // The text, on any of an entry's live forms (MB.222): an entry with two
+  // forms is found under either, and once.
   describe('form', () => {
     beforeEach(async () => {
-      await add('Fixture Herb', { form: 'herb' });
-      await add('Fixture Root', { form: 'root' });
+      await add('Fixture Both', {
+        variants: [makeVariant({ form: 'Fixture Herb' }), makeVariant({ form: 'Fixture Oil' })],
+      });
+      await add('Fixture Root', { variants: [makeVariant({ form: 'Fixture Root' })] });
+      // Its oil dropped, its root kept.
+      const dropped = await add('Fixture Dropped', {
+        variants: [makeVariant({ form: 'Fixture Root' }), makeVariant({ form: 'Fixture Oil' })],
+      });
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where ingredient_id = ${dropped} and form = 'Fixture Oil'`;
     });
 
-    it('matches the form folded, as canonical_key folds it', async () => {
-      expect(await namesOf({ form: ' HERB ' })).toEqual(['Fixture Herb']);
+    it('finds an entry under each of its live forms, folded on both sides, and not under a dropped one', async () => {
+      // Why Fixture Dropped could have been found by its oil: the row is still there.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_variants where form = 'Fixture Oil'`;
+      expect(count).toBe(2);
+
+      expect(await namesOf({ form: ' fixture HERB ' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ form: 'FIXTURE OIL' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ form: 'fixture root' })).toEqual(['Fixture Dropped', 'Fixture Root']);
     });
 
-    it('combines with search', async () => {
-      expect(await namesOf({ query: 'fixture', form: 'root' })).toEqual(['Fixture Root']);
+    it('combines with search, under either form', async () => {
+      expect(await namesOf({ query: 'both', form: 'fixture herb' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture oil' })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', form: 'fixture root' })).toEqual([]);
+    });
+
+    // A search matching both of an entry's forms is still one row, so the
+    // count reads what the page holds.
+    it('counts what the page holds, alone and with a search', async () => {
+      for (const filter of [
+        { form: 'fixture oil' },
+        { form: 'fixture root' },
+        { query: 'fixture', form: 'fixture oil' },
+        { query: 'fixture', form: 'fixture root' },
+      ]) {
+        const page = await pageOf(filter, { first: 100 });
+        // Precondition: the page holds rows for the count to agree with.
+        expect(page.edges.length, JSON.stringify(filter)).toBeGreaterThan(0);
+        expect(await countFor(filter, page), JSON.stringify(filter)).toEqual({
+          totalCount: page.edges.length,
+          countBefore: 0,
+        });
+      }
     });
   });
 
-  // The pick, not the text (MB.167): what a form's delete and rename read, so
-  // only the entries that picked this row answer, not every entry spelling it.
+  // The pick, not the text (MB.167), on any of an entry's forms (MB.220): what
+  // a form's delete reads, so only the entries holding a live variant that
+  // picked this row answer, not every entry spelling it.
   describe('formId', () => {
     let herb: string;
     let root: string;
@@ -405,31 +783,94 @@ describe('findCompendiumPage', () => {
     });
 
     beforeEach(async () => {
-      await add('Fixture Picked', { form: 'Herb', formId: herb });
-      await add('Fixture Also Picked', { form: 'Herb', formId: herb });
-      await add('Fixture Typed', { form: 'Herb' });
-      await add('Fixture Root', { form: 'Root', formId: root });
-      await add('Fixture Coven', { form: 'Herb', formId: herb, workspaceId: WORKSPACE_W_ID });
-      const gone = await add('Fixture Gone', { form: 'Herb', formId: herb });
+      const picked = (form: string, formId?: string) =>
+        makeVariant(formId === undefined ? { form } : { form, formId });
+      await add('Fixture Picked', { variants: [picked('Herb', herb)] });
+      // Its first form picks the root; its second picked the herb.
+      await add('Fixture Second', { variants: [picked('Root', root), picked('Herb', herb)] });
+      await add('Fixture Typed', { variants: [picked('Herb')] });
+      await add('Fixture Coven', { variants: [picked('Herb', herb)], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { variants: [picked('Herb', herb)] });
       await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+      // Its root kept and its herb dropped.
+      const dropped = await add('Fixture Dropped', { variants: [picked('Root', root)] });
+      const herbOf = await insertVariant(sql, dropped, picked('Herb', herb), A.id);
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${herbOf}`;
     });
 
-    it('lists the live compendium entries that picked the form, by name, and no other', async () => {
-      // Why the others could have been listed: each holds the form's text, and three its id.
+    it('lists the live compendium entries holding a live variant that picked the form, by name, and no other', async () => {
+      // Why the others could have been listed: each holds a variant of the
+      // form's text, all but one picking it.
       const [{ count }] = await sql`
-        select count(*)::int as count from ingredients where form = 'Herb'`;
+        select count(distinct ingredient_id)::int as count from ingredient_variants
+        where form = 'Herb' and form_id is not null`;
       expect(count).toBe(5);
 
-      expect(await namesOf({ formId: herb })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
+      expect(await namesOf({ formId: herb })).toEqual(['Fixture Picked', 'Fixture Second']);
       await expect(findCompendiumCount({ formId: herb }, undefined)).resolves.toEqual({
         totalCount: 2,
         countBefore: null,
       });
     });
 
-    it('combines with the form text it was picked as', async () => {
-      expect(await namesOf({ formId: herb, form: 'root' })).toEqual([]);
-      expect(await namesOf({ formId: root, form: 'root' })).toEqual(['Fixture Root']);
+    // Each arm reads any of the entry's live forms: Fixture Second picked the
+    // root on one and spells the herb on another; Fixture Dropped's herb is gone.
+    it('combines with the form text', async () => {
+      expect(await namesOf({ formId: root, form: 'herb' })).toEqual(['Fixture Second']);
+      expect(await namesOf({ formId: root, form: 'root' })).toEqual([
+        'Fixture Dropped',
+        'Fixture Second',
+      ]);
+    });
+  });
+
+  // A deity is a pick too (MB.167): what a deity's delete reads (MB.132), so
+  // only the entries holding a live link to this row answer, not every entry
+  // spelling it, nor one that picked a namesake.
+  describe('deityId', () => {
+    let hecate: string;
+    let hermes: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from deities where name in ('Hecate', 'Hermes') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      hecate = byName.get('Hecate') as string;
+      hermes = byName.get('Hermes') as string;
+    });
+
+    beforeEach(async () => {
+      await insertDeityLink(sql, await add('Fixture Picked'), hecate, 0, A.id);
+      const second = await add('Fixture Also Picked');
+      await insertDeityLink(sql, second, hermes, 0, A.id);
+      await insertDeityLink(sql, second, hecate, 1, A.id);
+      await add('Fixture Typed', { deities: ['Hecate'] });
+      await insertDeityLink(sql, await add('Fixture Hermes'), hermes, 0, A.id);
+      const coven = await add('Fixture Coven', { workspaceId: WORKSPACE_W_ID });
+      await insertDeityLink(sql, coven, hecate, 0, A.id);
+      const gone = await add('Fixture Gone');
+      await insertDeityLink(sql, gone, hecate, 0, A.id);
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+      const dropped = await add('Fixture Dropped');
+      const link = await insertDeityLink(sql, dropped, hecate, 0, A.id);
+      await sql`
+        update ingredient_deities set deleted_at = now(), deleted_by = ${A.id} where id = ${link}`;
+    });
+
+    it('lists the live compendium entries holding a live link to the deity, by name, and no other', async () => {
+      // Why the others could have been listed: each names Hecate, and four link her.
+      const [{ count }] = await sql`
+        select count(distinct ingredient_id)::int as count from ingredient_deities
+        where name = 'Hecate'`;
+      expect(count).toBe(6);
+
+      expect(await namesOf({ deityId: hecate })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
+      await expect(findCompendiumCount({ deityId: hecate }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+      expect(await namesOf({ deityId: hermes })).toEqual(['Fixture Also Picked', 'Fixture Hermes']);
     });
   });
 
@@ -519,7 +960,7 @@ describe('findCompendiumCount', () => {
       await add(`Fixture Mugwort ${n}`, { categories: n % 2 === 1 ? ['Protection'] : [] });
     }
     for (let n = 1; n <= 5; n += 1) {
-      await add(`Fixture Nettle ${n}`, { form: 'root' });
+      await add(`Fixture Nettle ${n}`, { variants: [makeVariant({ form: 'Fixture Root' })] });
     }
     const gone = await add('Fixture Mugwort 8', { categories: ['Protection'] });
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
@@ -547,7 +988,7 @@ describe('findCompendiumCount', () => {
     const [{ count }] = await sql`
       select count(*)::int as count from ingredients
       where id in ${sql(excluded)}
-        and form = 'herb'
+        and exists (select 1 from ingredient_variants where ingredient_id = ingredients.id)
         and exists (select 1 from ingredient_categories where ingredient_id = ingredients.id)`;
     expect(count).toBe(2);
   });
@@ -561,7 +1002,7 @@ describe('findCompendiumCount', () => {
   });
 
   it('counts by form', async () => {
-    await expectCountsToMatchTheWalk({ form: 'herb' }, 7);
+    await expectCountsToMatchTheWalk({ form: 'testform' }, 7);
   });
 
   // Read at pg_trgm's own 0.6, the count would find none of these rows while
@@ -604,41 +1045,131 @@ describe('findOneIngredient', () => {
     localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
   });
 
-  it('answers a compendium row with no proof at all', async () => {
-    await expect(findOneIngredient([], compendiumId)).resolves.toMatchObject({
-      id: compendiumId,
-      workspaceId: null,
-    });
-  });
-
-  it("answers a workspace row under its own coven's proof only", async () => {
+  // The mechanism, once: the proofs AND a workspace row's coven onto the
+  // read, and the compendium tier answers beside them. Who may hold which
+  // proof, and the soft-delete filter of every reader built on this finder,
+  // are the services' (tests/modules/ingredients/services/compendium.test.ts,
+  // and the READS tables of compendium-entries and workspace-ingredients).
+  it("answers a workspace row under its own coven's proof only, the compendium under any", async () => {
     // Why the refusals below could have passed wrongly: the row is there, and
     // the right proof reaches it.
     await expect(findOneIngredient([inW], localId)).resolves.toMatchObject({ id: localId });
 
     await expect(findOneIngredient([], localId)).resolves.toBeUndefined();
     await expect(findOneIngredient([inX], localId)).resolves.toBeUndefined();
-  });
-
-  it('answers the compendium under any proof', async () => {
-    await expect(findOneIngredient([inX], compendiumId)).resolves.toMatchObject({
-      id: compendiumId,
-    });
-  });
-
-  it('answers nothing for a soft-deleted row, proof or not', async () => {
-    await sql`
-      update ingredients set deleted_at = now(), deleted_by = ${A.id}
-      where id in (${compendiumId}, ${localId})`;
-
-    await expect(findOneIngredient([], compendiumId)).resolves.toBeUndefined();
-    await expect(findOneIngredient([inW], localId)).resolves.toBeUndefined();
+    for (const proofs of [[], [inX]]) {
+      await expect(findOneIngredient(proofs, compendiumId)).resolves.toMatchObject({
+        id: compendiumId,
+        workspaceId: null,
+      });
+    }
   });
 });
 
-// What a colliding compendium write is refused with names this row, so the
-// finder must read the key `ingredients_compendium_identity_unique` holds,
-// folded as the generated column folds it.
+// An ingredient's forms are its children (MB.216, MB.218): read through
+// `findManyOfIngredients` under the parent's tier, never by a bare id, and
+// reached by the search only where the parent is readable.
+describe('a variant read under its ingredient', () => {
+  let inW: Membership;
+  let inX: Membership;
+  let localId: string;
+  let variantId: string;
+
+  beforeAll(async () => {
+    inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
+  });
+
+  beforeEach(async () => {
+    localId = await add('Fixture Local', {
+      workspaceId: WORKSPACE_W_ID,
+      categories: ['Cleansing'],
+      substitutes: ['Fixture Stand-in'],
+    });
+    variantId = await insertVariant(
+      sql,
+      localId,
+      { form: 'Testoil', categories: ['Protection'], substitutes: ['Testbane'] },
+      A.id,
+    );
+    const book = await insertReference(sql, { title: 'Fixture Oils' }, E.id);
+    await insertVariantReferenceLink(sql, variantId, book, A.id);
+  });
+
+  /** What each of a variant's three child reads answers under `proofs`, by direct id. */
+  const childrenOf = async (proofs: Membership[], id: string) => ({
+    categories: (await findManyOfVariants(proofs, ingredientCategories, [id])).length,
+    substitutes: (await findSubstitutesIncludingSoftDeleted(proofs, 'variant', [id])).map(
+      ({ row }) => row.name,
+    ),
+    references: (await findReferencesOf(proofs, 'ingredientVariantId', [id])).map(
+      ({ reference }) => reference.title,
+    ),
+  });
+  const NONE = { categories: 0, substitutes: [], references: [] };
+
+  const formsOf = async (proofs: Membership[], id: string) =>
+    (await findManyOfIngredients(proofs, ingredientVariants, [id])).map((row) => row.form).sort();
+
+  it("answers a coven's variants under its own coven's proof only, by direct id", async () => {
+    // Why the refusals below could have passed wrongly: the variants are
+    // there, and the right proof reaches them by this id.
+    expect(await formsOf([inW], localId)).toEqual(['Testform', 'Testoil']);
+
+    expect(await formsOf([], localId)).toEqual([]);
+    expect(await formsOf([inX], localId)).toEqual([]);
+  });
+
+  it("answers a coven's variant's own rows under its own coven's proof only, by direct id", async () => {
+    // Why the refusals below could have passed wrongly: the rows are there,
+    // and the right proof reaches each by this id.
+    expect(await childrenOf([inW], variantId)).toEqual({
+      categories: 1,
+      substitutes: ['Testbane'],
+      references: ['Fixture Oils'],
+    });
+
+    expect(await childrenOf([], variantId)).toEqual(NONE);
+    expect(await childrenOf([inX], variantId)).toEqual(NONE);
+  });
+
+  it("hides a soft-deleted variant's own rows, which stay for a restore", async () => {
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${variantId}`;
+
+    expect(await childrenOf([inW], variantId)).toEqual(NONE);
+  });
+
+  // The union rule (MB.215): an ingredient's lists are its own rows, a form's
+  // its additions, and no read answers the one for the other.
+  it("keeps an ingredient's own rows and its variant's apart", async () => {
+    const ownCategories = await findManyOfIngredients([inW], ingredientCategories, [localId]);
+    const ownSubstitutes = await findSubstitutesIncludingSoftDeleted([inW], 'ingredient', [
+      localId,
+    ]);
+    const formCategories = await findManyOfVariants([inW], ingredientCategories, [variantId]);
+
+    expect(ownCategories.map((pair) => pair.variantId)).toEqual([null]);
+    expect(ownSubstitutes.map(({ row }) => row.name)).toEqual(['Fixture Stand-in']);
+    expect(formCategories.map((pair) => pair.variantId)).toEqual([variantId]);
+  });
+
+  it("offers a coven's entry by its variant's form to that coven's picker alone", async () => {
+    const offered = async (membership: Membership) =>
+      (
+        await resolvePage({ first: 100 }, (request) =>
+          findIngredientSuggestions(membership, 'testoil', request),
+        )
+      ).edges.map((edge) => edge.node.id);
+    // The precondition: the coven's own picker finds it by that form.
+    expect(await offered(inW)).toEqual([localId]);
+
+    expect(await offered(inX)).toEqual([]);
+  });
+});
+
+// The entry a colliding write names (MB.220): keyed on the formal name alone,
+// or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {
   let entryId: string;
 
@@ -646,17 +1177,13 @@ describe('findCompendiumEntryByIdentity', () => {
     entryId = await add('Testwort', {
       canonicalName: 'Fixtura testalis',
       nomenclature: 'botanical',
-      form: 'root bark',
+      variants: [makeVariant({ form: 'Fixture Bark' })],
     });
   });
 
-  it('finds the entry holding a formal name and form, folded as canonical_key folds them', async () => {
+  it('finds the entry holding a formal name, folded as identity_key folds it, whatever the label', async () => {
     await expect(
-      findCompendiumEntryByIdentity({
-        name: 'Another label',
-        canonicalName: 'FIXTURA Testalis',
-        form: '  Root Bark ',
-      }),
+      findCompendiumEntryByIdentity({ name: 'Another label', canonicalName: 'FIXTURA Testalis' }),
     ).resolves.toMatchObject({ id: entryId, name: 'Testwort' });
   });
 
@@ -664,26 +1191,16 @@ describe('findCompendiumEntryByIdentity', () => {
   // keys the same as another entry's formal name.
   it('finds it by a label standing in for the formal name', async () => {
     await expect(
-      findCompendiumEntryByIdentity({
-        name: 'Fixtura testalis',
-        canonicalName: null,
-        form: 'root bark',
-      }),
+      findCompendiumEntryByIdentity({ name: 'Fixtura testalis', canonicalName: null }),
     ).resolves.toMatchObject({ id: entryId });
   });
 
-  it('tells a form apart from no form', async () => {
-    await expect(
-      findCompendiumEntryByIdentity({ name: 'Testwort', canonicalName: 'Fixtura testalis' }),
-    ).resolves.toBeUndefined();
-  });
-
   it('reads the compendium alone, and only its live rows', async () => {
-    const identity = { name: 'Testleaf', canonicalName: null, form: null };
+    const identity = { name: 'Testleaf', canonicalName: null };
     // Why nothing could still be found: both rows hold the key, one in a coven
     // and one deleted, and a live compendium row holding it is found.
-    const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, form: null });
-    const deletedId = await add('Testleaf', { form: null });
+    const localId = await add('Testleaf', { workspaceId: WORKSPACE_W_ID, variants: [] });
+    const deletedId = await add('Testleaf', { variants: [] });
     await expect(findCompendiumEntryByIdentity(identity)).resolves.toMatchObject({
       id: deletedId,
     });
@@ -691,8 +1208,38 @@ describe('findCompendiumEntryByIdentity', () => {
       update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${deletedId}`;
 
     await expect(findCompendiumEntryByIdentity(identity)).resolves.toBeUndefined();
-    const [local] = await sql`select canonical_key from ingredients where id = ${localId}`;
-    expect(local.canonical_key).toBe('testleaf');
+    const [local] = await sql`select identity_key from ingredients where id = ${localId}`;
+    expect(local.identity_key).toBe('testleaf');
+  });
+});
+
+// The coven's twin of the above, under the proof (MB.220).
+describe('findWorkspaceIngredientByIdentity', () => {
+  it("finds the proof's coven's live ingredient holding the formal name, and never another tier's", async () => {
+    const identity = { name: 'Another label', canonicalName: 'Fixtura testalis' };
+    const mine = await add('Testwort', {
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+      workspaceId: WORKSPACE_W_ID,
+    });
+    // Why another row could have answered: the compendium and X each hold the formal name.
+    await add('Testwort', { canonicalName: 'Fixtura testalis', nomenclature: 'botanical' });
+    await add('Testwort', {
+      canonicalName: 'Fixtura testalis',
+      nomenclature: 'botanical',
+      workspaceId: WORKSPACE_X_ID,
+    });
+    const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    const inX = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
+
+    await expect(findWorkspaceIngredientByIdentity(inW, identity)).resolves.toMatchObject({
+      id: mine,
+    });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${mine}`;
+    await expect(findWorkspaceIngredientByIdentity(inW, identity)).resolves.toBeUndefined();
+    await expect(findWorkspaceIngredientByIdentity(inX, identity)).resolves.toMatchObject({
+      workspaceId: WORKSPACE_X_ID,
+    });
   });
 });
 
@@ -718,7 +1265,7 @@ describe('write.carryAstrologyRename', () => {
     expect(await rowOf(held)).toMatchObject({
       planets: ['Venus', 'Ares', 'Moon'],
       slug: before.slug,
-      canonical_key: before.canonical_key,
+      identity_key: before.identity_key,
       created_by: A.id,
       updated_by: E.id,
     });
@@ -747,5 +1294,162 @@ describe('write.carryAstrologyRename', () => {
     await rename('zodiacSigns', 'Aries', 'The Ram');
 
     expect(await rowOf(id)).toMatchObject({ planets: ['Aries'], zodiac_signs: ['The Ram', 'Leo'] });
+  });
+});
+
+describe('write.carryDeityRename', () => {
+  const linkOf = async (id: string) =>
+    (await sql`select * from ingredient_deities where id = ${id}`)[0];
+  const rename = (deityId: string, name: string) =>
+    withAudit(asUser(E), (write) =>
+      write.carryDeityRename(assertSiteAdmin(asUser(E)), deityId, name),
+    );
+  let hecate: string;
+  let hermes: string;
+
+  beforeAll(async () => {
+    const rows = await sql`
+      select id, name from deities where name in ('Hecate', 'Hermes') and deleted_at is null`;
+    const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+    hecate = byName.get('Hecate') as string;
+    hermes = byName.get('Hermes') as string;
+  });
+
+  it('renames each live compendium link to the deity in place, stamped by the session', async () => {
+    const one = await add('Testwort');
+    await insertDeityLink(sql, one, hermes, 0, A.id);
+    const picked = await insertDeityLink(sql, one, hecate, 1, A.id);
+    const other = await insertDeityLink(sql, await add('Testleaf'), hecate, 0, A.id);
+    const before = await linkOf(picked);
+
+    const rows = await rename(hecate, 'Hekate');
+
+    expect(rows.map((row) => row.id).sort()).toEqual([picked, other].sort());
+    expect(await linkOf(picked)).toMatchObject({
+      id: picked,
+      name: 'Hekate',
+      deity_id: hecate,
+      position: before.position,
+      created_by: A.id,
+      updated_by: E.id,
+      deleted_at: null,
+    });
+    expect((await linkOf(other)).name).toBe('Hekate');
+  });
+
+  // Why each could have been written: each names Hecate, and all but the typed one link her.
+  it("leaves a coven's link, a deleted entry's, a dropped link, a typed name and another deity's as they were", async () => {
+    const coven = await insertDeityLink(
+      sql,
+      await add('Testwort', { workspaceId: WORKSPACE_W_ID }),
+      hecate,
+      0,
+      A.id,
+    );
+    const goneEntry = await add('Testgone');
+    const gone = await insertDeityLink(sql, goneEntry, hecate, 0, A.id);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${goneEntry}`;
+    const dropped = await insertDeityLink(sql, await add('Testdrop'), hecate, 0, A.id);
+    await sql`
+      update ingredient_deities set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
+    await add('Testtyped', { deities: ['Hecate'] });
+    const [typed] = await sql`select id from ingredient_deities where deity_id is null`;
+    const others = await insertDeityLink(sql, await add('Testherm'), hermes, 0, A.id);
+    const ids = [coven, gone, dropped, typed.id as string, others];
+    const before = await Promise.all(ids.map(linkOf));
+    expect(before.map((row) => row.name)).toEqual([
+      'Hecate',
+      'Hecate',
+      'Hecate',
+      'Hecate',
+      'Hermes',
+    ]);
+
+    const rows = await rename(hecate, 'Hekate');
+
+    expect(rows).toEqual([]);
+    expect(await Promise.all(ids.map(linkOf))).toEqual(before);
+  });
+});
+
+// A curated form's rename carried onto the compendium's variants picking it
+// (M5.6a, MB.220): the text, in place, and nothing of the entry's address.
+describe('write.carryFormRename', () => {
+  const picked = (form: string, formId?: string) => [
+    makeVariant(formId === undefined ? { form } : { form, formId }),
+  ];
+  const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
+  const variantOf = async (id: string) =>
+    (await sql`select * from ingredient_variants where id = ${id}`)[0];
+  const firstVariantOf = async (ingredientId: string) =>
+    (await sql`select id from ingredient_variants where ingredient_id = ${ingredientId}`)[0]
+      .id as string;
+  const rename = (formId: string, form: string) =>
+    withAudit(asUser(E), (write) =>
+      write.carryFormRename(assertSiteAdmin(asUser(E)), formId, form),
+    );
+  let herb: string;
+  let root: string;
+
+  beforeAll(async () => {
+    const rows = await sql`
+      select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+    const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+    herb = byName.get('Herb') as string;
+    root = byName.get('Root') as string;
+  });
+
+  it('renames every live compendium variant picking the form in place, stamped by the session', async () => {
+    const one = await add('Testwort', { variants: picked('Herb', herb) });
+    const two = await add('Testleaf', { variants: picked('Root', root) });
+    const second = await insertVariant(sql, two, { form: 'Herb', formId: herb }, A.id);
+    const first = await firstVariantOf(one);
+    const before = await Promise.all([rowOf(one), rowOf(two)]);
+
+    const rows = await rename(herb, 'Herba');
+
+    expect(rows.map((row) => row.id).sort()).toEqual([first, second].sort());
+    expect(await variantOf(second)).toMatchObject({
+      form: 'Herba',
+      form_id: herb,
+      created_by: A.id,
+      updated_by: E.id,
+      deleted_at: null,
+    });
+    // A rename moves no entry's address, and writes no ingredient row.
+    expect(await Promise.all([rowOf(one), rowOf(two)])).toEqual(before);
+  });
+
+  // Why each could have been written: each holds a variant spelling the form,
+  // and all but the typed one and the other form's picked it.
+  it("leaves a coven's variant, a deleted entry's, a dropped variant, a typed form and another form's pick as they were", async () => {
+    const coven = await add('Testwort', {
+      variants: picked('Herb', herb),
+      workspaceId: WORKSPACE_W_ID,
+    });
+    const gone = await add('Testgone', { variants: picked('Herb', herb) });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    const dropping = await add('Testdrop', { variants: picked('Root', root) });
+    const dropped = await insertVariant(sql, dropping, { form: 'Herb', formId: herb }, A.id);
+    await sql`
+      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${dropped}`;
+    const typed = await add('Testtyped', { variants: picked('Herb') });
+    const other = await add('Testroot', { variants: picked('Root', root) });
+    const variants = [
+      await firstVariantOf(coven),
+      await firstVariantOf(gone),
+      dropped,
+      await firstVariantOf(typed),
+      await firstVariantOf(other),
+    ];
+    const before = await Promise.all([...variants.map(variantOf), rowOf(coven), rowOf(gone)]);
+    expect(before.slice(0, 5).map((row) => row.form_id)).toEqual([herb, herb, herb, null, root]);
+
+    const rows = await rename(herb, 'Herba');
+
+    expect(rows).toEqual([]);
+    expect(await Promise.all([...variants.map(variantOf), rowOf(coven), rowOf(gone)])).toEqual(
+      before,
+    );
   });
 });

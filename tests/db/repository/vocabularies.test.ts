@@ -3,14 +3,19 @@ import postgres from 'postgres';
 import {
   findAstrologyValueCount,
   findAstrologyValues,
+  findDeityCount,
+  findDeityPage,
+  findGroupCount,
+  findGroupPage,
   findIngredientFormValueCount,
   findIngredientFormValues,
 } from '@/db/repository';
 import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
+import { deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
-import type { IngredientFormValueRow } from '@/modules/vocabulary';
+import type { DeityFilter, IngredientFormValueRow } from '@/modules/vocabulary';
 
 // The curated form vocabulary as `ingredientFormValues` pages it: every live
 // form whose group is live too, in (name, id) order — the same "curated"
@@ -217,5 +222,152 @@ describe('findAstrologyValueCount', () => {
     await expect(findAstrologyValueCount(zodiacSigns, { query: 'ar' }, undefined)).resolves.toEqual(
       { totalCount: 3, countBefore: null },
     );
+  });
+});
+
+// The deity vocabulary as the admin's deities page lists it (MB.132): every
+// live deity under a live tradition — the same "curated" the autofill means —
+// by its tradition's name, then its own, so a page reads each deity under its
+// tradition, narrowed by a name fragment and a tradition.
+describe('findDeityPage and findDeityCount', () => {
+  afterEach(async () => {
+    await sql`delete from deities where name like 'Fixture%'`;
+    await sql`update deities set deleted_at = null, deleted_by = null`;
+    await sql`update deity_traditions set deleted_at = null, deleted_by = null`;
+  });
+
+  /** The curated deities in the finder's order, from the database's own collation. */
+  async function expectedDeities(): Promise<string[]> {
+    const rows = await sql<{ id: string }[]>`
+      select d.id from deities d join deity_traditions t on t.id = d.tradition_id
+      where d.deleted_at is null and t.deleted_at is null
+      order by t.name, d.name, d.id`;
+    return rows.map((row) => row.id);
+  }
+
+  async function idsOf(filter: DeityFilter = {}, first = 100): Promise<string[]> {
+    const ids: string[] = [];
+    let after: string | null = null;
+    for (;;) {
+      const page: Page<{ id: string }> = await resolvePage({ first, after }, (request) =>
+        findDeityPage(filter, request),
+      );
+      ids.push(...page.edges.map((edge) => edge.node.id));
+      if (!page.pageInfo.hasNextPage) return ids;
+      after = page.pageInfo.endCursor;
+    }
+  }
+
+  const traditionId = async (name: string) =>
+    (await sql`select id from deity_traditions where name = ${name}`)[0].id as string;
+
+  it('walks every curated deity once, by tradition then name, at the maximum page size', async () => {
+    const expected = await expectedDeities();
+    // The precondition: the seed's 216 deities, more than two pages of 100.
+    expect(expected).toHaveLength(216);
+
+    expect(await idsOf()).toEqual(expected);
+  });
+
+  it('omits a soft-deleted deity, and every deity of a soft-deleted tradition', async () => {
+    const [hecate] = await sql`select id from deities where name = 'Hecate'`;
+    const roman = await traditionId('Roman');
+    const [{ count: underRoman }] = await sql`
+      select count(*)::int as count from deities where tradition_id = ${roman}`;
+    // The precondition: the tradition holds deities that would otherwise be listed.
+    expect(underRoman).toBeGreaterThan(0);
+    await sql`update deities set deleted_at = now(), deleted_by = ${A.id} where id = ${hecate.id}`;
+    await sql`
+      update deity_traditions set deleted_at = now(), deleted_by = ${A.id} where id = ${roman}`;
+
+    const ids = await idsOf();
+
+    expect(ids).toHaveLength(216 - 1 - underRoman);
+    expect(ids).toEqual(await expectedDeities());
+    await expect(findDeityCount({}, undefined)).resolves.toEqual({
+      totalCount: ids.length,
+      countBefore: null,
+    });
+  });
+
+  it('narrows by a name fragment read literally, and by a tradition, alone and together', async () => {
+    const greek = await traditionId('Greek');
+    await sql`
+      insert into deities (name, slug, description, tradition_id, created_by, updated_by)
+      values ('Fixture 100% Herm', 'fixture-100-herm', 'A test god', ${greek}, ${A.id}, ${A.id})`;
+    const names = async (filter: DeityFilter) => {
+      const page = await resolvePage({ first: 100 }, (request) => findDeityPage(filter, request));
+      return page.edges.map((edge) => edge.node.name);
+    };
+    const [{ count: greeks }] = await sql`
+      select count(*)::int as count from deities
+      where tradition_id = ${greek} and deleted_at is null`;
+
+    expect(await names({ query: '100%' })).toEqual(['Fixture 100% Herm']);
+    expect(await names({ query: '_' })).toEqual([]);
+    expect(await names({ query: 'HERM', traditionId: greek })).toEqual([
+      'Fixture 100% Herm',
+      'Hermes',
+    ]);
+    expect(await names({ traditionId: greek })).toHaveLength(greeks);
+    await expect(findDeityCount({ traditionId: greek }, undefined)).resolves.toEqual({
+      totalCount: greeks,
+      countBefore: null,
+    });
+  });
+
+  it('counts how many come before a page’s first row, in the pages’ order', async () => {
+    const first = await resolvePage({ first: 25 }, (request) => findDeityPage({}, request));
+    const second = await resolvePage({ first: 25, after: first.pageInfo.endCursor }, (request) =>
+      findDeityPage({}, request),
+    );
+
+    await expect(
+      findDeityCount({}, decodeCursor(second.pageInfo.startCursor as string)),
+    ).resolves.toEqual({ totalCount: 216, countBefore: 25 });
+  });
+});
+
+// A group vocabulary as its admin page lists it (MB.115), run on the deity
+// traditions, the one page that searches: every live group by name, narrowed
+// by a name fragment the way the values' lists are.
+describe('findGroupPage and findGroupCount', () => {
+  afterEach(async () => {
+    await sql`delete from deity_traditions where name like 'Fixture%'`;
+  });
+
+  const names = async (query?: string) => {
+    const page = await resolvePage({ first: 100 }, (request) =>
+      findGroupPage(deityTraditions, { query }, request),
+    );
+    return page.edges.map((edge) => edge.node.name);
+  };
+
+  it('narrows by a name fragment, case-insensitively, reading % and _ literally', async () => {
+    await sql`
+      insert into deity_traditions (name, slug, description, created_by, updated_by)
+      values
+        ('Fixture Testwort Rite', 'fixture-testwort-rite', 'A test tradition', ${A.id}, ${A.id}),
+        ('Fixture 100% Mockish', 'fixture-100-mockish', 'Another', ${A.id}, ${A.id})`;
+    const [{ count: live }] = await sql`
+      select count(*)::int as count from deity_traditions where deleted_at is null`;
+    const all = await names();
+    // The precondition: unfiltered, the page holds both fixtures beside the seed's.
+    expect(all).toHaveLength(live);
+    expect(all).toEqual(expect.arrayContaining(['Fixture Testwort Rite', 'Fixture 100% Mockish']));
+
+    expect(await names('TESTWORT')).toEqual(['Fixture Testwort Rite']);
+    expect(await names('twort r')).toEqual(['Fixture Testwort Rite']);
+    expect(await names('ixture')).toEqual(['Fixture 100% Mockish', 'Fixture Testwort Rite']);
+    expect(await names('%')).toEqual(['Fixture 100% Mockish']);
+    expect(await names('_')).toEqual([]);
+    await expect(findGroupCount(deityTraditions, { query: 'ixture' }, undefined)).resolves.toEqual({
+      totalCount: 2,
+      countBefore: null,
+    });
+    await expect(findGroupCount(deityTraditions, {}, undefined)).resolves.toEqual({
+      totalCount: live,
+      countBefore: null,
+    });
   });
 });

@@ -9,6 +9,11 @@ export * from './services/categories';
 export * from './services/astrology';
 export * from './services/category-groups';
 export * from './services/ingredient-form-groups';
+export * from './services/deities';
+export * from './services/deity-traditions';
+// The compendium's refusals name an entry and a running redirect as the
+// vocabularies' do; the rest of the file is the module's own.
+export { describeEntry, redirectRefusal } from './services/held-entries';
 export * from './loaders/groups-by-id';
 export * from './graphql/suggestions';
 export * from './graphql/categories';
@@ -24,8 +29,10 @@ export type {
   CategoryGroupRow,
   CategoryRow,
   CuratedField,
+  DeityFilter,
   DeityRow,
   DeityTraditionRow,
+  GroupFilter,
   IngredientFormGroupRow,
   IngredientFormValueFilter,
   IngredientFormValueRow,

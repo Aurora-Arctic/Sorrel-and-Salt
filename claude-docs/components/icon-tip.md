@@ -1,0 +1,128 @@
+# IconTip
+
+`src/components/IconTip/` — a short word shown beside an icon control, such as
+"Edit" beside a pencil, for a sighted reader who cannot tell what the mark
+does. The owner's call in MB.115: "Change all Edit buttons to the edit icon
+with a "Edit" tooltip. Make it larger outside the form though." The directory
+also holds what every Edit control shares: the pencil, and the list rows'
+Edit link.
+
+| File            | What it holds                                                                    |
+| --------------- | -------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip  |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip     |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well |
+
+## The props contract
+
+`IconTip`:
+
+| Prop       | Meaning                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| `tip`      | The word or two shown: "Edit", "Edit Source". Shown only, never read (see "Accessibility").  |
+| `children` | The one icon control, a `<button>` or a link, which keeps its own name, role and attributes. |
+
+`EditLink`:
+
+| Prop   | Meaning                                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------- |
+| `href` | Where the edit opens, a typed `Route`: a list's address with its modal open (a soft navigation, `next/link`). |
+| `name` | What it edits. The link is named "Edit" and this, "Edit Aluminium, Aluminium", in `visually-hidden` text.     |
+
+## Where it is used
+
+- **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
+  page: categories, forms, deities, celestial bodies, zodiac signs) and
+  `CompendiumList`, each through `EditLink`.
+- **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
+  around its existing button: a variant's pencil and a reference row's
+  pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),
+  which draws a page with a pencil (`SourceEditIcon`, in the form's own
+  `icons.tsx`) so that it does not look like the row's pencil beside it
+  ([`ingredient-form.md`](ingredient-form.md), "Editing a source").
+
+## Behaviour
+
+It follows WCAG 1.4.13, content on hover or focus, through the same
+[`useTip`](info-tip.md) hook as InfoTip:
+
+- **It opens on hover and on the control's focus.** Both are heard on the
+  wrapper, which holds the tip as well as the control; focus bubbles up to
+  it from the control.
+- **It stays while the pointer is over it.** Leaving both closes it after
+  150ms, long enough to cross the small gap onto the tip.
+- **It closes on Escape, blur, or the pointer leaving both.** Escape is
+  heard on the document and marked handled while a tip is open, so it
+  closes the tip alone: inside a modal, as the ingredient form is, the
+  first Escape shuts the tip and the next one reaches the modal.
+- **It is in the page only while open**, so an open tip is one that exists.
+  It fades in from a starting style and goes at once.
+
+## Accessibility
+
+The tip is decoration. Each control's own name already says Edit and what:
+"Edit Testcraft", "Edit Oil", "Edit Source Fixture, Testwort Herbal". So the
+tip carries `role="tooltip"` and `aria-hidden="true"`, and no control lists
+it in `aria-describedby`: as a description it would read "Edit" a second
+time. A link stays a link and a button a button, with the names they had as
+words, so the tests and the e2e specs find them as before.
+
+## Placement
+
+**To the left of the control, level with it** (`right: 100%`, centred
+vertically), one layer up (`z-index: 1`). Every Edit stands at the end of its
+line: a list row's last column, a phone card's top right, a form row's
+actions, so the room to its left is the line's own. Not above, as InfoTip's
+tip is: a `.data-table-frame` scrolls sideways, and a box that scrolls one way
+clips both ways, so a tip above the first row or card was cut off. The tip
+covers the text beside the control while it is open.
+
+**In a table row, centred above the control** (`.data-table .icon-tip__bubble`),
+the owner's call at MB.115's review, so it covers nothing of the row's own. Above the first row is the header row,
+inside the frame, so nothing is clipped. A phone card (a `.data-table--stack`
+table under `$table-stack-width`) keeps the tip to the left: above the first
+card's top-right Edit is only the card's padding, and the frame would cut it
+off.
+
+## Styling
+
+Tokens and three mixins in `_mixins.scss`, so every Edit matches:
+
+- **`icon-button($target, $glyph, $radius, $cursor)`**: a square box with no
+  text and a transparent ground, the mark at `$glyph`, in the muted ink and
+  `$text-primary` when pointed at or focused. `$icon-size` around
+  `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default; a
+  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown.
+- **`icon-button-remove`**: the × and the bin's answer, the wax and a tint
+  of it 20% into the card, as the combobox's chip-remove and the form's
+  remove icons wear.
+- **`icon-button-edit`**: the pencil's ink, `$accent`, and, pointed at,
+  focused or open (`aria-expanded`), a tint of it 20% into the card.
+- **Sizes**: the ingredient form keeps the 24px box and 1rem glyph beside
+  its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
+  `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem.
+- **Contrast**: the accent on the page, on the card (banded rows, stacked
+  cards and the modal) and on its own tint each clear 3:1, a control's floor
+  (`tests/scss/tokens.test.ts`, "an Edit pencil").
+- **The bubble** is the `tip-bubble` mixin's, InfoTip's look.
+- **At phone width** a list's Edit cell carries `.data-table__card-action`,
+  which stands it at its card's top right ([`../styling.md`](../styling.md),
+  "Tables at phone width").
+
+## Stories
+
+`Admin / Icon Tip`: `InAListRow`, three banded rows, so the pencil shows on
+the page and on the card, and the `PhoneDark` / `PhoneLight` pair, the rows
+as cards with the pencil at each card's top right. Hover or focus a pencil to
+see its tip. The form's pencils are in the ingredient form's stories, and
+every list's in its own.
+
+## Testing
+
+`tests/components/IconTip/index.test.tsx` covers hover, the pointer crossing
+onto the tip, focus and blur, Escape closing the tip alone (the key marked
+handled only while it is open), Escape inside a `Modal` closing the tip first
+and the modal second, the tip kept out of the accessibility tree, and
+`EditLink`'s role and name. Each list's test finds its Edit links by their
+names, and the ingredient form's tests its buttons, so a renamed control
+fails there.

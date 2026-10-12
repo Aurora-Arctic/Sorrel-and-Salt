@@ -17,5 +17,6 @@ export const authClient = createAuthClient({
   plugins: [lastLoginMethodClient({ cookieName: LAST_USED_PROVIDER_COOKIE }), adminClient()],
 });
 
-export const { signIn, linkSocial, unlinkAccount, getLastUsedLoginMethod, useSession } = authClient;
+export const { signIn, signOut, linkSocial, unlinkAccount, getLastUsedLoginMethod, useSession } =
+  authClient;
 export const { impersonateUser, stopImpersonating } = authClient.admin;

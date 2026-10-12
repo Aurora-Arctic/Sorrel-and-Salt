@@ -1,10 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import GroupList from '@/components/GroupList';
 import { groupsHref } from '@/components/GroupList/href';
 import type { GroupListEntry } from '@/components/GroupList/types';
+import { FILTER_ROWS } from '../../support/filter-form';
+import type { FilterFormSubject } from '../../support/types';
 
-// The soft pager navigates through the App Router.
+// The soft pager and the filter navigate through the App Router.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
@@ -34,55 +36,73 @@ describe('GroupList', () => {
     );
   });
 
-  it("draws a category group's name in a chip wearing its pair", () => {
-    render(<GroupList kind="category" groups={[WARDS]} />);
-
-    const chip = screen.getByText('Fixture Wards', { selector: '.chip' });
-    expect(chip.style.getPropertyValue('--chip-dark')).toBe('#4e8bc2');
-    expect(chip.style.getPropertyValue('--chip-light')).toBe('#0c5393');
-  });
-
-  it("draws a form group's name as plain text", () => {
-    render(
-      <GroupList
-        kind="form"
-        groups={[{ ...WARDS, name: 'Fixture Matter', colorDark: undefined, colorLight: undefined }]}
-      />,
-    );
-
-    expect(screen.getByRole('cell', { name: 'Fixture Matter' })).toBeInTheDocument();
-    expect(document.querySelector('.chip')).toBeNull();
-  });
-
-  it('says so when there is no group', () => {
+  it('draws no table when there is no group', () => {
     render(<GroupList kind="form" groups={[]} />);
 
-    expect(screen.getByText('No groups yet.')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
+});
 
-  it('pages by the links it is given', () => {
-    render(
-      <GroupList
-        kind="category"
-        groups={[WARDS]}
-        nextHref={groupsHref('category', { after: 'cursor' })}
-      />,
-    );
+// The traditions' name search (MB.115): FilterForm's controls are its own
+// to test (CompendiumList's, GroupedValueList's); the shared rows assert the
+// search reaches the address and leaves it, and this that a kind not handed
+// one draws none.
+describe('GroupList, searched by name', () => {
+  beforeEach(() => {
+    router.push.mockReset();
+  });
 
-    expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute(
-      'href',
-      '/admin/category-groups?after=cursor',
-    );
+  const path = '/admin/deity-traditions';
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Deity Traditions',
+    path,
+    searchLabel: 'Name',
+    push: router.push,
+    none: {
+      list: <GroupList kind="tradition" groups={[WARDS]} filter={{ query: '' }} />,
+      sends: 'query=',
+    },
+    shown: {
+      list: (
+        <GroupList
+          kind="tradition"
+          groups={[WARDS]}
+          filter={{ query: 'wort' }}
+          previousHref={groupsHref('tradition', { query: 'wort', before: 'b' })}
+        />
+      ),
+      sends: 'query=wort',
+    },
+    alone: [
+      {
+        list: <GroupList kind="tradition" groups={[]} filter={{ query: 'wort' }} />,
+        sends: 'query=wort',
+      },
+    ],
+    searched: `${path}?query=Two+words`,
+  };
+
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  it('draws no search for a kind not handed one', () => {
+    render(<GroupList kind="category" groups={[WARDS]} />);
+
+    expect(screen.queryByRole('form')).not.toBeInTheDocument();
   });
 });
 
 describe('groupsHref', () => {
   it("builds each page's address, keeping the cursor under a modal", () => {
     expect(groupsHref('form', {})).toBe('/admin/form-groups');
+    expect(groupsHref('tradition', {}, 'new')).toBe('/admin/deity-traditions?new');
     expect(groupsHref('form', { after: 'c' }, 'new')).toBe('/admin/form-groups?after=c&new');
     expect(groupsHref('category', { before: 'c' }, { edit: 'a b' })).toBe(
       '/admin/category-groups?before=c&edit=a+b',
     );
+    // The search goes ahead of the cursor and the modal, and a blank one is none.
+    expect(groupsHref('tradition', { query: 'wort', after: 'c' }, 'new')).toBe(
+      '/admin/deity-traditions?query=wort&after=c&new',
+    );
+    expect(groupsHref('tradition', { query: '' })).toBe('/admin/deity-traditions');
   });
 });

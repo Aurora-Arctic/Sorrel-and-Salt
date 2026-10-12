@@ -6,10 +6,12 @@ import {
   cookieHeader,
   landingOf,
   signIn as signInThrough,
-  stubProviderCredentials,
+  PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
-import type { Profile } from '../support/types';
+import { importAuth } from '../support/auth-module';
+import { asManualFix } from '../support/db/privileges';
+import type { AuthInstance, Profile } from '../support/types';
 
 // Where the callback lands a sign-in (MB.113): a return path wins, `/coven`
 // included; with none, an admin — by the role held once any promotion at this
@@ -41,26 +43,35 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-let auth: typeof import('@/lib/auth').auth;
+let auth: AuthInstance;
+
+// Provider credentials at import; the primary admin's address is read per
+// request, so it is stubbed beside them for the whole file.
+beforeAll(async () => {
+  auth = await importAuth(PROVIDER_CREDENTIALS);
+  vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // The ledger first: a promotion's rows name the users deleted below, and
+  // only a truncate empties it.
+  await sql`truncate user_privilege_changes`;
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 
   send.mockReset();
-  stubProviderCredentials(vi.stubEnv);
-  vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY);
-  vi.resetModules();
-  ({ auth } = await import('@/lib/auth'));
   // Microsoft never vouches, so the primary admin's sign-in through it logs a refusal.
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
@@ -76,11 +87,15 @@ async function roleOf(email: string): Promise<string | undefined> {
 
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
 async function insertVerified(email: string, role: 'user' | 'admin'): Promise<void> {
-  await sql`
-    insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
-    values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
-            ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
-  `;
+  // An admin inserted by hand declares itself, as a `psql` fix must (MB.195).
+  await asManualFix(
+    sql,
+    (tx) => tx`
+      insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
+      values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
+              ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `,
+  );
 }
 
 /** The link in the one verification mail sent so far. */
@@ -115,22 +130,15 @@ describe('a sign-in with no return path', () => {
     expect(await roleOf(MEMBER)).toBe('user');
   });
 
-  it('lands the primary admin promoted at this very sign-in on the admin area', async () => {
-    // Why it could have landed on /coven: the row did not exist, so it was
-    // created a user, and only the promotion made it an admin.
-    expect(await roleOf(PRIMARY)).toBeUndefined();
-
-    const response = await signIn('google', { sub: 'g-primary', email: PRIMARY, verified: true });
-
-    expect(landingOf(response)).toBe('/admin');
-    expect(await roleOf(PRIMARY)).toBe('admin');
-  });
-
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
     // An admin holds the creation flag, which the users CHECK requires (MB.177).
-    await sql`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`;
+    await asManualFix(
+      sql,
+      (tx) =>
+        tx`update users set role = 'admin', can_create_workspace = true where email = ${ADMIN}`,
+    );
     // The preconditions: an admin, and still unverified — Microsoft never vouches.
     const [row] =
       await sql`select role::text as role, email_verified from users where email = ${ADMIN}`;
@@ -143,27 +151,6 @@ describe('a sign-in with no return path', () => {
     // (tests/app/account/email/page.test.tsx).
     expect(landingOf(again)).toBe('/account/email');
     expect(callbackOf(mailedLink())).toBe('/account/email?verified');
-  });
-
-  // The primary admin through a provider that never vouches is the unverified
-  // admin in practice: promoted by the link, not at the sign-in.
-  it('sends the primary admin through Microsoft to the email page, and its link promotes and lands with no next', async () => {
-    const response = await signIn('microsoft', {
-      sub: 'ms-primary',
-      email: PRIMARY,
-      verified: true,
-    });
-    expect(landingOf(response)).toBe('/account/email');
-    expect(await roleOf(PRIMARY)).toBe('user');
-    const link = mailedLink();
-    expect(callbackOf(link)).toBe('/account/email?verified');
-
-    const followed = await auth.handler(
-      new Request(link, { headers: { cookie: cookieHeader(response) } }),
-    );
-
-    expect(landingOf(followed)).toBe('/account/email?verified');
-    expect(await roleOf(PRIMARY)).toBe('admin');
   });
 });
 

@@ -4,8 +4,8 @@ import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredient
 import { spells } from '../../modules/grimoire/schema/spells';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { Membership } from '@/modules/coven';
-import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
-import { existsIn, selectFrom } from './select';
+import { inTiers, notSoftDeleted, scopedTo } from './predicates';
+import { existsIn, selectFrom, selectOne } from './select';
 import type {
   IngredientRow,
   IngredientScoped,
@@ -38,12 +38,11 @@ export function findManySpells(membership: Membership): Promise<(typeof spells.$
  * coven's spell and for a private spell that is not this reader's. A caller
  * holding an id it saw elsewhere learns nothing from the difference.
  */
-export async function findOneSpell(
+export function findOneSpell(
   membership: Membership,
   spellId: string,
 ): Promise<typeof spells.$inferSelect | undefined> {
-  const [row] = await selectFrom(spells, and(readableSpells(membership), eq(spells.id, spellId)));
-  return row;
+  return selectOne(spells, and(readableSpells(membership), eq(spells.id, spellId)));
 }
 
 /**
@@ -86,7 +85,7 @@ export function findIngredientsInSpellsIncludingSoftDeleted(
     ingredients,
     and(
       inArray(ingredients.id, [...ingredientIds]),
-      or(inCompendium(ingredients), scopedTo(membership, ingredients)),
+      inTiers([membership], ingredients),
       existsIn(
         spellIngredients,
         and(

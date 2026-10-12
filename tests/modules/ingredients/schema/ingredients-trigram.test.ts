@@ -1,60 +1,16 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { useTestDatabase } from '../../../support/db/database';
-import { tableFacts } from '../../../support/db/table-metadata';
-import { statementsOfMigrationContaining } from '../../../support/db/migrations';
-import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
-// §9's one multicolumn gin index serves a predicate on either column alone,
-// which the planner assertions below prove —
-// claude-docs/db/fuzzy-matching.md, "Fuzzy matching: one index, and a rule
-// every caller is bound by".
+// §9's one multicolumn gin index serves a predicate on either column alone.
+// That it is reached is proved on the SQL the services send, in
+// common-names-plan.test.ts and duplicates-plan.test.ts (MB.184); what stays
+// here is the index's expression, the threshold, and the negative control that makes
+// those plans meaningful — claude-docs/db/fuzzy-matching.md, "Fuzzy matching:
+// one index, and a rule every caller is bound by".
 const TRIGRAM_INDEX = 'ingredients_trgm';
-const FOLK_NAMES_TRIGRAM_INDEX = 'ingredient_folk_names_trgm';
-// The folded twin, owned by ingredients-unaccent.test.ts; named here so the
-// declaration pin stays exact.
-const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
-// M5.6a's reverse index on the pick, owned by ingredients-indexes.test.ts;
-// named here for the same reason.
-const FORM_PICKS_INDEX = 'ingredients_compendium_form_id_idx';
-
-// Named so the declaration test says the trigram index joined them, not replaced one.
-const UNIQUE_INDEXES = [
-  'ingredients_compendium_identity_unique',
-  'ingredients_workspace_identity_unique',
-  'ingredients_workspace_label_unique',
-  'ingredients_compendium_slug_unique',
-  'ingredients_workspace_slug_unique',
-];
-
-describe('ingredients trigram index declaration', () => {
-  const { byIndexName: byName } = tableFacts(ingredients);
-
-  it('declares the trigram index beside the five unique ones, its folded twin and the pick index', () => {
-    expect(Object.keys(byName).sort()).toEqual(
-      [...UNIQUE_INDEXES, TRIGRAM_INDEX, UNACCENT_INDEX, FORM_PICKS_INDEX].sort(),
-    );
-  });
-
-  it('builds it as a gin index over both names', () => {
-    expect(byName[TRIGRAM_INDEX].config.method).toBe('gin');
-    expect(byName[TRIGRAM_INDEX].config.columns).toHaveLength(2);
-  });
-
-  // Uniqueness is the other three's job, and a partial predicate would narrow
-  // the planner's choice over rows a finder already filters out.
-  it('makes it neither unique nor partial', () => {
-    expect(byName[TRIGRAM_INDEX].config.unique).toBe(false);
-    expect(byName[TRIGRAM_INDEX].config.where).toBeUndefined();
-  });
-});
-
-// What the idempotency test at the bottom finds its migration by.
-const TRIGRAM_MIGRATION = `CREATE INDEX IF NOT EXISTS "${TRIGRAM_INDEX}"`;
-
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
@@ -65,7 +21,7 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
     insert into ingredients (name, slug, canonical_name, nomenclature, created_by, updated_by)
     values (
       ${name},
-      ${ingredientSlug(name, null, canonicalName)},
+      ${ingredientSlug(name, canonicalName)},
       ${canonicalName},
       ${canonicalName === null ? 'none' : 'botanical'},
       ${AUTHOR},
@@ -76,7 +32,7 @@ async function addIngredient(name: string, canonicalName: string | null): Promis
   return inserted.id as string;
 }
 
-// Enough varied rows that "the index was chosen" means something; the planner
+// Enough varied rows that "no index was chosen" means something; the planner
 // assertions disable sequential scans regardless.
 async function fillWithDecoys(): Promise<void> {
   await sql`
@@ -112,101 +68,40 @@ async function matchingNames(name: string, threshold?: number): Promise<string[]
   return rows.map((row) => row.name as string);
 }
 
-beforeEach(async () => {
-  await sql`truncate ingredients cascade`;
-});
-
-describe('pg_trgm', () => {
-  // Enabled by migration 0000; asserted because `gin_trgm_ops` is not resolvable without it.
-  it('is installed in this database', async () => {
-    const rows = await sql`select extname from pg_extension where extname = 'pg_trgm'`;
-
-    expect(rows.map((row) => row.extname as string)).toEqual(['pg_trgm']);
-  });
-});
-
 describe('ingredients trigram index', () => {
-  describe('catalogue introspection', () => {
-    it('covers name and canonical_name in one gin index (DESIGN.md §9)', async () => {
-      const index = await catalogue.indexRow('ingredients', TRIGRAM_INDEX);
+  // No predicate, so every live row is reachable through it.
+  it('covers name and canonical_name in one gin index (DESIGN.md §9)', async () => {
+    const index = await catalogue.indexRow('ingredients', TRIGRAM_INDEX);
 
-      expect(index?.definition).toContain(
-        'USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)',
-      );
-    });
-
-    it('carries no predicate, so every live row is reachable through it', async () => {
-      const index = await catalogue.indexRow('ingredients', TRIGRAM_INDEX);
-
-      expect(index?.unique).toBe(false);
-      expect(index?.predicate).toBeNull();
-    });
+    expect(index?.definition).toContain(
+      'USING gin (name gin_trgm_ops, canonical_name gin_trgm_ops)',
+    );
   });
 
-  // One index, reached from either column alone.
-  describe('the planner reaches it from either column alone', () => {
-    beforeEach(async () => {
+  // The negative control behind the plan tests' "never a similarity()
+  // comparison": the same rows, once per file.
+  describe('the planner cannot reach it from a similarity() comparison', () => {
+    beforeAll(async () => {
+      await sql`truncate ingredients cascade`;
       await addIngredient('Mugwort', 'Artemisia vulgaris');
       await fillWithDecoys();
     });
 
-    it('uses it for a predicate on name alone', async () => {
-      const plan = await planFor(`select id from ingredients where name % 'Mugwart'`);
-
-      expect(plan).toContain(`Bitmap Index Scan on ${TRIGRAM_INDEX}`);
-    });
-
-    it('uses it for a predicate on canonical_name alone', async () => {
-      const plan = await planFor(
-        `select id from ingredients where canonical_name % 'Artemisia vulgare'`,
-      );
-
-      expect(plan).toContain(`Bitmap Index Scan on ${TRIGRAM_INDEX}`);
-    });
-
     // §9's trap: `similarity(a, b) > 0.4` is a function call no trigram index
     // can answer. Seq scans are already off, so a seq scan here is the planner
-    // having no alternative rather than preferring one.
-    it('cannot be reached by a similarity() comparison, even with seq scans off', async () => {
-      const plan = await planFor(
-        `select id from ingredients where similarity(name, 'Mugwart') > 0.4`,
-      );
-
-      expect(plan).toContain('Seq Scan on ingredients');
-      expect(plan).not.toContain(TRIGRAM_INDEX);
-    });
-
-    // Why the two above could have passed wrongly: if `%` could not reach the
-    // index either, their plans would read like this one.
-    it('is what separates the two forms — same rows, different plans', async () => {
-      const operatorPlan = await planFor(`select id from ingredients where name % 'Mugwart'`);
+    // having no alternative rather than preferring one. Why the plan tests
+    // could have passed wrongly: if `%` could not reach the index either,
+    // their plans would read like this one.
+    it('cannot be reached by a similarity() comparison, where % reaches it', async () => {
       const functionPlan = await planFor(
         `select id from ingredients where similarity(name, 'Mugwart') > 0.4`,
       );
+      const operatorPlan = await planFor(`select id from ingredients where name % 'Mugwart'`);
 
-      expect(operatorPlan).not.toEqual(functionPlan);
+      expect(functionPlan).toContain('Seq Scan on ingredients');
+      expect(functionPlan).not.toContain(TRIGRAM_INDEX);
+      expect(operatorPlan).toContain(TRIGRAM_INDEX);
       expect(await matchingNames('Mugwart', 0.4)).toEqual(['Mugwort']);
-    });
-  });
-
-  // Folk names match through their own index, never this table's.
-  describe('the folk-names index stays independent (M4.4a)', () => {
-    it('is reached for a predicate on ingredient_folk_names.name', async () => {
-      const mugwort = await addIngredient('Mugwort', 'Artemisia vulgaris');
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        select ${mugwort}, 'Folk ' || g, ${AUTHOR}, ${AUTHOR} from generate_series(1, 2000) g
-      `;
-      await sql`
-        insert into ingredient_folk_names (ingredient_id, name, created_by, updated_by)
-        values (${mugwort}, 'Cronewort', ${AUTHOR}, ${AUTHOR})
-      `;
-      await sql`analyze ingredient_folk_names`;
-
-      const plan = await planFor(`select id from ingredient_folk_names where name % 'Cronewart'`);
-
-      expect(plan).toContain(`Bitmap Index Scan on ${FOLK_NAMES_TRIGRAM_INDEX}`);
-      expect(plan).not.toContain(TRIGRAM_INDEX);
     });
   });
 
@@ -215,6 +110,7 @@ describe('ingredients trigram index', () => {
   // not to leak past the transaction.
   describe('the similarity threshold is set per transaction', () => {
     beforeEach(async () => {
+      await sql`truncate ingredients cascade`;
       // 0.4545 against 'Mugwart' — above 0.4, so it survives either threshold.
       await addIngredient('Mugwort', 'Artemisia vulgaris');
       // 0.3125 against 'Mugwart' — above the 0.3 default, below 0.4: the one
@@ -236,37 +132,5 @@ describe('ingredients trigram index', () => {
 
       expect(Number(row['pg_trgm.similarity_threshold'])).toBe(0.3);
     });
-  });
-
-  // `IF NOT EXISTS`, like 0000's extension: belt to `__drizzle_migrations`' braces.
-  describe('the migration is idempotent', () => {
-    it('applies a second time without error', async () => {
-      for (const statement of statementsOfMigrationContaining(TRIGRAM_MIGRATION)) {
-        await sql.unsafe(statement);
-      }
-
-      // Still one raw gin index on the table, not a second alongside it; the
-      // folded one is 0027's and ingredients-unaccent.test.ts's.
-      const rows = await sql`
-        select c.relname as name
-        from pg_index i
-        join pg_class c on c.oid = i.indexrelid
-        join pg_am am on am.oid = c.relam
-        where i.indrelid = 'ingredients'::regclass and am.amname = 'gin'
-        order by c.relname
-      `;
-
-      expect(rows.map((row) => row.name as string)).toEqual([TRIGRAM_INDEX, UNACCENT_INDEX]);
-    });
-  });
-});
-
-// The plan assertion above matches this index's name as a string; a rename
-// would redden it as "wrong index chosen". This reddens beside it, correctly.
-describe('folk-names index name is the one M4.4a declared', () => {
-  it('matches the constant this file plans against', () => {
-    const { indexes } = tableFacts(ingredientFolkNames);
-
-    expect(indexes.map((index) => index.config.name)).toContain(FOLK_NAMES_TRIGRAM_INDEX);
   });
 });

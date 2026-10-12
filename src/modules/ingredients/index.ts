@@ -24,5 +24,7 @@ export type {
   IngredientDeityRow,
   IngredientKey,
   IngredientRow,
+  IngredientVariantRow,
   SubstituteRow,
+  VariantKey,
 } from './types';

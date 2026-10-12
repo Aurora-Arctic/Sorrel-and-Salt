@@ -1,10 +1,14 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { Forbidden } from '../../../lib/errors';
+import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { userRole } from '../schema/users';
+import { pauseAdminRoleChanges, resumeAdminRoleChanges } from '../services/admin-role-pause';
 import { setEmail } from '../services/email';
+import { setName } from '../services/name';
 import { getMe } from '../services/profile';
 import { listUsers } from '../services/user-list';
+import { setUserRole } from '../services/user-role';
+import { grantWorkspaceCreation, revokeWorkspaceCreation } from '../services/workspace-creation';
 import type { UserRow } from '../types';
 
 const UserRoleEnum = builder.enumType('UserRole', { values: userRole.enumValues });
@@ -40,11 +44,7 @@ builder.queryField('me', (t) =>
   t.field({
     type: UserRef,
     authScopes: { signedIn: true },
-    resolve: (_query, _args, { session }) => {
-      // The scope has already refused a null session; the type does not know.
-      if (!session) throw new Forbidden();
-      return getMe(session);
-    },
+    resolve: (_query, _args, context) => getMe(sessionOf(context)),
   }),
 );
 
@@ -56,10 +56,19 @@ builder.mutationField('setEmail', (t) =>
     type: UserRef,
     args: { email: t.arg.string({ required: true }), next: t.arg.string() },
     authScopes: { signedIn: true },
-    resolve: (_root, { email, next }, { session, emailVerification }) => {
-      if (!session) throw new Forbidden();
-      return setEmail(session, email, emailVerification, next ?? undefined);
-    },
+    resolve: (_root, { email, next }, context) =>
+      setEmail(sessionOf(context), email, context.emailVerification, next ?? undefined),
+  }),
+);
+
+// The account page's Name section (MB.88): the session's own row, renamed
+// through the audited write; a refusal is `VALIDATION` on `name`.
+builder.mutationField('setName', (t) =>
+  t.field({
+    type: UserRef,
+    args: { name: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { name }, context) => setName(sessionOf(context), name),
   }),
 );
 
@@ -72,14 +81,82 @@ builder.queryField('users', (t) =>
     args: {
       query: t.arg.string({ required: false }),
       awaitingApproval: t.arg.boolean({ required: false }),
+      role: t.arg({ type: UserRoleEnum, required: false }),
     },
-    resolve: (_root, { query, awaitingApproval }, page, { session }) => {
-      if (!session) throw new Forbidden();
-      return listUsers(
-        session,
-        { query: query ?? undefined, awaitingApproval: awaitingApproval ?? undefined },
-        page,
-      );
+    resolve: (_root, { query, awaitingApproval, role }, page, context) =>
+      listUsers(sessionOf(context), definedArgs({ query, awaitingApproval, role }), page),
+  }),
+);
+
+// M5.8's approval and its revoke: the site admin's alone, scoped here and
+// refused again by the service, which is the real gate. Each answers the row,
+// so the list re-reads it.
+const CREATION_WRITES = [
+  {
+    field: 'grantWorkspaceCreation',
+    description: 'Lets a user with no invitation create a coven. Refused once they may.',
+    write: grantWorkspaceCreation,
+  },
+  {
+    field: 'revokeWorkspaceCreation',
+    description:
+      'Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.',
+    write: revokeWorkspaceCreation,
+  },
+] as const;
+
+for (const { field, description, write } of CREATION_WRITES) {
+  builder.mutationField(field, (t) =>
+    t.field({
+      type: UserRef,
+      description,
+      // The note is the confirmation's optional reason, kept on the ledger row.
+      args: { userId: t.arg.id({ required: true }), note: t.arg.string() },
+      authScopes: { admin: true },
+      resolve: (_root, { userId, note }, context) =>
+        write(sessionOf(context), userId, note ?? undefined),
+    }),
+  );
+}
+
+// MB.59's grant and revoke: the site admin's alone, scoped here and refused
+// again by the service, which is the real gate. The note is the
+// confirmation's optional reason, kept on the ledger row the trigger writes;
+// the actor is the session's, never an argument.
+builder.mutationField('setUserRole', (t) =>
+  t.field({
+    type: UserRef,
+    description:
+      'Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.',
+    args: {
+      userId: t.arg.id({ required: true }),
+      role: t.arg({ type: UserRoleEnum, required: true }),
+      note: t.arg.string(),
     },
+    authScopes: { admin: true },
+    resolve: (_root, { userId, role, note }, context) =>
+      setUserRole(sessionOf(context), userId, role, note ?? undefined),
+  }),
+);
+
+// MB.63's switch: the site admin's scope here, and the service refuses every
+// admin but the primary one. Each answers whether changes are paused now, so
+// a second click answers the state rather than an error; the stamps are the
+// session's, and neither takes an argument.
+builder.mutationField('pauseAdminRoleChanges', (t) =>
+  t.boolean({
+    description:
+      'Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.',
+    authScopes: { admin: true },
+    resolve: (_root, _args, context) => pauseAdminRoleChanges(sessionOf(context)),
+  }),
+);
+
+builder.mutationField('resumeAdminRoleChanges', (t) =>
+  t.boolean({
+    description:
+      'Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.',
+    authScopes: { admin: true },
+    resolve: (_root, _args, context) => resumeAdminRoleChanges(sessionOf(context)),
   }),
 );

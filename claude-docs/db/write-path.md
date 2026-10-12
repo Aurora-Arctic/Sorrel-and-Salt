@@ -38,7 +38,9 @@ a named method per tier, with an edit after it rather than in place
   hard-deleted join tables only (MB.34). Typed to reject any table carrying `deletedAt`, so
   it can never become the way a soft-deletable row is quietly destroyed. The
   rows are named by column value — `{ ingredientId, categoryId: [...] }`, a
-  list matching by `IN` — since a service may not build an `SQL` predicate
+  list matching by `IN`, `null` matching `IS NULL` (MB.217, so
+  `{ ingredientId, variantId: null, categoryId }` names the parent's own pair
+  and not a form's) — since a service may not build an `SQL` predicate
   (MB.33; MB.125). A list left empty deletes nothing without a statement, and
   a match naming no column throws rather than emptying the table.
 
@@ -56,14 +58,81 @@ The read-side finder builder that applies `deleted_at IS NULL` (M1.20)
 deliberately lands on top of this rather than beside it — see ["Soft-delete
 filtering and the partial-index convention"](soft-delete.md).
 
+### Table marks (MB.198)
+
+Some tables are written only through named writer methods, because a row
+authorises something or holds a state only a named call may move:
+`admin_role_change_pauses` (MB.62), opened and ended by
+`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and `invitations`
+(MB.201), made, accepted and revoked by its named insert, accept and revoke. Such a table says so once, in its schema file:
+
+```ts
+export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));
+```
+
+`namedWrites`, in `src/db/table-marks.ts`, is a cast and nothing more. It
+types the table as `NamedWrites`, `{ readonly $writes: 'named' }`, and adds no
+property, so drizzle-kit and every query see the same object. Every generic
+writer method takes `Generic`, `{ $writes?: never }`, which a marked table
+cannot satisfy: the six unscoped ones (`insert`, `update`, `updateById`,
+`softDelete`, `softDeleteByIds`, `delete`), the five workspace-scoped ones
+and the three compendium-tier ones, so a marked two-tier table is off the
+proof-scoped methods too. `$writes` is a phantom key beside Drizzle's
+`$inferSelect`, so no column can be named like it. Both types are in
+`src/db/types.ts`.
+
+**Why a mark, not a marker per table.** Before it, each such table was
+refused by a type keyed on a column it alone happened to carry,
+`NotPauseLedger` on `ended_at` and `NotInvitation` on `token_hash`, each
+added to six signatures. A third named table would have added a third marker
+to every one of them, and an unrelated table that later took one of those
+column names would have been refused by accident. The mark is the table's
+own statement, and nothing else reads it.
+
+**Where the named writes live.** Beside the table's finders, in its
+repository file, rather than in `write.ts`: `admin-roles.ts` exports
+`adminRoleWrites` and `invitations.ts`
+`invitationWrites`, each a function of a `WriterContext` (the
+transaction, the session, and the writer's own stamped `insert` and
+`update`), whose result `writerFor` spreads into the writer. So a new marked
+table touches its own repository file, and the writer's surface,
+`AuditWriter`, is where its methods are argued for, as before:
+`write.test.ts` still pins their number.
+
+**One read sits among them** (MB.59): `adminRoleWrites` also holds
+`lockLiveAdmins`, the live admin rows locked `for update` in id order, which
+the admin revoke counts before it writes so two revokes at once cannot leave
+no admin ([`auth/admin-users.md`](../auth/admin-users.md), "Granting and
+revoking admin"). It is in the writer only because the lock must be taken in
+the transaction that writes, and it is still built by `selectFrom`, whose
+`Locked` shape runs the read in that transaction and appends `FOR UPDATE`, so
+every read is still built in `select.ts`. It took the writer to twenty-four
+methods.
+
+**The guard.** `tests/support/db/probe-tables.ts` declares two marked
+probes, never created as tables: `switches`, unscoped, and `tiers`, with a
+nullable `workspace_id`. `write.test.ts` asserts with `@ts-expect-error`
+that every generic method refuses each, beside the same calls compiling
+against their unmarked twins, `herbs` and `tinctures`; the hard delete is
+also asserted against `pairs` marked, since `deleted_at` refuses it
+`switches` anyway. `npm run typecheck` is the check: a generic method that
+stops demanding `Generic` leaves a directive unused. Each marked table's
+schema test assigns the table to `NamedWrites`, so one that loses its mark
+fails too.
+
 ### `app.current_user_id`, published per transaction (M1.19)
 
 Before it calls `fn`, `withAudit` publishes the session's acting user to
-the database itself:
+the database itself, through `publishActor(executor, { userId,
+impersonatedBy?, route?, note? })` in `src/db/audit.ts` — client-free, since
+it runs on the transaction it is handed, which is how the seed's transaction
+publishes the same four (MB.208):
 
 ```sql
 select set_config('app.current_user_id', $1, true),
-       set_config('app.impersonated_by', $2, true)
+       set_config('app.impersonated_by', $2, true),
+       set_config('app.privilege_route', $3, true),
+       set_config('app.privilege_note', $4, true)
 ```
 
 **`app.impersonated_by` rides beside it** (MB.53): the admin acting as the
@@ -73,15 +142,38 @@ The stamps still name the user acted as, since impersonation reproduces what
 that user would do ([`auth/impersonation.md`](../auth/impersonation.md)). It
 is set on every transaction, empty included, so a reader never sees the
 placeholder an earlier transaction left on a pooled connection. One statement
-holds both, so it costs no second round trip. It has no reader either, for
-the same reasons as the user id.
+holds all four, so it costs no second round trip. It has no reader yet, for
+the same reasons as the user id once had none.
 
-**Nothing reads this back, and that is expected.** It is published for two
-readers that do not exist yet: the v2 history trigger's `changed_by`
-(DESIGN.md §13), and the RLS policies MB.29 deferred to the public launch
-(DESIGN.md §8), each of which it leaves one migration away (§5). So do not
-remove it on the grounds that it is unused, and do not describe it as
-protecting anything today.
+**`app.privilege_route` and `app.privilege_note` ride beside them too**
+(MB.195), from `withAudit`'s optional third argument,
+`{ via, note }` (`PrivilegeDeclaration` in `src/db/types.ts`, `via` typed as
+`user_privilege_route`'s values so it cannot be misspelt). A write that changes
+`users.role` or `users.can_create_workspace` declares how the change came
+about, `bootstrap`, `admin`, `invitation` or `manual`, and may give a
+reason. The trigger on `users`, `record_privilege_change()`, reads both and
+writes one `user_privilege_changes` row per changed column, with the route as
+`via` and the note as `note`, an empty note stored as none. **An empty route
+refuses the change**: `a privilege change must declare its route`. Both are
+published on every transaction, empty when nothing is declared, as
+`app.impersonated_by` is, so a write that declared nothing never inherits a
+route; a write that changes no privilege never reaches the trigger, whatever
+it declared. Outside `withAudit`, the seed publishes all four through the
+same `publishActor` — the bootstrap user, every other setting empty, so a
+seed run inherits nothing a pooled connection held (MB.208) — and declares
+`bootstrap` around its fixture users' insert (`declaringBootstrapPrivileges`,
+`src/db/seed/idempotent.ts`); a `psql` fix declares `manual` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md)).
+Why a declared route rather than a default:
+[`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md).
+
+**The user id has one reader, and two more are expected.** The privilege
+trigger reads it as the ledger row's actor, falling back to the row's own
+`updated_by` where no transaction published one (MB.195). It is also
+published for two readers that do not exist yet: the v2 history trigger's
+`changed_by` (DESIGN.md §13), and the RLS policies MB.29 deferred to the
+public launch (DESIGN.md §8), each of which it leaves one migration away
+(§5). So do not remove it, and do not describe it as protecting anything
+beyond the ledger's stamp today.
 
 **The second authorization layer is not here.** It is CLAUDE.md rule 5's
 branded `Membership` — the value `assertMembership` returns, which every

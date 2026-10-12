@@ -27,9 +27,7 @@ export const AUDIT_COLUMNS: readonly string[] = [
 // Transcribed so a catalogue sweep cannot pass on two empty sets. The two
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
 export const AUDITED_TABLES = [
-  'admin_invitations',
   'admin_role_change_pauses',
-  'admin_role_changes',
   'categories',
   'category_groups',
   'deities',
@@ -38,9 +36,11 @@ export const AUDITED_TABLES = [
   'ingredient_deities',
   'ingredient_folk_names',
   'ingredient_substitutes',
+  'ingredient_variants',
   'ingredient_form_groups',
   'ingredient_forms',
   'ingredients',
+  'invitations',
   'inventory_items',
   'planets',
   'reference_links',
@@ -49,8 +49,8 @@ export const AUDITED_TABLES = [
   'spell_categories',
   'spell_ingredients',
   'spells',
+  'user_privilege_changes',
   'users',
-  'workspace_invitations',
   'workspace_members',
   'workspaces',
   'zodiac_signs',
@@ -62,12 +62,16 @@ export const AUDITED_TABLES = [
 // for "only the audited tables". `rate_limits` has no `updated_at` to mistake.
 export const UNAUDITED_TABLES = ['accounts', 'sessions', 'verifications'].sort();
 
+// Every column of the key, not the first: a composite key (MB.217) read by
+// its first column alone would pass for a single-column one.
 function foreignKeyFacts(fk: ForeignKey): ForeignKeyFacts {
   const { columns, foreignColumns, foreignTable } = fk.reference();
+  const names = columns.map((column) => column.name);
   return {
-    column: columns[0].name,
+    column: names.join(', '),
+    columns: names,
     name: fk.getName(),
-    foreignColumnName: foreignColumns[0].name,
+    foreignColumnNames: foreignColumns.map((column) => column.name),
     foreignTable,
   };
 }

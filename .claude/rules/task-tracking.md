@@ -25,7 +25,7 @@ Issues, milestones, sub-issues, issue types, dependencies and Projects are on Gi
 - **One issue per task, titled `<Task ID> — <title>`**, exactly as its entry in `claude-docs/tasks/` heads it. The id is the first thing in the title and nothing precedes it — no marker, no emoji; status is a field, not a prefix, so a status change never rewrites a title.
 - **One milestone per wave** (`Wave 07 — GraphQL`) and one per pre-wave feature grouping (`M0 · Repo bootstrap`), plus one closed `Retired — not done` milestone holding the tasks MB.31 retired, so that no issue is without a milestone. The wave number is two digits because GitHub sorts milestones alphabetically and offers no other order.
 - **A wave's milestone description is its id list, then a link.** The first line holds the wave's task ids in execution order; a blank line follows; then the link to its wave file on `staging`, `https://github.com/Aurora-Arctic/Sorrel-and-Salt/blob/staging/claude-docs/waves/wave-<NN>.md`. The ordering reasoning lives in that file alone, never in the description. A task added to a wave is added to the first line in the same pass, and `reorder` reports a first line that differs from the wave's row.
-- **Issue type `Bug` for `MB.*`, `Task` for everything else**, and the `hotfix` label on a task that is one. The label, not the id, decides the branch skill: an `MB.*` id is an ordinary bugfix as often as a hotfix, and `start-task` asks when the issue is ambiguous.
+- **Issue type `Bug` for a task that fixes a bug, `Task` for everything else.** A bug is a failure that reached a PR, staging or production; new work, a refactor, a doc or a sweep is a `Task` whatever its id. The id prefix decides nothing: an `MB.*` id is new work as often as a fix. The `hotfix` label marks a bug that ships straight to `main`, and the label, not the type, decides the branch skill; `start-task` asks when the issue is ambiguous.
 - **Every tracked issue carries the `tracked` label**, which is the Project's auto-add filter. A public repo lets anyone open an issue, so an issue without the label is a visitor's until someone triages it onto the board.
 - **The board is kept in execution order**, `TASKS.md`'s wave table read wave by wave: `node scripts/task-board.mjs reorder` prints the moves that restore it and `--apply` makes them (claude-docs/task-tracking.md, "Order").
 - **Sub-issues only for genuine parent/child** (`M7.A.*` under `M7.A`, or a task split mid-flight). Waves are milestones, not parent issues.
@@ -56,7 +56,7 @@ Issues, milestones, sub-issues, issue types, dependencies and Projects are on Gi
 Re-check the next free id right before minting — another session may have taken it — then:
 
 ```sh
-gh issue create --title "MB.90 — <title>" --type Bug --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
+gh issue create --title "MB.90 — <title>" --type Task --label tracked --milestone "Wave 07 — GraphQL" --body-file <notes>
 node scripts/task-board.mjs estimate MB.90 3
 node scripts/task-board.mjs reorder --apply
 ```

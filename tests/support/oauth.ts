@@ -16,13 +16,22 @@ export const ORIGIN = 'http://localhost:8000';
 /** Where an unverified sign-in lands (MB.54) when it asked for no return path, as `signIn` does by default. */
 export const EMAIL_PAGE = '/account/email';
 
+/** Test credentials for all four providers, as the env `@/lib/auth` reads at import. */
+export const PROVIDER_CREDENTIALS: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT'].flatMap((provider) => [
+      [`${provider}_CLIENT_ID`, `test-${provider.toLowerCase()}-id`],
+      [`${provider}_CLIENT_SECRET`, `test-${provider.toLowerCase()}-secret`],
+    ]),
+  ),
+  MICROSOFT_TENANT_ID: '',
+};
+
 /** Registers all four providers with test credentials; call before importing `@/lib/auth`. */
 export function stubProviderCredentials(stubEnv: (name: string, value: string) => void): void {
-  for (const provider of ['GOOGLE', 'DISCORD', 'FACEBOOK', 'MICROSOFT']) {
-    stubEnv(`${provider}_CLIENT_ID`, `test-${provider.toLowerCase()}-id`);
-    stubEnv(`${provider}_CLIENT_SECRET`, `test-${provider.toLowerCase()}-secret`);
+  for (const [name, value] of Object.entries(PROVIDER_CREDENTIALS)) {
+    stubEnv(name, value);
   }
-  stubEnv('MICROSOFT_TENANT_ID', '');
 }
 
 // An unsigned JWT: Google and Microsoft decode the id token they received from

@@ -27,7 +27,7 @@ const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 let ingredientId: string;
 // Its own row, so the delete probe's admitted call leaves the update probe's standing.
 let deletableId: string;
-// W's own reference, which the update probe replaces.
+// W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
 
 beforeAll(async () => {
@@ -56,8 +56,7 @@ const WHOLE_INGREDIENT = {
   name: 'Testwort',
   canonicalName: '',
   nomenclature: 'none',
-  form: '',
-  formId: '',
+  variants: [],
   description: '',
   elements: [],
   planets: [],
@@ -98,7 +97,7 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {
       createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) { id }
     }`,
-    variables: () => ({ input: { name: 'Fixture Created' } }),
+    variables: () => ({ input: { name: 'Fixture Created', variants: [] } }),
   },
   updateIngredient: {
     source: `mutation ($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
@@ -110,6 +109,11 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source: `query ($workspaceId: ID!) {
       referenceSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
     }`,
+  },
+  reference: {
+    source:
+      'query ($workspaceId: ID, $id: ID!) { reference(workspaceId: $workspaceId, id: $id) { id } }',
+    variables: () => ({ id: referenceId }),
   },
   createReference: {
     source: `mutation ($workspaceId: ID, $input: ReferenceInput!) {

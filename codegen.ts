@@ -14,6 +14,9 @@ const config: CodegenConfig = {
   generates: {
     'src/gql/': {
       preset: 'client',
+      // Fragments only name a shared selection, so their fields are typed
+      // where they are spread rather than masked behind `useFragment`.
+      presetConfig: { fragmentMasking: false },
       config: {
         // What each custom scalar is on the wire. `strictScalars` fails the
         // run on an unmapped one rather than typing it `any`.
