@@ -3,6 +3,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
+import type { RouteModalOpener } from '@/components/Modal/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
@@ -34,6 +36,8 @@ const ADA = {
   providers: ['discord', 'google'],
   emailVerified: true,
   primaryAdmin: false,
+  openHref: '/admin/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
+  heading: { eyebrow: 'User', title: 'Ada Fixturewort', qualifier: 'ada@users.test' },
 } as const;
 
 const BO = {
@@ -46,6 +50,8 @@ const BO = {
   providers: [],
   emailVerified: false,
   primaryAdmin: false,
+  openHref: '/admin/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
+  heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
 const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
@@ -106,6 +112,34 @@ describe('UserList', () => {
       expect(
         screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+    });
+  });
+
+  // M9.19: each name opens its user’s modal over the list, at once under
+  // the page’s opener, and as a link still for a new tab or before the script.
+  describe('the name link', () => {
+    it('links each name to its user’s modal, in the name cell', () => {
+      render(<UserList {...props()} />);
+
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', { name: user.name });
+        expect(link).toHaveAttribute('href', user.openHref);
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
+
+    it('opens the modal at once with the row’s heading on a plain press', () => {
+      const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+      render(
+        <RouteModalContext.Provider value={opener}>
+          <UserList {...props()} />
+        </RouteModalContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByRole('link', { name: BO.name }));
+
+      expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading);
     });
   });
 

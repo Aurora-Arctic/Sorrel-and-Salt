@@ -8,6 +8,7 @@ import ImpersonateButton from './impersonate-button';
 import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
+import UserLink from './user-link';
 import { roleLabel } from './roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
@@ -107,11 +108,12 @@ const columns = (
   {
     heading: 'Name',
     // The way into their privilege history (MB.200), then the name, on every
-    // row: an admin's changes are the ones most worth reading.
+    // row: an admin's changes are the ones most worth reading. The name opens
+    // the user's modal, their covens and Impersonate (M9.19).
     cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
-        {user.name}
+        <UserLink href={user.openHref} heading={user.heading} name={user.name} />
       </span>
     ),
   },

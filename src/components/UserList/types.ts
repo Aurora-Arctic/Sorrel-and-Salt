@@ -1,4 +1,6 @@
+import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagerHrefs } from '../../app/admin/types';
 import type { PagePosition } from '../../lib/types';
@@ -16,6 +18,10 @@ export interface UserListEntry {
   emailVerified: boolean;
   /** Whether this is the primary admin, whom no one can revoke (MB.59). */
   primaryAdmin: boolean;
+  /** This page with the user’s modal open over it, `?user=<id>` (M9.19). */
+  openHref: Route;
+  /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
+  heading: ModalHeading;
 }
 
 export interface UserListProps extends Partial<PagerHrefs> {
@@ -55,6 +61,13 @@ export interface HistoryLinkProps {
   /** The user's address, which the ledger's search is opened with. */
   email: string;
   /** The user's name, completing the link's accessible name. */
+  name: string;
+}
+
+/** A row’s name, the link that opens its user’s modal (M9.19). */
+export interface UserLinkProps {
+  href: Route;
+  heading: ModalHeading;
   name: string;
 }
 

@@ -24,7 +24,11 @@ the hrefs of the pages either side
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
 read beside it, and `primaryAdmin`, which the page asks of the identity
-service's `isPrimaryAdmin` for each row as it reads it (MB.59).
+service's `isPrimaryAdmin` for each row as it reads it (MB.59). Since M9.19
+it also carries `openHref`, this page with the user's modal open over it
+(`?user=<id>`, the filter and cursor kept), and `heading`, that modal's
+head, both built by the page per row, as the other admin lists carry
+`editHref` and `editHeading` ("The user modal is the page's" under [Contracts](#contracts)).
 
 ## Contracts
 
@@ -123,6 +127,34 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the muted ink, and its hit area reaches `$control-height`, WCAG 2.5.5's
   44px, through a pseudo-element, so the row is no taller for it; its focus
   ring is the `focus-ring` mixin's.
+- **Each name opens the user's modal** (M9.19,
+  [`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
+  The name, after the history icon, is a link to the row's `openHref`,
+  `/admin/users?<filter>&user=<id>`, its accessible name the user's name.
+  It is `user-link.tsx`, a client file, so the list stays a server
+  component, and its press is `useOpenModalClick(openHref, heading)`: a plain
+  press opens the modal at once over a skeleton, a press with a modifier or
+  before the script loads follows the link
+  ([`modal.md`](modal.md), "Opening at once"). `userListHref` (`href.ts`)
+  takes the user's id as an optional third argument, written after the
+  cursor; the pager and the filter leave it out, so paging or filtering
+  closes the modal, as they drop `?edit=` elsewhere.
+- **The user modal is the page's, not the list's.** The page renders
+  `UserDialog` (`src/app/admin/(people)/users/user-dialog.tsx`), a
+  `RouteModal` at one fixed place, whatever the address opens. Its head is
+  `userHeading(user)` (`user-heading.ts` beside the page): eyebrow User,
+  the name as title and the address as qualifier, so the dialog is named
+  "User, <name>, <email>". The page builds each row's `heading` with the
+  same helper, so the head a press shows at once is the one that stays. Its
+  body is [`UserDetail`](user-detail.md): the user's covens and, where
+  impersonation is registered, Impersonate. On `?user=<id>` the page reads
+  the user through `usersForAdmin` and their covens through the coven
+  service's `membershipsOf`, with the navigation and never through GraphQL
+  (CLAUDE.md rule 1). An id that is not a UUID, no live user, or the seed's
+  bootstrap user (live, but `listedOnUserList` leaves it out) is _missing_:
+  `MissingNotice` over the list and no dialog, never an error or a 404, as
+  a stale `?edit=` is on the other admin lists. Closing returns to
+  `userListHref(filter, cursor)`, the list as it stood, with no `?user=`.
 - **Impersonate is a seventh column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
@@ -406,7 +438,8 @@ roster; no table when no user matches; through the shared filter rows (`tests/su
 names and kept values, Needs Approval found as a `switch`; no Filter button, the
 bare `awaiting` a change of the switch opens, the Role select's values and the `role` a change opens, the search text carried along;
 Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;
-the history link before every name and its address; the Impersonate column:
+the history link before every name and its address; each name a link to its
+`openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
 while pending with a second press sending nothing, and the refusal; the creation cell: Approve on rows awaiting approval, Revoke on
@@ -431,6 +464,13 @@ which of the two strings describes it. Its colours, marks, tips and their placem
 are presentation; paging is Pager's. `tests/app/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
-pager's position. `tests/e2e/admin.spec.ts`
-approves and revokes a user against the built server, and grants admin with a
-reason and revokes it, with axe over each open modal.
+pager's position; and the user modal (M9.19): `?user=<id>` reading the user and
+their covens as the guard's session into a dialog, each name's link keeping the
+filter, and the notice with no dialog, and no read, for an id that is not one,
+and the notice for a user the service finds none of or the list leaves out.
+`tests/e2e/admin.spec.ts` approves and revokes a user against the built
+server, and grants admin with a reason and revokes it, with axe over each open
+modal; and, tagged `@story-19`, opens a user's modal from their name, finds
+their coven and role in it, no link to the coven and no Impersonate (the run
+registers none), axe over it, and Close back to the filtered list, then
+`?user=not-an-id` showing the notice and no dialog.
