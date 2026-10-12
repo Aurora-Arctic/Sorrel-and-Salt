@@ -19,12 +19,21 @@ proof"](membership-proof.md)).
   [partial-index convention](soft-delete.md) — the slug is what
   `/coven/[slug]` routes on, so a plain unique constraint would let a deleted
   workspace hold a name hostage forever.
-- **`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, +
-  audit, with a composite primary key on the pair and no surrogate `id`. The
+- **`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, `invitedBy`
+  (nullable), + audit, with a composite primary key on the pair and no surrogate `id`. The
   pair _is_ the membership's identity: a surrogate key would let the same user
   join the same workspace twice, with two rows disagreeing about their role.
   `joinedAt` is deliberately distinct from `created_at` — a role change
-  rewrites the row without changing when the person joined.
+  rewrites the row without changing when the person joined. `invitedBy`
+  references `users.id` and holds the sender of the invitation that seated the
+  person (M10.26). It is not `created_by`, which is the person who accepted,
+  since acceptance runs under their session. It is written at the moment of
+  seating, not worked out later from `invitations`: a person removed and invited
+  back has several accepted invitations, and the database clock
+  (`accepted_at`) and the app clock (`joined_at`) need not order them the same
+  way. Revival overwrites it, a role change leaves it, a creator has null, and
+  the name resolves through the co-member finder, which still names someone
+  removed since.
 - **`owner` is a role here but not an invitable one.** That narrowing lives on
   `invitations` (M7.1; one table since MB.201), whose check constraint rejects it — see
   ["Invitations"](invitations.md); ownership is granted afterwards by an existing owner on

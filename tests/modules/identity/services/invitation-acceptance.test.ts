@@ -295,7 +295,7 @@ describe('a link that cannot be used', () => {
 
   describe('a coven’s invitation (M7.5)', () => {
     const memberRows = (userId: string) =>
-      sql`select role::text, joined_at, deleted_at from workspace_members
+      sql`select role::text, joined_at, deleted_at, invited_by from workspace_members
         where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;
 
     it('seats the person at the invited role, stamps the invitation and answers the coven’s slug', async () => {
@@ -417,6 +417,52 @@ describe('a link that cannot be used', () => {
       expect(stamped.acceptedBy).toBe(GRANTEE);
       expect(await memberRows(GRANTEE)).toEqual(before);
       expect(before[0].role).toBe('owner');
+    });
+
+    it('records the invitation’s sender on a fresh membership', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect((await memberRows(GRANTEE))[0].invited_by).toBe(A.id);
+    });
+
+    it('overwrites a revived row’s inviter with the latest sender', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, deleted_at, deleted_by, invited_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'member', now(), ${A.id}, ${A.id}, ${A.id}, ${A.id})
+      `;
+      // The precondition: the removed row names A, so a changed value is the revival’s doing.
+      expect((await memberRows(GRANTEE))[0].invited_by).toBe(A.id);
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: PRIMARY });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      const rows = await memberRows(GRANTEE);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].invited_by).toBe(PRIMARY);
+    });
+
+    it('leaves the inviter alone when the person is already seated', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, invited_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'member', ${A.id}, ${A.id}, ${A.id})
+      `;
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: PRIMARY });
+      const before = await memberRows(GRANTEE);
+      expect(before[0].invited_by).toBe(A.id);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await memberRows(GRANTEE)).toEqual(before);
+    });
+
+    it('leaves a coven creator’s inviter empty', async () => {
+      const [creator] = await sql`
+        select invited_by from workspace_members
+        where workspace_id = ${WORKSPACE_W_ID} and user_id = ${A.id}`;
+      expect(creator.invited_by).toBeNull();
     });
 
     it('refuses an unverified matching account and a different verified one, so the match admits', async () => {

@@ -1,0 +1,2 @@
+ALTER TABLE "workspace_members" ADD COLUMN "invited_by" uuid;--> statement-breakpoint
+ALTER TABLE "workspace_members" ADD CONSTRAINT "workspace_members_invited_by_users_id_fk" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;

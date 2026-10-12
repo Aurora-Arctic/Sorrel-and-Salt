@@ -19,7 +19,7 @@ describe('workspace_members schema', () => {
 
   it('has its own columns and the six audit ones, and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual(
-      ['workspace_id', 'user_id', 'role', 'joined_at', ...AUDIT_COLUMNS].sort(),
+      ['workspace_id', 'user_id', 'role', 'joined_at', 'invited_by', ...AUDIT_COLUMNS].sort(),
     );
   });
 

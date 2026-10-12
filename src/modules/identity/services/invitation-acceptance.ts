@@ -171,8 +171,13 @@ export async function acceptInvitation(session: Session, token: string): Promise
       }
       const { workspaceId, role } = standing.invitation;
       if (!seated) {
-        const [revived] = await write.reviveMembership(workspaceId, user.id, role);
-        if (!revived) await write.insertMembership(workspaceId, user.id, role);
+        const [revived] = await write.reviveMembership(
+          workspaceId,
+          user.id,
+          role,
+          stamped.createdBy,
+        );
+        if (!revived) await write.insertMembership(workspaceId, user.id, role, stamped.createdBy);
       }
       if (!user.canCreateWorkspace) {
         const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });

@@ -452,6 +452,7 @@ export interface AuditWriter {
     workspaceId: string,
     userId: string,
     role: WorkspaceRole,
+    invitedBy?: string,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * Set the role of one live member of the proof's workspace (M9.14). The
@@ -480,12 +481,14 @@ export interface AuditWriter {
    * `joined_at`. The one writer that touches a deleted row, so it reaches
    * only a deleted one: an empty result means the pair holds no removed row
    * (none was ever made, or it is live). Under no proof, as
-   * `insertMembership` is.
+   * `insertMembership` is. Always sets `invited_by`, to null when no sender
+   * is given, so an earlier inviter never lingers.
    */
   reviveMembership(
     workspaceId: string,
     userId: string,
     role: WorkspaceRole,
+    invitedBy: string | null,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * The proof's workspace's live members, locked `for update` until the
