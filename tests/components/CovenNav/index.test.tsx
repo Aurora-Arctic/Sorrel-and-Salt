@@ -12,7 +12,7 @@ const { default: CovenNav } = await import('@/components/CovenNav');
 // claude-docs/components/coven-nav.md).
 const SLUG = 'fixture-coven';
 
-const nav = () => screen.getByRole('navigation', { name: 'Workspace' });
+const nav = () => screen.getByRole('navigation', { name: 'Coven' });
 
 describe('CovenNav', () => {
   beforeEach(() => {

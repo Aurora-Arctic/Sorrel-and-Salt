@@ -51,6 +51,21 @@ describe('TabbedPage', () => {
     expect(within(screen.getByRole('main')).getByRole('table', { name: 'Users' })).toBeVisible();
   });
 
+  it("puts the tabs on the heading's line, between the heading and the action", () => {
+    render(
+      <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
+        <p>Content</p>
+      </TabbedPage>,
+    );
+
+    const heading = screen.getByRole('heading', { level: 1 });
+    const nav = screen.getByRole('navigation', { name: 'People' });
+    const action = screen.getByRole('link', { name: 'Pause' });
+    expect(nav.parentElement).toBe(heading.parentElement);
+    expect(heading.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(nav.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it.each([
     ['/admin/users', ['/admin/users']],
     ['/admin/invitations', ['/admin/invitations']],
