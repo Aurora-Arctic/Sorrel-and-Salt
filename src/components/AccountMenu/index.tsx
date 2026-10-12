@@ -11,7 +11,7 @@ import type { AccountMenuProps } from './types';
 import './index.scss';
 
 // The account button in the shell's bar and the panel it opens: Your Account,
-// at a phone's width the theme switch, and Sign Out. A disclosure, not an
+// at a phone's width the theme switch in its top corner, and Sign Out. A disclosure, not an
 // ARIA menu: `role="menu"` promises arrow-key roving and a typeahead this
 // does not have, and the panel holds a link, a switch and a button, which a
 // menu's three item roles do not cover. The APG disclosure pattern is a button
@@ -82,6 +82,15 @@ const AccountMenu = ({ name, verified, links = [] }: AccountMenuProps): ReactEle
       </button>
       {open && (
         <ul id={panelId} className="account-menu__panel">
+          {/* On a phone the bar has no room for the disc; it sits in the panel's top
+              right corner, first in the order. */}
+          <li
+            className={
+              verified ? 'account-menu__theme' : 'account-menu__theme account-menu__theme--alone'
+            }
+          >
+            <ThemeToggle variant="inline" size="small" />
+          </li>
           {verified && (
             <li>
               <Link href="/account" className="account-menu__item" onClick={close}>
@@ -102,12 +111,7 @@ const AccountMenu = ({ name, verified, links = [] }: AccountMenuProps): ReactEle
                 </Link>
               </li>
             ))}
-          {/* On a phone the bar has no room for the disc; it lives here. */}
-          <li className="account-menu__theme">
-            <span>Theme</span>
-            <ThemeToggle variant="inline" size="small" />
-          </li>
-          <li>
+          <li className="account-menu__signout">
             <SignOutButton />
           </li>
         </ul>

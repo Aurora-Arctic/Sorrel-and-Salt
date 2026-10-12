@@ -4,11 +4,14 @@
 // The account button and its panel (MB.7). The button is a control tall
 // ($control-height) with the avatar disc, the name and a chevron; at a phone's
 // width the name and chevron leave and it is a square of the avatar alone.
-$account-menu-avatar: 1.75rem;
+$account-menu-avatar: 2rem;
 
 .account-menu {
   position: relative;
-  flex: none;
+  // May give up width: the bar's one item that can, so a long name truncates
+  // (below) rather than pushing the disc past the window.
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .account-menu__button {
@@ -18,20 +21,26 @@ $account-menu-avatar: 1.75rem;
   display: inline-flex;
   align-items: center;
   gap: space(2);
+  max-width: 100%;
   min-height: $control-height;
   padding: 0 space(2);
   border-radius: radius('control');
   color: $text-primary;
   font: inherit;
-  @include theme-transition(background-color);
 
-  &:hover,
-  &[aria-expanded='true'] {
-    background-color: $fill-quiet;
+  // No wash behind the button: the disc is the control, and it answers the
+  // pointer as the theme switch's does, darkening to the accent's hover.
+  &:hover .account-menu__avatar,
+  &[aria-expanded='true'] .account-menu__avatar {
+    background-color: $accent-hover;
   }
 
   &:focus-visible {
     @include focus-ring;
+  }
+
+  @include reduced-motion {
+    transition: none;
   }
 }
 
@@ -51,6 +60,7 @@ $account-menu-avatar: 1.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
+  @include theme-transition(background-color);
 }
 
 .account-menu__name {
@@ -65,6 +75,10 @@ $account-menu-avatar: 1.75rem;
   color: $text-muted;
   @include theme-transition(transform);
 
+  @include reduced-motion {
+    transition: none;
+  }
+
   [aria-expanded='true'] > & {
     transform: rotate(180deg);
   }
@@ -76,19 +90,21 @@ $account-menu-avatar: 1.75rem;
   right: 0;
   z-index: layer('floating');
   min-width: 13rem;
-  padding: space(1);
+  overflow: hidden;
   border: 1px solid $text-muted;
   border-radius: radius('surface');
   background-color: $surface-card;
   box-shadow: $shadow-floating;
-  @include list-reset(space(1), false);
+  @include list-reset;
 }
 
-// A link, a button, or the theme row: one row each, a control tall, the
-// pointer's wash on hover. SignOutButton brings its own `.btn`, flattened to
-// a row here so the panel reads as a list.
-.account-menu__item,
-.account-menu__panel .sign-out-button .btn {
+// A link or a button: one row each, a control tall, edge to edge of the panel
+// (no padding or gap around the rows and no rounding, so the wash on hover and
+// the current mark run to the panel's edges; its `overflow: hidden` clips them
+// to its rounded corners). The pointer's wash on hover. SignOutButton brings its own `.btn`, left as the
+// outlined button it is, so the one action that ends the session reads as a
+// button and not as another link (below).
+.account-menu__item {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -96,13 +112,14 @@ $account-menu-avatar: 1.75rem;
   min-height: $control-height;
   padding: 0 space(3);
   border: 0;
-  border-radius: radius('control');
   background-color: transparent;
   color: $text-primary;
   font: inherit;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
+  // The wash eases in as the button's does, rather than snapping.
+  @include theme-transition(background-color, color);
 
   &:hover {
     background-color: $fill-quiet;
@@ -110,33 +127,59 @@ $account-menu-avatar: 1.75rem;
 
   &:focus-visible {
     @include focus-ring;
+    // Inside the row, where the panel's edge would clip an outside ring.
+    outline-offset: -2px;
   }
 
   &[aria-current='page'] {
-    background-color: $fill-quiet;
-    box-shadow: inset (-$rule-heavy) 0 0 $accent;
+    box-shadow: inset $rule-heavy 0 0 0 $accent;
     font-weight: 500;
+  }
+
+  @include reduced-motion {
+    transition: none;
   }
 }
 
+// The button keeps the shared `.btn` edge, height, radius and colours (and
+// so its contrast); only the width is set, to the panel row's.
 .account-menu__panel .sign-out-button {
   display: block;
+}
+
+.account-menu__panel .sign-out-button .btn {
+  width: 100%;
 }
 
 .account-menu__link {
   display: none;
 }
 
-.account-menu__theme {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(3);
-  min-height: $control-height;
-  padding: 0 space(3);
+// Sign Out is the one row with room around it, so the button never touches the
+// panel's edge.
+.account-menu__signout {
+  padding: space(2);
 }
 
-@media (max-width: $shell-phone-width) {
+// The theme switch, phone only: pinned to the panel's top right corner, level
+// with the first row, whose text keeps clear of it (below).
+.account-menu__theme {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: space(2);
+  // Above the first row, whose hover wash would otherwise paint over it.
+  z-index: 1;
+  align-items: center;
+  height: $control-height;
+}
+
+// Under the tablet width the bar has no room for the name and the site links
+// (for an admin at 642px the bar's brand, two links, Add Ingredient, the
+// named button and the disc ran past the window; the owner's finding at
+// MB.7's review, 2026-10-12): the button is the avatar alone and the links
+// move into the panel. The disc stays in the bar until the phone's width.
+@media (max-width: $shell-tablet-width) {
   .account-menu__button {
     justify-content: center;
     width: $control-height;
@@ -152,11 +195,25 @@ $account-menu-avatar: 1.75rem;
     display: none;
   }
 
+  .account-menu__link {
+    display: block;
+  }
+}
+
+@media (max-width: $shell-phone-width) {
   .account-menu__theme {
     display: flex;
   }
 
-  .account-menu__link {
-    display: block;
+  // With no row to sit beside (an unverified account), the switch takes a row,
+  // right-aligned, instead of covering Sign Out.
+  .account-menu__theme--alone {
+    position: static;
+    justify-content: flex-end;
+    padding: 0 space(2);
+  }
+
+  .account-menu__theme + li > .account-menu__item {
+    padding-right: space(8);
   }
 }

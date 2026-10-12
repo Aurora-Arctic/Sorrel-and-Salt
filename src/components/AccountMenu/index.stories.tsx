@@ -48,3 +48,7 @@ export const OpenUnverified: Story = () => <Opened verified={false} />;
 // A phone's width: the avatar alone, and the panel gains the links and the theme row.
 export const OpenPhone: Story = () => <Opened verified />;
 OpenPhone.meta = { width: 375 };
+
+// Seven hundred pixels, past the phone: the links in the panel, and no theme item.
+export const OpenAtSevenHundred: Story = () => <Opened verified />;
+OpenAtSevenHundred.meta = { width: 700 };

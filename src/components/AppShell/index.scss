@@ -38,6 +38,14 @@
   background-color: $surface-card;
 }
 
+// The layout layer gives every `header` a bottom margin, and this bar is one.
+// Zeroed: a context row meets the bar edge to edge, and a page with none has
+// its own padding, which with the margin as well made a page that fits the
+// window (`.page-frame`'s height is the window's less the bar) scroll by it.
+.app-shell .app-shell__bar {
+  margin-bottom: 0;
+}
+
 .app-shell__bar-inner {
   box-sizing: border-box;
   display: flex;
@@ -73,39 +81,52 @@
   display: none;
 }
 
+// The links fill the bar's height, square, so the current one's rule sits
+// along the bar's foot and a hover washes a column of it, as the section
+// nav's tabs do in the context row.
 .app-shell__nav {
+  align-self: stretch;
+
   ul {
     @include list-reset;
 
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    height: 100%;
     gap: space(1);
   }
 
   a {
     display: inline-flex;
     align-items: center;
-    min-height: $control-height;
+    // The item stretches to the bar; the link has to be told to fill it.
+    height: 100%;
     padding: 0 space(3);
-    border-radius: radius('control');
     color: $text-primary;
     text-decoration: none;
     white-space: nowrap;
+    @include theme-transition(background-color, color);
 
     &:hover {
       background-color: $fill-quiet;
     }
 
+    // Inside the link, where the bar's edge would clip an outside ring.
     &:focus-visible {
       @include focus-ring;
+
+      outline-offset: -2px;
     }
 
-    // The page you are on: weight, a quiet fill and the heavy rule beneath,
-    // so it is told by shape and not by colour alone.
+    // The page you are on: weight and the heavy rule beneath, no fill, so it
+    // is told by shape and not by colour alone and a hover still shows.
     &[aria-current='page'] {
-      background-color: $fill-quiet;
       box-shadow: inset 0 (-$rule-heavy) 0 $accent;
       font-weight: 500;
+    }
+
+    @include reduced-motion {
+      transition: none;
     }
   }
 }
@@ -136,24 +157,37 @@
     padding-inline: space(2);
   }
 
+  // The theme disc moves into the account panel too: this bar has room for
+  // the brand, Add Ingredient and the avatar.
+  .app-shell__theme {
+    display: none;
+  }
+}
+
+// Under the tablet width the site links move into the account panel, where
+// the name has already gone (AccountMenu/index.scss): with them in the bar
+// an admin's bar ran past the window from 642px up.
+@media (max-width: $shell-tablet-width) {
+  .app-shell__nav {
+    display: none;
+  }
+}
+
+// Narrower than the phone width: with the site links gone the bar has room
+// for the full name down to `$shell-brand-width`, so the initials stand in
+// only on a narrow phone, not in every phone-width window.
+@media (max-width: $shell-brand-width) {
   .app-shell__brand {
     justify-content: center;
     min-width: $control-height;
   }
 
-  // The initials stand in for the name; the name stays for a screen reader.
+  // The name stays for a screen reader.
   .app-shell__brand-full {
     @include visually-hidden;
   }
 
   .app-shell__brand-short {
     display: inline;
-  }
-
-  // The links move into the account panel and the theme disc too: this bar
-  // has room for the brand, Add Ingredient and the avatar.
-  .app-shell__nav,
-  .app-shell__theme {
-    display: none;
   }
 }

@@ -100,6 +100,10 @@ from the switcher's Create Workspace choice, offered to anyone holding the
 right (M6.9). A successful create lands on the new coven's index page as its
 owner ([`components/create-workspace-form.md`](../components/create-workspace-form.md)).
 
+- **A context row only for someone with a coven.** The switcher alone, with no
+  section nav, since the page belongs to no one coven; a first-time creator has
+  nothing to switch between, so the row is left out. The page frame is shorter
+  by the row, so a page that fits the window does not scroll.
 - **A static segment beside `[slug]`.** Next routes `/coven/new` to this page
   before it tries `[slug]`, so the coven layout and its guard never run here.
   The page runs `requireSession()` itself.

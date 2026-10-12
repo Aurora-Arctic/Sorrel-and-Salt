@@ -9,8 +9,8 @@ panel it opens (MB.7). It is a client component.
   initials.
 - `verified`: whether their address is verified. When not, the panel offers Sign
   Out alone.
-- `links?`: the bar's site links (Your Coven, Admin), offered in the panel at a
-  phone's width, where the bar has no room for them.
+- `links?`: the bar's site links (Your Coven, Admin), offered in the panel at or under
+  `$shell-tablet-width`, where the bar has no room for them.
 
 ## Contracts
 
@@ -24,24 +24,32 @@ panel it opens (MB.7). It is a client component.
 - **The name is said once**, on the button. The avatar disc (up to two
   initials, from the first and last words of the name) is `aria-hidden`.
 - **The panel lists**: Your Account (a link to `/account`, not for an
-  unverified viewer), at a phone's width the links and a theme row (a "Theme"
-  label beside `<ThemeToggle variant="inline" size="small" />`, which carries
-  its own name and `aria-pressed`), then `SignOutButton`.
+  unverified viewer), at or under `$shell-tablet-width` the site links and, at a phone's width, pinned to the panel's top right
+  corner and first in the tab order, `<ThemeToggle variant="inline" size="small" />`
+  (it carries its own name and `aria-pressed`; an unverified account gets it on a
+  row of its own), then `SignOutButton`.
 
 ## Styling
 
-The button is `$control-height` tall: avatar disc (1.75rem, `$accent`, the
+The button has no hover or open wash: the avatar disc answers the pointer and the open state as the theme switch does, darkening to `$accent-hover`.
+
+The button is `$control-height` tall: avatar disc (2rem, the theme switch's size, `$accent`, the
 contrast-checked `$text-on-color` initials), name, chevron. At or under
-`$shell-phone-width` the name stays in the page visually hidden, the chevron
-goes, and the button is a `$control-height` square. The panel hangs from the
+`$shell-tablet-width` the name stays in the page visually hidden, the chevron
+goes, and the button is a `$control-height` square, since with the name an
+admin's bar ran past the window from 642px up (the owner's finding at MB.7's
+review, 2026-10-12). The panel hangs from the
 button's right edge at `layer('floating')`, on `$surface-card` with a
 hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, at
-least 13rem wide. Rows are a control tall; Sign Out's `.btn` is flattened to a
-row. The current link in the panel gets the same weight and rule as the bar's.
+least 13rem wide. Rows are a control tall and run edge to edge of the panel, with no padding
+around them, no gap between them and no rounding (the panel clips them to its
+corners); no list markers. Sign Out alone has padding around it, and its `.btn`
+keeps its outline, full width of that. The current link gets a straight accent
+rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The first row keeps `space(8)` clear of the theme disc pinned to the corner. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's clipped edge would cut an outside one. The account button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 
 ## Stories
 
-`Closed`, `Open`, `OpenUnverified`, `OpenPhone` (the links and the theme row).
+`Closed`, `Open`, `OpenUnverified`, `OpenPhone` (the links and the theme switch), `OpenAtSevenHundred` (the links in the panel at 700px, with no theme item).
 
 ## Testing
 

@@ -115,7 +115,7 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).not.toHaveAttribute('aria-current');
   });
 
-  it('carries a theme switch for the phone, where the bar has no room for it', () => {
+  it('carries a theme switch, named for its function, for the phone', () => {
     render(<AccountMenu name="Fixture Owner" verified />);
 
     fireEvent.click(button());

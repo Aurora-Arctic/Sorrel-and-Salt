@@ -42,13 +42,15 @@ one's own id) throws.
   for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (admin:
   `/admin`) and `covenHome` (the first coven, else `/coven/new` for someone who
   may create one, else `/account`). M2.8 replaces both with `/coven`. At or
-  under `$shell-phone-width` the brand reads "S&S"; the full name stays in the
-  page, visually hidden, for a screen reader.
+  under `$shell-brand-width` (a narrow phone; wider than that the bar has room
+  for the name once the site links have gone) the brand reads "S&S"; the full
+  name stays in the page, visually hidden, for a screen reader.
 - **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for an
   admin only**, on every shell page. There is no Compendium link until its
-  public route exists (MB.80). With no links the nav is not rendered. At a
-  phone's width the bar has no room, so the same links are offered in the
-  account panel.
+  public route exists (MB.80). With no links the nav is not rendered. At or
+  under `$shell-tablet-width` the bar has no room for them beside the brand,
+  Add Ingredient, the account button and the disc, so the same links are
+  offered in the account panel.
 - **Add Ingredient** is a real `button`, disabled until M8.16 builds the form.
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
@@ -68,12 +70,15 @@ one's own id) throws.
 Measurements come from the signed-off mock-up, as tokens
 ([`styling.md`](../styling.md), "The application shell and the layers"). The
 bar is `position: sticky; top: $top-inset` at `layer('shell')`, exactly
-`$shell-bar-height` tall, on `$surface-card` with a `$hairline` bottom edge,
-and its inner column is `$wide-column` wide, centred. The current link is told
-by weight, a quiet fill and the `$rule-heavy` accent rule beneath, with
-`aria-current="page"`. Controls are `$control-height` tall. At or under
-`$shell-phone-width` the brand shortens, the site nav and theme disc leave the
-bar, and the account button is an avatar alone. `_primitives.scss` takes the
+`$shell-bar-height` tall, with `margin-bottom: 0` (the layout layer gives every `header` a bottom margin; zeroed, so a context row meets the bar edge to edge and a page that fits the window does not scroll by it), on `$surface-card` with a `$hairline` bottom edge,
+and its inner column is `$wide-column` wide, centred. The site links fill the
+bar's height, square, and the current one is told by weight and the
+`$rule-heavy` accent rule along the bar's foot, with `aria-current="page"`
+and no fill, so a hover's quiet wash still shows on it. Controls are
+`$control-height` tall. At or under `$shell-tablet-width` the site nav
+leaves the bar and the account button is an avatar alone; at or under
+`$shell-brand-width` the brand shortens and at or under `$shell-phone-width`
+the theme disc leaves the bar too. `_primitives.scss` takes the
 bar off `.page-frame`'s height and pads `.app-shell__main` for the bottom bar.
 
 ## Accessibility

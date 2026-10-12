@@ -25,6 +25,9 @@
     background-color: transparent;
     cursor: pointer;
     @include theme-transition(background-color, border-color);
+    @include reduced-motion {
+      transition: none;
+    }
 
     &:hover {
       border-color: $hairline;
