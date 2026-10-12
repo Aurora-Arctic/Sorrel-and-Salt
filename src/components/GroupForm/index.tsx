@@ -11,11 +11,10 @@ import { placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure'
 import { pairedColor } from '../../lib/group-colors';
 import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
-import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
 import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
-import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
+import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
@@ -317,30 +316,15 @@ const GroupForm = ({
   const rows = `${memberCount} ${rowNoun}`;
   const rootError = errors.root?.message ?? alert;
 
-  const deleteButton = (label: string, target: string | undefined) => (
-    <BusyButton
-      className="btn btn--destructive"
-      busy={remove.isPending}
-      busyLabel="Deleting"
-      disabled={remove.isPending}
-      onClick={() => void confirmDelete(target)}
-    >
-      {label}
-    </BusyButton>
-  );
-  // Each step's safe answer, which takes the focus as the step is asked.
+  // The choosing step's safe answer, which takes the focus as it is asked;
+  // the confirming step's are ConfirmQuestion's own.
   const keepItRef = useRef<HTMLButtonElement>(null);
-  const backRef = useRef<HTMLButtonElement>(null);
+  const keepGoing = () => {
+    setMoveError(undefined);
+    setStep({ at: 'idle' });
+  };
   const keepIt = (
-    <button
-      ref={keepItRef}
-      type="button"
-      className="btn btn--quiet"
-      onClick={() => {
-        setMoveError(undefined);
-        setStep({ at: 'idle' });
-      }}
-    >
+    <button ref={keepItRef} type="button" className="btn btn--quiet" onClick={keepGoing}>
       Keep It
     </button>
   );
@@ -403,26 +387,25 @@ const GroupForm = ({
 
   const confirming = (target: string | undefined): ReactElement => {
     const destination = others.find((each) => each.id === target);
+    // A refusal is confirmDelete's own to place, back at the choice or in
+    // the alert, so neither question is told it.
     if (!destination) {
       return (
-        <ConfirmOverlay
+        <ConfirmQuestion
           key="confirming"
           question={
             <>
               Delete &quot;{group?.name}&quot;? No {many} are filed under it.
             </>
           }
-          safe={keepItRef}
-        >
-          <div className="modal__actions">
-            {deleteButton('Delete', undefined)}
-            {keepIt}
-          </div>
-        </ConfirmOverlay>
+          busy={remove.isPending}
+          onConfirm={() => confirmDelete(undefined)}
+          onKeep={keepGoing}
+        />
       );
     }
     return (
-      <ConfirmOverlay
+      <ConfirmQuestion
         key="moving"
         question={
           <>
@@ -430,20 +413,12 @@ const GroupForm = ({
             {moved}
           </>
         }
-        safe={backRef}
-      >
-        <div className="modal__actions">
-          {deleteButton('Move and Delete', destination.id)}
-          <button
-            ref={backRef}
-            type="button"
-            className="btn btn--quiet"
-            onClick={() => setStep({ at: 'choosing' })}
-          >
-            Back
-          </button>
-        </div>
-      </ConfirmOverlay>
+        confirmLabel="Move and Delete"
+        keepLabel="Back"
+        busy={remove.isPending}
+        onConfirm={() => confirmDelete(destination.id)}
+        onKeep={() => setStep({ at: 'choosing' })}
+      />
     );
   };
 

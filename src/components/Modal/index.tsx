@@ -9,4 +9,5 @@ export { default } from './modal';
 export { default as RouteModal } from './route-modal';
 export { ConfirmOverlay } from './confirm-overlay';
 export { DiscardQuestion, useDiscardGuard } from './discard';
+export { ConfirmQuestion } from './confirm-question';
 export { useModalHeaderSlot } from './header-slot';
