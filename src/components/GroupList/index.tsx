@@ -5,6 +5,7 @@ import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import { noMatchText } from '../../lib/text';
 import GroupListFilter from './filter';
 import { KINDS } from './kinds';
 import type { GroupListFilter as Filter, GroupListProps } from './types';
@@ -23,14 +24,16 @@ import './index.scss';
 
 /**
  * What an empty list says: how to fill it, with the page header's Add, named
- * as that button is (`group-page.tsx`); or, searched with no rows, what to
- * change, as a value list's does.
+ * as that button is (`group-page.tsx`); or, searched with no rows, the search
+ * that left none, as every admin list says it.
  */
 function emptyMessage(kind: GroupKind, filter: Filter | undefined): string {
-  const { noun, plural, add } = KINDS[kind];
-  return filter?.query
-    ? `No ${noun} matches that filter. Try another name.`
-    : `There are no ${plural} yet. Add one with ${add}.`;
+  const { plural, add } = KINDS[kind];
+  return noMatchText(
+    plural,
+    filter?.query ? [`“${filter.query}”`] : [],
+    `There are no ${plural} yet. Add one with ${add}.`,
+  );
 }
 
 const GroupList = ({

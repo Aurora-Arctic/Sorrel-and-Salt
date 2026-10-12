@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import PrivilegeLedger from '../../../../components/PrivilegeLedger';
 import { privilegeLedgerHref } from '../../../../components/PrivilegeLedger/href';
+import { PRIVILEGES } from '../../../../components/PrivilegeLedger/privileges';
 import type {
   LedgerPerson,
   LedgerPrivilege,
@@ -9,7 +10,7 @@ import type {
 } from '../../../../components/PrivilegeLedger/types';
 import { userListHref } from '../../../../components/UserList/href';
 import { requireAdminSession } from '../../../../lib/request-session';
-import { single } from '../../../../lib/search-params';
+import { oneOf, single } from '../../../../lib/search-params';
 import type { Session } from '../../../../lib/session';
 import {
   countPrivilegeChanges,
@@ -23,9 +24,6 @@ import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } fro
 export const metadata: Metadata = {
   title: 'Privilege Changes',
 };
-
-/** The privileges a filter may name. */
-const PRIVILEGES: readonly LedgerPrivilege[] = ['admin', 'create_workspace'];
 
 /** One page of the ledger and its count, the first page again for a cursor that names no row of it. */
 function readLedgerPage(
@@ -104,8 +102,7 @@ export default async function AdminPrivilegeChangesPage({
   // None rather than blank: the ledger's filter leaves an unasked field out.
   const query = place.query || undefined;
   // Either privilege, or none: a hand-edited value is no filter.
-  const privilegeParam = single(params.privilege);
-  const privilege = PRIVILEGES.find((value) => value === privilegeParam);
+  const privilege = oneOf(PRIVILEGES, single(params.privilege));
   const { changes, pageInfo, position } = await readLedger(
     session,
     query,

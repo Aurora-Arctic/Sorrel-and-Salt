@@ -1,6 +1,7 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import { noMatchText } from '../../lib/text';
 import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
@@ -19,16 +20,9 @@ import type { CompendiumListFilter as Filter, CompendiumListProps } from './type
 // name from no formal name by this column.
 const NONE = '—';
 
-/** A list as prose, without the serial comma: "a", "a and b", "a, b and c". */
-function and(items: readonly string[]): string {
-  return items.length < 2
-    ? items.join('')
-    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
-}
-
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
- * an admin sees what to change: "No entry matches “wort”, the form “Oil” and
+ * an admin sees what to change: "No entries match “wort”, the form “Oil” and
  * the classification Botanical. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
@@ -39,9 +33,11 @@ function emptyText({ query, form, nomenclature, withoutReferences }: Filter): st
     nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
     withoutReferences && 'No Refs',
   ].filter((filter): filter is string => Boolean(filter));
-  return filters.length
-    ? `No entry matches ${and(filters)}. Change or clear the filter to see more.`
-    : 'The compendium is empty. Add the first entry with Add Ingredient.';
+  return noMatchText(
+    'entries',
+    filters,
+    'The compendium is empty. Add the first entry with Add Ingredient.',
+  );
 }
 
 const CompendiumList = ({
