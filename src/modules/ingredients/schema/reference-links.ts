@@ -79,20 +79,11 @@ export const referenceLinks = pgTable(
         .on(table[key], table.referenceId)
         .where(sql`${table[key]} is not null and ${table.deletedAt} is null`),
     ),
-    // Exactly one sourced row per link, a body counted once whichever of its
-    // two columns hold it. The column the body had before MB.252 is no longer
-    // declared, but until MB.254 drops it a link the deploy before this one
-    // wrote names it alone, and 0067 and 0068's fills leave both set. MB.254
-    // counts `celestial_body_id` alone (PENDING_DROPS in schema-drift.test.ts).
+
+    // Exactly one sourced row per link.
     check(
       'reference_links_one_row',
-      sql.raw(
-        `num_nonnulls(${SOURCED_KEYS.map((key) =>
-          key === 'celestialBodyId'
-            ? 'coalesce(celestial_body_id, planet_id)'
-            : SOURCED[key].column,
-        ).join(', ')}) = 1`,
-      ),
+      sql.raw(`num_nonnulls(${SOURCED_KEYS.map((key) => SOURCED[key].column).join(', ')}) = 1`),
     ),
     check('reference_links_locator_not_blank', sql`locator is null or btrim(locator) <> ''`),
   ],

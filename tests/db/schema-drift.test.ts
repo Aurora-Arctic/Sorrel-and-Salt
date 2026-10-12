@@ -51,24 +51,7 @@ const PENDING_DROPS: readonly {
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
   name: string;
   droppedBy: string;
-}[] = [
-  { table: 'planets', kind: 'view', name: 'planets', droppedBy: 'MB.254' },
-  { table: 'ingredients', kind: 'column', name: 'planets', droppedBy: 'MB.254' },
-  { table: 'ingredient_variants', kind: 'column', name: 'planets', droppedBy: 'MB.254' },
-  { table: 'reference_links', kind: 'column', name: 'planet_id', droppedBy: 'MB.254' },
-  {
-    table: 'reference_links',
-    kind: 'foreignKey',
-    name: 'reference_links_planet_id_celestial_bodies_id_fk',
-    droppedBy: 'MB.254',
-  },
-  {
-    table: 'reference_links',
-    kind: 'index',
-    name: 'reference_links_planet_unique',
-    droppedBy: 'MB.254',
-  },
-];
+}[] = [];
 
 const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) =>
   new Set(

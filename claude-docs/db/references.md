@@ -49,8 +49,6 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
-Until MB.254 the database still holds the old `planet_id` column beside `celestial_body_id`, and the live `reference_links_one_row` counts `coalesce(celestial_body_id, planet_id)` as the one row. The schema declares only `celestial_body_id`.
-
 **The sourced tables are listed once** (MB.207). `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
 `ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId` —

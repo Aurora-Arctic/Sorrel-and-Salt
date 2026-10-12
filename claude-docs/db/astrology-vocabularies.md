@@ -14,7 +14,7 @@ rather than _correspondence_, which in §5 names every property an ingredient
 carries — element and deities too — not these two; the migration keeps the
 name it shipped under, since its tag is in the journal.
 
-**People read this vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table is `celestial_bodies` (MB.252), and the code, GraphQL and the lists the code reads and writes say celestial bodies (MB.253). The old `planets` lists on `ingredients` and `ingredient_variants`, `reference_links.planet_id` and a `planets` view over the table stay in the database for the deploy before, until MB.254 drops them (["Renaming a table"](expand-contract.md); `design-decisions/mb.251-celestial-bodies.md`).
+**People read this vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table is `celestial_bodies` (MB.252), and the code, GraphQL and the lists the code reads and writes say celestial bodies (MB.253). MB.254 dropped the old `planets` lists on `ingredients` and `ingredient_variants`, `reference_links.planet_id` and the `planets` view, so no old name remains (["Renaming a table"](expand-contract.md); `design-decisions/mb.251-celestial-bodies.md`).
 
 - **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,

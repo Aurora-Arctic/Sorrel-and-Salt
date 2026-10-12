@@ -30,7 +30,7 @@ describe('the audit columns', () => {
     const columns = await sql<{ table_name: string; column_name: string; is_nullable: string }[]>`
       select table_name, column_name, is_nullable from information_schema.columns
       where table_schema = 'public'
-        -- Tables alone: a view lists its columns here too (MB.252's planets view).
+        -- Tables alone: a view lists its columns here too (MB.252's, until MB.254 dropped it).
         and table_name in (
           select table_name from information_schema.tables
           where table_schema = 'public' and table_type = 'BASE TABLE'

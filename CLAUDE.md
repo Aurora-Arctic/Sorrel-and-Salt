@@ -20,8 +20,6 @@ Never write "catalog" — it was the old word for the compendium and it is gone.
 
 The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate divergence (§5). Code, schema, and prose say _workspace_. Only the URL segment says _coven_.
 
-The vocabulary people read as _Celestial Bodies_ is `celestial_bodies` in the database and `celestialBodies` in code and GraphQL (MB.251 to MB.253). The old `planets` columns and a `planets` view stay in the database only until MB.254 drops them (`claude-docs/design-decisions/mb.251-celestial-bodies.md`).
-
 ## Commands
 
 The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. `make help` lists the host's targets; claude-docs/commands.md is the full table.
