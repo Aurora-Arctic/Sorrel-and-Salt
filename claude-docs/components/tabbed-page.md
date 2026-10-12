@@ -39,7 +39,8 @@ it renders.
 - **Pressing a tab does not change the page.** On the admin pages a route
   group, a folder in parentheses that adds nothing to the address (Next's
   "Route Groups"), holds the page's tabs, and its `layout.tsx` renders this
-  component: `src/app/admin/(categories)/layout.tsx` around `categories/` and
+  component through `tabbedLayout(key)` (`src/app/admin/tabbed-layout.tsx`, over
+  `ADMIN_PAGES`): `src/app/admin/(categories)/layout.tsx` is one line around `categories/` and
   `category-groups/`. A layout stays mounted while the address moves between
   its child routes, so the heading and the tab row stay put and only the
   action and the content swap.
@@ -59,7 +60,7 @@ it renders.
   alike, since a page segment's key carries its search parameters. Every tab
   has a slot page, Privilege Changes one that renders nothing, because on a
   client-side navigation Next keeps a slot's last page where the new address
-  has none; each slot's `default.tsx`, what Next asks for on a full load it
+  has none; each slot's `default.tsx` (the shared `no-action.tsx`), what Next asks for on a full load it
   cannot match, renders nothing too. A slot page calls the guard as every
   admin page does. The value and group pages' actions are `ValueAction` and
   `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same
