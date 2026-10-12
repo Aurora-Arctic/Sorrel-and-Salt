@@ -309,3 +309,158 @@ Not yet checked by hand: Safari, Firefox, and the impersonation banner on the ho
 6. **The tooltip and the index on a phone** follow desktop calls 7 and 9.
 
 Not yet checked by touch: every control in a card, the tips against the table frame, the colour picker in the group modal, the stacked filter's busy button, and the banner's Stop with the page scrolled.
+
+## DRY audit and consolidation (2026-10-12)
+
+An audit of the branch for repetition (Sass, components and admin pages, tests,
+stories and docs) found the same shapes written out by hand across the lanes.
+
+**The owner's call (2026-10-12):** everything the audit found folds into
+MB.115. It is not split into new tasks, and **no lint guard** is added against
+the pattern: the findings are recorded here for the next section review to brief
+against. Behaviour does not change anywhere. The acceptance criterion "No
+component or Sass partial in the section is a copy of another; a shared piece is
+one component, named in the PR body" is read literally.
+
+### The pattern behind the findings
+
+The dominant failure was not copy-paste between lanes. It was **a lane creating
+the shared piece and the next file, or another lane, not using it**: the
+`icon-button` mixin was used in 2 of 8 places; `joinAnd` and `plural` in
+`src/lib/text.ts` were rewritten 3 and 5 times; `PagePosition`, `PagerHrefs`,
+`PagerCursor` and `GroupColors` were declared again; `discard-guard.tsx` was
+copied by hand once; `$motion-short` was typed out as `150ms` beside a comment
+naming the combobox. Two inconsistencies you could see fell out of it: "Coven
+Creation" against "Coven creation" in the privilege filter and its table (B18),
+and the InfoTip focus sentence in `styling.md` (C22). The TabbedPage skeleton
+also stood at the wrong heights because it typed `2.5rem` and `10rem` instead
+of `$control-height` and `$filter-choice-width`: it was shorter than the
+control it stood in for.
+
+### Findings and what replaced them
+
+One line each: the id, what repeated, how many copies, and the shared piece
+that replaced it, or "left" with the reason.
+
+**A. Sass**
+
+| #   | What repeated                                                             | Copies | Replaced by                                                                                         |
+| --- | ------------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------- |
+| A1  | A square icon button written by hand beside the `icon-button` mixin       | 6      | `icon-button` with `$radius` and `$cursor`, and `icon-button-remove`                                |
+| A2  | A tip bubble placed above its anchor, with the capped width               | 6      | `tip-above($align, $layer, $capped)`                                                                |
+| A3  | A list with its bullets removed                                           | 6+     | `list-reset`                                                                                        |
+| A4  | A column stack with `gap: space(5)`                                       | 5      | `.list-frame` on the TabbedPage panel, skeleton and AdminInvitations root; `stack($step)`           |
+| A5  | Text cut off with an ellipsis                                             | 5      | `truncate`                                                                                          |
+| A6  | The visually hidden clip                                                  | 4      | `visually-hidden`, which the class includes                                                         |
+| A7  | The phone-width page action spanning the line                             | 4      | The `.page-header` action child grows; three component rules deleted                                |
+| A8  | The greyed busy state, and the `0.55` literal in 7 places                 | 3 + 7  | `busy-faded` and `$opacity-disabled`                                                                |
+| A9  | A button with its box stripped                                            | 3      | `button-reset`                                                                                      |
+| A10 | The fade-in on arrival, two keyframes                                     | 2      | `arrived` and the one `list-frame-fade-in` keyframe                                                 |
+| A11 | Table row tweaks: roomy centred rows, no-wrap rows                        | 2 + 2  | `.data-table--roomy` and `.data-table--nowrap` (`data-table-roomy`, `data-table-nowrap`)            |
+| A12 | UserList rebuilding the card-action grid                                  | 1      | `data-table__card-action` on the Impersonate cell                                                   |
+| A13 | A chevron that turns over when open                                       | 2      | `disclosure-chevron`                                                                                |
+| A14 | Smaller pairs (tip wrapper, floating panel, skeleton, confirm stack, ...) | 2 each | `tip-anchor`, `floating-panel`, `field-box`, and one home each                                      |
+| A15 | Literals that repeat a token (`150ms`, `2px`, `28rem`, `color-mix` x2)    | many   | `$motion-short`, `$rule-medium`, `$narrow-column`, `$fill-quiet`, `$hairline`; `$tip-fade` moved in |
+| A16 | `(prefers-color-scheme)` and `(forced-colors)` queries with no mixin      | 4      | `color-scheme-light` and `forced-colors` beside `reduced-motion`                                    |
+| A17 | `$breakpoint-desktop`, unused                                             | 1      | Deleted                                                                                             |
+| A18 | Raw `z-index` layers                                                      | 10+    | Left: MB.124 owns the site-wide layer map; named in the PR body                                     |
+
+**B. Components and admin pages**
+
+| #   | What repeated                                                               | Copies | Replaced by                                                                                                                               |
+| --- | --------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | The admin page title `'X — Admin — Sorrel & Salt'`                          | 12     | `title.template` in `src/app/admin/layout.tsx`                                                                                            |
+| B2  | Draft state in the filters                                                  | 6      | see filter section                                                                                                                        |
+| B3  | The text search field                                                       | 6      | see filter section                                                                                                                        |
+| B4  | The data table scaffold                                                     | 6      | `StackTable` (`src/components/DataTable/`)                                                                                                |
+| B5  | Tab layouts and `@action/default.tsx` differing by a key                    | 5 + 5  | `tabbedLayout(key)` in `src/app/admin/tabbed-layout.tsx` and one `no-action.tsx`                                                          |
+| B6  | `n === 1 ? one : many`                                                      | 5      | `plural` from `src/lib/text.ts`                                                                                                           |
+| B7  | Capitalise the first letter                                                 | 4      | `capitalise` in `src/lib/text.ts`                                                                                                         |
+| B8  | The server-issue loop                                                       | 4      | `placeServerIssues` in `src/lib/graphql-failure.ts`                                                                                       |
+| B9  | The Save, Cancel, Delete row                                                | 4      | `FormActions` (`src/components/Field/`)                                                                                                   |
+| B10 | A page path typed twice                                                     | 4      | Each `href.ts` exports its path                                                                                                           |
+| B11 | `PagePosition`, `PagerHrefs`, `PagerCursor` declared again                  | 4/6/2  | The existing types imported                                                                                                               |
+| B12 | The Delete question, its precedence and its refusal alert                   | 3 + 2  | `ConfirmQuestion` (`src/components/Modal/`)                                                                                               |
+| B13 | `and()` as `joinAnd`, and the "No X match" builders                         | 3      | `joinAnd` and `noMatchText` in `src/lib/text.ts`, one empty-state wording                                                                 |
+| B14 | The three pages' edit-place and Add action code                             | 3      | The edit-place helper and `AddAction` in `src/app/admin/list-page.tsx`                                                                    |
+| B15 | Kind copy tables kept in 3 to 5 places                                      | 3-5    | One kind table per vocabulary family; `allGroups` imported                                                                                |
+| B16 | The reference GraphQL selection                                             | 3      | `fragment ReferenceRow`                                                                                                                   |
+| B17 | The nomenclature label lookup                                               | 3      | `labelOf` from `IngredientForm/options.ts`                                                                                                |
+| B18 | Enum option lists re-typed, labels drifted                                  | 3      | One `{value, label}[]` per enum                                                                                                           |
+| B19 | The hydration-fallback type-ahead                                           | 2      | see filter section                                                                                                                        |
+| B20 | IngredientForm summaries two ways, `fold`/`texts` twice                     | 2-3    | `variantSummary` built from the `summaries.tsx` helpers, one `FIELD_NOUNS`, `useFoldIds` and `FoldFlag`; `fold` and `texts` exported once |
+| B21 | Runtime arrays repeating type unions                                        | 2 each | `as const` arrays that derive the unions                                                                                                  |
+| B22 | `'new' \| { edit }` and its encoding                                        | 3      | `ListDialog` and `dialogParams` in `src/lib/list-href.ts`                                                                                 |
+| B23 | `colorDark?/colorLight?` spelled out                                        | 5      | `Partial<GroupColors>`                                                                                                                    |
+| B24 | The Reason field                                                            | 2      | `ReasonField` (`src/components/Field/`)                                                                                                   |
+| B25 | Types declared inside `.tsx` files                                          | ~8     | Each component's `types.ts`                                                                                                               |
+| B26 | `oneOf` search-param guard, `single(x)?.trim()`, "paused and not primary"   | 3-4    | `oneOf` in `src/lib/search-params.ts`; `lock.ts` as the one source                                                                        |
+| B27 | `RemoveIcon` equal to the combobox's `ClearIcon`                            | 2      | `RemoveIcon` re-exports it                                                                                                                |
+| B28 | `GroupForm` create/update branches, the chip-or-plain cell                  | 2      | `GroupForm` on `defineKind`; `GroupChip` (`src/components/DataTable/`)                                                                    |
+| B29 | Older hover tips hand-writing `useTip`: history link, crown, locked control | 3      | Left: `IconTip`'s placement would visibly differ, so they stay on `useTip`                                                                |
+| B30 | The `outer ?? value` provider in `ListBody` and `TabPanel`                  | 2      | Left: the two go-logics differ, so a shared provider would hide the difference                                                            |
+| B31 | `GroupAction` and `ValueAction`                                             | 2      | Left as thin wrappers over `AddAction`                                                                                                    |
+| B32 | `FieldName` types                                                           | 2      | Left in two forms: each is derived from a value in its own file                                                                           |
+
+**C. Tests, stories and docs**
+
+| #   | What repeated                                                 | Copies | Replaced by                                                                                                                         |
+| --- | ------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | The jsdom `<dialog>` stub                                     | 9      | `tests/support/setup-dom.ts`                                                                                                        |
+| C2  | The IngredientForm test harness rebuilt per file              | 2-7    | `tests/support/ingredient-form.tsx`, `tests/support/interact.tsx` (`press`, `choose`, `type`), additions to `ingredient-lookups.ts` |
+| C3  | The list filter test rows                                     | 3-5    | see filter section                                                                                                                  |
+| C4  | AdminInvitations re-implementing `expectGuardedWaysOut`       | 1      | The helper called, with an optional `cancel` getter                                                                                 |
+| C5  | Type-ahead option narrowing asserted outside its owner        | 3      | see filter section                                                                                                                  |
+| C6  | `hrefs(links)` filter; a block re-asserting the Combobox test | 2      | Left in part: kept where a test asserted wiring the owner's test did not; the duplicated Combobox block dropped                     |
+| C7  | The admin frame wrapper in stories                            | 9      | `.ladle/admin-frame.tsx` (`AdminFrame`, `AdminTabbedFrame`)                                                                         |
+| C8  | Fixture data in stories                                       | 3-5    | `.ladle/fixtures.ts`                                                                                                                |
+| C9  | "Press a button by its text" effect                           | 3      | `.ladle/press.ts` (`press`, `usePressOnMount`)                                                                                      |
+| C10 | Phone Dark and Light story pairs                              | 38     | Left: repo convention that pre-dates the branch                                                                                     |
+| C11 | The unsaved-changes question                                  | 6      | `modal.md`, "Unsaved changes"; form docs keep a line and a link                                                                     |
+| C12 | The filter's "disabled while it matches" rule                 | 6      | see filter section                                                                                                                  |
+| C13 | "Under 28rem every row stacks"                                | 5      | `styling.md`, "A narrow form stacks its buttons"                                                                                    |
+| C14 | The `.filter-row` layout                                      | 4      | see filter section                                                                                                                  |
+| C15 | The type-ahead width rule                                     | 3      | see filter section                                                                                                                  |
+| C16 | Soft and full navigation with the `pageshow` rule             | 4      | `list-frame.md`, "Contracts"; see filter section for the filter and user-list docs                                                  |
+| C17 | The page-header action spanning the line                      | 3      | `page-header.md`, "Styling"                                                                                                         |
+| C18 | The ConfirmOverlay visuals                                    | 2      | `modal.md`, "Asking over the form"; `styling.md` keeps the tokens                                                                   |
+| C19 | The placeholder rule                                          | 3; 5   | `field.md`, "Contracts"; "keeps its placeholder after the chips" in `combobox.md`                                                   |
+| C20 | "A field is optional unless it carries the required mark"     | 4      | `field.md`, "Contracts"                                                                                                             |
+| C21 | `aria-invalid` draws the error edge                           | 2      | `styling.md`, "Form fields"; `field.md` keeps a clause and a link                                                                   |
+| C22 | The InfoTip hint rule, and the contradicting focus sentence   | 4      | `info-tip.md`, "Behaviour"; the `styling.md` sentence corrected to match the code and its test                                      |
+| C23 | Chips inside the control, Backspace takes the last            | 3      | `combobox.md`; `ingredient-form.md` keeps its `aria-label` naming                                                                   |
+| C24 | `value-page.test.tsx` described twice                         | 2      | `grouped-value-list.md`, "Testing"                                                                                                  |
+
+### The shared pieces, by location
+
+- **Sass**, `src/scss/_mixins.scss`: `list-reset`, `truncate`, `visually-hidden`,
+  `button-reset`, `busy-faded`, `tip-above`, `disclosure-chevron`,
+  `icon-button` (with `$radius`, `$cursor`), `icon-button-remove`, `arrived`,
+  `data-table-roomy`, `data-table-nowrap`, `color-scheme-light`, `forced-colors`.
+  Tokens in `_variables.scss`: `$opacity-disabled`, `$fill-quiet`, `$hairline`,
+  `$tip-fade`. `_primitives.scss`: `.data-table--roomy`, `.data-table--nowrap`,
+  `.spoken-separator`, one fade keyframe.
+- **`src/lib`**: `text.ts` (`capitalise`, `noMatchText`, with `joinAnd` and
+  `plural` now imported); `search-params.ts` (`oneOf`); `hydrated.ts`
+  (`useHydrated`); `list-href.ts` (`ListDialog`, `dialogParams`);
+  `graphql-failure.ts` (`placeServerIssues`).
+- **`src/components/Modal/`**: `ConfirmQuestion`, beside `DiscardQuestion`.
+- **`src/components/Field/`**: `FormActions`, `ReasonField`, `SearchField`.
+- **`src/components/DataTable/`**: `StackTable`, `GroupChip`.
+- **`src/components/IngredientForm/`**: `FIELD_NOUNS` in `values.ts`,
+  `useFoldIds` and `FoldFlag`, `labelOf` in `options.ts`, `RemoveIcon`.
+- **`src/app/admin/`**: `layout.tsx` (`title.template`), `tabbed-layout.tsx`
+  (`tabbedLayout`), `no-action.tsx`, `list-page.tsx` (the edit-place helper,
+  `AddAction`).
+- **Filter pieces**: see filter section.
+- **Tests**: `tests/support/setup-dom.ts`, `interact.tsx`,
+  `ingredient-form.tsx`, additions to `msw/ingredient-lookups.ts`.
+- **Workshop**: `.ladle/admin-frame.tsx`, `fixtures.ts`, `press.ts`, `types.ts`.
+
+The three corrections people could see: the TabbedPage skeleton's heights, the
+"Coven Creation" label, and the InfoTip focus sentence.
+
+### Filter section
+
+To be filled in once the filter docs are released: B2, B3, B19, C3, C5, C12,
+C14, C15 and C16's filter half.
