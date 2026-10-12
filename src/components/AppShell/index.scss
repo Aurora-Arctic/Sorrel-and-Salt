@@ -75,7 +75,7 @@
 
 .app-shell__nav {
   ul {
-    @include list-reset(0, false);
+    @include list-reset;
 
     display: flex;
     align-items: center;

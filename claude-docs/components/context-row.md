@@ -33,7 +33,7 @@ clipping it. `.context-row__name` is the display face, 1.5rem, 700.
 
 ## Accessibility
 
-The row adds no landmark; the nav inside it is named by its own `aria-label`.
+The row is a named region (`section`, labelled "Context"), so its lead sits inside a landmark for the axe region rule; the nav inside it is named by its own `aria-label`.
 
 ## Stories
 

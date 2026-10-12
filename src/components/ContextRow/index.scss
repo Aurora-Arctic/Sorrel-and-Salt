@@ -6,7 +6,13 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 
 // Full width, so its ground and its edge run the window; the inner column
 // holds the lead and the nav to the same width as the pages beneath.
+// A named region (a `section`), so the lead sits inside a landmark for the
+// axe region rule; the layout layer makes every `section` a flex column with
+// a margin, which would shrink the inner column to its content and centre
+// it, so both are put back to a plain band here.
 .context-row {
+  display: block;
+  margin: 0;
   border-bottom: 1px solid $hairline;
   background-color: $context-row-ground;
 }
