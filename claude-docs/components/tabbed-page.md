@@ -130,9 +130,8 @@ it renders.
 
 - **The heading line** is the `.page-header` primitive
   ([`styling.md`](../styling.md), "Buttons"): the action at the end of the
-  heading's line, beneath it under 28rem and spanning that line in the admin
-  area, the owner's call for an admin page's primary action at a phone's
-  width. The action's wrapper, `.tabbed-page__action`, spans it with its
+  heading's line, and how it spans the line at a phone's width is
+  [`page-header.md`](page-header.md#styling). The action's wrapper, `.tabbed-page__action`, spans it with its
   action, and is taken out of the line when a tab has none. An action that
   wraps its button, the pause's row or a locked control, spans its button
   too: the `.page-header` primitive makes any wrapper that is not a bare

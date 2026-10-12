@@ -107,11 +107,8 @@ field shows none: the browser draws its own format there.
   label: name, classification, formal name, form, folk names, planets,
   zodiac signs, colours, deities, substitute ingredients, categories and
   safety notes.
-  The colours tip says each is a correspondence, not the colour the thing is. A tip opens on its ⓘ, by
-  hover, tap or focus, and never on the field's own focus (MB.133), above
-  the label so it never covers the field. Its text stays in the control's
-  `aria-describedby`, so a screen reader reads it with the field, open or
-  not. A field's `note` is the one line kept beneath a label, for a state
+  The colours tip says each is a correspondence, not the colour the thing is.
+  How a tip opens and is read is [`info-tip.md`](info-tip.md#behaviour). A field's `note` is the one line kept beneath a label, for a state
   that must stay in view: only the formal name's reason for being shut uses
   it.
 - **Closed sets are the combobox's select-only box**, `ComboboxSelect`
@@ -132,12 +129,10 @@ field shows none: the browser draws its own format there.
   is a chip inside the control with its ×, "Remove Air", and a "Clear
   Element" and the chevron sit on the control's right, as a list field's
   do; but nothing is typed and there is no Add, and the list offers only the
-  elements not yet chosen, so none can be chosen twice. A choice keeps the
-  list open for the next; once all five are chosen it has nothing to offer
-  and does not open. Backspace in the box takes the last. None chosen is
+  elements not yet chosen, so none can be chosen twice (the box's own
+  behaviour, [`combobox.md`](combobox.md)). None chosen is
   the answer "none", so there is no None to choose: the box shows the
-  placeholder "Add an element", which stays after the chips while an
-  element is left. It is a field, labelled by its `<label>`
+  placeholder "Add an element". It is a field, labelled by its `<label>`
   and erring through its one error element, rather than a list's fieldset:
   its values are the enum's strings, `elements: IngredientElement[]`, not a
   `useFieldArray` of entry rows, so it is not one of `LIST_FIELDS`.
@@ -159,12 +154,10 @@ field shows none: the browser draws its own format there.
   the owner's call.
 - **The six lists are one combobox each, with the entries inside it.** Typing
   and pressing Add, or Enter with no suggestion highlighted, adds the text as
-  an entry, trimmed, and empties the box, as does picking a suggestion. The
-  box keeps the focus, so the next one can be typed at once. A blank box adds
-  nothing. The entries sit inside the control ahead of the text, after
-  react-select's multi-select on the owner's call, each a chip with an ×
-  labelled "Remove Hedge Fixture" rather than a bare "Remove"; pressing it
-  sends the focus back to the box, since the pressed × goes with its entry, and Backspace or Delete in the empty box takes the last entry. A
+  an entry, trimmed, and empties the box, as does picking a suggestion. A
+  blank box adds nothing. The entries sit inside the control as the
+  combobox draws them ([`combobox.md`](combobox.md)), each × labelled
+  "Remove Hedge Fixture" rather than a bare "Remove". A
   "Clear Folk Names" control on the control's right empties the list while it
   holds entries, beside the chevron a box with a source has. The box is
   labelled by the singular, "Folk Name", since the legend names the group, and

@@ -48,10 +48,9 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   plain left click opens the end's page through it, as the filter does, so
   the list's body, this pager included, is the tabs' skeleton and the filter
   row is off until the page renders. A soft end is `next/link`, so Next
-  still prefetches its page, and its page is pushed inside the frame's
-  transition; a plain end is a bare anchor, its page a full load from the
-  click until the browser leaves, and a `pageshow` from the back-forward
-  cache brings the list back, so Back does not land on a skeleton. A
+  still prefetches its page; a plain end is a bare anchor. How each
+  navigates, and how Back after a full load avoids a skeleton, is the
+  frame's ([`list-frame.md`](list-frame.md#contracts)). A
   modified or middle click opens the page elsewhere and leaves the list as
   it is. The live end is `pager-link.tsx`'s one client component; the
   disabled end stays a server render, sharing `end-content.tsx` with it.

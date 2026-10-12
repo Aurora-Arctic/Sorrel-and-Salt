@@ -160,9 +160,8 @@ button carries an id, `<control id>-submit`.
 ## Contracts
 
 - **The control names its hint, note and error** in `aria-describedby`, and
-  carries `aria-invalid` while there is an error. `aria-invalid` is what draws
-  the error edge, so the markup that makes the error announced is the markup
-  that makes it visible ([`styling.md`](../styling.md), "Form fields").
+  carries `aria-invalid` while there is an error, which also draws the error
+  edge ([`styling.md`](../styling.md), "Form fields").
 - **The hint is read whether its tip is open or not**: the tip's text stays in
   the page, `aria-hidden` while closed, and the control lists its id
   ([`info-tip.md`](info-tip.md)).
@@ -174,8 +173,7 @@ button carries an id, `<control id>-submit`.
   own; `TextField` and `SelectField` do it themselves.
 - **A field is optional unless it is marked required**, so a label never
   says "(Optional)": `required` is the only mark, and a field without it may
-  be left empty (the owner's call at MB.115's review; [`styling.md`](../styling.md),
-  "Form fields"). What a field is for goes in `hint`, behind the info tip, not
+  be left empty (the owner's call at MB.115's review). What a field is for goes in `hint`, behind the info tip, not
   in the label.
 - **Every text, select and type-ahead field has a placeholder: a short action,
   never a description.** One or two words, three short ones at most, in
