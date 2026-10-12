@@ -99,3 +99,16 @@ describe('createWorkspace', () => {
     );
   });
 });
+
+describe('createWorkspace and the create page’s address', () => {
+  // `/coven/new` is the create page (M9.16), so a coven named "New" takes the
+  // next slug along rather than an address no link could ever reach.
+  it('never gives a workspace the slug the create page sits at', async () => {
+    const first = await createWorkspace(asUser(A), { name: 'New' });
+    const second = await createWorkspace(asUser(A), { name: 'New' });
+
+    expect(first.slug).toBe('new-2');
+    expect(second.slug).toBe('new-3');
+    expect(await sql`select id from workspaces where slug = 'new'`).toHaveLength(0);
+  });
+});

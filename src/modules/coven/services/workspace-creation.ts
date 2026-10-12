@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { findOneById, findOneBySlug, withAudit } from '../../../db/repository';
+import { isReservedCovenSlug } from '../../../lib/coven-path';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
@@ -32,6 +33,8 @@ const SLUG_ATTEMPTS = 5;
 /**
  * The first free slug for `name`: the plain slug, then `-2`, `-3` and so on,
  * so the same names made in the same order always get the same addresses.
+ * A segment the router already answers, `new` for the create page (M9.16),
+ * counts as taken, so a coven named "New" is `new-2` and stays reachable.
  * Free as of this read; the unique index decides a race, and the caller
  * retries.
  */
@@ -39,6 +42,7 @@ async function freeSlug(name: string): Promise<string> {
   const base = slugify(name) || FALLBACK_SLUG;
   for (let n = 1; ; n++) {
     const candidate = n === 1 ? base : `${base}-${n}`;
+    if (isReservedCovenSlug(candidate)) continue;
     if (!(await findOneBySlug(workspaces, candidate))) return candidate;
   }
 }

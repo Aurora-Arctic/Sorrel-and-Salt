@@ -28,5 +28,12 @@ export const OutsideWorkspace: Story = () => (
   </WorkshopPathname.Provider>
 );
 
+// A viewer holding creation rights: the list ends with Create Workspace (M9.16).
+export const CanCreate: Story = () => (
+  <WorkshopPathname.Provider value="/coven/testwort-circle">
+    <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />
+  </WorkshopPathname.Provider>
+);
+
 export const Phone: Story = () => <InWorkspace />;
 Phone.meta = { width: 375 };
