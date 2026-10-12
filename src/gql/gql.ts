@@ -64,6 +64,7 @@ type Documents = {
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": typeof types.AcceptInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.LeaveWorkspaceDocument,
+    "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": typeof types.PromoteSuccessorDocument,
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": typeof types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": typeof types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
@@ -124,6 +125,7 @@ const documents: Documents = {
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": types.AcceptInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": types.LeaveWorkspaceDocument,
+    "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": types.PromoteSuccessorDocument,
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
@@ -348,6 +350,10 @@ export function graphql(source: "\n  mutation AcceptInvitation($token: String!) 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n"): (typeof documents)["\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -68,10 +68,10 @@ Ingredients by M9.6 and Grimoire by M10.11.
 
 **Leave and Delete are both live here: Delete (M6.14), and Leave (M6.15).**
 
-| Control          | Shown to                                   | Filled by                 |
-| ---------------- | ------------------------------------------ | ------------------------- |
-| Leave Workspace  | Every role                                 | M6.15, and M6.16's dialog |
-| Delete Workspace | Roles holding `workspace: delete` (owners) | M6.14's confirmation      |
+| Control          | Shown to                                   | Filled by                                     |
+| ---------------- | ------------------------------------------ | --------------------------------------------- |
+| Leave Workspace  | Every role                                 | M6.15; M6.16's guided exit for the only owner |
+| Delete Workspace | Roles holding `workspace: delete` (owners) | M6.14's confirmation                          |
 
 - **Leave is on this page, not the members page,** because a viewer gets a
   404 from the members page (M6.13) and must still be able to leave.
@@ -84,7 +84,10 @@ Ingredients by M9.6 and Grimoire by M10.11.
   **Leave opens a confirmation and then leaves** (M6.15), through
   `LeaveWorkspaceButton` ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
   It is enabled for every role, so a test finds it by role and name with no
-  test id, and a disabled control is what M6.16 forbids.
+  test id, and a disabled control is what M6.16 forbids. The coven's only
+  owner is shown both ways out on click, a hand-over or the deletion (M6.16;
+  [`components/leave-workspace-button.md`](../components/leave-workspace-button.md),
+  "The only owner's guided exit").
 
 Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
 for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
@@ -109,7 +112,10 @@ with owners.
   refuses anyone else, and a change that would leave no owner. It moves a
   member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
-- **Not here yet.** Remove is M6.15's and the invite action and pending list
+- **A quiet note when there is one owner** (M6.16): if that person loses
+  access nobody can manage members. A status, not an alert, drawn above the
+  table from the whole roll (`memberRoster`), since one page cannot count owners.
+- **Not here yet.** The invite action and pending list
   are M7.6's; the page draws neither, and their lists will be owner-only.
 - **Paged by cursor** with Prev and Next, 25 to a page, through the same
   helper as GraphQL.

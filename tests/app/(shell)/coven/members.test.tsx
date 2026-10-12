@@ -18,8 +18,10 @@ const requireSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
 
 const listMembers = vi.fn();
+const memberRoster = vi.fn();
 vi.mock('@/modules/coven', async () => ({
   listMembers,
+  memberRoster,
   rolePermits: (
     await vi.importActual<typeof import('@/modules/coven/services/access-control')>(
       '@/modules/coven/services/access-control',
@@ -55,6 +57,7 @@ const render_ = async (role: WorkspaceRole) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  memberRoster.mockImplementation(async () => SEATS.map(([userId, role]) => ({ userId, role })));
   listMembers.mockImplementation(async () =>
     SEATS.map(([userId, role], index) => ({
       cursor: { key: [String(index)], id: userId },
@@ -134,5 +137,25 @@ describe('the /coven/[slug]/members page', () => {
       }),
     ).rejects.toThrow('not-found');
     expect(notFound).toHaveBeenCalled();
+  });
+
+  // M6.16: the quiet note, raised before it is urgent.
+  it('notes it when the coven has exactly one owner, to an owner and a member alike', async () => {
+    await render_('owner');
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    document.body.innerHTML = '';
+    await render_('member');
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('says nothing about it when there are two owners', async () => {
+    memberRoster.mockImplementation(async () => [
+      { userId: 'u-owner', role: 'owner' },
+      { userId: 'u-member', role: 'owner' },
+    ]);
+    await render_('owner');
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

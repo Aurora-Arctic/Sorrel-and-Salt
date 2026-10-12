@@ -5,13 +5,14 @@ import RemoveControl from '../../../../../components/MemberList/remove-control';
 import RoleFailure from '../../../../../components/MemberList/role-failure';
 import RoleControl from '../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../components/MemberList/types';
+import Notice from '../../../../../components/Notice';
 import Pager from '../../../../../components/Pager';
 import { Forbidden } from '../../../../../lib/errors';
 import { resolvePage } from '../../../../../lib/pagination';
 import { requireCovenMembership, requireSession } from '../../../../../lib/request-session';
 import { readableCursor, single } from '../../../../../lib/search-params';
 import { displayNamesOf } from '@/modules/identity';
-import { listMembers, rolePermits } from '@/modules/coven';
+import { listMembers, memberRoster, rolePermits } from '@/modules/coven';
 import type { CovenLayoutParams } from '../types';
 import type { MembersPageProps } from './types';
 
@@ -52,6 +53,11 @@ export default async function MembersPage({
     throw error;
   }
 
+  // Read to the end, since one page of the list cannot say how many owners
+  // there are (M6.16).
+  const soleOwner =
+    (await memberRoster(session, workspace)).filter(({ role }) => role === 'owner').length === 1;
+
   const ids = [...new Set(page.edges.flatMap(({ node }) => [node.userId, node.updatedBy]))];
   const names = await displayNamesOf(session, ids);
   // A name the service withholds (it answers co-members only) reads as Unknown.
@@ -76,6 +82,14 @@ export default async function MembersPage({
   return (
     <main>
       <h1>Members</h1>
+      {/* Raised before it is urgent: a quiet status, since it is on the page
+          from the start and asks nothing of the reader yet. */}
+      {soleOwner && (
+        <Notice kind="warn" quiet>
+          This coven has one owner. If that person loses access, nobody can manage its members. Make
+          another member an owner to be safe.
+        </Notice>
+      )}
       <RoleFailure>
         <MemberList
           members={members}
