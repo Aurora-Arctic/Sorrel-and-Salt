@@ -15,8 +15,8 @@ const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitc
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven' },
-  { slug: 'testwort-circle', name: 'Testwort Circle' },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
 ];
 
 const box = () => screen.getByRole('combobox', { name: 'Coven' });
@@ -53,6 +53,17 @@ describe('WorkspaceSwitcher', () => {
     fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
 
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
+  });
+
+  it('goes to the coven index when the viewer cannot read members there', () => {
+    pathname.mockReturnValue('/coven/fixture-coven/members');
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, canReadMembers: false }];
+
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+    fireEvent.click(box());
+    fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
+
+    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
   });
 
   it('is operable from the keyboard', () => {

@@ -19,7 +19,7 @@ const MEMBER: ShellViewer = {
 };
 const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', isAdmin: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
-const COVENS = [{ slug: 'fixture-coven', name: 'Fixture Coven' }];
+const COVENS = [{ slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true }];
 
 const shell = (viewer: ShellViewer, workspaces = COVENS) =>
   render(
