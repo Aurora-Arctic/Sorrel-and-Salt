@@ -6,15 +6,17 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File              | What it holds                                                  |
-| ----------------- | -------------------------------------------------------------- |
-| `modal.tsx`       | `Modal`, the default export                                    |
-| `route-modal.tsx` | `RouteModal`                                                   |
-| `index.tsx`       | The exports; two files, since `RouteModal` renders `Modal`     |
-| `close-guard.ts`  | `CloseGuardContext`, the slot a form's guard goes in           |
-| `discard.tsx`     | `useDiscardGuard` and `DiscardQuestion` (below)                |
-| `header-slot.ts`  | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title |
-| `types.ts`        | `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's     |
+| File                  | What it holds                                                          |
+| --------------------- | ---------------------------------------------------------------------- |
+| `modal.tsx`           | `Modal`, the default export                                            |
+| `route-modal.tsx`     | `RouteModal`                                                           |
+| `index.tsx`           | The exports; two files, since `RouteModal` renders `Modal`             |
+| `close-guard.ts`      | `CloseGuardContext`, the slot a form's guard goes in                   |
+| `discard.tsx`         | `useDiscardGuard` and `DiscardQuestion` (below)                        |
+| `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself      |
+| `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with   |
+| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title         |
+| `types.ts`            | `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
 
 ## Props
 
@@ -90,36 +92,100 @@ each form.
 - **Saving and deleting never ask.** They close through `children(close)`,
   the modal's own close, which nothing guards, since a form just saved still
   reads as changed until it resets.
-- **The question is the form's to draw**, where its buttons were, as its
-  Delete question is: `<DiscardQuestion guard={guard} />` while
-  `guard.asking`, a `.form__confirm` with "You have unsaved changes.
-  Discard them?" and **Discard Changes** (`.btn--destructive`), which makes
-  the close it held back, and **Keep Editing** (`.btn--quiet`). Its row is
-  `.modal__actions`, or `row="form__actions"` where the form's other
-  questions use that, as IngredientForm's do.
-- **Focus.** The question scrolls into view and takes the focus on Keep
-  Editing, the safe answer, as the forms' Delete questions do: smooth unless
-  motion is reduced, `scrollIntoView?.` for jsdom. Keep Editing puts it away
-  with nothing lost and the focus back where it was (the field Escape was
-  pressed in, the Close button), or on the form's first field when that has
-  gone, as Cancel has.
+- **The question is the form's to draw**, over itself, as its Delete
+  question is: `<DiscardQuestion guard={guard} />` while `guard.asking`,
+  rendered after the form's own buttons, which stay where they are. It is a
+  `ConfirmOverlay` (["Asking over the form"](#asking-over-the-form)) with
+  "You have unsaved changes. Discard them?" and **Discard Changes**
+  (`.btn--destructive`), which makes the close it held back, and **Keep
+  Editing** (`.btn--quiet`), on a `.modal__actions` row. A form with a
+  question of its own asks this one first, in that one's place, since it is
+  what a way out would lose; Keep Editing brings the other back.
+- **Focus.** The question takes the focus on Keep Editing, the safe answer,
+  as the forms' Delete questions do. Keep Editing puts it away with nothing
+  lost and the focus back where it was: Cancel, which stays beneath the
+  question now, the field Escape was pressed in, or the Close button. If
+  that has gone, the focus goes to the form's first field.
 - **Tried again while asking, it flashes** (MB.115, the owner's call), so
   the person sees why nothing closed. Each try by Close, Escape or the
-  backdrop counts in `guard.flashes`, which the question carries as
-  `data-flash`, and draws a fresh `.discard-question__flash` layer behind it,
-  keyed on the count so the animation runs every time: twice, the owner's
-  call, the secondary's tint fading over 300ms each time, 600ms in all
-  (`$motion-short * 4`). Under reduced motion nothing fades: a solid
-  secondary outline shows and goes, twice, in the same time (`step-end`). Each
-  try also scrolls the question into view and puts the focus back on Keep
-  Editing, and says "You have unsaved changes." in a visually hidden
+  backdrop counts in `guard.flashes`, which the card carries as
+  `data-flash`, and draws a fresh `.confirm-overlay__flash` layer over the
+  card's ground and under its words, keyed on the count so the animation
+  runs every time: twice, the owner's call, the secondary's tint fading over
+  300ms each time, 600ms in all (`$motion-short * 4`). Under reduced motion
+  nothing fades: a solid secondary outline round the card shows and goes,
+  twice, in the same time (`step-end`). Each try also puts the focus back on
+  Keep Editing, and says "You have unsaved changes." in a visually hidden
   `<output>`, a polite live region, alternating a trailing no-break space so
-  a repeat is a change and is read again. Keep Editing is described by the
-  question, so the focus it takes reads it. Keep Editing sets the count back
+  a repeat is a change and is read again. Keep Editing sets the count back
   to 0.
 - **The browser's own ways out are not covered.** Back, a reload or closing
   the tab leave without asking: no `beforeunload` handler is added, since the
   modals are opened by their address and Back is how one is left.
+
+## Asking over the form
+
+A form asks before it acts, "Delete this?" or "Discard them?", on a card
+drawn over the form rather than where its buttons were (MB.115, the owner's
+call): one way of asking across the admin forms. `ConfirmOverlay`, in
+`confirm-overlay.tsx`, is that card; the unsaved-changes question and every
+form's Delete question are drawn through it.
+
+| Prop         | What it is                                                                   |
+| ------------ | ---------------------------------------------------------------------------- |
+| `question`   | The question, drawn as the card's first paragraph; it names the card         |
+| `labelledBy` | The id that names the card instead, when a field's label asks the question   |
+| `safe`       | A ref to the safe answer, Keep It or Keep Editing; never the destructive one |
+| `flashes`    | The discard guard's count of ways out tried again, each a flash of the card  |
+| `children`   | What follows the question: a field, a live region, the `.modal__actions` row |
+
+- **Where it is drawn.** The form renders it after its own buttons, which
+  stay where they are, and the card portals into the modal's layer,
+  `ConfirmLayerContext`, a slot as the header's control place is, since the
+  form sits inside the modal's render prop. The layer is a cell of
+  `.modal-dialog__main`'s grid, the same cell the body scrolls in, so its
+  scrim covers exactly the part of the body in view, under the header, at
+  every scroll position, and the card sits centred in it with auto margins.
+  The cell is as tall as the taller of the two, so a short form's dialog
+  grows to hold a question rather than scrolling it. Outside a modal there
+  is no layer, and the card stands in the form's flow with no scrim
+  (`.confirm-overlay--in-place`); every admin form is in a modal.
+- **The form behind is held.** As the card comes, the modal sets `inert` on
+  its body and on the control beside its title, so Tab, a click and typing
+  cannot reach the form until the question is answered; the scrim, the
+  page's ground at 75% as the backdrop is, dims both. The title and the Close
+  button are not held, so Close, Escape and a click outside go through the
+  form's guard as before: closing with nothing changed, asking about a change,
+  or flashing a question already asked. The attribute is set on the elements
+  in a layout effect rather than through a render, so it is on before the
+  card takes the focus and off before the focus goes back. The holds are
+  counted, so one question giving way to another releases once.
+- **Escape is unchanged.** It is the modal's, as it was when the questions
+  stood in place of the buttons: a Delete question with nothing changed
+  closes the modal; with a change, the unsaved-changes question takes its
+  place, and Keep Editing brings the Delete question back.
+- **A labelled group, not an alertdialog.** The card is a `<fieldset>`, whose
+  role is `group`, named by its question through `aria-labelledby`, so a
+  screen reader reads the question as the focus enters it. It is not an
+  `alertdialog`: an alertdialog promises a dialog's behaviour — the focus
+  kept inside it, Escape answering it — and this card keeps neither. The
+  modal's Close stays reachable beside it, and Escape stays the modal's.
+  Nested inside the modal's own `dialog`, a second dialog role would announce
+  a dialog that does not behave as one.
+- **Focus.** As the card comes it takes the focus on `safe`, the answer that
+  changes nothing, and never on the destructive one. As it goes, the form
+  live again first, the focus goes back where it was (the button pressed,
+  which stays beneath the card) or, if that has gone, to the body's first
+  field. Both in one layout effect, so a question giving way to another — a
+  group's move turning to its confirmation, or a Delete question to the
+  unsaved changes' — hands the focus over in one commit. A form keys a
+  question by its step, so each step takes the focus on its own safe answer.
+- **Motion.** The scrim and the card fade in over `$motion-short`, from
+  `@starting-style`, and appear at once under reduced motion. They go at
+  once, with the question.
+- **Its row stacks** at the width a form's own does: under 28rem of the
+  form's width, which is the main area's less the body's padding
+  (`$narrow-column + $modal-padding`, a container query on `modal-main`).
 
 ## Beside the title
 
@@ -131,7 +197,9 @@ owner's call at MB.115. A slot, as the guard is, since the form sits inside
 the modal's render prop, out of its owner's reach. Outside a modal the hook
 answers null and the form keeps the control in its own flow. Empty, the place
 is only the space that pushes the × to the end. Tab order follows the page:
-the title's control, then the ×, then the form.
+the title's control, then the ×, then the form. While a question is asked
+over the form, the place is held and dimmed with it
+(["Asking over the form"](#asking-over-the-form)).
 
 ## RouteModal
 
@@ -164,8 +232,17 @@ skipped the fade.
 ## Styling
 
 Only what the native element needs beyond `.modal`: no border, a 32rem
-column (`$dialog-column`) so it fits a phone, scrolling within the viewport's height, and a
-`::backdrop` of the page surface at 75%.
+column (`$dialog-column`) so it fits a phone, a height within the viewport's,
+and a `::backdrop` of the page surface at 75%.
+
+**The body scrolls, not the dialog** (MB.115). The open dialog is a flex
+column, the header over `.modal-dialog__main`, which reaches the dialog's
+edges and holds `.modal-dialog__body`, the part that scrolls, with the
+dialog's padding given back inside it so a focus ring at a field's edge is
+not cut off. So the header stays at the top as a long form scrolls beneath
+it, the owner's call at MB.115, without being `position: sticky`, and a
+question's layer can lie over exactly the part of the body in view. The body
+is isolated, so nothing in it raised by a `z-index` rises over the layer.
 
 **The page stays in view around it** (M5.5, the owner's call): a gap of
 `clamp(space(4), 5vmin, space(7))` on every side, 1rem at a phone's edge
@@ -179,7 +256,7 @@ back, so a column keeps the content width it had.
 call). `showModal()` makes the page inert, but a wheel over the backdrop
 still scrolled it. `:root:has(.modal-dialog:modal)` sets `overflow: hidden`,
 in CSS so no listener can leave the page locked, with `scrollbar-gutter:
-stable` so nothing shifts sideways as the scrollbar goes; the dialog's own
+stable` so nothing shifts sideways as the scrollbar goes; the body's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach.
 
@@ -190,7 +267,7 @@ becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
 would crowd. Nothing uses it since MB.115: the compendium form, its first
 owner, went back to the default column on the owner's call, since the form
 caps itself at that width and the wide modal only drew empty space beside it.
-M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the dialog scrolls
+M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the body scrolls
 within the viewport's height either way.
 
 ## Testing
@@ -205,7 +282,8 @@ shows, as does the wide size. The fade asks the owner once its transition
 ends, once however many ways it was asked, after a limit if no end comes, and
 at once under reduced motion. The e2e spec (`admin.spec.ts`)
 opens the category modal in a real browser, closes it with Escape, and runs
-axe against it while it is open. `admin-compendium.spec.ts` closes one by a
+axe against it while it is open, and again with a category group's Move and
+Delete question open over its form. `admin-compendium.spec.ts` closes one by a
 click on the backdrop, holds the wide one to its gap on a desktop and at
 375px, and the page behind still while it is open and scrolling again once it
 closes.
@@ -216,10 +294,20 @@ something changed, the dialog staying open, Keep Editing keeping the value
 and returning the focus, Discard Changes closing, a save closing without
 asking, and a try while asking flashing the question (its `data-flash`
 count rising each time), the focus back on Keep Editing and the status
-speaking. Each admin form's own test
-asserts only its wiring, through `tests/support/discard-guard.tsx`. The
-`AskingToDiscardChanges` story, and its `PhoneDark` and `PhoneLight` pair,
-show the question; pressing Escape or Close there flashes it.
+speaking. The overlay's own state is asserted there too: while asking, the
+form's fields and buttons and a control beside the title are inert, and the
+question, a group, and the Close button are not; answered, all are live
+again, and the focus is back on Cancel. jsdom implements `inert`'s
+attribute but not its effect, so the attribute is what is asserted; Playwright
+runs the real thing. Each admin form's own test asserts only its wiring,
+through `tests/support/discard-guard.tsx`: `expectGuardedWaysOut` for the
+unsaved changes, and `expectAskingOver` and `expectAnswered` for a Delete
+question in a modal (the form inert, the question a named group, the focus
+on the safe answer; then gone, the form live). The `AskingToDiscardChanges`
+story, and its `PhoneDark` and `PhoneLight` pair, show the question over a
+short form; pressing Escape or Close there flashes it. IngredientForm's
+`AskingToDeleteInModal` and `AskingToDiscardInModal` show it over the long
+form scrolled down, each with a phone pair.
 
 `RouteModal` has no file of its own (claude-docs/testing/layer-ownership.md,
 "What a test may assert", rule 6): each admin page test asserts its modal's

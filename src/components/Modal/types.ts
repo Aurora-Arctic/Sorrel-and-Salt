@@ -64,7 +64,7 @@ export interface CloseGuardSlot {
  * asking, and the parts its Cancel and its question are wired from.
  */
 export interface DiscardGuard {
-  /** The question is showing, in place of the form's own actions. */
+  /** The question is showing, over the form. */
   asking: boolean;
   /**
    * Cancel's handler: closes through `close` at once when nothing has
@@ -84,9 +84,40 @@ export interface DiscardGuard {
 export interface DiscardQuestionProps {
   /** The form's `useDiscardGuard`. */
   guard: DiscardGuard;
+}
+
+/**
+ * The layer a modal draws a form's question in (`ConfirmLayerContext`), over
+ * its body and below its title.
+ */
+export interface ConfirmLayer {
+  /** The element the question is drawn into; null until the modal has drawn it. */
+  host: HTMLElement | null;
   /**
-   * The buttons' row: `modal__actions`, the confirm primitive's own, unless
-   * the form's other questions stand on `form__actions`, as IngredientForm's do.
+   * Makes the modal's body, and any control beside its title, inert until
+   * the call it answers: the form behind a question can be neither pressed
+   * nor typed into. Counted, so two holds overlapping release once both have.
    */
-  row?: 'modal__actions' | 'form__actions';
+  hold: () => () => void;
+  /** The modal's body, whose first field takes the focus if what had it has gone. */
+  body: RefObject<HTMLElement | null>;
+}
+
+export interface ConfirmOverlayProps {
+  /**
+   * The question, "Delete this?", which names the group the card is. Absent
+   * when a field's label names it instead, through `labelledBy`.
+   */
+  question?: ReactNode;
+  /** The id of what names the card when there is no `question`. */
+  labelledBy?: string;
+  /**
+   * The safe answer, Keep It or Keep Editing: it takes the focus when the
+   * question comes, and again on each flash. Never the destructive one.
+   */
+  safe: RefObject<HTMLElement | null>;
+  /** Ways out tried again while asking, each a flash of the card; absent for none. */
+  flashes?: number;
+  /** What follows the question: a field, a live region, the row of answers. */
+  children: ReactNode;
 }

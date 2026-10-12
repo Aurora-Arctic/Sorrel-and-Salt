@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import { useEffect } from 'react';
 import Modal from '../Modal';
 import GroupForm from '.';
 
@@ -80,6 +81,18 @@ export const EditingATradition: Story = () => (
   </Modal>
 );
 
+// Delete Group pressed once drawn, as a person would: the first step, where
+// its categories go, asked over the form, which is dimmed and held beneath it
+// (MB.115).
+export const AskingWhereToMove: Story = () => {
+  useEffect(() => {
+    [...document.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Delete Group')
+      ?.click();
+  }, []);
+  return <EditingACategoryGroup />;
+};
+
 // At a phone's width, in each theme: the fields, the two pickers and the
 // buttons, which stack under the form's 28rem.
 export const PhoneDark: Story = () => <EditingACategoryGroup />;
@@ -93,5 +106,6 @@ EditingACategoryGroup.meta = { iframed: true };
 EditingAFormGroup.meta = { iframed: true };
 AddingATradition.meta = { iframed: true };
 EditingATradition.meta = { iframed: true };
+AskingWhereToMove.meta = { iframed: true };
 PhoneDark.meta = { theme: 'dark', width: 375, iframed: true };
 PhoneLight.meta = { theme: 'light', width: 375, iframed: true };

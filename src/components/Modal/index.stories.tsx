@@ -105,9 +105,10 @@ OpenedByItsAddress.meta = { iframed: true };
 
 /**
  * A form with a change, asked on opening whether to discard it, as Cancel,
- * Close, Escape or a click outside would ask (MB.115). Escape, Close or a
- * click outside now flashes it, as each try while asking does. Keep Editing
- * goes back to the form, whose Cancel asks again; Discard Changes closes.
+ * Close, Escape or a click outside would ask (MB.115): over the form, which
+ * is dimmed and held until it is answered. Escape, Close or a click outside
+ * now flashes it, as each try while asking does. Keep Editing goes back to
+ * the form, whose Cancel asks again; Discard Changes closes.
  */
 function ChangedForm({ close }: { close: () => void }) {
   const [name, setName] = useState('Testwort Renamed');
@@ -133,18 +134,15 @@ function ChangedForm({ close }: { close: () => void }) {
           onChange={(event) => setName(event.target.value)}
         />
       </div>
-      {discard.asking ? (
-        <DiscardQuestion guard={discard} />
-      ) : (
-        <div className="form__actions">
-          <button type="submit" className="btn btn--solid">
-            Save Category
-          </button>
-          <button type="button" className="btn btn--quiet" onClick={() => request(close)}>
-            Cancel
-          </button>
-        </div>
-      )}
+      <div className="form__actions">
+        <button type="submit" className="btn btn--solid">
+          Save Category
+        </button>
+        <button type="button" className="btn btn--quiet" onClick={() => request(close)}>
+          Cancel
+        </button>
+      </div>
+      {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
   );
 }
@@ -167,8 +165,8 @@ export const AskingToDiscardChanges: Story = () => {
 
 AskingToDiscardChanges.meta = { iframed: true };
 
-// The question at a phone's width in each theme: its buttons stack, full
-// width, as the form's own do under 28rem.
+// The question at a phone's width in each theme: its card fills the width
+// in view, and its buttons stack, full width, as the form's own do under 28rem.
 export const PhoneDark: Story = () => <AskingToDiscardChanges />;
 export const PhoneLight: Story = () => <AskingToDiscardChanges />;
 

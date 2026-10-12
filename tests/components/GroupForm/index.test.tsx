@@ -22,7 +22,12 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
+import {
+  expectAnswered,
+  expectAskingOver,
+  expectGuardedWaysOut,
+  renderInModal,
+} from '../../support/discard-guard';
 
 // The admin's form for a group (M5.6b), for every group vocabulary, a deity's
 // traditions included (MB.132): a name, a
@@ -85,6 +90,35 @@ describe('GroupForm, its unsaved changes', () => {
     ));
 
     expectGuardedWaysOut(onClose, () => type(description(), 'A change'));
+  });
+});
+
+// Each step of a delete is a question over the form, as the unsaved
+// changes' is (MB.115, the owner's call): the form inert behind it, each
+// step's focus on its own safe answer.
+describe('GroupForm, its delete questions in a modal', () => {
+  it('holds the form through both steps, the focus on each safe answer, and gives both back on Keep It', () => {
+    const onClose = renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
+    ));
+    expect(name().closest('[inert]')).toBeNull();
+
+    press('Delete Group');
+    expect(
+      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
+    ).toContainElement(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
+
+    choose('Move Its 3 Categories To', 'Fixture Mineral');
+    press('Continue');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
+
+    press('Back');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    press('Keep It');
+
+    expectAnswered(name(), 'Keep It');
+    expect(screen.getByRole('button', { name: 'Delete Group' })).toHaveFocus();
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
 
@@ -351,6 +385,8 @@ describe('GroupForm, for a category group', () => {
       );
       press('Keep It');
 
+      // The question gone, not merely the form's own button there beneath it.
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });

@@ -3,9 +3,10 @@
 // The one rule this form has of its own: the rename note, a `.field__hint`,
 // sits by the buttons it describes, with the actions row's own gap above it
 // and a closer one between it and Save. Everything else is the form
-// primitives' (`.form__actions`, `.form__aside`, `.form__confirm`, the
-// field's `.field__required`). Under the form's class, since the primitives
-// are emitted under `body` and would otherwise win on specificity.
+// primitives' (`.form__actions`, `.form__aside`, the field's
+// `.field__required`), or the modal's, whose ConfirmOverlay draws the delete
+// question. Under the form's class, since the primitives are emitted under
+// `body` and would otherwise win on specificity.
 .grouped-value-form .grouped-value-form__note {
   margin-top: space(4);
 

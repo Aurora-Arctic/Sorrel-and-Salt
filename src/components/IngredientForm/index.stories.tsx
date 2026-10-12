@@ -1174,6 +1174,80 @@ export const CompendiumEntryInModal: Story = () => {
   );
 };
 
+/** Presses the button of this name, as a person would. */
+function press(name: string): void {
+  [...document.querySelectorAll<HTMLButtonElement>('button')]
+    .find((button) => button.textContent === name || button.ariaLabel === name)
+    ?.click();
+}
+
+/** Scrolls the modal's body to this share of the way down, 0 the top and 1 the foot. */
+function scrollBody(share: number): void {
+  const body = document.querySelector<HTMLElement>('.modal-dialog__body');
+  if (body) body.scrollTop = (body.scrollHeight - body.clientHeight) * share;
+}
+
+/**
+ * The edit in its modal, every section open and scrolled to the foot, where
+ * Delete Ingredient is, and pressed: the question over the long form,
+ * centred in the part in view, the form dimmed and held beneath it (MB.115).
+ */
+export const AskingToDeleteInModal: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    press('Open All');
+    // Once the opened sections are laid out, as a person scrolls after opening.
+    const later = requestAnimationFrame(() => {
+      scrollBody(1);
+      press('Delete Ingredient');
+    });
+    return () => cancelAnimationFrame(later);
+  }, []);
+  return <CompendiumEntryInModal />;
+};
+
+/**
+ * The edit in its modal, a change typed, every section open and scrolled half
+ * way, then the Close button pressed: the unsaved changes' question over the
+ * form, centred where the person had scrolled to (MB.115). Close again
+ * flashes it.
+ */
+export const AskingToDiscardInModal: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+    if (name) {
+      // React reads a typed value through the input's own setter, not the property.
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
+        name,
+        `${name.value} Renamed`,
+      );
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    press('Open All');
+    const later = requestAnimationFrame(() => {
+      scrollBody(0.5);
+      press('Close');
+    });
+    return () => cancelAnimationFrame(later);
+  }, []);
+  return <CompendiumEntryInModal />;
+};
+
+// Both at a phone's width, in each theme: the card fills the width in view,
+// its buttons stacked.
+export const AskingToDeletePhoneDark: Story = () => <AskingToDeleteInModal />;
+AskingToDeletePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const AskingToDeletePhoneLight: Story = () => <AskingToDeleteInModal />;
+AskingToDeletePhoneLight.meta = { theme: 'light', width: 375 };
+
+export const AskingToDiscardPhoneDark: Story = () => <AskingToDiscardInModal />;
+AskingToDiscardPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const AskingToDiscardPhoneLight: Story = () => <AskingToDiscardInModal />;
+AskingToDiscardPhoneLight.meta = { theme: 'light', width: 375 };
+
 export const PhoneDark: Story = () => <CompendiumEntry />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 

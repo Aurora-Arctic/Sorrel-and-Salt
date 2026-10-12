@@ -122,9 +122,12 @@ its three mutation documents, and nothing else:
   is where it is still asked, of an entry's own save
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)).
 - **A delete asks first, and says what it does.** Delete Category, Delete
-  Form, Delete Deity, Delete Planet or Delete Zodiac Sign replaces the
-  actions with `Delete "<name>"?` and the kind's note, beside Delete and
-  Keep It. A category's: `Covens' ingredients and spells filed under it
+  Form, Delete Deity, Delete Planet or Delete Zodiac Sign asks
+  `Delete "<name>"?` and the kind's note, beside Delete and Keep It, on a
+  card over the form, which is dimmed and held until it is answered, the
+  focus on Keep It (MB.115, the owner's call; [`modal.md`](modal.md),
+  "Asking over the form"). Keep It puts it away, the focus back on the
+  delete button pressed. A category's: `Covens' ingredients and spells filed under it
 stay in their lists, but can no longer be filtered by it.` Deleting a
   category removes nothing of a coven's: an entry filed under it keeps its
   link and stops reading the category
@@ -139,7 +142,7 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
   not a bad value in a box, so it gets no field.
 - **Unsaved changes are asked about** (MB.115, the owner's call). While the
   form has changes, its `formState.isDirty`, the flag that turns Save on,
-  Cancel replaces the actions with "You have unsaved changes. Discard them?",
+  Cancel asks "You have unsaved changes. Discard them?" over the form,
   beside Discard Changes, which calls `onDone`, and Keep Editing, which goes
   back to the form as it was. The modal's Close button, Escape and a click
   outside ask the same through the form's guard (`useDiscardGuard`,
@@ -193,9 +196,10 @@ The form is the shared pieces on the form primitives
 [`TextField`](field.md)s in a `FormProvider`, "Add a name" and the kind's `describe` their placeholders, the group a `SelectField`, each
 with its label row and the `.field__required` asterisk; Save is a
 `BusyButton` in a wrapping `.form__actions` row, with Delete pushed to the far
-end by `.form__aside`; and the confirmation is a `.form__confirm` with its own
-`.modal__actions` row. Under 28rem of the form's own width every row stacks,
-full width. Its one rule of its own, `.grouped-value-form__note`, sets the
+end by `.form__aside`; and the confirmation is the modal's `ConfirmOverlay`
+card over the form, with its own `.modal__actions` row, the form's buttons
+staying beneath it. Under 28rem of the form's own width every row stacks,
+full width, the card's too. Its one rule of its own, `.grouped-value-form__note`, sets the
 rename note a step above the actions, with a closer gap between it and them.
 
 The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
@@ -214,7 +218,8 @@ there is none.
 `AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingAZodiacSign`, each in
 the modal and its own iframe, each kind's groups four invented ones, enough to narrow; and `PhoneDark` and
 `PhoneLight`, the category's edit at 375px in each theme, where the buttons
-stack and the type-ahead Group opens inside the modal. Renaming in `EditingAForm`, `EditingADeity` or
+stack and the type-ahead Group opens inside the modal; and `AskingToDelete`,
+the category's edit with Delete pressed, the question over the form. Renaming in `EditingAForm`, `EditingADeity` or
 `EditingAZodiacSign` shows the note. The workshop has no API, so a save answers
 with the generic error.
 
@@ -229,6 +234,11 @@ run once, on the category: a kind shares that code path, so another kind's
 run would prove nothing more (MB.189). Its unsaved-changes wiring is one test, the form in a modal
 (`tests/support/discard-guard.tsx`): Cancel and Escape asking after a
 change, and Discard Changes closing; the guard's shape is the Modal's test.
+The delete question in a modal has its own three, on the category: the form
+inert while it asks and the focus on Keep It, both given back on Keep It, the
+focus on the delete button; Delete deleting from over the form; and Escape
+closing with nothing changed, and with a change asking about it first, Keep
+Editing bringing the delete question back.
 What only one kind does stays under
 that kind's describe: the category's and the form's create and update with
 their variables, their confirmations and their delete refusals; the form kind's

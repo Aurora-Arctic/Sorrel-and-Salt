@@ -7,12 +7,14 @@ import {
   useCallback,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
 } from 'react';
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
+import { ConfirmLayerContext } from './confirm-layer';
 import { HeaderSlotContext } from './header-slot';
-import type { ModalPhase, ModalProps } from './types';
+import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
 
 // A dialog over the page on the native element's modal mode: `showModal()`
@@ -90,6 +92,37 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
   const [guard] = useState(closeGuardSlot);
   // Held in state, so the contents redraw into it once it is in the page.
   const [headerSlot, setHeaderSlot] = useState<HTMLElement | null>(null);
+
+  // A question a form asks over itself (ConfirmOverlay, MB.115) is drawn in
+  // the layer over the body, and holds the body and the control beside the
+  // title inert while it shows; the title and the Close button stay live, so
+  // a way out tried meanwhile still reaches the guard. The attribute is set
+  // on the elements rather than through a render, so it is on before the
+  // question takes the focus and off before the focus goes back.
+  const body = useRef<HTMLDivElement>(null);
+  const [layerHost, setLayerHost] = useState<HTMLElement | null>(null);
+  const holds = useRef(0);
+  const slotRef = useRef<HTMLElement | null>(null);
+  const putHeaderSlot = useCallback((element: HTMLElement | null): void => {
+    slotRef.current = element;
+    setHeaderSlot(element);
+  }, []);
+  const hold = useCallback((): (() => void) => {
+    const held = (on: boolean): void => {
+      body.current?.toggleAttribute('inert', on);
+      slotRef.current?.toggleAttribute('inert', on);
+    };
+    holds.current += 1;
+    held(true);
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      holds.current -= 1;
+      if (holds.current === 0) held(false);
+    };
+  }, []);
+  const layer = useMemo<ConfirmLayer>(() => ({ host: layerHost, hold, body }), [layerHost, hold]);
   const request = (): void => {
     if (phase === 'open' && guard.consult(close)) close();
   };
@@ -136,16 +169,25 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
           {title}
         </h2>
         {/* Beside the title, for a control the contents put there (HeaderSlotContext). */}
-        <div ref={setHeaderSlot} className="modal-dialog__header-slot" />
+        <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
       </div>
-      <CloseGuardContext.Provider value={guard}>
-        <HeaderSlotContext.Provider value={headerSlot}>
-          {typeof children === 'function' ? children(close) : children}
-        </HeaderSlotContext.Provider>
-      </CloseGuardContext.Provider>
+      {/* The body scrolls beneath the header, rather than the whole dialog,
+          so a question's layer can lie over exactly the part in view. */}
+      <div className="modal-dialog__main">
+        <div ref={body} className="modal-dialog__body">
+          <CloseGuardContext.Provider value={guard}>
+            <HeaderSlotContext.Provider value={headerSlot}>
+              <ConfirmLayerContext.Provider value={layer}>
+                {typeof children === 'function' ? children(close) : children}
+              </ConfirmLayerContext.Provider>
+            </HeaderSlotContext.Provider>
+          </CloseGuardContext.Provider>
+        </div>
+        <div ref={setLayerHost} className="modal-dialog__layer" />
+      </div>
     </dialog>
   );
   // oxlint-enable jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions

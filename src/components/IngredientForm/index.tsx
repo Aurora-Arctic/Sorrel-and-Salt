@@ -9,7 +9,7 @@ import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from 
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
+import { ConfirmOverlay, DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
@@ -246,24 +246,10 @@ const IngredientForm = ({
   const [question, setQuestion] = useState<RedirectQuestion | null>(null);
   // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
-  // A question in place of the saves (Delete's, or a redirect's) is brought
-  // into view and takes the focus on its safe answer, Keep It: the button
-  // pressed has gone, and in a long form the question would sit below the
-  // fold (MB.115, the owner's call). Smooth unless motion is reduced; jsdom
-  // has no scrollIntoView, hence the optional call.
+  // A question (Delete's, or a redirect's) is asked over the form, centred
+  // in view however far the form is scrolled, and takes the focus on its
+  // safe answer, Keep It (MB.115, the owner's call; ConfirmOverlay).
   const keepIt = useRef<HTMLButtonElement>(null);
-  const asking = deleting || question !== null;
-  useEffect(() => {
-    if (!asking) return;
-    const button = keepIt.current;
-    if (!button) return;
-    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? true;
-    button.closest('.form__confirm')?.scrollIntoView?.({
-      block: 'end',
-      behavior: still ? 'auto' : 'smooth',
-    });
-    button.focus({ preventScroll: true });
-  }, [asking]);
   const [refusal, setRefusal] = useState<string>();
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call), ahead of any other question; a
@@ -576,15 +562,66 @@ const IngredientForm = ({
                 folds={variantFolds}
               />
             </div>
+            <div className="form__actions">
+              {/* Two saves, both held down from the press to the answer, the
+                duplicate check included: Save Ingredient, first and so the
+                default Enter presses, opens what it made; Save & Add Another
+                clears the form for the next. The one pressed says so,
+                "Saving Ingredient" with a spinner and `aria-busy`, the owner's
+                call during MB.131. Both are off until something is entered or
+                changed, the owner's rule for every form (M5.6). An edit has
+                the first alone, and Delete apart at the far end. */}
+              <BusyButton
+                type="submit"
+                value="open"
+                className="btn btn--solid"
+                disabled={!isDirty || isSubmitting}
+                busy={busy('open')}
+                busyLabel="Saving Ingredient"
+              >
+                Save Ingredient
+              </BusyButton>
+              {!editing && (
+                <BusyButton
+                  type="submit"
+                  value="another"
+                  disabled={!isDirty || isSubmitting}
+                  busy={busy('another')}
+                  busyLabel="Saving Ingredient"
+                >
+                  Save & Add Another
+                </BusyButton>
+              )}
+              {onCancel && (
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  onClick={() => discard.request(onCancel)}
+                >
+                  Cancel
+                </button>
+              )}
+              {editing && (
+                <button
+                  type="button"
+                  className="btn btn--destructive form__aside"
+                  onClick={() => {
+                    setRefusal(undefined);
+                    setDeleting(true);
+                  }}
+                >
+                  Delete Ingredient
+                </button>
+              )}
+            </div>
             {discard.asking ? (
-              <DiscardQuestion guard={discard} row="form__actions" />
+              <DiscardQuestion guard={discard} />
             ) : question ? (
               // MB.82: the address this save takes is another entry's redirect.
-              // Asked in place of the saves, so nothing else is pressed until it
-              // is answered; Keep It leaves the entry as typed, unsaved.
-              <div className="form__confirm">
-                <p>{question.message}</p>
-                <div className="form__actions">
+              // Asked before anything else is pressed; Keep It leaves the entry
+              // as typed, unsaved.
+              <ConfirmOverlay question={question.message} safe={keepIt}>
+                <div className="modal__actions">
                   <BusyButton
                     className="btn btn--solid"
                     disabled={mutation.isPending}
@@ -603,14 +640,18 @@ const IngredientForm = ({
                     Keep It
                   </button>
                 </div>
-              </div>
+              </ConfirmOverlay>
             ) : deleting ? (
-              <div className="form__confirm">
-                <p>
-                  Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any spell
-                  that uses it keeps it.
-                </p>
-                <div className="form__actions">
+              <ConfirmOverlay
+                question={
+                  <>
+                    Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any spell
+                    that uses it keeps it.
+                  </>
+                }
+                safe={keepIt}
+              >
+                <div className="modal__actions">
                   <BusyButton
                     className="btn btn--destructive"
                     disabled={remove.isPending}
@@ -629,61 +670,8 @@ const IngredientForm = ({
                     Keep It
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="form__actions">
-                {/* Two saves, both held down from the press to the answer, the
-                duplicate check included: Save Ingredient, first and so the
-                default Enter presses, opens what it made; Save & Add Another
-                clears the form for the next. The one pressed says so,
-                "Saving Ingredient" with a spinner and `aria-busy`, the owner's
-                call during MB.131. Both are off until something is entered or
-                changed, the owner's rule for every form (M5.6). An edit has
-                the first alone, and Delete apart at the far end. */}
-                <BusyButton
-                  type="submit"
-                  value="open"
-                  className="btn btn--solid"
-                  disabled={!isDirty || isSubmitting}
-                  busy={busy('open')}
-                  busyLabel="Saving Ingredient"
-                >
-                  Save Ingredient
-                </BusyButton>
-                {!editing && (
-                  <BusyButton
-                    type="submit"
-                    value="another"
-                    disabled={!isDirty || isSubmitting}
-                    busy={busy('another')}
-                    busyLabel="Saving Ingredient"
-                  >
-                    Save & Add Another
-                  </BusyButton>
-                )}
-                {onCancel && (
-                  <button
-                    type="button"
-                    className="btn btn--quiet"
-                    onClick={() => discard.request(onCancel)}
-                  >
-                    Cancel
-                  </button>
-                )}
-                {editing && (
-                  <button
-                    type="button"
-                    className="btn btn--destructive form__aside"
-                    onClick={() => {
-                      setRefusal(undefined);
-                      setDeleting(true);
-                    }}
-                  >
-                    Delete Ingredient
-                  </button>
-                )}
-              </div>
-            )}
+              </ConfirmOverlay>
+            ) : null}
           </form>
         </EntryHrefContext.Provider>
       </PanelChangesContext.Provider>

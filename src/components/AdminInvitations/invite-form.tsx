@@ -110,29 +110,27 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
           />
         </FieldShell>
       </div>
-      {discard.asking ? (
-        <DiscardQuestion guard={discard} />
-      ) : (
-        <div className="modal__actions">
-          <BusyButton
-            className="btn btn--solid"
-            type="submit"
-            disabled={sending || email.trim() === ''}
-            busy={sending}
-            busyLabel="Sending"
-          >
-            Send Invitation
-          </BusyButton>
-          <button
-            className="btn btn--quiet"
-            type="button"
-            disabled={sending}
-            onClick={() => discard.request(close)}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
+      <div className="modal__actions">
+        <BusyButton
+          className="btn btn--solid"
+          type="submit"
+          disabled={sending || email.trim() === ''}
+          busy={sending}
+          busyLabel="Sending"
+        >
+          Send Invitation
+        </BusyButton>
+        <button
+          className="btn btn--quiet"
+          type="button"
+          disabled={sending}
+          onClick={() => discard.request(close)}
+        >
+          Cancel
+        </button>
+      </div>
+      {/* Over the form, its buttons beneath (MB.115). */}
+      {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
   );
 };

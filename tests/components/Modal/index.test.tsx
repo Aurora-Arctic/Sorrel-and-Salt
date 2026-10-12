@@ -1,7 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { type ReactElement, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import Modal, { DiscardQuestion, useDiscardGuard } from '@/components/Modal';
+import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/components/Modal';
 
 // A dialog over the page, on the native element's modal mode, which brings
 // the focus trap, Escape and the inert page (claude-docs/components/modal.md).
@@ -179,7 +180,11 @@ describe('Modal', () => {
   // here, on a form of the test's own; each admin form's test asserts only
   // its wiring.
   describe('guarding unsaved changes', () => {
-    /** A form as the admin forms are: a field, a save that closes, and Cancel. */
+    /**
+     * A form as the admin forms are: a field, a save that closes, and Cancel,
+     * and the question drawn over it while asking (MB.115), its buttons
+     * still beneath.
+     */
     function GuardedForm({ close }: { close: () => void }): ReactElement {
       const [name, setName] = useState('');
       const [note, setNote] = useState('');
@@ -192,18 +197,15 @@ describe('Modal', () => {
           <label>
             Note <input value={note} onChange={(event) => setNote(event.target.value)} />
           </label>
-          {discard.asking ? (
-            <DiscardQuestion guard={discard} />
-          ) : (
-            <div className="modal__actions">
-              <button type="button" onClick={close}>
-                Save
-              </button>
-              <button type="button" onClick={() => discard.request(close)}>
-                Cancel
-              </button>
-            </div>
-          )}
+          <div className="modal__actions">
+            <button type="button" onClick={close}>
+              Save
+            </button>
+            <button type="button" onClick={() => discard.request(close)}>
+              Cancel
+            </button>
+          </div>
+          {discard.asking && <DiscardQuestion guard={discard} />}
         </form>
       );
     }
@@ -250,6 +252,58 @@ describe('Modal', () => {
       expect(button('Keep Editing')).toHaveFocus();
       expect(screen.getByRole('dialog')).toHaveAttribute('open');
       expect(onClose).not.toHaveBeenCalled();
+    });
+
+    // The owner's call during MB.115: the question is drawn over the form,
+    // which can be neither pressed nor typed into until it is answered. The
+    // modal's own Close stays live, so a try there flashes the question.
+    it('makes the form behind the question inert while asking, and live again once answered', () => {
+      renderGuarded();
+      change('Name', 'Testwort');
+      // Live before it asks, so the inert below is the question's doing.
+      expect(field('Name').closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(field('Name').closest('[inert]')).not.toBeNull();
+      expect(button('Cancel').closest('[inert]')).not.toBeNull();
+      // The question, a group of its own, and the modal's Close are not.
+      const question = screen.getByRole('group');
+      expect(question).toContainElement(button('Keep Editing'));
+      expect(question.closest('[inert]')).toBeNull();
+      expect(button('Close').closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Keep Editing'));
+
+      expect(screen.queryByRole('group')).not.toBeInTheDocument();
+      expect(field('Name').closest('[inert]')).toBeNull();
+      expect(button('Cancel').closest('[inert]')).toBeNull();
+    });
+
+    // A control the form put beside the title is the form's too: held while asking.
+    it('makes a control beside the title inert while asking', () => {
+      function WithHeaderControl({ close }: { close: () => void }): ReactElement {
+        const slot = useModalHeaderSlot();
+        return (
+          <>
+            {slot && createPortal(<button type="button">Open All</button>, slot)}
+            <GuardedForm close={close} />
+          </>
+        );
+      }
+      render(
+        <Modal title="Edit Category" onClose={vi.fn()}>
+          {(done) => <WithHeaderControl close={done} />}
+        </Modal>,
+      );
+      change('Name', 'Testwort');
+      expect(button('Open All').closest('[inert]')).toBeNull();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(button('Open All').closest('[inert]')).not.toBeNull();
+      fireEvent.click(button('Keep Editing'));
+      expect(button('Open All').closest('[inert]')).toBeNull();
     });
 
     it.each([
@@ -313,16 +367,17 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    // Cancel, the button pressed, went with the question: the first field instead.
-    it('focuses the first field on Keep Editing after Cancel', () => {
+    // Cancel, the button pressed, stays beneath the question: back to it.
+    it('focuses Cancel again on Keep Editing after Cancel', () => {
       renderGuarded();
       change('Note', 'Kept');
       button('Cancel').focus();
 
       fireEvent.click(button('Cancel'));
+      expect(button('Keep Editing')).toHaveFocus();
       fireEvent.click(button('Keep Editing'));
 
-      expect(field('Name')).toHaveFocus();
+      expect(button('Cancel')).toHaveFocus();
     });
 
     it.each([
