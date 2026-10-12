@@ -153,6 +153,8 @@ export interface RadioGroupFieldProps<T extends string> {
   onChange: (value: T) => void;
   /** Shut: every radio dashed and faded. */
   disabled?: boolean;
+  /** A line for the whole group, read with it: what holds whichever is chosen. */
+  note?: string;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */
