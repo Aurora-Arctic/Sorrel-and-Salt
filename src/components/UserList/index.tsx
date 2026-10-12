@@ -1,27 +1,20 @@
 import type { ReactElement } from 'react';
-import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import UserListFilter from './filter';
 import CreationControl from './creation-control';
-import { CheckIcon, CrossIcon } from './icons';
+import { Mark, ProviderLogo } from './marks';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
+import UserLink from './user-link';
 import { roleLabel } from './roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
-import ProviderMark from '../ProviderMark';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import type {
-  MarkProps,
-  ProviderLogoProps,
-  UserListEntry,
-  UserListFilterProps,
-  UserListProps,
-} from './types';
+import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
 // `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
@@ -43,57 +36,6 @@ function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string
   return noMatchText('users', filters, 'There are no users yet.');
 }
 
-/** A provider by its roster label, or by its id when the roster has none. */
-function providerLabel(id: string): string {
-  return SOCIAL_PROVIDERS.find((provider) => provider.id === id)?.label ?? id;
-}
-
-/**
- * A linked provider as its logo on its brand's ground, on the owner's call,
- * named in a tip bubble on hover and in hidden text for a screen reader. A
- * provider with no logo, one since dropped from the roster, keeps its id as
- * text, so the account still says it is linked.
- */
-const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
-  const label = providerLabel(id);
-  if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
-  return (
-    <span className="user-list__hint">
-      <ProviderMark id={id} />
-      <span className="visually-hidden">{label}</span>
-      <span className="user-list__tip" aria-hidden="true">
-        {label}
-      </span>
-    </span>
-  );
-};
-
-/**
- * A yes-or-no as a mark, on the owner's call: a green check or a red cross,
- * its word in the page for a screen reader since the mark is drawn alone, and
- * where `hint` asks, in a tip bubble on hover too, since the column's heading
- * does not say it. The bubble is the eye's copy, hidden from the reader.
- */
-const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => (
-  <span
-    className={[
-      'user-list__mark',
-      `user-list__mark--${value ? 'yes' : 'no'}`,
-      hint && 'user-list__hint',
-    ]
-      .filter(Boolean)
-      .join(' ')}
-  >
-    {value ? <CheckIcon /> : <CrossIcon />}
-    <span className="visually-hidden">{label}</span>
-    {hint && (
-      <span className="user-list__tip" aria-hidden="true">
-        {label}
-      </span>
-    )}
-  </span>
-);
-
 /**
  * The columns, in the owner's order (MB.59). Impersonate is last, and only
  * where impersonation is registered: an action, its cell unlabelled as a
@@ -107,11 +49,12 @@ const columns = (
   {
     heading: 'Name',
     // The way into their privilege history (MB.200), then the name, on every
-    // row: an admin's changes are the ones most worth reading.
+    // row: an admin's changes are the ones most worth reading. The name opens
+    // the user's modal, their covens and Impersonate (M9.19).
     cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
-        {user.name}
+        <UserLink href={user.openHref} heading={user.heading} name={user.name} />
       </span>
     ),
   },

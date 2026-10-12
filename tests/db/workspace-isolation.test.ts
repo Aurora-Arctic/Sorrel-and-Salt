@@ -6,7 +6,7 @@ import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { assertMembership } from '@/modules/coven';
+import { assertMembership, membershipsOf } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { getWorkspaceIngredient, updateWorkspaceIngredient } from '@/modules/ingredients';
 import { A, D, E, asUser } from '../support/as-user';
@@ -283,6 +283,34 @@ describe('E’s site role carries no bypass and no penalty from the membership c
       expect(await visibilityOf(seeded.spellId)).toBe('workspace');
     },
   );
+
+  // Both halves of story 19 as narrowed in M9.19 sit in one test, so it fails
+  // if either changes: the admin may read which covens a user is in, and may
+  // still not read what those covens hold.
+  it('lets E list D’s covens by name and role while refusing X’s ingredients by direct id', async () => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({ workspaceId: WORKSPACE_X_ID }),
+      D.id,
+    );
+    // Why E could have been let through: the site role is real, and the row is
+    // X's, read by X's own member.
+    expect(asUser(E).role).toBe('admin');
+    await expect(
+      getWorkspaceIngredient(asUser(D), WORKSPACE_X_ID, ingredientId),
+    ).resolves.toMatchObject({ id: ingredientId });
+
+    const [answer] = await membershipsOf(asUser(E), [D.id]);
+    expect(answer).toEqual([
+      expect.objectContaining({
+        role: 'member',
+        workspace: expect.objectContaining({ id: WORKSPACE_X_ID, name: expect.any(String) }),
+      }),
+    ]);
+    await expect(
+      getWorkspaceIngredient(asUser(E), WORKSPACE_X_ID, ingredientId),
+    ).rejects.toBeInstanceOf(Forbidden);
+  });
 
   it('leaves the compendium itself untouched by the refusal', async () => {
     await assertMembership(asUser(E), WORKSPACE_W_ID, { spell: ['read'] }).catch(() => {});

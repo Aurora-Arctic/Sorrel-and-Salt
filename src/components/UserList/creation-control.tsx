@@ -40,6 +40,7 @@ const CreationControl = ({
   emailVerified,
   paused = false,
   action,
+  inModal = false,
 }: CreationControlProps): ReactElement =>
   // Locked while admin changes are paused, as Grant and Revoke are (MB.63).
   paused ? (
@@ -69,6 +70,7 @@ const CreationControl = ({
       busy="Approving"
       confirmClass="btn btn--solid"
       withNote
+      inModal={inModal}
       send={(note) => graphqlRequest(GrantWorkspaceCreationDocument, { userId, note })}
     />
   ) : (
@@ -86,6 +88,7 @@ const CreationControl = ({
       busy="Revoking"
       confirmClass="btn btn--destructive"
       withNote
+      inModal={inModal}
       send={(note) => graphqlRequest(RevokeWorkspaceCreationDocument, { userId, note })}
     />
   );

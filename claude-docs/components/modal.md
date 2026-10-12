@@ -369,7 +369,8 @@ The form arrives in the same dialog.
   the page's script has loaded: the link still works as a link. Outside a
   provider the hook returns nothing, and the link stays plain. `EditLink`
   ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/admin/add-action.tsx`)
-  and Invite Admin all use it.
+  and Invite Admin all use it, and so does each name on `/admin/users`, which
+  opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
 - **The heading is known before the form.** The page builds each row's
   `editHeading` on the server, with the same builder the loaded modal uses,
   and hands it to the row beside `editHref`. So the head does not change when

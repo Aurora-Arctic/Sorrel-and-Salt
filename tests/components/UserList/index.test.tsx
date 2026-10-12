@@ -3,6 +3,8 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
+import type { RouteModalOpener } from '@/components/Modal/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
@@ -34,6 +36,8 @@ const ADA = {
   providers: ['discord', 'google'],
   emailVerified: true,
   primaryAdmin: false,
+  openHref: '/admin/users?user=6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
+  heading: { eyebrow: 'User', title: 'Ada Fixturewort', qualifier: 'ada@users.test' },
 } as const;
 
 const BO = {
@@ -46,6 +50,8 @@ const BO = {
   providers: [],
   emailVerified: false,
   primaryAdmin: false,
+  openHref: '/admin/users?query=fixture&user=7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
+  heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
 const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
@@ -106,6 +112,34 @@ describe('UserList', () => {
       expect(
         screen.getByRole('link', { name: 'Privilege changes for Ada Fixturewort' }),
       ).toHaveAttribute('href', '/admin/privilege-changes?query=ada%40users.test');
+    });
+  });
+
+  // M9.19: each name opens its user’s modal over the list, at once under
+  // the page’s opener, and as a link still for a new tab or before the script.
+  describe('the name link', () => {
+    it('links each name to its user’s modal, in the name cell', () => {
+      render(<UserList {...props()} />);
+
+      for (const user of props().users) {
+        const row = screen.getByRole('row', { name: new RegExp(user.name) });
+        const link = within(row).getByRole('link', { name: user.name });
+        expect(link).toHaveAttribute('href', user.openHref);
+        expect(within(row).getAllByRole('cell')[0]).toContainElement(link);
+      }
+    });
+
+    it('opens the modal at once with the row’s heading on a plain press', () => {
+      const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+      render(
+        <RouteModalContext.Provider value={opener}>
+          <UserList {...props()} />
+        </RouteModalContext.Provider>,
+      );
+
+      fireEvent.click(screen.getByRole('link', { name: BO.name }));
+
+      expect(opener.open).toHaveBeenCalledExactlyOnceWith(BO.openHref, BO.heading);
     });
   });
 
@@ -557,7 +591,7 @@ describe('UserList approval', () => {
   });
 });
 
-// MB.59: the role cell's Grant or Revoke, each asking first in a modal naming
+// MB.59: the role cell's Promote or Revoke, each asking first in a modal naming
 // the user, with an optional reason; the primary admin's Revoke in view but
 // unusable, saying why. The service is the guard, and refuses the same.
 describe('UserList admin role', () => {
@@ -568,11 +602,11 @@ describe('UserList admin role', () => {
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
   const dialog = (title: string) => screen.getByRole('dialog', { name: title });
 
-  it('offers Grant on a user’s row and Revoke on an admin’s, each naming the user', () => {
+  it('offers Promote on a user’s row and Revoke on an admin’s, each naming the user', () => {
     render(<UserList {...props()} />);
 
     const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Grant admin to Bo Fixturewort',
+      name: 'Promote Bo Fixturewort to admin',
     });
     expect(grant).toBeEnabled();
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
@@ -593,12 +627,14 @@ describe('UserList admin role', () => {
     render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
 
     fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+      within(row('Bo Fixturewort')).getByRole('button', {
+        name: 'Promote Bo Fixturewort to admin',
+      }),
     );
 
-    const asking = dialog('Grant Admin');
+    const asking = dialog('Promote to Admin');
     expect(asking).toHaveTextContent('Bo Fixturewort');
-    const confirm = within(asking).getByRole('button', { name: 'Grant' });
+    const confirm = within(asking).getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveFocus();
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
@@ -639,7 +675,7 @@ describe('UserList admin role', () => {
     expect(calls).toEqual([{ userId: ADA.id, role: 'user' }]);
   });
 
-  // MB.205's warning, in Grant's words: a grant vouches as an approval does.
+  // MB.205's warning, in Promote's words: a promotion vouches as an approval does.
   it('warns before granting to a user whose email is unverified, and still grants', async () => {
     mockGraphQLMutation('SetUserRole', () => ({
       setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
@@ -648,10 +684,12 @@ describe('UserList admin role', () => {
     expect(within(row('Bo Fixturewort')).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
 
     fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+      within(row('Bo Fixturewort')).getByRole('button', {
+        name: 'Promote Bo Fixturewort to admin',
+      }),
     );
 
-    const confirm = within(dialog('Grant Admin')).getByRole('button', { name: 'Grant' });
+    const confirm = within(dialog('Promote to Admin')).getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveAccessibleDescription(/\S/);
     fireEvent.click(confirm);
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -846,7 +884,7 @@ describe('UserList admin changes switch', () => {
 });
 
 // MB.63: while admin changes are paused, an admin the pause binds sees every
-// Grant and Revoke in view but unusable, saying why; the primary admin, whom
+// Promote and Revoke in view but unusable, saying why; the primary admin, whom
 // the pause exempts, keeps them. The service refuses the same.
 describe('UserList admin role while admin changes are paused', () => {
   afterEach(() => {
@@ -855,7 +893,7 @@ describe('UserList admin role while admin changes are paused', () => {
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
-  it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
+  it('locks Promote and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
     let calls = 0;
     mockGraphQLMutation('SetUserRole', () => {
       calls += 1;
@@ -864,7 +902,7 @@ describe('UserList admin role while admin changes are paused', () => {
     render(<UserList {...props({ adminChanges: { paused: true, canToggle: false } })} />);
 
     const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Grant admin to Bo Fixturewort',
+      name: 'Promote Bo Fixturewort to admin',
     });
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
@@ -933,7 +971,7 @@ describe('UserList admin role while admin changes are paused', () => {
   it('locks nothing while changes are on', () => {
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
 
-    for (const name of ['Grant admin to Bo Fixturewort', 'Revoke admin from Ada Fixturewort']) {
+    for (const name of ['Promote Bo Fixturewort to admin', 'Revoke admin from Ada Fixturewort']) {
       expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-disabled');
     }
   });

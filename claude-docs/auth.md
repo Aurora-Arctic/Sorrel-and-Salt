@@ -94,7 +94,11 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The user list (MB.52)
 
-`/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)
+`/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
+
+### The user modal (M9.19)
+
+In [`auth/admin-users.md`](auth/admin-users.md#the-user-modal-m919).
 
 ### Approving workspace creation (M5.8)
 

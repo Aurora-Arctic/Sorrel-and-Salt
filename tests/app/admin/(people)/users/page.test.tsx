@@ -22,13 +22,20 @@ const countUsers = vi.fn();
 const providersOf = vi.fn();
 const isPrimaryAdmin = vi.fn();
 const adminRoleChangePauseState = vi.fn();
+const usersForAdmin = vi.fn();
+const listedOnUserList = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
   isPrimaryAdmin,
+  listedOnUserList,
   listUsers,
   providersOf,
+  usersForAdmin,
 }));
+
+const membershipsOf = vi.fn();
+vi.mock('@/modules/coven', () => ({ membershipsOf }));
 
 const { default: AdminUsersPage } = await import('@/app/admin/(people)/users/page');
 const { default: UsersAction } = await import('@/app/admin/(people)/@action/users/page');
@@ -44,6 +51,22 @@ const user = (index: number) => ({
   createdAt: new Date('2026-03-04T05:06:07Z'),
   emailVerified: true,
 });
+
+/** A membership as the coven service answers one, its workspace beside it. */
+const COVEN_ROW = {
+  workspaceId: '11111111-2222-4333-8444-555555555555',
+  userId: user(1).id,
+  role: 'owner',
+  joinedAt: new Date('2026-04-05T06:07:08Z'),
+  workspace: {
+    id: '11111111-2222-4333-8444-555555555555',
+    name: 'Fixture Coven',
+    slug: 'fixture-coven',
+  },
+};
+
+/** The user modal’s name: its eyebrow, then the name and the address (M9.19). */
+const VIEWING_01 = 'User, Listed Fixture 01, listed-1@users.test';
 
 const entry = (index: number) => {
   const node = user(index);
@@ -84,6 +107,14 @@ beforeEach(() => {
   isPrimaryAdmin.mockReturnValue(false);
   adminRoleChangePauseState.mockReset();
   adminRoleChangePauseState.mockResolvedValue({ paused: false, canToggle: false });
+  usersForAdmin.mockReset();
+  usersForAdmin.mockImplementation(async (_session, ids: string[]) =>
+    ids.map((id) => (id === user(1).id ? user(1) : null)),
+  );
+  listedOnUserList.mockReset();
+  listedOnUserList.mockReturnValue(true);
+  membershipsOf.mockReset();
+  membershipsOf.mockImplementation(async (_session, ids: string[]) => ids.map(() => [COVEN_ROW]));
 });
 
 describe('the /admin/users page', () => {
@@ -238,6 +269,76 @@ describe('the /admin/users page', () => {
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
+  });
+});
+
+// M9.19: `?user=<id>` opens the user’s modal over the list, holding the
+// covens the coven service answers for them, read with the navigation.
+describe('the /admin/users page, the user modal', () => {
+  it('reads the user and their covens as the guard’s session, and shows them in the modal', async () => {
+    await renderPage({ query: 'listed', user: user(1).id });
+
+    expect(usersForAdmin).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
+    expect(listedOnUserList).toHaveBeenCalledWith(user(1).id);
+    expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
+    expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id]);
+    const dialog = screen.getByRole('dialog', { name: VIEWING_01 });
+    // The row's facts reach the body: the sign-up date as a time element.
+    const stamps = Array.from(dialog.querySelectorAll('time'), (el) => el.getAttribute('datetime'));
+    expect(stamps).toContain(user(1).createdAt.toISOString());
+    expect(
+      within(within(dialog).getByRole('list', { name: 'Covens' })).getByRole('listitem'),
+    ).toHaveTextContent('Fixture Coven');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('opens no modal, and reads no user, without ?user=', async () => {
+    await renderPage();
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(usersForAdmin).not.toHaveBeenCalled();
+    expect(membershipsOf).not.toHaveBeenCalled();
+  });
+
+  // Each row’s name opens the modal, keeping the filter, under the head the
+  // modal carries once loaded.
+  it('links each name to its modal, keeping the filter', async () => {
+    await renderPage({ query: 'listed', role: 'user' });
+
+    expect(screen.getByRole('link', { name: 'Listed Fixture 02' })).toHaveAttribute(
+      'href',
+      `/admin/users?query=listed&role=user&user=${user(2).id}`,
+    );
+  });
+
+  // Hand-edited, or copied wrong: the list beneath is still the page asked for.
+  it('says the address names no user, opens no modal and reads no user, for an id that is not one', async () => {
+    await renderPage({ user: 'not-an-id' });
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(usersForAdmin).not.toHaveBeenCalled();
+    expect(membershipsOf).not.toHaveBeenCalled();
+    expect(screen.getByRole('row', { name: /Listed Fixture 01/ })).toBeInTheDocument();
+  });
+
+  it('says the address names no user, and opens no modal, for a user the service finds none of', async () => {
+    await renderPage({ user: user(9).id });
+
+    expect(usersForAdmin).toHaveBeenCalledWith(ADMIN, [user(9).id]);
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  // The seed’s bootstrap user is live, and off the list (MB.59).
+  it('says the address names no user, and opens no modal, for a user the list leaves out', async () => {
+    listedOnUserList.mockReturnValue(false);
+
+    await renderPage({ user: user(1).id });
+
+    expect(listedOnUserList).toHaveBeenCalledWith(user(1).id);
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
 

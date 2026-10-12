@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import { membershipsOf } from '@/modules/coven';
+import { assertMembership, membershipsOf } from '@/modules/coven';
 import { A, B, D, E, asUser } from '../../../support/as-user';
 
-// Whose covens a caller may list: their own, and nobody else's — a site admin
-// included, since an admin reaches no workspace (CLAUDE.md's invariants). One
-// answer per key, in key order, as a DataLoader batch needs; a refused key is
-// an Error in its slot rather than a rejection of the whole batch.
+// Whose covens a caller may list: their own, and for a site admin anyone's, by
+// workspace and role alone (M9.19) — an admin still reaches nothing a coven
+// holds. One answer per key, in key order, as a DataLoader batch needs; a
+// refused key is an Error in its slot rather than a rejection of the whole batch.
 
 const summary = (answer: Awaited<ReturnType<typeof membershipsOf>>[number]) =>
   answer instanceof Error
@@ -36,16 +36,32 @@ describe('membershipsOf', () => {
     expect(other).toBeInstanceOf(Forbidden);
   });
 
-  it('refuses a site admin asking after anyone else', async () => {
-    // Why this could have succeeded: E's session carries the admin role, and D
-    // holds a membership D's own call finds.
+  it('answers a site admin asking after anyone, each with its workspace', async () => {
+    // Why this is the admin branch and not a membership: E's session carries
+    // the admin role, D holds a membership D's own call finds, and E is not a
+    // member of that workspace.
     expect(asUser(E).role).toBe('admin');
     const [dOwn] = await membershipsOf(asUser(D), [D.id]);
     expect(summary(dOwn)).toEqual([{ role: 'member', workspaceId: WORKSPACE_X_ID }]);
+    await expect(
+      assertMembership(asUser(E), WORKSPACE_X_ID, { ingredient: ['read'] }),
+    ).rejects.toBeInstanceOf(Forbidden);
 
     const [answer] = await membershipsOf(asUser(E), [D.id]);
 
-    expect(answer).toBeInstanceOf(Forbidden);
+    expect(summary(answer)).toEqual([{ role: 'member', workspaceId: WORKSPACE_X_ID }]);
+    expect(answer).toEqual([
+      expect.objectContaining({
+        workspace: expect.objectContaining({ name: expect.any(String), slug: expect.any(String) }),
+      }),
+    ]);
+  });
+
+  it('answers a site admin a mixed batch of their own key and another’s', async () => {
+    const [other, own] = await membershipsOf(asUser(E), [D.id, E.id]);
+
+    expect(summary(other)).toEqual([{ role: 'member', workspaceId: WORKSPACE_X_ID }]);
+    expect(own).toEqual([]);
   });
 
   it('answers an empty list for a user in no workspace', async () => {
