@@ -52,7 +52,7 @@ describe('GroupList, searched by name', () => {
   const path = '/admin/deity-traditions';
   const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
 
-  it('opens the searched list from its first page, the query in the address', () => {
+  it('opens the searched list from its first page on Search, the query in the address', () => {
     render(
       <GroupList
         kind="tradition"
@@ -66,18 +66,24 @@ describe('GroupList, searched by name', () => {
     expect(search).toHaveAttribute('action', path);
     expect(searchbox()).toHaveAttribute('name', 'query');
     fireEvent.change(searchbox(), { target: { value: ' Test wort ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     expect(router.push).toHaveBeenCalledWith(`${path}?query=Test+wort`);
   });
 
-  it('opens the unsearched list from Clear while a search is shown', () => {
-    render(<GroupList kind="tradition" groups={[]} filter={{ query: 'wort' }} />);
+  it('opens the unsearched list from Clear while a search is shown, and draws none without one', () => {
+    const { unmount } = render(
+      <GroupList kind="tradition" groups={[]} filter={{ query: 'wort' }} />,
+    );
 
     expect(searchbox()).toHaveValue('wort');
     fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
 
     expect(router.push).toHaveBeenCalledWith(path);
+    unmount();
+
+    render(<GroupList kind="tradition" groups={[WARDS]} filter={{ query: '' }} />);
+    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
   });
 
   it('draws no search for a kind not handed one', () => {

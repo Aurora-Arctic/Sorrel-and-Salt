@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { type ReactElement, useState } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
@@ -143,15 +144,39 @@ describe('compendiumHref', () => {
   });
 });
 
-// MB.178's GET form to the page itself, as the category list's, with Filter
-// offered only when there is a new filter to apply.
+/**
+ * The compendium's page as the App Router draws it: the list under the
+ * filter its address shows, which a push changes inside the list's
+ * transition, as Next renders the new page, so the old filter row goes and
+ * the new one mounts.
+ */
+function RoutedCompendium(): ReactElement {
+  const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
+  router.push.mockImplementation((href: string) => {
+    const params = new URL(href, 'http://localhost').searchParams;
+    setFilter({
+      query: params.get('query') ?? '',
+      form: params.get('form') ?? '',
+      nomenclature: (params.get('nomenclature') ?? '') as CompendiumListFilter['nomenclature'],
+      withoutReferences: params.has('withoutReferences'),
+    });
+  });
+  return <CompendiumList {...props({ filter })} />;
+}
+
+// MB.178's GET form to the page itself, as the category list's, applying as
+// each field changes (MB.115, the owner's call): a select or a switch on its
+// change, the form once a choice settles, the name on its Search submit.
 describe('CompendiumList filter', () => {
   beforeEach(() => {
     router.push.mockReset();
   });
 
-  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+  const searchButton = () => screen.getByRole('button', { name: 'Search' });
+  const nameBox = () => screen.getByRole('searchbox', { name: 'Name' });
   const formBox = () => screen.getByRole('combobox', { name: 'Form' });
+  const kindSelect = () => screen.getByRole('combobox', { name: 'Classification' });
+  const unsourcedSwitch = () => screen.getByRole('switch', { name: 'No Refs' });
 
   it('filters by a GET search to the page itself, keeping what was asked', () => {
     render(<CompendiumList {...props({ filter: SHOWN })} />);
@@ -179,18 +204,17 @@ describe('CompendiumList filter', () => {
   it('offers every classification, after the option for any', () => {
     render(<CompendiumList {...props()} />);
 
-    const kind = screen.getByRole('combobox', { name: 'Classification' });
     expect(
-      within(kind)
+      within(kindSelect())
         .getAllByRole('option')
         .map((option) => option.getAttribute('value')),
     ).toEqual(['', 'botanical', 'fungal', 'zoological', 'mineral', 'chemical', 'unknown', 'none']);
-    expect(kind).toHaveValue('');
+    expect(kindSelect()).toHaveValue('');
   });
 
   // The owner's call (MB.115), as the curated lists' group filter: typed
-  // into once hydrated, but drawn as a native select by the server, so the
-  // filter works before JavaScript.
+  // into once hydrated, but drawn as a native select by the server, beside
+  // the search's own submit, so the filter works before JavaScript.
   it('draws the form as a native select on the server, and as a type-ahead once hydrated', async () => {
     const page = <CompendiumList {...props({ filter: SHOWN })} />;
     const container = document.createElement('div');
@@ -198,7 +222,12 @@ describe('CompendiumList filter', () => {
     document.body.append(container);
     onTestFinished(() => container.remove());
 
-    const served = within(container).getByRole('combobox', { name: 'Form' });
+    const search = within(container).getByRole('form', { name: 'Filter the Compendium' });
+    expect(within(search).getByRole('button', { name: 'Search' })).toHaveAttribute(
+      'type',
+      'submit',
+    );
+    const served = within(search).getByRole('combobox', { name: 'Form' });
     expect(served).toHaveValue('Fixture Oil');
     expect(served).toHaveAttribute('name', 'form');
     expect(
@@ -235,7 +264,7 @@ describe('CompendiumList filter', () => {
     expect(new FormData(search as HTMLFormElement).has('withoutReferences')).toBe(false);
   });
 
-  it('narrows the forms as their name is typed', () => {
+  it('narrows the forms as their name is typed, applying nothing', () => {
     render(<CompendiumList {...props()} />);
 
     fireEvent.click(formBox());
@@ -246,92 +275,84 @@ describe('CompendiumList filter', () => {
     expect(
       within(screen.getByRole('listbox', { name: 'Form choices' })).getAllByRole('option'),
     ).toHaveLength(1);
-    expect(filterButton()).toBeDisabled();
+    expect(router.push).not.toHaveBeenCalled();
   });
 
-  it('enables once a form is picked, and disables again when it is cleared', () => {
-    render(<CompendiumList {...props()} />);
-
-    fireEvent.click(formBox());
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Powder' }));
-    expect(formBox()).toHaveValue('Fixture Powder');
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Clear Form' }));
-    expect(formBox()).toHaveValue('');
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('is disabled while the form matches the filter shown', () => {
-    render(<CompendiumList {...props({ filter: SHOWN })} />);
-
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('enables once the query differs, and disables again when it is put back', () => {
-    render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />);
-    const box = screen.getByRole('searchbox', { name: 'Name' });
-
-    fireEvent.change(box, { target: { value: 'testw' } });
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.change(box, { target: { value: 'test ' } });
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('enables once the classification differs, and disables again when it is put back', () => {
-    render(<CompendiumList {...props()} />);
-    const kind = screen.getByRole('combobox', { name: 'Classification' });
-
-    fireEvent.change(kind, { target: { value: 'mineral' } });
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.change(kind, { target: { value: '' } });
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('enables once No Refs differs, and disables again when it is put back', () => {
-    render(<CompendiumList {...props()} />);
-    const unsourced = screen.getByRole('switch', { name: 'No Refs' });
-
-    fireEvent.click(unsourced);
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.click(unsourced);
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('opens the filtered list from its first page', () => {
+  it('opens the searched list from its first page on Search, or on Enter', () => {
     render(<CompendiumList {...props({ previousHref: compendiumHref({ before: 'b' }) })} />);
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
-      target: { value: ' Test wort ' },
-    });
-    fireEvent.change(formBox(), { target: { value: 'oil' } });
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
-      target: { value: 'unknown' },
-    });
-    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
-    fireEvent.click(filterButton());
+    fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
+    fireEvent.click(searchButton());
+    fireEvent.submit(screen.getByRole('form', { name: 'Filter the Compendium' }));
 
-    expect(router.push).toHaveBeenCalledWith(
-      '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
-    );
+    expect(router.push.mock.calls).toEqual([
+      ['/admin/compendium?query=Test+wort'],
+      ['/admin/compendium?query=Test+wort'],
+    ]);
   });
 
-  it('opens the unfiltered list when the filter is cleared', () => {
+  it('applies a classification on its change, carrying the name typed and the filter shown', () => {
+    render(
+      <CompendiumList
+        {...props({
+          filter: { ...SHOWN, nomenclature: '' },
+          previousHref: compendiumHref({ ...SHOWN, before: 'b' }),
+        })}
+      />,
+    );
+
+    fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
+    fireEvent.change(kindSelect(), { target: { value: 'unknown' } });
+
+    expect(router.push.mock.calls).toEqual([
+      [
+        '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
+      ],
+    ]);
+  });
+
+  it('applies No Refs on its press, on or off, keeping the rest of the filter shown', () => {
+    const { unmount } = render(<CompendiumList {...props()} />);
+    fireEvent.click(unsourcedSwitch());
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?withoutReferences=1');
+    unmount();
+
     render(<CompendiumList {...props({ filter: SHOWN })} />);
+    fireEvent.click(unsourcedSwitch());
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown',
+    );
+    expect(router.push).toHaveBeenCalledTimes(2);
+  });
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), { target: { value: '' } });
+  // The owner's call (MB.115): typing alone applies nothing, since a half
+  // typed name would read a list the admin never asked for.
+  it('a type-ahead applies on pick, on its clear and on leaving the box, not while typed', () => {
+    const { unmount } = render(<CompendiumList {...props()} />);
+    fireEvent.change(nameBox(), { target: { value: 'wort' } });
+    act(() => formBox().focus());
+    fireEvent.change(formBox(), { target: { value: 'fixture powd' } });
+    fireEvent.change(formBox(), { target: { value: 'fixture powder' } });
+    expect(router.push).not.toHaveBeenCalled();
+
+    // Left naming a choice in full, it applies that choice.
+    act(() => nameBox().focus());
+    expect(router.push.mock.calls).toEqual([['/admin/compendium?query=wort&form=Fixture+Powder']]);
+
+    // A pick applies at once.
+    fireEvent.click(formBox());
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=wort&form=Fixture+Oil');
+    unmount();
+    router.push.mockReset();
+
+    // Left on the form shown, nothing; its clear applies every form.
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />);
+    act(() => formBox().focus());
+    act(() => nameBox().focus());
+    expect(router.push).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Clear Form' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
-      target: { value: '' },
-    });
-    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
-    fireEvent.click(filterButton());
-
-    expect(router.push).toHaveBeenCalledWith('/admin/compendium');
+    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
   });
 
   // The owner's call (MB.115): while the filtered list reads, the list
@@ -349,14 +370,7 @@ describe('CompendiumList filter', () => {
       </Navigating>,
     );
     const row = screen.getByRole('form', { name: 'Filter the Compendium' });
-    const controls = () => [
-      screen.getByRole('searchbox', { name: 'Name' }),
-      formBox(),
-      screen.getByRole('combobox', { name: 'Classification' }),
-      screen.getByRole('switch', { name: 'No Refs' }),
-      filterButton(),
-    ];
-    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
+    const controls = () => [nameBox(), searchButton(), formBox(), kindSelect(), unsourcedSwitch()];
     // Before the press: the list shows, and every control can be used.
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(listStatus()).toEqual([]);
@@ -364,7 +378,7 @@ describe('CompendiumList filter', () => {
     expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
 
     await act(async () => {
-      fireEvent.click(filterButton());
+      fireEvent.click(unsourcedSwitch());
     });
 
     expect(router.push).toHaveBeenCalledWith('/admin/compendium?withoutReferences=1');
@@ -373,8 +387,8 @@ describe('CompendiumList filter', () => {
     expect(row).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
 
-    // A second press, or Enter in the form, while the first is on its way goes nowhere.
-    fireEvent.click(filterButton());
+    // A second change, or a submit, while the first is on its way goes nowhere.
+    fireEvent.change(kindSelect(), { target: { value: 'mineral' } });
     fireEvent.submit(row);
     expect(router.push).toHaveBeenCalledTimes(1);
 
@@ -395,9 +409,8 @@ describe('CompendiumList filter', () => {
       </Navigating>,
     );
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
-      target: { value: 'test' },
-    });
+    fireEvent.change(nameBox(), { target: { value: 'test' } });
+    fireEvent.change(formBox(), { target: { value: 'Fixture Oil' } });
 
     expect(router.push).not.toHaveBeenCalled();
     expect(screen.getByRole('table')).toBeInTheDocument();
@@ -407,45 +420,70 @@ describe('CompendiumList filter', () => {
     );
   });
 
+  // The owner's call (MB.115): the row is drawn afresh for the new filter,
+  // and the control that applied it has the focus again in the new row.
+  it('keeps the focus on the field changed once the list arrives', async () => {
+    render(<RoutedCompendium />);
+
+    act(() => unsourcedSwitch().focus());
+    await act(async () => {
+      fireEvent.click(unsourcedSwitch());
+    });
+    expect(unsourcedSwitch()).toBeChecked();
+    expect(unsourcedSwitch()).toHaveFocus();
+
+    act(() => kindSelect().focus());
+    await act(async () => {
+      fireEvent.change(kindSelect(), { target: { value: 'mineral' } });
+    });
+    expect(kindSelect()).toHaveValue('mineral');
+    expect(kindSelect()).toHaveFocus();
+
+    fireEvent.change(nameBox(), { target: { value: 'test' } });
+    act(() => searchButton().focus());
+    await act(async () => {
+      fireEvent.click(searchButton());
+    });
+    expect(nameBox()).toHaveValue('test');
+    expect(searchButton()).toHaveFocus();
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/compendium?query=test&nomenclature=mineral&withoutReferences=1',
+    );
+  });
+
   it('starts again from the filter shown when the page shows another', () => {
     const { rerender } = render(<CompendiumList {...props()} />);
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
-      target: { value: 'draft' },
-    });
+    fireEvent.change(nameBox(), { target: { value: 'draft' } });
 
     // Back to an older filter is a soft navigation: the page renders again with it.
     rerender(<CompendiumList {...props({ filter: SHOWN })} />);
 
-    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test');
+    expect(nameBox()).toHaveValue('test');
     expect(formBox()).toHaveValue('Fixture Oil');
-    expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
-    expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
-    expect(filterButton()).toBeDisabled();
+    expect(kindSelect()).toHaveValue('unknown');
+    expect(unsourcedSwitch()).toBeChecked();
   });
 
   it('starts again from the form shown when the page shows another form alone', () => {
     const { rerender } = render(<CompendiumList {...props()} />);
-    fireEvent.click(formBox());
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Powder' }));
+    fireEvent.change(formBox(), { target: { value: 'Fixture Powder' } });
 
     rerender(<CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />);
 
     expect(formBox()).toHaveValue('Fixture Oil');
-    expect(filterButton()).toBeDisabled();
   });
 });
 
-// Clear (MB.115, the owner's call): a link to the unfiltered first
-// page, offered while the page shows a filter and off, not gone, while it
-// shows none. Tested here once for every list, as the filter's spinner is;
-// each other list asserts only which of its values count as a filter.
+// Clear (MB.115, the owner's call): a link to the unfiltered first page,
+// drawn only while the page shows a filter. Tested here once for every list,
+// as the filter's loading state is; each other list asserts only which of
+// its values count as a filter.
 describe('CompendiumList Clear', () => {
   beforeEach(() => {
     router.push.mockReset();
   });
 
   const clearLink = () => screen.getByRole('link', { name: 'Clear' });
-  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
 
   it('links to the unfiltered first page while the page shows any filter', () => {
     for (const filter of [
@@ -466,57 +504,19 @@ describe('CompendiumList Clear', () => {
     }
   });
 
-  it('is off while neither the page nor the fields hold a filter', () => {
+  it('is not drawn while the page shows no filter, text typed or not', () => {
     render(<CompendiumList {...props()} />);
-
-    expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
-    expect(clearLink()).not.toHaveAttribute('href');
-  });
-
-  // The owner's call at MB.115's review: values not yet applied are cleared
-  // too, where they are, with nothing to navigate to.
-  it('empties every field in place when only the fields hold values, without navigating', () => {
-    render(<CompendiumList {...props()} />);
-    const name = screen.getByRole('searchbox', { name: 'Name' });
-    const formBox = screen.getByRole('combobox', { name: 'Form' });
-
-    fireEvent.change(name, { target: { value: 'draft' } });
-    expect(clearLink()).toHaveAttribute('href', '/admin/compendium');
-    fireEvent.change(formBox, { target: { value: 'oil' } });
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
-    fireEvent.change(screen.getByRole('combobox', { name: 'Classification' }), {
-      target: { value: 'mineral' },
-    });
-    fireEvent.click(screen.getByRole('switch', { name: 'No Refs' }));
-    fireEvent.click(clearLink());
-
-    expect(router.push).not.toHaveBeenCalled();
-    const search = screen.getByRole('form', { name: 'Filter the Compendium' });
-    expect(Object.fromEntries(new FormData(search as HTMLFormElement))).toEqual({
-      query: '',
-      form: '',
-      nomenclature: '',
-    });
-    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
-    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
-    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveFocus();
-    expect(filterButton()).toBeDisabled();
-    expect(clearLink()).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  it('empties a type-ahead holding text that names no choice', () => {
-    render(<CompendiumList {...props()} />);
+    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
       target: { value: 'draft' },
     });
     fireEvent.change(screen.getByRole('combobox', { name: 'Form' }), { target: { value: 'zz' } });
-    fireEvent.click(clearLink());
 
-    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
+    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
   });
 
-  it('opens the unfiltered list, not the fields emptied in place, while the page shows a filter', () => {
+  it('opens the unfiltered list, whatever the fields hold, while the page shows a filter', () => {
     render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />);
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
@@ -524,7 +524,7 @@ describe('CompendiumList Clear', () => {
     });
     fireEvent.click(clearLink());
 
-    expect(router.push).toHaveBeenCalledWith('/admin/compendium');
+    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
   });
 
   it('opens the unfiltered list, a status in place of the list and the row off until it arrives', async () => {
@@ -543,7 +543,7 @@ describe('CompendiumList Clear', () => {
     expect(listStatus()).toHaveLength(1);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(clear).toHaveAttribute('aria-disabled', 'true');
-    expect(filterButton()).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('aria-disabled', 'true');
     expect(screen.getByRole('form', { name: 'Filter the Compendium' })).toHaveAttribute(
       'aria-busy',
       'true',

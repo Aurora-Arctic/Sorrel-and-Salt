@@ -149,15 +149,15 @@ describe('GroupedValueList', () => {
     });
   });
 
-  // MB.178: a GET form to the page itself, as the user list's (MB.52), with
-  // Filter offered only when there is a new filter to apply.
+  // MB.178: a GET form to the page itself, as the user list's (MB.52),
+  // applying as each field changes (MB.115, the owner's call): the group once
+  // a choice settles, the name on its Search submit.
   describe('the filter', () => {
     beforeEach(() => {
       router.push.mockReset();
     });
 
     const shown = { query: DEITIES.query, group: groups[0].slug };
-    const filterButton = () => screen.getByRole('button', { name: 'Filter' });
     const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
     const groupBox = () => screen.getByRole('combobox', { name: DEITIES.groupLabel });
 
@@ -200,63 +200,58 @@ describe('GroupedValueList', () => {
       expect(hydrated).toHaveValue(groups[0].name);
     });
 
-    it('narrows the groups as their name is typed', () => {
+    it('narrows the groups as their name is typed, applying nothing', () => {
       render(<GroupedValueList {...props()} />);
 
       fireEvent.click(groupBox());
       expect(screen.getAllByRole('option')).toHaveLength(groups.length);
       fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4).toUpperCase() } });
       expect(screen.getAllByRole('option')).toHaveLength(1);
-      expect(filterButton()).toBeDisabled();
+      expect(router.push).not.toHaveBeenCalled();
     });
 
-    it('is disabled while the form matches the filter shown', () => {
-      render(<GroupedValueList {...props({ filter: shown })} />);
-
-      expect(filterButton()).toBeDisabled();
-    });
-
-    it('enables once the query differs, and disables again when it is put back', () => {
-      render(<GroupedValueList {...props({ filter: { query: DEITIES.query, group: '' } })} />);
-
-      fireEvent.change(searchbox(), { target: { value: `${DEITIES.query}s` } });
-      expect(filterButton()).toBeEnabled();
-
-      fireEvent.change(searchbox(), { target: { value: `${DEITIES.query} ` } });
-      expect(filterButton()).toBeDisabled();
-    });
-
-    it('opens the filtered list from its first page', () => {
+    it('opens the searched list from its first page, keeping the group shown', () => {
       render(
         <GroupedValueList
-          {...props({ previousHref: groupedValuesHref(DEITIES.kind, { before: 'b' }) })}
+          {...props({
+            filter: { query: '', group: groups[0].slug },
+            previousHref: groupedValuesHref(DEITIES.kind, { before: 'b' }),
+          })}
         />,
       );
 
       fireEvent.change(searchbox(), { target: { value: ' Two words ' } });
-      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
-      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
-      fireEvent.click(filterButton());
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-      expect(router.push).toHaveBeenCalledWith(
-        `${path}?query=Two+words&${DEITIES.groupParam}=${groups[1].slug}`,
-      );
+      expect(router.push.mock.calls).toEqual([
+        [`${path}?query=Two+words&${DEITIES.groupParam}=${groups[0].slug}`],
+      ]);
     });
 
-    it('opens the unfiltered list when the filter is cleared', () => {
+    it('applies a group picked, carrying the name typed', () => {
+      render(<GroupedValueList {...props()} />);
+
+      fireEvent.change(searchbox(), { target: { value: ' Two words ' } });
+      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
+      expect(router.push).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
+
+      expect(router.push.mock.calls).toEqual([
+        [`${path}?query=Two+words&${DEITIES.groupParam}=${groups[1].slug}`],
+      ]);
+    });
+
+    it('opens every group from the clear, keeping the name shown', () => {
       render(<GroupedValueList {...props({ filter: shown })} />);
 
-      fireEvent.change(searchbox(), { target: { value: '' } });
       fireEvent.click(screen.getByRole('button', { name: `Clear ${DEITIES.groupLabel}` }));
-      expect(groupBox()).toHaveValue('');
-      fireEvent.click(filterButton());
 
-      expect(router.push).toHaveBeenCalledWith(path);
+      expect(router.push.mock.calls).toEqual([[`${path}?query=${DEITIES.query}`]]);
     });
 
     // Clear is CompendiumList's to test; this asserts which of the
     // list's values count as a filter.
-    it('offers Clear to the unfiltered list while the name or the group is shown', () => {
+    it('draws Clear to the unfiltered list while the name or the group is shown', () => {
       for (const filter of [
         { query: DEITIES.query, group: '' },
         { query: '', group: groups[0].slug },
@@ -268,23 +263,7 @@ describe('GroupedValueList', () => {
       }
 
       render(<GroupedValueList {...props()} />);
-      expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('aria-disabled', 'true');
-    });
-
-    it('empties the name and the group in place when neither is applied yet', () => {
-      render(<GroupedValueList {...props()} />);
-
-      fireEvent.change(searchbox(), { target: { value: 'draft' } });
-      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
-      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
-      fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
-
-      expect(router.push).not.toHaveBeenCalled();
-      expect(searchbox()).toHaveValue('');
-      expect(groupBox()).toHaveValue('');
-      const search = screen.getByRole('form', { name: DEITIES.filterName });
-      expect(new FormData(search as HTMLFormElement).get(DEITIES.groupParam)).toBe('');
-      expect(filterButton()).toBeDisabled();
+      expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
     });
   });
 });
