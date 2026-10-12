@@ -39,8 +39,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   CLAUDE.md rule 8). Newest first, Prev and Next carrying the filter and a
   cursor (`?after=` or `?before=`), with "Page X of Y" between them, as the
   privilege ledger beside it counts its pages. Plain anchors rather than
-  soft links, for the user list's reason: a full load runs the admin
-  layout's guard again. The page builds the two hrefs through
+  soft links, for the reason [`pager.md`](pager.md) gives. The page builds the two hrefs through
   `list-page.tsx`'s `pagerHrefs`, and a cursor that names no row of this list
   (one copied from another list) reads the first page, through
   `readNumberedPage`. A list of one page shows no pager.
