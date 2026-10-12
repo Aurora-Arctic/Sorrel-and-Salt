@@ -119,16 +119,10 @@
 }
 
 .section-nav__chevron {
-  @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]');
+  @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]', $flip: true);
 
-  // Flipped with rotateX, not turned in the plane: the mixin's `rotate` is cleared and
-  // `transform` flips it, easing rather than snapping.
+  // The flip eases rather than snaps.
   transition: transform $motion-short $theme-transition-easing;
-
-  #{'.section-nav__more-button[aria-expanded="true"]'} & {
-    rotate: none;
-    transform: rotateX(180deg);
-  }
 
   @include reduced-motion {
     transition: none;
