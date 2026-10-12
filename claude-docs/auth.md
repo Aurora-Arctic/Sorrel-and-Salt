@@ -84,6 +84,10 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `requireCovenMembership(slug)`, called by the `/coven/[slug]` layout and every page under it, is `requireSession()` then the coven service's `membershipBySlug`, which finds the workspace by the slug in the URL and checks the user is a member. An unknown slug and a coven the user is not in both get the same 404 through Next's `notFound()`, never a 403, because a coven's existence is private. [`auth/coven-guard.md`](auth/coven-guard.md)
 
+## The coven index page (M9.15)
+
+`/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds the places for Leave Workspace, shown to every role, and Delete Workspace, shown to roles holding `workspace: delete`; both stay disabled until M6.15 and M6.14 wire them. [`auth/coven-guard.md`](auth/coven-guard.md)
+
 ## The user list (MB.52)
 
 `/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no workspace access. [`auth/admin-users.md`](auth/admin-users.md)

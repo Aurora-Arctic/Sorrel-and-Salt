@@ -554,8 +554,12 @@
   // `$wide-column`, for the tables its pages hold, and neither full height
   // nor centred down the window, since a list page runs as long as its rows.
   // A primitive rather than AdminNav's own rule, since the admin layout and
-  // three stories use the class as their frame.
-  .admin-layout {
+  // three stories use the class as their frame. The coven layout (M9.15)
+  // shares the frame, its section nav above its page, until its section's
+  // design review says otherwise; its pages will hold the ingredient and
+  // grimoire tables, so the wide column suits it too.
+  .admin-layout,
+  .coven-layout {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -566,7 +570,7 @@
 
   // Inside `:where()`, as `.page-frame`'s width is, so a story or page that
   // wants the frame narrower or wider can say so with a single class.
-  :where(.admin-layout) {
+  :where(.admin-layout, .coven-layout) {
     width: 100%;
     max-width: $wide-column;
   }
