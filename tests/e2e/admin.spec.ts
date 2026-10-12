@@ -137,14 +137,23 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     'admin-users.test',
   );
   // A filter's switch takes Space as a checkbox does, which only a browser's
-  // own keyboard handling shows (MB.115).
+  // own keyboard handling shows, and applies the moment it changes (MB.115):
+  // the address gains the flag, the list narrows to the one user not yet
+  // approved, and the switch, drawn afresh with the new list, has the focus
+  // back, so a second Space widens the list again.
   const awaiting = page.getByRole('search').getByRole('switch', { name: 'Needs Approval' });
+  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await awaiting.focus();
   await page.keyboard.press('Space');
+  await expect(page).toHaveURL(/\/admin\/users\?query=admin-users\.test&awaiting$/);
   await expect(awaiting).toBeChecked();
+  await expect(rows).toHaveCount(1);
+  await expect(awaiting).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(page).toHaveURL(/\/admin\/users\?query=admin-users\.test$/);
+  await expect(awaiting).not.toBeChecked();
 
   // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
-  const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await expect(rows).toHaveCount(2);
   // Anchored on the name and the verified mark's word before it:
   // not-an-admin's address ends the same way.
