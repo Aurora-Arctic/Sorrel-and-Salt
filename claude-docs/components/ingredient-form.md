@@ -958,9 +958,14 @@ since typed routes refuse a page the build does not contain; M8.19 builds the pa
 `<Link>`. Nothing refuses the create on the server: the warning is the
 form's alone.
 
+**An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
+entry makes nothing new, so on an edit the warning names its matches and
+links them as above, but offers no Create Anyway and never holds Save: the
+form skips `check`, and `NameField` takes `holds={false}`.
+
 **The warning has to be answered before the form saves**, the owner's call,
 which corrects the issue's "does not block submission". While it is only
-typed against, it is a warning notice and the name is not marked. A save that
+typed against, it is a warning notice and the name is not marked. A new entry's save that
 passes validation asks about the very name it is sending, through the query
 client's `fetchQuery`: the cached answer when the typing had settled, asked
 there and then when it had not, so a save inside the debounce cannot slip past
@@ -1739,7 +1744,8 @@ typed form refused is `variants.test.tsx`'s. What a pick-only list does on its o
 and flat, Enter on text not picked refused — is `list-field.test.tsx`'s. An
 entry given: its values shown, one save, off until something changes, and the
 update sent whole, its categories carried through; the duplicate warning
-leaving the entry out; MB.82's question, Keep It sending nothing and End
+leaving the entry out, and a rename near another entry naming it but saving
+at once, with no Create Anyway; MB.82's question, Keep It sending nothing and End
 Redirect & Save sending again with `endRedirect: true`; and a delete kept by
 Keep It, a refused delete's alert, and a confirmed delete calling `onDeleted`.
 In a modal, the delete's and MB.82's questions are asked over the form: the

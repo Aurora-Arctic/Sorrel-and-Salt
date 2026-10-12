@@ -14,7 +14,9 @@ import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps 
 // to its entry. It has to be answered: a save asks about the very name it is
 // sending, settled or not, and while a match shows the save is held, the
 // warning turns to an error on the name, and the focus goes to Create
-// Anyway, which sets the matches aside so the next save goes
+// Anyway, which sets the matches aside so the next save goes. An edit's
+// warning only names the matches: renaming makes nothing new, so its save
+// is never held and it offers no Create Anyway (MB.115, the owner's call)
 // (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const PossibleDuplicatesDocument = graphql(`
@@ -136,7 +138,12 @@ const joinerAt = (index: number, count: number) => {
 const covenHref = ({ id }: Duplicate) => `/ingredients/${id}`;
 
 /** The name field, with the duplicate warning beneath it. */
-export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps): ReactElement {
+export function NameField({
+  warning,
+  hrefOf = covenHref,
+  holds = true,
+  ref,
+}: NameFieldProps): ReactElement {
   const { shown, blocking } = warning;
   const warningId = useId();
 
@@ -177,16 +184,19 @@ export function NameField({ warning, hrefOf = covenHref, ref }: NameFieldProps):
                 ?
               </p>
               {/* Described by the warning: a save that stops here moves the
-                  focus to it, and the focus should say why. */}
-              <button
-                ref={ref}
-                type="button"
-                className="btn btn--quiet btn--small"
-                aria-describedby={warningId}
-                onClick={dismiss}
-              >
-                Create Anyway
-              </button>
+                  focus to it, and the focus should say why. None on an
+                  edit, whose save the warning never holds. */}
+              {holds && (
+                <button
+                  ref={ref}
+                  type="button"
+                  className="btn btn--quiet btn--small"
+                  aria-describedby={warningId}
+                  onClick={dismiss}
+                >
+                  Create Anyway
+                </button>
+              )}
             </div>
           )}
         </output>

@@ -333,8 +333,10 @@ const IngredientForm = ({
   const save = async (input: IngredientFormInput): Promise<void> => {
     // A near match not yet dismissed holds a save that would otherwise go,
     // asked about the name being sent rather than waiting out the debounce.
-    // After validation, so an error to fix comes first.
-    if (await duplicates.check(input.name)) return;
+    // After validation, so an error to fix comes first. An edit renames what
+    // exists rather than making another, so its warning holds nothing (MB.115,
+    // the owner's call).
+    if (!editing && (await duplicates.check(input.name))) return;
     await deliver(input, false);
   };
 
@@ -397,7 +399,12 @@ const IngredientForm = ({
               <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
                 {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
-                <NameField warning={duplicates} hrefOf={duplicateHref} ref={createAnyway} />
+                <NameField
+                  warning={duplicates}
+                  hrefOf={duplicateHref}
+                  holds={!editing}
+                  ref={createAnyway}
+                />
                 {/* The kind decides the formal name's error, so a change to it
             revalidates the formal name. A named kind marks it required;
             Unknown leaves it open and optional. A coven's formal name with no

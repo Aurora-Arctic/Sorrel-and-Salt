@@ -566,6 +566,28 @@ describe('IngredientForm on the compendium', () => {
       expect(within(warning).queryByRole('link', { name: /Testwort \(/ })).not.toBeInTheDocument();
     });
 
+    // An edit renames what exists rather than making another, so a near
+    // match warns and holds nothing (MB.115, the owner's call).
+    it('saves a rename near another entry at once, the match named and nothing to set aside', async () => {
+      const calls = acceptUpdate();
+      renderEntry();
+      offerDuplicates([
+        { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
+      ]);
+      openSections('Identity');
+
+      type('Name', 'Testworth');
+      await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+      const warning = screen.getByRole('status', { name: 'Possible duplicates' });
+      await waitFor(() => within(warning).getByRole('link', { name: 'Testworts' }));
+      noButton('Create Anyway');
+
+      press('Save Ingredient');
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ name: 'Testworth' });
+      expect(textbox('Name')).toBeValid();
+    });
+
     it('asks before ending another entry’s redirect, sending nothing on Keep It, and again once confirmed', async () => {
       const message =
         '"mockwort-fixtura-testalis" redirects to "Mockwort" (Fixtura vulgaris, root) until 4 April 2027, 00:00 UTC — confirm to end that redirect';

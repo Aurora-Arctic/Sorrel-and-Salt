@@ -516,6 +516,8 @@ export interface NameFieldProps {
   warning: DuplicateWarning;
   /** Where a match links: by default a coven's ingredient page; the admin's compendium page opens its own modal. */
   hrefOf?: (match: Duplicate) => string;
+  /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
+  holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */
   ref: Ref<HTMLButtonElement>;
 }
