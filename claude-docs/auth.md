@@ -92,6 +92,10 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 `/coven/new` is where someone holding `canCreateWorkspace` names a new coven and lands in it as owner. It runs `requireSession()` and reads the right from the user row; a user without it gets a notice and no form, and the creation service refuses them anyway. `new` is kept from ever being a coven's slug, so a coven named "New" is `new-2`. [`auth/coven-guard.md`](auth/coven-guard.md)
 
+## Display names (MB.10)
+
+`usersById` answers a user id with that user's display name and nothing else, for a members list and a row's last editor. A viewer reads the name only of someone who holds or has held a seat in a coven the viewer sits in now: a removed member counts, and a deleted user reads under the name their row last held. Anyone else is `null`, a site admin gets no wider reach, and one query answers a batch. [`auth/display-names.md`](auth/display-names.md)
+
 ## The user list (MB.52)
 
 `/admin/users` lists every live account, with its providers and whether its address is verified, through `listUsers` and `providersOf`, which refuse anyone but a site admin by direct call, paged by the M3.6 helper and filtered in SQL; it confers no access to any workspace's contents, and shows a user's covens by name and role in a modal (M9.19). [`auth/admin-users.md`](auth/admin-users.md)
