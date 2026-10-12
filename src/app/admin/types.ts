@@ -1,3 +1,4 @@
+import type { ADMIN_PAGES } from '../../components/AdminNav/sections';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type {
@@ -184,3 +185,6 @@ export interface GroupDialogProps {
   /** How many live rows the edited group holds. */
   memberCount?: number;
 }
+
+/** The admin pages that are tabbed pages, by their key in `ADMIN_PAGES`: every one but the single-tab compendium. */
+export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
