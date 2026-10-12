@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
+import { mockGraphQLMutation } from '../../support/msw/graphql';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
@@ -11,6 +12,9 @@ vi.mock('@/lib/auth-client', () => ({
   impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),
 }));
 const assignMock = vi.fn();
+// The role and creation controls read the page again after a write.
+const router = { refresh: vi.fn(), push: vi.fn() };
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The body of the modal over `/admin/users` (M9.19): render-only, so the page
 // owns the read and this owns what an admin sees of it
@@ -25,6 +29,7 @@ beforeEach(() => {
   };
   impersonateUserMock.mockReset();
   assignMock.mockReset();
+  router.refresh.mockReset();
   vi.stubGlobal('location', { ...window.location, assign: assignMock });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -122,10 +127,58 @@ describe('UserDetail', () => {
     expect(screen.getByText('No')).toBeInTheDocument();
   });
 
-  it('is read-only: no Grant, Revoke or Approve in the body', () => {
-    renderDetail({ canImpersonate: true });
+  it('offers Promote and Approve beside the facts they change, and no creation control on an admin', () => {
+    const { unmount } = renderDetail();
+    expect(screen.getByRole('button', { name: 'Promote Bo Fixturewort to admin' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
+    unmount();
 
-    expect(screen.queryByRole('button', { name: /Grant|Revoke|Approve/ })).not.toBeInTheDocument();
+    renderDetail({ user: ADA });
+    expect(screen.getByRole('button', { name: 'Revoke admin from Ada Fixturewort' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: /Approve|Revoke approval/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('asks inside this modal, opening no second one, then grants admin and reads the page again', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
+    });
+    renderDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Promote Bo Fixturewort to admin' }));
+
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(calls).toEqual([]);
+    fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id, role: 'admin' }]);
+  });
+
+  it('approves coven creation from the modal, asking first', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('GrantWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { grantWorkspaceCreation: { id: BO.id, canCreateWorkspace: true } };
+    });
+    renderDetail();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Approve Bo Fixturewort' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id }]);
+  });
+
+  it('locks both controls while admin changes are paused for this admin', () => {
+    renderDetail({ changesPaused: true });
+
+    for (const name of ['Promote Bo Fixturewort to admin', 'Approve Bo Fixturewort'])
+      expect(screen.getByRole('button', { name })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('lists the covens, owners first, then members, then viewers, each by name', () => {

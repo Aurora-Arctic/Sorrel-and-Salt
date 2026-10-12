@@ -1,7 +1,9 @@
 import type { ReactElement, ReactNode } from 'react';
 import { CheckIcon, CrossIcon } from '../UserList/icons';
+import CreationControl from '../UserList/creation-control';
 import { ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
+import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
 import ImpersonateAction from './impersonate-action';
 import { workspaceRoleLabel, workspaceRoleRank } from './roles';
@@ -11,7 +13,9 @@ import './index.scss';
 // The body of the modal that opens over `/admin/users` on a user (M9.19): the
 // facts the users table holds about them, read-only, then the covens they
 // belong to and, where impersonation is registered, the action to act as them
-// (claude-docs/components/user-detail.md). Laid out as the ingredient modal
+// (claude-docs/components/user-detail.md). The row's Grant or Revoke and
+// Approve or Revoke sit beside the facts they change (the owner's call), each
+// asking over this modal rather than opening another. Laid out as the ingredient modal
 // is, sections parted by hairlines under a small heading, rather than as a
 // table: a table's labels repeat on every card at a modal's width. Render-only:
 // the page reads the memberships through the coven service.
@@ -49,6 +53,7 @@ const UserDetail = ({
   user,
   memberships,
   canImpersonate = false,
+  changesPaused = false,
 }: UserDetailProps): ReactElement => (
   <div className="user-detail">
     {/* One level below the modal's own title, an h2. */}
@@ -68,17 +73,47 @@ const UserDetail = ({
         </div>
         <div>
           <dt>Role</dt>
-          <dd className="user-detail__role">
-            {user.role === 'admin' ? <strong>{roleLabel(user.role)}</strong> : roleLabel(user.role)}
-            {user.primaryAdmin && <PrimaryAdminMark />}
+          <dd className="user-detail__value">
+            <span className="user-detail__role">
+              {user.role === 'admin' ? (
+                <strong>{roleLabel(user.role)}</strong>
+              ) : (
+                roleLabel(user.role)
+              )}
+              {user.primaryAdmin && <PrimaryAdminMark />}
+            </span>
+            {/* Keyed by the action, as on the row: the refresh after a change
+                mounts a fresh control for the other one. */}
+            <RoleControl
+              key={user.role}
+              userId={user.id}
+              name={user.name}
+              emailVerified={user.emailVerified}
+              primaryAdmin={user.primaryAdmin}
+              paused={changesPaused}
+              action={user.role === 'admin' ? 'revoke' : 'grant'}
+              inModal
+            />
           </dd>
         </div>
         <div>
           <dt>Coven Creation</dt>
-          <dd>
+          <dd className="user-detail__value">
             <Answer value={user.canCreateWorkspace}>
               {user.canCreateWorkspace ? 'Yes' : 'No'}
             </Answer>
+            {/* None for an admin, whom the users CHECK holds to the flag (MB.177). */}
+            {user.role !== 'admin' && (
+              <CreationControl
+                key={user.canCreateWorkspace ? 'revoke' : 'approve'}
+                userId={user.id}
+                name={user.name}
+                emailVerified={user.emailVerified}
+                paused={changesPaused}
+                action={user.canCreateWorkspace ? 'revoke' : 'approve'}
+                inModal
+              />
+            )}
           </dd>
         </div>
         <div>

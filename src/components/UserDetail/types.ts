@@ -33,4 +33,10 @@ export interface UserDetailProps {
   memberships: readonly UserCoven[];
   /** Whether impersonation is registered here (MB.53); off by default. */
   canImpersonate?: boolean;
+  /**
+   * Whether admin changes are locked for the viewing admin (MB.63), as the
+   * list reads it: the role and creation controls then say why they cannot
+   * be used.
+   */
+  changesPaused?: boolean;
 }

@@ -591,7 +591,7 @@ describe('UserList approval', () => {
   });
 });
 
-// MB.59: the role cell's Grant or Revoke, each asking first in a modal naming
+// MB.59: the role cell's Promote or Revoke, each asking first in a modal naming
 // the user, with an optional reason; the primary admin's Revoke in view but
 // unusable, saying why. The service is the guard, and refuses the same.
 describe('UserList admin role', () => {
@@ -602,11 +602,11 @@ describe('UserList admin role', () => {
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
   const dialog = (title: string) => screen.getByRole('dialog', { name: title });
 
-  it('offers Grant on a user’s row and Revoke on an admin’s, each naming the user', () => {
+  it('offers Promote on a user’s row and Revoke on an admin’s, each naming the user', () => {
     render(<UserList {...props()} />);
 
     const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Grant admin to Bo Fixturewort',
+      name: 'Promote Bo Fixturewort to admin',
     });
     expect(grant).toBeEnabled();
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
@@ -627,12 +627,14 @@ describe('UserList admin role', () => {
     render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
 
     fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+      within(row('Bo Fixturewort')).getByRole('button', {
+        name: 'Promote Bo Fixturewort to admin',
+      }),
     );
 
-    const asking = dialog('Grant Admin');
+    const asking = dialog('Promote to Admin');
     expect(asking).toHaveTextContent('Bo Fixturewort');
-    const confirm = within(asking).getByRole('button', { name: 'Grant' });
+    const confirm = within(asking).getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveFocus();
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
@@ -673,7 +675,7 @@ describe('UserList admin role', () => {
     expect(calls).toEqual([{ userId: ADA.id, role: 'user' }]);
   });
 
-  // MB.205's warning, in Grant's words: a grant vouches as an approval does.
+  // MB.205's warning, in Promote's words: a promotion vouches as an approval does.
   it('warns before granting to a user whose email is unverified, and still grants', async () => {
     mockGraphQLMutation('SetUserRole', () => ({
       setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
@@ -682,10 +684,12 @@ describe('UserList admin role', () => {
     expect(within(row('Bo Fixturewort')).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
 
     fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', { name: 'Grant admin to Bo Fixturewort' }),
+      within(row('Bo Fixturewort')).getByRole('button', {
+        name: 'Promote Bo Fixturewort to admin',
+      }),
     );
 
-    const confirm = within(dialog('Grant Admin')).getByRole('button', { name: 'Grant' });
+    const confirm = within(dialog('Promote to Admin')).getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveAccessibleDescription(/\S/);
     fireEvent.click(confirm);
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
@@ -880,7 +884,7 @@ describe('UserList admin changes switch', () => {
 });
 
 // MB.63: while admin changes are paused, an admin the pause binds sees every
-// Grant and Revoke in view but unusable, saying why; the primary admin, whom
+// Promote and Revoke in view but unusable, saying why; the primary admin, whom
 // the pause exempts, keeps them. The service refuses the same.
 describe('UserList admin role while admin changes are paused', () => {
   afterEach(() => {
@@ -889,7 +893,7 @@ describe('UserList admin role while admin changes are paused', () => {
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
-  it('locks Grant and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
+  it('locks Promote and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
     let calls = 0;
     mockGraphQLMutation('SetUserRole', () => {
       calls += 1;
@@ -898,7 +902,7 @@ describe('UserList admin role while admin changes are paused', () => {
     render(<UserList {...props({ adminChanges: { paused: true, canToggle: false } })} />);
 
     const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Grant admin to Bo Fixturewort',
+      name: 'Promote Bo Fixturewort to admin',
     });
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
       name: 'Revoke admin from Ada Fixturewort',
@@ -967,7 +971,7 @@ describe('UserList admin role while admin changes are paused', () => {
   it('locks nothing while changes are on', () => {
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
 
-    for (const name of ['Grant admin to Bo Fixturewort', 'Revoke admin from Ada Fixturewort']) {
+    for (const name of ['Promote Bo Fixturewort to admin', 'Revoke admin from Ada Fixturewort']) {
       expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-disabled');
     }
   });

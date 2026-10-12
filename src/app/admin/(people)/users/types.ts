@@ -33,4 +33,6 @@ export interface UserDialogProps {
   opened?: OpenedUser;
   /** Whether impersonation is registered here, so the body offers it (MB.53). */
   canImpersonate: boolean;
+  /** Whether admin changes are locked for this admin (MB.63), as the list's controls read it. */
+  changesPaused: boolean;
 }

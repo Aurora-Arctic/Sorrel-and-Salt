@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
 import type { PagerHrefs } from '../../app/admin/types';
@@ -111,6 +111,25 @@ export interface ConfirmedActionProps {
   onSent?: () => void;
   /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
   refusal?: string;
+  /**
+   * Drawn inside a modal already, the user's (M9.19): asks over that modal's
+   * body through its confirm layer rather than opening a second modal on top.
+   */
+  inModal?: boolean;
+}
+
+/** `ConfirmedAction`'s confirm and Cancel, under its question. */
+export interface ConfirmAnswersProps {
+  label: string;
+  busy: string;
+  confirmClass: string;
+  /** The warning's id, which the confirm is described by; none without one. */
+  describedBy?: string;
+  sending: boolean;
+  confirmRef: RefObject<HTMLButtonElement | null>;
+  cancelRef: RefObject<HTMLButtonElement | null>;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 /** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
@@ -131,6 +150,8 @@ export interface RoleControlProps {
    */
   paused?: boolean;
   action: RoleAction;
+  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  inModal?: boolean;
 }
 
 export interface CreationControlProps {
@@ -146,6 +167,8 @@ export interface CreationControlProps {
    */
   paused?: boolean;
   action: CreationAction;
+  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  inModal?: boolean;
 }
 
 /** The pause on admin grants and revokes, as the page read it (MB.63). */

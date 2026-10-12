@@ -15,7 +15,7 @@
   flex-direction: column;
   gap: space(2);
   margin: 0;
-  padding-block: space(3);
+  padding-block: space(4);
   border-top: 1px solid $hairline;
 
   &:last-of-type {
@@ -50,6 +50,23 @@
 
   dd {
     margin: 0;
+  }
+}
+
+// A value, and the control that changes it at the right edge (the owner's
+// call); a refusal's notice wraps beneath, across the row.
+.user-detail__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(3);
+
+  > :first-child {
+    margin-inline-end: auto;
+  }
+
+  > .notice {
+    flex-basis: 100%;
   }
 }
 

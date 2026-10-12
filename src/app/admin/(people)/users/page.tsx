@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import UserList from '../../../../components/UserList';
 import { userListHref } from '../../../../components/UserList/href';
+import { changesLocked } from '../../../../components/UserList/lock';
 import { ROLES } from '../../../../components/UserList/roles';
 import type { UserListEntry } from '../../../../components/UserList/types';
 import type { PagerCursor } from '../../types';
@@ -154,6 +155,8 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
     userParam ? readOpenedUser(session, userParam) : undefined,
   ]);
   const canImpersonate = impersonationEnabled();
+  // The pause as the list's controls read it, for the modal's own (MB.63).
+  const changesPaused = Boolean(adminChanges && changesLocked(adminChanges));
 
   return (
     <>
@@ -176,6 +179,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         closeHref={userListHref({ query, awaitingApproval, role }, cursorOf(after, before))}
         opened={opened}
         canImpersonate={canImpersonate}
+        changesPaused={changesPaused}
       />
     </>
   );

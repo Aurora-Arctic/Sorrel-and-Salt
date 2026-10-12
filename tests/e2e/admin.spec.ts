@@ -270,7 +270,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
   await expect(approving).toContainText('Fixture Person');
   await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
-  // An optional reason, as Grant and Revoke of admin take one.
+  // An optional reason, as Promote and Revoke of admin take one.
   await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
   await assertNoAccessibilityViolations(page);
 
@@ -313,14 +313,14 @@ test(
     await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-    await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
-    const granting = page.getByRole('dialog', { name: 'Grant Admin' });
+    await row.getByRole('button', { name: 'Promote Fixture Person to admin' }).click();
+    const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
     await expect(granting).toContainText('Fixture Person');
-    await expect(granting.getByRole('button', { name: 'Grant' })).toBeFocused();
+    await expect(granting.getByRole('button', { name: 'Promote' })).toBeFocused();
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the planets');
     await assertNoAccessibilityViolations(page);
 
-    await granting.getByRole('button', { name: 'Grant' }).click();
+    await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
 
     // An admin now, who may create a coven, so the creation cell holds the mark alone.
@@ -340,7 +340,9 @@ test(
 
     await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-    await expect(row.getByRole('button', { name: 'Grant admin to Fixture Person' })).toBeVisible();
+    await expect(
+      row.getByRole('button', { name: 'Promote Fixture Person to admin' }),
+    ).toBeVisible();
   },
 );
 
@@ -382,13 +384,13 @@ test(
     await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
     await assertNoAccessibilityViolations(page);
 
-    // The other admin's Grant is locked; tried from the keyboard, it says why
+    // The other admin's Promote is locked; tried from the keyboard, it says why
     // and opens nothing. The service refuses the same.
     await signInAgainAs(page, other);
     await page.goto(list);
     await expect(status).toBeVisible();
     const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
-    const grant = row.getByRole('button', { name: 'Grant admin to Fixture Person' });
+    const grant = row.getByRole('button', { name: 'Promote Fixture Person to admin' });
     await expect(grant).toHaveAttribute('aria-disabled', 'true');
     await expect(grant).toHaveAccessibleDescription(/\S/);
     await grant.focus();

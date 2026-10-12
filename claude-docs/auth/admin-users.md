@@ -105,8 +105,10 @@ workspace's contents, and which covens someone belongs to is not among them
 - **The head** is the eyebrow "User", the name as the title and the email on a line beneath it as
   the qualifier. The body is `UserDetail`
   ([`components/user-detail.md`](../components/user-detail.md)): every fact
-  the list's row shows, read-only (the page reads them with the user, so the
-  modal holds the whole row, and it has no control but Impersonate), then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
+  the list's row shows (the page reads them with the user, so the modal holds
+  the whole row), with the row's Promote or Revoke and Approve or Revoke
+  beside the facts they change, asking inside the modal and going through the
+  same mutations and services as the row's, then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under
@@ -176,7 +178,7 @@ created, and their ownership of it
   destructive and says their covens stay theirs, and an approval of an
   unverified address warns that nobody has proved who holds it and that
   approving keeps the account from lapsing (MB.204, MB.205), and still
-  approves. Each takes the same optional Reason as Grant and Revoke of admin
+  approves. Each takes the same optional Reason as Promote and Revoke of admin
   ([`components/user-list.md`](../components/user-list.md)).
 
 **Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
@@ -322,7 +324,7 @@ the good ones while it is dealt with, and back on. The argument is
   control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
-  Grant and Revoke, and coven creation's Approve and Revoke, are locked the
+  Promote and Revoke, and coven creation's Approve and Revoke, are locked the
   same way
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.

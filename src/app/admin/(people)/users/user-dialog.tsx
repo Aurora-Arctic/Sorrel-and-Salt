@@ -14,6 +14,7 @@ export default function UserDialog({
   closeHref,
   opened,
   canImpersonate,
+  changesPaused,
 }: UserDialogProps): ReactElement {
   return (
     <RouteModal
@@ -28,6 +29,7 @@ export default function UserDialog({
               user={opened.user}
               memberships={opened.memberships}
               canImpersonate={canImpersonate}
+              changesPaused={changesPaused}
             />
           ),
         }

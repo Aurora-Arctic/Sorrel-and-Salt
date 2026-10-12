@@ -216,10 +216,10 @@ head, both built by the page per row, as the other admin lists carry
   closes the modal, puts the service's message in the row as an alert, and
   offers the action again. The service is the guard. The alert is a
   `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
-- **Approving or granting to an unverified address warns first** (MB.205,
+- **Approving or promoting an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
   under its question, in a quiet warning `Notice`: "Nobody has confirmed this
-  email address yet. Approving also keeps the account from lapsing." Grant's says the same with "Granting": the
+  email address yet. Approving also keeps the account from lapsing." Promote's says the same with "Promoting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
   ledger row keeps the account from the sweep as an approval's does. An
   approval vouches for whoever holds the address, and the vouching keeps the
@@ -231,15 +231,16 @@ head, both built by the page per row, as the other admin lists carry
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
   prop, and `.user-list__warning` its layout class. A verified
-  user's Approve or Grant, and every Revoke, carries
+  user's Approve or Promote, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
 - **The Role cell holds the role's control** (MB.59,
   [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
   admin"), from `role-control.tsx`, beside the role it changes: one column
   rather than a second saying the same thing, as Coven Creation holds its
-  own. A user's row has Grant, quiet, named "Grant admin to <name>"; an
+  own. A user's row has Promote, quiet, named "Promote <name> to admin" (Grant until
+  the owner renamed it, M9.19); an
   admin's has Revoke, red, named "Revoke admin from <name>". Each asks first
-  in a `Modal` titled "Grant Admin" or "Revoke Admin", the name in bold:
+  in a `Modal` titled "Promote to Admin" or "Revoke Admin", the name in bold:
   "Make <name> an admin? They will curate the compendium, grant and revoke
   admin, and create covens.", or "Stop
   <name> being an admin? They keep their covens, and everything they wrote
@@ -254,7 +255,7 @@ head, both built by the page per row, as the other admin lists carry
   `ConfirmedAction`, each control only its words and its write. Impersonate,
   Pause Admin Changes and the invitations' Revoke build one too; Impersonate
   passes `onSent`, its full load in place of the refresh, and `refusal`, its
-  own sentence in place of the service's. Grant warns
+  own sentence in place of the service's. Promote warns
   on an unverified address as Approve does, in its own verb (below).
 - **The switch on admin changes is the Users tab's action** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
@@ -293,7 +294,7 @@ head, both built by the page per row, as the other admin lists carry
   `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
   resume admin changes.", that describes it and that each try mounts afresh as
   an alert.
-- **While paused, an admin the pause binds cannot use Grant or Revoke, nor
+- **While paused, an admin the pause binds cannot use Promote or Revoke, nor
   coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
   and every row's role and creation control, for a viewer who is not the primary admin
@@ -416,7 +417,7 @@ People page with its Users tab open:
   first's Approve opens the warning (MB.205) and the second's does not.
   `AdminRoles` holds the primary admin, its Revoke unusable with the reason
   beside it, a second admin whose Revoke opens its modal, and users whose
-  Grant opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
+  Promote opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
   shows the switch paused with the primary admin's Resume, and
   `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
   `OnePageOfSeveral` is a middle page of 25, both pager ends live and
@@ -447,16 +448,16 @@ approved ones and nothing on an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
 until the refresh, and the refusal in the row; the unverified warning
 describing Approve for an unverified user, who is still approved, and absent
-from Revoke; the role cell (MB.59): Grant on a user's row and Revoke on an
+from Revoke; the role cell (MB.59): Promote on a user's row and Revoke on an
 admin's, each modal, the reason sent trimmed or not at all, Cancel sending
-nothing, Grant's warning for an unverified user, the refusal in the row, and
+nothing, Promote's warning for an unverified user, the refusal in the row, and
 the primary admin's crown and its `aria-disabled` Revoke, described by the
 reason and raising an alert each time it is tried, sending nothing; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh, a refusal beside it, and another
 admin's locked switch, described by its reason and raising an alert when
-tried; and, while paused, every Grant, Revoke, Approve and coven Revoke
+tried; and, while paused, every Promote, Revoke, Approve and coven Revoke
 locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Revoke kept on its own reason — which of the two reasons won is told by
