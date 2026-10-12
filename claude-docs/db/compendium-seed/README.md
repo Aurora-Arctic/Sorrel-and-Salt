@@ -99,7 +99,7 @@ What the example shows:
 - **Every entry cites at least one source of its own, and so does every form.** The admin's "unsourced" filter counts only entry-level links (`citesNothing('ingredientId')` in `src/db/repository/ingredients.ts`), so a source cited only on a form would leave the entry on the admin's to-do list.
 - **A form adds to its entry and never overrides it** (MB.215). Put a property on the entry when every form has it, and on a form when only that form does. Deities and folk names belong to the entry alone.
 - **Every entry carries at least its primary form as a variant.** A further form is added only where a source the lane read attaches something to that form: a description, a caution, a use.
-- **A work is cited once on an entry or a form.** `reference_links` holds one live link per work per row, so two passages of one book are one citation whose locator names both (`s.v. Mugwort; p. 266`). The guard refuses a work cited twice on one row. The pilot ([`pilot.md`](pilot.md), "Decisions the lanes inherit") records the other rules it settled: categories by the source's own word, deities by the curated row, colours.
+- **A work is cited once on an entry or a form.** `reference_links` holds one live link per work per row, so two passages of one book are one citation whose locator names both (`under "Mugwort"; p. 266`). The guard refuses a work cited twice on one row. The pilot ([`pilot.md`](pilot.md), "Decisions the lanes inherit") records the other rules it settled: categories by the source's own word, deities by the curated row, colours.
 - **A substitute links an entry only in its own shard or an earlier one**, by its identity key (the formal name, lower-cased, or the label where there is none). An entry in a later shard does not exist yet when this shard is seeded, so it is written as typed text, `{ name }`, which the substitutes table allows.
 
 ### What `supports` may name
@@ -256,7 +256,7 @@ Paul Beyerl's _A Compendium of Herbal Magick_ and Melody's _Love Is in the Earth
 - Kynes, Sandra. _Herbal Remedies for Beginners: Natural Ways to Treat Ailments_. Woodbury, MN: Llewellyn Publications, 2020. EPUB.
 - Northcote, Lady Rosalind. _The Book of Herbs_. Handbooks of Practical Gardening 12. London: John Lane, The Bodley Head, 1903.
 
-Culpeper, read online, was added to `works.ts` by MB.243 from its own title page, read on 2026-10-11. It is cited as the edition Project Gutenberg transcribes, the 1850 London edition, not the first edition of 1653; its locator is the entry heading, `s.v. Agrimony`.
+Culpeper, read online, was added to `works.ts` by MB.243 from its own title page, read on 2026-10-11. It is cited as the edition Project Gutenberg transcribes, the 1850 London edition, not the first edition of 1653; its locator is the entry heading, `under "Agrimony"`.
 
 - Culpeper, Nicholas. _The Complete Herbal_. London: Thomas Kelly, 1850. Project Gutenberg ebook 49513. https://www.gutenberg.org/ebooks/49513.
 
@@ -267,7 +267,7 @@ The sources seed already holds a citation of the first edition, "Cunningham, Sco
 **The locator** says where in the work the passage is:
 
 - **A PDF: the printed page number**, read off the page's text, written `p. 25` (or `pp. 25–26`). Never the file's number: the two differ by the front matter, and not by a fixed amount. In the crystal encyclopedia `0036.txt` is printed page 25; in the safety handbook `0030.txt` is page 1 and `0200.txt` page 172; in the 1903 _Book of Herbs_ `0030.txt` is page 10.
-- **An EPUB arranged by entry** (both Cunninghams' and Kynes's encyclopedias, Hall): the entry heading, `s.v. Mugwort`, as [`../references.md`](../references.md) writes it ("s.v. Hecate"). An e-book reflows, so its heading is the stable place.
+- **An EPUB arranged by entry** (both Cunninghams' and Kynes's encyclopedias, Hall): the entry heading, `under "Mugwort"`: the headword in quotation marks after "under", as Chicago's 18th edition writes it and [`../references.md`](../references.md) records. An e-book reflows, so its heading is the stable place.
 - **An EPUB arranged otherwise** (_Herbal Remedies for Beginners_): the e-book's own page marker before the passage, `p. 123`, from its `epub:type="pagebreak"` markers.
 
 **Finding a passage.** `grep` the text folder, then read the file. Entry headings are marked differently in each e-book:

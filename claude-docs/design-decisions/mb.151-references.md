@@ -2,6 +2,13 @@
 
 **Status:** decided · **Date:** 2026-10-06
 
+**Note, 2026-10-12 (MB.115):** a reference-work entry is now cited "under"
+its headword in quotation marks rather than "s.v.", as the 18th edition of the
+_Chicago Manual of Style_ (14.130) writes it, on the owner's instruction to
+follow the current standard. The form in force is
+[`db/references.md`](../db/references.md)'s; this record keeps the one
+decided then.
+
 MB.127 settled, on the owner's request, that every compendium entry carries a
 references section and that a reference is one table any sourced row links,
 rather than a child of `ingredients`. DESIGN.md §5, "References", records the

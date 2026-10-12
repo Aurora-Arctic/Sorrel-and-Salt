@@ -366,7 +366,7 @@ name deities per herb, before any tradition was rounded out:
 - "A–Z Gods and Goddesses & Plant Associations." Otherworldly Oracle. Accessed October 6, 2026. https://otherworldlyoracle.com/gods-goddesses-plant-associations/.
 - "Herbs Correspondences." Sacred Wicca. Accessed October 6, 2026. https://www.sacredwicca.com/herbs-correspondences.
 - "Herbs & Plants of Hekate." Hekate Covenant. Accessed October 6, 2026. https://www.hekatecovenant.com/herbsandplants.
-- Wikipedia, s.v. "Table of magical correspondences." Accessed October 6, 2026. https://en.wikipedia.org/wiki/Table_of_magical_correspondences.
+- Wikipedia, under "Table of magical correspondences." Accessed October 6, 2026. https://en.wikipedia.org/wiki/Table_of_magical_correspondences.
 
 Each tradition was then rounded out, choosing gods of the earth, plants,
 healing, the hearth, the Sun, Moon and weather, love and the dead over gods
@@ -405,12 +405,12 @@ Per-deity:
   - Atsma, Aaron J. "Hades." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Khthonios/Haides.html.
 - **Hecate** ("also Hekate, Trivia"; keys) — Atsma gives Hekate, Hecate and the Roman name Trivia; witchcraft, magic, night, ghosts and crossroads. Wikipedia's entry adds keys among her symbols and Trivia as the Roman epithet.
   - Atsma, Aaron J. "Hecate." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Khthonios/Hekate.html.
-  - Wikipedia, s.v. "Hecate." Last modified September 29, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Hecate.
+  - Wikipedia, under "Hecate." Last modified September 29, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Hecate.
 - **Helios** ("Roman Sol") — Atsma's "Helius" gives Roman Sol and the sun's chariot.
   - Atsma, Aaron J. "Helius." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Titan/Helios.html.
 - **Hyacinthus** ("divine youth"; "also Hyakinthos, Hiakinthos") — Atsma treats him as a Spartan prince loved by Apollo, the flower sprung from his death, and offerings at Amyklai "as to a hero" before Apollo's sacrifice, which supports the tradition's "heroes honoured as gods" rather than a god outright; it spells Hyakinthos and Hyacinthus, not Hiakinthos. Wikipedia's entry calls him "a deified hero" with a Mycenaean-era cult at Amyclae and the Hyacinthia, which is the "divine youth" of the table.
   - Atsma, Aaron J. "Hyacinthus." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Heros/Hyakinthos.html.
-  - Wikipedia, s.v. "Hyacinth (mythology)." Last modified September 28, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Hyacinth_(mythology).
+  - Wikipedia, under "Hyacinth (mythology)." Last modified September 28, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Hyacinth_(mythology).
 - **Hygieia** ("also Hygeia, Roman Salus"; daughter of Asclepius) — Atsma's "Hygeia" gives the goddess of good health, daughter and attendant of Asklepios, Roman Salus.
   - Atsma, Aaron J. "Hygeia." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Ouranios/AsklepiasHygeia.html.
 - **Hypnos** ("Roman Somnus"; poppies) — Atsma gives Roman Somnus (or Sopor), and the poppy among his attributes.
@@ -454,18 +454,18 @@ Per-deity:
 - **Flora** (Floralia) — Smith's dictionary gives the goddess of flowers and spring; her festival from April 28 to May 1.
   - Smith, William, ed. "Flora." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dflora-bio-1.
 - **Ceres** ("from whose name comes cereal"; "Greek Demeter") — Wikipedia's entry states "The word cereal derives from Ceres's association with edible grains" and the identification with Demeter, which Theoi's index table also gives.
-  - Wikipedia, s.v. "Ceres (mythology)." Last modified August 17, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ceres_(mythology).
+  - Wikipedia, under "Ceres (mythology)." Last modified August 17, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ceres_(mythology).
   - Atsma, Aaron J. "Greek Gods & Goddesses." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/greek-mythology/greek-gods.html.
 - **Fortuna** ("Greek Tyche"; "turning her wheel") — Smith's dictionary gives the goddess of chance and good luck, cross-referenced to Tyche. Wikipedia's entry supplies the wheel (Rota Fortunae) and "Her Greek equivalent is Tyche."
   - Smith, William, ed. "Fortuna." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dfortuna-bio-1.
-  - Wikipedia, s.v. "Fortuna." Last modified August 13, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Fortuna.
+  - Wikipedia, under "Fortuna." Last modified August 13, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Fortuna.
 - **Mars** ("earlier, of fields") — Wasson's "Roman Mythology" calls Mars a former agricultural deity before the war god.
   - Wasson, Donald L. "Roman Mythology." World History Encyclopedia. May 8, 2018. Accessed October 6, 2026. https://www.worldhistory.org/Roman_Mythology/.
 - **Minerva** ("medicine") — Smith's dictionary gives the patroness of arts and trades, invoked by those in medicine among others; identified with Athena.
   - Smith, William, ed. "Minerva." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dminerva-bio-1.
 - **Neptune** ("and of fresh water") — Smith's dictionary, under "Neptunus," gives the chief marine divinity identified with Poseidon. Wikipedia's entry settles the fresh water: "likely associated with freshwater springs before the sea." Servius's commentary on Virgil calls him "aquarum deus," god of the waters, and reads the trident as the three kinds of water, seas, rivers and streams, over all of which "some say" Neptune presides; it names no springs.
   - Smith, William, ed. "Neptunus." In _A Dictionary of Greek and Roman Biography and Mythology_. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus%3Atext%3A1999.04.0104%3Aentry%3Dneptunus-bio-1.
-  - Wikipedia, s.v. "Neptune (mythology)." Last modified September 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Neptune_(mythology).
+  - Wikipedia, under "Neptune (mythology)." Last modified September 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Neptune_(mythology).
   - Servius. _In Vergilii carmina comentarii_. Edited by Georg Thilo. B. G. Teubner, 1881. Perseus Digital Library. Accessed October 6, 2026. https://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0053. · on Aeneid 1.138 and 7.691
 - **Pluto** ("also Dis Pater") — Atsma's "Hades" gives Pluto, Dis and Orcus as the Roman names of Haides.
   - Atsma, Aaron J. "Hades." Theoi Greek Mythology. Accessed October 6, 2026. https://www.theoi.com/Khthonios/Haides.html.
@@ -520,7 +520,7 @@ Per-deity:
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
 - **Isis** ("also Aset") — Mark gives magic, healing, motherhood and the throne as her name's meaning; it spells the Egyptian name Eset. Wikipedia's entry gives the name in transliteration as _ꜣst_, whose conventional Egyptological reading is Aset (see Notes).
   - Mark, Joshua J. "Isis." World History Encyclopedia. February 19, 2016. Accessed October 6, 2026. https://www.worldhistory.org/isis/.
-  - Wikipedia, s.v. "Isis." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Isis.
+  - Wikipedia, under "Isis." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Isis.
 - **Maat** ("also Ma'at") — Mark's complete list gives, under "Ma'at," truth, justice and harmony.
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
 - **Min** ("desert roads", "linked with the lettuce") — The Global Egyptian Museum's glossary gives a fertility god and protector of the desert and foreign lands, often shown with tall lettuce plants, tied to Coptos at the mouth of the Wadi Hammamat; the WHE list adds "god of the eastern deserts."
@@ -529,14 +529,14 @@ Per-deity:
 - **Nephthys** ("also Nebet-Het") — Mark gives Nebthwt, Nebet-het and Nebt-het; funerary goddess of twilight and darkness, Isis's sister.
   - Mark, Joshua J. "Nephthys." World History Encyclopedia. March 13, 2016. Accessed October 6, 2026. https://www.worldhistory.org/Nephthys/.
 - **Nut** ("swallows the Sun each night") — Wikipedia's entry has her arching over the earth, Geb's wife, the Sun swallowed at dusk and reborn at dawn; the WHE list gives her as the sky goddess, wife of Geb.
-  - Wikipedia, s.v. "Nut (goddess)." Last modified May 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nut_(goddess).
+  - Wikipedia, under "Nut (goddess)." Last modified May 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nut_(goddess).
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
 - **Ra** ("also Re") — Mark's complete list has "Ra (Atum or Re) - The great sun god of Heliopolis."
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
 - **Sekhmet** ("also Sakhmet") — Ranke uses the spelling "Sakhmet, goddess of war. Mostly with head of lioness"; the WHE list gives her as a leonine goddess under "Sekhmet." Wikipedia's entry gives Sakhmet as the romanised form and plague, healing and the epithet "the eye of Ra."
   - Ranke, Hermann. "Egyptian Deities and Their Sacred Animals." _Museum Bulletin_, November 1950. Penn Museum. Accessed October 6, 2026. https://www.penn.museum/sites/bulletin/3283/.
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
-  - Wikipedia, s.v. "Sekhmet." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Sekhmet.
+  - Wikipedia, under "Sekhmet." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Sekhmet.
 - **Set** ("also Seth, Sutekh") — Mark's complete list has "Sutekh - The Semitic name for the god Set (Seth)."
   - Mark, Joshua J. "Egyptian Gods - The Complete List." World History Encyclopedia. April 14, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/885/egyptian-gods---the-complete-list/.
 - **Thoth** ("also Djehuty") — Mark gives Djehuty; writing, magic, wisdom, the moon and the reckoning of time, ibis-headed.
@@ -625,7 +625,7 @@ Per-deity:
   - Groeneveld, Emma. "Freyja." World History Encyclopedia. Last modified October 5, 2026. Accessed October 6, 2026. https://www.worldhistory.org/Freyja/.
 - **Eir** ("among Frigg's handmaidens") — _Gylfaginning_, chapter XXXV in Brodeur's translation, lists her third of the ásynjur as "the best physician" (the 1916 printing spells her "Fir"); Wikipedia's entry gives the line as "extremely good physician" and, citing Simek, the view that she may be a valkyrie. That supports "healing and medicine" and shows "handmaiden" is a gloss, not a source's word.
   - Snorri Sturluson. _The Prose Edda_. Translated by Arthur Gilchrist Brodeur. New York: American-Scandinavian Foundation, 1916. Internet Sacred Text Archive. Accessed October 6, 2026. https://sacred-texts.com/neu/pre/pre04.htm. · "Gylfaginning," chap. XXXV, p. 46
-  - Wikipedia, s.v. "Eir." Last modified August 31, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Eir.
+  - Wikipedia, under "Eir." Last modified August 31, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Eir.
 - **Skadi** ("giantess and goddess") — Groeneveld's "Freyja" names Skadi as the giantess wife of Njord, supporting the double label.
   - Groeneveld, Emma. "Freyja." World History Encyclopedia. Last modified October 5, 2026. Accessed October 6, 2026. https://www.worldhistory.org/Freyja/.
 
@@ -647,11 +647,11 @@ Per-deity:
   - Tacitus. _Germany and Its Tribes_. Translated by Alfred John Church and William Jackson Brodribb. New York: Random House, 1942. Perseus Digital Library, Tufts University. Accessed October 6, 2026. http://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0083:chapter=40. · chap. 40
   - Simek, Rudolf. _Dictionary of Northern Mythology_. Translated by Angela Hall. Cambridge: D. S. Brewer, 1993.
 - **Berchta** ("Germanic and Alpine goddess of spinning, the Twelve Nights"; "also Perchta, Bertha") — Wikipedia's entry gives the Alpine range, the twelve days, the spinning quota and the three spellings, and names Grimm as the one who read her as a goddess, which is what the description's "goddess of continental folklore" hedge rests on; Grimm's chapter 13 is the primary.
-  - Wikipedia, s.v. "Perchta." Last modified July 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Perchta.
+  - Wikipedia, under "Perchta." Last modified July 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Perchta.
   - Grimm, Jacob. _Teutonic Mythology_. Translated by James Steven Stallybrass. 4 vols. London: George Bell and Sons, 1882–88. · vol. 1, chap. 13, "Goddesses: Erda — Isis — Holda, Berhta — Hrede — Ostara"
 - **Holda** ("who shakes snow from her bed"; "also Holle, Hulda") — The Grimms' tale, in Ashliman's translation, has "shake it diligently until the feathers fly, then it will snow in the world," and Ashliman's note records the Hessian saying that it snows when Frau Holle makes her bed; Wikipedia's entry carries the names Holla, Holda, Hulda and the link to Perchta.
   - Grimm, Jacob, and Wilhelm Grimm. "Frau Holle." In _Kinder- und Hausmärchen_, translated by D. L. Ashliman. 7th ed. 1857. Folklore and Mythology Electronic Texts, University of Pittsburgh. Last modified January 6, 2019. Accessed October 6, 2026. https://sites.pitt.edu/~dash/grimm024.html. · no. 24
-  - Wikipedia, s.v. "Frau Holle." Last modified September 17, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Frau_Holle.
+  - Wikipedia, under "Frau Holle." Last modified September 17, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Frau_Holle.
 
 #### Irish
 
@@ -671,7 +671,7 @@ Per-deity:
 - **Lugh** ("Welsh Lleu, Gaulish Lugus") — Cartwright names Lleu Llaw Gyffes as the Welsh equivalent and Lugus/Lugos as the god the Romans knew, supporting the one Irish row that names the other two.
   - Cartwright, Mark. "Lugh." World History Encyclopedia. Last modified October 5, 2026. Accessed October 6, 2026. https://www.worldhistory.org/Lugh/.
 - **Aine** ("honoured at Knockainey") — Wikipedia's entry gives summer, the sun, sovereignty and the hill of Knockainey (Cnoc Áine) in Limerick; love and fertility are not in its lead.
-  - Wikipedia, s.v. "Áine." Last modified August 10, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%C3%81ine.
+  - Wikipedia, under "Áine." Last modified August 10, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%C3%81ine.
 
 #### Welsh
 
@@ -707,12 +707,12 @@ Per-deity:
 
 - **Epona** ("Gaulish and Roman goddess of horses, mules, fertility and journeys") — World History Encyclopedia's "Epona" places her in Gallic religion, with inscriptions across Gaul, Germany, the Danube and Rome signed by soldiers, which supports the Gaulish filing with Rome in the description; Wikipedia's entry supplies mules, fertility and the December 18 Roman feast.
   - "Epona." World History Encyclopedia. Last modified October 5, 2026. Accessed October 6, 2026. https://www.worldhistory.org/article/153/epona/.
-  - Wikipedia, s.v. "Epona." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Epona.
+  - Wikipedia, under "Epona." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Epona.
 - **Sulis** ("British goddess of the hot springs at Bath … Sulis Minerva"; "curses") — The Roman Baths' "Roman Curse Tablets" gives 130 tablets "rolled up and thrown into the Spring where the spirit of the goddess Sulis Minerva dwelt," which supports the curses and the double name; Cartwright's "The Ancient Celtic Pantheon" supports the healing spring, Aquae Sulis.
   - "Roman Curse Tablets." Roman Baths, Bath & North East Somerset Council. Accessed October 6, 2026. https://www.romanbaths.co.uk/roman-curse-tablets.
   - Cartwright, Mark. "The Ancient Celtic Pantheon." World History Encyclopedia. Last modified October 6, 2026. Accessed October 6, 2026. https://www.worldhistory.org/article/1715/the-ancient-celtic-pantheon/.
 - **Taranis** ("bearing a wheel") — Wikipedia's entry states that no inscription links Taranis with the wheel and that the "wheel god" identification is a scholarly inference, so the description's wheel is a reading, not an attestation; Cartwright supports thunder and sky.
-  - Wikipedia, s.v. "Taranis." Last modified September 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Taranis.
+  - Wikipedia, under "Taranis." Last modified September 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Taranis.
   - Cartwright, Mark. "The Ancient Celtic Pantheon." World History Encyclopedia. Last modified October 6, 2026. Accessed October 6, 2026. https://www.worldhistory.org/article/1715/the-ancient-celtic-pantheon/.
 
 #### Slavic
@@ -733,9 +733,9 @@ Per-deity:
   - Gimbutas, Marija. "Slavic Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/slavic-religion.
 - **Lada** (filed Slavic, "as later folklore records her") — The _Internet Encyclopedia of Ukraine_ dates the oldest references to fifteenth-century Polish church prohibitions and the 1674 _Sinopsis_, and records that some scholars read "lada" as a song refrain rather than a goddess, which is exactly the hedge; it calls her a deity of fertility and marriage. See also Wikipedia's entry for the current scholarly consensus against her historicity.
   - "Lada." _Internet Encyclopedia of Ukraine_. Canadian Institute of Ukrainian Studies. Accessed October 6, 2026. https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CL%5CA%5CLada.htm.
-  - Wikipedia, s.v. "Lada (mythology)." Last modified July 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Lada_(mythology).
+  - Wikipedia, under "Lada (mythology)." Last modified July 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Lada_(mythology).
 - **Morana** (filed Slavic; "also Marzanna, Morena") — Wikipedia's entry gives winter and death, the spring-equinox drowning or burning of her effigy, the regional names Marzanna, Morena and Marena, and flags her historicity as dubious; no academic page that could be fetched covers her under this name (see Notes).
-  - Wikipedia, s.v. "Morana (goddess)." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Morana_(goddess).
+  - Wikipedia, under "Morana (goddess)." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Morana_(goddess).
 - **Mokosh** (filed Slavic; "also Makosh, Mokosz") — The _Internet Encyclopedia of Ukraine_ confirms fertility, water and women, the spinning of thread, and the spelling _Makosh_; _Mokosz_ (the Polish form) appears in none of the fetched sources.
   - "Mokosh." _Internet Encyclopedia of Ukraine_. Canadian Institute of Ukrainian Studies. Accessed October 6, 2026. https://www.encyclopediaofukraine.com/display.asp?linkpath=pages%5CM%5CO%5CMokosh.htm.
 
@@ -747,22 +747,22 @@ The tradition's description ("whose old religion lasted longest in Europe"): Amb
 
 - Biezais, Haralds, and Sigma Ankrava. "Baltic Religion: An Overview." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-overview.
 - Kursīte, Janīna. "Baltic Religion: History of Study." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-history-study.
-- _Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
-- _Visuotinė lietuvių enciklopedija_, s.v. "Laima." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/laima/.
-- _Visuotinė lietuvių enciklopedija_, s.v. "Žemyna." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/zemyna/.
+- _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
+- _Visuotinė lietuvių enciklopedija_, under "Laima." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/laima/.
+- _Visuotinė lietuvių enciklopedija_, under "Žemyna." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/zemyna/.
 - Gimbutas, Marija. _The Balts_. Ancient Peoples and Places 33. London: Thames and Hudson, 1963. (Existence confirmed through the _Antiquity_ review record at Cambridge Core, https://www.cambridge.org/core/journals/antiquity/article/abs/balts-by-marija-gimbutas-vol-33-ancient-peoples-and-places-london-thames-and-hudson-1963-286-pp-40-pls-58-figs-30s/3AC643C4724810CC880846BB1C6763E6, and Open Library, https://openlibrary.org/works/OL278802W/The_Balts.)
 - Ambrazevičius, Rytis, ed. "Baltic Religion." In _Lithuanian Roots_. Vilnius: Lithuanian Folk Culture Centre, 1996. Accessed October 6, 2026. https://www.lnkc.lt/eknygos/roots/node16.html.
 
 Per-deity:
 
 - **Laima** (filed Baltic; "Latvian and Lithuanian," "linked with the linden; also Laime") — The _Visuotinė lietuvių enciklopedija_ states that she is more prominent in Latvian folklore, that Lithuanian tradition has the comparable Laimė, that she rules birth and fate and protects pregnant women, and that she appears as a linden tree, settling the two-nation filing, the linden and the second spelling.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Laima." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/laima/.
+  - _Visuotinė lietuvių enciklopedija_, under "Laima." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/laima/.
 - **Perkunas** (filed Baltic; "Latvian Perkons," "the oak") — The _Visuotinė lietuvių enciklopedija_ gives thunder, lightning, storm and rain and the Latvian form Pērkons; the oak enters only through the etymology it offers (Latin _quercus_), while Gimbutas's "Perun" entry ties the oak to the Perun/Perkunas pair directly.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
+  - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
   - Gimbutas, Marija. "Perun." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/perun.
 - **Zemyna** (filed Baltic; "also Zemynele") — The _Visuotinė lietuvių enciklopedija_ confirms the ancient Lithuanian earth goddess who protects crops, fruits, livestock and people, with offerings at sowing and harvest; the diminutive Žemynėlė is only in Wikipedia's entry.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Žemyna." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/zemyna/.
-  - Wikipedia, s.v. "Žemyna." Last modified December 21, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%C5%BDemyna.
+  - _Visuotinė lietuvių enciklopedija_, under "Žemyna." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/zemyna/.
+  - Wikipedia, under "Žemyna." Last modified December 21, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%C5%BDemyna.
 
 #### Finnish
 
@@ -782,7 +782,7 @@ Per-deity:
   - Siikala, Anna-Leena. "Ukko." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/ukko.
 - **Mielikki** (filed Finnish; a Kalevala figure, "wife of Tapio," "healing") — Crawford's preface reads "His consort is Mielikki, 'The Honey-rich Mother of the Woodland,' 'The Hostess of the Glen and Forest,'" and Rune XIV has Lemminkäinen pray to "Mistress of the woods, Mielikki, / Forest-mother" for his hunt, settling forest, hunt and Tapio; the healing is supported only by Wikipedia's entry, which also gives her pre-Kalevala attestation (Ganander 1789, hunting charms).
   - Lönnrot, Elias. _The Kalevala: The Epic Poem of Finland_. Translated by John Martin Crawford. 1888. Internet Sacred Text Archive. Accessed October 6, 2026. https://sacred-texts.com/neu/kveng/index.htm. (Preface: https://sacred-texts.com/neu/kveng/kvpref.htm; Rune II: https://sacred-texts.com/neu/kveng/kvrune02.htm; Rune XIV: https://sacred-texts.com/neu/kveng/kvrune14.htm.) · preface; rune XIV
-  - Wikipedia, s.v. "Mielikki." Last modified June 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Mielikki.
+  - Wikipedia, under "Mielikki." Last modified June 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Mielikki.
 
 #### Hindu
 
@@ -793,7 +793,7 @@ What the sources settle: Johnson's Oxford dictionary is the reference work for a
 - Findly, Ellison Banks. "Agni." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/agni.
 - Lorenzen, David N. "Durgā: Hinduism." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/durga-hinduism.
 - "Dhanvantari." In _The Concise Oxford Dictionary of World Religions_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/religion/dictionaries-thesauruses-pictures-and-press-releases/dhanvantari.
-- Wikipedia, s.v. "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
+- Wikipedia, under "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
 
 Per-deity:
 
@@ -802,7 +802,7 @@ Per-deity:
 - **Dhanvantari** (filed Hindu; "god of Ayurveda") — The _Concise Oxford Dictionary of World Religions_ gives "the physician of the gods in Hinduism, who emerged from the Churning of the Ocean bearing the cup of amṛta"; the Ayurveda link is the Wellcome Collection's authority label "Dhanvantarī (Founder of Ayurveda)," and Wikipedia's entry, which adds that he is counted an avatar of Vishnu.
   - "Dhanvantari." In _The Concise Oxford Dictionary of World Religions_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/religion/dictionaries-thesauruses-pictures-and-press-releases/dhanvantari.
   - Wellcome Collection. "Dhanvantarī (Founder of Ayurveda)." Accessed October 6, 2026. https://wellcomecollection.org/concepts/bzmtxvc4.
-  - Wikipedia, s.v. "Dhanvantari." Last modified August 9, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dhanvantari.
+  - Wikipedia, under "Dhanvantari." Last modified August 9, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dhanvantari.
 - **Hanuman** ("who carried a mountain of healing herbs") — The Cleveland Museum of Art's object record names the episode as the table describes it.
   - Cleveland Museum of Art. "Hanuman Brings the Mountain of Healing Plants; Rama Extracts the Arrow from Lakshmana as Hanuman and a Bear Prepare to Treat Him (recto)." Accessed October 6, 2026. https://www.clevelandart.org/art/1979.21.a. (Palm-leaf manuscript, Odisha, late 1700s; accession 1979.21.a.)
 - **Surya** ("riding a chariot drawn by seven horses") — The Philadelphia Museum of Art's object record reads "The god stands in a chariot pulled by seven horses. His charioteer Aruna (sunrise) guides the chariot across the sky."
@@ -814,10 +814,10 @@ Per-deity:
 - **Durga** ("slayer of the buffalo demon Mahishasura") — Lorenzen names the victory over Mahiṣāsura as her most important exploit and her as Śiva's śakti, sharing forms with Pārvatī and Kālī.
   - Lorenzen, David N. "Durgā: Hinduism." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/durga-hinduism.
 - **Krishna** ("an avatar of Vishnu") — Wikipedia's list gives Krishna as the eighth avatar of Vishnu; Johnson's dictionary is the print authority.
-  - Wikipedia, s.v. "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
+  - Wikipedia, under "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
   - Johnson, W. J. _A Dictionary of Hinduism_. Oxford: Oxford University Press, 2009. (Existence confirmed through the Internet Archive catalogue record, https://archive.org/details/dictionaryofhind0000john, and Oxford University Press's product listing, https://global.oup.com/academic/product/a-dictionary-of-hinduism-9780198610250.)
 - **Vishnu** ("avatars such as Rama and Krishna") — Wikipedia's list gives Vishnu as preserver and second of the Trimurti, with Krishna as his eighth avatar; Johnson's dictionary is the print authority.
-  - Wikipedia, s.v. "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
+  - Wikipedia, under "List of Hindu deities." Last modified December 12, 2023. Accessed October 6, 2026. https://en.wikipedia.org/wiki/List_of_Hindu_deities.
   - Johnson, W. J. _A Dictionary of Hinduism_. Oxford: Oxford University Press, 2009. (Existence confirmed through the Internet Archive catalogue record, https://archive.org/details/dictionaryofhind0000john, and Oxford University Press's product listing, https://global.oup.com/academic/product/a-dictionary-of-hinduism-9780198610250.)
 
 #### Taoist
@@ -825,14 +825,14 @@ Per-deity:
 What the sources settle: Xi Wangmu as the Queen Mother of the West, Taoist goddess of immortality whose peaches confer long life; the spellings Xiwangmu / Xi-Wang-Mu beside the table's Xi Wangmu.
 
 - Mark, Emily. "Most Popular Gods & Goddesses of Ancient China." World History Encyclopedia. April 25, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/894/most-popular-gods--goddesses-of-ancient-china/.
-- Wikipedia, s.v. "Queen Mother of the West." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Queen_Mother_of_the_West.
+- Wikipedia, under "Queen Mother of the West." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Queen_Mother_of_the_West.
 - Christie, Anthony. _Chinese Mythology_. Hamlyn's Mythology Series. Feltham: Hamlyn, 1968. (Existence confirmed through the _Journal of the Royal Asiatic Society_ review, https://www.cambridge.org/core/journals/journal-of-the-royal-asiatic-society/article/abs/chinese-mythology-by-anthony-christie-hamlyns-mythology-series-pp-141-feltham-hamlyn-publishing-group-1968-87p/B46788498D7288CA5A29D797E299B5A1.)
 
 Per-deity:
 
 - **Xi Wangmu** (filed Taoist; spelled Xi Wangmu, where the sources write Xiwangmu or Xi-Wang-Mu) — Mark names her "goddess of immortality" with an orchard whose peaches give immortality, and spells her "Xiwangmu or Xi-Wang-Mu"; the Wikipedia entry adds that she "became deeply integrated into Taoist tradition", which settles the Taoist filing.
   - Mark, Emily. "Most Popular Gods & Goddesses of Ancient China." World History Encyclopedia. April 25, 2016. Accessed October 6, 2026. https://www.worldhistory.org/article/894/most-popular-gods--goddesses-of-ancient-china/.
-  - Wikipedia, s.v. "Queen Mother of the West." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Queen_Mother_of_the_West.
+  - Wikipedia, under "Queen Mother of the West." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Queen_Mother_of_the_West.
 
 #### Chinese Buddhist
 
@@ -841,14 +841,14 @@ What the sources settle: Kuan Yin as the Chinese form of the bodhisattva Avaloki
 - Nelson-Atkins Museum of Art. "Guanyin of the Southern Sea." Collection. Accessed October 6, 2026. https://art.nelson-atkins.org/objects/597/guanyin-of-the-southern-sea.
 - Fitzwilliam Museum, University of Cambridge. "Look, Think, Do: Wooden Figure of Kwan Yin [Guanyin] God(dess) of Mercy." Accessed October 6, 2026. https://fitzmuseum.cam.ac.uk/learn-with-us/look-think-do/wooden-figure-of-kwan-yin-guanyin-goddess-of-mercy.
 - Asian Art Museum, San Francisco. "The Bodhisattva Avalokiteshvara (Guanyin)." Collections. Accessed October 6, 2026. https://collections.asianart.org/collection/guanyin/.
-- Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+- Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
 
 Per-deity:
 
 - **Kuan Yin** (filed Chinese Buddhist though honoured across East Asia; spelled Kuan Yin, with Guanyin, Kwan Yin, Kannon in the description) — The Nelson-Atkins Museum of Art labels the figure "Kuan-Yin of the southern seas" beside "Guanyin" and calls her the "Chinese Buddhist bodhisattva of compassion and mercy", which settles both the spelling and the filing; the Asian Art Museum page settles the "goddess" gloss (from the Yuan dynasty "a female form of the bodhisattva became popular" and was worshipped "as a protective goddess"), and the Wikipedia entry settles Kannon and the East Asian spread.
   - Nelson-Atkins Museum of Art. "Guanyin of the Southern Sea." Collection. Accessed October 6, 2026. https://art.nelson-atkins.org/objects/597/guanyin-of-the-southern-sea.
   - Asian Art Museum, San Francisco. "The Bodhisattva Avalokiteshvara (Guanyin)." Collections. Accessed October 6, 2026. https://collections.asianart.org/collection/guanyin/.
-  - Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
 
 #### Chinese folk
 
@@ -857,13 +857,13 @@ What the sources settle: Shennong as the Divine Farmer / Divine Husbandman, orig
 - National Library of Medicine. "Emperors and Physicians: Shen Nung." Chinese Traditional Medicine (online exhibition). Accessed October 6, 2026. https://www.nlm.nih.gov/hmd/topics/chinese-traditional/foundation-emperor_9203733-shennung-sm.html?imgid=3.
 - Wellcome Collection. "Chinese Woodcut, Famous Medical Figures: Shen Nong." Accessed October 6, 2026. https://wellcomecollection.org/works/fevczv94.
 - Daniel, Gillian. "The Legend of the Divine Farmer." _Public Domain Review_, November 3, 2015. Accessed October 6, 2026. https://publicdomainreview.org/essay/the-legend-of-the-divine-farmer/.
-- Wikipedia, s.v. "Shennong." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shennong.
+- Wikipedia, under "Shennong." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shennong.
 
 Per-deity:
 
 - **Shennong** (filed Chinese folk; description hedges "said to have tasted every herb"; epithet "the Divine Husbandman") — The National Library of Medicine's exhibition writes "He is said to have tasted hundreds of herbs to test their medicinal value" and names the _Divine Husbandman's Materia Medica_, which settles the hedge and the epithet; the Wikipedia entry settles the folk filing ("a legendary Chinese ruler and deity in Chinese folk religion ... patron deity of farmers ... and practitioners of traditional Chinese medicine").
   - National Library of Medicine. "Emperors and Physicians: Shen Nung." Chinese Traditional Medicine (online exhibition). Accessed October 6, 2026. https://www.nlm.nih.gov/hmd/topics/chinese-traditional/foundation-emperor_9203733-shennung-sm.html?imgid=3.
-  - Wikipedia, s.v. "Shennong." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shennong.
+  - Wikipedia, under "Shennong." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shennong.
 
 #### Japanese
 
@@ -899,19 +899,19 @@ What the sources settle: the _Encyclopedia of Religion_ entry fixes the high god
 
 - Gilbert, Michelle. "Akan Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/akan-religion.
 - Asante, Molefi Kete, and Ama Mazama, eds. _Encyclopedia of African Religion_. 2 vols. Thousand Oaks, CA: SAGE Publications, 2009. (Existence and the entries "Nyame" and "Asase Yaa" confirmed on the publisher's page, https://www.sagepub.com/en-us/nam/encyclopedia-of-african-religion/book228941, and the Open Library record; the entries themselves sit behind SAGE's sign-in and were not read.)
-- Wikipedia, s.v. "Akan religion." Last modified December 4, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Akan_religion.
-- Wikipedia, s.v. "Tano (Ta Kora)." Last modified August 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Tano_(Ta_Kora).
-- Wikipedia, s.v. "Asase Ya/Afua." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Asase_Ya/Afua.
-- Wikipedia, s.v. "Nyankapon-Nyame-Odomankoma." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nyankapon-Nyame-Odomankoma.
+- Wikipedia, under "Akan religion." Last modified December 4, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Akan_religion.
+- Wikipedia, under "Tano (Ta Kora)." Last modified August 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Tano_(Ta_Kora).
+- Wikipedia, under "Asase Ya/Afua." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Asase_Ya/Afua.
+- Wikipedia, under "Nyankapon-Nyame-Odomankoma." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nyankapon-Nyame-Odomankoma.
 
 Per-deity:
 
 - **Asase Yaa** (one row, not an Asante and a Fante one) — Wikipedia's "Asase Ya/Afua" has the Asante name her Yaa for Thursday and the Fante Efua or Afua for Friday; the same earth goddess with a different day-name, so one row under the spelling the _Encyclopedia of Religion_ and the SAGE encyclopedia both use, with Afua in the description.
-  - Wikipedia, s.v. "Asase Ya/Afua." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Asase_Ya/Afua.
+  - Wikipedia, under "Asase Ya/Afua." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Asase_Ya/Afua.
   - Gilbert, Michelle. "Akan Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/akan-religion.
   - Asante, Molefi Kete, and Ama Mazama, eds. _Encyclopedia of African Religion_. 2 vols. Thousand Oaks, CA: SAGE Publications, 2009. (Existence and the entries "Nyame" and "Asase Yaa" confirmed on the publisher's page, https://www.sagepub.com/en-us/nam/encyclopedia-of-african-religion/book228941, and the Open Library record; the entries themselves sit behind SAGE's sign-in and were not read.)
 - **Tano** (Tano, not Ta Kora) — Per Wikipedia's "Tano (Ta Kora)", the river's name is the one every source leads with; Ta Kora ("immense father") is a praise-name, and Tando the Fante form, so both go in the description.
-  - Wikipedia, s.v. "Tano (Ta Kora)." Last modified August 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Tano_(Ta_Kora).
+  - Wikipedia, under "Tano (Ta Kora)." Last modified August 19, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Tano_(Ta_Kora).
 
 **Anansi is left out.** Wikipedia's "Akan religion" calls Ananse a folk hero and trickster of the folktales, and the _Encyclopedia of Religion_ entry does not name him among the abosom at all; neither source calls him a deity, so by the list's own rule for Medea and Morgan le Fay he stays off it. "Anansi Kokuroko", the great designer, is an epithet of Nyame, not a second god.
 
@@ -920,29 +920,29 @@ Per-deity:
 What the sources settle: the _Encyclopedia of Religion_ entry gives the high god's names, Ala as earth mother with the spelling Ani, the yam god under the spelling Ahiajioku, and Agwu as the spirit that possesses the herbalist; the Wikipedia articles supply Amadioha and Anyanwu, which the entry does not name, and the dialect spellings of Ala.
 
 - Arinze, Francis A., and Ogbu Kalu. "Igbo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion.
-- Wikipedia, s.v. "Chukwu." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chukwu.
-- Wikipedia, s.v. "Ala (odinani)." Last modified August 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ala_(odinani).
-- Wikipedia, s.v. "Amadioha." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Amadioha.
-- Wikipedia, s.v. "Anyanwu." Last modified September 12, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Anyanwu.
-- Wikipedia, s.v. "Agwu Nsi." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Agwu_Nsi.
-- Wikipedia, s.v. "Njoku Ji." Last modified July 11, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Njoku_Ji.
-- Wikipedia, s.v. "Alusi." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Alusi.
+- Wikipedia, under "Chukwu." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chukwu.
+- Wikipedia, under "Ala (odinani)." Last modified August 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ala_(odinani).
+- Wikipedia, under "Amadioha." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Amadioha.
+- Wikipedia, under "Anyanwu." Last modified September 12, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Anyanwu.
+- Wikipedia, under "Agwu Nsi." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Agwu_Nsi.
+- Wikipedia, under "Njoku Ji." Last modified July 11, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Njoku_Ji.
+- Wikipedia, under "Alusi." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Alusi.
 
 Per-deity:
 
 - **Ala** (Ala, not Ani) — Arinze and Kalu's entry writes "Ani/Ala"; Wikipedia's article title and the "Deities of the Igbo Religion" piece in _World Eras_ lead with Ala, so Ala is the name and Ani (Achebe's spelling) the first alternate.
   - Arinze, Francis A., and Ogbu Kalu. "Igbo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion.
-  - Wikipedia, s.v. "Ala (odinani)." Last modified August 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ala_(odinani).
+  - Wikipedia, under "Ala (odinani)." Last modified August 22, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ala_(odinani).
   - "Deities of the Igbo Religion." In _World Eras_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/history/news-wires-white-papers-and-books/deities-igbo-religion.
 - **Agwu** (Agwu, not Agwu Nsi) — Arinze and Kalu's entry names the spirit "Agwu"; Wikipedia's article is "Agwu Nsi" and gives Agwu Nso as a variant. The shorter form is the one scholarship uses and the longer goes in the description.
   - Arinze, Francis A., and Ogbu Kalu. "Igbo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion.
-  - Wikipedia, s.v. "Agwu Nsi." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Agwu_Nsi.
+  - Wikipedia, under "Agwu Nsi." Last modified September 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Agwu_Nsi.
 - **Njoku Ji** (Njoku Ji, not Ahiajoku) — Wikipedia's "Alusi" lists "Njoku Ji (also Ahiajioku)". A judgement call: the _Encyclopedia of Religion_ entry uses Ahiajioku, the Owerri festival name. Njoku Ji is the deity's own name and Ahiajoku the festival's, so Njoku Ji leads and the three festival spellings follow. Note that the gloss names the yam, a crop, as Demeter's names grain; it names no herb.
-  - Wikipedia, s.v. "Alusi." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Alusi.
+  - Wikipedia, under "Alusi." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Alusi.
   - Arinze, Francis A., and Ogbu Kalu. "Igbo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion.
 - **Chukwu** (Chukwu, not Chineke) — Arinze and Kalu's entry lists Chukwu first among the high god's names, and Wikipedia's article is titled Chukwu; Chineke, "the spirit that creates", is the next most typed.
   - Arinze, Francis A., and Ogbu Kalu. "Igbo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion.
-  - Wikipedia, s.v. "Chukwu." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chukwu.
+  - Wikipedia, under "Chukwu." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chukwu.
 
 #### Fon & Ewe
 
@@ -952,18 +952,18 @@ What the sources settle: the two _Encyclopedia of Religion_ entries fix the trad
 - Thayer, James S. "Mawu-Lisa." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mawu-lisa.
 - Herskovits, Melville J. _Dahomey: An Ancient West African Kingdom_. 2 vols. New York: J. J. Augustin, 1938. (Title page read in the Internet Archive's full text, https://archive.org/details/in.ernet.dli.2015.36395; Open Library and Yale's eHRAF record the Northwestern University Press reprint, Evanston, 1967.)
 - Blier, Suzanne Preston. _African Vodun: Art, Psychology, and Power_. Chicago: University of Chicago Press, 1995. (Existence, place, year and ISBN 0-226-05858-1 confirmed on the Open Library record, https://openlibrary.org/books/OL1078882M/African_vodun; the text was not read.)
-- Wikipedia, s.v. "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
-- Wikipedia, s.v. "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
-- Wikipedia, s.v. "Xevioso." Last modified August 8, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Xevioso.
-- Wikipedia, s.v. "Nana Buluku." Last modified September 7, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nana_Buluku.
-- Wikipedia, s.v. "Ayida-Weddo." Last modified January 14, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ayida-Weddo.
-- Wikipedia, s.v. "Ogun." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ogun. (The page https://en.wikipedia.org/wiki/Gu_(vodun) redirects here; the section on the Fon names Gu and the Ewe Egu.)
+- Wikipedia, under "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
+- Wikipedia, under "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
+- Wikipedia, under "Xevioso." Last modified August 8, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Xevioso.
+- Wikipedia, under "Nana Buluku." Last modified September 7, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nana_Buluku.
+- Wikipedia, under "Ayida-Weddo." Last modified January 14, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ayida-Weddo.
+- Wikipedia, under "Ogun." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ogun. (The page https://en.wikipedia.org/wiki/Gu_(vodun) redirects here; the section on the Fon names Gu and the Ewe Egu.)
 
 Per-deity:
 
 - **Legba** (filed Fon & Ewe, beside Yoruba's Elegba and Vodou's Papa Legba) — Gilbert's entry makes Legba the youngest son of Mawu whose worship is universal among the Fon and Ewe, which settles that he is a vodun in his own right and not only Haiti's lwa or the Yoruba Eshu under another name; three rows, three traditions, as the list's rule allows. Wikipedia's "Papa Legba" article says the lwa's origins lie "in Yoruba traditions in Dahomey", which is the diaspora view and does not unseat the entry.
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
-  - Wikipedia, s.v. "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
+  - Wikipedia, under "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
 - **Mawu-Lisa** (one row, not two) — Thayer's entry is titled for the pair and the companion entry, Gilbert's, says the two "are often merged together in everyday speech as though they were a single deity"; one row named as the scholarship names it, with Mawu and Lisa in the description so either typed alone matches.
   - Thayer, James S. "Mawu-Lisa." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mawu-lisa.
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
@@ -971,21 +971,21 @@ Per-deity:
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
 - **Sagbata** (Sagbata, not Sakpata) — Gilbert's entry spells the earth vodun Sagbata, as does Wikipedia's "Dahomean religion". Sakpata is the spelling of Blier and of modern Benin, and Shapata of older English writing; both are in the description. The brief suggested Sakpata; see Notes.
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
-  - Wikipedia, s.v. "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
+  - Wikipedia, under "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
   - Blier, Suzanne Preston. _African Vodun: Art, Psychology, and Power_. Chicago: University of Chicago Press, 1995. (Existence, place, year and ISBN 0-226-05858-1 confirmed on the Open Library record, https://openlibrary.org/books/OL1078882M/African_vodun; the text was not read.)
 - **Xevioso** (Xevioso, not Heviosso) — Herskovits's _Dahomey_ titles its chapter XXVI "The chief-priest in charge of the Xevioso temple", and Gilbert's entry writes "Sogbo/Xevioso". The x is the Fon orthography's h-sound; Hevioso and Heviosso are in the description. The brief suggested Heviosso; see Notes.
   - Herskovits, Melville J. _Dahomey: An Ancient West African Kingdom_. 2 vols. New York: J. J. Augustin, 1938. (Title page read in the Internet Archive's full text, https://archive.org/details/in.ernet.dli.2015.36395; Open Library and Yale's eHRAF record the Northwestern University Press reprint, Evanston, 1967.) · chap. XXVI
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
 - **Gu** (filed Fon & Ewe, beside Yoruba's Ogun) — Wikipedia's "Ogun" records Dahomean ritual calling Gu a deity of Nago (Yoruba) origin, and its "Xevioso" makes Gu Xevioso's twin, so the two rows are honestly one god under two traditions, as Apollo is Greek and Roman; the Fon row carries the Ewe spelling Egu.
-  - Wikipedia, s.v. "Ogun." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ogun. (The page https://en.wikipedia.org/wiki/Gu_(vodun) redirects here; the section on the Fon names Gu and the Ewe Egu.)
-  - Wikipedia, s.v. "Xevioso." Last modified August 8, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Xevioso.
+  - Wikipedia, under "Ogun." Last modified October 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ogun. (The page https://en.wikipedia.org/wiki/Gu_(vodun) redirects here; the section on the Fon names Gu and the Ewe Egu.)
+  - Wikipedia, under "Xevioso." Last modified August 8, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Xevioso.
 - **Dan** (filed Fon & Ewe, beside Vodou's Damballah) — Wikipedia's "West African Vodun" lists "Dan/Da" as the serpent vodun of riches and cool breezes, and its "Ayida-Weddo" gives the Fon spellings Aido Hwedo and Ayido Hwedo and the creation story of the serpent carrying Mawu-Lisa. The two articles settle that the Fon serpent is one figure with the rainbow, which the diaspora split into Damballah and Ayida Wedo; one Fon row, both Haitian names in its description. The _Encyclopedia of Religion_ entry names only "Dambada Hwedo", the vodun of forgotten ancestors, which is a different figure and is not listed.
-  - Wikipedia, s.v. "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
-  - Wikipedia, s.v. "Ayida-Weddo." Last modified January 14, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ayida-Weddo.
+  - Wikipedia, under "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
+  - Wikipedia, under "Ayida-Weddo." Last modified January 14, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ayida-Weddo.
   - Gilbert, Michelle. "Fon and Ewe Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion.
 - **Agbe** — Wikipedia's "West African Vodun" and "Dahomean religion" both make Agbe the sea pantheon's head beside the earth and thunder pantheons. The only row resting on Wikipedia alone; drop it if the list wants seven.
-  - Wikipedia, s.v. "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
-  - Wikipedia, s.v. "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
+  - Wikipedia, under "West African Vodun." Last modified January 19, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/West_African_Vodun.
+  - Wikipedia, under "Dahomean religion." Last modified August 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Dahomean_religion.
 
 #### Yoruba
 
@@ -999,10 +999,10 @@ What the sources settle: the nine orishas' domains and their Yoruba spellings (S
 - Edmonds, Jahsun. "A Vital Matters Perspective: Yemonja in the Diaspora." Vital Matters, Fowler Museum at UCLA. Accessed October 6, 2026. https://vitalmatters.fowler.ucla.edu/perspectives/v0406.
 - Thompson, Robert Farris. _Flash of the Spirit: African and Afro-American Art and Philosophy_. New York: Random House, 1983. (Existence confirmed at https://archive.org/details/flashofspiritafr00thom_0, and of the Vintage Books paperback, New York, 1984, through Penguin Random House, https://www.penguinrandomhouse.com/books/178308/flash-of-the-spirit-by-robert-farris-thompson/; text not read.)
 - Karade, Baba Ifa. _The Handbook of Yoruba Religious Concepts_. Rev. ed. Weiser Classics. Newburyport, MA: Weiser Books, 2020. (Existence confirmed through Red Wheel/Weiser, https://redwheelweiser.com/book/the-handbook-of-yoruba-religious-concepts-9781578636679/.)
-- Wikipedia, s.v. "Shango." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shango.
-- Wikipedia, s.v. "Ọbatala." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cbatala.
-- Wikipedia, s.v. "Ọya." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cya.
-- Wikipedia, s.v. "Ọsanyìn." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Csany%C3%ACn.
+- Wikipedia, under "Shango." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shango.
+- Wikipedia, under "Ọbatala." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cbatala.
+- Wikipedia, under "Ọya." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cya.
+- Wikipedia, under "Ọsanyìn." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Csany%C3%ACn.
 
 Per-deity:
 
@@ -1011,23 +1011,23 @@ Per-deity:
   - Mark, Joshua J. "Orisha." World History Encyclopedia. October 6, 2021; last modified October 7, 2022. Accessed October 6, 2026. https://www.worldhistory.org/Orisha/.
 - **Shango** (spelled Shango over Sango) — Mark's "Orisha" uses "Shango" for the "god of lightning and thunder, fire, virility, war"; Wikipedia's "Shango" records Sango, Changó and Xangô as the other forms and adds drumming and justice.
   - Mark, Joshua J. "Orisha." World History Encyclopedia. October 6, 2021; last modified October 7, 2022. Accessed October 6, 2026. https://www.worldhistory.org/Orisha/.
-  - Wikipedia, s.v. "Shango." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shango.
+  - Wikipedia, under "Shango." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Shango.
 - **Yemaya** (spelled Yemaya over Yemoja; "orisha of the sea") — Edmonds, for the Fowler Museum, explains that in Nigeria she is "a river divinity ... associated with motherhood, nurturing, and healing" and in the diaspora "a powerful ocean deity", which settles both the sea gloss and the plurality of spellings; Mark's "Orisha" writes "Yemaya (also Yemoja)".
   - Edmonds, Jahsun. "A Vital Matters Perspective: Yemonja in the Diaspora." Vital Matters, Fowler Museum at UCLA. Accessed October 6, 2026. https://vitalmatters.fowler.ucla.edu/perspectives/v0406.
   - Mark, Joshua J. "Orisha." World History Encyclopedia. October 6, 2021; last modified October 7, 2022. Accessed October 6, 2026. https://www.worldhistory.org/Orisha/.
 - **Oshun** (also Ochun, Oxum) — Mark's "Oshun" gives Oxum (Candomblé) and Ochun (Santería) as her diaspora names and fresh water, love, fertility as her domains.
   - Mark, Joshua J. "Oshun." World History Encyclopedia. October 1, 2021. Accessed October 6, 2026. https://www.worldhistory.org/Oshun/.
 - **Obatala** (also Oxala) — Wikipedia's "Ọbatala" gives Oxalá as the Brazilian form and "King of White Cloth", purity and creation; Mark's "Orisha" supports "sky god of creation ... champion of purity".
-  - Wikipedia, s.v. "Ọbatala." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cbatala.
+  - Wikipedia, under "Ọbatala." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cbatala.
   - Mark, Joshua J. "Orisha." World History Encyclopedia. October 6, 2021; last modified October 7, 2022. Accessed October 6, 2026. https://www.worldhistory.org/Orisha/.
 - **Oya** (also Yansa, Iansa; "cemetery gates") — Wikipedia's "Ọya" gives Yànsàn-án and Iansã and her rule over the spirits of the dead and cemeteries; Mark's "Orisha" supports "guardian of the dead".
-  - Wikipedia, s.v. "Ọya." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cya.
+  - Wikipedia, under "Ọya." Last modified September 24, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Cya.
   - Mark, Joshua J. "Orisha." World History Encyclopedia. October 6, 2021; last modified October 7, 2022. Accessed October 6, 2026. https://www.worldhistory.org/Orisha/.
 - **Orunmila** ("witness of fate in Ifa") — UNESCO's inscription reads "Ifa refers to the mystical figure Ifa or Orunmila, regarded by the Yoruba as the deity of wisdom and intellectual development", which settles the wisdom and divination filing; Karade's handbook names Orunmila "the prophet of Yoruba religion".
   - UNESCO. "Ifa Divination System." Intangible Cultural Heritage, Representative List, inscribed 2008. Accessed October 6, 2026. https://ich.unesco.org/en/RL/ifa-divination-system-00146.
   - Karade, Baba Ifa. _The Handbook of Yoruba Religious Concepts_. Rev. ed. Weiser Classics. Newburyport, MA: Weiser Books, 2020. (Existence confirmed through Red Wheel/Weiser, https://redwheelweiser.com/book/the-handbook-of-yoruba-religious-concepts-9781578636679/.)
 - **Osanyin** (also Osain, Ossaim) — Wikipedia's "Ọsanyìn" gives "The omniscient knowledge of leaf, herb and matter", with Osaín / Ossain / Ossaím as the Latin American spellings; the Yale label confirms herbalists "enlist the aid of ... Osanyin" against illness (but see Notes on its wording).
-  - Wikipedia, s.v. "Ọsanyìn." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Csany%C3%ACn.
+  - Wikipedia, under "Ọsanyìn." Last modified August 20, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/%E1%BB%8Csany%C3%ACn.
   - Yale University Art Gallery. "Herbalist's Staff (Ọ̀pá Ọ̀sanyin)." Collections. Accessed October 6, 2026. https://artgallery.yale.edu/collections/objects/61022.
 
 #### Kongo
@@ -1041,34 +1041,34 @@ What the sources settle: every reference work names one supreme being, Nzambi (M
 - Thompson, Robert Farris. _Flash of the Spirit: African and Afro-American Art and Philosophy_. New York: Random House, 1983. (Existence confirmed at https://archive.org/details/flashofspiritafr00thom_0, and of the Vintage Books paperback, New York, 1984, through Penguin Random House, https://www.penguinrandomhouse.com/books/178308/flash-of-the-spirit-by-robert-farris-thompson/; text not read.)
 - Fu-Kiau, Kimbwandende Kia Bunseki. _African Cosmology of the Bântu-Kôngo: Tying the Spiritual Knot, Principles of Life and Living_. 2nd ed. Athelia Henrietta Press, 2001. (Existence confirmed at https://openlibrary.org/books/OL8714034M/African_Cosmology_of_the_Bantu-Kongo (the record gives no place of publication); text not read.)
 - Brown, Ras Michael. _African-Atlantic Cultures and the South Carolina Lowcountry_. Cambridge Studies on the American South. New York: Cambridge University Press, 2012. (Existence confirmed in Gwendolyn Midlo Hall's review, _American Historical Review_ 119, no. 2 (2014): 530–31, https://academic.oup.com/ahr/article-abstract/119/2/530/44946; read through Wells, Alexis S. "Spirits of the Landscape Rediscovered: Ras Michael Brown's _African-Atlantic Cultures and the South Carolina Lowcountry_." _Southern Spaces_, August 26, 2013. https://southernspaces.org/2013/spirits-landscape-rediscovered-ras-michael-browns-african-atlantic-cultures-and-south-carolina-lowcountry/.)
-- Wikipedia, s.v. "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
+- Wikipedia, under "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
 
 Per-deity:
 
 - **Nzambi Mpungu** (filed Kongo, with Palo's Nsambi in the description) — Janzen names "the belief in a supreme being, known as Nzambi Kalunga or Nzambi Mpungu Tulendo", omnipotent creator and "ultimate source of power", which settles the spelling _Nzambi Mpungu_ as the one the English-language scholarship uses (Ogungbile agrees: "Nzambi (whose nickname is Mpungu) is the supreme being of the Bakongo people"). Wikipedia's "Nzambi Ampungu" gives the sky, the Sun and fire, the alternates Nzambi a Mpungu and Nzambi Ampungu, and the Cuban continuation ("In Afro-Cuban Palo religion, Nzambi created the universe"); its "Palo (religion)" says Palo "draws heavily upon the traditional Kongo religion of Central Africa" and calls its creator "Nsambi or Sambia". Together they settle filing him once, as Kongo, the way the list files Apollo once with his Roman name beside him.
   - Janzen, John M. "Kongo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/kongo-religion.
   - Ogungbile, David. "God: African Supreme Beings." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/god-african-supreme-beings.
-  - Wikipedia, s.v. "Nzambi Ampungu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambi_Ampungu.
-  - Wikipedia, s.v. "Palo (religion)." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Palo_(religion).
+  - Wikipedia, under "Nzambi Ampungu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambi_Ampungu.
+  - Wikipedia, under "Palo (religion)." Last modified December 13, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Palo_(religion).
 - **Nzambici** (filed Kongo; goddess of the earth and the Moon) — Wikipedia's "Nzambici" calls her "the eternal Goddess of Essence, as well as Moon, Earth and Sky Mother in Bakongo religion", "the female counterpart to Nzambi Ampungu", with "Nzambi becoming associated with the sun and Nzambici with the earth and moon"; the article rests on Fu-Kiau 2001, Harold Scheub's _A Dictionary of African Mythology_ (2000), Asante and Mazama 2009 and Brown 2012. Wikipedia's "Kongo religion" says the pair "were perceived as the one Great Spirit" before colonisation. That settles her as a goddess in her own right and settles the earth, Moon and essence; the oldest English record is Dennett's _At the Back of the Black Man's Mind_ (1906), which names "Nzambici God the essence, the God on earth, the great princess, the mother of all the animals" (see Notes). She has no reliably attested second spelling, so the description carries none.
-  - Wikipedia, s.v. "Nzambici." Last modified August 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambici.
+  - Wikipedia, under "Nzambici." Last modified August 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambici.
   - Fu-Kiau, Kimbwandende Kia Bunseki. _African Cosmology of the Bântu-Kôngo: Tying the Spiritual Knot, Principles of Life and Living_. 2nd ed. Athelia Henrietta Press, 2001. (Existence confirmed at https://openlibrary.org/books/OL8714034M/African_Cosmology_of_the_Bantu-Kongo (the record gives no place of publication); text not read.)
   - Asante, Molefi Kete, and Ama Mazama, eds. _Encyclopedia of African Religion_. 2 vols. Thousand Oaks, CA: SAGE Publications, 2009. (Existence and the entries "Nyame" and "Asase Yaa" confirmed on the publisher's page, https://www.sagepub.com/en-us/nam/encyclopedia-of-african-religion/book228941, and the Open Library record; the entries themselves sit behind SAGE's sign-in and were not read.)
   - Brown, Ras Michael. _African-Atlantic Cultures and the South Carolina Lowcountry_. Cambridge Studies on the American South. New York: Cambridge University Press, 2012. (Existence confirmed in Gwendolyn Midlo Hall's review, _American Historical Review_ 119, no. 2 (2014): 530–31, https://academic.oup.com/ahr/article-abstract/119/2/530/44946; read through Wells, Alexis S. "Spirits of the Landscape Rediscovered: Ras Michael Brown's _African-Atlantic Cultures and the South Carolina Lowcountry_." _Southern Spaces_, August 26, 2013. https://southernspaces.org/2013/spirits-landscape-rediscovered-ras-michael-browns-african-atlantic-cultures-and-south-carolina-lowcountry/.)
-  - Wikipedia, s.v. "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
+  - Wikipedia, under "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
   - Dennett, R. E. _At the Back of the Black Man's Mind; or, Notes on the Kingly Office in West Africa_. London: Macmillan, 1906. Internet Archive. Accessed October 6, 2026. https://archive.org/details/atbackofblackman00denn. · chap. XVI, p. 167
 - **Simbi** (filed Kongo; a class of spirits, included because the scholarship calls them nature deities) — Wells's Emory-published review relays Brown's account of the simbi as "nature deities" of the West-Central African landscape dwelling in "rocks and springs", possibly "primordial ancestors originating from the land of the dead", and the Cambridge University Press book behind it is the one monograph on them. That settles inclusion under the brief's rule: a class of spirits, but one the sources also call divine, and the row says "spirits ... honoured as nature deities". Wikipedia's "Simbi" settles the spellings (Simbi, Cymbee, plural Bisimbi or Basimbi), the water and rock dwelling, the role as "intermediaries who travel the Kalûnga Line", the Haitian Vodou and Hoodoo continuations, and, citing MacGaffey's _Kongo Political Culture_ (2000), that in Palo the bisimbi are called Nkitas and are "guardians of all of nature".
   - Wells, Alexis S. "Spirits of the Landscape Rediscovered: Ras Michael Brown's _African-Atlantic Cultures and the South Carolina Lowcountry_." _Southern Spaces_, August 26, 2013. https://southernspaces.org/2013/spirits-landscape-rediscovered-ras-michael-browns-african-atlantic-cultures-and-south-carolina-lowcountry/.
   - Brown, Ras Michael. _African-Atlantic Cultures and the South Carolina Lowcountry_. Cambridge Studies on the American South. New York: Cambridge University Press, 2012. (Existence confirmed in Gwendolyn Midlo Hall's review, _American Historical Review_ 119, no. 2 (2014): 530–31, https://academic.oup.com/ahr/article-abstract/119/2/530/44946; read through Wells, Alexis S. "Spirits of the Landscape Rediscovered: Ras Michael Brown's _African-Atlantic Cultures and the South Carolina Lowcountry_." _Southern Spaces_, August 26, 2013. https://southernspaces.org/2013/spirits-landscape-rediscovered-ras-michael-browns-african-atlantic-cultures-and-south-carolina-lowcountry/.)
-  - Wikipedia, s.v. "Simbi." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Simbi.
+  - Wikipedia, under "Simbi." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Simbi.
 - **Kalunga** (filed Kongo; god, force and boundary — the sources use all three) — Wikipedia's "Kalûnga Line", resting on Fu-Kiau 2001 and MacGaffey 1974, states the lead sense in both halves, "Kalûnga as the Supreme God" and "the watery, energetic boundary separating the land of the living" from the ancestors, and gives the ocean and the fiery origin. Janzen confirms the divine use from a peer-reviewed reference work by naming the supreme being "Nzambi Kalunga". That settles that Kalunga is a divine name and not only a cosmological line, and settles the row's three clauses. The name is given without the circumflex (plain ASCII, as the list requires); "Kalunga Line" in the description catches the typed form.
-  - Wikipedia, s.v. "Kalûnga Line." Last modified August 31, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kalunga_Line.
+  - Wikipedia, under "Kalûnga Line." Last modified August 31, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kalunga_Line.
   - Fu-Kiau, Kimbwandende Kia Bunseki. _African Cosmology of the Bântu-Kôngo: Tying the Spiritual Knot, Principles of Life and Living_. 2nd ed. Athelia Henrietta Press, 2001. (Existence confirmed at https://openlibrary.org/books/OL8714034M/African_Cosmology_of_the_Bantu-Kongo (the record gives no place of publication); text not read.)
   - Janzen, John M., and Wyatt MacGaffey. _An Anthology of Kongo Religion: Primary Texts from Lower Zaïre_. University of Kansas Publications in Anthropology 5. Lawrence: University of Kansas, 1974. (Existence confirmed at https://opac.aua.ac.ke/cgi-bin/koha/opac-ISBDdetail.pl?biblionumber=7803; text not read.)
   - Janzen, John M. "Kongo Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/kongo-religion.
 - **Mbumba** (filed Kongo; rainbow serpent) — Wikipedia's "Kongo religion" names Mbumba as "the rainbow and a water serpent who reached the sky by climbing trees" among the Kongo spirits, which is the whole of the row; its "Nzambi Ampungu" lists Mbumba among the Kongo deities. The search record points to Janzen and MacGaffey 1974 for the rainbow-serpent cult of Mbumba Luangu (see Notes), but that text was not fetched, so the row carries no alternate name.
-  - Wikipedia, s.v. "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
-  - Wikipedia, s.v. "Nzambi Ampungu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambi_Ampungu.
+  - Wikipedia, under "Kongo religion." Last modified December 19, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Kongo_religion.
+  - Wikipedia, under "Nzambi Ampungu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Nzambi_Ampungu.
   - Janzen, John M., and Wyatt MacGaffey. _An Anthology of Kongo Religion: Primary Texts from Lower Zaïre_. University of Kansas Publications in Anthropology 5. Lawrence: University of Kansas, 1974. (Existence confirmed at https://opac.aua.ac.ke/cgi-bin/koha/opac-ISBDdetail.pl?biblionumber=7803; text not read.)
 
 #### Zulu
@@ -1077,33 +1077,33 @@ What the sources settle: Zulu religion centres on the ancestral shades (amadlozi
 
 - Preston-Whyte, Eleanor M. "Zulu Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/zulu-religion.
 - Thayer, James S. "Unkulunkulu." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/unkulunkulu.
-- _Dictionary of South African English_, s.v. "umvelinqangi." Accessed October 6, 2026. https://dsae.co.za/entry/umvelinqangi/e07507.
-- _Dictionary of South African English_, s.v. "mamlambo." Accessed October 6, 2026. https://dsae.co.za/entry/mamlambo/e04522.
+- _Dictionary of South African English_, under "umvelinqangi." Accessed October 6, 2026. https://dsae.co.za/entry/umvelinqangi/e07507.
+- _Dictionary of South African English_, under "mamlambo." Accessed October 6, 2026. https://dsae.co.za/entry/mamlambo/e04522.
 - Callaway, Henry. _The Religious System of the Amazulu_. Springvale, Natal: J. A. Blair, 1870. (Existence confirmed at https://openlibrary.org/books/OL7150829M/The_religious_system_of_the_Amazulu and https://archive.org/details/ReligiousSystemOfTheAmazulu; text not read (see Notes).)
 - Berglund, Axel-Ivar. _Zulu Thought-Patterns and Symbolism_. Studia Missionalia Upsaliensia 22. London: C. Hurst, 1976. (Reprint, Bloomington: Indiana University Press, 1989. Existence confirmed at https://openlibrary.org/books/OL4588743M/Zulu_thought-patterns_and_symbolism and https://iupress.org/9780253212054/zulu-thought-patterns-and-symbolism/; text not read (see Notes).)
-- Wikipedia, s.v. "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
+- Wikipedia, under "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
 
 Per-deity:
 
 - **Unkulunkulu** (filed Zulu; creator and first ancestor) — Thayer calls him "the first man" who "came out of, or broke off from, a bed of reeds", created humanity and "gave them their social institutions, such as marriage and chieftainship", and says he "is called uMvelinqangi". That settles the row as creator _and_ first ancestor rather than a sky god, and settles that uMvelinqangi belongs in his description. Wikipedia's "Unkulunkulu" adds the missionary history: the pre-Christian sense was "old-old one", the ancestor of a lineage, and the creator reading grew with the mid-1800s missions. Callaway 1870 is the primary record of that debate (Wikipedia's article on it: "the old-old one, the great-great-grandfather", who taught hunting, fire-making and agriculture). The description says both, and a practitioner reading either way will find their reading there.
   - Thayer, James S. "Unkulunkulu." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/unkulunkulu.
-  - Wikipedia, s.v. "Unkulunkulu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Unkulunkulu.
+  - Wikipedia, under "Unkulunkulu." Last modified August 26, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Unkulunkulu.
   - Callaway, Henry. _The Religious System of the Amazulu_. Springvale, Natal: J. A. Blair, 1870. (Existence confirmed at https://openlibrary.org/books/OL7150829M/The_religious_system_of_the_Amazulu and https://archive.org/details/ReligiousSystemOfTheAmazulu; text not read (see Notes).)
-  - Wikipedia, s.v. "The Religious System of the Amazulu." Last modified March 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/The_Religious_System_of_the_Amazulu.
+  - Wikipedia, under "The Religious System of the Amazulu." Last modified March 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/The_Religious_System_of_the_Amazulu.
 - **Umvelinqangi** (filed Zulu; supreme being and Lord of the Sky — a judgement call, see Notes) — The _Dictionary of South African English_ defines it as "the original being, the first to appear; used among isiXhosa- and isiZulu-speakers as a praise-name or term of address for the traditional supreme being and for the Christian God", from _vela_ (come forth) and _-qangi_ (first), with citations from 1855 ("The First Comer-Out") to 1978 ("the-one-who-emerged-first ... The Creator of all things"), and records both views of the relation to uNkulunkulu: one citation says they are the same, another that uNkulunkulu "is regarded more as an ancestor than deity". That settles the name as a living praise-name for the supreme being, and settles the "often identified with Unkulunkulu" clause. For the sky, thunder and lightning: Preston-Whyte names "the lord of the sky and personification of heaven", iNkosi yeZulu, as the power behind thunder and lightning, and Wikipedia's "Zulu traditional religion" identifies Umvelinqangi as the "sky god, god of thunder and earthquake", "sometimes conflated with Unkulunkulu". Spelling: the dictionary heads the entry _umvelinqangi_ and lists mvelangqangi, mvelingqangi, umvelingqangi, umvelinqange; the row capitalises the head form as the list capitalises Unkulunkulu.
-  - _Dictionary of South African English_, s.v. "umvelinqangi." Accessed October 6, 2026. https://dsae.co.za/entry/umvelinqangi/e07507.
+  - _Dictionary of South African English_, under "umvelinqangi." Accessed October 6, 2026. https://dsae.co.za/entry/umvelinqangi/e07507.
   - Preston-Whyte, Eleanor M. "Zulu Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/zulu-religion.
-  - Wikipedia, s.v. "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
+  - Wikipedia, under "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
 - **Nomkhubulwane** (filed Zulu; goddess of rain, the rainbow and the crops; Inkosazana folded into her description — a judgement call, see Notes) — Preston-Whyte names "iNkosazana (Princess of Heaven / Nomkhubulwana)" and writes that "this female deity is closely associated with abundance and sufficient (but not too much) rain. She bestows fertility on crops, cattle, and human beings." That is the one place a peer-reviewed reference work says "deity" of a Zulu figure without qualification, and it settles that Inkosazana and Nomkhubulwane are the same goddess under a title and a name. Wikipedia's "Zulu traditional religion" gives the rainbow, agriculture, rain and the spring shapeshifting, and its "Inkosazana" records the minority view that splits them (Inkosazana for growth and girls, Nomkhubulwane for harvest and mothers). The girls' planting rite is the Nomdede / Nomkhubulwana festival: the repository record of Adeyemi's chapter calls it the "annual Nomkhubulwana (Nomdede) festival in celebration of the Virgin Queen"; and the Ulwazi Programme's page ("the Zulu Goddess of rain, nature, and fertility ... 'she who chooses the state of an animal'"), a KwaZulu-Natal community-heritage site, supports the modern spelling.
   - Preston-Whyte, Eleanor M. "Zulu Religion." In _Encyclopedia of Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/zulu-religion.
-  - Wikipedia, s.v. "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
-  - Wikipedia, s.v. "Inkosazana." Last modified August 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Inkosazana.
+  - Wikipedia, under "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
+  - Wikipedia, under "Inkosazana." Last modified August 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Inkosazana.
   - Adeyemi, Sola. "Performing Myths, Ritualising Modernity: Dancing for Nomkhubulwana and the Reinvention of Zulu Tradition." In _A Gazelle of the Savannah: Sunday Ododo and the Framing of Techno-Cultural Performance in Nigeria_, edited by Osakue S. Omoera, Sola Adeyemi, and Benedict Binebai, 435–45. Rochester, UK: Alpha Crownes, 2012. (Record at https://gala.gre.ac.uk/10255/.)
   - "Nomkhubulwane Zulu Goddess of Rain." _Ulwazi Programme_. Accessed October 6, 2026. https://www.ulwaziprogramme.org/nomkhubulwane-zulu-goddess-of-rain/.
 - **Mamlambo** (filed Zulu; goddess and spirit of rivers — the sources differ, see Notes) — The _Dictionary of South African English_ defines her as "a female water spirit, usually in the form of a snake or a woman requiring sacrifice, sometimes of human life, in return for her favour", from isiZulu _umamlambo_, "one of the river", with the variant Momlambo and a 1990 citation calling her "the goddess of the rivers of Natal". That settles the etymology, the serpent form and the "sought and feared" clause, and shows the word "goddess" is in the South African record, not only on mythology sites. Wikipedia's "Mamlambo" ("a deity in South African and Zulu mythology, the 'goddess of rivers'", citing Michael Jordan's _Dictionary of Gods and Goddesses_, 2nd ed., 2004) and its "Zulu traditional religion" ("Mamlambo (Nomhoyi) ... the goddess of rivers") support the filing as a goddess and the alternate Nomhoyi.
-  - _Dictionary of South African English_, s.v. "mamlambo." Accessed October 6, 2026. https://dsae.co.za/entry/mamlambo/e04522.
-  - Wikipedia, s.v. "Mamlambo." Last modified April 25, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Mamlambo.
-  - Wikipedia, s.v. "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
+  - _Dictionary of South African English_, under "mamlambo." Accessed October 6, 2026. https://dsae.co.za/entry/mamlambo/e04522.
+  - Wikipedia, under "Mamlambo." Last modified April 25, 2025. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Mamlambo.
+  - Wikipedia, under "Zulu traditional religion." Last modified October 4, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Zulu_traditional_religion.
 
 #### Haitian Vodou
 
@@ -1120,33 +1120,33 @@ What the sources settle: the five lwa and their roles; the Kreyòl spellings Dan
 - Desmangles, Leslie G. _The Faces of the Gods: Vodou and Roman Catholicism in Haiti_. Chapel Hill: University of North Carolina Press, 1992. (Confirmed through Open Library, https://openlibrary.org/works/OL4321480W.)
 - Cosentino, Donald J., ed. _Sacred Arts of Haitian Vodou_. Los Angeles: UCLA Fowler Museum of Cultural History, 1995. (Confirmed through Open Library, https://openlibrary.org/books/OL792534M/Sacred_arts_of_Haitian_vodou.)
 - Noonan, Kerry. "Gran Brijit: Haitian Vodou Guardian of the Cemetery." In _Goddesses in World Culture_, edited by Patricia Monaghan. Santa Barbara, CA: Praeger, 2010. (The set confirmed through Open Library, https://openlibrary.org/works/OL35706227W; the chapter's volume and pages were not verified, see Notes.)
-- Wikipedia, s.v. "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
-- Wikipedia, s.v. "Damballa." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Damballa.
-- Wikipedia, s.v. "Baron Samedi." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Baron_Samedi.
-- Wikipedia, s.v. "Maman Brigitte." Last modified August 18, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Maman_Brigitte.
+- Wikipedia, under "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
+- Wikipedia, under "Damballa." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Damballa.
+- Wikipedia, under "Baron Samedi." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Baron_Samedi.
+- Wikipedia, under "Maman Brigitte." Last modified August 18, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Maman_Brigitte.
 
 Per-deity:
 
 - **Papa Legba** (filed Haitian Vodou as a row apart from Yoruba Elegba; also Legba; "opens every ceremony") — The Pressbooks chapter "What Is Vodou?" has "Papa Legba is the first lwa to be addressed at such ceremonies, as he is the gatekeeper", which settles the opening role and the lwa filing; Michel lists "Legba (Atibon Legba)" among the lwa, and Wikipedia's entry records Eṣu and Elegua as the related but distinct Yoruba figures.
   - Florida State College at Jacksonville. "What Is Vodou?" In _World Religions_. Lumen Learning / Pressbooks, hosted by the University of Nevada, Reno. Accessed October 6, 2026. https://unr.pressbooks.pub/worldreligions/chapter/what-is-vodou/. (CC BY 4.0.)
   - Michel, Claudine. "Vodun (Voodoo)." In _Contemporary American Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/religion/legal-and-political-magazines/vodun-voodoo.
-  - Wikipedia, s.v. "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
+  - Wikipedia, under "Papa Legba." Last modified October 3, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Papa_Legba.
 - **Damballah** (spelled Damballah over Danbala) — Michel writes "Damballah (Danbala)", attesting both forms; the Pressbooks chapter uses "Danbala" for "the serpent spirit of fertility and regeneration ... of waterfalls, rainbows" and reproduces Hyppolite's painting titled _Damballah the Torch_; Deren's chapter headings use "Damballah". Wikipedia's entry supports "creation" and "peaceful stability" (see Notes on "rain").
   - Michel, Claudine. "Vodun (Voodoo)." In _Contemporary American Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/religion/legal-and-political-magazines/vodun-voodoo.
   - Florida State College at Jacksonville. "What Is Vodou?" In _World Religions_. Lumen Learning / Pressbooks, hosted by the University of Nevada, Reno. Accessed October 6, 2026. https://unr.pressbooks.pub/worldreligions/chapter/what-is-vodou/. (CC BY 4.0.)
   - Deren, Maya. _Divine Horsemen: The Living Gods of Haiti_. London: Thames and Hudson, 1953. (Reprint, New Paltz, NY: McPherson, 1983. Confirmed through McPherson & Company, https://www.mcphersonco.com/store/p45/Divine_Horsemen_The_Living_Gods_of_Haiti_by_Maya_Deren.html, and Open Library, https://openlibrary.org/books/OL3173920M/Divine_horsemen.)
-  - Wikipedia, s.v. "Damballa." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Damballa.
+  - Wikipedia, under "Damballa." Last modified September 15, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Damballa.
 - **Erzulie** (described as a "family of lwa", naming Erzulie Freda and Erzulie Dantor; also Ezili) — Nwokocha treats Ezili as a group — Ezili Freda, Ezili Dantò, La Sirenn, Gran Ezili, Ezili je wouj — and gives Freda love, luxury, vanity and jealousy, which settles the hedge, the two named members and the Ezili spelling; Michel names "Ezili Freda Daome" and "Ezili Danto".
   - Nwokocha, Eziaku Atuama. "An Equilibrist Vodou Goddess." _Harvard Divinity Bulletin_, Summer/Autumn 2013. Accessed October 6, 2026. https://bulletin.hds.harvard.edu/an-equilibrist-vodou-goddess/.
   - Michel, Claudine. "Vodun (Voodoo)." In _Contemporary American Religion_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/religion/legal-and-political-magazines/vodun-voodoo.
 - **Baron Samedi** ("head of the Gede"; "resurrection") — The Fowler Museum's drapo page has "Bawon Samdi ... serves as the chief of the Gede clan", which settles the headship; its "In Extremis" page has him preside "over key aspects of mortality, sexuality, and rebirth", and Wikipedia's entry calls him "the loa of resurrection" and gives Bawon Samdi / Bawon Sanmdi as the other spellings.
   - Fowler Museum at UCLA. "Curator's Choice: A Vodou Drapo for Papa Gede." Accessed October 6, 2026. https://fowler.ucla.edu/curators-choice-a-vodou-drapo-for-papa-gede/.
   - Fowler Museum at UCLA. "In Extremis: Death and Life in 21st-Century Haitian Art." Accessed October 6, 2026. https://fowler.ucla.edu/exhibitions/in-extremis-death-and-life-in-21st%E2%80%90century-haitian-art/. (Exhibition, September 16, 2012–January 20, 2013.)
-  - Wikipedia, s.v. "Baron Samedi." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Baron_Samedi.
+  - Wikipedia, under "Baron Samedi." Last modified September 25, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Baron_Samedi.
 - **Maman Brigitte** ("wife of Baron Samedi"; a lwa named from Irish Brigid; spelled Maman Brigitte over Grann Brijit) — The Pressbooks chapter "Death, Dying, and the Soul in Haitian Vodou" has "A female lwa named Grann Brijit (Old or Great Brigid), who is often called Manman Brijit (Mother Brigid)", sharing with Bawon the "passage between life and death", which settles the wife's role, the Brigid gloss on the name and the Kreyòl spellings; the Fowler drapo page calls her "Bawon Samdi's wife", and Wikipedia's entry gives the French spelling and the derivation "possibly deriving from Saint Brigid of Ireland", with Noonan's chapter as the scholarly treatment of the Irish link.
   - Florida State College at Jacksonville. "Death, Dying, and the Soul in Haitian Vodou." In _World Religions_. Lumen Learning / Pressbooks, hosted by the University of Nevada, Reno. Accessed October 6, 2026. https://unr.pressbooks.pub/worldreligions/chapter/death-dying-and-the-soul-in-haitian-vodou/. (CC BY 4.0.)
   - Fowler Museum at UCLA. "Curator's Choice: A Vodou Drapo for Papa Gede." Accessed October 6, 2026. https://fowler.ucla.edu/curators-choice-a-vodou-drapo-for-papa-gede/.
-  - Wikipedia, s.v. "Maman Brigitte." Last modified August 18, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Maman_Brigitte.
+  - Wikipedia, under "Maman Brigitte." Last modified August 18, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Maman_Brigitte.
   - Noonan, Kerry. "Gran Brijit: Haitian Vodou Guardian of the Cemetery." In _Goddesses in World Culture_, edited by Patricia Monaghan. Santa Barbara, CA: Praeger, 2010. (The set confirmed through Open Library, https://openlibrary.org/works/OL35706227W; the chapter's volume and pages were not verified, see Notes.)
 
 #### Aztec
@@ -1165,7 +1165,7 @@ Per-deity:
   - Mursell, Ian. "The Aztecs' Use of Hallucinogenic Drugs." Mexicolore. December 7, 2023. Accessed October 6, 2026. https://www.mexicolore.co.uk/aztecs/aztec-life/hallucinogens.
   - Olivier, Guilhem. "The Gods of the Mexica (2)." Mexicolore. August 28, 2011. Accessed October 6, 2026. https://www.mexicolore.co.uk/aztecs/gods/gods-of-the-mexica-2/1000. (Tláloc, "god of rain and lightning"; Chalchiuhtlicue, "'She with the jade skirt' – goddess of rivers and births"; Quetzalcoátl, creator god; Xochipilli, "'Prince of flowers' – god of flowers, nobles, music"; Xochiquétzal, "'Quetzal-flower' – mother goddess, patroness of weavers.")
 - **Chalchiuhtlicue** ("birth and baptism") — Wikipedia's entry is the only fetched source that says baptism: it gives her as goddess of "water, seas, oceans, rivers, lakes, streams, rain, storms, and baptism" and describes the bathing and naming of the newborn on its fourth day, which the academic sources call "births" and "ceremonies related to birth", the latter in a World History Encyclopedia image caption.
-  - Wikipedia, s.v. "Chalchiuhtlicue." Last modified September 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chalchiuhtlicue.
+  - Wikipedia, under "Chalchiuhtlicue." Last modified September 14, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Chalchiuhtlicue.
   - Olivier, Guilhem. "The Gods of the Mexica (2)." Mexicolore. August 28, 2011. Accessed October 6, 2026. https://www.mexicolore.co.uk/aztecs/gods/gods-of-the-mexica-2/1000. (Tláloc, "god of rain and lightning"; Chalchiuhtlicue, "'She with the jade skirt' – goddess of rivers and births"; Quetzalcoátl, creator god; Xochipilli, "'Prince of flowers' – god of flowers, nobles, music"; Xochiquétzal, "'Quetzal-flower' – mother goddess, patroness of weavers.")
   - "Chalchiuhtlicue." World History Encyclopedia. November 6, 2025. Accessed October 6, 2026. https://www.worldhistory.org/image/21257/chalchiuhtlicue/. (Image caption, uploaded by Jordy Samuels.)
 - **Quetzalcoatl** ("Maya Kukulkan") — Cartwright's "Quetzalcóatl" and Mark's "The Mayan Pantheon" both name Kukulkan/Kukulcan as the Maya form of the same god, which settles filing him once, under Aztec, with the Maya name in the gloss.
@@ -1183,7 +1183,7 @@ What the sources settle: World History Encyclopedia's Maya pantheon covers Ixche
 Per-deity:
 
 - **Ixchel** ("goddess of the Moon"; "also Ix Chel") — Wikipedia's entry uses "Ixchel" and "Ix Chel" interchangeably, which settles the alternative spelling, and gives her as goddess of fertility, midwifery, medicine and water with a section "Confusion with the moon goddess." Mursell's Mexicolore answer on the Maya symbol for the moon, quoting Miller and Taube, agrees: the young moon goddess of Classic art "is not Ixchel, as is often alleged; Ixchel is an old goddess." The moon in the description is the popular attribution, not the scholarly one (see Notes).
-  - Wikipedia, s.v. "Ixchel." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ixchel.
+  - Wikipedia, under "Ixchel." Last modified September 1, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Ixchel.
   - Mursell, Ian. "What Was the Ancient Maya Symbol for the Moon?" Mexicolore. n.d. Accessed October 6, 2026. https://www.mexicolore.co.uk/aztecs/ask-us/what-was-the-maya-moon-symbol.
   - Miller, Mary, and Karl Taube. _The Gods and Symbols of Ancient Mexico and the Maya: An Illustrated Dictionary of Mesoamerican Religion_. London: Thames and Hudson, 1993. (Existence confirmed through the Cambridge Core record of Bruce Welsh's review, _Latin American Antiquity_ 5, no. 2 (1994): 185, and Google Books, ISBN 0500050686.)
 
@@ -1212,11 +1212,11 @@ Per-deity:
 
 - **Hina** (filed Hawaiian; "Hawaiian and Polynesian goddess of the Moon, tapa-making and women") — Beckwith's "Hina Myths" chapter opens by identifying Hina-hanaia-i-ka-malama, "the woman who worked in the moon," with "the Tahitian who beats out tapa in the moon," which settles the moon, the tapa and the hedge that she is Polynesian beyond Hawaiʻi; the Kahoʻiwai entry adds that she is "the god associated with female energies."
   - Beckwith, Martha. _Hawaiian Mythology_. Honolulu: University of Hawaii Press, 1970. (First published 1940 by Yale University Press. Record confirmed at Ulukau, https://www.ulukau.org/ulukau-books/?a=d&d=EBOOK-BECKWIT1&l=en, and the Internet Archive; chapters "The God Lono," "The Kane Worship," "The Pele Myth," "The Pele Sisters," "Pele Legends," "Hina Myths" from the table of contents at https://books.google.com/books/about/Hawaiian_Mythology.html?id=BqElGaH4DiIC; text read in the 1940 scan at https://archive.org/details/hawaiianmytholog00beck_0.) · chap. "Hina Myths," p. 214
-  - Dizon, Puaokamele, and Annemarie Paikai. "Akua Vocabulary List." Kahoʻiwai: Reclaiming Hawaiian Knowledge Sovereignty. University of Hawaiʻi. Accessed October 6, 2026. https://www.hawaii.edu/kawaihapai/akua-list/. (Entries fetched: "Hina" (/hina/), "Kāne" (/kane/), "Laka" (/laka/), "Lono" (/lono/), "Pelehonuamea" (/pelehonuamea/). Hina: "the moon is her bodily form," kapa making, female energies; Kāne: freshwater streams, pools and the life-giving waters, taro, ʻawa; Laka: "the akua of hula, maile lei making, ʻieʻie weaving, and healing"; Lono: agriculture, rain clouds, thunder, rain, rainbows, "Makahiki is a ceremony for Lono"; Pele: volcanic phenomena, "usually resides at Halemaʻumaʻu at Kīlauea.") · s.v. "Hina"
+  - Dizon, Puaokamele, and Annemarie Paikai. "Akua Vocabulary List." Kahoʻiwai: Reclaiming Hawaiian Knowledge Sovereignty. University of Hawaiʻi. Accessed October 6, 2026. https://www.hawaii.edu/kawaihapai/akua-list/. (Entries fetched: "Hina" (/hina/), "Kāne" (/kane/), "Laka" (/laka/), "Lono" (/lono/), "Pelehonuamea" (/pelehonuamea/). Hina: "the moon is her bodily form," kapa making, female energies; Kāne: freshwater streams, pools and the life-giving waters, taro, ʻawa; Laka: "the akua of hula, maile lei making, ʻieʻie weaving, and healing"; Lono: agriculture, rain clouds, thunder, rain, rainbows, "Makahiki is a ceremony for Lono"; Pele: volcanic phenomena, "usually resides at Halemaʻumaʻu at Kīlauea.") · under "Hina"
 - **Kane** ("creation, life, sunlight and fresh water") — Wikipedia's entry is the only fetched source for sunlight: "Kāne is the creator and gives life associated with dawn, sun, and sky"; creation, procreation and the water of life are Beckwith's, fresh water the Kahoʻiwai entry's.
-  - Wikipedia, s.v. "Kāne." Last modified September 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/K%C4%81ne.
+  - Wikipedia, under "Kāne." Last modified September 16, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/K%C4%81ne.
   - Beckwith, Martha. _Hawaiian Mythology_. Honolulu: University of Hawaii Press, 1970. (First published 1940 by Yale University Press. Record confirmed at Ulukau, https://www.ulukau.org/ulukau-books/?a=d&d=EBOOK-BECKWIT1&l=en, and the Internet Archive; chapters "The God Lono," "The Kane Worship," "The Pele Myth," "The Pele Sisters," "Pele Legends," "Hina Myths" from the table of contents at https://books.google.com/books/about/Hawaiian_Mythology.html?id=BqElGaH4DiIC; text read in the 1940 scan at https://archive.org/details/hawaiianmytholog00beck_0.) · chap. "The Kane Worship"
-  - Dizon, Puaokamele, and Annemarie Paikai. "Akua Vocabulary List." Kahoʻiwai: Reclaiming Hawaiian Knowledge Sovereignty. University of Hawaiʻi. Accessed October 6, 2026. https://www.hawaii.edu/kawaihapai/akua-list/. (Entries fetched: "Hina" (/hina/), "Kāne" (/kane/), "Laka" (/laka/), "Lono" (/lono/), "Pelehonuamea" (/pelehonuamea/). Hina: "the moon is her bodily form," kapa making, female energies; Kāne: freshwater streams, pools and the life-giving waters, taro, ʻawa; Laka: "the akua of hula, maile lei making, ʻieʻie weaving, and healing"; Lono: agriculture, rain clouds, thunder, rain, rainbows, "Makahiki is a ceremony for Lono"; Pele: volcanic phenomena, "usually resides at Halemaʻumaʻu at Kīlauea.") · s.v. "Kāne"
+  - Dizon, Puaokamele, and Annemarie Paikai. "Akua Vocabulary List." Kahoʻiwai: Reclaiming Hawaiian Knowledge Sovereignty. University of Hawaiʻi. Accessed October 6, 2026. https://www.hawaii.edu/kawaihapai/akua-list/. (Entries fetched: "Hina" (/hina/), "Kāne" (/kane/), "Laka" (/laka/), "Lono" (/lono/), "Pelehonuamea" (/pelehonuamea/). Hina: "the moon is her bodily form," kapa making, female energies; Kāne: freshwater streams, pools and the life-giving waters, taro, ʻawa; Laka: "the akua of hula, maile lei making, ʻieʻie weaving, and healing"; Lono: agriculture, rain clouds, thunder, rain, rainbows, "Makahiki is a ceremony for Lono"; Pele: volcanic phenomena, "usually resides at Halemaʻumaʻu at Kīlauea.") · under "Kāne"
 
 #### Wicca
 
@@ -1247,8 +1247,8 @@ Per-deity:
   - Malta-Król, Joanna. "The Horned God: Divine Male Principle in British Traditional Wicca." In _Manifestations of Male Image in the World's Cultures_, edited by Renata Iwicka, 157–78. Kraków: Jagiellonian University Press, 2021. (Record at https://www.cambridge.org/core/books/abs/manifestations-of-male-image-in-the-worlds-cultures/horned-god-divine-male-principle-in-british-traditional-wicca/06791E7F8D0F4385DE388972509A5D3C.)
 - **Herne** ("English folklore's antlered hunter of Windsor Forest, honoured as a horned god in modern practice"; "Herne the Hunter") — In Shakespeare, Mistress Page's "Herne the Hunter, / Sometime a keeper here in Windsor Forest, / Doth all the wintertime, at still midnight, / Walk round about an oak, with great ragged horns" settles the antlers, the forest, the oak and the name as folklore Shakespeare already found told. The 1911 _Encyclopaedia Britannica_'s "Herne the Hunter" settles the Windsor Great Park haunting, Herne's oak and the keeper story. Wikipedia's entry settles the modern clause: Margaret Murray "identified Cernunnos with Herne in her 1933 book _The God of the Witches_," and "some modern Neopagans such as Wiccans accept Lowe Thompson's equation of Herne with Cernunnos"; it also confirms Shakespeare's 1597 play as the earliest mention.
   - Shakespeare, William. _The Merry Wives of Windsor_. Edited by Barbara A. Mowat and Paul Werstine, with Michael Poston and Rebecca Niles. Folger Shakespeare Library, 2015. Accessed October 6, 2026. https://www.folger.edu/explore/shakespeares-works/the-merry-wives-of-windsor/read/4/4/. · act 4, scene 4
-  - _Encyclopaedia Britannica_, 11th ed., s.v. "Herne the Hunter." 1911. Wikisource. Accessed October 6, 2026. https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Herne_the_Hunter. · vol. 13
-  - Wikipedia, s.v. "Herne the Hunter." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Herne_the_Hunter.
+  - _Encyclopaedia Britannica_, 11th ed., under "Herne the Hunter." 1911. Wikisource. Accessed October 6, 2026. https://en.wikisource.org/wiki/1911_Encyclop%C3%A6dia_Britannica/Herne_the_Hunter. · vol. 13
+  - Wikipedia, under "Herne the Hunter." Last modified October 5, 2026. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Herne_the_Hunter.
 
 #### Italian folk witchcraft
 
