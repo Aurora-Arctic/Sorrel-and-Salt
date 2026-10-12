@@ -243,16 +243,16 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.221 | IngredientForm's Variants section                                                                                        | Wave 8  | MB.222                 |
 | MB.222 | The form leaves the ingredient row: filters, list, SDL, seeds, fixtures                                                  | Wave 8  | MB.223                 |
 | MB.223 | Drop `canonical_key`, `form`, `form_id` and what indexed them                                                            | Wave 8  | —                      |
-| MB.240 | The compendium seed: scope, sourcing rules, the candidate list and the library                                           | Wave 8  | MB.242                 |
-| MB.241 | `seed_key` on `ingredients`                                                                                              | Wave 8  | MB.242                 |
-| MB.242 | `db:seed:compendium`, the guard, CI and a 14-ingredient pilot                                                            | Wave 8  | MB.243                 |
-| MB.243 | The compendium seed: plants A to Cn                                                                                      | Wave 8  | MB.249                 |
-| MB.244 | The compendium seed: plants Co to K                                                                                      | Wave 8  | MB.249                 |
-| MB.245 | The compendium seed: plants L to Q                                                                                       | Wave 8  | MB.249                 |
-| MB.246 | The compendium seed: plants R to Z                                                                                       | Wave 8  | MB.249                 |
-| MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 8  | MB.249                 |
-| MB.248 | The compendium seed: stones and metals                                                                                   | Wave 8  | MB.249                 |
-| MB.249 | Close the compendium seed                                                                                                | Wave 8  | —                      |
+| MB.240 | The compendium seed: scope, sourcing rules, the candidate list and the library                                           | Wave 9  | MB.242                 |
+| MB.241 | `seed_key` on `ingredients`                                                                                              | Wave 9  | MB.242                 |
+| MB.242 | `db:seed:compendium`, the guard, CI and a 14-ingredient pilot                                                            | Wave 9  | MB.243                 |
+| MB.243 | The compendium seed: plants A to Cn                                                                                      | Wave 9  | MB.249                 |
+| MB.244 | The compendium seed: plants Co to K                                                                                      | Wave 9  | MB.249                 |
+| MB.245 | The compendium seed: plants L to Q                                                                                       | Wave 9  | MB.249                 |
+| MB.246 | The compendium seed: plants R to Z                                                                                       | Wave 9  | MB.249                 |
+| MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9  | MB.249                 |
+| MB.248 | The compendium seed: stones and metals                                                                                   | Wave 9  | MB.249                 |
+| MB.249 | Close the compendium seed                                                                                                | Wave 9  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
