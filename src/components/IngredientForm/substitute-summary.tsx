@@ -98,7 +98,7 @@ export function SubstituteSummary({
         .map((element) => labelOf(ELEMENT_OPTIONS, element))
         .join(', '),
     ],
-    ['Planets', joined(ingredient.planets, form?.planets).join(', ')],
+    ['Celestial Bodies', joined(ingredient.planets, form?.planets).join(', ')],
     ['Zodiac Signs', joined(ingredient.zodiacSigns, form?.zodiacSigns).join(', ')],
     ['Colours', joined(ingredient.colors, form?.colors).join(', ')],
     ['Entry', tierOf(ingredient)],

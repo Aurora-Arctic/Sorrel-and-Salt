@@ -86,7 +86,7 @@ describe('IngredientForm’s sections', () => {
 
     fireEvent.click(toggle('Correspondences'));
     expect(openSections()).toEqual(['Correspondences']);
-    expect(control('Planet')).toBeVisible();
+    expect(control('Celestial Body')).toBeVisible();
     expect(control('Name')).not.toBeVisible();
 
     fireEvent.click(toggle('Safety'));
@@ -94,7 +94,7 @@ describe('IngredientForm’s sections', () => {
 
     fireEvent.click(toggle('Correspondences'));
     expect(openSections()).toEqual(['Safety']);
-    expect(control('Planet')).not.toBeVisible();
+    expect(control('Celestial Body')).not.toBeVisible();
   });
 
   it('puts Open All beside the modal’s title, out of the form, and it still opens every section', () => {

@@ -13,7 +13,7 @@ tabs, each tab at its own address, and the nav links a page at its first tab
 |            | Categories | Categories `/admin/categories` · Groups `/admin/category-groups`                                       | M5.6, M5.6b          |
 |            | Forms      | Forms `/admin/forms` · Groups `/admin/form-groups`                                                     | M5.6a, M5.6b         |
 |            | Deities    | Deities `/admin/deities` · Traditions `/admin/deity-traditions`                                        | MB.132               |
-|            | Astrology  | Planets `/admin/planets` · Zodiac Signs `/admin/zodiac-signs`                                          | MB.95                |
+|            | Astrology  | Celestial Bodies `/admin/celestial-bodies` · Zodiac Signs `/admin/zodiac-signs`                        | MB.95                |
 | People     | People     | Users `/admin/users` · Invitations `/admin/invitations` · Privilege Changes `/admin/privilege-changes` | MB.52, MB.70, MB.200 |
 
 It takes no props. The list is in `sections.ts`: `ADMIN_PAGES`, each page
@@ -37,7 +37,7 @@ only too.
   Categories with their groups, Forms with theirs, Deities with their
   traditions (M5.6b, MB.132;
   [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).
-  Planets and Zodiac Signs share Astrology; Users, the admin invitations and
+  Celestial Bodies and Zodiac Signs share Astrology; Users, the admin invitations and
   the privilege ledger, the history of what was done to them (MB.200), share
   People. Two sections, Compendium and People. The grouping and the tabs are
   the owner's, at MB.115's design review.

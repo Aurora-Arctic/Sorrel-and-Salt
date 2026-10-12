@@ -645,12 +645,12 @@ function WhatToTry() {
       <summary>What to try</summary>
       <ul>
         <li>
-          <strong>Suggestions:</strong> focus New Form, Folk Name, Planet, Zodiac Sign, Deity or
-          Substitute Ingredient to list everything, then type to narrow it. &ldquo;wax&rdquo; in New
-          Form shows two forms named Wax, told apart by group; &ldquo;mo&rdquo; in Planet shows From
-          Compendium and From Coven; &ldquo;hec&rdquo; in Deity shows Hecate under two traditions;
-          &ldquo;test&rdquo; in Substitute Ingredient shows one plant twice, the compendium&rsquo;s
-          and this coven&rsquo;s.
+          <strong>Suggestions:</strong> focus New Form, Folk Name, Celestial Body, Zodiac Sign,
+          Deity or Substitute Ingredient to list everything, then type to narrow it.
+          &ldquo;wax&rdquo; in New Form shows two forms named Wax, told apart by group;
+          &ldquo;mo&rdquo; in Celestial Body shows From Compendium and From Coven; &ldquo;hec&rdquo;
+          in Deity shows Hecate under two traditions; &ldquo;test&rdquo; in Substitute Ingredient
+          shows one plant twice, the compendium&rsquo;s and this coven&rsquo;s.
         </li>
         <li>
           <strong>A pick:</strong> pick either Wax in New Form, and a Wax variant is added, its
@@ -694,15 +694,16 @@ function WhatToTry() {
           then Save.
         </li>
         <li>
-          <strong>Moving an entry:</strong> add a few Planets, Zodiac Signs, Colours or Deities,
-          enough to wrap onto a second row, and drag one by its grip; or Tab to it, press Space,
-          move it with the arrow keys and press Space again. Folk Names and Substitute Ingredients
-          have no grip.
+          <strong>Moving an entry:</strong> add a few Celestial Bodies, Zodiac Signs, Colours or
+          Deities, enough to wrap onto a second row, and drag one by its grip; or Tab to it, press
+          Space, move it with the arrow keys and press Space again. Folk Names and Substitute
+          Ingredients have no grip.
         </li>
         <li>
-          <strong>Repeated entry:</strong> add Mars to Planets, then type &ldquo;mars&rdquo; and
-          press Add: nothing is added, and the box says why. Mars is no longer suggested, nor is the
-          Name among Folk Names. Pick Greek Hecate, and Roman Hecate is still offered.
+          <strong>Repeated entry:</strong> add Mars to Celestial Bodies, then type
+          &ldquo;mars&rdquo; and press Add: nothing is added, and the box says why. Mars is no
+          longer suggested, nor is the Name among Folk Names. Pick Greek Hecate, and Roman Hecate is
+          still offered.
         </li>
         <li>
           <strong>Long entry:</strong> add a Folk Name too long for the box, then hover it.
@@ -808,7 +809,7 @@ const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') =>
   locator,
 });
 
-// The entry the edit story opens: a planet listed, a category picked
+// The entry the edit story opens: a celestial body listed, a category picked
 // (MB.126), three sources — a book, an article by two authors and a web
 // page — and two forms, one carrying details of its own.
 const ENTRY = {
@@ -906,10 +907,10 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
           <strong>Classification:</strong> required here: Save with none chosen to see it refused.
         </li>
         <li>
-          <strong>Picks only:</strong> New Form, a variant&rsquo;s Form, Planet, Zodiac Sign and
-          Deity offer the curated rows alone, with no &ldquo;Use what you typed&rdquo; and no Add;
-          type into one and Save, or press Enter, to see the text refused. Substitute Ingredient
-          offers the compendium&rsquo;s entries alone{editing ? ', never this one' : ''}.
+          <strong>Picks only:</strong> New Form, a variant&rsquo;s Form, Celestial Body, Zodiac Sign
+          and Deity offer the curated rows alone, with no &ldquo;Use what you typed&rdquo; and no
+          Add; type into one and Save, or press Enter, to see the text refused. Substitute
+          Ingredient offers the compendium&rsquo;s entries alone{editing ? ', never this one' : ''}.
         </li>
         <li>
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it

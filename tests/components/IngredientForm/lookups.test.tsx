@@ -273,8 +273,8 @@ describe('LookupListField', () => {
     useSuggestions: usePlanetSuggestions,
     name: 'planets',
     ordered: true,
-    legend: 'Planets',
-    entry: 'Planet',
+    legend: 'Celestial Bodies',
+    entry: 'Celestial Body',
   };
   const DEITIES: LookupList = {
     useSuggestions: useDeitySuggestions,
@@ -425,15 +425,15 @@ describe('LookupListField', () => {
     renderList(PLANETS);
     const calls = offerPlanets([{ ...MOON, description: null }, MOONFIXTURE]);
 
-    type('Planet', 'moon');
-    fireEvent.click(screen.getByRole('button', { name: 'Add Planet' }));
-    await lookUp('Planet', calls, 'Mo');
+    type('Celestial Body', 'moon');
+    fireEvent.click(screen.getByRole('button', { name: 'Add Celestial Body' }));
+    await lookUp('Celestial Body', calls, 'Mo');
 
     await screen.findByRole('option', { name: 'Moonfixture' });
     expect(screen.queryByRole('option', { name: 'Moon' })).not.toBeInTheDocument();
     expect(typedRow('Mo')).toBeInTheDocument();
 
-    type('Planet', ' MOON ');
+    type('Celestial Body', ' MOON ');
     settle();
     await screen.findByRole('option', { name: 'Moonfixture' });
     expect(typedRow('MOON')).not.toBeInTheDocument();

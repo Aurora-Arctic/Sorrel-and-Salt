@@ -124,7 +124,7 @@ function merged(
 }
 
 /**
- * What a copy says, for a screen reader: "Copied 3 planets from the
+ * What a copy says, for a screen reader: "Copied 3 celestial bodies from the
  * ingredient", and, for a variant's substitutes, how many it skipped for
  * having no form like the variant's, "Skipped 1 with no Oil form".
  */

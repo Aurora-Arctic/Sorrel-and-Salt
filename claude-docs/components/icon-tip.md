@@ -32,7 +32,7 @@ Edit link.
 ## Where it is used
 
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
-  page: categories, forms, deities, planets, zodiac signs) and
+  page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's

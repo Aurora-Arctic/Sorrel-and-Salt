@@ -3,7 +3,7 @@
 `src/components/GroupedValueForm/` — the admin's form for a curated value,
 grouped or flat. Grouped, the value is filed under a group: a category
 (M5.6), a curated ingredient form (M5.6a) or a curated deity (MB.132). Flat,
-it is filed under nothing: a planet or a zodiac sign (MB.95). One component
+it is filed under nothing: a celestial body or a zodiac sign (MB.95). One component
 serves every such vocabulary, `kind: 'category' | 'form' | 'deity' |
 'planet' | 'zodiacSign'`, as [`GroupForm`](group-form.md) serves the groups,
 so a new vocabulary is a kind rather than another copy. The flat kinds had a
@@ -41,7 +41,7 @@ Everything that tells one kind from another is its entry in `index.tsx`'s
 its three mutation documents, and nothing else:
 
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
-  "Form", "Deity", "Planet", "Zodiac Sign"); `group`, for a grouped kind only, the
+  "Form", "Deity", "Celestial Body", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label`, `placeholder`, what it shows until one is chosen
   ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, where a reader meets the description; `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
@@ -122,7 +122,7 @@ its three mutation documents, and nothing else:
   is where it is still asked, of an entry's own save
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)).
 - **A delete asks first, and says what it does.** Delete Category, Delete
-  Form, Delete Deity, Delete Planet or Delete Zodiac Sign asks
+  Form, Delete Deity, Delete Celestial Body or Delete Zodiac Sign asks
   `Delete "<name>"?` and the kind's note, beside Delete and Keep It, on a
   card over the form, which is dimmed and held until it is answered, the
   focus on Keep It (MB.115, the owner's call; [`modal.md`](modal.md),
@@ -151,7 +151,7 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
 
 ## On the admin pages
 
-`/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/planets` and
+`/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/celestial-bodies` and
 `/admin/zodiac-signs` are one page, `src/app/admin/value-page.tsx`'s
 `ValuePage`. Each route's `page.tsx` keeps its tab title and hands its kind
 and address over. `value-kinds.ts` holds each kind's readers from
@@ -168,11 +168,11 @@ the form, since a server component cannot hand `RouteModal` the function its
 contents take. Closing, saving or deleting fades the modal out, then
 `router.replace`s the page it opened over, filter and cursor kept
 (`closeHref`, from `groupedValuesHref`), so Back does not reopen it, and
-`router.refresh()`es so the list re-reads. The planets and signs skipped
+`router.refresh()`es so the list re-reads. The celestial bodies and signs skipped
 that fade on a save until the pages shared it.
 
 A form's slug is its name and its group's (`wax-substance`), a deity's its
-name and its tradition's (`hecate-greek`, from `deitySlug`), and a planet's
+name and its tradition's (`hecate-greek`, from `deitySlug`), and a celestial body's
 or a zodiac sign's its name, so a save can move the address; closing after every
 save means the modal never sits on a stale one. A deity's address also moves
 when its tradition is renamed, or deleted and its deities moved
@@ -243,13 +243,13 @@ group refusal and pathless one placed, and its rename note; and, under `describe
 create sending its tradition as `traditionId`, its rename saved under its
 id after the note, a `traditionId`
 refusal landing beside Tradition, and
-its delete refusal. The flat kinds, the planet and the zodiac sign, are rows of
+its delete refusal. The flat kinds, the celestial body and the zodiac sign, are rows of
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
 built from, `TextField`, `SelectField` and `BusyButton`, have no test file
 of their own: this one covers them as it uses them. The pages' half, `tests/app/admin/value-page.test.tsx`, is
 described in [`grouped-value-list.md`](grouped-value-list.md#testing); what the
 modal shows once open is this file's. `tests/e2e/admin.spec.ts`
-adds, renames and deletes a category, a form and a planet through the real server, adds
+adds, renames and deletes a category, a form and a celestial body through the real server, adds
 a deity under a new tradition and moves it when the tradition goes, and is
 refused deleting Protection, which seeded compendium entries are filed under.

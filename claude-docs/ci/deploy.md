@@ -214,7 +214,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   `migrate.yml`, not a workflow of their own.** After the migrations, `npm run
 db:seed:categories`, `npm run db:seed:forms`, `npm run db:seed:astrology`
   and `npm run db:seed:deities` write DESIGN.md §6's category vocabulary, §5's
-  ingredient form, planet and zodiac vocabularies and the deity vocabulary
+  ingredient form, celestial body (`planets`) and zodiac vocabularies and the deity vocabulary
   into the schema they just created, and `npm run db:seed:sources` then the
   sources their seed docs record, linked to the rows those seeds wrote, and
   `npm run db:seed:compendium` last the compendium's entries, which pick from

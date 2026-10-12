@@ -543,12 +543,12 @@ describe('GroupedValueForm, a deity', () => {
   });
 });
 
-// MB.95's flat kinds, folded in at MB.115: a planet or a zodiac sign has no
+// MB.95's flat kinds, folded in at MB.115: a celestial body or a zodiac sign has no
 // group, so the form asks for none and sends none. What every kind shares
 // runs on the category above; each flat kind gets only what it changes, its
 // three mutations (claude-docs/testing/layer-ownership.md, rule 5).
 const FLAT = [
-  { kind: 'planet', type: 'Planet', noun: 'Planet' },
+  { kind: 'planet', type: 'Planet', noun: 'Celestial Body' },
   { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Zodiac Sign' },
 ] as const;
 

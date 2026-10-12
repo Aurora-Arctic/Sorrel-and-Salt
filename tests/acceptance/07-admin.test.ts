@@ -46,7 +46,7 @@ import {
 import type { Stamps } from './types';
 
 // Stories 17 and 18 against the compendium's writes (M5.2), the category
-// vocabulary's (M5.6), the form vocabulary's (M5.6a), the planets' and the
+// vocabulary's (M5.6), the form vocabulary's (M5.6a), the celestial bodies' and the
 // signs' (MB.95), the two group vocabularies' (M5.6b), and the deities' and
 // their traditions' (MB.132).
 
@@ -261,7 +261,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
   });
 
   it.each([
-    ['a planet', 'planets', 'planets'],
+    ['a celestial body', 'planets', 'planets'],
     ['a zodiac sign', 'zodiacSigns', 'zodiac_signs'],
   ] as const)(
     'lets the site admin add, edit and soft-delete %s, every write stamped as the admin and the deleted row kept',

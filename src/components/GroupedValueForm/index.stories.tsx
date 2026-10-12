@@ -5,7 +5,7 @@ import Modal from '../Modal';
 import GroupedValueForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueForm.
-// Every kind, the flat planets and signs among them (MB.115).
+// Every kind, the flat celestial bodies and signs among them (MB.115).
 // The workshop has no API, so a save answers with the form's generic error.
 // Shown in the modal the admin pages open it in.
 export default {
@@ -90,7 +90,7 @@ export const EditingADeity: Story = () => (
 );
 
 export const AddingAPlanet: Story = () => (
-  <Modal title="Add Planet" onClose={done}>
+  <Modal title="Add Celestial Body" onClose={done}>
     <GroupedValueForm kind="planet" onDone={done} />
   </Modal>
 );

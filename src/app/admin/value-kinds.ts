@@ -19,7 +19,7 @@ import { GROUP_READERS } from './group-readers';
 import type { ValueKindSource, ValueRow } from './types';
 
 // Each curated value page's readers, from the vocabulary module: what tells
-// `/admin/categories` from `/admin/planets` once the copy is the list's
+// `/admin/categories` from `/admin/celestial-bodies` once the copy is the list's
 // (`GroupedValueList/kinds.ts`). Written once (MB.115) after five pages had
 // each carried the same reads under their own names. Every reader is mapped
 // onto the page's own names here, so `value-page.tsx` reads every kind alike:

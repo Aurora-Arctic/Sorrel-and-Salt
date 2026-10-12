@@ -471,9 +471,9 @@ function VariantFieldset({
               name={`${at}.planets`}
               ordered
               pickOnly={compendium}
-              legend="Planets"
-              entry="Planet"
-              placeholder="Add a planet"
+              legend="Celestial Bodies"
+              entry="Celestial Body"
+              placeholder="Add a body"
               action={(announce) => (
                 <CopyFromIngredient at={at} field="planets" announce={announce} />
               )}

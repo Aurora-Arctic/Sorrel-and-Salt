@@ -462,10 +462,10 @@ const IngredientForm = ({
                   name="planets"
                   ordered
                   pickOnly={compendium}
-                  legend="Planets"
-                  entry="Planet"
+                  legend="Celestial Bodies"
+                  entry="Celestial Body"
                   hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
-                  placeholder="Add a planet"
+                  placeholder="Add a body"
                 />
                 <LookupListField
                   workspaceId={workspaceId}

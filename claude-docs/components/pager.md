@@ -3,7 +3,7 @@
 `src/components/Pager/` — a paged list's Prev and Next (M5.6), on the
 `.pager` primitive ([`styling.md`](../styling.md), "Buttons"). The category
 list and UserList were its first two owners, the forms' list its third and
-the planets' list its fourth; the grouped and flat lists are now one,
+the celestial bodies' list its fourth; the grouped and flat lists are now one,
 [`GroupedValueList`](grouped-value-list.md) (MB.132, MB.115). Every list pages through the M3.6
 cursor helper (rule 8), so every list that shows its pages shows them here.
 

@@ -47,7 +47,7 @@ it renders.
   action and the content swap.
 - **The action belongs to the tab, beside the page's heading** (the owner's
   call): Add Category on Categories, Add Group on its Groups tab, Add Form,
-  Add Deity, Add Tradition, Add Planet, Add Zodiac Sign, Pause Admin Changes
+  Add Deity, Add Tradition, Add Celestial Body, Add Zodiac Sign, Pause Admin Changes
   on Users, Invite Admin on Invitations, and nothing on Privilege Changes.
   The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md)),
   the action at the end of its line. Each route group's layout takes the

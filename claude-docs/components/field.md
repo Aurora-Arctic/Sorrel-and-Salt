@@ -226,7 +226,7 @@ caller narrowing it to its own type reads it with `oneOf`
   `TextField` and `SelectField` take `placeholder`, and a plain-state
   form sets it on its own control, since `FieldShell` draws none. A
   `date` field is the exception: the browser draws its own format there. A
-  box holding several values names one, "Add a planet", and keeps it
+  box holding several values names one, "Add a body", and keeps it
   after the chips while it can take another, prompting for the next
   ([`combobox.md`](combobox.md)).
 - **A react-hook-form field re-renders for its own error only**: `useField`

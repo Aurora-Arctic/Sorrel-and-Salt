@@ -93,7 +93,7 @@ describe('GroupedValueList', () => {
     const headings = within(screen.getByRole('table')).getAllByRole('columnheader');
     expect(headings).toHaveLength(3);
     expect(
-      within(screen.getByRole('form', { name: 'Filter Planets' })).queryByRole('combobox'),
+      within(screen.getByRole('form', { name: 'Filter Celestial Bodies' })).queryByRole('combobox'),
     ).not.toBeInTheDocument();
   });
 
@@ -139,7 +139,7 @@ describe('GroupedValueList', () => {
       { kind: 'category', path: '/admin/categories', group: 'group=g&' },
       { kind: 'form', path: '/admin/forms', group: 'group=g&' },
       // A flat kind has no group to write.
-      { kind: 'planet', path: '/admin/planets', group: '' },
+      { kind: 'planet', path: '/admin/celestial-bodies', group: '' },
       { kind: 'zodiacSign', path: '/admin/zodiac-signs', group: '' },
     ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(
