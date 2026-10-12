@@ -2,10 +2,11 @@ import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import { noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
+import { privilegeLabel } from './privileges';
 import type {
   LedgerPerson,
-  LedgerPrivilege,
   LedgerRoute,
   PrivilegeLedgerEntry,
   PrivilegeLedgerFilter,
@@ -17,11 +18,6 @@ import './index.scss';
 // the page reads one page of the ledger through the identity service and
 // hands it over (claude-docs/components/privilege-ledger.md). The filter is
 // `filter.tsx`, its one client file.
-
-const PRIVILEGE_LABELS: Record<LedgerPrivilege, string> = {
-  admin: 'Admin',
-  create_workspace: 'Coven creation',
-};
 
 /** The columns: each heading, and the label its cell carries as a card at phone width. */
 const COLUMNS = {
@@ -43,16 +39,17 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   manual: 'Manual fix',
 };
 
-/** A privilege as the empty state names its changes. */
-const WHAT_CHANGED: Record<LedgerPrivilege, string> = {
-  admin: 'admin',
-  create_workspace: 'coven creation',
-};
-
-/** The empty state, in plain words for the filter shown. */
+/**
+ * The empty ledger, naming the filters in use as every admin list does
+ * (MB.115): "No privilege changes match “ada” and the privilege Admin. Change
+ * or clear the filter to see more."
+ */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
-  const what = privilege ? `${WHAT_CHANGED[privilege]} changes` : 'privilege changes';
-  return query ? `No ${what} for “${query}”.` : `No ${what} yet.`;
+  const filters = [
+    query && `“${query}”`,
+    privilege && `the privilege ${privilegeLabel(privilege)}`,
+  ].filter((filter): filter is string => Boolean(filter));
+  return noMatchText('privilege changes', filters, 'No privilege changes yet.');
 }
 
 /** A time to the minute, in UTC and saying so, since the server renders it. */
@@ -74,7 +71,7 @@ const ChangeRow = ({ change }: { change: PrivilegeLedgerEntry }): ReactElement =
     <td {...stackCell(COLUMNS.user)}>
       <Person person={change.subject} />
     </td>
-    <td {...stackCell(COLUMNS.privilege)}>{PRIVILEGE_LABELS[change.privilege]}</td>
+    <td {...stackCell(COLUMNS.privilege)}>{privilegeLabel(change.privilege)}</td>
     <td {...stackCell(COLUMNS.change)}>{CHANGE_LABELS[change.change]}</td>
     <td {...stackCell(COLUMNS.how)}>{ROUTE_LABELS[change.via]}</td>
     <td {...stackCell(COLUMNS.changedBy)}>

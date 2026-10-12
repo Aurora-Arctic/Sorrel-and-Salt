@@ -1,3 +1,5 @@
+import type { PagePosition } from '../../lib/types';
+
 export interface PagerProps {
   /** The page before this one; Prev is disabled without it. */
   previousHref?: string;
@@ -10,7 +12,7 @@ export interface PagerProps {
    */
   soft?: boolean;
   /** Where the page stands, shown between the ends as "Page 2 of 3"; none when the list is not counted. */
-  position?: { page: number; pages: number };
+  position?: PagePosition;
 }
 
 /** An end of the pager: its label, its mark and the side the mark sits on. */
