@@ -25,7 +25,7 @@ export function useActionsLine(
     if (!form || !actions) return;
 
     const measure = () => {
-      delete actions.dataset.alone;
+      actions.removeAttribute('data-alone');
       actions.style.removeProperty('--filter-actions-width');
       const fields = [...form.children].filter((child) => child !== actions);
       if (fields.length === 0) return;
@@ -36,7 +36,7 @@ export function useActionsLine(
       // Nothing laid out, as in a test's DOM: left as its own size.
       if (reach <= 0) return;
       actions.style.setProperty('--filter-actions-width', `${reach}px`);
-      actions.dataset.alone = '';
+      actions.setAttribute('data-alone', '');
     };
 
     measure();
