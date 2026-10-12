@@ -20,6 +20,10 @@
   vertical-align: middle;
 }
 
+.user-list {
+  @include data-table-nowrap;
+}
+
 // No cell wraps, heading or body, since the table scrolls inside its frame
 // (the owner's call, during MB.59): a row stays one line however narrow the
 // screen. Separate borders, not the primitive's collapsed ones, so each rule
@@ -30,16 +34,7 @@
   border-collapse: separate;
   border-spacing: 0;
 
-  th,
-  td {
-    white-space: nowrap;
-  }
-}
-
-// A confirmation opens from its cell, so it would inherit the cell's single
-// line: its question, warning and hint wrap as prose again.
-.user-list .data-table .modal-dialog {
-  white-space: normal;
+  @include data-table-roomy;
 }
 
 // A yes-or-no column's mark: green for yes, red for no, the colours the
@@ -72,16 +67,9 @@
 }
 
 .user-list__tip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  z-index: $tip-layer;
-  width: max-content;
-  margin-bottom: space(1);
-  translate: -50% 0;
-  pointer-events: none;
+  @include tip-above(center, $tip-layer, false);
 
-  @include tip-bubble;
+  pointer-events: none;
 }
 
 .user-list__hint:hover .user-list__tip {
@@ -112,8 +100,7 @@
 
 // The history link's tip is placed against this.
 .user-list__history {
-  position: relative;
-  display: inline-flex;
+  @include tip-anchor;
 }
 
 // An `$icon-size` box, WCAG 2.2's 24px minimum, in the muted ink as InfoTip's ⓘ
@@ -122,14 +109,9 @@
 // `.user-list`: the typography's `body a` colours would outrank a lone
 // class in the app, though not in the workshop.
 .user-list .user-list__history-link {
+  @include icon-button($icon-size, $glyph-size, radius('pill'));
+
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $icon-size;
-  height: $icon-size;
-  border-radius: radius('pill');
-  color: $text-muted;
 
   &::after {
     content: '';
@@ -141,16 +123,6 @@
     translate: -50% -50%;
   }
 
-  svg {
-    width: $glyph-size;
-    height: $glyph-size;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
-
   &:focus-visible {
     @include focus-ring;
   }
@@ -160,18 +132,7 @@
 // are: the icon starts the row's first cell, and a centred tip would run past
 // the table's scrolling frame, which clips it.
 .user-list__history-tip {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: $tip-layer;
-  width: max-content;
-  margin-bottom: space(1);
-
-  @include tip-bubble;
-
-  &.is-open {
-    @include tip-bubble-open;
-  }
+  @include tip-above(start, $tip-layer, false);
 }
 
 // Email and its verified mark, side by side.
@@ -187,10 +148,6 @@
 // muted at the caption size, so the eye goes to what can be acted on. Scoped
 // to this width because a card already leads each fact with its muted label.
 @container data-table (width > #{$table-stack-width}) {
-  .user-list .data-table td {
-    padding-block: space(3);
-  }
-
   .user-list .user-list__fact {
     color: $text-muted;
     font-size: type-size('caption');
@@ -240,30 +197,11 @@
 // claude-docs/styling.md, "Tables at phone width".
 @container data-table (max-width: #{$table-stack-width}) {
   .user-list .data-table--stack {
-    th,
-    td {
-      white-space: normal;
-    }
-
-    // Two tracks: the name and Impersonate share the first line, and every
-    // other cell spans both beneath. An admin's card, with no Impersonate,
-    // leaves the second track empty, so it takes no width.
-    > tbody > tr {
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    > tbody > tr > :is(td, th) {
-      grid-column: 1 / -1;
-    }
-
-    > tbody > tr > :first-child {
-      grid-column: 1;
-    }
-
+    // The grid itself is the primitive's, from the cell's
+    // `data-table__card-action`: the name and Impersonate share the first
+    // line and every other cell spans beneath. An admin's card, with no
+    // Impersonate, leaves the second track empty, so it takes no width.
     > tbody > tr > .user-list__impersonate {
-      grid-row: 1;
-      grid-column: 2;
-      align-self: start;
       position: static;
       border-left: 0;
       background-color: transparent;
@@ -308,35 +246,14 @@
 
 // The crown and its tip, the tip placed against this wrapper.
 .user-list__primary {
-  position: relative;
-  display: inline-flex;
+  @include tip-anchor;
 }
 
 // `$icon-size`: WCAG 2.2's 24px minimum target around a `$glyph-size`
 // glyph, as InfoTip's button. The muted ink, so it reads as a fact about the
 // row, not a control.
 .user-list__primary-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $icon-size;
-  height: $icon-size;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  cursor: help;
-
-  svg {
-    width: $glyph-size;
-    height: $glyph-size;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
+  @include icon-button($icon-size, $glyph-size, radius('pill'), help);
 
   &:focus-visible {
     @include focus-ring;
@@ -344,7 +261,8 @@
 }
 
 // The pause on admin changes, beside the page's heading as its `.page-header`
-// child: the warning while paused and the button on one line (MB.63).
+// child: the warning while paused and the button on one line (MB.63). At a
+// phone's width the page header spans them across the line, a line each.
 .user-list__pause {
   display: flex;
   align-items: center;
@@ -354,19 +272,5 @@
   // as `.notice.user-list__warning` is: a lone class loses to it there.
   .notice.user-list__pause-state {
     margin: 0;
-  }
-}
-
-// At a phone's width the heading line puts the action on a line of its own
-// and spans it (`.page-header`, MB.115, the owner's call): the warning and
-// the switch then take a line each, the switch across it, as every admin
-// page's action is.
-@container page-header (max-width: #{$narrow-column}) {
-  .admin-layout .user-list__pause {
-    flex-wrap: wrap;
-
-    > * {
-      flex: 1 1 100%;
-    }
   }
 }
