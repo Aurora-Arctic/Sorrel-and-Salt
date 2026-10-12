@@ -453,8 +453,6 @@ $motion-short: 150ms;
 // switcher's own height. The page keeps the bottom bar's height clear
 // beneath its content, so the last row is never under it.
 $shell-bar-height: 3.25rem;
-$context-row-height: 3.5rem;
-$context-row-height-phone: $control-height;
 $bottom-bar-height: 4rem;
 
 // The width at or under which the shell takes its phone shape (the switcher
@@ -468,6 +466,30 @@ $shell-phone-width: $table-stack-width;
 // view and tucks the rest behind More (Priority+), between the phone shape
 // and a desktop where all six fit the row.
 $shell-tablet-width: 48rem;
+// Under this the bar's brand is its initials: a narrow phone, since the bar
+// has room for the full name wider than that once the site links have gone.
+$shell-brand-width: 26rem;
+// Under this width of its own (680px, the owner's measure on the Astrology
+// page at MB.7's review, 2026-10-12) a tabbed page's Add is a plus; the pills
+// keep the heading's line.
+$tabbed-plus-width: 42.5rem;
+// Under this width of its own (a 568px window's header, the owner's measure
+// at MB.7's review, 2026-10-12) a tabbed page's pills drop beneath the
+// heading and the plus, a concern of its own, apart from the plus's switch.
+$tabbed-reflow-width: 33.5rem;
+// The same for a tabbed page whose action keeps its label (People's Pause
+// Admin Changes): under 700px of the header's own width the pills drop
+// beneath the heading and the action, which keep the line (the owner's
+// measure at MB.7's review, 2026-10-12).
+$tabbed-reflow-width-labelled: 43.75rem;
+// Under 400px of the header's own width that labelled action goes beneath
+// the heading, at the line's start (the owner's measure at MB.7's review,
+// 2026-10-12); wider, the two keep the line, the forms' column included.
+$tabbed-action-below-width: 25rem;
+// At 350px of the header's own width and under, the Add is the labelled
+// button again, beneath the heading at the line's start (the owner's measure
+// at MB.7's review, 2026-10-12): the plus is for the widths between.
+$add-below-width: 21.875rem;
 
 // The one place a z-index comes from (MB.124's handoff, settled by MB.7):
 // what stacks above the page, named by what it is rather than by a number
@@ -516,6 +538,16 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// Written after `space()` above: a Sass function is not in scope before its
+// definition, and inside `calc()` an unknown name is left as plain CSS text,
+// which is invalid and drops the declaration.
+// The context row's height: a control with a step of air above and below
+// (the lead's padding, ContextRow/index.scss), so the Admin row, which holds
+// text alone, stands as tall as the coven row's switcher, and the backdrop's
+// offset below it is exact. On a phone the air is the half step.
+$context-row-height: calc(#{$control-height} + 2 * #{space(2)});
+$context-row-height-phone: calc(#{$control-height} + #{space(3)});
 
 // The admin table's inline cell padding (MB.115): a step of space, written
 // once so the filter row above a table insets its fields by the same amount

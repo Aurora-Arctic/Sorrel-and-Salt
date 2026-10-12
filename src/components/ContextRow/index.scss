@@ -36,6 +36,8 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   align-items: center;
   min-width: 0;
   margin-right: space(2);
+  // Air above and below the switcher, so its edge is never the row's.
+  padding-block: space(2);
   padding-right: space(5);
 
   &:not(:last-child)::after {
@@ -61,16 +63,19 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 }
 
 @media (max-width: $shell-phone-width) {
+  // A half step of air, the owner's measure for the phone: between the
+  // scale's first two steps, so derived from them.
+  $phone-air: calc(#{space(3)} / 2);
+
   .context-row__inner {
     min-height: $context-row-height-phone;
-    padding-inline: space(2);
+    padding-inline: $phone-air;
   }
 
   // The lead has the whole row, and no hairline since nothing follows it.
-  // A step of air above and below the control, so its edge is not the row's.
   .context-row__lead {
     flex: 1 1 auto;
-    padding-block: space(1);
+    padding-block: $phone-air;
     margin-right: 0;
     padding-right: 0;
 

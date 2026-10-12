@@ -458,7 +458,8 @@ the inset, so it starts below the banner and the page does not scroll by the
 banner's height:
 
 - The shell's bar (`position: sticky`), `ThemeToggle`'s corner variant and the
-  sorrel corner of `Backdrop` take `top: $top-inset`.
+  sorrel corner of `Backdrop` take `top: $top-inset`; inside the shell the
+  sorrel starts below the bar and the context row as well.
 - Every page a full screen high sits in `.page-frame`, which takes
   `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below), less
   `$shell-bar-height` inside the shell: `/`, `/sign-in`, `/account`,
@@ -567,7 +568,7 @@ a narrow screen rather than squeezing the heading. The header is a size
 container, so it measures its own width rather than the screen's: under
 28rem of it, the forms' column, the action goes beneath the heading and loses
 the quarter-rem drop, which only lined it up beside the heading (MB.115).
-Where it then spans the line, and where it keeps its natural width, is
+Where it then sits, and how the Add becomes a plus, is
 [`components/page-header.md`](components/page-header.md#styling). The markup is the `PageHeader` component's
 ([`components/page-header.md`](components/page-header.md)). A tabbed admin
 page draws its heading in a `PageHeader` too, the open tab's action beside
@@ -774,7 +775,10 @@ still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive
 rather than AdminNav's own rule because the admin layout and the admin
 components' stories use the class as their frame. Inside it a page header's
-action, and a tab's, spans the line at phone width ("Buttons", above).
+action, and a tab's, goes beneath the heading at phone width at its natural
+width, at the line's start, except the Add, which is a plus beside the
+heading ("Buttons", above). MB.115's review had the action span the line;
+the owner reversed that at MB.7's review, 2026-10-12.
 
 `.coven-layout` is the same frame around every `/coven/[slug]` page, its
 page's children inside it; the section nav (`CovenNav`) is in the context row above (M9.15, MB.7). It shares the rule

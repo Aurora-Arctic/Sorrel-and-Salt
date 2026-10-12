@@ -25,11 +25,10 @@ area's section nav beside it (MB.7). A server component of two slots.
 Full width, with a ground of the card colour mixed 45% into the page
 (`color-mix(in srgb, $surface-card 45%, $surface-page)`, defined once here) and
 a `$hairline` bottom edge. The inner column is `$wide-column` wide. The row is
-`$context-row-height` (3.5rem) tall on a desktop, with a hairline between the
-lead and the nav; at or under `$shell-phone-width` it is at least
-`$context-row-height-phone` (a control's height) with a step of air above and
-below the lead, so a two-line coven name makes the row taller rather than
-clipping it. `.context-row__name` is the display face, 1.5rem, 700.
+`$context-row-height` tall on a desktop: a control's height plus `space(2)` of air above and below the lead, so the Admin row, which holds text alone, stands as tall as the coven row's switcher and the backdrop's offset below it is exact. There is a hairline between the
+lead and the nav. At or under `$shell-phone-width` it is at least
+`$context-row-height-phone` tall, a control plus half a step (`calc(space(3) / 2)`) of air each side, and the inner column's inline padding is the same half step; a two-line
+coven name makes the row taller rather than clipping it. `.context-row__name` is the display face, 1.5rem, 700.
 
 ## Accessibility
 
