@@ -1,11 +1,11 @@
 import 'server-only';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
+import { normaliseEmail, validateEmailAddress } from '../../../lib/email-address';
 import { ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import { getMe } from './profile';
 import type { AuditSession } from '../../../db/types';
-import type { ValidationIssue } from '../../../lib/types';
 import type { EmailVerificationSender, UserRow } from '../types';
 
 // The address an account is mailed at changes only at verification: asking
@@ -26,27 +26,7 @@ export function isPlaceholderEmail(email: string): boolean {
   return email.toLowerCase().endsWith(`@${PLACEHOLDER_DOMAIN}`);
 }
 
-/** Trimmed and lower-cased, as the column stores it. */
-export function normaliseEmail(input: string): string {
-  return input.trim().toLowerCase();
-}
-
-// Deliberately loose: the mail is the real check, and a rule stricter than
-// the inbox refuses addresses that work. Replacing this function is the whole
-// of the v2 swap for a real validator (claude-docs/backlog.md).
-const SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_LENGTH = 254;
-
-/** The one rule a normalised address broke, pathed to the field, or `null`. */
-export function validateEmailAddress(email: string): ValidationIssue | null {
-  const path = ['email'];
-  if (email.length === 0) return { path, message: 'Enter an email address' };
-  if (email.length > MAX_LENGTH || !SHAPE.test(email)) {
-    return { path, message: "That doesn't look like an email address" };
-  }
-  if (email.endsWith('.invalid')) return { path, message: "That email address can't receive mail" };
-  return null;
-}
+export { normaliseEmail, validateEmailAddress };
 
 /**
  * Whether a live, verified account holds this address. Only a verified holder
