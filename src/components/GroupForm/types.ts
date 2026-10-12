@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { FieldValues, Resolver } from 'react-hook-form';
 import type { z } from 'zod';
+import type { GroupColors } from '../../lib/types';
 
 /**
  * Which group vocabulary the form writes: the category groups, whose rows
@@ -47,11 +48,9 @@ export interface GroupKindSpec<Input extends object> extends GroupKindCopy {
  * category group with its colours, which the pickers warn against standing
  * too close to.
  */
-export interface GroupChoice {
+export interface GroupChoice extends Partial<GroupColors> {
   id: string;
   name: string;
-  colorDark?: string;
-  colorLight?: string;
 }
 
 /**
