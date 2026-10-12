@@ -172,7 +172,7 @@ what it scans — an empty listing satisfies every `toEqual([])`.
     A component test wraps its tree in a `QueryClientProvider` holding
     `makeQueryClient()`, a fresh client per test — `Providers` keeps one for the
     tab, which would carry one test's cache into the next — and
-    `graphql-request` resolves `/api/graphql` against jsdom's location, which
+    the client wrapper resolves `/api/graphql` against jsdom's location, which
     the link matches. A test with no client posts a plain `fetch` of
     `JSON.stringify({ query })` to `/api/graphql`; msw's graphql matcher parses
     the operation name out of the `query` document itself, no explicit

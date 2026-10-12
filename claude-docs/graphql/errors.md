@@ -40,8 +40,8 @@ DESIGN.md §7, "Errors"):
 
 Auth scopes throw the same `Forbidden` a service does (`unauthorizedError` in
 the builder), so a scope refusal and a service refusal look the same to the
-client. On the client, `graphql-request` rejects with a `ClientError` whose
-`response.errors[].extensions` carries the code and the field errors. Forms
+client. On the client, the client wrapper rejects with a `GraphQLClientError` whose
+`errors[].extensions` carries the code and the field errors. Forms
 read them back through react-hook-form's `setError` (DESIGN.md §7).
 
 The tests: `tests/graphql/errors.test.ts` covers each type and the masking

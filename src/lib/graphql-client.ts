@@ -1,10 +1,10 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
-import { getOperationAST } from 'graphql';
-import { ClientError, request } from 'graphql-request';
+import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import { GraphQLClientError } from './graphql-client-error';
 import type { VariablesArg } from './types';
 
-// The browser's half of the API: graphql-request sends a codegen document and
+// The browser's half of the API: a small fetch wrapper sends a codegen document and
 // TanStack Query caches the answer, with no second, normalized cache beside it
 // (DESIGN.md §7). Server components never come through here — they read
 // through services (CLAUDE.md rule 1). claude-docs/graphql/client.md, "The client".
@@ -17,30 +17,49 @@ const STALE_TIME_MS = 30_000;
 /** Two retries, so three attempts in all. */
 const MAX_RETRIES = 2;
 
+/** What Yoga sends back, as far as the client reads it. */
+type GraphQLBody<TResult> = { data?: TResult | null; errors?: readonly GraphQLFormattedError[] };
+
 async function send<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,
   variables: TVariables | undefined,
   signal?: AbortSignal,
 ): Promise<TResult> {
-  // Explicit, because graphql-request's own failure here is `new URL`'s
+  // Explicit, because the failure here would otherwise be `new URL`'s
   // "Invalid URL": on the server there is no origin, and no cookie to send.
   if (typeof window === 'undefined') {
     throw new Error('The GraphQL client runs in the browser; a server component reads a service.');
   }
+  // `fetch` is looked up here, on every request, never captured at import, so
+  // a story or test can stand in for `window.fetch` after the module loads.
+  const response = await fetch(
+    // `new URL` resolves the relative path against the page's origin.
+    new URL(ENDPOINT, window.location.origin).href,
+    {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        // Asks for the GraphQL-over-HTTP media type first, which is what keeps
+        // Yoga's status codes as they were under graphql-request.
+        accept: 'application/graphql-response+json, application/json',
+      },
+      body: JSON.stringify({ query: print(document), variables }),
+      signal,
+    },
+  );
+  // A gateway's HTML page or an empty body is not JSON; the status still says what happened.
+  const body = (await response.json().catch(() => undefined)) as GraphQLBody<TResult> | undefined;
   // Typed by the result alone: `VariablesArg` has already held the variables
-  // to the document's own at the call site.
-  return request<TResult>({
-    // graphql-request passes the url to `new URL`, which rejects a relative one.
-    url: new URL(ENDPOINT, window.location.origin).href,
-    document,
-    variables,
-    signal,
-  });
+  // to the document's own at the call site. A partial answer never resolves.
+  if (!response.ok || body?.errors?.length || body?.data == null) {
+    throw new GraphQLClientError({ status: response.status, errors: body?.errors });
+  }
+  return body.data;
 }
 
 /**
- * Runs one typed document against /api/graphql. Rejects with graphql-request's
- * `ClientError` on any GraphQL error, so a partial answer never reads as whole.
+ * Runs one typed document against /api/graphql. Rejects with
+ * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole.
  */
 export function graphqlRequest<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,
@@ -95,7 +114,7 @@ export function graphqlQuery<TResult, TVariables extends object>(
  */
 export function shouldRetry(failureCount: number, error: unknown): boolean {
   if (failureCount >= MAX_RETRIES) return false;
-  if (error instanceof ClientError) return error.response.status >= 500;
+  if (error instanceof GraphQLClientError) return error.status >= 500;
   // fetch rejects with a TypeError when the request never completes.
   return error instanceof TypeError;
 }
