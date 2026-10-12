@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // What the list has of its own. The root is `.list-frame`, the filter
 // `.filter-row` (through FilterForm), the table `.data-table` stacking into
@@ -17,9 +18,6 @@
 // (`$table-stack-width` and under) each cell is a block with the card's own
 // padding, which this would double. Under the list's class, which outranks
 // the primitive's `body` scope.
-@container data-table not (max-width: #{$table-stack-width}) {
-  .grouped-value-list--category .data-table td {
-    padding-block: space(3);
-    vertical-align: middle;
-  }
+.grouped-value-list--category .data-table {
+  @include data-table-roomy;
 }

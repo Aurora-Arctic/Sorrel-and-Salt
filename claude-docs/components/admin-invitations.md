@@ -121,8 +121,9 @@ with no label. The filter row is the `.filter-row` primitive, which stacks at ph
 width: the Email box across the line, the switch, Filter and Clear
 beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet holds the tab's column, the sent
 notice and the list's frame `space(5)` apart as the tab's content is, the
-muted "None given", the Reason field's wrapper (`.admin-invitations__note`,
-a step of room above and `space(6)` below) and the sent confirmation's
+muted "None given", the Reason field's wrapper (`.admin-invitations__note`, which shares
+`UserList/controls.scss`'s rule with the user list's: a step of room above
+and `space(6)` below) and the sent confirmation's
 margin and full line, `.notice.admin-invitations__sent` compounded with its
 primitive, which the app scopes as `body .notice`. The section's look is MB.115's,
 signed off as it stands.

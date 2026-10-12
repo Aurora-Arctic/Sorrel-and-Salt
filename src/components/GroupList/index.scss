@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // What a group list adds to the list primitives (`.list-frame`, `.data-table`
 // with `--stack`, `.chip`, `.pager`, and IconTip's Edit pencil): the
@@ -16,9 +17,6 @@
 // primitive's `body` scope. Only while it is a table: as cards, under
 // `$table-stack-width`, the stack primitive spaces each cell, and this would
 // pad every line of the card apart.
-@container data-table not (max-width: #{$table-stack-width}) {
-  .data-table.group-list__table td {
-    padding-block: space(3);
-    vertical-align: middle;
-  }
+.data-table.group-list__table {
+  @include data-table-roomy;
 }

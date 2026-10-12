@@ -66,7 +66,13 @@ to.
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
   (150ms), a control answering a press with a movement of its own, as the
-  switch's thumb slides.
+  switch's thumb slides, and `$tip-fade` (500ms), a tip bubble's fade.
+- **A mix or a level used in more than one stylesheet is a token** too:
+  `$fill-quiet` (the muted ink 18% into the card: a chip's wash, the
+  skeleton's bars, the pressed admin menu), `$hairline` (the muted ink 45%
+  into whatever is behind: the ingredient form's section rules, the tab
+  strip's shade) and `$opacity-disabled` (0.55: what is left of a control
+  that is busy or cannot be used).
 - **Body copy keeps to the reading measure, `$measure` (66ch)** — the longest
   line that still reads comfortably. `ch` is the width of "0" in the element's
   own font, so the measure follows the text it caps: 660px of Lexend at 1rem.
@@ -971,6 +977,26 @@ heavier than the reverse; light reverts to the browser default.
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
   `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
+  The shapes that repeated by hand are mixins too, one line each:
+  `color-scheme-light` and `forced-colors` (the two media queries, as
+  `reduced-motion` wraps its own); `list-reset` (a list with no margin,
+  indent or marker, its items' too); `truncate` (one line cut with an
+  ellipsis); `visually-hidden` (the clipped box a screen reader still
+  reads, which the `.visually-hidden` class includes); `button-reset` (a
+  button with its box taken away); `stack($step)` (a column a step of space
+  apart); `busy-faded` (colour out and `$opacity-disabled` left);
+  `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
+  placed against, and a bubble above it, capped to `$tip-width` and the
+  window); `icon-button` (which takes a `$radius` and a `$cursor`, and
+  turns `$text-primary` when pointed at or focused), `icon-button-edit`
+  and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
+  (a chevron that turns over while its section is open); `floating-panel`
+  (the card surface, floating shadow and muted edge a list or summary
+  floats on); `field-box` (the edge, ground and height a field and the
+  admin menu's summary share); `arrived` (the fade a list or tab's new
+  content comes in with, the one `list-frame-fade-in` keyframe); and
+  `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
+  rows; its one-line cells, wrapping again as cards).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The admin invitations tab's own rules: its column, the table's one-line cells at desktop width and wrapping ones
 // as cards, the "None given" ink, the Reason field's room and the sent
@@ -9,47 +10,24 @@
 // Spaced as the tab's panel spaces any other tab's content: the sent notice,
 // then the list's frame, its filter row above the table or the empty state.
 .admin-invitations {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack;
 }
 
 // No cell wraps, heading or body: the table scrolls inside its frame, as the
 // user list's does (the owner's call, during MB.59).
-.admin-invitations .data-table {
-  th,
-  td {
-    white-space: nowrap;
-    vertical-align: middle;
-  }
+.admin-invitations {
+  @include data-table-nowrap;
 
-  // A confirmation opens from its cell: its question wraps as prose again.
-  .modal-dialog {
-    white-space: normal;
-  }
-}
-
-// As cards at phone width, under the primitive's own named container query
-// (claude-docs/styling.md, "Tables at phone width"): a card does not scroll,
-// so an address or a reason wraps within it.
-@container data-table (max-width: #{$table-stack-width}) {
-  .admin-invitations .data-table--stack {
+  .data-table {
     th,
     td {
-      white-space: normal;
+      vertical-align: middle;
     }
   }
 }
 
 .admin-invitations__none {
   color: $text-muted;
-}
-
-// The Reason field, given the user list's confirmation spacing: a step of room
-// above and 2rem below (the owner's call). A wrapper round the field's shell,
-// which takes no class of its own.
-.admin-invitations__note {
-  margin-block: space(5) space(6);
 }
 
 // Compounded with `.notice`, whose primitive is `body .notice` in the app: a

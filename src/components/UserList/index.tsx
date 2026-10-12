@@ -215,7 +215,7 @@ const UserRow = ({
     {/* Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
         as acting as someone else is the table's one dangerous control. */}
     {canImpersonate && (
-      <td className="user-list__impersonate" {...stackCell('')}>
+      <td className="user-list__impersonate data-table__card-action" {...stackCell('')}>
         {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
       </td>
     )}

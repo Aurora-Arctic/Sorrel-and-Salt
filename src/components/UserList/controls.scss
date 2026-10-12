@@ -22,16 +22,17 @@
 // The confirmation's Reason field, given the warning's step of room above and
 // 2rem below, so it reads apart from the question and stands clear of
 // the buttons (the owner's call). A wrapper round the field's shell, which
-// takes no class of its own.
-.user-list__note {
+// takes no class of its own. The invitations tab's confirmation takes the same
+// room, through this stylesheet.
+.user-list__note,
+.admin-invitations__note {
   margin-block: space(5) space(6);
 }
 
 // The primary admin's Revoke and the tip saying why it cannot be used, the
 // tip placed against this wrapper.
 .user-list__locked {
-  position: relative;
-  display: inline-flex;
+  @include tip-anchor;
 }
 
 // A locked control as a page's action, Pause Admin Changes or Invite Admin
@@ -52,17 +53,10 @@
 // `$tip-width` and the window, so it stays on a phone. Not `.user-list__tip`,
 // the marks' and logos' centred tip, which takes no pointer: these stay open while hovered.
 .user-list__control-tip {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: $tip-layer;
-  width: max-content;
-  max-width: min($tip-width, calc(100vw - #{space(6)}));
-  margin-bottom: space(1);
+  @include tip-above(start, $tip-layer);
+
   // Its cell keeps to one line; the reason wraps within the bubble.
   white-space: normal;
-
-  @include tip-bubble;
 }
 
 // The locked Revoke's, placed against the viewport by its script rather than

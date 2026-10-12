@@ -5,8 +5,8 @@
 // pointer may cross onto the tip within. Middle-aligned, so a mark taller
 // than its row's text sits level with it rather than on its baseline.
 .icon-tip {
-  position: relative;
-  display: inline-flex;
+  @include tip-anchor;
+
   vertical-align: middle;
 }
 
