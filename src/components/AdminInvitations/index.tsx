@@ -10,6 +10,7 @@ import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
+import Pager from '../Pager';
 import AdminInvitationsFilter from './filter';
 import { invitationsHref } from './href';
 import InviteForm from './invite-form';
@@ -23,8 +24,9 @@ import './index.scss';
 
 // The People page's Invitations tab, `/admin/invitations` (MB.70; a tab of
 // its own since MB.115): a filter by address and by expiry within 24 hours,
-// the pending invitations it leaves, each with its address, reason and
-// expiry, and Revoke, and the invite form `?invite` opens over them. Invite Admin is the tab's action, beside the page's heading. While
+// a page of the pending invitations it leaves, each with its address, reason
+// and expiry, and Revoke, the pager beneath them, and the invite form
+// `?invite` opens over them. Invite Admin is the tab's action, beside the page's heading. While
 // admin changes are paused both are in view but locked for any admin but the
 // primary one, with the pause as the reason, as the role controls are. The
 // confirmation and the locked control are the user list's own, so the page
@@ -109,13 +111,17 @@ const Revoke = ({
  * link to `?invite`, which opens the form over the list, or locked with the
  * pause as its reason. A link rather than a button holding the form, since
  * the heading line and the list are rendered apart (MB.115). It keeps the
- * tab's filter, as a value page's Add does.
+ * tab's filter and page, as a value page's Add does.
  */
-export const InviteAdmin = ({ locked, filter = NO_FILTER }: InviteAdminProps): ReactElement =>
+export const InviteAdmin = ({
+  locked,
+  filter = NO_FILTER,
+  cursor,
+}: InviteAdminProps): ReactElement =>
   locked ? (
     <LockedControl label="Invite Admin" className="btn btn--solid" reason={locked} />
   ) : (
-    <Link className="btn btn--solid" href={invitationsHref(filter, true)}>
+    <Link className="btn btn--solid" href={invitationsHref(filter, cursor, true)}>
       Invite Admin
     </Link>
   );
@@ -128,6 +134,10 @@ export const InviteAdmin = ({ locked, filter = NO_FILTER }: InviteAdminProps): R
 const AdminInvitations = ({
   invitations,
   filter = NO_FILTER,
+  cursor,
+  previousHref,
+  nextHref,
+  position,
   locked,
   inviting = false,
 }: AdminInvitationsProps): ReactElement => {
@@ -187,9 +197,14 @@ const AdminInvitations = ({
               </table>
             </div>
           )}
+
+          {/* Plain anchors, as the user list's: a full load runs the admin layout's guard again. */}
+          <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
         </ListBody>
       </ListFrame>
-      {inviting && !locked && <InviteForm onSent={setSent} closeHref={invitationsHref(filter)} />}
+      {inviting && !locked && (
+        <InviteForm onSent={setSent} closeHref={invitationsHref(filter, cursor)} />
+      )}
     </section>
   );
 };

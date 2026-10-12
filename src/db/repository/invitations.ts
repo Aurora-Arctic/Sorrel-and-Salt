@@ -3,15 +3,18 @@ import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { containsText, notSoftDeleted, scopedTo } from './predicates';
+import { findPageCountInScope, findPageInScope } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
   InvitationRow,
   SiteInvitationFilter,
   SiteInvitationValues,
+  SortPart,
   WorkspaceInvitationValues,
   WriterContext,
 } from './types';
@@ -90,27 +93,62 @@ export async function findPendingInvitationsInWorkspace(
 }
 
 /**
- * The site tier's pending invitations, for `/admin/invitations` (MB.70),
- * narrowed in SQL by a `SiteInvitationFilter` (MB.115). Unordered, as the workspace's are.
+ * The site-tier list's order, newest first, as the ledger's is: a page's key
+ * is ascending, so the instant is written negated, and as `numeric`, which
+ * keeps the microseconds a `Date` would drop from a cursor. Invitations of
+ * one instant follow by id.
  */
-export async function findPendingSiteInvitations(
+const SITE_INVITATION_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
+];
+
+/** The filter's arms over a pending site-tier invitation, each `undefined` when its part is absent. */
+function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL | undefined {
+  return pendingInvitation(
+    email ? containsText(invitations.email, email) : undefined,
+    // Against the database's clock, as `pendingInvitation`'s own
+    // expiry is, so the two edges of the window read one `now()`.
+    expiresWithinHours === undefined
+      ? undefined
+      : lte(invitations.expiresAt, sql`now() + make_interval(hours => ${expiresWithinHours})`),
+  );
+}
+
+/**
+ * One page of the site tier's pending invitations, newest first, for
+ * `/admin/invitations` (MB.70), narrowed in SQL by a `SiteInvitationFilter`
+ * and paged by the cursor helper (MB.115; CLAUDE.md rule 8).
+ */
+export function findPendingSiteInvitationPage(
   _admin: SiteAdmin,
-  { email, expiresWithinHours }: SiteInvitationFilter = {},
-): Promise<InvitationRow[]> {
-  return selectFrom(
+  filter: SiteInvitationFilter,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  return findPageInScope(
     invitations,
-    and(
-      notSoftDeleted(invitations),
-      pendingInvitation(
-        onSiteTier(),
-        email ? containsText(invitations.email, email) : undefined,
-        // Against the database's clock, as `pendingInvitation`'s own
-        // expiry is, so the two edges of the window read one `now()`.
-        expiresWithinHours === undefined
-          ? undefined
-          : lte(invitations.expiresAt, sql`now() + make_interval(hours => ${expiresWithinHours})`),
-      ),
-    ),
+    onSiteTier(),
+    SITE_INVITATION_ORDER,
+    page,
+    pendingOnSite(filter),
+  );
+}
+
+/**
+ * How many invitations `findPendingSiteInvitationPage` pages under `filter`,
+ * and how many come before `start`, a page's first row, none on an empty
+ * page: the Invitations tab's "Page X of Y" (MB.115).
+ */
+export function findPendingSiteInvitationCount(
+  _admin: SiteAdmin,
+  filter: SiteInvitationFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    invitations,
+    onSiteTier(),
+    SITE_INVITATION_ORDER,
+    start,
+    pendingOnSite(filter),
   );
 }
 

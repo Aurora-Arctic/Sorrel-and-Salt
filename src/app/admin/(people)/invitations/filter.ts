@@ -1,16 +1,21 @@
-import type { AdminInvitationsFilter } from '../../../../components/AdminInvitations/types';
 import { single } from '../../../../lib/search-params';
-import type { InvitationsSearchParams } from './types';
+import { readListPlace } from '../../list-page';
+import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
 /**
- * The tab's filter off its address (MB.115), which the page and Invite Admin
- * beside the heading both read: `email` trimmed, blank as none, as a native
- * submit sends `email=`; and `expiring` by its presence, a native submit's
- * `expiring=` read the same as the bare flag.
+ * The tab's filter and page off its address (MB.115), which the page and
+ * Invite Admin beside the heading both read: `email` trimmed, blank as none,
+ * as a native submit sends `email=`; `expiring` by its presence, a native
+ * submit's `expiring=` read the same as the bare flag; and at most one
+ * cursor, read as every admin list reads one (`readListPlace`).
  */
-export function readInvitationsFilter(params: InvitationsSearchParams): AdminInvitationsFilter {
+export function readInvitationsPlace(params: InvitationsSearchParams): InvitationsPlace {
+  const { after, before } = readListPlace(params);
   return {
-    email: single(params.email)?.trim() ?? '',
-    expiringSoon: params.expiring !== undefined,
+    filter: {
+      email: single(params.email)?.trim() ?? '',
+      expiringSoon: params.expiring !== undefined,
+    },
+    cursor: { after, before },
   };
 }

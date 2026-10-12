@@ -1,5 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { InvalidCursor } from '@/lib/errors';
+import { encodeCursor } from '@/lib/pagination';
+import type { PageRequest } from '@/lib/types';
 
 // The `/admin/invitations` page, the People page's Invitations tab (MB.70; a
 // tab of its own since MB.115), with Invite Admin, its action beside the
@@ -25,7 +28,12 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
 
 const adminRoleChangePauseState = vi.fn();
 const listPendingAdminInvitations = vi.fn();
-vi.mock('@/modules/identity', () => ({ adminRoleChangePauseState, listPendingAdminInvitations }));
+const countPendingAdminInvitations = vi.fn();
+vi.mock('@/modules/identity', () => ({
+  adminRoleChangePauseState,
+  countPendingAdminInvitations,
+  listPendingAdminInvitations,
+}));
 
 const { default: AdminInvitationsPage } = await import('@/app/admin/(people)/invitations/page');
 const { default: InvitationsAction } =
@@ -55,13 +63,26 @@ const PENDING = {
   tokenHash: 'a-hash-that-must-not-render',
 };
 
+/** A pending invitation as the service pages it, with the cursor it was found at. */
+const entry = (index: number) => ({
+  node: { ...PENDING, id: `i${index}`, email: `invited${index}@users.test` },
+  cursor: { key: [String(-index)], id: `i${index}` },
+});
+
+function lastRequest(): PageRequest {
+  const { calls } = listPendingAdminInvitations.mock;
+  return calls[calls.length - 1]?.[2] as PageRequest;
+}
+
 beforeEach(() => {
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   adminRoleChangePauseState.mockReset();
   adminRoleChangePauseState.mockResolvedValue({ paused: false, canToggle: false });
   listPendingAdminInvitations.mockReset();
-  listPendingAdminInvitations.mockResolvedValue([PENDING]);
+  listPendingAdminInvitations.mockResolvedValue([{ node: PENDING, cursor: entry(1).cursor }]);
+  countPendingAdminInvitations.mockReset();
+  countPendingAdminInvitations.mockResolvedValue({ totalCount: 1, countBefore: 0 });
 });
 
 describe('the /admin/invitations page', () => {
@@ -76,10 +97,16 @@ describe('the /admin/invitations page', () => {
   it('lists the pending invitations with what an admin acts on, and never the hash', async () => {
     await renderPage();
 
-    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN, {
-      email: '',
-      expiringSoon: false,
-    });
+    expect(listPendingAdminInvitations).toHaveBeenCalledWith(
+      ADMIN,
+      { email: '', expiringSoon: false },
+      { limit: 26, inverted: false },
+    );
+    expect(countPendingAdminInvitations).toHaveBeenCalledWith(
+      ADMIN,
+      { email: '', expiringSoon: false },
+      entry(1).cursor,
+    );
     const section = screen.getByRole('region', { name: 'Admin Invitations' });
     expect(within(section).getByText('invited@users.test')).toBeInTheDocument();
     expect(within(section).getByText('Curates the resins')).toBeInTheDocument();
@@ -91,7 +118,11 @@ describe('the /admin/invitations page', () => {
   it('reads the filter off the address, a native submit’s blank flag as the bare one, and keeps it in Invite Admin', async () => {
     await renderPage({ email: ' fern ', expiring: '' });
 
-    expect(listPendingAdminInvitations).toHaveBeenCalledWith(ADMIN, {
+    expect(listPendingAdminInvitations.mock.calls[0]?.[1]).toEqual({
+      email: 'fern',
+      expiringSoon: true,
+    });
+    expect(countPendingAdminInvitations.mock.calls[0]?.[1]).toEqual({
       email: 'fern',
       expiringSoon: true,
     });
@@ -101,6 +132,58 @@ describe('the /admin/invitations page', () => {
     expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
       'href',
       '/admin/invitations?email=fern&expiring&invite',
+    );
+  });
+
+  it('reads on after a cursor, and back before one', async () => {
+    const cursor = entry(5).cursor;
+
+    await renderPage({ after: encodeCursor(cursor) });
+    expect(lastRequest()).toEqual({ after: cursor, limit: 26, inverted: false });
+
+    await renderPage({ before: encodeCursor(cursor) });
+    expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
+  });
+
+  // A cursor copied from another list decodes, then names no row of this one.
+  it('reads the first page when the cursor is not one of this list', async () => {
+    listPendingAdminInvitations.mockRejectedValueOnce(new InvalidCursor());
+    const cursor = { key: ['Listed Fixture 25'], id: 'i5' };
+
+    await renderPage({ after: encodeCursor(cursor) });
+
+    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+  });
+
+  it('links the pages either side, keeping the filter, and says where it stands', async () => {
+    listPendingAdminInvitations.mockResolvedValue(
+      Array.from({ length: 26 }, (_, index) => entry(index + 1)),
+    );
+    countPendingAdminInvitations.mockResolvedValue({ totalCount: 60, countBefore: 25 });
+
+    await renderPage({ email: 'fern', expiring: '', after: encodeCursor(entry(0).cursor) });
+
+    const filter = '/admin/invitations?email=fern&expiring';
+    expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
+      'href',
+      `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,
+    );
+    expect(screen.getByRole('link', { name: 'Prev' })).toHaveAttribute(
+      'href',
+      `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
+    );
+    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
+  });
+
+  it('keeps the page shown in Invite Admin', async () => {
+    const after = encodeCursor(entry(25).cursor);
+
+    await renderPage({ email: 'fern', after });
+
+    expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
+      'href',
+      `/admin/invitations?email=fern&after=${encodeURIComponent(after)}&invite`,
     );
   });
 

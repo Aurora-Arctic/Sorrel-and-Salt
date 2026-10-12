@@ -9,9 +9,10 @@ import type { AdminInvitationsFilterProps } from './types';
 // The Invitations tab's filter (MB.115, on the owner's ask: "search the
 // Invitations by email and expires in 24 hrs"), on the shared FilterForm as
 // the user list's is: Filter offered only when the fields differ from the
-// filter the page shows, and Clear after it. A soft navigation, as
-// the compendium's: the tab has no pager whose plain anchors it must agree
-// with. Before hydration the form submits natively, the email as `email=`
+// filter the page shows, and Clear after it. A full load, as the user
+// list's, to agree with the pager's plain anchors, which run the admin
+// layout's guard again; it names no cursor, so it opens the first page.
+// Before hydration the form submits natively, the email as `email=`
 // and Expires in 24 Hrs, a native checkbox, as `expiring=`, which the page
 // reads the same as the bare flag. The list keys this by the filter shown,
 // so a page showing another starts it again from that one.
@@ -33,7 +34,7 @@ const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactE
         setDraftEmail('');
         setDraftSoon(false);
       }}
-      navigation="soft"
+      navigation="full"
     >
       <FieldShell label="Email" {...email}>
         <input

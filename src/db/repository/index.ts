@@ -72,7 +72,8 @@ export {
 export {
   findInvitationByToken,
   findPendingInvitationsInWorkspace,
-  findPendingSiteInvitations,
+  findPendingSiteInvitationCount,
+  findPendingSiteInvitationPage,
 } from './invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';

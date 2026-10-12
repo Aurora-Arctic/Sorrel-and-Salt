@@ -3,9 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { invitationSender } from '@/lib/invitation-mail';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { ADMIN_CHANGES_PAUSED_REFUSAL as PAUSED_REFUSAL } from '@/lib/primary-admin';
-import type { Message } from '@/lib/types';
+import type { Message, PageRequest } from '@/lib/types';
 import {
+  countPendingAdminInvitations,
   createAdminInvitation,
   listPendingAdminInvitations,
   pauseAdminRoleChanges,
@@ -40,6 +42,13 @@ const PRIMARY = '00000000-0000-0000-0000-0000000000b1';
 const PRIMARY_EMAIL = `primary${DOMAIN}`;
 const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
 const ORIGIN = 'http://localhost:8000';
+
+/** More than the list's page, so every row is read in one. */
+const PAGE: PageRequest = { limit: 101, inverted: false };
+
+/** The pending invitations an admin is listed, in the list's order, on one page. */
+const pending = async (filter: Parameters<typeof listPendingAdminInvitations>[1] = {}) =>
+  (await listPendingAdminInvitations(asUser(E), filter, PAGE)).map(({ node }) => node);
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
@@ -176,7 +185,7 @@ describe('revokeAdminInvitation', () => {
 
   it('stamps a pending invitation revoked, as the admin, and lists it no longer', async () => {
     const id = await invite();
-    expect((await listPendingAdminInvitations(asUser(E))).map((row) => row.id)).toEqual([id]);
+    expect((await pending()).map((row) => row.id)).toEqual([id]);
 
     const revoked = await revokeAdminInvitation(asUser(AS_PRIMARY), id);
 
@@ -184,7 +193,7 @@ describe('revokeAdminInvitation', () => {
     const [row] = await invitations();
     expect(row.revoked_at).toBeInstanceOf(Date);
     expect(row.updated_by).toBe(PRIMARY);
-    expect(await listPendingAdminInvitations(asUser(E))).toEqual([]);
+    expect(await pending()).toEqual([]);
   });
 
   it('answers NotFound for one already revoked, and for an id that names none', async () => {
@@ -222,7 +231,7 @@ describe('listPendingAdminInvitations', () => {
           (${`coven${DOMAIN}`}, 'h6', null, now(), ${A.id}, ${A.id}, null, null, null, now() + interval '1 day', ${WORKSPACE_W_ID}, 'member')
       `;
 
-    const listed = await listPendingAdminInvitations(asUser(E));
+    const listed = await pending();
 
     expect(listed.map(({ email, note }) => ({ email, note }))).toEqual([
       { email: `newer${DOMAIN}`, note: null },
@@ -232,7 +241,7 @@ describe('listPendingAdminInvitations', () => {
 
   // MB.115: the list's two filters, each in the finder's SQL.
   const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
-    (await listPendingAdminInvitations(asUser(E), filter)).map(({ email }) => email).sort();
+    (await pending(filter)).map(({ email }) => email).sort();
 
   it('narrows by a fragment of the address, in any case, trimmed', async () => {
     await sql`
@@ -263,12 +272,113 @@ describe('listPendingAdminInvitations', () => {
     expect(await listedEmails({ expiringSoon: true })).toEqual([`soon${DOMAIN}`]);
   });
 
+  // MB.115: a page at a time, as every admin list reads (CLAUDE.md rule 8).
+  const id = (n: number) => `00000000-0000-0000-0000-0000000001${String(n).padStart(2, '0')}`;
+
+  // Five pending invitations an hour apart but for two sharing an instant,
+  // as one statement's `now()` is shared, which only the id can order. Named
+  // fern or bracken by turn, so a filter picks rows from every page.
+  async function fivePending() {
+    await sql`
+        insert into invitations (id, email, token_hash, created_at, created_by, updated_by, expires_at)
+        values
+          (${id(1)}, ${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${id(3)}, ${`bracken.one${DOMAIN}`}, 'h3', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${id(2)}, ${`fern.two${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${id(4)}, ${`bracken.two${DOMAIN}`}, 'h4', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${id(5)}, ${`fern.three${DOMAIN}`}, 'h5', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
+          (${id(6)}, ${`fern.revoked${DOMAIN}`}, 'h6', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day')
+      `;
+    await sql`update invitations set revoked_at = now() where id = ${id(6)}`;
+  }
+
+  /** The page `args` asks for under `filter`, as the page reads it. */
+  const page = (
+    args: Parameters<typeof resolvePage>[0],
+    filter: Parameters<typeof listPendingAdminInvitations>[1] = {},
+  ) => resolvePage(args, (request) => listPendingAdminInvitations(asUser(E), filter, request));
+  const ids = (read: Awaited<ReturnType<typeof page>>) => read.edges.map(({ node }) => node.id);
+
+  it('reads a page newest first, an instant’s rows by id, and the next cursor the rest', async () => {
+    await fivePending();
+
+    const first = await page({ first: 2 });
+    expect(ids(first)).toEqual([id(1), id(2)]);
+    expect(first.pageInfo.hasNextPage).toBe(true);
+
+    const second = await page({ first: 3, after: first.pageInfo.endCursor ?? undefined });
+    expect(ids(second)).toEqual([id(3), id(4), id(5)]);
+    expect(second.pageInfo.hasNextPage).toBe(false);
+
+    const back = await page({ last: 2, before: second.pageInfo.startCursor ?? undefined });
+    expect(ids(back)).toEqual([id(1), id(2)]);
+  });
+
+  it('narrows every page by the filter, not only the first', async () => {
+    await fivePending();
+
+    const first = await page({ first: 2 }, { email: 'fern' });
+    expect(ids(first)).toEqual([id(1), id(2)]);
+
+    const second = await page(
+      { first: 2, after: first.pageInfo.endCursor ?? undefined },
+      {
+        email: 'fern',
+      },
+    );
+    expect(ids(second)).toEqual([id(5)]);
+    expect(second.pageInfo.hasNextPage).toBe(false);
+  });
+
   it('refuses a non-admin as Forbidden', async () => {
     await createAdminInvitation(asUser(E), INVITED, undefined, sender());
-    expect(await listPendingAdminInvitations(asUser(E))).toHaveLength(1);
+    expect(await pending()).toHaveLength(1);
     expect(asUser(C).role).toBe('user');
 
-    await expect(listPendingAdminInvitations(asUser(C))).rejects.toThrow(Forbidden);
+    await expect(listPendingAdminInvitations(asUser(C), {}, PAGE)).rejects.toThrow(Forbidden);
+  });
+});
+
+describe('countPendingAdminInvitations', () => {
+  it('counts the pending invitations under the filter, and those before a page', async () => {
+    await sql`
+        insert into invitations (email, token_hash, created_at, created_by, updated_by, expires_at, revoked_at)
+        values
+          (${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day', null),
+          (${`bracken${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
+          (${`fern.two${DOMAIN}`}, 'h3', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
+          (${`fern.three${DOMAIN}`}, 'h4', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
+          (${`fern.revoked${DOMAIN}`}, 'h5', now() - interval '5 hours', ${E.id}, ${E.id}, now() + interval '1 day', now())
+      `;
+    const fern = { email: 'fern' };
+    const first = await resolvePage({ first: 2 }, (request) =>
+      listPendingAdminInvitations(asUser(E), fern, request),
+    );
+    const second = await resolvePage(
+      { first: 2, after: first.pageInfo.endCursor ?? undefined },
+      (request) => listPendingAdminInvitations(asUser(E), fern, request),
+    );
+
+    expect(
+      await countPendingAdminInvitations(
+        asUser(E),
+        fern,
+        decodeCursor(second.pageInfo.startCursor ?? ''),
+      ),
+    ).toEqual({ totalCount: 3, countBefore: 2 });
+    expect(await countPendingAdminInvitations(asUser(E), {}, undefined)).toEqual({
+      totalCount: 4,
+      countBefore: null,
+    });
+  });
+
+  // Why the refusal is the role's: the same count as an admin finds a row.
+  it('refuses a non-admin as Forbidden', async () => {
+    await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    expect((await countPendingAdminInvitations(asUser(E), {}, undefined)).totalCount).toBe(1);
+    expect(asUser(C).role).toBe('user');
+
+    await expect(countPendingAdminInvitations(asUser(C), {}, undefined)).rejects.toThrow(Forbidden);
   });
 });
 
@@ -314,6 +424,6 @@ describe('while admin changes are paused', () => {
   it('still lists the pending invitations to every admin', async () => {
     await createAdminInvitation(asUser(AS_PRIMARY), INVITED, undefined, sender());
 
-    expect(await listPendingAdminInvitations(asUser(E))).toHaveLength(1);
+    expect(await pending()).toHaveLength(1);
   });
 });

@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   findInvitationByToken,
   findPendingInvitationsInWorkspace,
-  findPendingSiteInvitations,
+  findPendingSiteInvitationPage,
   withAudit,
   type AuditWriter,
   type InvitationRow,
@@ -294,7 +294,8 @@ describe('the pending lists', () => {
     const { pendingOnSite } = await everyKind();
 
     expect(await sql`select id from invitations where workspace_id is not null`).not.toEqual([]);
-    expect(ids(await findPendingSiteInvitations(admin))).toEqual([pendingOnSite!.id]);
+    const page = await findPendingSiteInvitationPage(admin, {}, { limit: 101, inverted: false });
+    expect(ids(page.map(({ node }) => node))).toEqual([pendingOnSite!.id]);
   });
 });
 

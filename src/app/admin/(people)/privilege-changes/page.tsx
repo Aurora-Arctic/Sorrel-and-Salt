@@ -8,8 +8,6 @@ import type {
   PrivilegeLedgerEntry,
 } from '../../../../components/PrivilegeLedger/types';
 import { userListHref } from '../../../../components/UserList/href';
-import { InvalidCursor } from '../../../../lib/errors';
-import { resolveNumberedPage } from '../../../../lib/pagination';
 import { requireAdminSession } from '../../../../lib/request-session';
 import { single } from '../../../../lib/search-params';
 import type { Session } from '../../../../lib/session';
@@ -19,7 +17,7 @@ import {
   listedOnUserList,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs, readListPlace } from '../../list-page';
+import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
 export const metadata: Metadata = {
@@ -30,26 +28,17 @@ export const metadata: Metadata = {
 const PRIVILEGES: readonly LedgerPrivilege[] = ['admin', 'create_workspace'];
 
 /** One page of the ledger and its count, the first page again for a cursor that names no row of it. */
-async function readLedgerPage(
+function readLedgerPage(
   session: Session,
   filter: { query?: string; privilege?: LedgerPrivilege },
   after: string | undefined,
   before: string | undefined,
 ) {
-  const read = (cursors: { after?: string; before?: string }) =>
-    resolveNumberedPage(
-      cursors,
-      (request) => listPrivilegeChanges(session, filter, request),
-      (start) => countPrivilegeChanges(session, filter, start),
-    );
-  try {
-    return await read({ after, before });
-  } catch (error) {
-    // A cursor the codec reads but this list's key will not cast, one copied
-    // from another list: the first page, as for one the codec refuses.
-    if (error instanceof InvalidCursor && (after || before)) return read({});
-    throw error;
-  }
+  return readNumberedPage(
+    { after, before },
+    (request) => listPrivilegeChanges(session, filter, request),
+    (start) => countPrivilegeChanges(session, filter, start),
+  );
 }
 
 // The page and GraphQL's `privilegeChanges` end at the same service, paged by

@@ -1,8 +1,16 @@
 import 'server-only';
 import type { Route } from 'next';
-import { NotFound } from '../../lib/errors';
+import { InvalidCursor, NotFound } from '../../lib/errors';
+import { resolveNumberedPage } from '../../lib/pagination';
 import { readableCursor, single } from '../../lib/search-params';
-import type { Page } from '../../lib/types';
+import type {
+  Cursor,
+  Page,
+  PageCount,
+  PageEntry,
+  PagePosition,
+  PageRequest,
+} from '../../lib/types';
 import type { ListPlace, ListSearchParams, PagerCursor, PagerHrefs } from './types';
 
 // What every admin list page reads off its address and builds back into one,
@@ -40,6 +48,27 @@ export function pagerHrefs(
     previousHref: hasPreviousPage && startCursor ? build({ before: startCursor }) : undefined,
     nextHref: hasNextPage && endCursor ? build({ after: endCursor }) : undefined,
   };
+}
+
+/**
+ * One numbered page of a list, through `resolveNumberedPage`, or its first
+ * page again for a cursor that names no row of it: one the codec reads but
+ * this list's key will not cast, as a cursor copied from another list is.
+ * Any other failure is still thrown.
+ */
+export async function readNumberedPage<T>(
+  { after, before }: { after?: string; before?: string },
+  fetch: (request: PageRequest) => Promise<PageEntry<T>[]>,
+  count: (start: Cursor | undefined) => Promise<PageCount>,
+): Promise<Page<T> & { position: PagePosition }> {
+  try {
+    return await resolveNumberedPage({ after, before }, fetch, count);
+  } catch (error) {
+    if (error instanceof InvalidCursor && (after || before)) {
+      return resolveNumberedPage({}, fetch, count);
+    }
+    throw error;
+  }
 }
 
 /**

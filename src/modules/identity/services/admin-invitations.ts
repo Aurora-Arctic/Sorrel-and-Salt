@@ -1,9 +1,15 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
-import { findPendingSiteInvitations, findUserByEmail, withAudit } from '../../../db/repository';
-import type { InvitationRow } from '../../../db/repository';
+import {
+  findPendingSiteInvitationCount,
+  findPendingSiteInvitationPage,
+  findUserByEmail,
+  withAudit,
+} from '../../../db/repository';
+import type { InvitationRow, SiteInvitationFilter } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
 import { assertSiteAdmin } from './site-admin';
 import { adminDeclaration } from './admin-changes';
@@ -81,23 +87,46 @@ export async function revokeAdminInvitation(session: Session, id: string): Promi
 /** How soon an invitation lapses for Expires in 24 Hrs to list it (MB.115). */
 const EXPIRING_SOON_HOURS = 24;
 
+const LIST_REFUSAL = 'Only a site admin may see admin invitations';
+
 /**
- * The pending admin invitations, newest first, for `/admin/invitations`. To
- * every admin, paused or not: the list is where an invitation is seen.
- * Narrowed by `filter` in the finder's SQL: `email` a fragment of the
- * address, trimmed, and `expiringSoon` only those lapsing within
- * `EXPIRING_SOON_HOURS`.
+ * One page of the pending admin invitations under `filter`, newest first,
+ * for `/admin/invitations`. To every admin, paused or not: the list is where
+ * an invitation is seen. Narrowed by `filter` in the finder's SQL: `email` a
+ * fragment of the address, trimmed, and `expiringSoon` only those lapsing
+ * within `EXPIRING_SOON_HOURS`.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
 export async function listPendingAdminInvitations(
   session: Session,
-  { email, expiringSoon }: AdminInvitationFilter = {},
-): Promise<InvitationRow[]> {
-  const admin = assertSiteAdmin(session, 'Only a site admin may see admin invitations');
-  const rows = await findPendingSiteInvitations(admin, {
+  filter: AdminInvitationFilter,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  const admin = assertSiteAdmin(session, LIST_REFUSAL);
+  return findPendingSiteInvitationPage(admin, siteFilter(filter), page);
+}
+
+/**
+ * How many invitations `listPendingAdminInvitations` pages under `filter`,
+ * and how many come before `start`, a page's first row, none on an empty
+ * page: the Invitations tab's "Page X of Y" (MB.115).
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function countPendingAdminInvitations(
+  session: Session,
+  filter: AdminInvitationFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const admin = assertSiteAdmin(session, LIST_REFUSAL);
+  return findPendingSiteInvitationCount(admin, siteFilter(filter), start);
+}
+
+/** The filter as the finder takes it: a blank address none, and the window in hours. */
+function siteFilter({ email, expiringSoon }: AdminInvitationFilter): SiteInvitationFilter {
+  return {
     email: email?.trim() || undefined,
     expiresWithinHours: expiringSoon ? EXPIRING_SOON_HOURS : undefined,
-  });
-  return rows.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  };
 }

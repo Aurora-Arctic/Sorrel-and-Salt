@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminInvitations, { InviteAdmin } from '@/components/AdminInvitations';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '@/lib/primary-admin';
 import type {
@@ -219,23 +219,38 @@ describe('AdminInvitations', () => {
 
 // The filter (MB.115): FilterForm's loading state and Clear are
 // CompendiumList's to test; this asserts the address this one builds, which
-// of its values count as a filter, and that the invite form keeps it.
+// of its values count as a filter, and that the invite form keeps it and the
+// page shown. A full load, as the pager's plain anchors are.
 describe('AdminInvitations filter', () => {
   const FERN = { email: 'fern', expiringSoon: true };
+  const assign = vi.fn();
+  beforeEach(() => {
+    vi.stubGlobal('location', { ...window.location, assign });
+  });
+  afterEach(() => {
+    assign.mockReset();
+    vi.unstubAllGlobals();
+  });
   const email = () => screen.getByRole('searchbox', { name: 'Email' });
   const soon = () => screen.getByRole('switch', { name: 'Expires in 24 Hrs' });
   const filterButton = () => screen.getByRole('button', { name: 'Filter' });
   const clearLink = () => screen.getByRole('link', { name: 'Clear' });
 
-  it('opens the filtered list, the email trimmed and Expires in 24 Hrs a bare flag', () => {
-    render(<AdminInvitations invitations={INVITATIONS} />);
+  it('opens the filtered list from its first page, the email trimmed and Expires in 24 Hrs a bare flag', () => {
+    render(
+      <AdminInvitations
+        invitations={INVITATIONS}
+        cursor={{ after: 'c25' }}
+        previousHref="/admin/invitations?before=c1"
+      />,
+    );
     expect(filterButton()).toBeDisabled();
 
     fireEvent.change(email(), { target: { value: ' Fern ' } });
     fireEvent.click(soon());
     fireEvent.click(filterButton());
 
-    expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
+    expect(assign).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
   });
 
   it('starts from the filter shown, and offers Clear to the unfiltered list while either part is shown', () => {
@@ -262,25 +277,26 @@ describe('AdminInvitations filter', () => {
     fireEvent.click(soon());
     fireEvent.click(clearLink());
 
-    expect(router.push).not.toHaveBeenCalled();
+    expect(assign).not.toHaveBeenCalled();
     expect(email()).toHaveValue('');
     expect(soon()).not.toBeChecked();
     expect(filterButton()).toBeDisabled();
   });
 
-  it('keeps the filter in Invite Admin and in the invite form’s close', () => {
+  it('keeps the filter and the page shown in Invite Admin and in the invite form’s close', () => {
+    const cursor = { after: 'c25' };
     render(
       <>
-        <InviteAdmin filter={FERN} />
-        <AdminInvitations invitations={[]} filter={FERN} inviting />
+        <InviteAdmin filter={FERN} cursor={cursor} />
+        <AdminInvitations invitations={[]} filter={FERN} cursor={cursor} inviting />
       </>,
     );
 
     expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
       'href',
-      '/admin/invitations?email=fern&expiring&invite',
+      '/admin/invitations?email=fern&expiring&after=c25&invite',
     );
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring');
+    expect(router.replace).toHaveBeenCalledWith('/admin/invitations?email=fern&expiring&after=c25');
   });
 });
