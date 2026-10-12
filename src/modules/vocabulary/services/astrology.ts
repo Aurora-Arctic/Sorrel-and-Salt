@@ -46,7 +46,7 @@ const VOCABULARY = {
     input: PlanetInput,
     noun: 'celestial body',
     listNoun: 'celestial bodies',
-    slugIndex: 'planets_slug_unique',
+    slugIndex: 'celestial_bodies_slug_unique',
     holding: (name: string) => ({ planet: name }),
   },
   zodiacSigns: {

@@ -337,7 +337,7 @@ export function findCompendiumFormRenameClashes(
  * ingredient row mirrors.
  */
 const IN_USE = {
-  planets: { list: ingredients.planets },
+  celestial_bodies: { list: ingredients.planets },
   zodiac_signs: { list: ingredients.zodiacSigns },
   ingredient_forms: { child: ingredientVariants, value: ingredientVariants.form },
   deities: { child: ingredientDeities, value: ingredientDeities.name },

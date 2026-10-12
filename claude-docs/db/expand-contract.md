@@ -148,6 +148,58 @@ mid-rollout. Never do it in one step. Instead:
   has to say out loud "yes, this is the point where we give up the old
   column," not have it happen silently.
 
+### Renaming a table
+
+Renaming a table in one step breaks the deploy that is still serving, just as
+renaming a column does, because every statement it sends names the old table.
+Unlike a column, though, a table can leave its old name behind as a **view**
+over itself. A view is a saved query that the database treats like a table, so
+the rename needs no second table and no copying. MB.252 is the worked case,
+renaming `planets` to `celestial_bodies`, and it was the first table rename
+here ([`design-decisions/mb.252-table-rename.md`](../design-decisions/mb.252-table-rename.md)).
+
+- **Expand in one migration.** Rename the table with `ALTER TABLE … RENAME TO`,
+  then create `CREATE VIEW <old> AS SELECT * FROM <new>`. Postgres can write
+  through a view over a single table with no joins or aggregates. So the deploy
+  before keeps reading and writing the same rows under the old name:
+  - inserts and updates with `RETURNING`, and soft deletes, all work
+  - the table's `set_updated_at` trigger still fires, because a rename keeps it
+  - a connection that prepared statements against the table before the rename
+    runs them through the view afterwards, because Postgres looks the name up
+    again whenever it re-plans a statement
+
+  MB.252 measured both. The whole `db` test project passed with the migration
+  applied and the schema still naming the old table, and a scratch script ran
+  prepared statements across the rename.
+
+- **Rename the indexes, CHECKs and foreign keys in the same migration.**
+  `vocabularyIndexes` and Drizzle's foreign-key names are built from the
+  table's name, and the schema-drift test compares the names. The one cost is
+  any code in the deploy before that looks up a constraint by name. For MB.252
+  that was the friendly duplicate-slug error: during the rollout, and after a
+  rollback, a duplicate gets a generic error instead. It is still refused.
+- **Declare the new name in the schema straight away**, and the old name
+  nowhere. The schema-drift test lists tables only, so it doesn't compare
+  views. Instead, its `PENDING_DROPS` list holds the view under the `view`
+  kind, and any view missing from that list fails the test.
+  `audit-columns.test.ts` reads base tables only, because
+  `information_schema.columns` lists a view's columns as well as a table's.
+- **Write the migration with `generate --custom`, and edit the snapshot by
+  hand.** drizzle-kit stops to ask whether a table it hasn't seen before is a
+  rename, and that question fails without a terminal. In the copied snapshot,
+  change:
+  - the table's key and name, and its index, CHECK and foreign-key names
+  - the `"<old>".` prefix in every index predicate
+  - every foreign key that points at the table
+
+  A second scratch `generate` must then report no changes.
+
+- **The view locks the table's columns until the contract step drops it.**
+  Postgres refuses `DROP COLUMN` or `ALTER COLUMN TYPE` on any column a view
+  reads, so neither can happen to the table in between. The contract task drops
+  the view, with its sidecar, once a release carrying the switch has reached
+  production.
+
 **The CI check (`checks / destructive-ddl` / `scripts/check-destructive-ddl.ts`,
 M1.5; a `checks.yml` leg since MB.37)** scans migration files new or changed in
 a PR for five forms:
@@ -227,7 +279,7 @@ and goes red on a real omission. It was permanently red before, first because
 the bare command _was_ that full scan (fixed in MB.37) and then because the
 acknowledgements it needed only ever existed in PR bodies.
 
-Fifteen migrations carry findings today, and each has its sidecar:
+Sixteen migrations carry findings today, and each has its sidecar:
 
 | Migration                              | Findings                                                                                                                                                                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -246,6 +298,7 @@ Fifteen migrations carry findings today, and each has its sidecar:
 | `0061_ingredient-variants.sql`         | `ingredients.identity_key` added `NOT NULL` with no `DEFAULT`, a false positive: a generated column computed from `name`, itself `NOT NULL` (MB.216)                                                                                 |
 | `0063_variant-children.sql`            | four unique indexes and three constraints dropped and re-created keyed on the variant or wider in one transaction, under `0029` and `0038`'s precedent, and `inventory_items.variant_id` added `NOT NULL` to an empty table (MB.217) |
 | `0064_drop-form-and-canonical-key.sql` | `ingredients.canonical_key`, `form` and `form_id` dropped with their two CHECKs, the pick's foreign key and three indexes, the contract half of MB.220 and MB.222's switch to `identity_key` and `ingredient_variants` (MB.223)      |
+| `0067_celestial-bodies-expand.sql`     | `planets` renamed `celestial_bodies` with its indexes, CHECK and foreign keys, a `planets` view standing in, and `reference_links_one_row` dropped and re-added counting either link column (MB.252)                                 |
 
 **`0002`'s sidecar was written retroactively, and says so.** This document
 previously claimed its `DROP CONSTRAINT` and two `NOT NULL` columns "were
