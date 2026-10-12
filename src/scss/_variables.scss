@@ -440,6 +440,54 @@ $switch-width: 2.75rem;
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
 
+// The application shell (MB.7, drawn in its design review): the global bar
+// across the top of every signed-in page, the context row beneath it that
+// names the coven (as the switcher) or the admin area and carries the section
+// nav, and at a phone's width the section nav's bar along the bottom instead.
+// The bar is a little taller than a control, so a control sits inside it
+// with a step of air; the context row on a phone is exactly a control, the
+// switcher's own height. The page keeps the bottom bar's height clear
+// beneath its content, so the last row is never under it.
+$shell-bar-height: 3.25rem;
+$context-row-height: 3.5rem;
+$context-row-height-phone: $control-height;
+$bottom-bar-height: 4rem;
+
+// The width at or under which the shell takes its phone shape (the switcher
+// on its own row, the section nav along the bottom, the account button an
+// avatar alone): the one width the admin tables stack into cards at, so a
+// page changes shape once rather than twice. A screen width, where
+// `$table-stack-width` is a container's, since the shell's bars are the window's.
+$shell-phone-width: $table-stack-width;
+
+// The width at or under which the admin section nav keeps its first pages in
+// view and tucks the rest behind More (Priority+), between the phone shape
+// and a desktop where all six fit the row.
+$shell-tablet-width: 48rem;
+
+// The one place a z-index comes from (MB.124's handoff, settled by MB.7):
+// what stacks above the page, named by what it is rather than by a number
+// each component chose for itself. A component inside its own stacking
+// context (a combobox's list over its field) keeps a small local index; these
+// are the layers that meet each other at the window. `floating` is a popover
+// or list opened from the shell, over the bars; `dialog` is a non-native
+// overlay, since a <dialog> sits in the browser's top layer above every one.
+$layers: (
+  'shell': 10,
+  'banner': 11,
+  'toggle': 12,
+  'floating': 20,
+  'dialog': 30,
+);
+
+@function layer($name) {
+  @if not map.has-key($layers, $name) {
+    @error "Unknown layer \"#{$name}\". The layers are: #{map.keys($layers)}.";
+  }
+
+  @return map.get($layers, $name);
+}
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------
