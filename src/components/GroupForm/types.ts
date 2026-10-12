@@ -1,4 +1,6 @@
-import type { Resolver } from 'react-hook-form';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+import type { FieldValues, Resolver } from 'react-hook-form';
+import type { z } from 'zod';
 
 /**
  * Which group vocabulary the form writes: the category groups, whose rows
@@ -26,6 +28,18 @@ export interface GroupFormKind {
   save: (input: GroupValues, id: string | undefined) => Promise<void>;
   /** Deletes it, moving its rows to `moveTo` when given. */
   remove: (variables: { id: string; moveTo?: string }) => Promise<void>;
+}
+
+/** What a group vocabulary's copy is: everything of `GroupFormKind` but its schema and requests. */
+export type GroupKindCopy = Omit<GroupFormKind, 'resolver' | 'save' | 'remove'>;
+
+/** One group vocabulary as declared: its copy, its shared schema, and its three mutations. */
+export interface GroupKindSpec<Input extends object> extends GroupKindCopy {
+  /** The shared schema the values pass before a request, whose output is the input. */
+  schema: z.ZodType<object, FieldValues>;
+  create: TypedDocumentNode<unknown, { input: Input }>;
+  update: TypedDocumentNode<unknown, { id: string; input: Input }>;
+  remove: TypedDocumentNode<unknown, { id: string; moveTo?: string | null }>;
 }
 
 /**

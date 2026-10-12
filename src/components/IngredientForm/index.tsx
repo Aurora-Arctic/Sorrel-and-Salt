@@ -8,7 +8,7 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import { GENERIC_FAILURE, placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
@@ -302,17 +302,11 @@ const IngredientForm = ({
       // setError, as the resolver's own errors are set: the next submit or an
       // edit to the field clears them the same way. MB.82's refusal is a
       // question rather than an error: it asks before the save goes again.
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        if (path[0] === END_REDIRECT) {
-          setQuestion({ message, input });
-          continue;
-        }
-        const name = fieldNameOf(path, getValues());
-        if (name === undefined) unplaced.push(message);
-        else setError(name, { type: 'server', message });
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path, message }) => {
+        if (path[0] !== END_REDIRECT) return fieldNameOf(path, getValues());
+        setQuestion({ message, input });
+        return false;
+      });
     }
   };
 

@@ -1,13 +1,13 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
+import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
+import { GENERIC_FAILURE, placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import { FormActions, SelectField, TextField } from '../Field';
@@ -172,22 +172,13 @@ function defineKind<Input extends object>({
   remove,
   ...copy
 }: GroupedValueKindSpec<Input>): GroupedValueFormKind {
+  const send = saveRequest(create, update);
   return {
     ...copy,
     // The form's values always carry `groupId`, `''` for a flat kind, whose
     // schema parses them without it; the resolver is typed for the values.
     resolver: zodResolver(schema) as unknown as Resolver<GroupedValueValues>,
-    save: async (values, id) => {
-      const input = toInput(values);
-      if (id) {
-        await graphqlRequest(update, { id, input });
-        return;
-      }
-      // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
-      // `Input` is generic; the spec has already held the document to it.
-      const widened = create as TypedDocumentNode<unknown, { input: object }>;
-      await graphqlRequest<unknown, { input: object }>(widened, { input });
-    },
+    save: (values, id) => send(toInput(values), id),
     remove: async (id) => {
       await graphqlRequest(remove, { id });
     },
@@ -369,14 +360,9 @@ const GroupedValueForm = ({
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const [key, ...rest] = path;
-        const field = rest.length === 0 ? fieldOf(spec, key) : undefined;
-        if (field) setError(field, { type: 'server', message });
-        else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [key, ...rest] }) =>
+        rest.length === 0 ? fieldOf(spec, key) : undefined,
+      );
     }
   };
 

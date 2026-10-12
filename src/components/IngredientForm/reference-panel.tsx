@@ -23,7 +23,7 @@ import type {
 } from './types';
 import { useFocusFirstInvalid } from './on-submit';
 import { useReportPanelChanges } from './panel-changes';
-import { readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 
 // The citation sub-form (MB.154): a new source written to this coven without
 // leaving the ingredient form. Inline beneath the References field rather
@@ -447,15 +447,11 @@ function PanelForm({
       // A field error beside the field it names, if this kind shows it;
       // anything else above the fields.
       const visible = shownFor(kind);
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const [field, ...rest] = path;
-        if (field === 'kind' && rest.length === 0) setError('kind', { type: 'server', message });
-        else if (rest.length === 0 && visible.has(field as ReferenceFieldName)) {
-          setError(field as ReferenceFieldName, { type: 'server', message });
-        } else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        if (rest.length > 0) return undefined;
+        if (field === 'kind') return 'kind';
+        return visible.has(field as ReferenceFieldName) ? (field as ReferenceFieldName) : undefined;
+      });
     }
   };
   const submit = () => void handleSubmit(save)();
