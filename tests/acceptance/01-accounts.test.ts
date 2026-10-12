@@ -227,7 +227,7 @@ describe("Story 2: As a newly signed-in user, be told plainly what I can do next
     // three states — the third being the one that keeps an empty account
     // from reading as broken. What the page says is its own test's, not this
     // file's: the story's line is that the landing exists.
-    const landing = fromRoot('src/app/coven/page.tsx');
+    const landing = fromRoot('src/app/(shell)/coven/page.tsx');
     expect(existsSync(landing), 'the /coven landing route is not built yet').toBe(true);
   });
 });
@@ -452,8 +452,8 @@ describe('Story 8: Switch between workspaces without losing my place.', () => {
     // so two tabs can disagree. What each renders is its own task's test.
     const paths = [
       ['M6.9', 'src/components/WorkspaceSwitcher/index.tsx'],
-      ['M6.10', 'src/app/coven/[slug]/layout.tsx'],
-      ['M9.15', 'src/app/coven/[slug]/page.tsx'],
+      ['M6.10', 'src/app/(shell)/coven/[slug]/layout.tsx'],
+      ['M9.15', 'src/app/(shell)/coven/[slug]/page.tsx'],
     ] as const;
     for (const [task, path] of paths) {
       expect(existsSync(fromRoot(path)), `${task} has not built ${path} yet`).toBe(true);

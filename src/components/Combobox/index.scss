@@ -321,6 +321,22 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// A choice that makes something new: after a hairline rule, led by a plus.
+.combobox__option--create {
+  flex-direction: row;
+  align-items: center;
+  gap: space(2);
+  margin-top: space(1);
+  border-top: 1px solid $hairline;
+
+  svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    color: $accent;
+  }
+}
+
 .combobox__option--typed {
   font-style: italic;
 }

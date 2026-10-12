@@ -6,16 +6,16 @@ import CreateWorkspaceForm from '.';
 // submit in the workshop fails into the alert region. The TanStack Query
 // client comes from the workshop's global provider (.ladle/components.tsx).
 export default {
-  title: 'Forms / Create Workspace',
+  title: 'Forms / Create Coven',
 };
 
-// Inside the page's frame and head, as src/app/coven/new/page.tsx writes
+// Inside the page's frame and head, as src/app/(shell)/coven/new/page.tsx writes
 // them, so the workshop shows what the page shows.
 const Page = () => (
   <main className="page-frame page-frame--narrow">
     <div className="page-frame__section panel">
       <div className="header">
-        <h1>Create Workspace</h1>
+        <h1>Create Coven</h1>
         <p className="lede">Start a coven of your own. You will be its owner.</p>
       </div>
       <CreateWorkspaceForm />

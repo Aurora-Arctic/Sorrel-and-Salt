@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { entryValues } from '@/app/admin/compendium/entry-values';
+import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { toInput } from '@/components/IngredientForm/values';
 import { citationText } from '@/lib/citation';
 import {
@@ -16,7 +16,7 @@ import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
-// src/app/admin/compendium/entry-values.ts: the values `/admin/compendium`'s
+// src/app/(shell)/admin/compendium/entry-values.ts: the values `/admin/compendium`'s
 // edit modal opens with, read from the database. What they must hold is every
 // value and link of the entry, so that saving the form untouched sends the
 // entry back as it was: an edit that changes nothing changes nothing.

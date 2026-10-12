@@ -1,0 +1,75 @@
+@use '../../scss/variables' as *;
+
+// The card colour mixed 45% into the page: a step off the page, a step short
+// of the bar's own card, so the row reads as part of the shell and below it.
+$context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
+
+// Full width, so its ground and its edge run the window; the inner column
+// holds the lead and the nav to the same width as the pages beneath.
+.context-row {
+  border-bottom: 1px solid $hairline;
+  background-color: $context-row-ground;
+}
+
+.context-row__inner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: stretch;
+  max-width: $wide-column;
+  min-height: $context-row-height;
+  margin-inline: auto;
+  padding-inline: space(4);
+}
+
+// The lead and the nav are told apart by a hairline between them, centred
+// down the row with a step of air at each end.
+.context-row__lead {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  min-width: 0;
+  margin-right: space(2);
+  padding-right: space(5);
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: space(4);
+    right: 0;
+    bottom: space(4);
+    width: 1px;
+    background-color: $hairline;
+  }
+}
+
+// The area's name when it is not a control: "Admin".
+.context-row__name {
+  margin: 0;
+  font-family: $font-heading;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (max-width: $shell-phone-width) {
+  .context-row__inner {
+    min-height: $context-row-height-phone;
+    padding-inline: space(2);
+  }
+
+  // The lead has the whole row, and no hairline since nothing follows it.
+  // A step of air above and below the control, so its edge is not the row's.
+  .context-row__lead {
+    flex: 1 1 auto;
+    padding-block: space(1);
+    margin-right: 0;
+    padding-right: 0;
+
+    &::after {
+      content: none;
+    }
+  }
+}

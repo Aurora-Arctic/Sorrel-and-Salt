@@ -67,6 +67,26 @@ describe('ThemeToggle', () => {
     expect(button).toHaveAttribute('aria-pressed', 'false');
   });
 
+  describe('the inline variant (the shell’s bar)', () => {
+    it('switches the theme exactly as the corner does, at either size', () => {
+      render(
+        <>
+          <ThemeToggle variant="inline" />
+          <ThemeToggle variant="inline" size="small" />
+        </>,
+      );
+      const [bar, panel] = screen.getAllByRole('button', { name: 'Toggle light and dark mode' });
+
+      fireEvent.click(bar!);
+      expect(document.documentElement.getAttribute('data-theme')).toBe('light');
+      expect(bar).toHaveAttribute('aria-pressed', 'true');
+
+      fireEvent.click(panel!);
+      expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+      expect(panel).toHaveAttribute('aria-pressed', 'false');
+    });
+  });
+
   // Three theme states, not two: dark by default, a light *system* preference
   // that never stamps `data-theme`, and a stored choice. The current theme is
   // resolved as the stylesheet resolves it: attribute, then media query, then

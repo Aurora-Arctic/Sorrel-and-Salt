@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import './index.scss';
 
-// The body of `src/app/forbidden.tsx`: what a signed-in non-admin sees at
+// The body of `src/app/(shell)/forbidden.tsx`: what a signed-in non-admin sees at
 // `/admin`. It says why and offers the way back — never who the admins are or
 // a way to ask them (claude-docs/components/not-authorized.md).
 

@@ -62,7 +62,7 @@ const controlsOf = (row: Element) => [...row.querySelectorAll<HTMLElement>(FIELD
  * Opens the list under a new filter from its first page, softly, through the
  * list's `ListFrame`: a select's or a switch's change, a type-ahead's settled
  * choice. Soft on every list, the admin ones too, since every page under
- * `/admin` runs its own guard (`src/app/admin/layout.tsx`).
+ * `/admin` runs its own guard (`src/app/(shell)/admin/layout.tsx`).
  */
 export function useApplyFilter(): (href: Route) => void {
   const { go } = useListNavigation();

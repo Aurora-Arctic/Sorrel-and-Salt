@@ -490,10 +490,11 @@
     }
   }
 
-  // The centred, full-height frame of a page with no AppShell: Welcome,
-  // sign-in, the account pages, the 403, the invitation. One column, its
-  // children a `space(6)` apart, held below the top inset so a page with the
-  // impersonation banner above it still fits the window.
+  // The centred, full-height frame of a page: Welcome, sign-in, the account
+  // pages, the 403, the invitation. One column, its children a `space(6)`
+  // apart, held below the top inset so a page with the impersonation banner
+  // above it still fits the window; inside the application shell, below the
+  // shell's bar too (`.app-shell .page-frame`, next).
   // claude-docs/styling.md, "The page frame".
   .page-frame {
     box-sizing: border-box;
@@ -504,6 +505,26 @@
     gap: space(6);
     min-height: calc(100dvh - #{$top-inset});
     padding: space(6) space(4);
+  }
+
+  // The shell's bar takes room above the frame, so the frame is shorter by it
+  // and a centred page still fits the window without a scroll.
+  .app-shell .page-frame {
+    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height});
+  }
+
+  // A jump to a section lands below the sticky bar, not under it.
+  .app-shell .page-frame__section {
+    scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  }
+
+  // At a phone's width the section nav is a bar fixed along the bottom; the
+  // page keeps its last row clear of it. The nav is a child of the context
+  // row, not of this, so the shell finds it with :has().
+  @media (max-width: $shell-phone-width) {
+    .app-shell__main:has(.section-nav) {
+      padding-bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+    }
   }
 
   // The gap alone spaces the column: this outranks `section`'s margins from
@@ -549,13 +570,14 @@
     border-top: 1px solid $text-muted;
   }
 
-  // The admin area's frame (MB.115), around the nav it carries: the nav
-  // above, the page below, a `space(5)` apart. Wider than `.page-frame`, at
-  // `$wide-column`, for the tables its pages hold, and neither full height
-  // nor centred down the window, since a list page runs as long as its rows.
+  // The admin area's frame (MB.115), around the page: its children a
+  // `space(5)` apart. The nav it once carried is the shell's context row now.
+  // Wider than `.page-frame`, at `$wide-column`, for the tables its pages
+  // hold, and neither full height nor centred down the window, since a list
+  // page runs as long as its rows.
   // A primitive rather than AdminNav's own rule, since the admin layout and
   // three stories use the class as their frame. The coven layout (M9.15)
-  // shares the frame, its section nav above its page, until its section's
+  // shares the frame, until its section's
   // design review says otherwise; its pages will hold the ingredient and
   // grimoire tables, so the wide column suits it too.
   .admin-layout,

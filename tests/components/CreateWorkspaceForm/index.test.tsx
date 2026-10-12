@@ -7,7 +7,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 const push = vi.fn();
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+const refresh = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
 
@@ -39,6 +40,7 @@ function acceptCreate(slug = 'fixture-coven') {
 
 beforeEach(() => {
   push.mockClear();
+  refresh.mockClear();
 });
 
 describe('CreateWorkspaceForm', () => {
@@ -65,6 +67,8 @@ describe('CreateWorkspaceForm', () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'));
     expect(calls).toEqual([{ name: 'Fixture Coven' }]);
+    // The shell's switcher lists covens from a layout the push does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it('stays busy from the press until the new page takes over', async () => {
@@ -97,6 +101,7 @@ describe('CreateWorkspaceForm', () => {
     expect(nameField()).toHaveAccessibleDescription(/\S/);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
     expect(create()).toBeEnabled();
   });
 

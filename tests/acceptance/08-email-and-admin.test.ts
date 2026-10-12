@@ -127,7 +127,7 @@ describe('Story 58: Prove I own my email address, whichever provider I signed in
 
 describe('Story 59: Set or change the email the site knows me by, prefilled from my provider, and have it take effect only once I have proved it is mine.', () => {
   it('has the email page at /account/email, where an unverified sign-in lands', async () => {
-    expect(existsSync(fromRoot('src/app/account/email/page.tsx'))).toBe(true);
+    expect(existsSync(fromRoot('src/app/(shell)/account/email/page.tsx'))).toBe(true);
 
     const response = await signIn('microsoft', { sub: 'ms-59', email: OWNER, verified: true });
 
