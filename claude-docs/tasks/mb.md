@@ -1342,7 +1342,7 @@ _Acceptance criteria:_
 - Nav survives navigation between workspace-scoped and global pages
 - Admin entry appears only for admins
 - An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries, and the theme toggle on a phone (added 2026-10-10, on the owner's call)
-- The owner signs off the design, in both themes and at phone width, recorded as a comment on this issue (given 2026-10-12 on the mock-up; the comment is still to be posted)
+- The owner signs off the design, in both themes and at phone width, recorded as a comment on this issue (given 2026-10-12 on the mock-up and recorded on #405)
 - No page in the shell scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - axe clean with visible keyboard focus; the e2e specs and stories pass
