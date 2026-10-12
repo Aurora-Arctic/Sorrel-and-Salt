@@ -116,6 +116,18 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
     expect(await heightOf(box)).toBeCloseTo(field, 0);
   }
 
+  // Escape on a picker's open list closes the list alone, not the dialog
+  // (MB.115): the flow below goes on in the same dialog. Before anything is
+  // typed, so a leaked Escape would close it rather than ask to discard.
+  const classification = adding.getByRole('combobox', { name: 'Classification' });
+  const choices = adding.getByRole('listbox', { name: 'Classification choices' });
+  await classification.click();
+  await expect(choices.getByRole('option').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(choices.getByRole('option')).toHaveCount(0);
+  await expect(classification).toHaveAttribute('aria-expanded', 'false');
+  await expect(adding).toBeVisible();
+
   // A lookup open inside the dialog: the suggestions float in its top layer.
   await adding.getByRole('combobox', { name: 'Planet' }).click();
   await adding.getByRole('combobox', { name: 'Planet' }).fill('M');
@@ -137,18 +149,19 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
   };
 
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Testwort');
-  await adding.getByRole('combobox', { name: 'Classification' }).click();
-  await adding
-    .getByRole('listbox', { name: 'Classification choices' })
-    .getByRole('option', { name: 'None' })
-    .click();
+  await classification.click();
+  await choices.getByRole('option', { name: 'None' }).click();
   await addForm(adding, 'Herb');
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
 
-  // Save Ingredient opens what it saved, at its address.
-  const editing = page.getByRole('dialog', { name: 'Edit Ingredient' });
+  // Save Ingredient opens what it saved, at its address, named by its saved
+  // name (MB.115): no formal name, since it is classified None.
+  const editing = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Testwort', exact: true });
   await expect(editing).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/compendium\?edit=aaa-testwort$/);
+  // An edit opens with every section closed (MB.115); the control in the
+  // modal's header opens them all.
+  await editing.getByRole('button', { name: 'Open All' }).click();
   await expect(editing.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
     'Aaa Testwort',
   );
@@ -156,7 +169,8 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
 
   // The ingredient's own description, ahead of its forms' (MB.221).
   await editing.getByRole('textbox', { name: 'Description' }).first().fill('Made by the e2e spec');
-  // A second form, with a safety note of its own.
+  // A second form, with a safety note of its own. Added here, it opens with
+  // every section open.
   await addForm(editing, 'Oil');
   const oil = editing.getByRole('group', { name: 'Oil', exact: true });
   await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
@@ -167,15 +181,20 @@ test('an admin adds, edits and deletes a compendium entry in the modal over the 
 
   // Read back from the server: both forms, the oil's note its own.
   await page.reload();
-  const reopened = page.getByRole('dialog', { name: 'Edit Ingredient' });
+  const reopened = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Testwort', exact: true });
+  // Every section closed, it opens with the focus on the dialog itself.
+  await expect(reopened).toBeFocused();
+  // Each section opens by its heading (MB.115).
+  await reopened.getByRole('button', { name: 'Variants', exact: true }).click();
   await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
-  // A variant opens closed to its summary line (MB.115): its Edit shows its fields.
+  // A variant opens closed to its summary line (MB.115): its Edit shows its
+  // sections, each closed. Safety is the oil's own, inside its card.
   await reopened.getByRole('button', { name: 'Edit Oil' }).click();
-  await expect(
-    reopened
-      .getByRole('group', { name: 'Oil', exact: true })
-      .getByRole('textbox', { name: 'Safety Notes' }),
-  ).toHaveValue('Dilute before use.');
+  const reopenedOil = reopened.getByRole('group', { name: 'Oil', exact: true });
+  await reopenedOil.getByRole('button', { name: 'Safety', exact: true }).click();
+  await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
+    'Dilute before use.',
+  );
   await assertNoAccessibilityViolations(page);
 
   await reopened.getByRole('button', { name: 'Delete Ingredient' }).click();
