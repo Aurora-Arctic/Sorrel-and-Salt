@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal from '@/components/Modal';
 import UserDetail from '@/components/UserDetail';
-import type { UserCoven, UserDetailProps } from '@/components/UserDetail/types';
+import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
@@ -29,16 +29,27 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-const BO = {
+const FACTS = {
+  email: 'bo@fixture.test',
+  emailVerified: true,
+  primaryAdmin: false,
+  canCreateWorkspace: false,
+  providers: ['google', 'discord'],
+  createdAt: new Date('2026-02-03T04:05:06Z'),
+};
+const BO: UserDetailUser = {
+  ...FACTS,
   id: '7a2b3c4d-5e6f-4a1b-9c8d-7e6f5a4b3c2d',
   name: 'Bo Fixturewort',
   role: 'user',
-} as const;
-const ADA = {
+};
+const ADA: UserDetailUser = {
+  ...FACTS,
   id: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f',
   name: 'Ada Fixturewort',
+  email: 'ada@fixture.test',
   role: 'admin',
-} as const;
+};
 
 const coven = (name: string, role: UserCoven['role']): UserCoven => ({
   workspaceId: `w-${name}`,
@@ -70,6 +81,53 @@ const renderDetail = (overrides: Partial<UserDetailProps> = {}) =>
   );
 
 describe('UserDetail', () => {
+  it('shows each fact of the users table as a term with its value', () => {
+    renderDetail();
+
+    expect(screen.getAllByRole('term')).toHaveLength(5);
+    expect(screen.getAllByRole('definition')).toHaveLength(5);
+    const signedUp = within(screen.getAllByRole('definition')[4]!).getByText('2026-02-03');
+    expect(signedUp).toHaveAttribute('datetime', BO.createdAt.toISOString());
+  });
+
+  it('shows one logo per linked provider, and none for a user with none', () => {
+    const { unmount } = renderDetail();
+    expect(screen.getAllByText('Google')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Discord')[0]).toBeInTheDocument();
+    unmount();
+
+    renderDetail({ user: { ...BO, providers: [] } });
+    expect(screen.queryAllByText('Google')).toHaveLength(0);
+  });
+
+  it('marks the primary admin, and no one else', () => {
+    const { unmount } = renderDetail({ user: { ...ADA, primaryAdmin: true } });
+    expect(screen.getByRole('button', { name: 'Primary Admin' })).toBeInTheDocument();
+    unmount();
+
+    renderDetail({ user: ADA });
+    expect(screen.queryByRole('button', { name: 'Primary Admin' })).not.toBeInTheDocument();
+  });
+
+  it('states whether the address is verified and whether they may create covens', () => {
+    const { unmount } = renderDetail({
+      user: { ...BO, emailVerified: false, canCreateWorkspace: true },
+    });
+    expect(screen.getAllByText('Unverified')[0]).toBeInTheDocument();
+    expect(screen.getByText('Yes')).toBeInTheDocument();
+    unmount();
+
+    renderDetail();
+    expect(screen.getAllByText('Verified')[0]).toBeInTheDocument();
+    expect(screen.getByText('No')).toBeInTheDocument();
+  });
+
+  it('is read-only: no Grant, Revoke or Approve in the body', () => {
+    renderDetail({ canImpersonate: true });
+
+    expect(screen.queryByRole('button', { name: /Grant|Revoke|Approve/ })).not.toBeInTheDocument();
+  });
+
   it('lists the covens, owners first, then members, then viewers, each by name', () => {
     renderDetail();
 

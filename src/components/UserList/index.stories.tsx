@@ -11,7 +11,11 @@ import type { UserListEntry } from './types';
 const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntry => ({
   ...user,
   openHref: '#user',
-  heading: { eyebrow: 'User', title: user.name, qualifier: user.email },
+  heading: {
+    eyebrow: 'User',
+    title: user.name,
+    qualifier: <span className="user-list__modal-email">{user.email}</span>,
+  },
 });
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter

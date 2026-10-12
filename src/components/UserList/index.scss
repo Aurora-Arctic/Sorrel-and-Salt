@@ -269,3 +269,11 @@
     margin: 0;
   }
 }
+
+// The email under the name in the user modal's head. Lives here, not in
+// Modal's sheet: the heading object is built by the page for this list's
+// modal and shown at once on a press, before the body's stylesheet matters,
+// and Modal's own qualifier stays inline for its other callers.
+.user-list__modal-email {
+  display: block;
+}

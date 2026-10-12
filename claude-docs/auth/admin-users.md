@@ -102,10 +102,11 @@ workspace's contents, and which covens someone belongs to is not among them
   skeleton, through M9.18's `RouteModal`; the list keeps its filter and page
   beneath it, and Close drops `?user=`. A request that arrives with a live
   `?user=` renders the modal on the server.
-- **The head** is the eyebrow "User", the name as the title and the email as
+- **The head** is the eyebrow "User", the name as the title and the email on a line beneath it as
   the qualifier. The body is `UserDetail`
-  ([`components/user-detail.md`](../components/user-detail.md)): a Covens
-  table (Coven, Role, Joined), owners first, then members, then viewers, each
+  ([`components/user-detail.md`](../components/user-detail.md)): every fact
+  the list's row shows, read-only (the page reads them with the user, so the
+  modal holds the whole row, and it has no control but Impersonate), then a Covens table (Coven, Role, Joined), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under

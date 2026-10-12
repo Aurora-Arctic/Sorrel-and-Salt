@@ -16,3 +16,51 @@
   display: flex;
   gap: space(3);
 }
+
+// The user's facts, as the users table holds them, each term above its value.
+// Two columns where they fit, one on a phone-width modal; the label is the
+// stacked table card's.
+.user-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: space(3) space(4);
+  margin: 0;
+
+  > div {
+    min-width: 0;
+  }
+
+  dt {
+    margin-bottom: space(1);
+    color: $text-muted;
+    font-size: type-size('caption');
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.user-detail__role {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// Each coven as a card, on the owner's call (2026-10-12): its name larger,
+// then Role and Joined side by side beneath it. Doubling the class outranks
+// the primitive's `> tbody > tr { display: grid }`, whichever sheet loads
+// first.
+@container data-table (max-width: #{$table-stack-width}) {
+  .data-table.user-detail__covens > tbody > tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    > :first-child {
+      grid-column: 1 / -1;
+      // No token is larger than body; this is the step above it.
+      font-size: calc(#{type-size('body')} * 1.25);
+      font-weight: 500;
+    }
+  }
+}

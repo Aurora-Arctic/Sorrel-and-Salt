@@ -11,8 +11,34 @@ export default {
   title: 'Admin / User Detail',
 };
 
-const BO: UserDetailUser = { id: 'u-bo', name: 'Bo Fixturewort', role: 'user' };
-const ADA: UserDetailUser = { id: 'u-ada', name: 'Ada Fixturewort', role: 'admin' };
+const FACTS = {
+  emailVerified: true,
+  primaryAdmin: false,
+  canCreateWorkspace: false,
+  providers: ['google'],
+  createdAt: new Date('2026-02-03T04:05:06Z'),
+};
+const BO: UserDetailUser = {
+  ...FACTS,
+  id: 'u-bo',
+  name: 'Bo Fixturewort',
+  email: 'bo@fixture.test',
+  role: 'user',
+};
+const ADA: UserDetailUser = {
+  ...FACTS,
+  id: 'u-ada',
+  name: 'Ada Fixturewort',
+  email: 'ada@fixture.test',
+  role: 'admin',
+  primaryAdmin: true,
+  canCreateWorkspace: true,
+};
+const MANY: UserDetailUser = {
+  ...BO,
+  providers: ['google', 'discord', 'facebook', 'microsoft'],
+  emailVerified: false,
+};
 
 const COVENS: readonly UserCoven[] = [
   {
@@ -42,7 +68,10 @@ export const WithCovens: Story = () => <UserDetail user={BO} memberships={COVENS
 
 export const NoCovens: Story = () => <UserDetail user={BO} memberships={[]} canImpersonate />;
 
-// No Impersonate on an admin: the endpoint refuses one (MB.53).
+// Several providers and an unverified address.
+export const SeveralProviders: Story = () => <UserDetail user={MANY} memberships={COVENS} />;
+
+// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
 export const Admin: Story = () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />;
 
 export const WithoutImpersonation: Story = () => <UserDetail user={BO} memberships={COVENS} />;

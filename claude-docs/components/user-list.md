@@ -142,11 +142,11 @@ head, both built by the page per row, as the other admin lists carry
 - **The user modal is the page's, not the list's.** The page renders
   `UserDialog` (`src/app/admin/(people)/users/user-dialog.tsx`), a
   `RouteModal` at one fixed place, whatever the address opens. Its head is
-  `userHeading(user)` (`user-heading.ts` beside the page): eyebrow User,
-  the name as title and the address as qualifier, so the dialog is named
+  `userHeading(user)` (`user-heading.tsx` beside the page): eyebrow User,
+  the name as title and the address as qualifier, on a line beneath the name, so the dialog is named
   "User, <name>, <email>". The page builds each row's `heading` with the
   same helper, so the head a press shows at once is the one that stays. Its
-  body is [`UserDetail`](user-detail.md): the user's covens and, where
+  body is [`UserDetail`](user-detail.md): the row's facts, shown read-only, then the user's covens and, where
   impersonation is registered, Impersonate. On `?user=<id>` the page reads
   the user through `usersForAdmin` and their covens through the coven
   service's `membershipsOf`, with the navigation and never through GraphQL

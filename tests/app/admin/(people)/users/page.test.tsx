@@ -281,7 +281,11 @@ describe('the /admin/users page, the user modal', () => {
     expect(usersForAdmin).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
     expect(listedOnUserList).toHaveBeenCalledWith(user(1).id);
     expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, [user(1).id]);
+    expect(providersOf).toHaveBeenCalledWith(ADMIN, [user(1).id]);
     const dialog = screen.getByRole('dialog', { name: VIEWING_01 });
+    // The row's facts reach the body: the sign-up date as a time element.
+    const stamps = Array.from(dialog.querySelectorAll('time'), (el) => el.getAttribute('datetime'));
+    expect(stamps).toContain(user(1).createdAt.toISOString());
     expect(within(dialog).getByRole('row', { name: /Fixture Coven/ })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
