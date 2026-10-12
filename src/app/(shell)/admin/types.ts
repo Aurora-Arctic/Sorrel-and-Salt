@@ -200,5 +200,6 @@ export interface AddActionProps {
   href: Route;
   /** The head of the modal it opens, "Add Category", shown at once while the form loads (M9.18). */
   heading: ModalHeading;
-  children: ReactNode;
+  /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */
+  children: string;
 }

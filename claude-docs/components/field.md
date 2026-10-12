@@ -165,7 +165,7 @@ keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
 block of its own rather than `FieldShell`, since it has no hint, note or
 error and its label takes the press feedback: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`. The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native

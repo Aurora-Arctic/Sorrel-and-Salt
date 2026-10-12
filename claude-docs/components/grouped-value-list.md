@@ -169,7 +169,7 @@ page's Add is `.btn--solid` beside its heading, its one primary action, and
 each row's Edit is the larger green pencil, a 2rem target
 ([`icon-tip.md`](icon-tip.md), "Styling"). The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
-full width and the Add spans its line, the sign-off's two phone calls,
+full width and the Add is a plus on the heading's line (it spanned its line until MB.7's review, 2026-10-12), the sign-off's two phone calls,
 which `FilterForm` and `TabbedPage` own
 ([`filter-form.md`](filter-form.md), [`tabbed-page.md`](tabbed-page.md)),
 so the list adds no rule for either.
@@ -184,7 +184,7 @@ kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
-full-width Add and the rows as cards. `CategoriesPending`, with
+Add as a plus and the rows as cards. `CategoriesPending`, with
 `PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
 a filter applied and the list on its way: a `ListNavigationContext` holding
 one pending above the page, since the stub router goes nowhere, so the

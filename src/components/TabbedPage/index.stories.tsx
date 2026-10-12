@@ -2,6 +2,7 @@ import type { Story } from '@ladle/react';
 import type { ReactElement, ReactNode } from 'react';
 import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import { INVITATIONS } from '../../../.ladle/fixtures';
+import AddAction from '../../app/(shell)/admin/add-action';
 import AdminInvitations, { InviteAdmin } from '../AdminInvitations';
 import { ADMIN_PAGES } from '../AdminNav/sections';
 import PrivilegeLedger from '../PrivilegeLedger';
@@ -59,7 +60,8 @@ export const Default: Story = () => <Invitations />;
 
 // At a phone's width in each theme: the section nav is the bar along the
 // window's foot, the pills drop under the heading at their own size, Invite
-// Admin spans the line beneath them, and each invitation is a card.
+// Admin stands at its natural width at the line's start beneath them, and each
+// invitation is a card.
 export const PhoneDark: Story = () => <Invitations />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
@@ -104,3 +106,33 @@ export const PhoneScrolled: Story = () => (
   </People>
 );
 PhoneScrolled.meta = { width: 375 };
+
+// The Add as the plus at the heading's end, the pills on the heading's line:
+// a window 600px wide, between the labelled Add and the narrow column.
+export const AddAsPlus: Story = () => (
+  <People
+    action={
+      <AddAction href="/admin/invitations?invite" heading={{ title: 'Invite Admin' }}>
+        Invite Admin
+      </AddAction>
+    }
+  >
+    <AdminInvitations invitations={INVITATIONS} />
+  </People>
+);
+AddAsPlus.meta = { width: 600 };
+
+// The Add labelled and beneath the heading, the pills beneath it: a window
+// 382px wide, the width at which the plus gives way to the label.
+export const AddBeneathAtThreeFifty: Story = () => (
+  <People
+    action={
+      <AddAction href="/admin/invitations?invite" heading={{ title: 'Invite Admin' }}>
+        Invite Admin
+      </AddAction>
+    }
+  >
+    <AdminInvitations invitations={INVITATIONS} />
+  </People>
+);
+AddBeneathAtThreeFifty.meta = { width: 382 };

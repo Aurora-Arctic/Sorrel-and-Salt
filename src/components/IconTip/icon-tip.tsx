@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactElement } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 import type { IconTipProps } from './types';
 import './index.scss';
@@ -12,11 +12,29 @@ import './index.scss';
 // `useTip`, whose Escape is marked handled so a modal around it stays open.
 // Decoration only: the control's own name already says Edit and what, so
 // the tip is `aria-hidden` and describes nothing, which would read the word
-// twice. Mounted only while open, so an open tip is one in the page
-// (claude-docs/components/icon-tip.md).
+// twice. Mounted while open and for the length of its fade after closing,
+// so an open tip is one in the page and a closed one fades rather than
+// vanishing (claude-docs/components/icon-tip.md).
+
+// `$tip-fade` (_variables.scss): how long the closed tip stays for its fade.
+const TIP_FADE_MS = 500;
 
 const IconTip = ({ tip, children }: IconTipProps): ReactElement => {
   const { open, show, hide, hideSoon } = useTip();
+  // Closing: no longer open, still in the page for the fade. Set as `open`
+  // is seen to drop, during the render that sees it, and cleared by the
+  // timer below.
+  const [wasOpen, setWasOpen] = useState(open);
+  const [closing, setClosing] = useState(false);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (!open) setClosing(true);
+  }
+  useEffect(() => {
+    if (!closing) return;
+    const timer = setTimeout(() => setClosing(false), TIP_FADE_MS);
+    return () => clearTimeout(timer);
+  }, [closing]);
 
   return (
     // Hover on the wrapper, which holds the tip as well as the control, so
@@ -30,8 +48,12 @@ const IconTip = ({ tip, children }: IconTipProps): ReactElement => {
       onBlur={hide}
     >
       {children}
-      {open && (
-        <span role="tooltip" aria-hidden="true" className="icon-tip__bubble">
+      {(open || closing) && (
+        <span
+          role="tooltip"
+          aria-hidden="true"
+          className={`icon-tip__bubble${open ? '' : ' icon-tip__bubble--closing'}`}
+        >
           {tip}
         </span>
       )}

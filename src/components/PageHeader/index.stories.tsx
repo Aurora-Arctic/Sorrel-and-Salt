@@ -1,14 +1,13 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
-import Link from 'next/link';
 import { AdminFrame as InAdminLayout } from '../../../.ladle/admin-frame';
+import AddAction from '../../app/(shell)/admin/add-action';
 import PageHeader from '.';
 
 // Render-only: a heading and its action are the whole component, so the
 // story is for the look, at desktop and at a phone's width, where the action
-// goes beneath the heading and spans the line. Each sits in the admin
-// layout's frame, `.admin-layout`, since the full-width action is the admin
-// area's (claude-docs/styling.md, "The admin layout").
+// is a plus beside the heading, with its label as a tip. Each sits in the
+// admin layout's frame, `.admin-layout` (claude-docs/styling.md, "The admin layout").
 export default {
   title: 'Layout / Page Header',
 };
@@ -16,9 +15,9 @@ export default {
 // The compendium's, the one admin page with a heading of its own since the
 // others went into tabs (MB.115).
 const AddIngredient = () => (
-  <Link className="btn btn--solid" href={'/admin/compendium?new' as Route}>
-    Add Ingredient
-  </Link>
+  <AddAction href={'/admin/compendium?new' as Route} heading={{ title: 'Add Compendium Entry' }}>
+    Add Compendium Entry
+  </AddAction>
 );
 
 export const WithAnAction: Story = () => (
@@ -40,9 +39,12 @@ const Long = () => (
     <PageHeader
       title="Deity Traditions"
       action={
-        <Link className="btn btn--solid" href={'/admin/deity-traditions?new' as Route}>
+        <AddAction
+          href={'/admin/deity-traditions?new' as Route}
+          heading={{ title: 'Add Tradition' }}
+        >
           Add Tradition
-        </Link>
+        </AddAction>
       }
     />
   </InAdminLayout>

@@ -136,20 +136,19 @@ it renders.
   then the action pushed to the end by an auto margin. The pills are centred on
   the line and not brought down to the heading's letters as an action is. At
   the page header's narrow width (28rem of its own, `$narrow-column`; how the
-  action then spans the line is [`page-header.md`](page-header.md#styling)) the
+  action then sits is [`page-header.md`](page-header.md#styling)) the
   pills drop under the heading at the same size, not stretched to the line as
   an action is: the selector is doubled to outweigh the primitive's narrow
-  rules. The action's wrapper, `.tabbed-page__action`, is taken out of the
-  line when a tab has none. An action that wraps its button, the pause's row
-  or a locked control, spans its button too: the `.page-header` primitive
-  makes any wrapper that is not a bare button a flex box whose children grow
-  to the line, and a locked control's own button, a level deeper, does so in
-  `UserList/controls.scss`, so Pause Admin Changes and a locked Invite Admin
-  span the line as an Add link does. The header sits `space(5)` above the
+  rules. When the header holds the Add, a plus on the heading's line from
+  `$tabbed-plus-width` down, the pills stay on the line beside it until
+  `$tabbed-reflow-width`, a separate threshold (the owner's call, so the two
+  are set apart), where the heading takes the line less the plus and the
+  pills are `order`ed after it so they drop beneath. Between `$tabbed-reflow-width` and `$tabbed-plus-width` (536px to 680px) the heading yields first: its basis is zero, so a long heading wraps its own words rather than sending the plus to a line of its own. The plus has a floor, `$add-below-width` (350px of the header's own width): at or under it the Add is a labelled button again, beneath the heading at its natural width, with the pills on a line of their own below it. The action's wrapper, `.tabbed-page__action`, is taken out of the
+  line when a tab has none. Any other action, the pause's row or a locked control, keeps the heading's line at its end, and from `$tabbed-reflow-width-labelled` (700px of the header's own width) down the pills drop beneath the two at their own size, a line break forced by a pseudo-element since a flex box cannot otherwise give an item a line of its own at its own width (the pills themselves take back one row gap with a negative top margin, because the empty line the break makes would otherwise be paid a gap above and below it, so the pills sit one gap under the heading in every band); the two keep the line through the forms' column (the heading gives up the line the primitive hands it there) until `$tabbed-action-below-width` (400px of the header's own width), where the action goes beneath the heading at its natural width and the line's start, the wrapper's auto margin cancelled. This reverses MB.115's spanning action (the owner's calls at MB.7's review, 2026-10-12). The header sits `space(5)` above the
   content.
 - **The pills** (MB.7, drawn in its design review; they were a larger
   segmented control until then): one rounded track, `2.25rem` tall, in the
-  quiet fill (`$fill-quiet`) edged by a `$hairline`; each pill the caption
+  quiet fill (`$fill-quiet`) edged by a `$hairline`, with `0.125rem` of padding round the pills; each pill the caption
   size at weight 500 with `space(3)` either side of its label, in the muted
   ink, turning to the body ink on hover; the open tab a pill, the accent 18%
   into the card, edged 1px in the accent, its label in the body ink. The
@@ -250,8 +249,7 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 `Admin / Tabbed Page`: the People page under the admin nav with its
 Invitations tab open and the pills beside the heading, Invite Admin at the
 end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
-`PhoneLight` at 375px, the pills under the heading and Invite Admin across the
-line beneath them; `PhoneScrolled` at 375px, on Privilege Changes, the last
+`PhoneLight` at 375px, the pills under the heading and Invite Admin at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
 tab, with no action; and `LoadingState` with `LoadingPhoneDark` and
 `LoadingPhoneLight`, Users on its way: the action and the row greyed out, the
 pill moved to Users in its pending look, over its skeleton with the filter row,

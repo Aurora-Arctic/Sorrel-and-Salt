@@ -290,7 +290,7 @@ export const PlanetsEmpty: Story = () => (
 
 // Inside the admin layout and the Categories page with its Categories tab
 // open, as the page draws it; at a phone's width in each theme, the tab's Add
-// button full width beneath the heading, the filter stacked and each row a
+// at its own width beneath the heading, the filter stacked and each row a
 // card. The page and the filter are the real `TabbedPage` and
 // `FilterForm`, so these show what the sign-off settled.
 const CategoriesPage = () => (
