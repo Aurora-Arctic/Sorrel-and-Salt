@@ -390,10 +390,11 @@
     // sizes itself by its longest option, and a type-ahead by its few
     // letters, so the server's select and the type-ahead that replaces it
     // once hydrated would differ, and two selects beside each other would
-    // too. A type-ahead opts in by its block's `filter-row__typeahead`, since
-    // once hydrated it holds no select. A switch, a `.field` with no select
-    // in it, keeps its own width. Each gives way on a narrow row.
-    > :is(.field:has(> .select), .filter-row__typeahead) {
+    // too. `FilterSelectField` marks every form of a choice `filter-row__choice`,
+    // since once hydrated it holds a Combobox box, not a select; a bare `.field`
+    // holding a select counts too. A switch, a `.field` with no select in it,
+    // keeps its own width. Each gives way on a narrow row.
+    > :is(.field:has(> .select), .filter-row__choice) {
       flex: 0 1 $filter-choice-width;
       min-width: 0;
     }

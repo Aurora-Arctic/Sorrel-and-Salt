@@ -109,7 +109,7 @@ calls `onChange` once a choice other than it is picked, or for the
 type-ahead settles, since the list keys its filter by the filter shown and
 draws it again from the new one ([`filter-form.md`](filter-form.md)). A
 change to the server's select before hydration applies nothing until the
-magnifier is pressed. Every form of it stands in `filter-row__typeahead`,
+magnifier is pressed. Every form of it stands in `filter-row__choice`,
 one width, so the swap moves nothing. Not `SelectField`: a filter has no
 form state, and its select must submit natively.
 
@@ -128,7 +128,7 @@ Every field takes `FieldProps` (`types.ts`):
 `hintId`, `noteId`, `errorId`, `error`), `children` (the control), `after`
 (drawn beneath the error), `action` (a control at the right end of the label
 row, after the tip: an ingredient variant's Copy From Ingredient, MB.115) and `className`, a class beside `field` on the
-block: a filter's type-ahead takes `filter-row__typeahead`
+block: a filter's type-ahead takes `filter-row__choice`
 ([`filter-form.md`](filter-form.md), "Styling").
 
 `fieldDescription({ id, hint, note, describedBy, error, invalid })` takes a

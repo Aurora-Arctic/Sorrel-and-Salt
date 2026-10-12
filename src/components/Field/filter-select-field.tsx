@@ -17,7 +17,7 @@ import type { FilterSelectFieldProps } from './types';
  * want a search, the type-ahead. A hidden input carries the same parameter
  * after. Each starts from the value the page shows and applies a choice
  * other than it, since the list draws its filter again from the filter it
- * shows. One width for every form of it, `filter-row__typeahead`, so
+ * shows. One width for every form of it, `filter-row__choice`, so
  * hydration moves nothing. Not `SelectField`, which is a react-hook-form
  * field: a filter has no form state, and its select must submit natively.
  */
@@ -44,7 +44,7 @@ export function FilterSelectField({
 
   if (hydrated) {
     return (
-      <FieldShell label={label} className="filter-row__typeahead" {...field}>
+      <FieldShell label={label} className="filter-row__choice" {...field}>
         {typeahead ? (
           // A choice settled on the one shown, the box left unchanged say,
           // applies nothing.
@@ -81,7 +81,7 @@ export function FilterSelectField({
   // Before hydration, and in the render that hydrates: a change applies
   // nothing, since no script runs; the search's magnifier sends it.
   return (
-    <FieldShell label={label} className="filter-row__typeahead" {...field}>
+    <FieldShell label={label} className="filter-row__choice" {...field}>
       <select id={field.controlId} className="select" name={name} defaultValue={defaultValue}>
         <option value="">{all}</option>
         {options.map((option) => (

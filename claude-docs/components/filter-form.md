@@ -132,7 +132,7 @@ the whole line, so the boxes share one edge, the owner's call at MB.115's
 review over a filter folded behind a disclosure.
 
 **A choice takes one width.** A plain select's field, a `.field` holding a
-`.select`, and every `FilterSelectField`, which puts `filter-row__typeahead`
+`.select`, and every `FilterSelectField`, which puts `filter-row__choice`
 on its `.field` block (`FieldShell`'s `className`, [`field.md`](field.md)),
 stand at `$filter-choice-width`, 14rem on the owner's call: most names fit, and
 the longest seeded one, "Anglo-Saxon & Continental Germanic", runs on inside

@@ -53,7 +53,7 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   after?: ReactNode;
   /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
   action?: ReactNode;
-  /** A class beside `field` on the block: a filter's type-ahead, `filter-row__typeahead`. */
+  /** A class beside `field` on the block: a filter's type-ahead, `filter-row__choice`. */
   className?: string;
 }
 
