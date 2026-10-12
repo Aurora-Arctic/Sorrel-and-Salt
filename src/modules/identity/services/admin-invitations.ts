@@ -1,5 +1,4 @@
 import 'server-only';
-import { randomBytes } from 'node:crypto';
 import {
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
@@ -8,6 +7,7 @@ import {
 } from '../../../db/repository';
 import type { InvitationRow, SiteInvitationFilter } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
+import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
@@ -23,14 +23,6 @@ import type { AdminInvitationFilter, InvitationSender } from '../types';
 // (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
-
-/**
- * 32 bytes from the CSPRNG, base64url: unguessable, and safe in a path. Never
- * `Math.random()` (CLAUDE.md, "Invitation tokens").
- */
-function newToken(): string {
-  return randomBytes(32).toString('base64url');
-}
 
 /**
  * Invites `input` to become an admin: a pending site-tier invitation, stamped

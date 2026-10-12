@@ -127,6 +127,16 @@ fast but predictable: anyone who collects a few outputs can work out its
 internal state and compute the next ones, so a token made with it could be
 guessed.
 
+**One generator makes every token** (M7.2): `newToken()` in
+`src/lib/invitation-token.ts`, 32 bytes of `crypto.randomBytes()` as
+base64url, 256 bits where 128 would do. Both tiers' services call it: the
+admin invitation (MB.70) and the workspace invitation (M7.3). It lives in
+`src/lib/` because a service may not import the repository's internals, so
+it cannot sit beside `hashToken`, and because two modules mint a token, so
+neither module owns it. The service hands the token to `insertInvitation`
+and then to the mail sender, and to nothing else: no response, no query, and
+no later read can recover it.
+
 The finders:
 
 - **`findInvitationByToken(token)`** returns the live row the token names,
