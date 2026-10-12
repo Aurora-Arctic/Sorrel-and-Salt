@@ -28,5 +28,6 @@ review since MB.224 retired the guard that checked it.
 These files run under the `acceptance` project in `vitest.stories.config.mts`
 — node, against the seeded per-worker database, the same harness as
 `tests/db/`. They are not part of `npm run test` or `npm run test:coverage`,
-so a red story never moves the 80% line threshold. See
-[`claude-docs/testing.md`](../../claude-docs/testing.md).
+so a red story never moves the 80% line threshold. The checklist also marks a story ` · browser` when a Playwright spec tags it `@story-N`
+(M9.17; [`claude-docs/testing/acceptance.md`](../../claude-docs/testing/acceptance.md)).
+See [`claude-docs/testing.md`](../../claude-docs/testing.md).

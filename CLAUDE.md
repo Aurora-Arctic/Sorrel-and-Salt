@@ -90,7 +90,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - Fixture users: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X · **E** site admin in no workspace. `asUser(A)` gives a session; services throw `Forbidden`.
 - **Fixture factory defaults are invented names, never real ones** (M1.25) — Testwort / _Fixtura testalis_, Fixture Coven.
 - **Setup rows go through the raw `postgres` client and the shared inserters, never `withAudit`** (MB.101).
-- Acceptance tests name their story (`describe('Story 12: ...')`), and are tracked apart from the 80% line.
+- Acceptance tests name their story (`describe('Story 12: ...')`), and are tracked apart from the 80% line; an e2e spec tags the stories it walks (`@story-N`), which the checklist reports.
 - **Accessibility is asserted in Playwright** via `@axe-core/playwright`, not `vitest-axe`.
 - Component tests use role and label queries only. No test ids for anything a user can see. A test proves a functional requirement by the state it leaves, never by copy, class or layout; a regression test needs a bug that reached a PR.
 - **No snapshots** except design tokens and the GraphQL SDL.

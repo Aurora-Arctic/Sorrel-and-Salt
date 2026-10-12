@@ -55,6 +55,8 @@ export interface StoryEntry extends Story {
   status: StoryStatus;
   /** Every module holding a suite that names this story. */
   suites: string[];
+  /** Every e2e spec tagged `@story-N` with this story: its browser flows. */
+  browser: string[];
 }
 
 export interface UnknownSuite {
@@ -64,10 +66,28 @@ export interface UnknownSuite {
   module: string;
 }
 
+/** An e2e tag `@story-N` naming a number §10 does not list. */
+export interface UnknownTag {
+  id: number;
+  /** The spec holding the tag, repo-relative. */
+  file: string;
+}
+
+/** What tests/support/browser-flows.ts reads out of the e2e specs. */
+export interface BrowserFlows {
+  /** The repo-relative specs tagged with each known story, sorted. */
+  byStory: ReadonlyMap<number, readonly string[]>;
+  unknown: UnknownTag[];
+}
+
 export interface Checklist {
   stories: StoryEntry[];
   unknown: UnknownSuite[];
+  /** E2e tags naming no v1 story, beside the suites that do the same. */
+  unknownTags: UnknownTag[];
   counts: Record<StoryStatus, number>;
+  /** Stories with a browser flow. Apart from `counts`, whose statuses are exclusive. */
+  browserFlows: number;
   total: number;
 }
 
