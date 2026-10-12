@@ -446,6 +446,14 @@ export interface AuditWriter {
     role: WorkspaceRole,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * The proof's workspace's live members, locked `for update` until the
+   * transaction ends (M6.8): what the last-owner guard counts before a role
+   * change or removal writes, so two owners stepping down at once cannot both
+   * leave the other the last. A read, and in the writer only because the lock
+   * must be taken in the transaction that writes.
+   */
+  lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
    * never the values'. The token is hashed here and only the hash is stored.

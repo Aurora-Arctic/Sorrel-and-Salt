@@ -132,3 +132,23 @@ the type looks like it closes more than it does.
   `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
   stops being required. A runtime assertion could not see that at all: it would
   pass just as happily against a signature that had quietly gone optional.
+
+## The last-owner guard (M6.8)
+
+`assertNotLastOwner(write, membership, userId, becomes)` in
+`src/modules/coven/services/last-owner.ts` refuses any change that would leave a
+workspace with no owner. `becomes` is the role the person ends up with, or
+`null` when they are removed or leave. Every write that can take the owner role
+calls it inside `withAudit`: the role change (M9.14), the removal and the
+voluntary leave (M6.15).
+
+It reads the workspace's live members through `write.lockLiveMembers(membership)`,
+which locks them `for update` in user-id order, as `lockLiveAdmins` does for
+admins. Two owners stepping down at once therefore queue on the first row, and
+the second counts the first's committed change instead of both seeing two owners.
+
+The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16
+needs to offer a way out: `remedy` is `'promote'` when other members exist
+(`promotable` lists their user ids) and `'delete'` when the owner is the only
+member. A change that keeps an owner an owner, or touches someone who is not the
+last owner, passes.
