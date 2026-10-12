@@ -356,7 +356,6 @@ export const auth = betterAuth({
         await verifyEmailMessage({
           to: user.email,
           url: link.href,
-          name: user.name,
           providers: await linkedProviderIds(ctx.context, user.id),
         }),
       );

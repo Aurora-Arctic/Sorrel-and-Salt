@@ -27,9 +27,11 @@ function providerList(providers: readonly ProviderId[]): string {
     : (labels[0] ?? '');
 }
 
+// No greeting by name, though the invitations open with one: this mail goes to
+// an address the account has not yet proved, and a mistyped one would hand a
+// stranger the name of the account that typed it (the owner's call, MB.118).
 export function VerifyEmail({
   url,
-  name,
   purpose = 'sign-up',
   providers,
   origin = new URL(url).origin,
@@ -38,7 +40,6 @@ export function VerifyEmail({
   const signedUpWith = providerList(providers);
   return (
     <EmailLayout preview={PREVIEW[purpose]} heading="Confirm Your Email Address" origin={origin}>
-      {name && <Paragraph>{`Dear ${name},`}</Paragraph>}
       <Paragraph>
         {purpose === 'change'
           ? 'Someone asked to use this email address for their Sorrel & Salt account'

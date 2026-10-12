@@ -28,7 +28,6 @@ const MAILS: {
       verifyEmailMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven`,
-        name: 'Fixture Reader',
         providers: ['google'],
       }),
   },
@@ -41,7 +40,6 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/verify-email?token=d.e.f&callbackURL=%2Faccount`,
         purpose: 'change',
-        name: 'Fixture Reader',
         providers: [],
       }),
   },

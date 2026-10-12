@@ -5,8 +5,6 @@ import { verifyEmailMessage } from '@/emails/verify-email';
 // names — and the two rules a mail client holds it to. Its wording and its
 // design are the story's (src/emails/verify-email.stories.tsx).
 
-const NAME = 'Fixture Reader';
-
 const URL_WITH_QUERY =
   'http://localhost:8000/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven';
 
@@ -17,7 +15,6 @@ describe('verifyEmailMessage', () => {
     const message = await verifyEmailMessage({
       to: 'someone@verify-email.test',
       url: URL_WITH_QUERY,
-      name: NAME,
       providers: ['microsoft'],
     });
 
@@ -31,13 +28,11 @@ describe('verifyEmailMessage', () => {
     const named = await verifyEmailMessage({
       to: 'someone@verify-email.test',
       url: URL_WITH_QUERY,
-      name: NAME,
       providers: ['facebook', 'microsoft'],
     });
     const none = await verifyEmailMessage({
       to: 'someone@verify-email.test',
       url: URL_WITH_QUERY,
-      name: NAME,
       providers: [],
     });
 
@@ -45,24 +40,6 @@ describe('verifyEmailMessage', () => {
     expect(named.text).toContain('Microsoft');
     expect(none.text).toContain(URL_WITH_QUERY);
     expect(none.text).not.toMatch(/Facebook|Microsoft|Google|Discord/);
-  });
-
-  it('greets the account by name, and greets no one when it has none', async () => {
-    const named = await verifyEmailMessage({
-      to: 'someone@verify-email.test',
-      url: URL_WITH_QUERY,
-      name: NAME,
-      providers: [],
-    });
-    const nameless = await verifyEmailMessage({
-      to: 'someone@verify-email.test',
-      url: URL_WITH_QUERY,
-      name: '',
-      providers: [],
-    });
-
-    expect(named.text).toContain(NAME);
-    expect(nameless.text).not.toContain('Dear');
   });
 
   // An existing account asking for this address (MB.54): the address is new to
@@ -73,7 +50,6 @@ describe('verifyEmailMessage', () => {
       to: 'someone@verify-email.test',
       url: URL_WITH_QUERY,
       purpose: 'change',
-      name: NAME,
       providers: ['discord'],
     });
 
@@ -93,7 +69,6 @@ describe('verifyEmailMessage in a mail client', () => {
       await verifyEmailMessage({
         to: 'someone@verify-email.test',
         url: 'https://staging.sorrelandsalt.com/api/auth/verify-email?token=a.b.c',
-        name: NAME,
         providers: ['google'],
       })
     ).html;

@@ -28,8 +28,6 @@ export type MessageInput<Props extends BaseEmailProps> = Omit<Props, 'part'> & {
 export type VerifyEmailPurpose = 'sign-up' | 'change';
 
 export interface VerifyEmailProps extends BaseEmailProps {
-  /** The account's name, which the greeting uses so the reader can tell the mail is meant for them; may be empty. */
-  name: string;
   purpose?: VerifyEmailPurpose;
   /** The providers linked to the account, so the reader can tell whether they signed up at all. */
   providers: readonly ProviderId[];
