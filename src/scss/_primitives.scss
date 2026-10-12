@@ -959,6 +959,7 @@
   }
 
   .notice--error {
+    margin-bottom: 1rem;
     border-color: $secondary;
     color: $secondary;
   }
@@ -1459,6 +1460,126 @@
     &:focus-visible {
       @include focus-ring;
     }
+  }
+
+  // A radio group (RadioGroupField): a choice of one, each option a native
+  // radio drawn as a small ring, its centre dot in the accent green growing
+  // in as it is chosen, over the same short ease the switch uses. The ring
+  // carries the state by its dot as well as its colour (WCAG 1.4.1).
+  // Both classes, so it outranks `.fieldset`'s own `margin: 0` below.
+  .fieldset.radio-group {
+    margin-block: 1.5rem;
+  }
+
+  .radio {
+    $radio-size: 1.125rem;
+
+    display: flex;
+    align-items: flex-start;
+    gap: space(3);
+    padding-block: space(2);
+    cursor: pointer;
+
+    input {
+      flex: none;
+      box-sizing: border-box;
+      inline-size: $radio-size;
+      block-size: $radio-size;
+      // Level with the first line of the label.
+      margin-block-start: 0.125rem;
+      margin-inline: 0;
+      border: 1px solid $text-muted;
+      border-radius: radius('pill');
+      background-color: $surface-card;
+      appearance: none;
+      cursor: pointer;
+      transition:
+        background-color $motion-short ease-out,
+        border-color $motion-short ease-out;
+
+      &::before {
+        content: '';
+        display: block;
+        inline-size: 100%;
+        block-size: 100%;
+        border-radius: radius('pill');
+        background-color: $accent;
+        scale: 0;
+        transition: scale $motion-short ease-out;
+      }
+
+      // Chosen: the ring and the dot in the accent green, the dot grown to leave
+      // only a thin gap between it and the ring.
+      &:checked {
+        border-color: $accent;
+
+        &::before {
+          scale: 0.72;
+        }
+      }
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+
+      &:disabled {
+        border-style: dashed;
+        background-color: transparent;
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      @include reduced-motion {
+        transition: none;
+
+        &::before {
+          transition: none;
+        }
+      }
+
+      @include forced-colors {
+        &:checked {
+          border-color: Highlight;
+          forced-color-adjust: none;
+
+          &::before {
+            background-color: Highlight;
+          }
+        }
+      }
+    }
+
+    &:hover input:not(:disabled) {
+      border-color: $accent;
+
+      &:checked {
+        border-color: $accent-solid-hover;
+
+        &::before {
+          background-color: $accent-solid-hover;
+        }
+      }
+    }
+
+    // Pressed: the dot swells ahead of the choice taking.
+    &:is(:active, [data-pressed]) input:not(:disabled, :checked)::before {
+      scale: 0.3;
+      background-color: $text-muted;
+    }
+  }
+
+  .radio__text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .radio__label {
+    font-weight: 500;
+  }
+
+  .radio__description {
+    color: $text-muted;
+    font-size: type-size('caption');
   }
 
   // Groups rows under one name — checkboxes, or a list of entries.

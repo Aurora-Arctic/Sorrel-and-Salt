@@ -134,6 +134,27 @@ export interface SwitchFieldProps {
   disabled?: boolean;
 }
 
+/** One choice of a `RadioGroupField`: its value, its name and what it means. */
+export interface RadioOption<T extends string> {
+  value: T;
+  label: string;
+  /** What choosing it means, read after its name. */
+  description?: string;
+}
+
+export interface RadioGroupFieldProps<T extends string> {
+  /** The group's name, in title case. */
+  legend: string;
+  /** The group's `name`, shared by its radios. */
+  name: string;
+  options: readonly RadioOption<T>[];
+  /** The chosen value, held by the caller. */
+  value: T;
+  onChange: (value: T) => void;
+  /** Shut: every radio dashed and faded. */
+  disabled?: boolean;
+}
+
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */
 export interface FormActionsProps {
   /** What is saved, in title case: "Save Group", "Saving Group", "Delete Group". */
