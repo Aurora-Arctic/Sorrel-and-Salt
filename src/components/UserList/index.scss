@@ -149,88 +149,28 @@
   }
 }
 
-// The Impersonate column, heading and cells: a red rule down its left, a
-// faded red tint and red text, since it is the one control in the table that
-// acts as someone else (kept at MB.115, on the owner's call after the sign-off).
-//
-// It stays at the table's right edge while the other columns scroll beneath
-// it (the owner's call), so its ground is opaque: the tint mixed into the
-// band it sits on, the page or a banded row's card, rather than laid over
-// transparent. Still needed with the admin column at 80rem:
-// the frame stops scrolling only from about 77rem of table, so any window
-// narrower than that, above the stacking width, scrolls it still.
+// The Impersonate column, heading and cells: the shared dangerous-action
+// column (`row-action-column`, kept at MB.115 on the owner's call), red since
+// it is the one control in the table that acts as someone else. Still sticky
+// with the admin column at 80rem: the frame stops scrolling only from about
+// 77rem of table, so any window narrower than that, above the stacking width,
+// scrolls it still.
 .user-list__impersonate {
-  position: sticky;
-  right: 0;
-  z-index: $sticky-column-layer;
-  // A hairline, as the headings' rule is: the red marks it, not the weight.
-  border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
-  color: $secondary;
-}
-
-.user-list .data-table tbody tr:nth-child(even) .user-list__impersonate {
-  // 5% rather than the page's 6%: the dark card is lighter, and at 6% the wax
-  // label falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
-  background-color: color-mix(in srgb, $secondary 5%, $surface-card);
-}
-
-// Its heading's hairline red too, where every other column's is the muted
-// ink; scoped past the primitive's own `thead th` rule.
-.user-list .data-table thead th.user-list__impersonate {
-  border-bottom-color: $secondary;
-}
-
-// Stacked into cards at phone width (`.data-table--stack`, under the same
-// named container query as the primitive): a card is no scrolling row, so the
-// one-line rule gives way and an address or a reason wraps within the card.
-// The Impersonate cell gives up its sticky place, which would sit over the
-// card's other cells, and stands at the card's top right, beside the name
-// (the owner's call, MB.115), on the card's own ground rather than a tint
-// mixed for a band. Placed by the grid, not moved in the markup, so the
-// table's columns and the keyboard order stay as the desktop has them.
-// claude-docs/styling.md, "Tables at phone width".
-@container data-table (max-width: #{$table-stack-width}) {
-  .user-list .data-table--stack {
-    // The grid itself is the primitive's, from the cell's
-    // `data-table__card-action`: the name and Impersonate share the first
-    // line and every other cell spans beneath. An admin's card, with no
-    // Impersonate, leaves the second track empty, so it takes no width.
-    > tbody > tr > .user-list__impersonate {
-      position: static;
-      border-left: 0;
-      background-color: transparent;
-    }
-
-    .user-list__impersonate:empty {
-      display: none;
-    }
-
-    // Two classes past the banded row's rule above, so the card's ground wins.
-    tbody tr:nth-child(even) .user-list__impersonate {
-      background-color: transparent;
-    }
-  }
+  @include row-action-column($sticky-column-layer);
 }
 
 // The creation cell: the Yes or No on the left, the control that changes it
 // on the right, centred on one line, as the role cell holds its own (the
 // owner's call).
 .user-list__creation {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(2) space(3);
+  @include value-and-control;
 }
 
 // The role cell: the role and the primary admin's crown on the left, the
 // control that changes it on the right, centred on one line (the owner's
 // call).
 .user-list__role {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(2) space(3);
+  @include value-and-control;
 }
 
 .user-list__role-name {
