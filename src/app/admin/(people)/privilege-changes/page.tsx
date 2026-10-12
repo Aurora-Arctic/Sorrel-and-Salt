@@ -21,7 +21,7 @@ import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
 export const metadata: Metadata = {
-  title: 'Privilege Changes — Admin — Sorrel & Salt',
+  title: 'Privilege Changes',
 };
 
 /** The privileges a filter may name. */

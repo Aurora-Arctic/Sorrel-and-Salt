@@ -11,7 +11,7 @@ import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Admin Invitations — Admin — Sorrel & Salt',
+  title: 'Admin Invitations',
 };
 
 // One page of the pending invitations and its count, newest first, the first

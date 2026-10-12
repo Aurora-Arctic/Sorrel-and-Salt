@@ -119,8 +119,8 @@ it renders.
   first such tab. It looks like a segmented control, and is still a nav: a
   look does not change what pressing a tab does. So `tab-links.tsx` is the
   one client part; the rest renders on the server.
-- **Each tab keeps its own `metadata` title**, set in its `page.tsx`:
-  "Category Groups — Admin — Sorrel & Salt" on the Groups tab.
+- **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/admin/layout.tsx`
+  sets `title.template`, so the tab shows "Category Groups — Admin — Sorrel & Salt".
 
 ## Styling
 

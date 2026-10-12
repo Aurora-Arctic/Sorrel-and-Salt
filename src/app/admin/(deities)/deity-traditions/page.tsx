@@ -3,7 +3,7 @@ import { GroupPage } from '../../group-page';
 import type { GroupRouteProps } from '../../types';
 
 export const metadata: Metadata = {
-  title: 'Deity Traditions — Admin — Sorrel & Salt',
+  title: 'Deity Traditions',
 };
 
 // The deity traditions (MB.132), in the page shape every group vocabulary shares.

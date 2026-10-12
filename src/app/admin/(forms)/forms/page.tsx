@@ -3,7 +3,7 @@ import { ValuePage } from '../../value-page';
 import type { ValueRouteProps } from '../../types';
 
 export const metadata: Metadata = {
-  title: 'Forms — Admin — Sorrel & Salt',
+  title: 'Forms',
 };
 
 // The curated ingredient forms (M5.6a), in the page shape every curated value shares.
