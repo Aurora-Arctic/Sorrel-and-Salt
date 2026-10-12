@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import PrivilegeLedger from '@/components/PrivilegeLedger';
 import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
 import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
-import { FILTER_ROWS } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
@@ -112,24 +112,33 @@ describe('PrivilegeLedger', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    it('offers every privilege, after the option for all', () => {
-      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+    // The owner's call (MB.115): a select-only box once hydrated, as every
+    // closed set in the row is, over the native select the server draws.
+    it('offers every privilege, after the option for all, as a native select on the server and a select-only box once hydrated', async () => {
+      const { container, hydrate } = drawnOnServer(
+        <PrivilegeLedger changes={[GRANT]} filter={{}} />,
+      );
 
-      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
+      const served = within(container).getByRole('combobox', { name: 'Privilege' });
       expect(
-        within(privilege)
+        within(served)
           .getAllByRole('option')
           .map((option) => option.getAttribute('value')),
       ).toEqual(['', 'admin', 'create_workspace']);
+
+      await hydrate();
+      fireEvent.click(within(container).getByRole('combobox', { name: 'Privilege' }));
+      expect(
+        within(screen.getByRole('listbox', { name: 'Privilege choices' })).getAllByRole('option'),
+      ).toHaveLength(3);
     });
 
     it('opens a new privilege from the first page the moment it changes', async () => {
       inFlight(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
 
+      fireEvent.click(screen.getByRole('combobox', { name: 'Privilege' }));
       await act(async () => {
-        fireEvent.change(screen.getByRole('combobox', { name: 'Privilege' }), {
-          target: { value: '' },
-        });
+        fireEvent.click(screen.getByRole('option', { name: 'All Privileges' }));
       });
 
       expect(router.push).toHaveBeenCalledTimes(1);
@@ -142,10 +151,9 @@ describe('PrivilegeLedger', () => {
       fireEvent.change(screen.getByRole('searchbox', { name: 'Name or Email' }), {
         target: { value: ' Ada ' },
       });
+      fireEvent.click(screen.getByRole('combobox', { name: 'Privilege' }));
       await act(async () => {
-        fireEvent.change(screen.getByRole('combobox', { name: 'Privilege' }), {
-          target: { value: 'create_workspace' },
-        });
+        fireEvent.click(screen.getByRole('option', { name: 'Coven Creation' }));
       });
 
       expect(router.push).toHaveBeenCalledWith(

@@ -49,8 +49,8 @@ already above them.
   it is submitted, and typing in a type-ahead nothing until a choice settles
   (`onSettle`, [`combobox.md`](combobox.md)): a pick, the clear, or leaving
   the box, applied when the settled choice differs from the one shown. Only
-  the search text is the caller's state; a select, `FilterSelectField`, is
-  uncontrolled (`defaultValue` the value shown) and a switch takes
+  the search text is the caller's state; a select, `FilterSelectField`,
+  starts from `defaultValue`, the value shown, and a switch takes
   `defaultChecked` ([`field.md`](field.md)), since the new list draws the filter again from
   what it shows.
 - **The search carries its own submit**, `SearchField`'s magnifier named
@@ -65,10 +65,10 @@ already above them.
   reads as the same filter: a blank `<select>` option as `role=`, a switch, a
   native checkbox beneath (`SwitchField`, [`field.md`](field.md)), as
   `awaiting=` or `withoutReferences=1`. A field that is a script's control,
-  the curated lists' type-ahead group, is drawn as a native control by the
-  server and swapped once hydrated, so the press before the script still
-  sends it (`FilterSelectField` with `typeahead`, [`field.md`](field.md);
-  MB.115). A select or a switch changed before
+  every select once hydrated, the select-only box or the type-ahead, is
+  drawn as a native `<select>` by the server and swapped once hydrated, so
+  the press before the script still sends it (`FilterSelectField`,
+  [`field.md`](field.md); MB.115). A select or a switch changed before
   hydration applies nothing until the magnifier is pressed.
 - **Every filter navigates softly**, through the list's `ListFrame`
   ([`list-frame.md`](list-frame.md#contracts)), which holds the navigation
@@ -80,8 +80,9 @@ already above them.
   renders. Meanwhile the form is `aria-busy`, as the tab row is, and every
   control in it is `aria-disabled`: Clear by its own prop, the caller's
   fields by a layout effect that marks each `input` (not a hidden one),
-  `select`, `textarea`, `button` and `a[href]` in the form and unmarks it
-  after. `aria-disabled` rather than `disabled`, as the tabs use it, so a
+  `select`, `textarea`, `button`, `a[href]` and `[role="combobox"]`, the
+  select-only box being a `div`, in the form and unmarks it after. The
+  focus restore below counts the same controls. `aria-disabled` rather than `disabled`, as the tabs use it, so a
   focus in a field stays where it was rather than falling to the page. The
   same effect refuses, in the capture phase, every key but Tab, every press,
   every edit, paste and drop, so nothing in the row changes, and a submit,
@@ -130,15 +131,15 @@ the whole line, so the boxes share one edge, the owner's call at MB.115's
 review over a filter folded behind a disclosure.
 
 **A choice takes one width.** A plain select's field, a `.field` holding a
-`.select`, and a type-ahead's, which puts `filter-row__typeahead` on its
-`.field` block (`FieldShell`'s `className`, [`field.md`](field.md)), stand
-at `$filter-choice-width`, 14rem on the owner's call: most names fit, and
+`.select`, and every `FilterSelectField`, which puts `filter-row__typeahead`
+on its `.field` block (`FieldShell`'s `className`, [`field.md`](field.md)),
+stand at `$filter-choice-width`, 14rem on the owner's call: most names fit, and
 the longest seeded one, "Anglo-Saxon & Continental Germanic", runs on inside
 the box while its option in the list is drawn whole. A native select sizes
 itself by its longest option and a type-ahead by its few letters, so
 without it two selects would differ and hydration, which swaps the
-server's select for the type-ahead, would move the row. The type-ahead
-opts in by class since once hydrated it holds no select. It gives way on a
+server's select for a Combobox box, would move the row. The field opts in
+by class since once hydrated it holds no select. It gives way on a
 narrower row. The clear inside the type-ahead keeps its room while hidden
 ([`combobox.md`](combobox.md)), so typing does not change the width either.
 

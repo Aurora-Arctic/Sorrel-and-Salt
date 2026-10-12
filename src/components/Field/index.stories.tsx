@@ -185,11 +185,11 @@ const Search = () => {
 
 export const SearchBox: Story = () => <Search />;
 
-// A list filter's closed set: a native select, its blank first choice no
-// filter, and the same set typed into, as the curated lists' group is once
-// hydrated. Each applies nowhere here: a filter's FilterForm opens the list
-// (Forms / Filter Form). The type-ahead stands at the select's width, so
-// hydration, which swaps one for the other, moves nothing.
+// A list filter's closed set as the browser draws it once hydrated: the
+// select-only box, its blank first choice no filter, and the same set typed
+// into, as the curated lists' group is. The server draws each as a native
+// select at the same width, so hydration moves nothing. Each applies nowhere
+// here: a filter's FilterForm opens the list (Forms / Filter Form).
 const GROUPS = [
   { value: 'fixture-substance', label: 'Fixture Substance' },
   { value: 'testwort-wards', label: 'Testwort Wards' },

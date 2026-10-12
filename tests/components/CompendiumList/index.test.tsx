@@ -8,7 +8,8 @@ import type {
   CompendiumListFilter,
   CompendiumListProps,
 } from '@/components/CompendiumList/types';
-import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer, sent } from '../../support/filter-form';
+import { choose } from '../../support/interact';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
@@ -176,6 +177,11 @@ describe('CompendiumList filter', () => {
   const nameBox = () => screen.getByRole('searchbox', { name: 'Name' });
   const formBox = () => screen.getByRole('combobox', { name: 'Form' });
   const kindSelect = () => screen.getByRole('combobox', { name: 'Classification' });
+  /** The classification the form sends: once hydrated, the select-only box's hidden input. */
+  const kindSent = () =>
+    new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).get(
+      'nomenclature',
+    );
   const unsourcedSwitch = () => screen.getByRole('switch', { name: 'No Refs' });
 
   // The form goes under its own parameter by its text, from the type-ahead's
@@ -221,15 +227,29 @@ describe('CompendiumList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  it('offers every classification, after the option for any', () => {
-    render(<CompendiumList {...props()} />);
+  // The owner's call (MB.115): every closed set in the row takes one
+  // dropdown look once hydrated, the select-only box, but the server draws a
+  // native select, so the filter works before JavaScript.
+  it('offers every classification, after the option for any, as a native select on the server and a select-only box once hydrated', async () => {
+    const { container, hydrate } = drawnOnServer(<CompendiumList {...props()} />);
 
+    const served = within(container).getByRole('combobox', { name: 'Classification' });
     expect(
-      within(kindSelect())
+      within(served)
         .getAllByRole('option')
         .map((option) => option.getAttribute('value')),
     ).toEqual(['', 'botanical', 'fungal', 'zoological', 'mineral', 'chemical', 'unknown', 'none']);
-    expect(kindSelect()).toHaveValue('');
+    expect(served).toHaveValue('');
+    expect(served).toHaveAttribute('name', 'nomenclature');
+
+    await hydrate();
+    fireEvent.click(kindSelect());
+    expect(
+      within(screen.getByRole('listbox', { name: 'Classification choices' })).getAllByRole(
+        'option',
+      ),
+    ).toHaveLength(8);
+    expect(kindSent()).toBe('');
   });
 
   // The owner's call (MB.115), as the curated lists' group filter: typed
@@ -287,7 +307,7 @@ describe('CompendiumList filter', () => {
     );
 
     fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
-    fireEvent.change(kindSelect(), { target: { value: 'unknown' } });
+    choose('Classification', 'Unknown');
 
     expect(router.push.mock.calls).toEqual([
       [
@@ -373,7 +393,8 @@ describe('CompendiumList filter', () => {
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
 
     // A second change, or a submit, while the first is on its way goes nowhere.
-    fireEvent.change(kindSelect(), { target: { value: 'mineral' } });
+    fireEvent.click(kindSelect());
+    fireEvent.keyDown(kindSelect(), { key: 'ArrowDown' });
     fireEvent.submit(row);
     expect(router.push).toHaveBeenCalledTimes(1);
 
@@ -418,10 +439,11 @@ describe('CompendiumList filter', () => {
     expect(unsourcedSwitch()).toHaveFocus();
 
     act(() => kindSelect().focus());
+    fireEvent.click(kindSelect());
     await act(async () => {
-      fireEvent.change(kindSelect(), { target: { value: 'mineral' } });
+      fireEvent.click(screen.getByRole('option', { name: 'Mineral' }));
     });
-    expect(kindSelect()).toHaveValue('mineral');
+    expect(kindSent()).toBe('mineral');
     expect(kindSelect()).toHaveFocus();
 
     fireEvent.change(nameBox(), { target: { value: 'test' } });

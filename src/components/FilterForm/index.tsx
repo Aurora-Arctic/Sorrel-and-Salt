@@ -31,8 +31,12 @@ import type { FilterFormProps, FilterValue } from './types';
 const isSet = (value: FilterValue): boolean =>
   typeof value === 'string' ? value.trim() !== '' : value === true;
 
-/** The caller's controls, which the row marks `aria-disabled` while a list is on its way. */
-const FIELD_CONTROLS = 'input:not([type="hidden"]), select, textarea, button, a[href]';
+/**
+ * The caller's controls, which the row marks `aria-disabled` while a list is
+ * on its way: a select-only box among them, a `div` with the combobox role.
+ */
+const FIELD_CONTROLS =
+  'input:not([type="hidden"]), select, textarea, button, a[href], [role="combobox"]';
 
 /** What would change a field or press a control, each refused while a list is on its way. */
 const PRESSES = ['keydown', 'beforeinput', 'mousedown', 'click', 'paste', 'drop'] as const;

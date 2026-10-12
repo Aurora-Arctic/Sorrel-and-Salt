@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
-import { FILTER_ROWS } from '../../support/filter-form';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
@@ -259,10 +259,16 @@ describe('UserList filter', () => {
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  it('narrows by role the moment it changes, from a native select that starts at the role shown', async () => {
-    inFlight(<UserList {...props({ role: 'admin' })} />);
+  // The owner's call (MB.115): a select-only box once hydrated, as every
+  // closed set in the row is, over the native select the server draws.
+  it('narrows by role the moment one is picked, from a native select on the server that starts at the role shown', async () => {
+    const { container, hydrate } = drawnOnServer(
+      <Navigating push={router.push}>
+        <UserList {...props({ role: 'admin' })} />
+      </Navigating>,
+    );
 
-    const role = screen.getByLabelText('Role');
+    const role = within(container).getByRole('combobox', { name: 'Role' });
     expect(role).toHaveValue('admin');
     expect(role).toHaveAttribute('name', 'role');
     expect(
@@ -271,8 +277,10 @@ describe('UserList filter', () => {
         .map((option) => option.getAttribute('value')),
     ).toEqual(['', 'admin', 'user']);
 
+    await hydrate();
+    fireEvent.click(within(container).getByRole('combobox', { name: 'Role' }));
     await act(async () => {
-      fireEvent.change(role, { target: { value: 'user' } });
+      fireEvent.click(screen.getByRole('option', { name: 'User' }));
     });
 
     expect(router.push).toHaveBeenCalledTimes(1);
@@ -283,8 +291,9 @@ describe('UserList filter', () => {
     inFlight(<UserList {...props()} />);
 
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' bo ' } });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Role' }));
     await act(async () => {
-      fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
+      fireEvent.click(screen.getByRole('option', { name: 'User' }));
     });
 
     expect(router.push).toHaveBeenCalledWith('/admin/users?query=bo&role=user');

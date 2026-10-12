@@ -29,15 +29,17 @@ id.
   form to `/admin/privilege-changes` (`PRIVILEGE_CHANGES_PATH`, `href.ts`), named "Filter Privilege Changes" inside
   a `<search>` landmark, as the user list's is
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
-  (`query`), matching part of the subject's name or email, a native Privilege
+  (`query`), matching part of the subject's name or email, a Privilege
   dropdown (`privilege`: All Privileges, then `PRIVILEGE_LABELS`, Admin or
   Coven Creation, in title case as every label is; a `FilterSelectField`,
   [`field.md`](field.md)), both on the owner's call, and no Filter button (MB.115). It is `filter.tsx`, the one client file here:
   the search text, held in state, inside the shared `FilterForm`
-  ([`filter-form.md`](filter-form.md#contracts)). A native
-  `<select>`, so before hydration the form still submits, All Privileges as
-  `privilege=`, which the page reads as no privilege. The dropdown applies the moment it
-  changes, and the search from its magnifier or Enter, each carrying the other. Clear, offered
+  ([`filter-form.md`](filter-form.md#contracts)). The server draws
+  the dropdown as a native `<select>`, so before hydration the form still
+  submits, All Privileges as `privilege=`, which the page reads as no
+  privilege; once hydrated it is the select-only box, so the row has one
+  dropdown look (the owner's call). The dropdown applies the moment a choice
+  is picked, and the search from its magnifier or Enter, each carrying the other. Clear, offered
   only while the page shows a query or a privilege, opens
   `/admin/privilege-changes` with neither. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the

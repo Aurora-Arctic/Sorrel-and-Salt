@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
+import { sent } from '../../../../support/filter-form';
 
 // The `/admin/users` page (MB.52): the guard, then the identity reads, a
 // page of users and its count, the search parameters turned into the filter
@@ -205,7 +206,7 @@ describe('the /admin/users page', () => {
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false, role: 'admin' });
     expect(countUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false, role: 'admin' });
-    expect(screen.getByLabelText('Role')).toHaveValue('admin');
+    expect(filterSends('role')).toBe('admin');
   });
 
   // Only a hand-edited address carries one, so it filters nothing rather than erring.
@@ -213,7 +214,7 @@ describe('the /admin/users page', () => {
     await renderPage({ role: 'wizard' });
 
     expect(listUsers.mock.calls[0]?.[1]).toEqual({ awaitingApproval: false });
-    expect(screen.getByLabelText('Role')).toHaveValue('');
+    expect(filterSends('role')).toBe('');
   });
 
   it('links the pages either side, keeping the filter, and says where it stands', async () => {
@@ -265,3 +266,8 @@ describe('the /admin/users page, impersonation', () => {
     expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 });
+
+/** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
+function filterSends(name: string): string | null {
+  return new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter Users' }))).get(name);
+}
