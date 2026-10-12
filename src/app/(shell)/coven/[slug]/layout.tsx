@@ -30,13 +30,13 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // the shell's own cached lookup, so it costs no second query.
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
-  await requireCovenMembership(slug);
+  const { membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
 
   return (
     <>
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
-        <CovenNav slug={slug} />
+        <CovenNav slug={slug} covenRole={membership.role} />
       </ContextRow>
       <div className="coven-layout">{children}</div>
     </>
