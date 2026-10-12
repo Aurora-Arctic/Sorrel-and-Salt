@@ -6,6 +6,7 @@ import { workspaceRole } from '../schema/workspaces';
 import { updateMemberRole } from '../services/member-role';
 import { listMembers } from '../services/members';
 import { createWorkspace } from '../services/workspace-creation';
+import { deleteWorkspace } from '../services/workspace-deletion';
 import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 const WorkspaceRoleEnum = builder.enumType('WorkspaceRole', {
@@ -83,5 +84,18 @@ builder.mutationField('updateMemberRole', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { workspaceId, userId, role }, context) =>
       updateMemberRole(sessionOf(context), workspaceId, userId, role),
+  }),
+);
+
+builder.mutationField('deleteWorkspace', (t) =>
+  t.boolean({
+    description:
+      'Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.',
+    args: { workspaceId: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId }, context) => {
+      await deleteWorkspace(sessionOf(context), workspaceId);
+      return true;
+    },
   }),
 );
