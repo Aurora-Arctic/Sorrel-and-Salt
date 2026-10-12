@@ -93,6 +93,8 @@ export interface ConfirmedActionProps {
   label: string;
   /** The row's button's accessible name, opening with `label`. */
   accessibleName: string;
+  /** The modal's confirm, when it says something other than the row's button does. */
+  confirmLabel?: string;
   openClass: string;
   /** The modal's heading, in title case. */
   title: string;

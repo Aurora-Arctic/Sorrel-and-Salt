@@ -459,9 +459,19 @@ type Mutation {
   grantWorkspaceCreation(note: String, userId: ID!): User!
 
   """
+  Takes the caller out of a coven, whatever their role. Only the caller's own membership; refused when they are its only owner.
+  """
+  leaveWorkspace(workspaceId: ID!): Boolean!
+
+  """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
+
+  """
+  Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
+  """
+  removeMember(userId: ID!, workspaceId: ID!): Boolean!
 
   """
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.

@@ -48,7 +48,7 @@ describe('MemberList', () => {
     }
   });
 
-  it("leaves Updated By and Updated At empty when the editor's name is withheld", () => {
+  it("leaves the Updated cell empty when the editor's name is withheld", () => {
     render(
       <MemberList
         members={[{ ...MEMBER, updatedBy: null, updatedAt: null }]}

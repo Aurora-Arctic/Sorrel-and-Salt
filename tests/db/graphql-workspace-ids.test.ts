@@ -29,6 +29,9 @@ let ingredientId: string;
 let deletableId: string;
 // A coven of its own for the delete probe's admitted call, which would take W down.
 let deletableWorkspaceId: string;
+// Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
+let removableWorkspaceId: string;
+let leavableWorkspaceId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
 
@@ -45,13 +48,19 @@ beforeAll(async () => {
     A.id,
   );
   referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
-  const [coven] = await sql`
-    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name: 'Fixture Deletable Coven' })), created_by: A.id, updated_by: A.id })}
-    returning id`;
-  deletableWorkspaceId = coven.id as string;
-  await sql`
-    insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-    values (${deletableWorkspaceId}, ${A.id}, 'owner', ${A.id}, ${A.id})`;
+  const insertCoven = async (name: string) => {
+    const [coven] = await sql`
+      insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
+      returning id`;
+    const id = coven.id as string;
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${id}, ${A.id}, 'owner', ${A.id}, ${A.id}), (${id}, ${B.id}, 'member', ${A.id}, ${A.id})`;
+    return id;
+  };
+  deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
+  removableWorkspaceId = await insertCoven('Fixture Removable Coven');
+  leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
   await sql.end();
 });
 
@@ -114,6 +123,20 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     variables: () => ({ userId: B.id }),
     asOwner: true,
+  },
+  removeMember: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      removeMember(workspaceId: $workspaceId, userId: $userId)
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+    admittedTo: () => removableWorkspaceId,
+  },
+  leaveWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      leaveWorkspace(workspaceId: $workspaceId)
+    }`,
+    admittedTo: () => leavableWorkspaceId,
   },
   deleteWorkspace: {
     source: `mutation ($workspaceId: ID!) {

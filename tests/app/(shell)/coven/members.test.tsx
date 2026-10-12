@@ -93,16 +93,18 @@ describe('the /coven/[slug]/members page', () => {
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });
 
-  it('gives an owner the controls to promote a member and a viewer', async () => {
+  it('gives an owner a Change Role control on every row', async () => {
     await render_('owner');
 
-    expect(screen.getByRole('button', { name: 'Promote Name of u-member' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Promote Name of u-viewer' })).toBeInTheDocument();
+    for (const who of ['u-owner', 'u-member', 'u-viewer'])
+      expect(
+        screen.getByRole('button', { name: `Change Role for Name of ${who}` }),
+      ).toBeInTheDocument();
   });
 
   it('offers an owner the roles to move to, each with what it allows', async () => {
     await render_('owner');
-    fireEvent.click(screen.getByRole('button', { name: 'Promote Name of u-viewer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change Role for Name of u-viewer' }));
 
     const group = await screen.findByRole('group', { name: 'New Role' });
     expect(within(group).getByRole('radio', { name: /^Member/ })).toBeChecked();
@@ -114,7 +116,7 @@ describe('the /coven/[slug]/members page', () => {
     await render_('member');
 
     expect(screen.getAllByRole('row')).toHaveLength(1 + SEATS.length);
-    expect(screen.queryByRole('button', { name: /^(Promote|Demote)/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Change Role/ })).not.toBeInTheDocument();
   });
 
   it('answers a viewer, whose seat exists, with the 404 a stranger gets', async () => {

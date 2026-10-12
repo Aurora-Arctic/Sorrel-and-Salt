@@ -11,7 +11,7 @@ component taking the workspace's `workspaceId` and `name`.
   restore by hand rests on.
 - **One GraphQL mutation, `deleteWorkspace(workspaceId)`**, through the same path as every write
   from the browser (CLAUDE.md rule 1). A refusal, such as a second owner deleting first, is said
-  beside the button by `ConfirmedAction`.
+  above the page's buttons by `ActionFailure` (see [`leave-workspace-button.md`](leave-workspace-button.md)).
 - **A success leaves the page** with `router.replace('/')`. A re-read would be a 404, since the
   deleting user has no membership of the coven any more.
 - **The page decides who sees it**, from `rolePermits(role, { workspace: ['delete'] })`, never from a

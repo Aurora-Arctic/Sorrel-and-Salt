@@ -4,8 +4,8 @@ import type { WorkspaceRole } from '@/modules/coven';
 
 // The `/coven/[slug]` index page (M9.15): the page every coven opens on. It
 // runs the coven guard on its own slug, since a layout does not re-run on
-// client-side navigation, and holds the places for Leave, which every role
-// sees, and Delete, which only an owner does. What the guard decides is
+// client-side navigation, and offers Leave, which every role sees, and
+// Delete, which only an owner does. What the guard decides is
 // tests/lib/request-session.test.ts's and the service's; here it is mocked.
 // The role check is the real one, read off the access-control statements.
 
@@ -51,19 +51,17 @@ describe('the /coven/[slug] page', () => {
     await expect(CovenPage({ params: params('fixture-coven') })).rejects.toThrow('not-found');
   });
 
-  // The places M6.14 and M6.15 fill: shown now, pressable once their
-  // services land.
   it.each<WorkspaceRole>(['viewer', 'member'])('offers a %s Leave and no Delete', async (role) => {
     await renderAs(role);
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
     expect(screen.queryByRole('button', { name: 'Delete Workspace' })).not.toBeInTheDocument();
   });
 
   it('offers an owner Leave and Delete', async () => {
     await renderAs('owner');
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
   });
 });

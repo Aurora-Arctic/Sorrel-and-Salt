@@ -294,6 +294,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   // A malformed id, so a caller past the scope is refused by the service
   // before anything is deleted.
   deleteWorkspace: write('mutation { deleteWorkspace(workspaceId: "not-an-id") }'),
+  // Malformed ids again, so nothing is removed whoever gets past the scope.
+  removeMember: write('mutation { removeMember(workspaceId: "not-an-id", userId: "not-an-id") }'),
+  leaveWorkspace: write('mutation { leaveWorkspace(workspaceId: "not-an-id") }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
@@ -450,6 +453,9 @@ const OPEN_WRITES = [
   'updateMemberRole',
   // The owner's `workspace: delete` decides, which the service checks (M6.14).
   'deleteWorkspace',
+  // `member: remove` decides removal, and leaving is the caller's own seat (M6.15).
+  'removeMember',
+  'leaveWorkspace',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',

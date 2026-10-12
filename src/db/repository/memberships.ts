@@ -1,10 +1,11 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull } from 'drizzle-orm';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 // Type-only, so it is erased and no runtime cycle forms with the service that
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
+import { applyAudit } from '../audit';
 import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom, selectOne } from './select';
 import type { AuditWriter, Keyset, WriterContext } from './types';
@@ -116,10 +117,16 @@ export function workspaceWrites({
 export function membershipWrites({
   insert,
   update,
+  softDelete,
   tx,
+  session,
 }: WriterContext): Pick<
   AuditWriter,
-  'insertMembership' | 'lockLiveMembers' | 'updateMembershipRole'
+  | 'insertMembership'
+  | 'lockLiveMembers'
+  | 'reviveMembership'
+  | 'softDeleteMembership'
+  | 'updateMembershipRole'
 > {
   return {
     // In user-id order, so two changes at once queue on the first row rather
@@ -138,5 +145,39 @@ export function membershipWrites({
       ),
     insertMembership: (workspaceId, userId, role) =>
       insert(workspaceMembers, { workspaceId, userId, role }),
+    // Removal and leave alike (M6.15): the proof's workspace scopes it, so
+    // another coven's row is out of reach, and a row already deleted is
+    // skipped, so a second removal never overwrites who made the first.
+    softDeleteMembership: (membership, userId) =>
+      softDelete(
+        workspaceMembers,
+        and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
+      ),
+    // Rule 4's fourth named exception, after M5.3's, MB.138's and MB.10's, and
+    // the only writer that touches a deleted row: the audit writer's `update`
+    // skips one by design, and the pair `(workspace_id, user_id)` is the
+    // primary key, so a person invited back cannot be inserted a second time.
+    // It reaches deleted rows only (`isNotNull`), so no live seat is rewritten.
+    // Takes no proof for `insertMembership`'s reason: the seat a proof is
+    // minted from is the one being restored. `joinedAt` restarts, because the
+    // members list shows when this membership began.
+    reviveMembership: (workspaceId, userId, role) => {
+      const now = new Date();
+      return tx
+        .update(workspaceMembers)
+        .set({
+          ...applyAudit('update', { role, joinedAt: now }, session),
+          deletedAt: null,
+          deletedBy: null,
+        })
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, workspaceId),
+            eq(workspaceMembers.userId, userId),
+            isNotNull(workspaceMembers.deletedAt),
+          ),
+        )
+        .returning();
+    },
   };
 }

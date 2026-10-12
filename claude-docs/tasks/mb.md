@@ -125,7 +125,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
 | MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
 | MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12 | —                      |
-| MB.122 | Design review: the navigation                                                                                            | Wave 9  | —                      |
+| MB.122 | ~~Design review: the navigation~~ — **folded into MB.7**                                                                 | —       | —                      |
 | MB.123 | Design review: the grimoire                                                                                              | Wave 13 | —                      |
 | MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15 | —                      |
 | MB.125 | Categories on the ingredient writes                                                                                      | Wave 8  | MB.126, M5.5           |
@@ -3629,7 +3629,7 @@ _Acceptance criteria:_
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
-Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.122's.
+Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
