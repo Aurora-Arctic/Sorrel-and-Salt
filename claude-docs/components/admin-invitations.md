@@ -87,10 +87,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
   a spinner and "Sending" while the request is out; Cancel is quiet and
   closes back to the tab. With anything typed in either field, Cancel asks
-  first, "You have unsaved changes. Discard them?", beside Discard Changes,
-  which closes, and Keep Editing, which goes back to the form as it was; the
-  modal's Close button, Escape and a click outside ask the same (MB.115, the
-  owner's call; [`modal.md`](modal.md), "Unsaved changes"). The form is
+  first (MB.115, the owner's call; [`modal.md`](modal.md#unsaved-changes));
+  Discard Changes closes. The form is
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
   guard reaches the modal's ways out. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent

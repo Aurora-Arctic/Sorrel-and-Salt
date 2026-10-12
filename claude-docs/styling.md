@@ -701,23 +701,16 @@ The class layer every form is built from, in `_primitives.scss`:
 **Cancel asks when there are changes** (MB.115, the owner's call, for every
 admin form). While a form has unsaved changes, the same flag that turns its
 Save on, Cancel, and the modal's Close button, Escape and a click outside,
-ask "You have unsaved changes. Discard them?" over the form, with
-**Discard Changes** (`.btn--destructive`) and **Keep Editing**
-(`.btn--quiet`), the focus on Keep Editing; a way out tried again while it
-asks flashes it, the secondary's tint fading twice in 600ms, a still outline
-shown twice under reduced motion.
-With nothing changed they close at once; a save or a
-delete never asks. One guard draws it for every form
-([`components/modal.md`](components/modal.md), "Unsaved changes").
+ask before throwing the changes away; a save or a delete never asks. One
+guard draws the question for every form
+([`components/modal.md`](components/modal.md#unsaved-changes)).
 
 **A form asks over itself** (MB.115, the owner's call). Every question a
 form asks before it acts, the unsaved changes' and each Delete's, is one
 card, `ConfirmOverlay`: the modal's raised surface at the floating
-elevation, `$narrow-column` wide, centred in the part of the modal's body in
-view over a scrim of the page's ground at 75%, the form beneath it dimmed and
-`inert` until it is answered. It fades in over `$motion-short`, and not
-under reduced motion ([`components/modal.md`](components/modal.md), "Asking
-over the form").
+elevation, `$narrow-column` wide, over a scrim of the page's ground at 75%,
+fading in over `$motion-short`. How it is placed, held and focused is
+[`components/modal.md`](components/modal.md#asking-over-the-form).
 
 **A narrow form stacks its buttons.** A `.form` is a size container, and under 28rem of its own width its `.form__actions` or `.modal__actions` row turns to a column: each button full width, in order, any `margin-inline` pushing a Delete aside reset. Above that, every form's row fits one line. It keys off the form's width rather than the screen's, so a form in a narrow modal stacks too (the owner's call).
 

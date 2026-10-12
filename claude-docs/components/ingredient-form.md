@@ -1170,16 +1170,11 @@ site admin's, through the compendium mutations
   delete does: the server's message, then **End Redirect & Save**, which sends
   the same input again with `endRedirect: true`, and **Keep It**, which
   drops the question and sends nothing, the entry left as typed.
-- **Unsaved changes** (MB.115, the owner's call). While the form has
-  changes, its `formState.isDirty`, the flag that turns the saves on,
-  Cancel asks "You have unsaved changes. Discard them?" over the form,
-  before any other question and in its place until answered, with **Discard Changes**,
-  destructive, which closes as Cancel did, and **Keep Editing**, quiet,
-  which goes back to the form as it was. The modal's Close button, Escape
-  and a click outside ask the same, since the form's guard is the modal's
-  (`useDiscardGuard`, [`modal.md`](modal.md), "Unsaved changes"); with
-  nothing changed every way out closes at once, and a save or a delete never
-  asks. Every question's buttons stand on the card's `.modal__actions`
+- **Unsaved changes** (MB.115, the owner's call). The form hands
+  `formState.isDirty`, the flag that turns the saves on, to the shared guard
+  ([`modal.md`](modal.md#unsaved-changes)). Its question comes before any
+  other and takes its place until answered; Discard Changes closes as Cancel
+  did. Every question's buttons stand on the card's `.modal__actions`
   row, the form's own `.form__actions` staying beneath the card. The form's
   row is the shared [`FormActions`](field.md), its two saves passed to it,
   and its Delete and End Redirect & Save questions the shared
