@@ -15,6 +15,7 @@ is the wrapper every admin page opens it through (below).
 | `discard.tsx`         | `useDiscardGuard` and `DiscardQuestion` (below)                                        |
 | `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself                      |
 | `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with                   |
+| `fields.ts`           | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                      |
 | `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title                         |
 | `types.ts`            | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
 
@@ -54,13 +55,27 @@ is the wrapper every admin page opens it through (below).
 - **The focus trap, Escape and the inert page are the platform's.**
   `showModal()` puts the dialog in the top layer and makes the rest of the
   document inert. Nothing in the component traps focus by hand.
+- **The focus goes to the first field as it opens**, not where the platform
+  puts it. `showModal()` focuses the first thing in the dialog that takes the
+  focus, which is the header's Close button, so every dialog opened on Close.
+  Right after `showModal()`, in the same effect, the modal moves it to the
+  body's first field a person can use (`firstShownField`, `fields.ts`): an
+  input that is not `type="hidden"`, a select or a textarea, not disabled,
+  and shown, so not under a `hidden` section as the ingredient form's closed
+  ones are. With no field, the dialog itself takes it (`tabIndex={-1}`,
+  drawing no ring): its name is read, and Tab moves on to Close. React's
+  `autoFocus` cannot do this, since it focuses the field at mount, before
+  `showModal()` opens the dialog and moves the focus again. A question over
+  the form, and the discard question, keep their own focus handling
+  (["Asking over the form"](#asking-over-the-form)).
 - **Named by its heading**, and its eyebrow when it has one.
   `aria-labelledby` points at the `<h2>`, or at the eyebrow then the
   `<h2>`, so `getByRole('dialog', { name })` finds it
   (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
   from assistive technology, inside a button named "Close". It is a 2rem ×
-  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and the header centres it
-  on the title.
+  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and it sits at the
+  head's top: level with a one-line title, which is its height, and with an
+  edit's eyebrow, rather than adrift beside a name wrapped over lines (MB.115).
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
   Close and Escape do. The backdrop is the dialog's own box to an event, so
@@ -185,7 +200,7 @@ form's Delete question are drawn through it.
   unsaved changes' — hands the focus over in one commit. A form keys a
   question by its step, so each step takes the focus on its own safe answer.
 - **Motion.** The scrim and the card fade in over `$motion-short`, from
-  `@starting-style`, and appear at once under reduced motion. They go at
+  `@starting-style`, and appear at once under reduced motion. It opens with the focus on its first shown field, past a hidden input, a disabled select and a field under `hidden`, or on itself when it holds none; and is named by its eyebrow, title and qualifier together. They go at
   once, with the question.
 - **Its row stacks** at the width a form's own does: under 28rem of the
   form's width, which is the main area's less the body's padding
