@@ -5,7 +5,9 @@ is `findPage(table, order, page, where?)`, or
 `findPageInWorkspace(membership, table, order, page, where?)` for a
 workspace-scoped table, or, inside the repository,
 `findPageInTiers(memberships, table, order, page, where?)` for a two-tier one
-(MB.206). `order` is a list of sort parts, each ascending, or a `ListOrder`:
+(MB.206), and `findPageInScope(table, scope, order, page, where?)` for a
+finder that spells its own scope because none of the others' types admit its
+table: `invitations`' site tier, two-tier but no compendium row (MB.115). `order` is a list of sort parts, each ascending, or a `ListOrder`:
 the parts with the join, threshold and carried values below. Each finder ANDs
 the same soft-delete and workspace predicates as `findMany` and
 `findManyInWorkspace` — the two-tier one `readableInTiers` — and adds a
@@ -97,7 +99,8 @@ from … [join …] where …   -- no order, no limit
 - **A position, not an offset.** The count labels a page and never seeks one,
   so a cursor stays a key.
 - **`findPageCount` counts a `findPage` list** under the same order and
-  `where`, and `findPageCountInTiers` a `findPageInTiers` one: the three
+  `where`, `findPageCountInTiers` a `findPageInTiers` one, and
+  `findPageCountInScope` a `findPageInScope` one, the Invitations tab's: the three
   group pages count through it (MB.132), and each vocabulary's own count
   finder and the compendium's call one under their own filter (MB.206).
 
