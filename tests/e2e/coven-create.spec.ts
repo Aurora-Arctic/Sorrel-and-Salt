@@ -9,7 +9,7 @@ import { signInAgainAs, signInAs } from './session';
 // owner, makes a second, and a coven named "New" never takes the page's own
 // address. A user without the right is offered no form; that the service
 // refuses them is tests/modules/coven/services/workspace-creation.test.ts's.
-// The switcher's entry is walked once MB.7's shell renders the switcher.
+// The switcher's entry to this page is walked in shell.spec.ts.
 test.describe.configure({ mode: 'serial' });
 
 const users = { holder: { id: '' }, outsider: { id: '' } };
@@ -60,9 +60,10 @@ test(
     await page.goto('/coven/new');
 
     const name = page.getByRole('textbox', { name: 'Name' });
-    // Bounded: the theme toggle comes first, and a few spare presses tolerate another stop.
+    // Bounded: the shell's stops (the skip link, the brand, the bar's buttons)
+    // come first, and a few spare presses tolerate another.
     let reached = false;
-    for (let i = 0; i < 10 && !reached; i++) {
+    for (let i = 0; i < 12 && !reached; i++) {
       await page.keyboard.press('Tab');
       reached = await name.evaluate((element) => element === document.activeElement);
     }
