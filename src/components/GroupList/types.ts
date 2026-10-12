@@ -46,20 +46,23 @@ export interface GroupsPlace {
   before?: string;
 }
 
-/** Which modal the address opens: the empty one, or a group's by slug. */
-export type GroupsDialog = 'new' | { edit: string };
-
 /** How a group list is named and what it calls its rows (`kinds.ts`). */
 export interface GroupListKind {
+  /** Its page's address. */
+  path: Route;
   /**
    * The table's name, what a screen reader lists it as: the full name its
    * tab's short label, "Groups" or "Traditions", stands for (MB.115).
    */
   title: string;
+  /** One group in title case, as a modal's title says it: "Category Group", "Tradition". */
+  label: string;
   /** One row, lower-case, as a sentence says it: "tradition". */
   noun: string;
   /** More than one, lower-case: "traditions". */
   plural: string;
   /** The page header's Add, named as that button is (`group-page.tsx`): "Add Tradition". */
   add: string;
+  /** The curated value kind its groups hold, whose nouns and groups' readers are that kind's. */
+  holds: 'category' | 'form' | 'deity';
 }

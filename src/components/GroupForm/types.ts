@@ -10,16 +10,8 @@ import type { GroupColors } from '../../lib/types';
  */
 export type GroupKind = 'category' | 'form' | 'tradition';
 
-/** One group vocabulary as the form uses it: its nouns, its schema and its requests. */
+/** One group vocabulary as the form uses it: what only the form says, its schema and its requests; the nouns are the list's (`GroupList/kinds.ts`). */
 export interface GroupFormKind {
-  /** A group, lower-case, as a sentence says it: "group", "tradition". */
-  group: string;
-  /** The same in title case, as a button says it: "Save Group". */
-  title: string;
-  /** One row it holds, lower-case: "category". */
-  one: string;
-  /** More than one: "categories". */
-  many: string;
   /** What the move's confirmation says the rows keep. */
   moved: string;
   /** The Description's placeholder, a one-line prompt for what to write. */

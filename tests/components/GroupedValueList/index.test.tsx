@@ -6,9 +6,9 @@ import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
   GroupedValueListProps,
-  GroupedValuesDialog,
   GroupedValuesPlace,
 } from '@/components/GroupedValueList/types';
+import type { ListDialog } from '@/lib/types';
 import type { GroupedValueListSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router; Vitest hoists the mock above the imports.
@@ -109,7 +109,7 @@ describe('GroupedValueList', () => {
   });
 
   describe('groupedValuesHref', () => {
-    const href = (place: GroupedValuesPlace, dialog?: GroupedValuesDialog) =>
+    const href = (place: GroupedValuesPlace, dialog?: ListDialog) =>
       groupedValuesHref(DEITIES.kind, place, dialog);
 
     it('keeps the page a modal opens over, the modal last', () => {

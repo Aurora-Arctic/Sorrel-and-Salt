@@ -14,6 +14,8 @@ import type { GroupColorColumn } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import { KINDS as VALUE_LIST_KINDS } from '../GroupedValueList/kinds';
+import { KINDS as GROUP_LIST_KINDS } from '../GroupList/kinds';
 import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -145,10 +147,6 @@ function defineKind<Input extends object>({
  */
 const KINDS: Record<GroupKind, GroupFormKind> = {
   category: defineKind({
-    group: 'group',
-    title: 'Group',
-    one: 'category',
-    many: 'categories',
     // A category's address is its name alone, so a move changes none.
     moved: 'Each category keeps its name, its address and the entries filed under it.',
     describe: 'What the categories in this group share',
@@ -158,10 +156,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     remove: DeleteCategoryGroupDocument,
   }),
   form: defineKind({
-    group: 'group',
-    title: 'Group',
-    one: 'form',
-    many: 'forms',
     // A form's address carries its group's name, so a move re-addresses it.
     moved: "Each form keeps its name and takes its new group's address.",
     // The question a form group answers: what kind of thing is it (DESIGN.md §5).
@@ -174,10 +168,6 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
   }),
   // A deity's tradition (MB.132): a form group's shape, under its own name.
   tradition: defineKind({
-    group: 'tradition',
-    title: 'Tradition',
-    one: 'deity',
-    many: 'deities',
     // A deity's address carries its tradition's name, as a form's does its group's.
     moved: "Each deity keeps its name and takes its new tradition's address.",
     // A tradition is a people or a religion, never a region (DESIGN.md §5).
@@ -218,7 +208,11 @@ const GroupForm = ({
 }: GroupFormProps): ReactElement => {
   const id = useId();
   const spec = KINDS[kind];
-  const { group: noun, title, one, many, moved, resolver } = spec;
+  // What the group and the rows it holds are called is the lists' (MB.115).
+  const { noun, holds } = GROUP_LIST_KINDS[kind];
+  const { noun: one, plural: many } = VALUE_LIST_KINDS[holds];
+  const title = capitalise(noun);
+  const { moved, resolver } = spec;
   const methods = useForm<GroupValues>({
     defaultValues: group
       ? {

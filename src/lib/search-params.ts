@@ -35,3 +35,8 @@ export function oneOf<T extends string>(
 ): T | undefined {
   return values.find((value) => value === raw);
 }
+
+/** The first value of a parameter, trimmed, or `''` for none: a text filter, where blank is no filter. */
+export function trimmed(value: string | string[] | undefined): string {
+  return single(value)?.trim() ?? '';
+}

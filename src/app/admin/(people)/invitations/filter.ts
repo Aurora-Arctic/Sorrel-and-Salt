@@ -1,4 +1,4 @@
-import { single } from '../../../../lib/search-params';
+import { trimmed } from '../../../../lib/search-params';
 import { readListPlace } from '../../list-page';
 import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
@@ -13,7 +13,7 @@ export function readInvitationsPlace(params: InvitationsSearchParams): Invitatio
   const { after, before } = readListPlace(params);
   return {
     filter: {
-      email: single(params.email)?.trim() ?? '',
+      email: trimmed(params.email),
       expiringSoon: params.expiring !== undefined,
     },
     cursor: { after, before },
