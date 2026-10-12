@@ -2,6 +2,7 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
 import { createPortal } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
@@ -36,6 +37,7 @@ import type {
   IngredientFormInput,
   IngredientFormProps,
   IngredientFormValues,
+  IngredientSend,
   RedirectQuestion,
   SavedIngredient,
   SectionFold,
@@ -163,17 +165,12 @@ const IngredientForm = ({
   if (blocking) erring.add('identity');
   // A save that finds an error in a closed section opens it, every such
   // section, flagged, so the focus on the first field marked invalid (below)
-  // can reach it. A submit's last update carries its count with every error,
-  // the schema's or the server's, so it is caught here while rendering, and
-  // the section is open in the very commit that draws the error, which is
-  // when that focus runs.
-  const [seenSubmit, setSeenSubmit] = useState(submitCount);
-  if (seenSubmit !== submitCount) {
-    setSeenSubmit(submitCount);
+  // can reach it.
+  useOnEachSubmit(submitCount, () => {
     if ([...erring].some((key) => !open.has(key))) setOpen(new Set([...open, ...erring]));
     // A variant's too, inside it: the Variants section opens the card.
     variantFolds.openErring(variantsWithErrors(errors));
-  }
+  });
   const fold = (key: SectionKey): SectionFold => ({
     open: open.has(key),
     invalid: erring.has(key),
@@ -204,14 +201,9 @@ const IngredientForm = ({
     </button>
   );
 
-  // A submit's last update carries its count and every error it found, the
-  // resolver's or the server's, so this runs once they are all drawn: the
-  // first field marked invalid, in page order, takes the focus. A layout
-  // effect, so the focus moves in the commit that draws the error: a passive
-  // effect leaves a gap in which the error shows and the focus has not moved.
-  useLayoutEffect(() => {
-    if (submitCount > 0) form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-  }, [submitCount]);
+  // The first field marked invalid, in page order, takes the focus once a
+  // save's errors are all drawn.
+  useFocusFirstInvalid(form, submitCount);
   // A save held on the duplicate warning focuses its button rather than the
   // name it marks, which needs no change, only an answer. After the effect
   // above, so it wins when both run, and again on each held save.
@@ -259,13 +251,7 @@ const IngredientForm = ({
   const discard = useDiscardGuard(isDirty || panels.changed);
 
   const mutation = useMutation({
-    mutationFn: async ({
-      input,
-      endRedirect,
-    }: {
-      input: IngredientFormInput;
-      endRedirect: boolean;
-    }): Promise<SavedIngredient> => {
+    mutationFn: async ({ input, endRedirect }: IngredientSend): Promise<SavedIngredient> => {
       if (workspaceId !== null) {
         const answer = await graphqlRequest(CreateWorkspaceIngredientDocument, {
           workspaceId,

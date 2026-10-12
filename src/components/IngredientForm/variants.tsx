@@ -14,13 +14,14 @@ import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
+import { useOnEachSubmit } from './on-submit';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
-import { CollapsibleSection } from './section';
-import { variantSectionSummary } from './summaries';
+import { CollapsibleSection, FoldFlag, useFoldIds } from './section';
+import { variantSectionSummary, variantSummary } from './summaries';
 import {
   FormField,
   LookupListField,
@@ -38,13 +39,14 @@ import type {
   ListOption,
   SectionFold,
   VariantFieldsetProps,
+  VariantFoldList,
   VariantFolds,
-  VariantFormValues,
   VariantSectionKey,
   VariantsFieldProps,
 } from './types';
 import {
   EMPTY_VARIANT,
+  UNNAMED_FORM,
   VARIANT_SECTION_KEYS,
   formRows,
   rankForForm,
@@ -69,10 +71,8 @@ const BOX = 'drafts.variants';
 /** No section open: what a variant the form has not yet seen opens with, as an edit's do. */
 const NONE_OPEN: ReadonlySet<VariantSectionKey> = new Set();
 
-type Folds = readonly ReadonlySet<VariantSectionKey>[];
-
 /** `folds` with each place up to `length` filled, so a later removal keeps every place in step. */
-const padded = (folds: Folds, length: number): ReadonlySet<VariantSectionKey>[] =>
+const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSectionKey>[] =>
   Array.from({ length: Math.max(folds.length, length) }, (_, at) => folds[at] ?? NONE_OPEN);
 
 /**
@@ -85,7 +85,7 @@ const padded = (folds: Folds, length: number): ReadonlySet<VariantSectionKey>[] 
  * every one closed, as an edit does.
  */
 export function useVariantFolds(): VariantFolds {
-  const [folds, setFolds] = useState<Folds>([]);
+  const [folds, setFolds] = useState<VariantFoldList>([]);
   return {
     isOpen: (index, section) => (folds[index] ?? NONE_OPEN).has(section),
     toggle: (index, section) =>
@@ -153,14 +153,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const erring = (index: number) => get(errors, `variants.${index}`) !== undefined;
   // A save that finds an error in a closed variant opens it, the first such,
   // unless the one open errs too, so the form's focus on the first field
-  // marked invalid can reach it. Set while rendering, so the variant is open
-  // in the very commit that draws the error, which is when that focus runs.
-  const [seenSubmit, setSeenSubmit] = useState(submitCount);
-  if (seenSubmit !== submitCount) {
-    setSeenSubmit(submitCount);
+  // marked invalid can reach it.
+  useOnEachSubmit(submitCount, () => {
     const first = fields.findIndex((_, index) => erring(index));
     if (first !== -1 && (open === null || !erring(open))) setOpen(first);
-  }
+  });
 
   const error: string | undefined = get(errors, BOX)?.message;
   // Shown while a compendium entry has no form: it saves, but as information
@@ -301,39 +298,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   );
 }
 
-/** What a variant's summary line counts between its description and safety note, in its fields' order: a word, and its plural. */
-const COUNTED = [
-  ['elements', 'element', 'elements'],
-  ['planets', 'planet', 'planets'],
-  ['zodiacSigns', 'zodiac sign', 'zodiac signs'],
-  ['colors', 'colour', 'colours'],
-  ['categoryIds', 'category', 'categories'],
-  ['substitutes', 'substitute', 'substitutes'],
-] as const;
-
-/** A count of `variant`'s entries in `key`, "2 planets", or false for none. */
-const counted = (
-  variant: VariantFormValues,
-  [key, one, many]: readonly [(typeof COUNTED)[number][0] | 'references', string, string],
-): string | false => {
-  const count = variant[key].length;
-  return count > 0 && `${count} ${count === 1 ? one : many}`;
-};
-
-/** A variant's summary: what it carries, in its sections' order, "1 planet · 2 categories · Safety note", or that it carries nothing. */
-export function variantSummary(variant: VariantFormValues): string {
-  const parts = [
-    variant.description.trim() !== '' && 'description',
-    ...COUNTED.map((entry) => counted(variant, entry)),
-    variant.safetyNotes.trim() !== '' && 'safety note',
-    counted(variant, ['references', 'reference', 'references']),
-  ].filter(Boolean);
-  if (parts.length === 0) return 'No details yet';
-  // A line of its own, so it opens on a capital: "1 planet · Safety note".
-  const line = parts.join(' · ');
-  return line.charAt(0).toUpperCase() + line.slice(1);
-}
-
 /**
  * One variant: a group named by its form, its summary line with Edit and
  * Remove, and beneath it, while open, the fields that form adds, in the
@@ -355,7 +319,7 @@ function VariantFieldset({
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
-  const legend = form.trim() || 'Unnamed Form';
+  const legend = form.trim() || UNNAMED_FORM;
   // An ingredient in this form is the likeliest stand-in, then one in its
   // group; each is offered form by form, this variant itself left out.
   const own = variant.variantId;
@@ -365,12 +329,15 @@ function VariantFieldset({
   );
   // What a substitute copy skipped, for the notice beneath the list.
   const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
-  const id = useId();
-  const legendId = `${id}-legend`;
-  const summaryId = `${id}-summary`;
-  const flagId = `${id}-flag`;
-  const fieldsId = `${id}-fields`;
   const invalid = get(errors, at) !== undefined;
+  // Flagged only while closed: open, the fields' own errors say it.
+  const { id, summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
+    block: 'fieldset ingredient-form__variant',
+    open,
+    invalid,
+    flagged: invalid && !open,
+  });
+  const legendId = `${id}-legend`;
   // Its own sections, each a disclosure as the ingredient's are (MB.115),
   // flagged while one holds an error and opened by a save that finds one.
   const erring = variantSectionsWithErrors(get(errors, at));
@@ -399,12 +366,7 @@ function VariantFieldset({
   };
 
   return (
-    <fieldset
-      className={['fieldset ingredient-form__variant', open && 'is-open', invalid && 'is-invalid']
-        .filter(Boolean)
-        .join(' ')}
-      aria-labelledby={legendId}
-    >
+    <fieldset className={className} aria-labelledby={legendId}>
       <div className="ingredient-form__variant-head">
         <div className="ingredient-form__variant-title">
           {/* The form as the box reads it, its group after it in the muted ink. */}
@@ -416,11 +378,11 @@ function VariantFieldset({
           <span id={summaryId} className="ingredient-form__variant-summary" hidden={open}>
             {variantSummary(variant)}
           </span>
-          {invalid && !open && (
-            <span id={flagId} className="ingredient-form__variant-flag">
-              Has an error to fix
-            </span>
-          )}
+          <FoldFlag
+            id={flagId}
+            className="ingredient-form__variant-flag"
+            shown={invalid && !open}
+          />
         </div>
         <div className="ingredient-form__variant-actions">
           {/* The reference rows' pencil and × (MB.115, the owner's call),
@@ -433,10 +395,7 @@ function VariantFieldset({
               aria-label={`Edit ${legend}`}
               aria-expanded={open}
               aria-controls={fieldsId}
-              aria-describedby={
-                [!open && summaryId, invalid && !open && flagId].filter(Boolean).join(' ') ||
-                undefined
-              }
+              aria-describedby={describedBy}
               onClick={() => {
                 focusOnOpen.current = !open;
                 onToggle(!open);

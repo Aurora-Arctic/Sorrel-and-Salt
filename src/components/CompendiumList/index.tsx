@@ -1,7 +1,7 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import { stackCell, tableRole } from '../../lib/table-roles';
-import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
+import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import CompendiumListFilter from './filter';
@@ -18,9 +18,6 @@ import type { CompendiumListFilter as Filter, CompendiumListProps } from './type
 // None, rather than an empty cell: the to-do list tells an unconfirmed formal
 // name from no formal name by this column.
 const NONE = '—';
-
-/** Each kind by the label the filter and the form give it: Botanical, Unknown. */
-const KIND_LABELS = new Map(NOMENCLATURE_OPTIONS.map(({ value, label }) => [value, label]));
 
 /** A list as prose, without the serial comma: "a", "a and b", "a, b and c". */
 function and(items: readonly string[]): string {
@@ -39,7 +36,7 @@ function emptyText({ query, form, nomenclature, withoutReferences }: Filter): st
   const filters = [
     query && `“${query}”`,
     form && `the form “${form}”`,
-    nomenclature && `the classification ${KIND_LABELS.get(nomenclature)}`,
+    nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
     withoutReferences && 'No Refs',
   ].filter((filter): filter is string => Boolean(filter));
   return filters.length
@@ -94,7 +91,9 @@ const CompendiumList = ({
                 <tr key={entry.id} {...tableRole('row')}>
                   <td {...stackCell('Name')}>{entry.name}</td>
                   <td {...stackCell('Formal Name')}>{entry.canonicalName ?? NONE}</td>
-                  <td {...stackCell('Classification')}>{KIND_LABELS.get(entry.nomenclature)}</td>
+                  <td {...stackCell('Classification')}>
+                    {labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature)}
+                  </td>
                   <td {...stackCell('Form')}>
                     {entry.forms.length ? entry.forms.join(', ') : NONE}
                   </td>

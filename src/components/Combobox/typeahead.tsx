@@ -10,6 +10,9 @@ import type { ComboboxChoice, ComboboxOption, ComboboxTypeaheadProps } from './t
 // which this imports, since the lint refuses an import cycle. See
 // claude-docs/components/combobox.md, "The type-ahead box".
 
+// Not the ingredient form's `fold`, which keys entries as the database folds
+// them: this matches what a person types against a label they read, so it
+// folds in their locale.
 const fold = (text: string) => text.trim().toLocaleLowerCase();
 
 /** The choice the text names in full, whatever its case, or none. */

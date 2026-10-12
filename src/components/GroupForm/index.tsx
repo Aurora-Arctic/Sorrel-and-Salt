@@ -9,6 +9,7 @@ import { HEX_COLOR } from '../../lib/contrast';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 import { pairedColor } from '../../lib/group-colors';
+import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
@@ -188,9 +189,6 @@ const COLORS: { column: GroupColorColumn; label: string; hint: string }[] = [
   },
 ];
 
-/** A one-word noun in title case, as a label says it: "categories" is "Categories". */
-const titled = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
-
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
 const GroupForm = ({
@@ -301,7 +299,7 @@ const GroupForm = ({
   };
 
   const others = groups.filter((each) => each.id !== group?.id);
-  const rowNoun = memberCount === 1 ? one : many;
+  const rowNoun = plural(memberCount, one, many);
   const rows = `${memberCount} ${rowNoun}`;
   const rootError = errors.root?.message ?? alert;
 
@@ -353,7 +351,7 @@ const GroupForm = ({
       );
     }
     // A label, so title case (the MB.115 sign-off): "Move Its 3 Categories To".
-    const label = `Move Its ${memberCount} ${titled(rowNoun)} To`;
+    const label = `Move Its ${memberCount} ${capitalise(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
     // Named by the picker's label, the question this step asks.
     return (

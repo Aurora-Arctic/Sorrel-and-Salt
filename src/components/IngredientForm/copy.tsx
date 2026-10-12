@@ -2,8 +2,9 @@
 
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
+import { plural } from '@/lib/text';
 import { RemoveIcon } from './icons';
-import { entryText } from './values';
+import { FIELD_NOUNS, entryText, fold } from './values';
 import type {
   CopiedField,
   CopyFromIngredientProps,
@@ -22,22 +23,6 @@ import type {
 // after its own, and a text gains the ingredient's after a blank line. Shut
 // while the ingredient's field, as the form holds it now, is empty
 // (claude-docs/components/ingredient-form.md, "Copying from the ingredient").
-
-/** An entry's key, as the schema folds a list's text: trimmed, its case set aside. */
-const fold = (text: string): string => text.trim().toLowerCase();
-
-/** What a field is called in its button's name and in what the copy says. */
-const NAMES: Record<CopiedField, { label: string; one: string; many: string }> = {
-  description: { label: 'Description', one: 'description', many: 'description' },
-  safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
-  elements: { label: 'Element', one: 'element', many: 'elements' },
-  planets: { label: 'Planets', one: 'planet', many: 'planets' },
-  zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
-  colors: { label: 'Colours', one: 'colour', many: 'colours' },
-  categoryIds: { label: 'Categories', one: 'category', many: 'categories' },
-  substitutes: { label: 'Substitute Ingredients', one: 'substitute', many: 'substitutes' },
-  references: { label: 'References', one: 'reference', many: 'references' },
-};
 
 /** The text `own` takes from `theirs`: theirs into an empty box, else after a blank line, once. */
 function copiedText(own: string, theirs: string): string {
@@ -149,10 +134,10 @@ function said(field: CopiedField, added: number, skipped = 0, form = ''): string
     return added === 0 ? why : `${said(field, added)}. ${why}`;
   }
   if (added === 0) return 'Nothing new to copy from the ingredient';
-  const { one, many } = NAMES[field];
+  const { one, many } = FIELD_NOUNS[field];
   if (field === 'description' || field === 'safetyNotes')
     return `Copied the ${one} from the ingredient`;
-  return `Copied ${added} ${added === 1 ? one : many} from the ingredient`;
+  return `Copied ${added} ${plural(added, one, many)} from the ingredient`;
 }
 
 /**
@@ -201,14 +186,14 @@ export function CopyFromIngredient({
         ref={buttonRef}
         type="button"
         className="btn btn--small btn--quiet ingredient-form__copy"
-        aria-label={`Copy From Ingredient: ${NAMES[field].label}`}
+        aria-label={`Copy From Ingredient: ${FIELD_NOUNS[field].label}`}
         disabled={empty}
         onClick={copy}
       >
         Copy From Ingredient
       </button>
       {announce === undefined && (
-        <output className="visually-hidden" aria-label={`${NAMES[field].label} copy`}>
+        <output className="visually-hidden" aria-label={`${FIELD_NOUNS[field].label} copy`}>
           {news}
         </output>
       )}
@@ -266,7 +251,8 @@ export function SkippedNotice({
     const next = copiedEntries(own, names, substituteKey);
     const added = next.length - own.length;
     setValue(path, next, { shouldDirty: true });
-    skipped.announce(`Copied ${added} ${added === 1 ? 'substitute' : 'substitutes'} as names only`);
+    const { one, many } = FIELD_NOUNS.substitutes;
+    skipped.announce(`Copied ${added} ${plural(added, one, many)} as names only`);
     close();
   };
   return (

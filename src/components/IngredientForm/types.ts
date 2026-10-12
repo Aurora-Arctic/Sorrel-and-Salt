@@ -18,6 +18,9 @@ import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
+// The arrays the unions below are derived from, as `INGREDIENT_ELEMENTS`'s is:
+// a type import of a value, which brings nothing into the bundle.
+import type { LIST_FIELDS, SECTION_KEYS, VARIANT_LISTS, VARIANT_SECTION_KEYS } from './values';
 
 interface IngredientFormCallbacks {
   /**
@@ -250,13 +253,19 @@ export interface VariantFormValues {
 }
 
 /** A variant's lists that take entries in a box: its own planets, signs, colours and substitutes. */
-export type VariantListName = 'planets' | 'zodiacSigns' | 'colors' | 'substitutes';
+export type VariantListName = (typeof VARIANT_LISTS)[number];
 
 /** A variant's boxes: its lists', and its references' search. */
 export type VariantDraftName = VariantListName | 'references';
 
 /** Where a variant's fields sit in the form's values: `variants.1`. */
 export type VariantPath = `variants.${number}`;
+
+/** One save as the form sends it: the input, and whether MB.82's redirect question was answered to end it. */
+export interface IngredientSend {
+  input: IngredientFormInput;
+  endRedirect: boolean;
+}
 
 /** A save the server asked to confirm (MB.82): what it said, and the input to send again. */
 export interface RedirectQuestion {
@@ -284,8 +293,7 @@ export type TextFieldName =
 export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
 
 /** The ingredient's own lists that take entries in a box. */
-export type IngredientListName =
-  'folkNames' | 'planets' | 'zodiacSigns' | 'colors' | 'deities' | 'substitutes';
+export type IngredientListName = (typeof LIST_FIELDS)[number];
 
 /** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.planets`. */
 export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListName}`;
@@ -532,8 +540,7 @@ export interface Claimant {
 }
 
 /** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
-export type SectionKey =
-  'identity' | 'description' | 'correspondences' | 'relations' | 'safety' | 'sources' | 'variants';
+export type SectionKey = (typeof SECTION_KEYS)[number];
 
 /**
  * A folding section's state, which the form owns so that Save can open the
@@ -546,8 +553,48 @@ export interface SectionFold {
   onToggle: () => void;
 }
 
+/** What `useFoldIds` is told of a fold: its block class, and whether it is open, holds an error, and shows its flag. */
+export interface FoldIdsOptions {
+  block: string;
+  open: boolean;
+  invalid: boolean;
+  /** The flag is drawn: a section's while it errs, a variant card's only while it is closed too. */
+  flagged: boolean;
+}
+
+/** What a fold names its parts by, from `useFoldIds`. */
+export interface FoldIds {
+  /** The base the other ids are made from, for a fold that names a part of its own. */
+  id: string;
+  summaryId: string;
+  flagId: string;
+  fieldsId: string;
+  className: string;
+  /** Its toggle's `aria-describedby`: the closed line, and the flag while shown; undefined for neither. */
+  describedBy: string | undefined;
+}
+
+export interface FoldFlagProps {
+  id: string;
+  className: string;
+  shown: boolean;
+}
+
+/** The closed line of one of the ingredient's sections. */
+export interface SectionSummaryProps {
+  section: SectionKey;
+}
+
+/** The closed line of a section that is one text field, its first words. */
+export interface TextSummaryProps {
+  name: 'description' | 'safetyNotes';
+}
+
 /** A variant's own sections, the ingredient's bar Variants, each folding as the ingredient's do (MB.115). */
-export type VariantSectionKey = Exclude<SectionKey, 'variants'>;
+export type VariantSectionKey = (typeof VARIANT_SECTION_KEYS)[number];
+
+/** Each variant's open sections, by its place in the list, as `useVariantFolds` holds them. */
+export type VariantFoldList = readonly ReadonlySet<VariantSectionKey>[];
 
 /**
  * Which of each variant's sections are open, by the variant's place in the
@@ -590,6 +637,16 @@ interface CollapsibleSectionBase {
 }
 
 /** A variant's field that its Copy From Ingredient fills from the ingredient's own. */
+/** A field the form counts or names the entries of: `FIELD_NOUNS`'s keys. */
+export type NounedField = CopiedField | 'folkNames' | 'deities' | 'variants';
+
+/** What a field is called: its label, as its button names it, and one entry and several, as a count says them. */
+export interface FieldNoun {
+  label: string;
+  one: string;
+  many: string;
+}
+
 export type CopiedField =
   | 'description'
   | 'safetyNotes'

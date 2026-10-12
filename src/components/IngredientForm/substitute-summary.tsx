@@ -6,7 +6,7 @@ import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import type { EntrySummary } from '../Combobox/types';
-import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
 
@@ -50,9 +50,6 @@ const IngredientSummaryDocument = graphql(`
  * compendium's are not built yet.
  */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
-
-const labelOf = (options: readonly { value: string; label: string }[], value: string) =>
-  options.find((option) => option.value === value)?.label ?? value;
 
 /** The ingredient's values beside a form's, which add to them and never take away (MB.215). */
 const joined = (own: readonly string[] | null, form: readonly string[] | null | undefined) => [

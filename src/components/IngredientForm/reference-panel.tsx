@@ -2,15 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  type KeyboardEvent,
-  type ReactElement,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import { type KeyboardEvent, type ReactElement, useEffect, useId, useMemo, useRef } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
@@ -29,6 +21,7 @@ import type {
   ReferenceSendInput,
   SavedReference,
 } from './types';
+import { useFocusFirstInvalid } from './on-submit';
 import { useReportPanelChanges } from './panel-changes';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
 
@@ -441,10 +434,7 @@ function PanelForm({
     panel.current?.scrollIntoView?.({ block: 'start' });
     panel.current?.querySelector<HTMLElement>('[role="combobox"]')?.focus({ preventScroll: true });
   }, [summons]);
-  useLayoutEffect(() => {
-    if (submitCount > 0)
-      panel.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-  }, [submitCount]);
+  useFocusFirstInvalid(panel, submitCount);
 
   // A new source is written to this coven, or the compendium; an edited one
   // in its own tier, which in a coven's form is the coven's, since only its
