@@ -45,8 +45,10 @@ function outcomeOf(spec) {
 function walk(suite, ancestors, skipOwnTitle) {
   const nextAncestors = skipOwnTitle ? ancestors : [...ancestors, suite.title];
   for (const spec of suite.specs ?? []) {
+    // The JSON reporter writes a tag without its leading `@` ("story-6" for
+    // `@story-6`), unlike the reporter API, so the match takes either form.
     for (const tag of spec.tags ?? []) {
-      const match = /^@story-(\d+)$/.exec(tag);
+      const match = /^@?story-(\d+)$/.exec(tag);
       if (!match) continue;
       const id = Number(match[1]);
       walked.set(id, [...(walked.get(id) ?? []), outcomeOf(spec)]);
