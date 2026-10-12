@@ -23,9 +23,9 @@
   for access ([`components/not-authorized.md`](../components/not-authorized.md)).
 - **`forbidden()` is Next's, behind `experimental.authInterrupts`** in
   `next.config.ts`. It throws, and Next answers 403 with a `noindex` robots
-  tag and `src/app/forbidden.tsx` at the same URL. The boundary is at the root
-  because the layout is what throws it, and a segment's own `forbidden.tsx`
-  sits inside that segment's layout. It is the one `forbidden()` in the app:
+  tag and `src/app/(shell)/forbidden.tsx` at the same URL. The boundary sits in
+  the `(shell)` group, above the admin layout, because the layout is what throws
+  it, and a segment's own `forbidden.tsx` sits inside that segment's layout. It is the one `forbidden()` in the app:
   `/coven/[slug]` answers 404.
 - **The 403 renders inside the navigation shell.** `src/app/(shell)/layout.tsx`
   (MB.7) wraps `/admin`, so a signed-in non-admin sees the shell's bar around
