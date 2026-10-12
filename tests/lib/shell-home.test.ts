@@ -1,34 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { covenHome, shellHome } from '@/lib/shell-home';
 
-// Where the brand and the Your Coven link go, until M2.8 builds `/coven`.
-
-const COVENS = [{ slug: 'fixture-coven' }, { slug: 'testwort-circle' }];
+// Where the brand and the Your Coven link go: the /coven landing (M2.8).
 
 describe('covenHome', () => {
-  it('is the first coven the viewer belongs to', () => {
-    expect(covenHome(COVENS, false)).toBe('/coven/fixture-coven');
-    expect(covenHome(COVENS, true)).toBe('/coven/fixture-coven');
-  });
-
-  it('is the create page for someone with no coven who may make one', () => {
-    expect(covenHome([], true)).toBe('/coven/new');
-  });
-
-  it('is the account page for someone with no coven who may not', () => {
-    expect(covenHome([], false)).toBe('/account');
+  it("is the landing, which decides between the viewer's covens, the create page and the explanation", () => {
+    expect(covenHome()).toBe('/coven');
   });
 });
 
 describe('shellHome', () => {
-  it('is /admin for an admin, whatever covens they belong to', () => {
-    expect(shellHome({ isAdmin: true, canCreate: true }, COVENS)).toBe('/admin');
-    expect(shellHome({ isAdmin: true, canCreate: false }, [])).toBe('/admin');
+  it('is /admin for an admin', () => {
+    expect(shellHome({ isAdmin: true })).toBe('/admin');
   });
 
-  it('is the coven home for anyone else', () => {
-    expect(shellHome({ isAdmin: false, canCreate: false }, COVENS)).toBe('/coven/fixture-coven');
-    expect(shellHome({ isAdmin: false, canCreate: true }, [])).toBe('/coven/new');
-    expect(shellHome({ isAdmin: false, canCreate: false }, [])).toBe('/account');
+  it('is the landing for anyone else, whatever covens they belong to', () => {
+    expect(shellHome({ isAdmin: false })).toBe('/coven');
   });
 });

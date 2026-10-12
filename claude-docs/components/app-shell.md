@@ -38,10 +38,12 @@ one's own id) throws.
 
 - **The bar** has the brand, the site nav, then at the right Add Ingredient,
   the account menu and the theme disc.
-- **The brand** is a link to `shellHome(viewer, workspaces)` and plain text
+- **The brand** is a link to `shellHome(viewer)` and plain text
   for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (admin:
-  `/admin`) and `covenHome` (the first coven, else `/coven/new` for someone who
-  may create one, else `/account`). M2.8 replaces both with `/coven`. At or
+  `/admin`, anyone else `/coven`) and `covenHome` (always `/coven`, the
+  admin's Your Coven link). The `/coven` landing (M2.8) chooses between the
+  viewer's first coven, the create page and the invite-only explanation, so the
+  shell takes no list of covens. At or
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.

@@ -23,11 +23,9 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
     </p>
     <p className="welcome__way-in">
       {landing ? (
-        // A plain anchor rather than <Link>: typed routes refuse a route that
-        // is not built yet, and M2.8 builds /coven.
-        <a className="btn btn--solid" href={landing}>
+        <Link className="btn btn--solid" href={landing}>
           Continue
-        </a>
+        </Link>
       ) : (
         <Link className="btn btn--solid" href="/sign-in">
           Sign In
