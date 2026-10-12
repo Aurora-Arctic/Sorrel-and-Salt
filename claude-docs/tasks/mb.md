@@ -3490,6 +3490,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), and is the frame for the coven create page too: a form page with no AppShell (`styling.md`, "The page frame"). Every notice in the section shows through `Notice` (`components/notice.md`).
 
+_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3510,6 +3512,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `IngredientForm`'s notices already show through `Notice`, and its failed saves fall back to `readGraphqlFailure`. The one left hand-written is the duplicate-name warning in `IngredientForm/duplicates.tsx`, a `div` that turns from warning to error in place, which is this review's to settle. A shared `TextField`, lifted from `IngredientForm/fields.tsx`, is settled with MB.115.
 
+_Left by MB.115:_ The shared field is `Field` (`components/field.md`): `TextField`, `SelectField`, `SwitchField` and `SearchField` on one shell, and `IngredientForm` uses them. `SuggestField`, `MultiSelectField` and `ListField` still live in `IngredientForm/fields.tsx`, on that shell; whether they move is this review's call. The `duplicates.tsx` warning stays as MB.116 left it. The qualifier's tooltip in `Combobox` sits above the field, aligned to its right, and closes at the first keystroke and when the list opens (the owner's call at MB.115); it holds wherever `FormField` renders. The edit dialogs' head is MB.115's: an eyebrow saying what the dialog does, the entry's name as the title, and its formal name after it, italic only for a botanical, fungal or zoological entry (`components/modal.md`).
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3528,6 +3532,8 @@ _Story:_ As a coven member, I want the ingredients page to make stock easy to sc
 Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — inline row editing (M9.9), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
 
@@ -3549,6 +3555,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; where it goes is this review's to settle once the nav exists.
 
+_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). Wider than a phone it is a wrapping row of links; at a phone's width it is a `<details>` disclosure listing them in the `/admin` index's sections, the owner's jump menu built as real links so it works before the page's script has loaded. Where it sits under the shell's nav, and whether the disclosure stays, is this review's to settle. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3567,6 +3575,8 @@ _Story:_ As a coven member, I want building and reading a spell to feel crafted,
 Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
 
 _Acceptance criteria:_
 
@@ -3588,6 +3598,8 @@ Minted during M5.4, the last design review, once M11.10's error pages and M11.16
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
 _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a success sentence (`components/notice.md`), and `GENERIC_FAILURE`, "That didn't work. Please try again.", is the one sentence for a request that got no usable answer. The whole-site read checks against MB.116's copy register (`styling.md`, "Designing a section") and the browser baseline (`styling.md`, "Binding rules"). The not-authorized page already sits in `.page-frame`, the frame the 404 and 500 pages can share.
+
+_Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
 
 _Acceptance criteria:_
 
