@@ -300,12 +300,14 @@ describe('a link that cannot be used', () => {
 
     it('seats the person at the invited role, stamps the invitation and answers the coven’s slug', async () => {
       await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
-      const [{ slug }] = await sql`select slug from workspaces where id = ${WORKSPACE_W_ID}`;
+      const [{ slug, name }] =
+        await sql`select slug, name from workspaces where id = ${WORKSPACE_W_ID}`;
 
       expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
         acceptable: true,
         tier: 'workspace',
         slug,
+        name,
       });
       expect(await memberRows(GRANTEE)).toHaveLength(0);
 

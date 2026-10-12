@@ -22,7 +22,8 @@ and sends the accept. The rules it shows are
   again and decides; the button stays busy, with a spinner, until
   `router.push` reaches `landing` (`/admin` for an admin invitation,
   `/coven/[slug]` for a coven's, the slug coming from the standing; the
-  sentence says a coven, never which). A
+  sentence names the coven, `covenName`, which only this state carries: the
+  standing reaches it after the address checks, so no refusal can say it). A
   refusal is said in an alert in the service's words, and Accept is offered
   again.
 

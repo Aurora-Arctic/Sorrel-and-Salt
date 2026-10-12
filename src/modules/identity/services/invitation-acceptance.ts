@@ -1,7 +1,7 @@
 import 'server-only';
 import {
   findInvitationByToken,
-  findInvitedCovenSlug,
+  findInvitedCoven,
   findOneById,
   findOpenAdminRoleChangePause,
   findWorkspaceRole,
@@ -98,9 +98,9 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
   // A deleted coven is refused here, after the address checks so a stranger
   // learns nothing of it, and so the person never sees an Accept that fails
   // on click. The repository write's own live-workspace check is the backstop.
-  const slug = await findInvitedCovenSlug(invitation.workspaceId);
-  if (!slug) return { refusal: 'invalid' };
-  return { tier: 'workspace', invitation, user, slug };
+  const coven = await findInvitedCoven(invitation.workspaceId);
+  if (!coven) return { refusal: 'invalid' };
+  return { tier: 'workspace', invitation, user, coven };
 }
 
 /**
@@ -116,7 +116,7 @@ export async function invitationStanding(
   if (standing.refusal) return refused(standing.refusal);
   return standing.tier === 'site'
     ? { acceptable: true, tier: 'site' }
-    : { acceptable: true, tier: 'workspace', slug: standing.slug };
+    : { acceptable: true, tier: 'workspace', slug: standing.coven.slug, name: standing.coven.name };
 }
 
 function refusalError(reason: InvitationRefusal): Error {

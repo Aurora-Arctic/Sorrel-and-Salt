@@ -87,8 +87,8 @@ export type InvitationRefusal =
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
   | { acceptable: true; tier: 'site' }
-  /** The coven's slug, which is where accepting lands: `/coven/[slug]`. */
-  | { acceptable: true; tier: 'workspace'; slug: string }
+  /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
+  | { acceptable: true; tier: 'workspace'; slug: string; name: string }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
 /** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
@@ -100,6 +100,6 @@ export type InvitationCheck =
       tier: 'workspace';
       invitation: WorkspaceInvitationRow;
       user: UserRow;
-      /** The live coven's slug. */
-      slug: string;
+      /** The live coven, as the invited account may be told it. */
+      coven: { name: string; slug: string };
     };

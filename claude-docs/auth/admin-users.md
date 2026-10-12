@@ -402,7 +402,9 @@ filter, page)` is one page of the pending list, newest first, and
      alone and the invitation only stamped, and otherwise a row is inserted.
      It sets `canCreateWorkspace` declared `via: 'invitation'`, which
      re-grants it to a person an admin revoked (M5.8's recorded default; no
-     marker exists to consult). An invitation into a deleted coven is
+     marker exists to consult). The standing carries the coven's name and slug, so the Accept page names the
+     coven to the account that matches and is verified, and to no one else. An
+     invitation into a deleted coven is
      `invalid` at the standing, after the address checks, so no Accept is
      offered; the repository write's live-workspace check is the backstop.
   4. The session's account holds the invited address, compared

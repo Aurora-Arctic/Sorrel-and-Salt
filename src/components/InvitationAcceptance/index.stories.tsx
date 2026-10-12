@@ -30,6 +30,7 @@ export const AcceptableCoven: Story = () => (
     status="acceptable"
     token="workshop"
     tier="workspace"
+    covenName="Fixture Coven"
     landing={'/coven/fixture-coven' as Route}
   />
 );

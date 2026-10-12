@@ -78,7 +78,7 @@ export {
 } from './users';
 export {
   findInvitationByToken,
-  findInvitedCovenSlug,
+  findInvitedCoven,
   findPendingInvitationsInWorkspace,
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,

@@ -89,8 +89,10 @@ describe('InvitationAcceptance', () => {
         token="abc"
         tier="workspace"
         landing={COVEN_LANDING}
+        covenName="Fixture Coven"
       />,
     );
+    expect(screen.getByText(/Fixture Coven/)).toBeVisible();
 
     fireEvent.click(accept());
 

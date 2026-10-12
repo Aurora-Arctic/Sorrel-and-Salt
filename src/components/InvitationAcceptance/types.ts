@@ -7,4 +7,10 @@ export type InvitationAcceptanceProps =
   /** The service's reason, in its words; `emailHref` for a matching address not yet verified. */
   | { status: 'refused'; message: string; emailHref?: string }
   /** This session may accept: what the invitation grants, and where accepting lands. */
-  | { status: 'acceptable'; token: string; tier: 'site' | 'workspace'; landing: Route };
+  | {
+      status: 'acceptable';
+      token: string;
+      tier: 'site' | 'workspace';
+      landing: Route;
+      covenName?: string;
+    };

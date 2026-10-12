@@ -42,6 +42,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           token,
           tier: standing.tier,
           landing: standing.tier === 'site' ? ADMIN_LANDING : route(`/coven/${standing.slug}`),
+          covenName: standing.tier === 'workspace' ? standing.name : undefined,
         }
       : {
           status: 'refused',
