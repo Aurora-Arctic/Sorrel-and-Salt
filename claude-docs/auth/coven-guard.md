@@ -28,7 +28,7 @@ visitors three ways, all from the server:
   same reason).
 - **Any role is let in.** The guard asks for `workspace: read`, which viewer,
   member and owner all hold. A page that needs more — the members page, which
-  a viewer gets a 404 from — asks `assertMembership` for that itself.
+  a viewer gets a 404 from — asks the service for that itself.
 - **A site admin gets no way in.** Admins curate the compendium and reach no
   workspace, so an admin in no coven gets the 404 like anyone else.
 - **The layout calls it, and so does every page beneath it,** with the slug
@@ -61,12 +61,10 @@ every page under `/coven`, `/account` and `/admin`.
 renders `CovenNav` above the page, inside the `.coven-layout` frame, so
 every page under the coven carries it without repeating it
 ([`components/coven-nav.md`](../components/coven-nav.md)). Today it links
-only the index, Overview. Each other section is linked by the task that
-builds its page, because `typedRoutes` refuses a link to a route the build
-does not contain: Members by M6.13, for the roles holding `member: read`,
-Ingredients by M9.6 and Grimoire by M10.11. Members is deferred for that
-reason too, though the task first listed it here (the owner's call,
-2026-10-12).
+the index, Overview, and Members for the roles holding `member: read`
+(M6.13). Each other section is linked by the task that builds its page,
+because `typedRoutes` refuses a link to a route the build does not contain:
+Ingredients by M9.6 and Grimoire by M10.11.
 
 **Leave and Delete have their places here, disabled until their services
 land.**
@@ -90,6 +88,36 @@ land.**
 Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
 for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
 (the same in a browser, keyboard reach and an axe scan).
+
+## The members page (M6.13)
+
+`/coven/[slug]/members` lists who is in the coven, with each person's role
+and joining date. Owners and members see it; a viewer gets the same 404 a
+stranger does, so the page's existence says nothing about anyone's role (the
+owner's call, 2026-10-12). The `member` role holds `member: read` and no
+other `member` statement, so inviting, changing a role and removing stay
+with owners.
+
+- **The page asks the service, not the role.** It reads through
+  `listMembers`, which checks `member: read`; a `Forbidden` becomes
+  `notFound()`. The nav link is the other half: `covenSections(slug, role)`
+  shows Members when `rolePermits(role, { member: ['read'] })`, never by rank.
+- **Role controls are the owner's.** The page passes Promote and Demote to
+  `MemberList` only when the caller holds `member: update`. They are client
+  components that send `updateMemberRole` through `/api/graphql`; the service
+  refuses anyone else, and a demotion that would leave no owner. Each moves
+  one rung along viewer, member, owner, and only ever an existing member:
+  invitations cannot grant ownership, so this is the only route to it.
+- **Not here yet.** Remove is M6.15's and the invite action and pending list
+  are M7.6's; the page draws neither, and their lists will be owner-only.
+- **Paged by cursor** with Prev and Next, 25 to a page, through the same
+  helper as GraphQL.
+
+Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
+404), `tests/components/CovenNav/index.test.tsx` (the link by role),
+`tests/modules/coven/services/access-control.test.ts` (the pinned matrix),
+and `tests/e2e/coven.spec.ts` (`@story-9`: a viewer's 404, a promotion, the
+axe scan).
 
 ## The create page (M9.16)
 

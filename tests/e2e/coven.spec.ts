@@ -118,3 +118,88 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+// The members page (story 9; M6.13): owners and members read the roll, a
+// viewer meets the 404 a stranger does, and only an owner has the role
+// controls, which promote an existing member through GraphQL.
+test.describe('the members page', () => {
+  test('an owner and a member read the roll, and a viewer meets the 404', async ({ page }) => {
+    for (const role of ['owner', 'member'] as const) {
+      await signInAgainAs(page, users[role].id);
+      const response = await page.goto(`/coven/${COVEN_SLUG}/members`);
+      expect(response?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Members' }).getByRole('row')).toHaveCount(4);
+      await expect(
+        page
+          .getByRole('navigation', { name: 'Coven' })
+          .getByRole('link', { name: 'Members', exact: true }),
+      ).toHaveAttribute('aria-current', 'page');
+    }
+
+    // Why the viewer's 404 is the check's: they hold a live seat, and the
+    // coven page opens for them.
+    await signInAgainAs(page, users.viewer.id);
+    expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(200);
+    await expect(
+      page.getByRole('navigation', { name: 'Coven' }).getByRole('link', { name: 'Members' }),
+    ).toHaveCount(0);
+    expect((await page.goto(`/coven/${COVEN_SLUG}/members`))?.status()).toBe(404);
+  });
+
+  test('a member has no role controls', async ({ page }) => {
+    await signInAgainAs(page, users.member.id);
+    await page.goto(`/coven/${COVEN_SLUG}/members`);
+
+    await expect(page.getByRole('table', { name: 'Members' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(Promote|Demote)/ })).toHaveCount(0);
+  });
+
+  test('demoting the only owner is refused above the table, naming them', async ({ page }) => {
+    await signInAgainAs(page, users.owner.id);
+    await page.goto(`/coven/${COVEN_SLUG}/members`);
+
+    await page
+      .getByRole('row')
+      .filter({ hasText: 'Owner' })
+      .getByRole('button', { name: /^Demote / })
+      .click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Demote', exact: true }).click();
+
+    const refusal = page.getByRole('alert').filter({ hasText: 'role was not changed' });
+    await expect(refusal).toContainText('This is the last owner');
+    // Above the table, not in a row.
+    const above = await refusal.evaluate(
+      (el) =>
+        !!(
+          el.compareDocumentPosition(document.querySelector('table') as Node) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+        ),
+    );
+    expect(above).toBe(true);
+  });
+
+  test('an owner promotes a member to owner, and the page passes the scans', async ({ page }) => {
+    await signInAgainAs(page, users.owner.id);
+    await page.goto(`/coven/${COVEN_SLUG}/members`);
+    await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page);
+
+    await page
+      .getByRole('button', { name: /^Promote / })
+      .first()
+      .click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+
+    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+    try {
+      const [seat] = await sql`
+        select role::text from workspace_members
+        where user_id = ${users.member.id} and deleted_at is null`;
+      expect(seat.role).toBe('owner');
+    } finally {
+      await sql.end();
+    }
+  });
+});
