@@ -32,6 +32,9 @@ const ConfirmedAction = ({
   send,
   onSent,
   refusal,
+  onFailure,
+  choices,
+  closeOnSent = false,
   inModal = false,
 }: ConfirmedActionProps): ReactElement => {
   const router = useRouter();
@@ -59,21 +62,31 @@ const ConfirmedAction = ({
     }
   }, [step, inModal]);
 
+  // A caller that shows the refusal itself (the members page, above its table)
+  // takes it through `onFailure`; otherwise it shows beside the control.
+  function report(message: string | undefined) {
+    if (onFailure) onFailure(message);
+    else setFailure(message);
+  }
+
   async function confirm() {
     setStep('sending');
-    setFailure(undefined);
+    report(undefined);
     try {
       await send(note.trim() || undefined);
       // Busy until the re-read replaces this control with one offering the
       // other action, or until the page is left.
       if (onSent) onSent();
       else router.refresh();
+      // A control that survives the re-read (a member's Promote after a
+      // promotion) is not replaced, so it closes its own modal.
+      if (closeOnSent) setStep('idle');
     } catch (error) {
       setStep('idle');
       // No fields of its own, so the shared reader always answers an alert:
       // the service's refusal verbatim, or the one generic sentence, unless
       // the caller says the refusal itself.
-      setFailure(refusal ?? readGraphqlFailure(error).alert);
+      report(refusal ?? readGraphqlFailure(error).alert);
     }
   }
 
@@ -94,6 +107,7 @@ const ConfirmedAction = ({
           {warning}
         </Notice>
       )}
+      {typeof choices === 'function' ? choices(sending) : choices}
       {withNote && (
         <ReasonField
           className="user-list__note"
@@ -124,7 +138,7 @@ const ConfirmedAction = ({
         type="button"
         aria-label={accessibleName}
         onClick={() => {
-          setFailure(undefined);
+          report(undefined);
           setNote('');
           setStep('confirming');
         }}
