@@ -29,9 +29,9 @@ subsection large enough to read alone. This page keeps each `## ` and `### `
 heading with a link to where it lives; a citation in code names that file, not
 this page.
 
-## Why the ORM stays on 0.45.2 (MB.20)
+## Why the ORM stays on the 0.45 line (MB.20)
 
-`drizzle-orm` stays pinned at `0.45.2` and `drizzle-kit` at `0.31.10`, deliberately not upgraded: the standing `npm audit` advisory has no runtime exposure, and three named triggers would reopen the decision. [`db/orm-version.md`](db/orm-version.md)
+`drizzle-orm` stays on the `0.45` line and `drizzle-kit` on the `0.31` line (Dependabot moves the patch), deliberately not upgraded to `1.0`: the standing `npm audit` advisory has no runtime exposure, and three named triggers would reopen the decision. [`db/orm-version.md`](db/orm-version.md)
 
 ## Debugging a query (MB.22)
 
