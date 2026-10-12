@@ -12,8 +12,6 @@ import type { CovenInvitationProps } from './types';
 // reader's inbox, since only its token's hash is stored and no response
 // carries it (claude-docs/db/invitations.md, "Inviting into a coven").
 
-const SUBJECT = 'You Are Invited to a Sorrel & Salt Coven.';
-
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';
 
@@ -25,7 +23,11 @@ export function CovenInvitation({
   part,
 }: CovenInvitationProps) {
   return (
-    <EmailLayout preview={SUBJECT} heading="You Are Invited" origin={origin}>
+    <EmailLayout
+      preview={`Accept within ${LIFETIME} to join ${covenName} as a ${role}.`}
+      heading="You Are Invited"
+      origin={origin}
+    >
       <Paragraph>
         {`You have been invited to join ${covenName} on Sorrel & Salt as a ${role}.`}
       </Paragraph>
@@ -33,10 +35,13 @@ export function CovenInvitation({
         {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}
       </Paragraph>
       <Action href={url} label="Accept the Invitation" part={part} />
-      <IgnoreNote when="If you weren't expecting this" />
+      <IgnoreNote when="If you were not expecting this" />
     </EmailLayout>
   );
 }
 
 /** The coven invitation mail for `to`, rendered to the html and plain text `send` takes. */
-export const covenInvitationMessage = defineMessage<CovenInvitationProps>(SUBJECT, CovenInvitation);
+export const covenInvitationMessage = defineMessage<CovenInvitationProps>(
+  ({ covenName }) => `Join ${covenName} on Sorrel & Salt`,
+  CovenInvitation,
+);

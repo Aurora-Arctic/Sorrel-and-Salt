@@ -36,4 +36,11 @@ describe('covenInvitationMessage', () => {
     expect(text).toContain('Fixture Coven');
     expect(text).toContain('viewer');
   });
+
+  // The inbox list shows only the subject, so it says which coven.
+  it('carries the coven name in the subject', async () => {
+    const { subject } = await covenInvitationMessage(INPUT);
+
+    expect(subject).toContain('Fixture Coven');
+  });
 });

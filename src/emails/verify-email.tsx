@@ -10,7 +10,13 @@ import {
 import type { ProviderId } from '../lib/types';
 import type { VerifyEmailProps } from './types';
 
-const SUBJECT = 'Confirm Your Email for Sorrel & Salt.';
+const SUBJECT = 'Confirm Your Email Address';
+
+// The inbox line beside the subject.
+const PREVIEW = {
+  'sign-up': 'Confirm the address you signed up with. The link works for one hour.',
+  change: 'Confirm this address for your account. The link works for one hour.',
+};
 
 function providerList(providers: readonly ProviderId[]): string {
   const labels = SOCIAL_PROVIDERS.filter((provider) => providers.includes(provider.id)).map(
@@ -30,7 +36,7 @@ export function VerifyEmail({
 }: VerifyEmailProps) {
   const signedUpWith = providerList(providers);
   return (
-    <EmailLayout preview={SUBJECT} heading="Confirm Your Email" origin={origin}>
+    <EmailLayout preview={PREVIEW[purpose]} heading="Confirm Your Email Address" origin={origin}>
       <Paragraph>
         {purpose === 'change'
           ? 'Someone asked to use this email address for their Sorrel & Salt account'
@@ -40,8 +46,11 @@ export function VerifyEmail({
       <Paragraph>
         {`If that was you, ${actionVerb(part)} within one hour, in the same browser where you are signed in to Sorrel & Salt.`}
       </Paragraph>
+      <Paragraph>
+        If the link has expired, sign in and ask for a new one from your account page.
+      </Paragraph>
       <Action href={url} label="Confirm My Email" part={part} />
-      <IgnoreNote when="If it wasn't you" />
+      <IgnoreNote when="If this was not you" />
     </EmailLayout>
   );
 }

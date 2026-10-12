@@ -336,15 +336,16 @@ export async function renderParts(
  * rendered to both parts `send` takes, so a caller never renders anything
  * itself. The template is handed `to` along with its own props and ignores
  * it: dropping it first would leave a generic `Omit` TypeScript cannot
- * prove is the template's props again.
+ * prove is the template's props again. `subject` is a function when the
+ * subject names something the message carries, such as a coven.
  */
 export function defineMessage<Props extends BaseEmailProps>(
-  subject: string,
+  subject: string | ((input: MessageInput<Props>) => string),
   Template: (props: Omit<Props, 'part'> & { part: Part }) => ReactElement,
 ): (input: MessageInput<Props>) => Promise<Message> {
   return async (input) => ({
     to: input.to,
-    subject,
+    subject: typeof subject === 'function' ? subject(input) : subject,
     ...(await renderParts((part) => <Template {...input} part={part} />)),
   });
 }
